@@ -9700,6 +9700,44 @@ describe('AuxRuntime', () => {
                         [{ myAction: toast('hello!') }],
                     ]);
                 });
+
+                it('should be called for actions added during onAnyAction', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger();
+                                
+                                let b = await d.create({
+                                    onAnyAction: '@os.toast("Hello")'
+                                });
+
+                                d.onAfterAction((a) => {
+                                    action.perform({ myAction: a });
+                                });
+
+                                await d.os.toast('second');
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    await Promise.all(result.results);
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            { myAction: toast('Hello') },
+                            { myAction: toast('second') },
+                        ],
+                    ]);
+                });
             });
 
             describe('interpreter', () => {

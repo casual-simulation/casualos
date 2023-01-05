@@ -1004,7 +1004,10 @@ export class AuxRuntime
                 null,
                 rejection.newActions,
                 (action) => {
-                    return _this._processAction(action);
+                    return _this._callAfterActionListeners(
+                        _this._processAction(action),
+                        action
+                    );
                 }
             );
             if (rejection.rejected) {
@@ -1013,10 +1016,18 @@ export class AuxRuntime
 
             if (promise) {
                 return markAsRuntimePromise(
-                    promise.then((p) => _this._processAction(action))
+                    promise.then((p) =>
+                        _this._callAfterActionListeners(
+                            _this._processAction(action),
+                            action
+                        )
+                    )
                 );
             } else {
-                return _this._processAction(action);
+                return _this._callAfterActionListeners(
+                    _this._processAction(action),
+                    action
+                );
             }
         }
 
@@ -1032,24 +1043,48 @@ export class AuxRuntime
                 result = handleRejection(action, rejection);
             }
 
-            if (this._afterActionListeners.length > 0) {
-                let listeners = this._afterActionListeners.slice();
-                if (isRuntimePromise(result)) {
-                    return markAsRuntimePromise(
-                        result.then(() => {
-                            for (let func of listeners) {
-                                func(action);
-                            }
-                        })
-                    );
-                } else {
-                    for (let func of listeners) {
-                        func(action);
-                    }
-                }
-            }
+            // if (this._afterActionListeners.length > 0) {
+            //     let listeners = this._afterActionListeners.slice();
+            //     if (isRuntimePromise(result)) {
+            //         return markAsRuntimePromise(
+            //             result.then(() => {
+            //                 for (let func of listeners) {
+            //                     func(action);
+            //                 }
+            //             })
+            //         );
+            //     } else {
+            //         for (let func of listeners) {
+            //             func(action);
+            //         }
+            //     }
+            // }
             return result;
         });
+    }
+
+    private _callAfterActionListeners(
+        result: MaybeRuntimePromise<void>,
+        action: BotAction
+    ): MaybeRuntimePromise<void> {
+        if (this._afterActionListeners.length > 0) {
+            let listeners = this._afterActionListeners.slice();
+            if (isRuntimePromise(result)) {
+                return markAsRuntimePromise(
+                    result.then(() => {
+                        for (let func of listeners) {
+                            func(action);
+                        }
+                    })
+                );
+            } else {
+                for (let func of listeners) {
+                    func(action);
+                }
+            }
+        }
+
+        return result;
     }
 
     private _processAction(action: BotAction): MaybeRuntimePromise<void> {
