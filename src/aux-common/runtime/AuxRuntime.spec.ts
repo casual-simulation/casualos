@@ -9865,6 +9865,90 @@ describe('AuxRuntime', () => {
                 });
             });
 
+            describe('performUserAction()', () => {
+                it('should allow performing an action as if a user performed it themselves', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger();
+
+                                d.onBeforeUserAction((a) => {
+                                    action.perform({ myAction: a });
+                                });
+
+                                d.performUserAction({
+                                    test: true
+                                });
+                                `,
+                            }),
+                        })
+                    );
+
+                    await runtime.shout('test');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            {
+                                myAction: { test: true },
+                            },
+                        ],
+                    ]);
+                });
+
+                it('should support executing async results in response to async requests', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+
+                                let b = await d.create({
+                                    onShout: '@let result = await os.showInput(""); os.toast(result);'
+                                })
+
+                                d.onScriptActionEnqueued(a => {
+                                    if ('taskId' in a) {
+                                        d.performUserAction({
+                                            type: 'async_result',
+                                            taskId: a.taskId,
+                                            result: 123
+                                        });
+                                    } else {
+                                        action.perform({ myAction: a });
+                                    }
+                                });
+
+                                await d.shout('onShout');
+                                `,
+                            }),
+                        })
+                    );
+
+                    await runtime.shout('test');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            {
+                                myAction: toast(123),
+                            },
+                        ],
+                    ]);
+                });
+            });
+
             describe.skip('onBeforeScriptEnter()', () => {
                 it('should call the given function before a script is entered', async () => {
                     if (type === 'interpreted') {

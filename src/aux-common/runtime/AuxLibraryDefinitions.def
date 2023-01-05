@@ -8449,6 +8449,12 @@ interface DebuggerBase {
     getCallStack(): DebuggerCallFrame[];
 
     /**
+     * Performs the given actions as if they were user actions.
+     * @param actions The actions that should be performed.
+     */
+    performUserAction(...actions: BotAction[]): void;
+
+    /**
      * Registers the given handler to react to when this debugger pauses by hitting a trigger.
      * @param handler The handler that should be called when the debugger pauses.
      */

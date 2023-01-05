@@ -712,6 +712,9 @@ export class AuxRuntime
                     interpreter.agent.executionContextStack
                 );
             },
+            performUserAction(...actions: BotAction[]) {
+                runtime.process(actions);
+            },
             // TODO: Determine whether to support this
             // onBeforeScriptEnter: (
             //     listener: (trace: DebuggerScriptEnterTrace) => void
