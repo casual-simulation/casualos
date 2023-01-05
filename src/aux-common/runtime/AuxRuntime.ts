@@ -157,6 +157,7 @@ import type {
     DeclarativeEnvironmentRecord as DeclarativeEnvironmentRecordType,
     DefinePropertyOrThrow as DefinePropertyOrThrowType,
     Descriptor as DescriptorType,
+    ExecutionContextStack,
     Value as ValueType,
 } from '@casual-simulation/engine262';
 import {
@@ -701,6 +702,15 @@ export class AuxRuntime
             ) => {
                 runtime._scriptUpdatedTagMaskListeners.push(listener);
             },
+            getCallStack() {
+                if (!interpreter) {
+                    throw new Error(
+                        'getCallStack() is only supported on pausable debuggers.'
+                    );
+                }
+                return runtime._mapCallStack(
+                    interpreter.agent.executionContextStack
+                );
             },
             // TODO: Determine whether to support this
             // onBeforeScriptEnter: (
@@ -828,188 +838,7 @@ export class AuxRuntime
                     const pause: DebuggerPause = {
                         pauseId: stop.stopId,
                         state: stop.state,
-                        callStack: stop.stack.map((s) => {
-                            const callSite: any = (s as any).callSite;
-                            const funcName: string = callSite.getFunctionName();
-
-                            let funcLocation: DebuggerFunctionLocation = {};
-
-                            if (funcName) {
-                                const f = runtime._functionMap.get(funcName);
-                                if (f) {
-                                    funcLocation.name =
-                                        f.metadata.diagnosticFunctionName;
-                                    const location =
-                                        runtime._compiler.calculateOriginalLineLocation(
-                                            f,
-                                            {
-                                                lineNumber: callSite.lineNumber,
-                                                column: callSite.columnNumber,
-                                            }
-                                        );
-
-                                    funcLocation.lineNumber =
-                                        location.lineNumber + 1;
-                                    funcLocation.columnNumber =
-                                        location.column + 1;
-
-                                    const tagName = f.metadata.context
-                                        .tag as string;
-                                    const bot = f.metadata.context.bot as Bot;
-
-                                    if (bot) {
-                                        funcLocation.botId = bot.id;
-                                    }
-                                    if (tagName) {
-                                        funcLocation.tag = tagName;
-                                    }
-                                } else {
-                                    funcLocation.name = funcName;
-                                }
-                            }
-
-                            if (
-                                !hasValue(funcLocation.lineNumber) &&
-                                !hasValue(funcLocation.columnNumber) &&
-                                hasValue(callSite.lineNumber) &&
-                                hasValue(callSite.columnNumber)
-                            ) {
-                                funcLocation.lineNumber = callSite.lineNumber;
-                                funcLocation.columnNumber =
-                                    callSite.columnNumber;
-                            }
-
-                            if (
-                                !hasValue(funcLocation.lineNumber) &&
-                                !hasValue(funcLocation.columnNumber) &&
-                                !hasValue(funcLocation.name)
-                            ) {
-                                funcLocation = null;
-                            }
-
-                            const ret: DebuggerCallFrame = {
-                                location: funcLocation,
-                                listVariables() {
-                                    let variables: DebuggerVariable[] = [];
-
-                                    if (
-                                        s.LexicalEnvironment instanceof
-                                        DeclarativeEnvironmentRecord
-                                    ) {
-                                        addBindingsFromEnvironment(
-                                            s.LexicalEnvironment,
-                                            'block'
-                                        );
-                                    }
-
-                                    if (
-                                        s.VariableEnvironment instanceof
-                                        DeclarativeEnvironmentRecord
-                                    ) {
-                                        addBindingsFromEnvironment(
-                                            s.VariableEnvironment,
-                                            'frame'
-                                        );
-
-                                        let parent =
-                                            s.VariableEnvironment.OuterEnv;
-                                        while (parent) {
-                                            if (
-                                                parent instanceof
-                                                DeclarativeEnvironmentRecord
-                                            ) {
-                                                addBindingsFromEnvironment(
-                                                    parent,
-                                                    'closure'
-                                                );
-                                            }
-                                            parent = parent.OuterEnv;
-                                        }
-                                    }
-
-                                    return variables;
-
-                                    function addBindingsFromEnvironment(
-                                        env: DeclarativeEnvironmentRecordType,
-                                        scope: DebuggerVariable['scope']
-                                    ) {
-                                        for (let [
-                                            nameValue,
-                                            binding,
-                                        ] of env.bindings.entries()) {
-                                            const name =
-                                                interpreter.copyFromValue(
-                                                    nameValue
-                                                );
-
-                                            const initialized =
-                                                !!binding.initialized;
-                                            const mutable = !!binding.mutable;
-
-                                            const value = initialized
-                                                ? interpreter.reverseProxyObject(
-                                                      binding.value,
-                                                      false
-                                                  )
-                                                : undefined;
-
-                                            const variable: DebuggerVariable = {
-                                                name,
-                                                value,
-                                                writable: mutable,
-                                                scope,
-                                            };
-                                            if (!initialized) {
-                                                variable.initialized = false;
-                                            }
-
-                                            variables.push(variable);
-                                        }
-                                    }
-                                },
-                                setVariableValue(name: string, value: any) {
-                                    if (
-                                        s.LexicalEnvironment instanceof
-                                        DeclarativeEnvironmentRecord
-                                    ) {
-                                        const nameValue =
-                                            interpreter.copyToValue(name);
-                                        const proxiedValue =
-                                            interpreter.proxyObject(value);
-
-                                        if (nameValue.Type !== 'normal') {
-                                            throw interpreter.copyFromValue(
-                                                nameValue.Value
-                                            );
-                                        }
-
-                                        if (proxiedValue.Type !== 'normal') {
-                                            throw interpreter.copyFromValue(
-                                                proxiedValue.Value
-                                            );
-                                        }
-
-                                        const result =
-                                            s.LexicalEnvironment.SetMutableBinding(
-                                                nameValue.Value,
-                                                proxiedValue.Value,
-                                                Value.true
-                                            );
-
-                                        if (result.Type !== 'normal') {
-                                            throw interpreter.copyFromValue(
-                                                result.Value
-                                            );
-                                        }
-                                        return interpreter.copyFromValue(
-                                            result.Value
-                                        );
-                                    }
-                                },
-                            };
-
-                            return ret;
-                        }),
+                        callStack: runtime._mapCallStack(stop.stack),
                         trigger: {
                             triggerId: stop.breakpoint.id,
                             botId: stop.breakpoint.botId,
@@ -1047,6 +876,164 @@ export class AuxRuntime
         runtime._currentDebugger = debug;
         this._scheduleJobQueueCheck();
         return debug;
+    }
+
+    private _mapCallStack(stack: ExecutionContextStack) {
+        const interpreter = this._interpreter;
+        return stack.map((s) => {
+            const callSite: any = (s as any).callSite;
+            const funcName: string = callSite.getFunctionName();
+
+            let funcLocation: DebuggerFunctionLocation = {};
+
+            if (funcName) {
+                const f = this._functionMap.get(funcName);
+                if (f) {
+                    funcLocation.name = f.metadata.diagnosticFunctionName;
+                    const location =
+                        this._compiler.calculateOriginalLineLocation(f, {
+                            lineNumber: callSite.lineNumber,
+                            column: callSite.columnNumber,
+                        });
+
+                    funcLocation.lineNumber = location.lineNumber + 1;
+                    funcLocation.columnNumber = location.column + 1;
+
+                    const tagName = f.metadata.context.tag as string;
+                    const bot = f.metadata.context.bot as Bot;
+
+                    if (bot) {
+                        funcLocation.botId = bot.id;
+                    }
+                    if (tagName) {
+                        funcLocation.tag = tagName;
+                    }
+                } else {
+                    funcLocation.name = funcName;
+                }
+            }
+
+            if (
+                !hasValue(funcLocation.lineNumber) &&
+                !hasValue(funcLocation.columnNumber) &&
+                hasValue(callSite.lineNumber) &&
+                hasValue(callSite.columnNumber)
+            ) {
+                funcLocation.lineNumber = callSite.lineNumber;
+                funcLocation.columnNumber = callSite.columnNumber;
+            }
+
+            if (
+                !hasValue(funcLocation.lineNumber) &&
+                !hasValue(funcLocation.columnNumber) &&
+                !hasValue(funcLocation.name)
+            ) {
+                funcLocation = null;
+            }
+
+            const ret: DebuggerCallFrame = {
+                location: funcLocation,
+                listVariables() {
+                    let variables: DebuggerVariable[] = [];
+
+                    if (
+                        s.LexicalEnvironment instanceof
+                        DeclarativeEnvironmentRecord
+                    ) {
+                        addBindingsFromEnvironment(
+                            s.LexicalEnvironment,
+                            'block'
+                        );
+                    }
+
+                    if (
+                        s.VariableEnvironment instanceof
+                        DeclarativeEnvironmentRecord
+                    ) {
+                        addBindingsFromEnvironment(
+                            s.VariableEnvironment,
+                            'frame'
+                        );
+
+                        let parent = s.VariableEnvironment.OuterEnv;
+                        while (parent) {
+                            if (
+                                parent instanceof DeclarativeEnvironmentRecord
+                            ) {
+                                addBindingsFromEnvironment(parent, 'closure');
+                            }
+                            parent = parent.OuterEnv;
+                        }
+                    }
+
+                    return variables;
+
+                    function addBindingsFromEnvironment(
+                        env: DeclarativeEnvironmentRecordType,
+                        scope: DebuggerVariable['scope']
+                    ) {
+                        for (let [
+                            nameValue,
+                            binding,
+                        ] of env.bindings.entries()) {
+                            const name = interpreter.copyFromValue(nameValue);
+
+                            const initialized = !!binding.initialized;
+                            const mutable = !!binding.mutable;
+
+                            const value = initialized
+                                ? interpreter.reverseProxyObject(
+                                      binding.value,
+                                      false
+                                  )
+                                : undefined;
+
+                            const variable: DebuggerVariable = {
+                                name,
+                                value,
+                                writable: mutable,
+                                scope,
+                            };
+                            if (!initialized) {
+                                variable.initialized = false;
+                            }
+
+                            variables.push(variable);
+                        }
+                    }
+                },
+                setVariableValue(name: string, value: any) {
+                    if (
+                        s.LexicalEnvironment instanceof
+                        DeclarativeEnvironmentRecord
+                    ) {
+                        const nameValue = interpreter.copyToValue(name);
+                        const proxiedValue = interpreter.proxyObject(value);
+
+                        if (nameValue.Type !== 'normal') {
+                            throw interpreter.copyFromValue(nameValue.Value);
+                        }
+
+                        if (proxiedValue.Type !== 'normal') {
+                            throw interpreter.copyFromValue(proxiedValue.Value);
+                        }
+
+                        const result = s.LexicalEnvironment.SetMutableBinding(
+                            nameValue.Value,
+                            proxiedValue.Value,
+                            Value.true
+                        );
+
+                        if (result.Type !== 'normal') {
+                            throw interpreter.copyFromValue(result.Value);
+                        }
+                        return interpreter.copyFromValue(result.Value);
+                    }
+                },
+            };
+
+            return ret;
+        });
     }
 
     private _processCore(actions: BotAction[]): MaybeRuntimePromise<void> {

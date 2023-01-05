@@ -22,6 +22,34 @@ Array [
 ]
 `;
 
+exports[`AuxRuntime not-interpreted os.createDebugger() getCallStack() should return the current call stack for the debugger 1`] = `
+ExecutionContextStack [
+  Object {
+    "listVariables": [Function],
+    "location": null,
+    "setVariableValue": [Function],
+  },
+  Object {
+    "listVariables": [Function],
+    "location": Object {
+      "botId": "uuid-1",
+      "columnNumber": 1,
+      "lineNumber": 1,
+      "name": "onShout",
+      "tag": "onShout",
+    },
+    "setVariableValue": [Function],
+  },
+  Object {
+    "listVariables": [Function],
+    "location": Object {
+      "name": "toast",
+    },
+    "setVariableValue": [Function],
+  },
+]
+`;
+
 exports[`AuxRuntime not-interpreted os.createDebugger() interpreter should be able to list variables  1`] = `
 Array [
   "args",

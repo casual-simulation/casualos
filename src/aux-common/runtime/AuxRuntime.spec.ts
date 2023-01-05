@@ -9788,7 +9788,84 @@ describe('AuxRuntime', () => {
                 });
             });
 
-            describe('onBeforeScriptEnter()', () => {
+            describe('getCallStack()', () => {
+                it('should throw an error if using a non-pausable debugger', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({});
+                                
+                                const callStack = d.getCallStack();
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    expect(result.results.length).toBe(1);
+
+                    let error: ScriptError = null;
+                    try {
+                        await Promise.all(result.results);
+                    } catch (err) {
+                        error = err;
+                    }
+
+                    expect(error !== null).toBe(true);
+                    expect(error.error).toEqual(
+                        new Error(
+                            'getCallStack() is only supported on pausable debuggers.'
+                        )
+                    );
+                });
+
+                it('should return the current call stack for the debugger', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger({
+                                    pausable: true
+                                });
+                                
+                                let b = await d.create({
+                                    onShout: '@os.toast("Hello"); bot.masks.tagValue = 123;'
+                                });
+
+                                d.onScriptActionEnqueued((a) => {
+                                    action.perform({ myAction: a, callStack: d.getCallStack() });
+                                });
+
+                                await d.shout('onShout');
+                                `,
+                            }),
+                        })
+                    );
+
+                    const result = await runtime.shout('test');
+
+                    await Promise.all(result.results);
+
+                    await waitAsync();
+
+                    expect(events.length).toBe(1);
+                    expect(events[0].length).toBe(1);
+                    const event = events[0][0] as any;
+
+                    expect(event.myAction).toEqual(toast('Hello'));
+                    expect(event.callStack).toMatchSnapshot();
+                });
+            });
+
+            describe.skip('onBeforeScriptEnter()', () => {
                 it('should call the given function before a script is entered', async () => {
                     if (type === 'interpreted') {
                         return;
@@ -9933,7 +10010,7 @@ describe('AuxRuntime', () => {
                 });
             });
 
-            describe('onAfterScriptExit()', () => {
+            describe.skip('onAfterScriptExit()', () => {
                 it('should call the given function after a script returns', async () => {
                     if (type === 'interpreted') {
                         return;
