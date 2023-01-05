@@ -311,6 +311,7 @@ describe('AuxLibrary', () => {
         };
         notifier = {
             notifyChange: jest.fn(),
+            notifyActionEnqueued: jest.fn(),
         };
         processor = {
             processGenerator: jest.fn(),
@@ -2837,6 +2838,7 @@ describe('AuxLibrary', () => {
                 device = null;
                 notifier = {
                     notifyChange: jest.fn(),
+                    notifyActionEnqueued: jest.fn(),
                 };
                 processor = {
                     processGenerator: jest.fn(),
@@ -2875,6 +2877,7 @@ describe('AuxLibrary', () => {
                 device = null;
                 notifier = {
                     notifyChange: jest.fn(),
+                    notifyActionEnqueued: jest.fn(),
                 };
                 processor = {
                     processGenerator: jest.fn(),
@@ -8368,6 +8371,7 @@ describe('AuxLibrary', () => {
                     };
                     notifier = {
                         notifyChange: jest.fn(),
+                        notifyActionEnqueued: jest.fn(),
                     };
                     processor = {
                         processGenerator: jest.fn(),

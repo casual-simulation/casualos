@@ -183,6 +183,7 @@ describe('RuntimeBot', () => {
             getListener: getListenerMock,
             getSignature: getSignatureMock,
             notifyChange: notifyChangeMock,
+            notifyActionEnqueued: jest.fn(),
             updateTagMask: updateTagMaskMock,
             getTagMask: getTagMaskMock,
             getTagLink: getTagLinkMock,
