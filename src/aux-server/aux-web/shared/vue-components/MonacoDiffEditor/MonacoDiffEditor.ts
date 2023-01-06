@@ -72,6 +72,7 @@ export default class MonacoEditor extends Vue {
             minimap: {
                 enabled: false,
             },
+            diffCodeLens: true,
         });
         this._applyViewZones();
         this._watchSizeChanges();
