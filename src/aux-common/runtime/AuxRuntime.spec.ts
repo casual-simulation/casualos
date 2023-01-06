@@ -4930,6 +4930,42 @@ describe('AuxRuntime', () => {
                 ]);
             });
 
+            it('should return the list of results from each action', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test1: createBot('test1', {
+                            hello: '@os.toast("hi1")',
+                        }),
+                        test2: createBot('test2', {
+                            hello: '@os.toast("hi2")',
+                        }),
+                        test3: createBot('test3', {}),
+                    })
+                );
+                const results = runtime.process([
+                    toast('hi0'),
+                    action('hello'),
+                    toast('hi3'),
+                ]);
+
+                expect(results).toEqual([
+                    null,
+                    {
+                        results: [undefined, undefined],
+                        errors: [],
+                        actions: [toast('hi1'), toast('hi2')],
+                        listeners: expect.any(Array),
+                    },
+                    null,
+                ]);
+
+                await waitAsync();
+
+                expect(events).toEqual([
+                    [toast('hi0'), toast('hi1'), toast('hi2'), toast('hi3')],
+                ]);
+            });
+
             describe('onError', () => {
                 let actions = [] as any[];
                 let sub: SubscriptionLike;
@@ -9943,6 +9979,47 @@ describe('AuxRuntime', () => {
                         [
                             {
                                 myAction: toast(123),
+                            },
+                        ],
+                    ]);
+                });
+
+                it('should return a promise that resolves with the action results', async () => {
+                    if (type === 'interpreted') {
+                        return;
+                    }
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                test: `@let d = await os.createDebugger();
+
+                                const b = await d.create({
+                                    onShout: '@return 123;'
+                                });
+
+                                // d.onBeforeUserAction((a) => {
+                                //     action.perform({ myAction: a });
+                                // });
+
+                                const results = await d.performUserAction({
+                                    test: true
+                                }, { type: 'action', eventName: 'onShout', botIds: [b.id] });
+
+                                action.perform({ results: results });
+                                `,
+                            }),
+                        })
+                    );
+
+                    await runtime.shout('test');
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        [
+                            {
+                                results: [null, [123]],
                             },
                         ],
                     ]);

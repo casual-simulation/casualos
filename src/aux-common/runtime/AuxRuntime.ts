@@ -117,7 +117,12 @@ import {
     RuntimeStop,
     RuntimeStopState,
 } from './CompiledBot';
-import { ScriptError, ActionResult, RanOutOfEnergyError } from './AuxResults';
+import {
+    ScriptError,
+    ActionResult,
+    RanOutOfEnergyError,
+    ProcessActionResult,
+} from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import {
@@ -545,8 +550,10 @@ export class AuxRuntime
         }
 
         this._processBatch();
-        this._processCore(actions);
+        const result = this._processCore(actions);
         this._processBatch();
+
+        return result;
     }
 
     private _getExecutingDebugger() {
@@ -712,8 +719,9 @@ export class AuxRuntime
                     interpreter.agent.executionContextStack
                 );
             },
-            performUserAction(...actions: BotAction[]) {
-                runtime.process(actions);
+            async performUserAction(...actions: BotAction[]) {
+                const result = await runtime.process(actions);
+                return result.map((r) => (r ? r.results : null));
             },
             // TODO: Determine whether to support this
             // onBeforeScriptEnter: (
@@ -1039,8 +1047,34 @@ export class AuxRuntime
         });
     }
 
-    private _processCore(actions: BotAction[]): MaybeRuntimePromise<void> {
+    private _processCore(
+        actions: BotAction[]
+    ): MaybeRuntimePromise<ProcessActionResult[]> {
         const _this = this;
+        const results = [] as ProcessActionResult[];
+
+        function processAction(
+            action: BotAction,
+            addToResults: boolean
+        ): MaybeRuntimePromise<void> {
+            let promise = _this._processAction(action);
+
+            if (addToResults) {
+                if (isRuntimePromise(promise)) {
+                    return markAsRuntimePromise(
+                        promise.then((result) => {
+                            results.push(result);
+                        })
+                    );
+                } else {
+                    results.push(promise);
+                }
+                return;
+            }
+
+            return promise as unknown as MaybeRuntimePromise<void>;
+        }
+
         function handleRejection(
             action: BotAction,
             rejection: { rejected: boolean; newActions: BotAction[] }
@@ -1049,7 +1083,7 @@ export class AuxRuntime
                 null,
                 rejection.newActions,
                 (action) => {
-                    return _this._processAction(action);
+                    return processAction(action, false);
                 }
             );
             if (rejection.rejected) {
@@ -1058,14 +1092,13 @@ export class AuxRuntime
 
             if (promise) {
                 return markAsRuntimePromise(
-                    promise.then((p) => _this._processAction(action))
+                    promise.then((p) => processAction(action, true))
                 );
             } else {
-                return _this._processAction(action);
+                return processAction(action, true);
             }
         }
-
-        return processListOfMaybePromises(null, actions, (action) => {
+        let promise = processListOfMaybePromises(null, actions, (action) => {
             let rejection = this._rejectAction(action);
 
             let result: MaybeRuntimePromise<void>;
@@ -1078,9 +1111,17 @@ export class AuxRuntime
             }
             return result;
         });
+
+        if (isRuntimePromise(promise)) {
+            return markAsRuntimePromise(promise.then(() => results));
+        } else {
+            return results;
+        }
     }
 
-    private _processAction(action: BotAction): MaybeRuntimePromise<void> {
+    private _processAction(
+        action: BotAction
+    ): MaybeRuntimePromise<ProcessActionResult> {
         if (action.type === 'action') {
             const result = this._shout(
                 action.eventName,
@@ -1090,10 +1131,17 @@ export class AuxRuntime
             );
             if (isRuntimePromise(result)) {
                 return markAsRuntimePromise(
-                    result.then((result) => this._processCore(result.actions))
+                    result
+                        .then((result) => this._processCore(result.actions))
+                        .then(() => result)
                 );
             } else {
-                return this._processCore(result.actions);
+                let promise = this._processCore(result.actions);
+                if (isRuntimePromise(promise)) {
+                    return markAsRuntimePromise(promise.then(() => result));
+                } else {
+                    return result;
+                }
             }
         } else if (action.type === 'run_script') {
             const result = this._execute(action.script, false, false);
@@ -1110,6 +1158,7 @@ export class AuxRuntime
                                         false
                                     );
                                 }
+                                return null;
                             });
                         } else {
                             if (hasValue(action.taskId)) {
@@ -1124,6 +1173,7 @@ export class AuxRuntime
                                 }
                             }
                         }
+                        return null;
                     })
                 );
             } else {
@@ -1142,6 +1192,7 @@ export class AuxRuntime
                                     this._scheduleJobQueueCheck();
                                 }
                             }
+                            return null;
                         })
                     );
                 }
@@ -1159,7 +1210,12 @@ export class AuxRuntime
             }
         } else if (action.type === 'apply_state') {
             const events = breakIntoIndividualEvents(this.currentState, action);
-            return this._processCore(events);
+            const promise = this._processCore(events);
+            if (isRuntimePromise(promise)) {
+                return markAsRuntimePromise(promise.then(() => null));
+            } else {
+                return null;
+            }
         } else if (action.type === 'async_result') {
             const value =
                 action.mapBotsInResult === true
@@ -1229,11 +1285,19 @@ export class AuxRuntime
                 this._actionBatch.push(action);
             }
             if (hasValue(action.taskId)) {
-                return this._processCore([asyncResult(action.taskId, null)]);
+                const promise = this._processCore([
+                    asyncResult(action.taskId, null),
+                ]);
+                if (isRuntimePromise(promise)) {
+                    return markAsRuntimePromise(promise.then(() => null));
+                } else {
+                    return null;
+                }
             }
         } else {
             this._actionBatch.push(action);
         }
+        return null;
     }
 
     private _registerPortalBot(portalId: string, botId: string) {

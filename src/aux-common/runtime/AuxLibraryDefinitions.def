@@ -8450,9 +8450,11 @@ interface DebuggerBase {
 
     /**
      * Performs the given actions as if they were user actions.
+     * Returns a promise that resolves with an array that contains the result for each action in order.
+     * If the action was a shout action, then the results for that shout are also included.
      * @param actions The actions that should be performed.
      */
-    performUserAction(...actions: BotAction[]): void;
+    performUserAction(...actions: BotAction[]): Promise<(any[] | null)[]>;
 
     /**
      * Registers the given handler to react to when this debugger pauses by hitting a trigger.
