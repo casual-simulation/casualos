@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V3.1.19
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Improved the diff multi-line code editor to support `codeButton` form bots.
+-   Improved `os.focusOn()` to be able to navigate to systemPortal tags when the diff pane is open in the systemPortal.
+
 ## V3.1.18
 
 #### Date: 12/28/2022
