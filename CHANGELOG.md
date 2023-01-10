@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.19
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.applyUpdatesToInst()` would not sync updates to the server.
+
 ## V3.1.18
 
 #### Date: 12/28/2022
