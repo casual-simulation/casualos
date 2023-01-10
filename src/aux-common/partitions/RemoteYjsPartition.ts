@@ -120,6 +120,8 @@ export function createRemoteClientYjsPartition(
 type MapValue = Text | object | number | boolean;
 type TagsMap = Map<MapValue>;
 
+const APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN = '__apply_updates_to_inst';
+
 export class RemoteYjsPartitionImpl implements YjsPartition {
     protected _onVersionUpdated: BehaviorSubject<CurrentVersion>;
     private _onUpdates: Subject<string[]>;
@@ -488,7 +490,10 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                 } else if (event.event.type === 'apply_updates_to_inst') {
                     const action = <ApplyUpdatesToInstAction>event.event;
                     try {
-                        this._applyUpdates(action.updates.map((u) => u.update));
+                        this._applyUpdates(
+                            action.updates.map((u) => u.update),
+                            APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN
+                        );
                         this._onEvents.next([
                             asyncResult(event.taskId, null, false),
                         ]);
@@ -648,7 +653,11 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
             if (this._readOnly) {
                 return;
             }
-            if (transaction && transaction.local) {
+            if (
+                transaction &&
+                (transaction.local ||
+                    origin === APPLY_UPDATES_TO_INST_TRANSACTION_ORIGIN)
+            ) {
                 const updates = [fromByteArray(update)];
                 this._client.addUpdates(this._branch, updates);
                 this._onUpdates.next(updates);
@@ -772,12 +781,12 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         }
     }
 
-    private _applyUpdates(updates: string[]) {
+    private _applyUpdates(updates: string[], transactionOrigin?: string) {
         try {
             this._isRemoteUpdate = true;
             for (let updateBase64 of updates) {
                 const update = toByteArray(updateBase64);
-                applyUpdate(this._doc, update);
+                applyUpdate(this._doc, update, transactionOrigin);
             }
         } finally {
             this._isRemoteUpdate = false;
