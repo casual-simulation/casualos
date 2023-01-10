@@ -9,6 +9,10 @@
 -   Improved the diff multi-line code editor to support `codeButton` form bots.
 -   Improved `os.focusOn()` to be able to navigate to systemPortal tags when the diff pane is open in the systemPortal.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.applyUpdatesToInst()` would not sync updates to the server.
+
 ## V3.1.18
 
 #### Date: 12/28/2022
