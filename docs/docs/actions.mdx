@@ -4313,7 +4313,6 @@ await os.closeImageClassifier();
 
 ### `os.showInput(value?, options?)`
 
-
 Shows an input modal with the given value and options.
 When shown, the player will be able to change the value.
 
@@ -4377,7 +4376,6 @@ os.toast(date);
 
 ### `os.showInputForTag(bot, tag, options?)`
 
-
 Shows an input modal for the given bot and tag with the given options.
 When shown, the player will be able to change the value stored in the given tag.
 Triggers the <TagLink tag='@onSaveInput'/> whisper when the modal is closed with saving and the <TagLink tag='@onCloseInput'/> whisper when the modal is closed without saving.
@@ -4417,8 +4415,62 @@ os.showInputForTag(this, "color", {
 });
 ```
 
-### `os.setClipboard(text)`
+### `os.showConfirm(options)`
 
+Shows a confirmation dialog using the given options.
+Confirmation dialogs are useful for giving users the ability to quickly confirm or cancel an action.
+
+Returns a promise that resolves with `true` if the user clicked the "Confirm" button and `false` if they closed the dialog or clicked the "Cancel" button.
+
+The **first parameter** is the options that should be used. It should be an object with the following structure:
+
+```typescript
+let options: {
+    /**
+     * The title that should be shown for the dialog.
+     */
+    title: string;
+
+    /**
+     * The content of the dialog.
+     */
+    content: string;
+
+    /**
+     * The text that should be shown on the "Confirm" button.
+     */
+    confirmText?: string;
+
+    /**
+     * The text that should be shown on the "Cancel" button.
+     */
+    cancelText?: string;
+};
+```
+
+#### Examples:
+
+```typescript title='Show a confirmation dialog'
+let confirmed = await os.showConfirm({
+    title: 'Confirm',
+    content: 'Please confirm the action.'
+});
+
+os.toast('Confirmed: ' + (confirmed ? 'Yes' : 'No'));
+```
+
+```typescript title='Show a confirmation dialog with custom button text'
+let confirmed = await os.showConfirm({
+    title: 'Confirm',
+    content: 'Are you sure?',
+    confirmText: 'Yes',
+    cancelText: 'No'
+});
+
+os.toast('Confirmed: ' + (confirmed ? 'Yes' : 'No'));
+```
+
+### `os.setClipboard(text)`
 
 Copies the given text to the player's clipboard. On Chrome and Firefox, this will act like a `Ctrl+C`/`Cmd+C`. 
 On Safari and all iOS browsers this will open a popup which prompts the player to copy the text.

@@ -124,6 +124,7 @@ export type AsyncActions =
     | AsyncResultAction
     | AsyncErrorAction
     | ShowInputAction
+    | ShowConfirmAction
     | ShareAction
     | RegisterBuiltinPortalAction
     | RegisterPrefixAction
@@ -1362,6 +1363,43 @@ export interface ShowInputAction extends AsyncAction {
      * The options for the input box.
      */
     options: Partial<ShowInputOptions>;
+}
+
+/**
+ * Defines an event that is used to show a confirmation dialog.
+ */
+export interface ShowConfirmAction extends AsyncAction {
+    type: 'show_confirm';
+
+    /**
+     * The options for the confirmation dialog.
+     */
+    options: ShowConfirmOptions;
+}
+
+/**
+ * Defines an interface that represents the options that can be used for a confirmation dialog.
+ */
+export interface ShowConfirmOptions {
+    /**
+     * The title that should be shown for the dialog.
+     */
+    title: string;
+
+    /**
+     * The content of the dialog.
+     */
+    content: string;
+
+    /**
+     * The text that should be shown on the "Confirm" button.
+     */
+    confirmText?: string;
+
+    /**
+     * The text that should be shown on the "Cancel" button.
+     */
+    cancelText?: string;
 }
 
 /**
@@ -4915,6 +4953,22 @@ export function showInput(
         taskId,
         currentValue,
         options: options || {},
+    };
+}
+
+/**
+ * Creates a new ShowConfirmAction.
+ * @param options The options for the action.
+ * @param taskId The ID of the async task.
+ */
+export function showConfirm(
+    options: ShowConfirmOptions,
+    taskId?: number | string
+): ShowConfirmAction {
+    return {
+        type: 'show_confirm',
+        options,
+        taskId,
     };
 }
 

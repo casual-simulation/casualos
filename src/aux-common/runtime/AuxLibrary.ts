@@ -43,6 +43,7 @@ import {
     importAUX as calcImportAUX,
     showInputForTag as calcShowInputForTag,
     showInput as calcShowInput,
+    showConfirm as calcShowConfirm,
     replaceDragBot as calcReplaceDragBot,
     goToDimension as calcGoToDimension,
     goToURL as calcGoToURL,
@@ -313,6 +314,7 @@ import {
     TagMapper,
     detachRuntime,
     KNOWN_TAGS,
+    ShowConfirmOptions,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1732,6 +1734,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getDimensionalDepth,
                 showInputForTag,
                 showInput: makeMockableFunction(showInput, 'os.showInput'),
+                showConfirm,
                 goToDimension,
                 goToURL,
                 openURL,
@@ -3798,6 +3801,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ) {
         const task = context.createTask();
         const event = calcShowInput(currentValue, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Shows a confirmation dialog. Returns a promise that resolves with true if the "Confirm" button is clicked and false if the "Cancel" button is clicked or the dialog is closed.
+     * @param options The options that indicate how the confirmation dialog shold be customized.
+     */
+    function showConfirm(options: ShowConfirmOptions): Promise<boolean> {
+        if (!options) {
+            throw new Error(
+                'You must provide an options object for os.showConfirm()'
+            );
+        }
+        const task = context.createTask();
+        const event = calcShowConfirm(options, task.taskId);
         return addAsyncAction(task, event);
     }
 

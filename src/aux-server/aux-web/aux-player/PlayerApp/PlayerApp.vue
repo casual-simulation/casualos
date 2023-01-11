@@ -32,6 +32,7 @@
             <upload-files></upload-files>
             <checkout></checkout>
             <show-input></show-input>
+            <show-confirm></show-confirm>
 
             <md-dialog :md-active.sync="showQRCode" md-theme="default" class="qr-code-dialog">
                 <div class="qr-code-container">

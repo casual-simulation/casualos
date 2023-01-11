@@ -273,6 +273,7 @@ declare type AsyncActions =
     | AsyncResultAction
     | AsyncErrorAction
     | ShowInputAction
+    | ShowConfirmAction
     | ShareAction
     | CreateCertificateAction
     | SignTagAction
@@ -1416,6 +1417,43 @@ declare type ShowInputType = 'text' | 'color' | 'secret' | 'date';
  * Defines the possible input types.
  */
 declare type ShowInputSubtype = 'basic' | 'swatch' | 'advanced';
+
+/**
+ * Defines an event that is used to show a confirmation dialog.
+ */
+declare interface ShowConfirmAction extends AsyncAction {
+    type: 'show_confirm';
+
+    /**
+     * The options for the confirmation dialog.
+     */
+    options: ShowConfirmOptions;
+}
+
+/**
+ * Defines an interface that represents the options that can be used for a confirmation dialog.
+ */
+declare interface ShowConfirmOptions {
+    /**
+     * The title that should be shown for the dialog.
+     */
+    title: string;
+
+    /**
+     * The content of the dialog.
+     */
+    content: string;
+
+    /**
+     * The text that should be shown on the "Confirm" button.
+     */
+    confirmText?: string;
+
+    /**
+     * The text that should be shown on the "Cancel" button.
+     */
+    cancelText?: string;
+}
 
 /**
  * Defines an event for actions.
@@ -10236,6 +10274,12 @@ interface Os {
         currentValue?: any,
         options?: Partial<ShowInputOptions>
     ) => Promise<string>>;
+
+    /**
+     * Shows a confirmation dialog. Returns a promise that resolves with true if the "Confirm" button is clicked and false if the "Cancel" button is clicked or the dialog is closed.
+     * @param options The options that indicate how the confirmation dialog shold be customized.
+     */
+    showConfirm(options: ShowConfirmOptions): Promise<boolean>;
 
     /**
      * Shows a checkout screen that lets the user purchase something.

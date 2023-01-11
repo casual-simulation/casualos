@@ -213,6 +213,7 @@ import {
     attachRuntime,
     detachRuntime,
     KNOWN_TAGS,
+    showConfirm,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -4111,6 +4112,34 @@ describe('AuxLibrary', () => {
 
                     expect(result).toEqual('mocked');
                 });
+            });
+        });
+
+        describe('os.showConfirm()', () => {
+            it('should emit a ShowConfirmAction', () => {
+                const promise: any = library.api.os.showConfirm({
+                    title: 'Confirm your choice',
+                    content: 'Are you sure?',
+                    confirmText: 'Yes',
+                    cancelText: 'No',
+                });
+                const expected = showConfirm(
+                    {
+                        title: 'Confirm your choice',
+                        content: 'Are you sure?',
+                        confirmText: 'Yes',
+                        cancelText: 'No',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if not given an options object', () => {
+                expect(() => {
+                    (library.api.os.showConfirm as any)();
+                }).toThrowError();
             });
         });
 
