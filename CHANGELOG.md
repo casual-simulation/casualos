@@ -10,6 +10,14 @@
 -   Improved `os.focusOn()` to be able to navigate to systemPortal tags when the diff pane is open in the systemPortal.
 -   Added the `debug.onScriptActionEnqueued(handler)`, `debug.onAfterScriptUpdatedTag(handler)`, `debug.onAfterScriptUpdatedTagMask(handler)`, `debug.onBeforeUserAction(handler)`, `debug.performUserAction(...actions)`, and `debug.getCallStack()` functions for debuggers.
     -   See the documentation for more information and examples.
+-   Added the `os.showConfirm(options)` function.
+    -   When called, it displays a confirmation dialog that gives the user the ability to indicate whether they want something confirmed or canceled.
+    -   Returns a promise that resolves with `true` if the user clicked the "Confirm" button and `false` if they closed the dialog or clicked the "Cancel" button.
+    -   `options` should be an object with the following properties:
+        -   `title` - The title that should be shown on the dialog.
+        -   `content` - The descriptive content that should be shown in the dialog.
+        -   `confirmText` - The text that should be shown for the "Confirm" button. (Optional)
+        -   `cancelText` - The text that should be shown for the "Cancel" button. (Optional)
 
 ### :bug: Bug Fixes
 
