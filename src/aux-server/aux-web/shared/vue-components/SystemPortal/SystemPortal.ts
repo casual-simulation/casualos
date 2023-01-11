@@ -744,6 +744,11 @@ export default class SystemPortal extends Vue {
             [SYSTEM_PORTAL_BOT]: createBotLink([botId]),
             [SYSTEM_PORTAL_TAG]: tag,
             [SYSTEM_PORTAL_TAG_SPACE]: space ?? null,
+            [SYSTEM_PORTAL_PANE]: 'bots',
+            [SYSTEM_PORTAL_DIFF]: null,
+            [SYSTEM_PORTAL_DIFF_BOT]: null,
+            [SYSTEM_PORTAL_DIFF_TAG]: null,
+            [SYSTEM_PORTAL_DIFF_TAG_SPACE]: null,
         };
         this._setTagSelection(botId, tag, space, startIndex, endIndex);
 
@@ -754,6 +759,16 @@ export default class SystemPortal extends Vue {
                 sim.helper.userBot.tags[SYSTEM_PORTAL_TAG] ||
             tags[SYSTEM_PORTAL_TAG_SPACE] !=
                 sim.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE] ||
+            tags[SYSTEM_PORTAL_PANE] !=
+                sim.helper.userBot.tags[SYSTEM_PORTAL_PANE] ||
+            tags[SYSTEM_PORTAL_DIFF] !=
+                sim.helper.userBot.tags[SYSTEM_PORTAL_DIFF] ||
+            tags[SYSTEM_PORTAL_DIFF_BOT] !=
+                sim.helper.userBot.tags[SYSTEM_PORTAL_DIFF_BOT] ||
+            tags[SYSTEM_PORTAL_DIFF_TAG] !=
+                sim.helper.userBot.tags[SYSTEM_PORTAL_DIFF_TAG] ||
+            tags[SYSTEM_PORTAL_DIFF_TAG_SPACE] !=
+                sim.helper.userBot.tags[SYSTEM_PORTAL_DIFF_TAG_SPACE] ||
             (forceOpen && !this.hasPortal)
         ) {
             if (!this.hasPortal) {

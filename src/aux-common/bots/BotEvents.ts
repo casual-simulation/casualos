@@ -4391,6 +4391,85 @@ export interface DetachRuntimeAction extends AsyncAction {
     uncopiable: true;
 }
 
+/**
+ * Defines an interface for a debugger trace that represents when a tag was updated.
+ */
+export interface DebuggerTagUpdate {
+    /**
+     * The ID of the bot that was updated.
+     */
+    botId: string;
+
+    /**
+     * The tag that was updated.
+     */
+    tag: string;
+
+    /**
+     * The old value of the tag.
+     */
+    oldValue: any;
+
+    /**
+     * The new value for the tag.
+     */
+    newValue: any;
+}
+
+/**
+ * Defines an interface for a debugger trace that represents when a tag mask was updated.
+ */
+export interface DebuggerTagMaskUpdate extends DebuggerTagUpdate {
+    /**
+     * The space of the tag mask.
+     */
+    space: string;
+}
+
+/**
+ * Defines an interface for a debugger trace that is sent right before when the debugger starts executing a script.
+ */
+export interface DebuggerScriptEnterTrace {
+    /**
+     * The ID of the bot that the debugger started executing.
+     */
+    botId: string;
+
+    /**
+     * The tag of the bot that the debugger started executing.
+     */
+    tag: string;
+
+    /**
+     * The type of entry into the script.
+     * - "call" means that the script was started by a function call.
+     * - "task" means that execution in the script was started by the resumption of a task (setTimeout(), setInterval(), async/await, etc).
+     */
+    enterType: 'call' | 'task';
+}
+
+/**
+ * Defines an interface for a debugger trace that is sent right after when the debugger stops executing a script.
+ */
+export interface DebuggerScriptExitTrace {
+    /**
+     * The ID of the bot.
+     */
+    botId: string;
+
+    /**
+     * The ID of the tag that the debugger stopped executing.
+     */
+    tag: string;
+
+    /**
+     * The type of exit from the script.
+     * - "return" means the script stopped because it returned a value.
+     * - "throw" means the script stopped because it
+     */
+    exitType: 'return' | 'throw';
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.

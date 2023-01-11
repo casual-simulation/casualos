@@ -43,6 +43,7 @@ import {
     getOriginalObject,
     GET_TAG_MASKS_SYMBOL,
     RuntimeBotLinks,
+    BotAction,
 } from '../bots';
 import { REPLACE_BOT_SYMBOL } from '../bots/Bot';
 import {
@@ -969,6 +970,11 @@ export interface RuntimeBatcher {
      * a handler to grab the changes and apply them.
      */
     notifyChange(): void;
+
+    /**
+     * Notifies the batcher of an action that was added.
+     */
+    notifyActionEnqueued(action: BotAction): void;
 }
 
 /**

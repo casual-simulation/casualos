@@ -59,6 +59,7 @@ import {
     InterpreterAfterStop,
     InterpreterStop,
     InterpreterContinuation,
+    InterpreterBeforeStop,
 } from './Interpreter';
 import {
     getInterpreterObject,
@@ -450,6 +451,26 @@ describe('Interpreter', () => {
             expect(error).toBeInstanceOf(Error);
             expect(error.message).toBe('my error');
             expect(error.stack).toMatchSnapshot();
+        });
+
+        it('should set the surrounding agent when calling the function', () => {
+            const other = new Interpreter();
+
+            expect(surroundingAgent !== interpreter.agent).toBe(true);
+
+            const func = interpreter.createFunction(
+                'myFunc',
+                'return a + b;',
+                'a',
+                'b'
+            );
+
+            const gen = interpreter.callFunction(func, 1, 2);
+            expect(surroundingAgent === interpreter.agent).toBe(true);
+
+            const result = unwind(gen);
+
+            expect(result).toBe(3);
         });
     });
 
@@ -914,6 +935,51 @@ describe('Interpreter', () => {
             expect(result).toBe(3);
             expect(states.length).toBe(0);
         });
+
+        it('should set the surrounding agent when resuming a breakpoint', async () => {
+            const func = interpreter.createFunction(
+                'myFunc',
+                'console.log(a + b)',
+                'a',
+                'b'
+            );
+
+            let breakpoint: Breakpoint = {
+                id: 'breakpoint-id',
+                func,
+                lineNumber: 2,
+                columnNumber: 13,
+                states: ['before'],
+            };
+            interpreter.setBreakpoint(breakpoint);
+
+            const gen = interpreter.callFunction(func, 1, 2);
+
+            const otherInterpreter = new Interpreter();
+
+            expect(surroundingAgent !== interpreter.agent).toBe(true);
+
+            const first = gen.next();
+
+            expect(surroundingAgent === interpreter.agent).toBe(true);
+
+            expect(first.done).toBe(false);
+            const state = first.value as InterpreterBeforeStop;
+            const code = (func.func as any).ECMAScriptCode
+                .FunctionStatementList[0].Expression.Arguments[0];
+
+            const second = gen.next();
+
+            expect(second.done).toBe(true);
+            expect(second.value).toBeUndefined();
+
+            expect(state.state).toBe('before');
+            expect(state.node === code).toBe(true);
+            expect(state.breakpoint === breakpoint).toBe(true);
+            expect(state.stack.length).toBe(
+                interpreter.agent.executionContextStack.length + 1
+            );
+        });
     });
 
     describe('removeBreakpointById()', () => {
@@ -1203,6 +1269,19 @@ describe('Interpreter', () => {
                 expect(locations).toEqual(expected);
             }
         );
+    });
+
+    describe('runJobQueue()', () => {
+        it('should set the surrounding agent to the interpreters agent', () => {
+            const other = new Interpreter();
+
+            expect(surroundingAgent !== interpreter.agent).toBe(true);
+
+            const gen = interpreter.runJobQueue();
+
+            expect(surroundingAgent === interpreter.agent).toBe(true);
+            expect(surroundingAgent !== other.agent).toBe(true);
+        });
     });
 
     const primitiveCases = [

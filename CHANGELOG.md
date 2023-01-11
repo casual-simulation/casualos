@@ -4,6 +4,13 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Improved the diff multi-line code editor to support `codeButton` form bots.
+-   Improved `os.focusOn()` to be able to navigate to systemPortal tags when the diff pane is open in the systemPortal.
+-   Added the `debug.onScriptActionEnqueued(handler)`, `debug.onAfterScriptUpdatedTag(handler)`, `debug.onAfterScriptUpdatedTagMask(handler)`, `debug.onBeforeUserAction(handler)`, `debug.performUserAction(...actions)`, and `debug.getCallStack()` functions for debuggers.
+    -   See the documentation for more information and examples.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `os.applyUpdatesToInst()` would not sync updates to the server.

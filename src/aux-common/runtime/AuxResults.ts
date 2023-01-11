@@ -88,3 +88,5 @@ export interface ActionResult {
      */
     listeners: Bot[];
 }
+
+export type ProcessActionResult = ActionResult | null;

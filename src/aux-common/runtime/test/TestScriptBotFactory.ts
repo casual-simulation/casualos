@@ -8,6 +8,7 @@ import {
     TAG_MASK_SPACE_PRIORITIES,
     RuntimeBot,
     hasValue,
+    BotAction,
 } from '../../bots';
 import {
     createRuntimeBot,
@@ -92,6 +93,7 @@ export const testScriptBotInterface: RuntimeBotInterface = {
         }
     },
     notifyChange() {},
+    notifyActionEnqueued(action: BotAction) {},
     getTagMask(bot: CompiledBot, tag: string): any {
         if (!bot.masks) {
             return undefined;
