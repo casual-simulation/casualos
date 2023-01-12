@@ -394,11 +394,7 @@ export default class SystemPortal extends Vue {
                             typeof value === 'string' ? value : '';
                     }
                     if (!this.isFocusingTagsSearch) {
-                        const value = calculateBotValue(
-                            null,
-                            bot,
-                            SYSTEM_PORTAL_SEARCH
-                        );
+                        const value = getBotTag(bot, SYSTEM_PORTAL_SEARCH);
                         this.searchTagsValue =
                             typeof value === 'string' ? value : '';
                     }
