@@ -166,6 +166,7 @@ export default class SystemPortal extends Vue {
     sheetPortalValue: string = '';
 
     private _focusEditorOnSelectionUpdate: boolean = false;
+    private _focusSearchInputAfterPanelUpdate: boolean = false;
     private _tagSelectionEvents: Map<
         string,
         {
@@ -346,6 +347,12 @@ export default class SystemPortal extends Vue {
             appManager.systemPortal.onSystemPortalPaneUpdated.subscribe(
                 (pane) => {
                     this.selectedPane = pane ?? 'bots';
+                    if (this._focusSearchInputAfterPanelUpdate) {
+                        this._focusSearchInputAfterPanelUpdate = false;
+                        if (this.selectedPane === 'search') {
+                            this._focusSearchInput();
+                        }
+                    }
                 }
             )
         );
@@ -490,11 +497,17 @@ export default class SystemPortal extends Vue {
     showSearch() {
         this._selectPane('search');
         this._closeSheetPortal();
+        this._focusSearchInputAfterPanelUpdate = true;
+        this._focusSearchInput();
+    }
+
+    private _focusSearchInput() {
         this.$nextTick(() => {
             const input = this.getSearchTagsInput();
             if (input) {
                 input.focus();
                 input.setSelectionRange(0, input.value.length);
+                this._focusSearchInputAfterPanelUpdate = false;
             }
         });
     }
