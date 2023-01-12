@@ -9,7 +9,27 @@ export interface StoredAuxVersion1 {
 
 export interface StoredAuxVersion2 {
     version: 2;
-    update: void;
+    update: InstUpdate;
+}
+
+/**
+ * Defines an interface that represents an update that has been applied to an inst.
+ */
+export interface InstUpdate {
+    /**
+     * The ID of the update.
+     */
+    id: number;
+
+    /**
+     * The update content.
+     */
+    update: string;
+
+    /**
+     * The time that the update occurred at.
+     */
+    timestamp: number;
 }
 
 /**

@@ -26,6 +26,7 @@ import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
 import type { RecordFileFailure } from '@casual-simulation/aux-records';
 import { AuxRuntime } from '../runtime/AuxRuntime';
+import { InstUpdate } from './StoredAux';
 
 /**
  * Defines a symbol that can be used to signal to the runtime that the action should not be mapped for bots.
@@ -1256,26 +1257,6 @@ export interface GetRemotesAction extends Action {
  */
 export interface ListInstUpdatesAction extends Action {
     type: 'list_inst_updates';
-}
-
-/**
- * Defines an interface that represents an update that has been applied to an inst.
- */
-export interface InstUpdate {
-    /**
-     * The ID of the update.
-     */
-    id: number;
-
-    /**
-     * The update content.
-     */
-    update: string;
-
-    /**
-     * The time that the update occurred at.
-     */
-    timestamp: number;
 }
 
 /**

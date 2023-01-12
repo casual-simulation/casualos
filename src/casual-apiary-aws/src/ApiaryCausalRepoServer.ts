@@ -5,9 +5,9 @@ import {
     createBot,
     isBot,
     ON_WEBHOOK_ACTION_NAME,
+    StoredAux,
 } from '@casual-simulation/aux-common/bots';
 import { YjsPartitionImpl } from '@casual-simulation/aux-common/partitions';
-import { StoredAux } from '@casual-simulation/aux-vm';
 import {
     applyEvents,
     auxTree,

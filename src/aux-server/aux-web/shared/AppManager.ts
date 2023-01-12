@@ -11,14 +11,14 @@ import {
     hasValue,
     KNOWN_PORTALS,
     normalizeAUXBotURL,
+    StoredAux,
+    getBotsStateFromStoredAux,
 } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
 import { WebConfig } from '../../shared/WebConfig';
 import {
     SimulationManager,
     AuxUser,
-    StoredAux,
-    getBotsStateFromStoredAux,
     AuxConfig,
     parseVersionNumber,
 } from '@casual-simulation/aux-vm';

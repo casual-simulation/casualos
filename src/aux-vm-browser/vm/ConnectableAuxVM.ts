@@ -3,13 +3,13 @@ import {
     LocalActions,
     RuntimeStateVersion,
     StateUpdatedEvent,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 import {
     AuxVM,
     AuxChannel,
     AuxChannelErrorType,
     AuxUser,
-    StoredAux,
     ChannelActionResult,
 } from '@casual-simulation/aux-vm';
 import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';

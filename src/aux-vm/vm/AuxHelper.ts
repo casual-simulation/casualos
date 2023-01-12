@@ -33,6 +33,8 @@ import {
     BotTagMasks,
     isBot,
     RanOutOfEnergyError,
+    StoredAux,
+    getBotsStateFromStoredAux,
 } from '@casual-simulation/aux-common';
 import {
     RemoteAction,
@@ -44,7 +46,6 @@ import { Subject } from 'rxjs';
 import { union, sortBy, pick, transform } from 'lodash';
 import { BaseHelper } from '../managers/BaseHelper';
 import { AuxUser } from '../AuxUser';
-import { StoredAux, getBotsStateFromStoredAux } from '../StoredAux';
 import { CompiledBot } from '@casual-simulation/aux-common/runtime/CompiledBot';
 import { concatMap, tap } from 'rxjs/operators';
 

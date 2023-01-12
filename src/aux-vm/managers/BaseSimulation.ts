@@ -5,6 +5,7 @@ import {
     BotIndex,
     AuxPartitionConfig,
     LocalActions,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject, SubscriptionLike } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
@@ -25,7 +26,6 @@ import {
 import { ProgressStatus, DeviceInfo } from '@casual-simulation/causal-trees';
 import { Simulation } from './Simulation';
 import { CodeLanguageManager } from './CodeLanguageManager';
-import { StoredAux } from '../StoredAux';
 import { BotDimensionManager } from './BotDimensionManager';
 
 /**
