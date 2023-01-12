@@ -20,7 +20,6 @@ import {
     BOOTSTRAP_PARTITION_ID,
     getTagValueForSpace,
     getUpdateForTagAndSpace,
-    getBotsStateFromStoredAux,
 } from '@casual-simulation/aux-common';
 
 import {

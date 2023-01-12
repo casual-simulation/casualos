@@ -6,6 +6,7 @@ import { downloadAuxState, readFileText } from './DownloadHelpers';
 import {
     ProgressMessage,
     remapProgressPercent,
+    remote,
 } from '@casual-simulation/causal-trees';
 import {
     hasValue,
@@ -13,6 +14,8 @@ import {
     normalizeAUXBotURL,
     StoredAux,
     getBotsStateFromStoredAux,
+    applyUpdatesToInst,
+    isStoredVersion2,
 } from '@casual-simulation/aux-common';
 import { v4 as uuid } from 'uuid';
 import { WebConfig } from '../../shared/WebConfig';
@@ -33,6 +36,7 @@ import bootstrap from './ab1/ab-1.bootstrap.json';
 import { registerSW } from 'virtual:pwa-register';
 import { openIDB, getItem, getItems, putItem, deleteItem } from './IDB';
 import { merge } from 'lodash';
+import { addStoredAuxV2ToSimulation } from './SharedUtils';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -226,8 +230,15 @@ export class AppManager {
     async uploadState(file: File): Promise<void> {
         const json = await readFileText(file);
         const stored: StoredAux = JSON.parse(json);
-        const value = getBotsStateFromStoredAux(stored);
-        await this.simulationManager.primary.helper.addState(value);
+        if (isStoredVersion2(stored)) {
+            await addStoredAuxV2ToSimulation(
+                this.simulationManager.primary,
+                stored
+            );
+        } else {
+            const value = getBotsStateFromStoredAux(stored);
+            await this.simulationManager.primary.helper.addState(value);
+        }
     }
 
     /**

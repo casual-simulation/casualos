@@ -5,7 +5,7 @@ import {
     hasValue,
     RemoteCausalRepoProtocol,
     SharedPartitionsVersion,
-    StoredAux,
+    StoredAuxVersion1,
 } from '@casual-simulation/aux-common';
 
 /**
@@ -24,7 +24,7 @@ export interface AuxConfigParameters {
     version: string;
     versionHash: string;
     builder?: string;
-    bootstrapState?: StoredAux;
+    bootstrapState?: StoredAuxVersion1;
     device?: AuxDevice;
 
     /**

@@ -315,6 +315,8 @@ import {
     detachRuntime,
     KNOWN_TAGS,
     ShowConfirmOptions,
+    isStoredVersion2,
+    StoredAux,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -404,6 +406,7 @@ import {
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
 import { INTERPRETABLE_FUNCTION } from './AuxCompiler';
 import type { AuxRuntime } from './AuxRuntime';
+import { constructInitializationUpdate } from 'partitions/PartitionUtils';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -3394,7 +3397,39 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             state[bot.id] = bot;
         }
 
-        let data = JSON.stringify(getDownloadState(state));
+        let data = JSON.stringify(getVersion1DownloadState(state));
+        if (isPdf(filename)) {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(data);
+            const base64 = fromByteArray(bytes);
+            data = embedBase64InPdf(base64);
+        }
+
+        const downloadedFilename = formatAuxFilename(filename);
+
+        return addAction(
+            download(
+                data,
+                downloadedFilename,
+                mime.getType(downloadedFilename) || 'application/json'
+            )
+        );
+    }
+
+    /**
+     * Downloads the given list of bots.
+     * @param bots The bots that should be downloaded.
+     * @param filename The name of the file that the bots should be downloaded as.
+     */
+    function downloadBotsAsInitialzationUpdate(
+        bots: Bot[],
+        filename: string
+    ): DownloadAction {
+        const update = constructInitializationUpdate(
+            calcCreateInitalizationUpdate(bots)
+        );
+
+        let data = JSON.stringify(getVersion2DownloadState(update));
         if (isPdf(filename)) {
             const encoder = new TextEncoder();
             const bytes = encoder.encode(data);
@@ -3560,15 +3595,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function importAUX(urlOrJSON: string): ImportAUXAction | ApplyStateAction {
         try {
-            const bots = parseBotsFromData(urlOrJSON);
-            if (bots) {
-                let state: BotsState = {};
-                for (let bot of bots) {
-                    state[bot.id] = bot;
+            const aux = parseStoredAuxFromData(urlOrJSON);
+            if (aux) {
+                if (isStoredVersion2(aux)) {
+                    applyUpdatesToInst([aux.update]);
+                } else {
+                    const state = getUploadState(aux);
+                    if (state) {
+                        const event = addState(state);
+                        return addAction(event);
+                    }
                 }
-                const uploaded = getUploadState(state);
-                const event = addState(uploaded);
-                return addAction(event);
             }
         } catch {}
         const event = calcImportAUX(urlOrJSON);
@@ -3624,6 +3661,49 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return bots;
+    }
+
+    /**
+     * Parses the given JSON or PDF data and returns the list of bots that were contained in it.
+     * @param jsonOrPdf The JSON or PDF data to parse.
+     */
+    function parseStoredAuxFromData(
+        jsonOrPdf: string | ArrayBuffer
+    ): StoredAux {
+        let data: any;
+
+        if (typeof jsonOrPdf === 'string') {
+            try {
+                data = JSON.parse(jsonOrPdf);
+            } catch (e) {
+                try {
+                    data = getEmbeddedBase64FromPdf(jsonOrPdf);
+                    const bytes = toByteArray(data);
+                    const decoder = new TextDecoder();
+                    const text = decoder.decode(bytes);
+                    data = JSON.parse(text);
+                } catch (err) {
+                    data = null;
+                }
+            }
+        } else {
+            try {
+                const str = new TextDecoder().decode(jsonOrPdf);
+                data = getEmbeddedBase64FromPdf(str);
+                const bytes = toByteArray(data);
+                const decoder = new TextDecoder();
+                const text = decoder.decode(bytes);
+                data = JSON.parse(text);
+            } catch (err) {
+                data = null;
+            }
+        }
+
+        if (!hasValue(data)) {
+            return null;
+        }
+
+        return data;
     }
 
     /**
@@ -9090,13 +9170,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return promise;
     }
 
-    function getDownloadState(state: BotsState): {
+    function getVersion1DownloadState(state: BotsState): {
         version: number;
         state: BotsState;
     } {
         return {
             version: 1,
             state,
+        };
+    }
+
+    function getVersion2DownloadState(update: InstUpdate): {
+        version: number;
+        update: InstUpdate;
+    } {
+        return {
+            version: 2,
+            update,
         };
     }
 
