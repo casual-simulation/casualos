@@ -7,6 +7,11 @@
         v-on:keyup.stop
     >
         <hotkey :keys="['ctrl', 'shift', 'f']" @triggered="showSearch()" />
+        <hotkey
+            v-if="selectedPane !== 'sheet'"
+            :keys="['ctrl', 'p']"
+            @triggered="showQuickAccess()"
+        />
         <md-card ref="card" class="portal-card">
             <md-card-content>
                 <div class="panes">

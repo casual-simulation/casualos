@@ -165,6 +165,7 @@ export default class SystemPortal extends Vue {
     isSettingSheetPortal: boolean = false;
     sheetPortalValue: string = '';
 
+    private _showQuickAccessAfterModelLoad: boolean = false;
     private _focusEditorOnSelectionUpdate: boolean = false;
     private _focusSearchInputAfterPanelUpdate: boolean = false;
     private _tagSelectionEvents: Map<
@@ -500,6 +501,51 @@ export default class SystemPortal extends Vue {
         this._focusSearchInput();
     }
 
+    showQuickAccess() {
+        if (!this._runQuickAccessAction()) {
+            if (!this.selectedBot) {
+                const items = appManager.systemPortal.items;
+                if (items.hasPortal && items.items.length > 0) {
+                    const firstArea = items.items.find(
+                        (a) => a.areas.length > 0 && a.areas[0].bots.length > 0
+                    );
+                    if (firstArea) {
+                        const sim =
+                            appManager.simulationManager.simulations.get(
+                                firstArea.simulationId
+                            );
+                        const bot = firstArea.areas[0].bots[0];
+                        if (sim && bot) {
+                            this._showQuickAccessAfterModelLoad = true;
+                            this.selectBotAndTag(
+                                sim,
+                                bot.bot.id,
+                                'system',
+                                null
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private _runQuickAccessAction() {
+        const editor = <TagValueEditor>this.$refs.multilineEditor;
+        const monacoEditor = editor?.monacoEditor()?.editor;
+        if (monacoEditor) {
+            monacoEditor.focus();
+            setTimeout(() => {
+                const action = monacoEditor.getAction(
+                    'editor.action.quickOutline2'
+                );
+                action.run();
+            }, 100);
+            return true;
+        }
+        return false;
+    }
+
     private _saveSelectedTextForSearch() {
         const el = document.activeElement;
         if (
@@ -826,6 +872,11 @@ export default class SystemPortal extends Vue {
                     action.selectionStart,
                     action.selectionEnd
                 );
+            }
+
+            if (this._showQuickAccessAfterModelLoad) {
+                this._showQuickAccessAfterModelLoad = false;
+                this._runQuickAccessAction();
             }
         }
     }
