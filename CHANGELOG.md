@@ -20,6 +20,8 @@
         -   `cancelText` - The text that should be shown for the "Cancel" button. (Optional)
 -   Improved the systemPortal to always focus and select the search box when using `Ctrl+Shift+F`/`Cmd+Shift+F`.
     -   It will also grab the currently selected text and auto-fill that into the search box.
+-   Improved the systemPortal to preserve the last selected location in a tag when using `os.focusOn()` without line/index information or when using the quick access panel (`Ctrl+P`).
+-   Improved the systemPortal to be able to show the quick access panel (`Ctrl+P`) even if the multi-line editor is not focused.
 
 ### :bug: Bug Fixes
 
