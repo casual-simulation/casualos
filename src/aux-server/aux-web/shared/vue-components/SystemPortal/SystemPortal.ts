@@ -493,8 +493,25 @@ export default class SystemPortal extends Vue {
     showSearch() {
         this._selectPane('search');
         this._closeSheetPortal();
+        this._saveSelectedTextForSearch();
         this._focusSearchInputAfterPanelUpdate = true;
         this._focusSearchInput();
+    }
+
+    private _saveSelectedTextForSearch() {
+        const el = document.activeElement;
+        if (
+            el &&
+            (el instanceof HTMLInputElement ||
+                el instanceof HTMLTextAreaElement)
+        ) {
+            const text = el.value
+                .substring(el.selectionStart ?? 0, el.selectionEnd ?? 0)
+                .trim();
+            if (hasValue(text)) {
+                this._updateSearchValue(text);
+            }
+        }
     }
 
     private _focusSearchInput() {
@@ -585,6 +602,10 @@ export default class SystemPortal extends Vue {
 
     updateSearch(event: InputEvent) {
         const value = (event.target as HTMLInputElement).value;
+        this._updateSearchValue(value);
+    }
+
+    private _updateSearchValue(value: string) {
         this.searchTagsValue = value;
 
         const sim = appManager.simulationManager.primary;
