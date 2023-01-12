@@ -95,7 +95,7 @@ Vue.use(MdBadge);
 Vue.use(MdDialogPrompt);
 Vue.use(MdDatepicker);
 Vue.use(VueShortkey, {
-    prevent: ['input', 'textarea'],
+    prevent: ['input.no-shortcuts', 'textarea.no-shortcuts'],
 });
 Vue.use(VueClipboard);
 Vue.use(MdImmediateInput);
