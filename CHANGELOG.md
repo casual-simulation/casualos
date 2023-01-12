@@ -18,10 +18,13 @@
         -   `content` - The descriptive content that should be shown in the dialog.
         -   `confirmText` - The text that should be shown for the "Confirm" button. (Optional)
         -   `cancelText` - The text that should be shown for the "Cancel" button. (Optional)
+-   Improved the systemPortal to always focus and select the search box when using `Ctrl+Shift+F`/`Cmd+Shift+F`.
+    -   It will also grab the currently selected text and auto-fill that into the search box.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `os.applyUpdatesToInst()` would not sync updates to the server.
+-   Fixed an issue where strings that can be converted to primitive values search box would not appear if `systemPortalSearch` was set via a script.
 
 ## V3.1.18
 
