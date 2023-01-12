@@ -32,12 +32,12 @@ export default class ClipboardModal extends Vue {
 
         this._sub.add(
             appManager.simulationManager.simulationAdded
-                .pipe(tap(sim => this._simulationAdded(sim)))
+                .pipe(tap((sim) => this._simulationAdded(sim)))
                 .subscribe()
         );
         this._sub.add(
             appManager.simulationManager.simulationRemoved
-                .pipe(tap(sim => this._simulationRemoved(sim)))
+                .pipe(tap((sim) => this._simulationRemoved(sim)))
                 .subscribe()
         );
     }
@@ -56,7 +56,13 @@ export default class ClipboardModal extends Vue {
         this.closeDialog();
     }
 
-    async onPaste() {
+    async onPaste(e: KeyboardEvent) {
+        if (e.target instanceof HTMLElement) {
+            if (e.target.matches('input') || e.target.matches('textarea')) {
+                return;
+            }
+        }
+
         const text = await readTextFromClipboard();
         if (text) {
             for (let [id, sim] of appManager.simulationManager.simulations) {
@@ -70,7 +76,7 @@ export default class ClipboardModal extends Vue {
         this._sub.add(sub);
 
         sub.add(
-            sim.localEvents.subscribe(async e => {
+            sim.localEvents.subscribe(async (e) => {
                 if (e.type === 'set_clipboard') {
                     try {
                         await writeTextToClipboard(e.text);

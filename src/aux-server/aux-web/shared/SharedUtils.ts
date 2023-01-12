@@ -49,13 +49,6 @@ export function getOptionalValue(obj: any, defaultValue: any): any {
 }
 
 /**
- * Determines if the current device is a Mac.
- */
-export function isMac(): boolean {
-    return /(Mac)/i.test(navigator.platform);
-}
-
-/**
  * Copies the given list of bots as an AUX to the user's clipboard.
  * @param bots The bots to copy.
  */

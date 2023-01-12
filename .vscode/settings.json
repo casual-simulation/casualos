@@ -62,6 +62,9 @@
         "src/timesync/**/*.d.ts": {
             "when": "$(basename).ts"
         },
+        "src/vue-shortkey/**/*.d.ts": {
+            "when": "$(basename).ts"
+        },
         // "src/js-interpreter/**/*.d.ts": {
         //     "when": "$(basename).ts"
         // },

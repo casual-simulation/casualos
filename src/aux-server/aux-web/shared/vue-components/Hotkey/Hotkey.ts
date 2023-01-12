@@ -1,22 +1,24 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
-import { isMac } from '../../SharedUtils';
 
 @Component({
     components: {},
 })
 export default class Hotkey extends Vue {
     @Prop() keys: string[];
+    @Prop({ default: false }) prevent: boolean;
+    @Prop({ default: false }) stop: boolean;
 
     get realKeys(): string[] {
-        if (isMac()) {
-            return this.keys.map(k => (k === 'ctrl' ? 'meta' : k));
-        }
+        // if (isMac()) {
+        //     return this.keys.map(k => (k === 'ctrl' ? 'meta' : k));
+        // }
         return this.keys;
     }
 
-    trigger() {
+    trigger(e: any) {
+        console.log('hotkey', e);
         this.$emit('triggered');
     }
 

@@ -67,7 +67,7 @@ import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import BotTag from '../BotTag/BotTag';
 import { debounce, mapValues, unionBy, uniq } from 'lodash';
 import { onMonacoLoaded } from '../../MonacoAsync';
-import Hotkey from '../Hotkey/Hotkey';
+// import Hotkey from '../Hotkey/Hotkey';
 import { onFocusSearch } from './SystemPortalHelpers';
 import MiniBot from '../MiniBot/MiniBot';
 import {
@@ -101,7 +101,7 @@ import { Simulation, SimulationManager } from '@casual-simulation/aux-vm';
         'tag-diff-editor': MonacoTagDiffEditor,
         'bot-tag': BotTag,
         'bot-id': BotID,
-        hotkey: Hotkey,
+        // hotkey: Hotkey,
         'mini-bot': MiniBot,
         'system-portal-tag': SystemPortalTag,
         'system-portal-diff-tag': SystemPortalDiffTag,
