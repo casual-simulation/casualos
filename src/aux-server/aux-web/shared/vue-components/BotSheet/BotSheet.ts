@@ -243,7 +243,7 @@ export default class BotSheet extends Vue {
                                     e.startIndex ?? 0,
                                     e.endIndex ?? e.startIndex ?? 0
                                 );
-                            } else {
+                            } else if (hasValue(e.lineNumber)) {
                                 table.selectBotAndTagByLineNumber(
                                     sim,
                                     e.botId,
@@ -251,6 +251,13 @@ export default class BotSheet extends Vue {
                                     e.space,
                                     e.lineNumber ?? 1,
                                     e.columnNumber ?? 1
+                                );
+                            } else {
+                                table.selectBotAndTag(
+                                    sim,
+                                    e.botId,
+                                    e.tag,
+                                    e.space
                                 );
                             }
                         } else {

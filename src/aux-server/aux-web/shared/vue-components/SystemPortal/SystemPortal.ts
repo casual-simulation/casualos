@@ -434,7 +434,7 @@ export default class SystemPortal extends Vue {
                             e.startIndex ?? 0,
                             e.endIndex ?? e.startIndex ?? 0
                         );
-                    } else {
+                    } else if (hasValue(e.lineNumber)) {
                         this.selectBotAndTagByLineNumber(
                             sim,
                             e.botId,
@@ -444,6 +444,8 @@ export default class SystemPortal extends Vue {
                             e.columnNumber ?? 1,
                             true
                         );
+                    } else {
+                        this.selectBotAndTag(sim, e.botId, e.tag, e.space);
                     }
                 }
             })
@@ -766,8 +768,8 @@ export default class SystemPortal extends Vue {
         botId: string,
         tag: string,
         space: string,
-        startIndex: number,
-        endIndex: number,
+        startIndex: number = null,
+        endIndex: number = null,
         forceOpen: boolean = false
     ) {
         let tags: BotTags = {
@@ -839,19 +841,24 @@ export default class SystemPortal extends Vue {
             const model = monacoEditor.getModel();
             if (model && model.uri.toString() === modelUri) {
                 setTimeout(() => {
-                    const position = model.getPositionAt(selectionStart);
-                    const endPosition = model.getPositionAt(selectionEnd);
-                    monacoEditor.setSelection({
-                        startLineNumber: position.lineNumber,
-                        startColumn: position.column,
-                        endLineNumber: endPosition.lineNumber,
-                        endColumn: endPosition.column,
-                    });
-                    monacoEditor.revealLinesInCenter(
-                        position.lineNumber,
-                        endPosition.lineNumber,
-                        1 /* Immediate scrolling */
-                    );
+                    if (
+                        typeof selectionStart === 'number' &&
+                        typeof selectionEnd === 'number'
+                    ) {
+                        const position = model.getPositionAt(selectionStart);
+                        const endPosition = model.getPositionAt(selectionEnd);
+                        monacoEditor.setSelection({
+                            startLineNumber: position.lineNumber,
+                            startColumn: position.column,
+                            endLineNumber: endPosition.lineNumber,
+                            endColumn: endPosition.column,
+                        });
+                        monacoEditor.revealLinesInCenter(
+                            position.lineNumber,
+                            endPosition.lineNumber,
+                            1 /* Immediate scrolling */
+                        );
+                    }
                     monacoEditor.focus();
                 }, 100);
                 return true;
