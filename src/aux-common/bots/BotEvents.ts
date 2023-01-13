@@ -883,6 +883,11 @@ export interface OpenQRCodeScannerAction extends Action {
      * The camera that should be used.
      */
     cameraType: CameraType;
+
+    /**
+     * Whether to not allow switching the camera.
+     */
+    disallowSwitchingCameras: boolean;
 }
 
 /**
@@ -900,6 +905,11 @@ export interface OpenBarcodeScannerAction extends Action {
      * The camera that should be used.
      */
     cameraType: CameraType;
+
+    /**
+     * Whether to not allow switching the camera.
+     */
+    disallowSwitchingCameras: boolean;
 }
 
 /**
