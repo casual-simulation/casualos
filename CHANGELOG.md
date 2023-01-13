@@ -31,6 +31,7 @@
 
 -   Fixed an issue where `os.applyUpdatesToInst()` would not sync updates to the server.
 -   Fixed an issue where strings that can be converted to primitive values search box would not appear if `systemPortalSearch` was set via a script.
+-   Fixed an issue where it was impossible to use `os.importAUX()` with URLs that didn't end with ".aux".
 
 ## V3.1.18
 
