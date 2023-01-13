@@ -246,8 +246,7 @@ export class AppManager {
      * @param url The url to load.
      */
     async loadAUX(url: string): Promise<StoredAux> {
-        const normalized = normalizeAUXBotURL(url);
-        const result = await Axios.get(normalized);
+        const result = await Axios.get(url);
         return result.data;
     }
 
