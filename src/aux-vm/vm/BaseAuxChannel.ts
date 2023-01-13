@@ -37,6 +37,7 @@ import {
     createBot,
     getBotSpace,
     DetachRuntimeAction,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
@@ -52,7 +53,6 @@ import {
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { StatusHelper } from './StatusHelper';
-import { StoredAux } from '../StoredAux';
 import { flatMap, mapKeys, mapValues, pick, transform } from 'lodash';
 import { CustomAppHelper } from '../portals/CustomAppHelper';
 import { v4 as uuid } from 'uuid';

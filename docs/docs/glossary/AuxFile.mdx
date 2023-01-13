@@ -5,5 +5,15 @@ This means that AUXes are designed to work on a wide variety of devices (phones,
 
 With respect to CasualOS, every [inst](#instance) is an AUX because CasualOS does the hard work to ensure that everything is synced and works across all connected devices.
 
-You may also come across the term "AUX File". AUX files are files that use the `.aux` filename extension and contain [JSON](https://en.wikipedia.org/wiki/JSON) formatted bots.
+You may also come across the term "AUX File". AUX files are files that use the `.aux` filename extension and contain [JSON](https://en.wikipedia.org/wiki/JSON) formatted data which represents a set of bots and their tags.
+
+AUX Files come in two different versions:
+
+-   Version 1
+    -   Version 1 AUX Files contain a snapshot of a set of bots as pure JSON.
+        They are most useful for when you would like to save and reload the exact state of bots or when you would like to export bot data to an external system.
+-   Version 2
+    -   Version 2 AUX Files contain a set of [conflict-free](https://crdt.tech/) updates to a set of bots as base64 encoded strings embedded in JSON.
+        They are most useful for when you would like to ensure the initialization of a shared [inst](#instance) doesn't run into issues with duplicated data or when you want to manually share a set of changes offline.
+
 Usually, AUX files are utilized as an easy way to save/load [bots](#bot) from an inst.

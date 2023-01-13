@@ -20,6 +20,7 @@ import {
     BOOTSTRAP_PARTITION_ID,
     getTagValueForSpace,
     getUpdateForTagAndSpace,
+    getBotsStateFromStoredAux,
 } from '@casual-simulation/aux-common';
 
 import {
@@ -41,7 +42,6 @@ import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import { Observable, fromEventPattern, Subscription } from 'rxjs';
 import { getFinalUrl } from '@casual-simulation/aux-vm-client';
 import { LocalStoragePartitionImpl } from '../partitions/LocalStoragePartition';
-import { getBotsStateFromStoredAux } from '@casual-simulation/aux-vm/StoredAux';
 import { IdePortalManager } from './IdePortalManager';
 import { AuthHelper } from './AuthHelper';
 import { AuthHelperInterface } from '@casual-simulation/aux-vm/managers';

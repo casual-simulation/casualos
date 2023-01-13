@@ -26,6 +26,7 @@ import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
 import type { RecordFileFailure } from '@casual-simulation/aux-records';
 import { AuxRuntime } from '../runtime/AuxRuntime';
+import { InstUpdate } from './StoredAux';
 
 /**
  * Defines a symbol that can be used to signal to the runtime that the action should not be mapped for bots.
@@ -79,7 +80,6 @@ export type ExtraActions =
     | GoToDimensionAction
     | GoToURLAction
     | OpenURLAction
-    | ImportAUXAction
     | ShowInputForTagAction
     | SetForcedOfflineAction
     | ShellAction
@@ -126,6 +126,7 @@ export type AsyncActions =
     | ShowInputAction
     | ShowConfirmAction
     | ShareAction
+    | ImportAUXAction
     | RegisterBuiltinPortalAction
     | RegisterPrefixAction
     | RunScriptAction
@@ -1032,7 +1033,7 @@ export interface UnloadServerAction extends Action {
 /**
  * An event that is used to load an AUX from a remote location.
  */
-export interface ImportAUXAction extends Action {
+export interface ImportAUXAction extends AsyncAction {
     type: 'import_aux';
 
     /**
@@ -1256,26 +1257,6 @@ export interface GetRemotesAction extends Action {
  */
 export interface ListInstUpdatesAction extends Action {
     type: 'list_inst_updates';
-}
-
-/**
- * Defines an interface that represents an update that has been applied to an inst.
- */
-export interface InstUpdate {
-    /**
-     * The ID of the update.
-     */
-    id: number;
-
-    /**
-     * The update content.
-     */
-    update: string;
-
-    /**
-     * The time that the update occurred at.
-     */
-    timestamp: number;
 }
 
 /**
@@ -4911,11 +4892,16 @@ export function goToDimension(dimension: string): GoToDimensionAction {
 /**
  * Creates a new ImportAUXAction.
  * @param url The URL that should be loaded.
+ * @param taskId The ID of the async task.
  */
-export function importAUX(url: string): ImportAUXAction {
+export function importAUX(
+    url: string,
+    taskId?: string | number
+): ImportAUXAction {
     return {
         type: 'import_aux',
         url: url,
+        taskId,
     };
 }
 

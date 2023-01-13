@@ -4,6 +4,7 @@ import {
     StateUpdatedEvent,
     ProxyBridgePartitionImpl,
     RuntimeStateVersion,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
 import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
@@ -17,7 +18,6 @@ import {
     AuxChannel,
     AuxStatic,
     AuxChannelErrorType,
-    StoredAux,
 } from '@casual-simulation/aux-vm';
 import { loadScript, setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import {

@@ -1,5 +1,5 @@
 import download from 'downloadjs';
-import { StoredAux } from '@casual-simulation/aux-vm';
+import { StoredAux } from '@casual-simulation/aux-common';
 
 export function downloadAuxState(state: StoredAux, name: string) {
     return downloadFile(

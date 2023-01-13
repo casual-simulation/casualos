@@ -10149,11 +10149,21 @@ interface Os {
     ): DownloadAction;
 
     /**
-     * Downloads the given list of bots.
+     * Downloads the given list of bots. (Version 1 of the Aux File Format)
      * @param bots The bots that should be downloaded.
      * @param filename The name of the file that the bots should be downloaded as.
      */
     downloadBots(bots: Bot[], filename: string): DownloadAction;
+
+    /**
+     * Downloads the given list of bots as an initialization update. (Version 2 of the Aux File Format)
+     * @param bots The bots that should be downloaded.
+     * @param filename The name of the file that the bots should be downloaded as.
+     */
+    downloadBotsAsInitialzationUpdate(
+        bots: Bot[],
+        filename: string
+    ): DownloadAction;
 
     /**
      * Downloads all the shared bots in the inst.
