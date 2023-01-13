@@ -11,7 +11,7 @@ export interface StoredAuxVersion1 {
 
 export interface StoredAuxVersion2 {
     version: 2;
-    update: InstUpdate;
+    updates: InstUpdate[];
 }
 
 /**
@@ -79,7 +79,7 @@ export function getBotsStateFromStoredAux(stored: StoredAuxVersion1) {
 export function getUploadState(data: StoredAux | BotsState): BotsState {
     if ('version' in data) {
         if (isStoredVersion2(data)) {
-            return getStateFromUpdates(getInstStateFromUpdates([data.update]));
+            return getStateFromUpdates(getInstStateFromUpdates(data.updates));
         } else if (isStoredVersion1(data)) {
             return data.state;
         }

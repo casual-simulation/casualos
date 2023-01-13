@@ -142,7 +142,7 @@ export async function addStoredAuxV2ToSimulation(
 ) {
     await sim.helper.transaction(
         remote(
-            applyUpdatesToInst([stored.update]),
+            applyUpdatesToInst(stored.updates),
             undefined,
             undefined,
             undefined

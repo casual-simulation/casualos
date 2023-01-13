@@ -3634,16 +3634,18 @@ describe('AuxLibrary', () => {
                 uuidMock.mockReturnValueOnce('taskId');
                 const aux: StoredAuxVersion2 = {
                     version: 2,
-                    update: {
-                        id: 0,
-                        timestamp: 0,
-                        update: 'AQLNrtWDBQAnAQRib3RzBGJvdDEBKADNrtWDBQAEdGFnMQF3A2FiYwA=',
-                    },
+                    updates: [
+                        {
+                            id: 0,
+                            timestamp: 0,
+                            update: 'AQLNrtWDBQAnAQRib3RzBGJvdDEBKADNrtWDBQAEdGFnMQF3A2FiYwA=',
+                        },
+                    ],
                 };
                 const json = JSON.stringify(aux);
                 const promise: any = library.api.os.importAUX(json);
                 const expected = remote(
-                    applyUpdatesToInst([aux.update]),
+                    applyUpdatesToInst(aux.updates),
                     undefined,
                     undefined,
                     'taskId'

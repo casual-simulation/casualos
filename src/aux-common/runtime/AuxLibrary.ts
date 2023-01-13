@@ -317,6 +317,8 @@ import {
     ShowConfirmOptions,
     isStoredVersion2,
     StoredAux,
+    StoredAuxVersion2,
+    StoredAuxVersion1,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -3599,7 +3601,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             const aux = parseStoredAuxFromData(urlOrJSON);
             if (aux) {
                 if (isStoredVersion2(aux)) {
-                    return applyUpdatesToInst([aux.update]);
+                    return applyUpdatesToInst(aux.updates);
                 } else {
                     const state = getUploadState(aux);
                     if (state) {
@@ -9176,23 +9178,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return promise;
     }
 
-    function getVersion1DownloadState(state: BotsState): {
-        version: number;
-        state: BotsState;
-    } {
+    function getVersion1DownloadState(state: BotsState): StoredAuxVersion1 {
         return {
             version: 1,
             state,
         };
     }
 
-    function getVersion2DownloadState(update: InstUpdate): {
-        version: number;
-        update: InstUpdate;
-    } {
+    function getVersion2DownloadState(update: InstUpdate): StoredAuxVersion2 {
         return {
             version: 2,
-            update,
+            updates: [update],
         };
     }
 

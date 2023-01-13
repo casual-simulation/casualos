@@ -42,7 +42,7 @@ describe('getUploadState()', () => {
 
         const data: StoredAuxVersion2 = {
             version: 2,
-            update,
+            updates: [update],
         };
 
         const state = getUploadState(data);
