@@ -16330,7 +16330,7 @@ describe('original action tests', () => {
             const botAction = action('test', ['thisBot']);
             const result = calculateActionResults(state, botAction);
 
-            expect(result.actions).toEqual([importAUX('abc')]);
+            expect(result.actions).toEqual([importAUX('abc', 1)]);
         });
 
         it('should emit a AddStateEvent if given JSON', () => {
@@ -17686,7 +17686,7 @@ describe('original action tests', () => {
                 'os.unloadServer("channel")',
                 unloadSimulation('channel'),
             ] as const,
-            ['os.importAUX("aux")', importAUX('aux')] as const,
+            ['os.importAUX("aux")', importAUX('aux', 1)] as const,
             ['os.showQRCode("code")', showQRCode(true, 'code')] as const,
             ['os.hideQRCode()', showQRCode(false)] as const,
             [

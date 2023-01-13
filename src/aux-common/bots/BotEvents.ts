@@ -80,7 +80,6 @@ export type ExtraActions =
     | GoToDimensionAction
     | GoToURLAction
     | OpenURLAction
-    | ImportAUXAction
     | ShowInputForTagAction
     | SetForcedOfflineAction
     | ShellAction
@@ -127,6 +126,7 @@ export type AsyncActions =
     | ShowInputAction
     | ShowConfirmAction
     | ShareAction
+    | ImportAUXAction
     | RegisterBuiltinPortalAction
     | RegisterPrefixAction
     | RunScriptAction
@@ -1033,7 +1033,7 @@ export interface UnloadServerAction extends Action {
 /**
  * An event that is used to load an AUX from a remote location.
  */
-export interface ImportAUXAction extends Action {
+export interface ImportAUXAction extends AsyncAction {
     type: 'import_aux';
 
     /**
@@ -4892,11 +4892,16 @@ export function goToDimension(dimension: string): GoToDimensionAction {
 /**
  * Creates a new ImportAUXAction.
  * @param url The URL that should be loaded.
+ * @param taskId The ID of the async task.
  */
-export function importAUX(url: string): ImportAUXAction {
+export function importAUX(
+    url: string,
+    taskId?: string | number
+): ImportAUXAction {
     return {
         type: 'import_aux',
         url: url,
+        taskId,
     };
 }
 

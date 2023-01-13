@@ -74,6 +74,7 @@ import {
     formatBotVector,
     getBotsStateFromStoredAux,
     isStoredVersion2,
+    ImportAUXAction,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -727,7 +728,7 @@ export class PlayerGame extends Game {
                         }
                     );
                 } else if (e.type === 'import_aux') {
-                    this.importAUX(sim, e.url);
+                    this.importAUX(sim, e);
                 } else if (e.type === 'play_sound') {
                     this.playAudio(sim, e);
                 } else if (e.type === 'buffer_sound') {
@@ -1169,13 +1170,26 @@ export class PlayerGame extends Game {
         });
     }
 
-    private async importAUX(sim: BrowserSimulation, url: string) {
-        const stored = await appManager.loadAUX(url);
-        if (isStoredVersion2(stored)) {
-            await addStoredAuxV2ToSimulation(sim, stored);
-        } else {
-            const state = getBotsStateFromStoredAux(stored);
-            await sim.helper.addState(state);
+    private async importAUX(sim: BrowserSimulation, event: ImportAUXAction) {
+        try {
+            const url = event.url;
+            const stored = await appManager.loadAUX(url);
+            if (isStoredVersion2(stored)) {
+                await addStoredAuxV2ToSimulation(sim, stored);
+            } else {
+                const state = getBotsStateFromStoredAux(stored);
+                await sim.helper.addState(state);
+            }
+
+            if (hasValue(event.taskId)) {
+                sim.helper.transaction(asyncResult(event.taskId, null));
+            }
+        } catch (err) {
+            if (hasValue(event.taskId)) {
+                sim.helper.transaction(
+                    asyncError(event.taskId, err.toString())
+                );
+            }
         }
     }
 

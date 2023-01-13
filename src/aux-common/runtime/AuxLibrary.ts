@@ -406,7 +406,7 @@ import {
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
 import { INTERPRETABLE_FUNCTION } from './AuxCompiler';
 import type { AuxRuntime } from './AuxRuntime';
-import { constructInitializationUpdate } from 'partitions/PartitionUtils';
+import { constructInitializationUpdate } from '../partitions/PartitionUtils';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -1653,6 +1653,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getWakeLockConfiguration,
                 download: downloadData,
                 downloadBots,
+                downloadBotsAsInitialzationUpdate,
 
                 downloadServer,
                 downloadInst: downloadServer,
@@ -3593,23 +3594,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *                  If given JSON, then it will be imported as if it was a .aux file.
      *                  If given a URL, then it will be downloaded and then imported.
      */
-    function importAUX(urlOrJSON: string): ImportAUXAction | ApplyStateAction {
+    function importAUX(urlOrJSON: string): Promise<void> {
         try {
             const aux = parseStoredAuxFromData(urlOrJSON);
             if (aux) {
                 if (isStoredVersion2(aux)) {
-                    applyUpdatesToInst([aux.update]);
+                    return applyUpdatesToInst([aux.update]);
                 } else {
                     const state = getUploadState(aux);
                     if (state) {
                         const event = addState(state);
-                        return addAction(event);
+                        addAction(event);
+                        let promise = Promise.resolve();
+                        (<any>promise)[ORIGINAL_OBJECT] = event;
+                        return promise;
                     }
                 }
             }
         } catch {}
-        const event = calcImportAUX(urlOrJSON);
-        return addAction(event);
+        const task = context.createTask();
+        const event = calcImportAUX(urlOrJSON, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -6101,11 +6106,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (!event) {
             return;
         }
+        const original = getOriginalObject(event);
         let actions = [];
         let selectors = Array.isArray(selector) ? selector : [selector];
         for (let s of selectors) {
             const r = calcRemote(
-                event,
+                original,
                 convertSessionSelector(s),
                 allowBatching
             );

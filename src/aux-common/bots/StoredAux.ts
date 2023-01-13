@@ -1,4 +1,4 @@
-import { getStateFromUpdates } from 'partitions/PartitionUtils';
+import { getStateFromUpdates } from '../partitions/PartitionUtils';
 import { BotsState } from './Bot';
 import { getInstStateFromUpdates } from './BotEvents';
 
@@ -40,10 +40,28 @@ export interface InstUpdate {
  * @param version
  * @returns
  */
-export function isStoredVersion2(
-    stored: StoredAux
-): stored is StoredAuxVersion2 {
-    return stored && stored.version === 2;
+export function isStoredVersion2(stored: unknown): stored is StoredAuxVersion2 {
+    return (
+        typeof stored === 'object' &&
+        stored &&
+        'version' in stored &&
+        (stored as any).version === 2
+    );
+}
+
+/**
+ * Gets whether the given stored aux matches the given version.
+ * @param stored
+ * @param version
+ * @returns
+ */
+export function isStoredVersion1(stored: unknown): stored is StoredAuxVersion1 {
+    return (
+        typeof stored === 'object' &&
+        stored &&
+        'version' in stored &&
+        (stored as any).version === 1
+    );
 }
 
 /**
@@ -58,11 +76,11 @@ export function getBotsStateFromStoredAux(stored: StoredAuxVersion1) {
  * Gets the state that should be uploaded from the given data.
  * @param data The data.
  */
-export function getUploadState(data: StoredAux): BotsState {
+export function getUploadState(data: StoredAux | BotsState): BotsState {
     if ('version' in data) {
         if (isStoredVersion2(data)) {
             return getStateFromUpdates(getInstStateFromUpdates([data.update]));
-        } else {
+        } else if (isStoredVersion1(data)) {
             return data.state;
         }
     }
