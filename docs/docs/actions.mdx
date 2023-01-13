@@ -2979,6 +2979,9 @@ os.download("abc", "test.txt");
 Downloads the given array of bots as a `.aux` or a `.pdf` file with the given filename.
 Useful for quickly backing up a set of bots.
 
+The downloaded bots will be stored in the Version 1 format of the <GlossaryRef term='aux'>AUX File Format</GlossaryRef>, which is well suited for most scenarios.
+For scenarios where you want conflict-free initialization of a shared inst, you should use <ActionLink action='os.downloadBotsAsInitialzationUpdate(bots, filename)'/>.
+
 The **first parameter** is the array of bots that should be downloaded.
 
 The **second parameter** is the name of the file that the bots should be stored in.
@@ -3000,6 +3003,36 @@ os.downloadBots([bot], "currentBot");
 3. Download all bots as "myServer.pdf".
 ```typescript
 os.downloadBots(getBots(), "myServer.pdf");
+```
+
+### `os.downloadBotsAsInitialzationUpdate(bots, filename)`
+
+Downloads the given array of bots as a `.aux` or a `.pdf` file with the given filename.
+
+The downloaded bots will be stored in the Version 2 format of the <GlossaryRef term='aux'>AUX File Format</GlossaryRef>, which is better suited towards scenarios which require conflict-free initialization of a shared inst from the AUX file.
+For an archive of the current state, you should use <ActionLink action='os.downloadBots(bots, filename)'/> which is better for scenarios which require direct access to the bot data.
+
+The **first parameter** is the array of bots that should be downloaded.
+
+The **second parameter** is the name of the file that the bots should be stored in.
+If the filename ends with `.pdf`, then a PDF file will be downloaded with the bots as embedded data.
+Otherwise, `.aux` will automatically be added to the end of the filename.
+
+#### Examples:
+
+1. Download all the bots in the "abc" dimension as "abcBots.aux".
+```typescript
+os.downloadBotsAsInitialzationUpdate(getBots(inDimension("abc")), "abcBots");
+```
+
+2. Download the current bot as "currentBot.aux".
+```typescript
+os.downloadBotsAsInitialzationUpdate([bot], "currentBot");
+```
+
+3. Download all bots as "myServer.pdf".
+```typescript
+os.downloadBotsAsInitialzationUpdate(getBots(), "myServer.pdf");
 ```
 
 ### `os.downloadInst()`
