@@ -22,6 +22,10 @@
     -   It will also grab the currently selected text and auto-fill that into the search box.
 -   Improved the systemPortal to preserve the last selected location in a tag when using `os.focusOn()` without line/index information or when using the quick access panel (`Ctrl+P`).
 -   Improved the systemPortal to be able to show the quick access panel (`Ctrl+P`) even if the multi-line editor is not focused.
+-   Added the `os.downloadBotsAsInitialzationUpdate(bots, filename)` function.
+    -   When called, it downloads the given array of bots as a `.aux` or `.pdf` file stored in the Version 2 AUX File Format.
+    -   The [Version 2 AUX Format](https://github.com/casual-simulation/casualos/blob/9910658524e4a37f40c72f824ef5770693005394/src/aux-common/bots/StoredAux.ts#L12) is similar to the [Version 1 AUX Format](https://github.com/casual-simulation/casualos/blob/9910658524e4a37f40c72f824ef5770693005394/src/aux-common/bots/StoredAux.ts#L7), except instead of storing the bot data as a snapshot, it stores bot data as a conflict-free update. This means that the Version 2 format is more suited towards scenarios where multiple different machines want to load the aux file at the same time (like when initializing shared instances), or when you want to share changes to an inst offline.
+    -   Note that the Version 2 AUX Format is not a replacement for the Version 1 AUX Format. They are both in active use and each is slightly more optimal for different use-cases.
 
 ### :bug: Bug Fixes
 
