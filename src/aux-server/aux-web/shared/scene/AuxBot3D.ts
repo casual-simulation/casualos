@@ -165,6 +165,9 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
      */
     calculateGridScale() {
         const group = this.dimensionGroup;
+        if (group?.coordinateTransformer) {
+            return 1;
+        }
         const sim = group ? group.simulation3D : null;
         const gridScale = sim
             ? sim.getGridScale(this)

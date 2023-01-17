@@ -409,16 +409,13 @@ export abstract class Simulation3D
                 for (let b of bots) {
                     if (b instanceof AuxBot3D) {
                         group.boundBot = b;
-                        b.container.add(group);
-                        added = true;
 
                         const form = getBotShape(null, b.bot);
                         if (form === 'spherePortal') {
                             group.coordinateTransformer = (pos) => {
-                                const gridScale = this.getGridScale(group);
                                 const translated = latLonToCartesian(
-                                    gridScale / 2,
-                                    new Vector3(pos.y, pos.x, pos.z * gridScale)
+                                    0.5,
+                                    new Vector3(pos.y, pos.x, pos.z)
                                 );
 
                                 const surfaceNormal = new CasualOSVector3(
@@ -452,8 +449,11 @@ export abstract class Simulation3D
 
                                 return m;
                             };
+                            b.scaleContainer.add(group);
+                        } else {
+                            b.container.add(group);
                         }
-
+                        added = true;
                         break;
                     }
                 }
