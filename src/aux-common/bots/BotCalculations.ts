@@ -240,17 +240,6 @@ export function filterBotsBySelection<TBot extends Bot>(
 }
 
 /**
- * Gets the state that should be uploaded from the given data.
- * @param data The data.
- */
-export function getUploadState(data: any): BotsState {
-    if ('version' in data) {
-        return data.state;
-    }
-    return data;
-}
-
-/**
  * Gets whether the bot is pointable.
  * @param calc The calculation context.
  * @param bot The bot.
@@ -1721,7 +1710,8 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         shape === 'circle' ||
         shape === 'keyboard' ||
         shape === 'codeButton' ||
-        shape === 'codeHint'
+        shape === 'codeHint' ||
+        shape === 'spherePortal'
     ) {
         return shape;
     }

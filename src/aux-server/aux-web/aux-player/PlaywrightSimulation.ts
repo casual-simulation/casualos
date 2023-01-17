@@ -46,7 +46,6 @@ import { filter, tap } from 'rxjs/operators';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import { Observable, fromEventPattern, Subscription } from 'rxjs';
 import { getFinalUrl } from '@casual-simulation/aux-vm-client';
-import { getBotsStateFromStoredAux } from '@casual-simulation/aux-vm/StoredAux';
 import { AuthHelperInterface } from '@casual-simulation/aux-vm/managers';
 
 /**

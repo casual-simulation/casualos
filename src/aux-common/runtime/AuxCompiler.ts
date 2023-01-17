@@ -41,6 +41,11 @@ export const COMPILED_SCRIPT_SYMBOL = Symbol('compiled_script');
 export const INTERPRETABLE_FUNCTION = Symbol('interpretable_function');
 
 /**
+ * The symbol that is used to tag function modules with the metadata for a function.
+ */
+export const FUNCTION_METADATA = Symbol('function_metadata');
+
+/**
  * Creates a new interpretable function based on the given function.
  * @param interpretableFunc
  */
@@ -610,6 +615,19 @@ export class AuxCompiler {
 
         const final = func as AuxCompiledScript;
         final.metadata = meta;
+
+        if (meta.constructedFunction?.module) {
+            Object.defineProperty(
+                meta.constructedFunction.module,
+                FUNCTION_METADATA,
+                {
+                    value: meta,
+                    writable: false,
+                    enumerable: false,
+                    configurable: true,
+                }
+            );
+        }
 
         return final;
     }

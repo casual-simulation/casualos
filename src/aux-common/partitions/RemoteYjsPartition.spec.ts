@@ -1050,6 +1050,20 @@ describe('RemoteYjsPartition', () => {
                             num: 124,
                         }),
                     });
+
+                    const addedAtoms = connection.sentMessages.filter(
+                        (m) => m.name === ADD_UPDATES
+                    );
+                    expect(addedAtoms).toEqual([
+                        {
+                            name: ADD_UPDATES,
+                            data: {
+                                branch: 'testBranch',
+                                updates: updates.map((u) => u.update),
+                                updateId: 1,
+                            },
+                        },
+                    ]);
                 });
 
                 it('should support updates from v13.5.24 of yjs', async () => {

@@ -146,9 +146,15 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
         y: number;
         z: number;
     }) => Matrix4 {
-        const sim = this.dimensionGroup?.simulation3D;
+        const dimensionGroup = this.dimensionGroup;
+        const sim = dimensionGroup?.simulation3D;
         if (sim.coordinateTransformer) {
             return sim.coordinateTransformer;
+        }
+        if (dimensionGroup?.coordinateTransformer) {
+            // Only use the dimension group coordinate transformer if
+            // there is no coordinate transformer for the simulation.
+            return dimensionGroup.coordinateTransformer;
         }
         return null;
     }
@@ -159,6 +165,9 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
      */
     calculateGridScale() {
         const group = this.dimensionGroup;
+        if (group?.coordinateTransformer) {
+            return 1;
+        }
         const sim = group ? group.simulation3D : null;
         const gridScale = sim
             ? sim.getGridScale(this)

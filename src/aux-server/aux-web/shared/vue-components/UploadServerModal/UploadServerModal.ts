@@ -104,10 +104,14 @@ export default class UploadServerModal extends Vue {
 
     async uploadFiles() {
         if (this._uploadAuxFile) {
-            await Promise.all(
-                this.uploadedFiles.map((f) => appManager.uploadState(f))
-            );
-            this.isOpen = false;
+            try {
+                await Promise.all(
+                    this.uploadedFiles.map((f) => appManager.uploadState(f))
+                );
+            } finally {
+                this.isOpen = false;
+                this.uploadedFiles = [];
+            }
         } else if (this._currentSim) {
             try {
                 const files = await Promise.all(

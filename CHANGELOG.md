@@ -1,5 +1,41 @@
 # CasualOS Changelog
 
+## V3.1.19
+
+#### Date: 1/17/2023
+
+### :rocket: Improvements
+
+-   Improved the diff multi-line code editor to support `codeButton` form bots.
+-   Improved `os.focusOn()` to be able to navigate to systemPortal tags when the diff pane is open in the systemPortal.
+-   Added the `debug.onScriptActionEnqueued(handler)`, `debug.onAfterScriptUpdatedTag(handler)`, `debug.onAfterScriptUpdatedTagMask(handler)`, `debug.onBeforeUserAction(handler)`, `debug.performUserAction(...actions)`, and `debug.getCallStack()` functions for debuggers.
+    -   See the documentation for more information and examples.
+-   Added the `os.showConfirm(options)` function.
+    -   When called, it displays a confirmation dialog that gives the user the ability to indicate whether they want something confirmed or canceled.
+    -   Returns a promise that resolves with `true` if the user clicked the "Confirm" button and `false` if they closed the dialog or clicked the "Cancel" button.
+    -   `options` should be an object with the following properties:
+        -   `title` - The title that should be shown on the dialog.
+        -   `content` - The descriptive content that should be shown in the dialog.
+        -   `confirmText` - The text that should be shown for the "Confirm" button. (Optional)
+        -   `cancelText` - The text that should be shown for the "Cancel" button. (Optional)
+-   Improved the systemPortal to always focus and select the search box when using `Ctrl+Shift+F`/`Cmd+Shift+F`.
+    -   It will also grab the currently selected text and auto-fill that into the search box.
+-   Improved the systemPortal to preserve the last selected location in a tag when using `os.focusOn()` without line/index information or when using the quick access panel (`Ctrl+P`).
+-   Improved the systemPortal to be able to show the quick access panel (`Ctrl+P`) even if the multi-line editor is not focused.
+-   Added the `os.downloadBotsAsInitialzationUpdate(bots, filename)` function.
+    -   When called, it downloads the given array of bots as a `.aux` or `.pdf` file stored in the Version 2 AUX File Format.
+    -   The [Version 2 AUX Format](https://github.com/casual-simulation/casualos/blob/9910658524e4a37f40c72f824ef5770693005394/src/aux-common/bots/StoredAux.ts#L12) is similar to the [Version 1 AUX Format](https://github.com/casual-simulation/casualos/blob/9910658524e4a37f40c72f824ef5770693005394/src/aux-common/bots/StoredAux.ts#L7), except instead of storing the bot data as a snapshot, it stores bot data as a conflict-free update. This means that the Version 2 format is more suited towards scenarios where multiple different machines want to load the aux file at the same time (like when initializing shared instances), or when you want to share changes to an inst offline.
+    -   Note that the Version 2 AUX Format is not a replacement for the Version 1 AUX Format. They are both in active use and each is slightly more optimal for different use-cases.
+-   Added a button to the "Scan QR Code" dialog that allows changing the current camera.
+-   Added the `spherePortal` form.
+    -   The `spherePortal` form functions like the `portal` form except that it displays bots in the portal on the surface of an invisible sphere and treats the dimension X and Y tags as latitude and longitude coordinates.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.applyUpdatesToInst()` would not sync updates to the server.
+-   Fixed an issue where strings that can be converted to primitive values search box would not appear if `systemPortalSearch` was set via a script.
+-   Fixed an issue where it was impossible to use `os.importAUX()` with URLs that didn't end with ".aux".
+
 ## V3.1.18
 
 #### Date: 12/28/2022

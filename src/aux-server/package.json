@@ -58,7 +58,7 @@
         "@casual-simulation/crypto": "^3.1.11",
         "@casual-simulation/crypto-browser": "^3.1.11",
         "@casual-simulation/crypto-node": "^3.1.11",
-        "@casual-simulation/engine262": "0.0.1-6fadd673dfc837c2717737a2729a1baf022566a2",
+        "@casual-simulation/engine262": "0.0.1-4de2170374e22761996e46eb1362f4496ee57f8f",
         "@casual-simulation/fast-json-stable-stringify": "^3.1.11",
         "@casual-simulation/js-interpreter": "^3.1.17",
         "@casual-simulation/monaco-editor": "0.34.3",
@@ -128,7 +128,7 @@
         "vue-material": "1.0.0-beta-15",
         "vue-property-decorator": "^7.2.0",
         "vue-router": "3.5.4",
-        "vue-shortkey": "^3.1.6"
+        "@casual-simulation/vue-shortkey": "^3.1.7"
     },
     "devDependencies": {
         "@casual-simulation/aux-components": "^3.1.18",

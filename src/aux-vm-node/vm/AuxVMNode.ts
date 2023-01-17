@@ -1,7 +1,6 @@
 import {
     AuxVM,
     AuxChannelErrorType,
-    StoredAux,
     ChannelActionResult,
     AuxSubVM,
     AuxChannel,
@@ -13,6 +12,7 @@ import {
     BotAction,
     StateUpdatedEvent,
     RuntimeStateVersion,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 import {
     LoadingProgressCallback,

@@ -2,6 +2,7 @@ import {
     SimulationIdParseSuccess,
     LocalActions,
     BotIndex,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 import { BotWatcher } from './BotWatcher';
 import { Observable } from 'rxjs';
@@ -12,7 +13,6 @@ import { ConnectionManager } from './ConnectionManager';
 import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
 import { CodeLanguageManager } from './CodeLanguageManager';
 import { BotDimensionManager } from './BotDimensionManager';
-import { StoredAux } from '../StoredAux';
 
 /**
  * Defines an interface for objects that represent bot simulations.

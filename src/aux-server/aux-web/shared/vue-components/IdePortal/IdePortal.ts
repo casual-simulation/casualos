@@ -32,14 +32,13 @@ import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import BotTag from '../BotTag/BotTag';
 import { debounce } from 'lodash';
 import { onMonacoLoaded } from '../../MonacoAsync';
-import Hotkey from '../Hotkey/Hotkey';
+// import Hotkey from '../Hotkey/Hotkey';
 import { onFocusSearch } from './IdePortalHelpers';
 
 @Component({
     components: {
         'tag-value-editor': TagValueEditor,
         'bot-tag': BotTag,
-        hotkey: Hotkey,
     },
 })
 export default class IdePortal extends Vue {

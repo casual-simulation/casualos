@@ -947,10 +947,12 @@ export class MemoryGlobalContext implements AuxGlobalContext {
                 this.actions[index] = action;
             } else {
                 this.actions.push(action);
+                this._batcher.notifyActionEnqueued(action);
                 this._batcher.notifyChange();
             }
         } else {
             this.actions.push(action);
+            this._batcher.notifyActionEnqueued(action);
             this._batcher.notifyChange();
         }
     }

@@ -15,6 +15,7 @@ import {
     AuxRuntime,
     RuntimeStateVersion,
     isPromise,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 import {
     StatusUpdate,
@@ -23,7 +24,6 @@ import {
 } from '@casual-simulation/causal-trees';
 import { union } from 'lodash';
 import { AuxUser } from '../../AuxUser';
-import { StoredAux } from '../../StoredAux';
 import { ChannelActionResult } from '../../vm';
 
 export class TestAuxVM implements AuxVM {

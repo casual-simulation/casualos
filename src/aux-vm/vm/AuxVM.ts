@@ -3,13 +3,13 @@ import {
     BotAction,
     StateUpdatedEvent,
     RuntimeStateVersion,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 import { StatusUpdate, DeviceAction } from '@casual-simulation/causal-trees';
 import { Observable } from 'rxjs';
 import { Initable } from '../managers/Initable';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
-import { StoredAux } from '../StoredAux';
 import { ChannelActionResult } from './AuxChannel';
 
 /**

@@ -213,6 +213,8 @@ import {
     attachRuntime,
     detachRuntime,
     KNOWN_TAGS,
+    showConfirm,
+    StoredAuxVersion2,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -311,6 +313,7 @@ describe('AuxLibrary', () => {
         };
         notifier = {
             notifyChange: jest.fn(),
+            notifyActionEnqueued: jest.fn(),
         };
         processor = {
             processGenerator: jest.fn(),
@@ -2837,6 +2840,7 @@ describe('AuxLibrary', () => {
                 device = null;
                 notifier = {
                     notifyChange: jest.fn(),
+                    notifyActionEnqueued: jest.fn(),
                 };
                 processor = {
                     processGenerator: jest.fn(),
@@ -2875,6 +2879,7 @@ describe('AuxLibrary', () => {
                 device = null;
                 notifier = {
                     notifyChange: jest.fn(),
+                    notifyActionEnqueued: jest.fn(),
                 };
                 processor = {
                     processGenerator: jest.fn(),
@@ -3584,9 +3589,10 @@ describe('AuxLibrary', () => {
 
         describe('os.importAUX()', () => {
             it('should emit a ImportAUXEvent', () => {
-                const action = library.api.os.importAUX('abc');
-                expect(action).toEqual(importAUX('abc'));
-                expect(context.actions).toEqual([importAUX('abc')]);
+                const promise: any = library.api.os.importAUX('abc');
+                const expected = importAUX('abc', context.tasks.size);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
 
             it('should emit a AddStateEvent if given JSON', () => {
@@ -3602,9 +3608,10 @@ describe('AuxLibrary', () => {
                     version: 1,
                     state: uploadState,
                 });
-                const action = library.api.os.importAUX(json);
-                expect(action).toEqual(addState(uploadState));
-                expect(context.actions).toEqual([addState(uploadState)]);
+                const promise: any = library.api.os.importAUX(json);
+                const expected = addState(uploadState);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
 
             it('should be able to parse PDF files', () => {
@@ -3615,11 +3622,37 @@ describe('AuxLibrary', () => {
                     [bot1],
                     'test.pdf'
                 );
-                const action = library.api.os.importAUX(downloadAction.data);
-                expect(action).toEqual(addState(uploadState));
-                expect(context.actions.slice(1)).toEqual([
-                    addState(uploadState),
-                ]);
+                const promise: any = library.api.os.importAUX(
+                    downloadAction.data
+                );
+                const expected = addState(uploadState);
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions.slice(1)).toEqual([expected]);
+            });
+
+            it('should be able to parse version 2 aux files', () => {
+                uuidMock.mockReturnValueOnce('taskId');
+                const aux: StoredAuxVersion2 = {
+                    version: 2,
+                    updates: [
+                        {
+                            id: 0,
+                            timestamp: 0,
+                            update: 'AQLNrtWDBQAnAQRib3RzBGJvdDEBKADNrtWDBQAEdGFnMQF3A2FiYwA=',
+                        },
+                    ],
+                };
+                const json = JSON.stringify(aux);
+                const promise: any = library.api.os.importAUX(json);
+                const expected = remote(
+                    applyUpdatesToInst(aux.updates),
+                    undefined,
+                    undefined,
+                    'taskId'
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
@@ -4108,6 +4141,34 @@ describe('AuxLibrary', () => {
 
                     expect(result).toEqual('mocked');
                 });
+            });
+        });
+
+        describe('os.showConfirm()', () => {
+            it('should emit a ShowConfirmAction', () => {
+                const promise: any = library.api.os.showConfirm({
+                    title: 'Confirm your choice',
+                    content: 'Are you sure?',
+                    confirmText: 'Yes',
+                    cancelText: 'No',
+                });
+                const expected = showConfirm(
+                    {
+                        title: 'Confirm your choice',
+                        content: 'Are you sure?',
+                        confirmText: 'Yes',
+                        cancelText: 'No',
+                    },
+                    context.tasks.size
+                );
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if not given an options object', () => {
+                expect(() => {
+                    (library.api.os.showConfirm as any)();
+                }).toThrowError();
             });
         });
 
@@ -8368,6 +8429,7 @@ describe('AuxLibrary', () => {
                     };
                     notifier = {
                         notifyChange: jest.fn(),
+                        notifyActionEnqueued: jest.fn(),
                     };
                     processor = {
                         processGenerator: jest.fn(),

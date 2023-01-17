@@ -3,6 +3,7 @@ import {
     BotAction,
     StateUpdatedEvent,
     RuntimeStateVersion,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 import {
     StatusUpdate,
@@ -14,7 +15,6 @@ import { AuxConfig } from './AuxConfig';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
 import { Observable, SubscriptionLike } from 'rxjs';
-import { StoredAux } from '../StoredAux';
 
 /**
  * Defines an interface for the static members of an AUX.

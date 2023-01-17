@@ -225,17 +225,15 @@ export default class CodeToolsPortal extends Vue {
 
 function calculateTool(bot: Bot, dimension: string, sim: BotManager): CodeTool {
     if (isBotInDimension(null, bot, dimension)) {
-        const label = calculateFormattedBotValue(null, bot, 'label');
+        const label = calculateFormattedBotValue(null, bot, 'label') ?? '';
         const index = getBotIndex(null, bot, dimension);
-        if (hasValue(label)) {
-            return {
-                botId: bot.id,
-                dimension,
-                simId: sim.id,
-                label,
-                index,
-            };
-        }
+        return {
+            botId: bot.id,
+            dimension,
+            simId: sim.id,
+            label,
+            index,
+        };
     }
     return null;
 }
