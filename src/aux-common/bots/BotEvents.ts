@@ -4761,6 +4761,7 @@ export function openQRCodeScanner(
         type: 'show_qr_code_scanner',
         open: open,
         cameraType: cameraType,
+        disallowSwitchingCameras: false,
     };
 }
 
@@ -4790,6 +4791,7 @@ export function openBarcodeScanner(
         type: 'show_barcode_scanner',
         open: open,
         cameraType: cameraType,
+        disallowSwitchingCameras: false,
     };
 }
 
