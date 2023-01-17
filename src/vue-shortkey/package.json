@@ -9,9 +9,6 @@
     "main": "index.js",
     "types": "index.d.ts",
     "module": "index",
-    "bin": {
-        "tunnel": "bin/tunnel.js"
-    },
     "directories": {
         "lib": "."
     },
