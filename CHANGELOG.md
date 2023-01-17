@@ -27,6 +27,8 @@
     -   The [Version 2 AUX Format](https://github.com/casual-simulation/casualos/blob/9910658524e4a37f40c72f824ef5770693005394/src/aux-common/bots/StoredAux.ts#L12) is similar to the [Version 1 AUX Format](https://github.com/casual-simulation/casualos/blob/9910658524e4a37f40c72f824ef5770693005394/src/aux-common/bots/StoredAux.ts#L7), except instead of storing the bot data as a snapshot, it stores bot data as a conflict-free update. This means that the Version 2 format is more suited towards scenarios where multiple different machines want to load the aux file at the same time (like when initializing shared instances), or when you want to share changes to an inst offline.
     -   Note that the Version 2 AUX Format is not a replacement for the Version 1 AUX Format. They are both in active use and each is slightly more optimal for different use-cases.
 -   Added a button to the "Scan QR Code" dialog that allows changing the current camera.
+-   Added the `spherePortal` form.
+    -   The `spherePortal` form functions like the `portal` form except that it displays bots in the portal on the surface of an invisible sphere and treats the dimension X and Y tags as latitude and longitude coordinates.
 
 ### :bug: Bug Fixes
 
