@@ -146,9 +146,15 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
         y: number;
         z: number;
     }) => Matrix4 {
-        const sim = this.dimensionGroup?.simulation3D;
+        const dimensionGroup = this.dimensionGroup;
+        const sim = dimensionGroup?.simulation3D;
         if (sim.coordinateTransformer) {
             return sim.coordinateTransformer;
+        }
+        if (dimensionGroup?.coordinateTransformer) {
+            // Only use the dimension group coordinate transformer if
+            // there is no coordinate transformer for the simulation.
+            return dimensionGroup.coordinateTransformer;
         }
         return null;
     }

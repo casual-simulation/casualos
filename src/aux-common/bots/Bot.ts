@@ -558,6 +558,7 @@ export type BotShape =
     | 'cursor'
     | 'portal'
     | 'dimension'
+    | 'spherePortal'
     | 'nothing'
     | 'keyboard'
     | 'codeButton'

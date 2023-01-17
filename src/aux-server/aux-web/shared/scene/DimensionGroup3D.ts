@@ -16,6 +16,7 @@ import { AuxBot3D } from './AuxBot3D';
 import { DimensionGroup } from './DimensionGroup';
 import { AuxBotVisualizer } from './AuxBotVisualizer';
 import { DimensionGroupHelper } from './DimensionGroupHelper';
+import { CoordinateTransformer } from './CoordinateSystem';
 
 /**
  * Defines a class that represents a visualization of a dimension for the AUX Builder.
@@ -25,6 +26,10 @@ import { DimensionGroupHelper } from './DimensionGroupHelper';
  */
 export class DimensionGroup3D extends GameObject implements DimensionGroup {
     private _helper: DimensionGroupHelper<AuxBot3D>;
+    /**
+     * The coordinate transformer that should be used by the group.
+     */
+    private _coordinateTransformer: CoordinateTransformer;
 
     /**
      * The group that contains the dimensions that this group is displaying.
@@ -90,6 +95,14 @@ export class DimensionGroup3D extends GameObject implements DimensionGroup {
         return this._portalTag;
     }
 
+    public get coordinateTransformer(): CoordinateTransformer {
+        return this._coordinateTransformer;
+    }
+
+    public set coordinateTransformer(transformer: CoordinateTransformer) {
+        this._coordinateTransformer = transformer;
+    }
+
     /**
      * Creates a new Builder dimension 3D Object.
      * @param The bot that this builder represents.
@@ -108,6 +121,7 @@ export class DimensionGroup3D extends GameObject implements DimensionGroup {
         this.display = new Group();
         this._decoratorFactory = decoratorFactory;
         this._portalTag = portalTag;
+        this._coordinateTransformer = null;
 
         this.add(this.display);
     }

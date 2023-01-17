@@ -873,6 +873,7 @@ export function botCalculationContextTests(
             ['keyboard'],
             ['codeButton'],
             ['codeHint'],
+            ['spherePortal'],
         ];
         const tagCases = ['auxForm', 'form'];
 
