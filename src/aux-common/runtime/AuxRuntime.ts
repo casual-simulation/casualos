@@ -1940,6 +1940,53 @@ export class AuxRuntime
             let newBot: CompiledBot = this._createCompiledBot(bot, false);
 
             if (!!existing) {
+                const changes = existing.script.changes;
+                const maskChanges = existing.script.maskChanges;
+
+                for (let key in changes) {
+                    newBot.tags[key] =
+                        newBot.values[key] =
+                        newBot.script.changes[key] =
+                            changes[key];
+                }
+                let maskTags = new Set<string>();
+                for (let space of TAG_MASK_SPACE_PRIORITIES) {
+                    const masks = maskChanges[space];
+                    let newMasks: BotTagMasks;
+                    let addNewMasks = false;
+                    let hasNewMasks = false;
+                    if (!newBot?.masks?.[space]) {
+                        addNewMasks = true;
+                        newMasks = {};
+                    } else {
+                        newMasks = newBot.masks[space];
+                    }
+                    if (masks) {
+                        if (!newBot.script.maskChanges[space]) {
+                            newBot.script.maskChanges[space] = {};
+                        }
+                        for (let key in masks) {
+                            hasNewMasks = true;
+                            maskTags.add(key);
+                            const value =
+                                (newMasks[key] =
+                                newBot.script.maskChanges[space][key] =
+                                    masks[key]);
+
+                            if (!maskTags.has(key)) {
+                                newBot.values[key] = value;
+                            }
+                        }
+                    }
+
+                    if (addNewMasks && hasNewMasks) {
+                        if (!newBot.masks) {
+                            newBot.masks = {};
+                        }
+                        newBot.masks[space] = newMasks;
+                    }
+                }
+
                 existing.script[REPLACE_BOT_SYMBOL](newBot.script);
             }
 
