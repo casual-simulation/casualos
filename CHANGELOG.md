@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where the gridPortal would error if a bot had `labelPosition` set to `floating` but had no `label`.
+-   Fixed an issue where it was possible for CasualOS to ignore udpates to a newly created bot.
 
 ## V3.1.19
 
