@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.20
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the gridPortal would error if a bot had `labelPosition` set to `floating` but had no `label`.
+
 ## V3.1.19
 
 #### Date: 1/17/2023
