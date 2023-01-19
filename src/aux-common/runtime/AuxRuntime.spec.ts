@@ -93,6 +93,7 @@ import {
     ShowToastAction,
     arSupported,
     UNMAPPABLE,
+    updatedBot,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -1415,6 +1416,295 @@ describe('AuxRuntime', () => {
                             version: null,
                         });
                     });
+                });
+
+                it('should preserve tag changes on new bots that are replaced and occur after async resolutions', async () => {
+                    uuidMock.mockReturnValueOnce('newBotId');
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                run: '@let newBot = create({ num: 0, creator: null }); await Promise.resolve(); newBot.tags.num += 1; await Promise.resolve(); os.toast(newBot.tags.num)',
+                                num: 1,
+                            }),
+                        })
+                    );
+
+                    runtime.shout('run');
+
+                    // Note: The microtask queue now looks like this:
+                    // 1. check batch (the batch check was scheduled after the create() call)
+                    // 2. resume script
+                    // At this point, the bot has been created and a microtask has been
+                    // created for the batch.
+
+                    expect(events).toEqual([]);
+
+                    await Promise.resolve();
+
+                    // Note: The microtask queue has now checked the batch and also resumed the script.
+                    // It now looks like this:
+                    // 1. check batch (the batch was scheduled after the tag update)
+                    // 2. resume script
+
+                    // The batch has been processed so the created bot event has been emitted.
+                    // We imediately act as if the bot processed and the state updated immediately
+                    // At this point, there are pending changes to the newBotId bot, but they are unbatched (meaning that the bot ID is marked as having an update, but the actual updates aren't codified yet).
+                    // By sending a new bot to the runtime, it is forced to replace the bot instance and therefore we can check whether the changes are preserved.
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            newBotId: createBot('newBotId', {
+                                num: 0,
+                            }),
+                        })
+                    );
+
+                    await Promise.resolve();
+
+                    // Events show up one microtask after they are emitted
+                    // Here we validate that the correct bot create event was sent
+                    expect(events).toEqual([
+                        [
+                            botAdded(
+                                createBot('newBotId', {
+                                    num: 0,
+                                })
+                            ),
+                        ],
+                    ]);
+
+                    await waitAsync();
+
+                    if (type === 'interpreted') {
+                        expect(events).toEqual([
+                            [
+                                botAdded(
+                                    createBot('newBotId', {
+                                        num: 0,
+                                    })
+                                ),
+                            ],
+                            [
+                                toast(1),
+                                botUpdated('newBotId', {
+                                    tags: {
+                                        num: 1,
+                                    },
+                                }),
+                            ],
+                        ]);
+                    } else {
+                        expect(events).toEqual([
+                            [
+                                botAdded(
+                                    createBot('newBotId', {
+                                        num: 0,
+                                    })
+                                ),
+                            ],
+                            [
+                                botUpdated('newBotId', {
+                                    tags: {
+                                        num: 1,
+                                    },
+                                }),
+                            ],
+                            [toast(1)],
+                        ]);
+                    }
+                });
+
+                it('should preserve raw tag changes on new bots that are replaced and occur after async resolutions', async () => {
+                    uuidMock.mockReturnValueOnce('newBotId');
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                run: '@let newBot = create({ num: 0, creator: null }); await Promise.resolve(); newBot.raw.num = 1; await Promise.resolve(); os.toast(newBot.raw.num)',
+                                num: 1,
+                            }),
+                        })
+                    );
+
+                    runtime.shout('run');
+
+                    // Note: The microtask queue now looks like this:
+                    // 1. check batch (the batch check was scheduled after the create() call)
+                    // 2. resume script
+                    // At this point, the bot has been created and a microtask has been
+                    // created for the batch.
+
+                    expect(events).toEqual([]);
+
+                    await Promise.resolve();
+
+                    // Note: The microtask queue has now checked the batch and also resumed the script.
+                    // It now looks like this:
+                    // 1. check batch (the batch was scheduled after the tag update)
+                    // 2. resume script
+
+                    // The batch has been processed so the created bot event has been emitted.
+                    // We imediately act as if the bot processed and the state updated immediately
+                    // At this point, there are pending changes to the newBotId bot, but they are unbatched (meaning that the bot ID is marked as having an update, but the actual updates aren't codified yet).
+                    // By sending a new bot to the runtime, it is forced to replace the bot instance and therefore we can check whether the changes are preserved.
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            newBotId: createBot('newBotId', {
+                                num: 0,
+                            }),
+                        })
+                    );
+
+                    await Promise.resolve();
+
+                    // Events show up one microtask after they are emitted
+                    // Here we validate that the correct bot create event was sent
+                    expect(events).toEqual([
+                        [
+                            botAdded(
+                                createBot('newBotId', {
+                                    num: 0,
+                                })
+                            ),
+                        ],
+                    ]);
+
+                    await waitAsync();
+
+                    if (type === 'interpreted') {
+                        expect(events).toEqual([
+                            [
+                                botAdded(
+                                    createBot('newBotId', {
+                                        num: 0,
+                                    })
+                                ),
+                            ],
+                            [
+                                toast(1),
+                                botUpdated('newBotId', {
+                                    tags: {
+                                        num: 1,
+                                    },
+                                }),
+                            ],
+                        ]);
+                    } else {
+                        expect(events).toEqual([
+                            [
+                                botAdded(
+                                    createBot('newBotId', {
+                                        num: 0,
+                                    })
+                                ),
+                            ],
+                            [
+                                botUpdated('newBotId', {
+                                    tags: {
+                                        num: 1,
+                                    },
+                                }),
+                            ],
+                            [toast(1)],
+                        ]);
+                    }
+                });
+
+                it('should preserve tag mask changes on new bots that are replaced and occur after async resolutions', async () => {
+                    uuidMock.mockReturnValueOnce('newBotId');
+                    const update1 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                run: '@let newBot = create({ num: 0, creator: null }); await Promise.resolve(); newBot.masks.num = 1; await Promise.resolve(); os.toast(newBot.masks.num)',
+                                num: 1,
+                            }),
+                        })
+                    );
+
+                    runtime.shout('run');
+
+                    // Note: The microtask queue now looks like this:
+                    // 1. check batch (the batch check was scheduled after the create() call)
+                    // 2. resume script
+                    // At this point, the bot has been created and a microtask has been
+                    // created for the batch.
+
+                    expect(events).toEqual([]);
+
+                    await Promise.resolve();
+
+                    // Note: The microtask queue has now checked the batch and also resumed the script.
+                    // It now looks like this:
+                    // 1. check batch (the batch was scheduled after the tag update)
+                    // 2. resume script
+
+                    // The batch has been processed so the created bot event has been emitted.
+                    // We imediately act as if the bot processed and the state updated immediately
+                    // At this point, there are pending changes to the newBotId bot, but they are unbatched (meaning that the bot ID is marked as having an update, but the actual updates aren't codified yet).
+                    // By sending a new bot to the runtime, it is forced to replace the bot instance and therefore we can check whether the changes are preserved.
+                    const update2 = runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            newBotId: createBot('newBotId', {
+                                num: 0,
+                            }),
+                        })
+                    );
+
+                    await Promise.resolve();
+
+                    // Events show up one microtask after they are emitted
+                    // Here we validate that the correct bot create event was sent
+                    expect(events).toEqual([
+                        [
+                            botAdded(
+                                createBot('newBotId', {
+                                    num: 0,
+                                })
+                            ),
+                        ],
+                    ]);
+
+                    await waitAsync();
+
+                    if (type === 'interpreted') {
+                        expect(events).toEqual([
+                            [
+                                botAdded(
+                                    createBot('newBotId', {
+                                        num: 0,
+                                    })
+                                ),
+                            ],
+                            [
+                                toast(1),
+                                botUpdated('newBotId', {
+                                    masks: {
+                                        tempLocal: {
+                                            num: 1,
+                                        },
+                                    },
+                                }),
+                            ],
+                        ]);
+                    } else {
+                        expect(events).toEqual([
+                            [
+                                botAdded(
+                                    createBot('newBotId', {
+                                        num: 0,
+                                    })
+                                ),
+                            ],
+                            [
+                                botUpdated('newBotId', {
+                                    masks: {
+                                        tempLocal: {
+                                            num: 1,
+                                        },
+                                    },
+                                }),
+                            ],
+                            [toast(1)],
+                        ]);
+                    }
                 });
 
                 describe('timers', () => {

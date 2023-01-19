@@ -4501,6 +4501,29 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
+            it('should support the type property', () => {
+                const action = library.api.os.addDropGrid({
+                    position: { x: 0, y: 0, z: 0 },
+                    rotation: { x: 0, y: 0, z: 0 },
+                    priority: 1,
+                    bounds: { x: 5, y: 2 },
+                    showGrid: true,
+                    type: 'sphere',
+                });
+                const expected = addDropGrid(null, [
+                    {
+                        position: { x: 0, y: 0, z: 0 },
+                        rotation: { x: 0, y: 0, z: 0 },
+                        priority: 1,
+                        bounds: { x: 5, y: 2 },
+                        showGrid: true,
+                        type: 'sphere',
+                    },
+                ]);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
             it('should accept a list of targets', () => {
                 const action = library.api.os.addDropGrid(
                     {
@@ -4545,6 +4568,29 @@ describe('AuxLibrary', () => {
                         priority: 1,
                         bounds: { x: 5, y: 2 },
                         showGrid: true,
+                    },
+                ]);
+                expect(action).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support the type property', () => {
+                const action = library.api.os.addBotDropGrid(bot1, {
+                    position: { x: 0, y: 0, z: 0 },
+                    rotation: { x: 0, y: 0, z: 0 },
+                    priority: 1,
+                    bounds: { x: 5, y: 2 },
+                    showGrid: true,
+                    type: 'sphere',
+                });
+                const expected = addDropGrid(bot1.id, [
+                    {
+                        position: { x: 0, y: 0, z: 0 },
+                        rotation: { x: 0, y: 0, z: 0 },
+                        priority: 1,
+                        bounds: { x: 5, y: 2 },
+                        showGrid: true,
+                        type: 'sphere',
                     },
                 ]);
                 expect(action).toEqual(expected);

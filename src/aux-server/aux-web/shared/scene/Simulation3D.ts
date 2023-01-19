@@ -449,7 +449,7 @@ export abstract class Simulation3D
 
                                 return m;
                             };
-                            b.scaleContainer.add(group);
+                            b.container.add(group);
                         } else {
                             b.container.add(group);
                         }

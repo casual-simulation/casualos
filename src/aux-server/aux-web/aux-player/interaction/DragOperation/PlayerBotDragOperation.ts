@@ -22,6 +22,7 @@ import {
     calculateGridScale,
     SnapGrid,
     realNumberOrDefault,
+    getBotShape,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import {
@@ -65,6 +66,8 @@ import { BoundedGrid3D } from '../../../shared/scene/BoundedGrid3D';
 import { DimensionGroup3D } from '../../../shared/scene/DimensionGroup3D';
 import { first } from '@casual-simulation/causal-trees';
 import { convertCasualOSPositionToThreePosition } from '../../../shared/scene/grid/Grid';
+import { Simulation3D } from '../../../shared/scene/Simulation3D';
+import { SphereGrid3D } from '../../../shared/scene/SphereGrid3D';
 
 const INTERNAL_GRID_FLAG = Symbol('internal_grid');
 const INTERNAL_GRID_DIMENSION = Symbol('internal_grid_dimension');
@@ -937,10 +940,13 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             .map((g) => {
                 let grid = this._internalGrids.get(g);
                 if (!grid) {
-                    let bounded = new BoundedGrid3D();
+                    // let bounded: Grid3D & Object3D;
+                    let bounded =
+                        this._getTypeForGrid(currentSim, g) === 'grid'
+                            ? new BoundedGrid3D()
+                            : new SphereGrid3D();
                     grid = bounded as any;
                     grid[INTERNAL_GRID_FLAG] = true;
-                    bounded.useAuxCoordinates = true;
                     if (hasValue(g.rotation)) {
                         if (hasValue(g.rotation.w)) {
                             bounded.quaternion.set(
@@ -957,24 +963,26 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                             );
                         }
                     }
-                    if (hasValue(g.bounds)) {
-                        bounded.maxX = Math.floor(
-                            realNumberOrDefault(g.bounds.x, 5) / 2
-                        );
-                        bounded.minX = Math.floor(
-                            realNumberOrDefault(-g.bounds.x, -5) / 2
-                        );
-                        bounded.maxY = Math.floor(
-                            realNumberOrDefault(g.bounds.y, 5) / 2
-                        );
-                        bounded.minY = Math.floor(
-                            realNumberOrDefault(-g.bounds.y, -5) / 2
-                        );
-                    } else {
-                        bounded.maxX = 5;
-                        bounded.minX = -5;
-                        bounded.maxY = 5;
-                        bounded.minY = -5;
+                    if (bounded instanceof BoundedGrid3D) {
+                        if (hasValue(g.bounds)) {
+                            bounded.maxX = Math.floor(
+                                realNumberOrDefault(g.bounds.x, 5) / 2
+                            );
+                            bounded.minX = Math.floor(
+                                realNumberOrDefault(-g.bounds.x, -5) / 2
+                            );
+                            bounded.maxY = Math.floor(
+                                realNumberOrDefault(g.bounds.y, 5) / 2
+                            );
+                            bounded.minY = Math.floor(
+                                realNumberOrDefault(-g.bounds.y, -5) / 2
+                            );
+                        } else {
+                            bounded.maxX = 5;
+                            bounded.minX = -5;
+                            bounded.maxY = 5;
+                            bounded.minY = -5;
+                        }
                     }
 
                     if (!hasValue(g.portalBotId)) {
@@ -1006,6 +1014,10 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                                 hasParent = true;
                                 bounded.tileScale =
                                     group.simulation3D.getGridScale(group);
+
+                                if (bounded instanceof SphereGrid3D) {
+                                    bounded.useLatLon = true;
+                                }
 
                                 break;
                             }
@@ -1051,6 +1063,28 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         priorityGrid.grids.push(grid3D);
 
         return this._dragOnGrid(calc, priorityGrid, inputRay);
+    }
+
+    private _getTypeForGrid(sim: Simulation3D, g: SnapGrid): SnapGrid['type'] {
+        if (g.type === 'grid' || g.type === 'sphere') {
+            return g.type;
+        } else if (hasValue(g.portalBotId)) {
+            let group = sim.dimensionGroupForBotAndTag(
+                g.portalBotId,
+                g.portalTag ??
+                    (g.portalBotId === sim.simulation.helper.userId
+                        ? 'gridPortal'
+                        : 'formAddress')
+            );
+            if (group) {
+                const shape = getBotShape(null, group.bot);
+                if (shape === 'spherePortal') {
+                    return 'sphere';
+                }
+            }
+        }
+
+        return 'grid';
     }
 
     private _dragOnGrid(
@@ -1298,6 +1332,9 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
             const grid = gridTile.grid;
             if ((grid as unknown as InternalGrid)[INTERNAL_GRID_FLAG]) {
+                if (gridTile.is3DTile) {
+                    result.copy(gridTile.center);
+                }
                 const obj = grid as unknown as Object3D;
 
                 const position = new Vector3();

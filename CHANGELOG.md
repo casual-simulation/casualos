@@ -1,5 +1,21 @@
 # CasualOS Changelog
 
+## V3.1.20
+
+#### Date: 1/19/2023
+
+### :rocket: Improvements
+
+-   Added the ability to specify a `type` to `os.addDropGrid()` and `os.addBotDropGrid()`.
+    -   Possible types are `sphere` and `grid`. (Defaults to `grid`)
+    -   When combined with `portalBot`, you can use this to place bots in a sphere portal.
+    -   Alternatively, it can be used to place bots on the surface of a sphere (without rotation for now).
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the gridPortal would error if a bot had `labelPosition` set to `floating` but had no `label`.
+-   Fixed an issue where it was possible for CasualOS to ignore udpates to a newly created bot.
+
 ## V3.1.19
 
 #### Date: 1/17/2023

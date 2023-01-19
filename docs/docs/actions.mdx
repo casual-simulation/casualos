@@ -3372,6 +3372,15 @@ let grid: {
      * Defaults to false.
      */
     showGrid?: boolean;
+
+    /**
+     * The type of grid that this snap grid should be.
+     * Defaults to the type of grid that the portal bot uses.
+     * 
+     * - "grid" indicates that the snap target should be a flat grid.
+     * - "sphere" indicates that the snap target should be a sphere.
+     */
+    type?: 'grid' | 'sphere';
 };
 ```
 
@@ -3419,6 +3428,14 @@ os.addDropGrid({
     bounds: { x: 20, y: 20 },
     showGrid: true,
     priority: 20
+});
+```
+
+```typescript title='Add a spherical grid that the user can see.'
+os.addDropGrid({
+    type: "sphere",
+    position: { x: 0, y: 0, z: 3 },
+    showGrid: true
 });
 ```
 
@@ -3476,6 +3493,15 @@ let grid: {
      * Defaults to false.
      */
     showGrid?: boolean;
+
+    /**
+     * The type of grid that this snap grid should be.
+     * Defaults to the type of grid that the portal bot uses.
+     * 
+     * - "grid" indicates that the snap target should be a flat grid.
+     * - "sphere" indicates that the snap target should be a sphere.
+     */
+    type?: 'grid' | 'sphere';
 };
 ```
 
@@ -3523,6 +3549,14 @@ os.addBotDropGrid(thisBot, {
     bounds: { x: 20, y: 20 },
     showGrid: true,
     priority: 20
+});
+```
+
+```typescript title='Add a spherical grid that the user can see.'
+os.addBotDropGrid(thisBot, {
+    type: "sphere",
+    position: { x: 0, y: 0, z: 3 },
+    showGrid: true
 });
 ```
 
