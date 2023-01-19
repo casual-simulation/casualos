@@ -4151,7 +4151,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             type:
                 t.type && (t.type === 'sphere' || t.type === 'grid')
                     ? t.type
-                    : null,
+                    : undefined,
         }));
     }
 
