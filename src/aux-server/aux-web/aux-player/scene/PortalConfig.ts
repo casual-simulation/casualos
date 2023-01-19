@@ -295,7 +295,6 @@ export class PortalConfig implements SubscriptionLike {
         this._defaultGrid3D = this._grid3D = new BoundedGrid3D().showGrid(
             false
         );
-        this._defaultGrid3D.useAuxCoordinates = true;
         this._sub = watchPortalConfigBot(simulation, portalTag)
             .pipe(
                 tap((update) => {

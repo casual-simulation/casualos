@@ -1180,6 +1180,15 @@ export interface SnapGridTarget {
      * Defaults to false.
      */
     showGrid?: boolean;
+
+    /**
+     * The type of grid that this snap grid should be.
+     * Defaults to the type of grid that the portal bot uses.
+     *
+     * - "grid" indicates that the snap target should be a flat grid.
+     * - "sphere" indicates that the snap target should be a sphere.
+     */
+    type?: 'grid' | 'sphere';
 }
 
 export type JoinRoomResult = JoinRoomSuccess | JoinRoomFailure;
@@ -4139,6 +4148,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             portalTag: t.portalTag,
             priority: t.priority,
             showGrid: t.showGrid,
+            type:
+                t.type && (t.type === 'sphere' || t.type === 'grid')
+                    ? t.type
+                    : null,
         }));
     }
 

@@ -76,29 +76,6 @@ export class MapPortalGrid3D implements Grid3D {
         }
 
         return null;
-        // Physics.raycast(ray, [this._globe], null);
-        // const pagePos = this._getPagePositionForRay(ray);
-        // let mapPos = this.mapView.toMap(pagePos);
-
-        // if (mapPos) {
-        //     // mapPos is in this.mapView.spatialReference
-        //     // we need it in WGS84
-        //     if (!mapPos.spatialReference.isWGS84) {
-        //         if (!WebMercatorUtils.canProject(mapPos.spatialReference, SpatialReference.WGS84)) {
-        //             return null;
-        //         }
-        //     }
-
-        //     mapPos = WebMercatorUtils.project(mapPos, SpatialReference.WGS84) as Point;
-
-        //     return new Vector3(
-        //         mapPos.longitude,
-        //         0,
-        //         mapPos.latitude,
-        //     );
-        // }
-
-        // return null;
     }
 
     getTileFromRay(ray: Ray, roundToWholeNumber: boolean): GridTile {

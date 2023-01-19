@@ -30,8 +30,6 @@ export const GRIDLINES_Y_END = 5;
  * A grid for Aux Player to help position objects in a dimension.
  */
 export class BoundedGrid3D extends Object3D implements Grid3D {
-    useAuxCoordinates: boolean = false;
-
     get tileScale() {
         return this._tileScale;
     }
@@ -136,11 +134,6 @@ export class BoundedGrid3D extends Object3D implements Grid3D {
     ): GridTile {
         const localPos = position.clone();
         this.worldToLocal(localPos);
-
-        // if (this.useAuxCoordinates) {
-        //     // Flip the z axis to line up with AUX coordinates.
-        //     localPos.z = -localPos.z;
-        // }
 
         // Snap position to a grid center.
         let tileX = snapToTileCoord(

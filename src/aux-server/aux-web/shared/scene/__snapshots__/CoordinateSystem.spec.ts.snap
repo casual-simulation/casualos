@@ -2,8 +2,8 @@
 
 exports[`CoordinateSystem latLonToCartesian() should return a Vector3 for the given latitude and longitude and altitude 1`] = `
 Vector3 {
-  "x": 15.517540966287266,
-  "y": 2.7361611466053493,
-  "z": 2.7783708426708853,
+  "x": 15.457679690014206,
+  "y": 3.285631246305953,
+  "z": 2.502951440643694,
 }
 `;

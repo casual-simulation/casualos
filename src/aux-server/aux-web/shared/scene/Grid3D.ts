@@ -70,4 +70,10 @@ export interface GridTile {
      * The grid that the tile is for.
      */
     grid: Grid3D;
+
+    /**
+     * Whether the grid tile should be used as a 3D position.
+     * Defaults to false.
+     */
+    is3DTile?: boolean;
 }
