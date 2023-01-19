@@ -4,6 +4,13 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added the ability to specify a `type` to `os.addDropGrid()` and `os.addBotDropGrid()`.
+    -   Possible types are `sphere` and `grid`. (Defaults to `grid`)
+    -   When combined with `portalBot`, you can use this to place bots in a sphere portal.
+    -   Alternatively, it can be used to place bots on the surface of a sphere (without rotation for now).
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where the gridPortal would error if a bot had `labelPosition` set to `floating` but had no `label`.
