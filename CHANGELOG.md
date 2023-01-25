@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.21
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Improved the ab-1 bootstrapper to support Version 2 AUX Files.
+
 ## V3.1.20
 
 #### Date: 1/19/2023
