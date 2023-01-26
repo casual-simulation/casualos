@@ -23,11 +23,22 @@ export async function importInterpreter(): ReturnType<
     const response = await fetch(url.href);
     if (
         response.status >= 300 ||
-        response.headers.get('content-type') !== 'application/json'
+        !response.headers.has('content-type') ||
+        (!response.headers
+            .get('content-type')
+            .startsWith('application/javascript') &&
+            !response.headers
+                .get('content-type')
+                .startsWith('text/javascript') &&
+            !response.headers
+                .get('content-type')
+                .startsWith('application/json') &&
+            !response.headers.get('content-type').startsWith('text/json'))
     ) {
         console.error(
             '[aux-runtime-dynamic-imports] Unable to import interpreter!',
-            response
+            response,
+            response.headers.get('content-type')
         );
         throw new Error('Unable to import the interpreter!');
     }
