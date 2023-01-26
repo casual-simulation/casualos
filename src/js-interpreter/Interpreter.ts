@@ -240,39 +240,53 @@ export class Interpreter {
      * @param func The function that should be called.
      * @param args The arguments that should be provided to the function.
      */
-    *callFunction(
+    callFunction(
         func: ConstructedFunction,
         ...args: any[]
     ): Generator<InterpreterStop, any, InterpreterContinuation> {
-        let a = args.map((a) => {
-            const result = this.copyToValue(a);
+        setSurroundingAgent(this.agent);
+        const _this = this;
+        function* gen() {
+            let a = args.map((a) => {
+                const result = _this.copyToValue(a);
+                if (result.Type !== 'normal') {
+                    throw _this.copyFromValue(result.Value);
+                }
+                return result.Value;
+            });
+
+            const generator = Call(func.func, Value.null, a);
+            const result = yield* _this._handleBreakpoints(generator);
+            const copied = _this.copyFromValue(result.Value);
+
             if (result.Type !== 'normal') {
-                throw this.copyFromValue(result.Value);
+                throw copied;
             }
-            return result.Value;
-        });
-
-        const generator = Call(func.func, Value.null, a);
-        const result = yield* this._handleBreakpoints(generator);
-        const copied = this.copyFromValue(result.Value);
-
-        if (result.Type !== 'normal') {
-            throw copied;
+            return copied;
         }
-        return copied;
+
+        return gen();
     }
 
     /**
      * Runs the job queue and yields with any interpreter breaks that are encountered along the way.
      */
-    *runJobQueue(): Generator<InterpreterStop, void, InterpreterContinuation> {
-        yield* this._handleBreakpoints(runJobQueue());
+    runJobQueue(): Generator<InterpreterStop, void, InterpreterContinuation> {
+        setSurroundingAgent(this.agent);
+
+        const _this = this;
+        function* gen() {
+            return yield* _this._handleBreakpoints(runJobQueue());
+        }
+
+        return gen();
     }
 
     private *_handleBreakpoints<T>(
         generator: Generator<EvaluationYield, T, unknown>
     ): Generator<InterpreterStop, T, InterpreterContinuation> {
         while (true) {
+            setSurroundingAgent(this.agent);
             let { done, value } = generator.next();
 
             if (done) {

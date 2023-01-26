@@ -1838,6 +1838,37 @@ const otherRemotes = remotes.filter(id => id !== remoteId);
 sendRemoteData(otherRemotes, "custom", "Hello");
 ```
 
+### `action.perform(action)`
+
+Performs the given action. This function can be used to perform actions that you have stored as data without having to find out which function to call.
+You can find a list of action types [here](https://github.com/casual-simulation/casualos/blob/develop/src/aux-common/bots/BotEvents.ts#L40).
+
+The **first parameter** is the action that should be performed.
+
+#### Examples:
+
+```typescript title='Perform a toast action'
+action.perform({
+    type: 'show_toast',
+    message: 'Hello, world!',
+    duration: 2000
+});
+```
+
+```typescript title='Perform an add bot action'
+action.perform({
+    type: 'add_bot',
+    id: 'bot_id',
+    bot: {
+        id: 'bot_id',
+        tags: {
+            home: true,
+            label: 'Hello, World!'
+        }
+    }
+});
+```
+
 ### `action.reject(action)`
 
 
@@ -1846,6 +1877,8 @@ Prevents a previous action from being performed.
 This is especially useful when used in a <TagLink tag='@onAnyAction'/> listener since it lets you reject actions before they are performed.
 
 The **first parameter** is the action that should be prevented/rejected.
+
+#### Examples:
 
 1. Prevent a toast message from being performed.
 ```typescript
@@ -2946,6 +2979,9 @@ os.download("abc", "test.txt");
 Downloads the given array of bots as a `.aux` or a `.pdf` file with the given filename.
 Useful for quickly backing up a set of bots.
 
+The downloaded bots will be stored in the Version 1 format of the <GlossaryRef term='aux'>AUX File Format</GlossaryRef>, which is well suited for most scenarios.
+For scenarios where you want conflict-free initialization of a shared inst, you should use <ActionLink action='os.downloadBotsAsInitialzationUpdate(bots, filename)'/>.
+
 The **first parameter** is the array of bots that should be downloaded.
 
 The **second parameter** is the name of the file that the bots should be stored in.
@@ -2967,6 +3003,36 @@ os.downloadBots([bot], "currentBot");
 3. Download all bots as "myServer.pdf".
 ```typescript
 os.downloadBots(getBots(), "myServer.pdf");
+```
+
+### `os.downloadBotsAsInitialzationUpdate(bots, filename)`
+
+Downloads the given array of bots as a `.aux` or a `.pdf` file with the given filename.
+
+The downloaded bots will be stored in the Version 2 format of the <GlossaryRef term='aux'>AUX File Format</GlossaryRef>, which is better suited towards scenarios which require conflict-free initialization of a shared inst from the AUX file.
+For an archive of the current state, you should use <ActionLink action='os.downloadBots(bots, filename)'/> which is better for scenarios which require direct access to the bot data.
+
+The **first parameter** is the array of bots that should be downloaded.
+
+The **second parameter** is the name of the file that the bots should be stored in.
+If the filename ends with `.pdf`, then a PDF file will be downloaded with the bots as embedded data.
+Otherwise, `.aux` will automatically be added to the end of the filename.
+
+#### Examples:
+
+1. Download all the bots in the "abc" dimension as "abcBots.aux".
+```typescript
+os.downloadBotsAsInitialzationUpdate(getBots(inDimension("abc")), "abcBots");
+```
+
+2. Download the current bot as "currentBot.aux".
+```typescript
+os.downloadBotsAsInitialzationUpdate([bot], "currentBot");
+```
+
+3. Download all bots as "myServer.pdf".
+```typescript
+os.downloadBotsAsInitialzationUpdate(getBots(), "myServer.pdf");
 ```
 
 ### `os.downloadInst()`
@@ -3306,6 +3372,15 @@ let grid: {
      * Defaults to false.
      */
     showGrid?: boolean;
+
+    /**
+     * The type of grid that this snap grid should be.
+     * Defaults to the type of grid that the portal bot uses.
+     * 
+     * - "grid" indicates that the snap target should be a flat grid.
+     * - "sphere" indicates that the snap target should be a sphere.
+     */
+    type?: 'grid' | 'sphere';
 };
 ```
 
@@ -3353,6 +3428,14 @@ os.addDropGrid({
     bounds: { x: 20, y: 20 },
     showGrid: true,
     priority: 20
+});
+```
+
+```typescript title='Add a spherical grid that the user can see.'
+os.addDropGrid({
+    type: "sphere",
+    position: { x: 0, y: 0, z: 3 },
+    showGrid: true
 });
 ```
 
@@ -3410,6 +3493,15 @@ let grid: {
      * Defaults to false.
      */
     showGrid?: boolean;
+
+    /**
+     * The type of grid that this snap grid should be.
+     * Defaults to the type of grid that the portal bot uses.
+     * 
+     * - "grid" indicates that the snap target should be a flat grid.
+     * - "sphere" indicates that the snap target should be a sphere.
+     */
+    type?: 'grid' | 'sphere';
 };
 ```
 
@@ -3457,6 +3549,14 @@ os.addBotDropGrid(thisBot, {
     bounds: { x: 20, y: 20 },
     showGrid: true,
     priority: 20
+});
+```
+
+```typescript title='Add a spherical grid that the user can see.'
+os.addBotDropGrid(thisBot, {
+    type: "sphere",
+    position: { x: 0, y: 0, z: 3 },
+    showGrid: true
 });
 ```
 
@@ -4280,7 +4380,6 @@ await os.closeImageClassifier();
 
 ### `os.showInput(value?, options?)`
 
-
 Shows an input modal with the given value and options.
 When shown, the player will be able to change the value.
 
@@ -4344,7 +4443,6 @@ os.toast(date);
 
 ### `os.showInputForTag(bot, tag, options?)`
 
-
 Shows an input modal for the given bot and tag with the given options.
 When shown, the player will be able to change the value stored in the given tag.
 Triggers the <TagLink tag='@onSaveInput'/> whisper when the modal is closed with saving and the <TagLink tag='@onCloseInput'/> whisper when the modal is closed without saving.
@@ -4384,8 +4482,62 @@ os.showInputForTag(this, "color", {
 });
 ```
 
-### `os.setClipboard(text)`
+### `os.showConfirm(options)`
 
+Shows a confirmation dialog using the given options.
+Confirmation dialogs are useful for giving users the ability to quickly confirm or cancel an action.
+
+Returns a promise that resolves with `true` if the user clicked the "Confirm" button and `false` if they closed the dialog or clicked the "Cancel" button.
+
+The **first parameter** is the options that should be used. It should be an object with the following structure:
+
+```typescript
+let options: {
+    /**
+     * The title that should be shown for the dialog.
+     */
+    title: string;
+
+    /**
+     * The content of the dialog.
+     */
+    content: string;
+
+    /**
+     * The text that should be shown on the "Confirm" button.
+     */
+    confirmText?: string;
+
+    /**
+     * The text that should be shown on the "Cancel" button.
+     */
+    cancelText?: string;
+};
+```
+
+#### Examples:
+
+```typescript title='Show a confirmation dialog'
+let confirmed = await os.showConfirm({
+    title: 'Confirm',
+    content: 'Please confirm the action.'
+});
+
+os.toast('Confirmed: ' + (confirmed ? 'Yes' : 'No'));
+```
+
+```typescript title='Show a confirmation dialog with custom button text'
+let confirmed = await os.showConfirm({
+    title: 'Confirm',
+    content: 'Are you sure?',
+    confirmText: 'Yes',
+    cancelText: 'No'
+});
+
+os.toast('Confirmed: ' + (confirmed ? 'Yes' : 'No'));
+```
+
+### `os.setClipboard(text)`
 
 Copies the given text to the player's clipboard. On Chrome and Firefox, this will act like a `Ctrl+C`/`Cmd+C`. 
 On Safari and all iOS browsers this will open a popup which prompts the player to copy the text.
@@ -7482,6 +7634,8 @@ const triggers = debug.listPauseTriggers();
 Gets a list of common trigger locations for the specified tag on the specified bot.
 Returns an array containing the list of possible pause trigger locations.
 
+Only available inside a debugger that was created using <ActionLink action='os.createDebugger(options?)'/>.
+
 The **first parameter** is the bot or bot ID that the locations should be listed for.
 
 The **second parameter** is the name of the tag that the locations should be listed for.
@@ -7521,6 +7675,8 @@ const trigger = debug.setPauseTrigger(b, 'test', {
 ### `resume(pause)`
 
 Resumes the debugger's execution from the given pause.
+
+Only available inside a debugger that was created using <ActionLink action='os.createDebugger(options?)'/>.
 
 The **first parameter** is the debugger pause that was passed to the handler of <ActionLink action='onPause(handler)'/>.
 
@@ -7564,6 +7720,256 @@ await debug.shout('test');
 // it should print 999 because we changed the value of abc during the debugger pause.
 const actions = debug.getCommonActions();
 action.perform(actions[0]);
+```
+
+### `onScriptActionEnqueued(handler)`
+
+Registers the given handler function to be called by the debugger whenever a script enqueues an action.
+This occurrs for common actions like <ActionLink action='os.toast(message, duration?)'/> and <ActionLink action='os.showInput(value?, options?)'/>.
+
+Every action that is enqueued ends up being performed.
+
+Only available inside a debugger that was created using <ActionLink action='os.createDebugger(options?)'/>.
+
+The **first parameter** is the function that should be called whenever an action is scheduled to be performed. The first parameter of the function is the action that was enqueued.
+
+#### Examples:
+
+```typescript title='Listen for actions to be enqueued in a debugger'
+const debug = await os.createDebugger({
+    pausable: true
+});
+
+// Register a listener that gets called whenever an action is scheduled to be performed.
+debug.onScriptActionEnqueued(action => {
+    console.log('action enqueued', action);
+});
+
+// Because the debugger is pausable, the create() function returns a promise
+// because it calls @onCreate which could cause a pause trigger to be hit.
+const debuggerBot = await debug.create({
+    test: '@let abc = 123; os.toast(abc);'
+});
+
+// Send a shout. Just like the create() function above, we recieve a promise that we can await.
+await debug.shout('test');
+```
+
+### `onAfterScriptUpdatedTag(handler)`
+
+Registers the given handler function to be called after any tag is updated in the debugger.
+
+Only available inside a debugger that was created using <ActionLink action='os.createDebugger(options?)'/>.
+
+The **first parameter** is the function that should be called when a tag is updated.
+The first parameter of the function is an object that contains information about the update.
+
+#### Examples:
+
+```typescript title='Listen for tag updates in a debugger'
+const debug = await os.createDebugger({
+    pausable: true
+});
+
+// Register a listener that gets called whenever a tag is updated.
+debug.onAfterScriptUpdatedTag(update => {
+    console.log('tag updated', update);
+});
+
+// Because the debugger is pausable, the create() function returns a promise
+// because it calls @onCreate which could cause a pause trigger to be hit.
+const debuggerBot = await debug.create({
+    test: '@tags.message = "hello, world";'
+});
+
+// Send a shout. Just like the create() function above, we recieve a promise that we can await.
+await debug.shout('test');
+```
+
+### `onAfterScriptUpdatedTagMask(handler)`
+
+Registers the given handler function to be called after any tag mask is updated in the debugger.
+
+Only available inside a debugger that was created using <ActionLink action='os.createDebugger(options?)'/>.
+
+The **first parameter** is the function that should be called when a tag mask is updated.
+The first parameter of the function is an object that contains information about the update.
+
+#### Examples:
+
+```typescript title='Listen for tag updates in a debugger'
+const debug = await os.createDebugger({
+    pausable: true
+});
+
+// Register a listener that gets called whenever a tag mask is updated.
+debug.onAfterScriptUpdatedTagMask(update => {
+    console.log('tag mask updated', update);
+});
+
+// Because the debugger is pausable, the create() function returns a promise
+// because it calls @onCreate which could cause a pause trigger to be hit.
+const debuggerBot = await debug.create({
+    test: '@masks.message = "hello, world";'
+});
+
+// Send a shout. Just like the create() function above, we recieve a promise that we can await.
+await debug.shout('test');
+```
+
+### `onBeforeUserAction(handler)`
+
+Registers the given handler function to be called before a user action is performed in the debugger.
+
+User actions are like normal actions, except they are generated by the CasualOS frontend.
+Generally, this only happens for built-in shouts and whispers.
+Additionally, these actions can only be automatically created for debuggers that are attached using <ActionLink action='os.attachDebugger(debug, options?)'/>.
+
+Only available inside a debugger that was created using <ActionLink action='os.createDebugger(options?)'/>.
+
+The **first parameter** is the function that should be called before a user action is performed.
+The first parameter of the function is an object that contains the action that will be performed.
+
+#### Examples:
+
+```typescript title='Listen for tag updates in a debugger'
+const debug = await os.createDebugger({
+    pausable: true
+});
+
+// Register a listener that gets called whenever a user action is about to be performed.
+debug.onBeforeUserAction(update => {
+    console.log('user action', update);
+});
+
+// Because the debugger is pausable, the create() function returns a promise
+// because it calls @onCreate which could cause a pause trigger to be hit.
+const debuggerBot = await debug.create({
+    home: true,
+});
+
+// Attach the debugger to the front end
+await os.attachDebugger(debug);
+```
+
+### `performUserAction(...actions)`
+
+Performs the given actions in order as if they were user actions.
+
+This function works similarly to <ActionLink action='action.perform(action)'/> except that actions performed with it will also call handlers registered with <ActionLink action='onBeforeUserAction(handler)'/>.
+
+Only available inside a debugger that was created using <ActionLink action='os.createDebugger(options?)'/>.
+
+**Each parameter** is an action that should be performed.
+
+### `getCallStack()`
+
+Gets the current call stack for the debugger.
+Call stacks are useful for determining program flow and how scripts interact with each other.
+
+Only available inside a debugger that was created using <ActionLink action='os.createDebugger(options?)'/>.
+Additionally, this function is only available on pausable debuggers.
+
+Returns an array with the following structure:
+
+```typescript
+let callStack: DebuggerCallFrame[];
+
+/**
+ * Defines an interface that contains information about a single call stack frame.
+ */
+interface DebuggerCallFrame {
+    /**
+     * The location that was last evaluated in this frame.
+     */
+    location: DebuggerFunctionLocation;
+
+    /**
+     * Gets the list of variables that are avaiable from this frame.
+     */
+    listVariables(): DebuggerVariable[];
+
+    /**
+     * Sets the given variable name to the given value.
+     * @param variableName The name of the variable to set.
+     * @param value The value to set in the variable.
+     */
+    setVariableValue(variableName: string, value: any): void;
+}
+
+/**
+ * Defines an interface that represents a location in a debugger.
+ */
+interface DebuggerFunctionLocation {
+    /**
+     * The name of the function.
+     */
+    name?: string;
+
+    /**
+     * The ID of the bot that this function is defined in.
+     */
+    botId?: string;
+
+    /**
+     * The name of the tag that this function is defined in.
+     */
+    tag?: string;
+
+    /**
+     * The line number that this function is defined at.
+     */
+    lineNumber?: number;
+
+    /**
+     * The column number that this function is defined at.
+     */
+    columnNumber?: number;
+}
+
+/**
+ * Defines an interface that represents a debugger variable.
+ */
+interface DebuggerVariable {
+    /**
+     * The name of the variable.
+     */
+    name: string;
+
+    /**
+     * The value contained by the variable.
+     */
+    value: any;
+
+    /**
+     * The scope that the variable exists in.
+     *
+     * "block" indicates that the variable was defined in and exists only in the current block.
+     * "frame" indicates that the variable was defined in and exists in the current stack frame.
+     * "closure" indicates that the variable was inherited from a parent stack frame.
+     */
+    scope: 'block' | 'frame' | 'closure';
+
+    /**
+     * Whether the variable value can be overwriten.
+     */
+    writable: boolean;
+
+    /**
+     * Whether this variable has been initialized.
+     */
+    initialized?: boolean;
+}
+```
+
+#### Examples:
+
+```typescript title='Get the call stack from a debugger'
+const debug = os.createDebugger({
+    pausable: true
+});
+
+const callStack = debug.getCallStack();
 ```
 
 ## Math Actions
@@ -9265,8 +9671,10 @@ let options: {
      * will cause an error.
      * 
      * Defaults to true.
+     * 
+     * If an array is specified, only the specified audio sources will be recorded.
      */
-    audio: boolean;
+    audio: boolean | ('screen' | 'microphone')[];
 
     /**
      * Whether video from a video camera should be recorded.
@@ -9295,6 +9703,22 @@ await experiment.beginRecording({
     audio: true,
     video: true,
     screen: false
+});
+await os.sleep(10000);
+const data = await experiment.endRecording();
+let index = 0;
+for(let file of data.files) {
+    os.download(file.data, `file-${index}`);
+    index += 1;
+}
+```
+
+2. Record the screen with microphone audio.
+```typescript
+await experiment.beginRecording({
+    audio: ['microphone'],
+    video: false,
+    screen: true
 });
 await os.sleep(10000);
 const data = await experiment.endRecording();

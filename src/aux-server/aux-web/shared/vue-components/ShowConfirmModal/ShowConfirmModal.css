@@ -1,0 +1,19 @@
+.input-dialog-content {
+    padding-bottom: 0;
+}
+
+.input-dialog .md-dialog-title {
+    margin-bottom: 0;
+}
+
+.input-dialog {
+    transition-duration: 0.1s, 0.1s;
+}
+
+.input-dialog .md-dialog-title {
+    display: inline-block;
+}
+
+.md-dialog.input-dialog {
+    z-index: 20;
+}

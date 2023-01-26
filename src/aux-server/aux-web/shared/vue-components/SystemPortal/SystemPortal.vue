@@ -6,7 +6,18 @@
         v-on:keydown.stop
         v-on:keyup.stop
     >
-        <hotkey :keys="['ctrl', 'shift', 'f']" @triggered="showSearch()" />
+        <div v-shortkey="['ctrl-cmd', 'shift', 'f']" @shortkey.stop.prevent="showSearch()" />
+        <!-- <hotkey :keys="['ctrl', 'shift', 'f']" @triggered="showSearch()" /> -->
+        <div
+            v-if="selectedPane !== 'sheet'"
+            v-shortkey="['ctrl-cmd', 'p']"
+            @shortkey.stop.prevent="showQuickAccess()"
+        />
+        <!-- <hotkey
+            v-if="selectedPane !== 'sheet'"
+            :keys="['ctrl', 'p']"
+            @triggered="showQuickAccess()"
+        /> -->
         <md-card ref="card" class="portal-card">
             <md-card-content>
                 <div class="panes">
@@ -318,7 +329,7 @@
                                     @click="selectTag(tag)"
                                     @pin="pinTag(tag)"
                                     @close="closeTag(tag)"
-                                    @focusChanged="onTagFocusChanged(tag, $event)"
+                                    @focusChanged="onTagFocusChanged(selectedBotSimId, tag, $event)"
                                 >
                                 </system-portal-tag>
                             </div>

@@ -39,6 +39,7 @@
         { "path": "../aux-vm-deno" },
         { "path": "../websocket" },
         { "path": "../fast-json-stable-stringify" },
-        { "path": "../multi-streams-mixer" }
+        { "path": "../multi-streams-mixer" },
+        { "path": "../vue-shortkey" }
     ]
 }

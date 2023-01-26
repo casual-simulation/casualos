@@ -1,6 +1,7 @@
 <template>
     <div v-if="hasPortal" class="ide-portal" v-on:keydown.stop v-on:keyup.stop>
-        <hotkey :keys="['ctrl', 'shift', 'f']" @triggered="showSearch()" />
+        <div v-shortkey="['ctrl-cmd', 'shift', 'f']" @shortkey.stop.prevent="showSearch()" />
+        <!-- <hotkey :keys="['ctrl', 'shift', 'f']" @triggered="showSearch()" /> -->
         <md-card ref="card" class="info-card maximized">
             <md-card-content>
                 <div class="items-list">

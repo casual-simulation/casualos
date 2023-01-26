@@ -32,6 +32,7 @@
             <upload-files></upload-files>
             <checkout></checkout>
             <show-input></show-input>
+            <show-confirm></show-confirm>
 
             <md-dialog :md-active.sync="showQRCode" md-theme="default" class="qr-code-dialog">
                 <div class="qr-code-container">
@@ -74,9 +75,17 @@
             >
                 <div class="qr-scanner-container">
                     <h3>Scan a QR Code</h3>
-                    <qrcode-stream @decode="onQRCodeScanned" :camera="camera"></qrcode-stream>
+                    <qrcode-stream
+                        @decode="onQRCodeScanned"
+                        :camera="camera"
+                        :cameraId="selectedCameraId"
+                        @streamAquired="onQRStreamAquired"
+                    ></qrcode-stream>
                 </div>
                 <md-dialog-actions>
+                    <md-button v-if="canSwitchCameras" @click="changeQRStream"
+                        >Change Camera</md-button
+                    >
                     <md-button class="md-primary" @click="hideQRCodeScanner()">Close</md-button>
                 </md-dialog-actions>
             </md-dialog>

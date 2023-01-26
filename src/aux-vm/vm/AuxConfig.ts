@@ -5,8 +5,8 @@ import {
     hasValue,
     RemoteCausalRepoProtocol,
     SharedPartitionsVersion,
+    StoredAuxVersion1,
 } from '@casual-simulation/aux-common';
-import { StoredAux } from '../StoredAux';
 
 /**
  * Defines the possible configuration options for a simulation.
@@ -24,7 +24,7 @@ export interface AuxConfigParameters {
     version: string;
     versionHash: string;
     builder?: string;
-    bootstrapState?: StoredAux;
+    bootstrapState?: StoredAuxVersion1;
     device?: AuxDevice;
 
     /**
@@ -82,7 +82,7 @@ export interface AuxConfigParameters {
 
     /**
      * Gets the player mode of this CasualOS version.
-     * 
+     *
      * - "player" indicates that the instance has been configured for experiencing AUXes.
      * - "builder" indicates that the instance has been configured for building AUXes.
      */
@@ -110,7 +110,7 @@ export function buildVersionNumber(config: AuxConfigParameters) {
     return {
         hash: config.versionHash,
         ...parseVersionNumber(config.version),
-        playerMode: config.playerMode ?? 'builder'
+        playerMode: config.playerMode ?? 'builder',
     };
 }
 

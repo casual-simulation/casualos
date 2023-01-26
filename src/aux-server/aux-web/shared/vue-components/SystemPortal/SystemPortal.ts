@@ -67,7 +67,7 @@ import TagValueEditor from '../TagValueEditor/TagValueEditor';
 import BotTag from '../BotTag/BotTag';
 import { debounce, mapValues, unionBy, uniq } from 'lodash';
 import { onMonacoLoaded } from '../../MonacoAsync';
-import Hotkey from '../Hotkey/Hotkey';
+// import Hotkey from '../Hotkey/Hotkey';
 import { onFocusSearch } from './SystemPortalHelpers';
 import MiniBot from '../MiniBot/MiniBot';
 import {
@@ -101,7 +101,7 @@ import { Simulation, SimulationManager } from '@casual-simulation/aux-vm';
         'tag-diff-editor': MonacoTagDiffEditor,
         'bot-tag': BotTag,
         'bot-id': BotID,
-        hotkey: Hotkey,
+        // hotkey: Hotkey,
         'mini-bot': MiniBot,
         'system-portal-tag': SystemPortalTag,
         'system-portal-diff-tag': SystemPortalDiffTag,
@@ -165,7 +165,9 @@ export default class SystemPortal extends Vue {
     isSettingSheetPortal: boolean = false;
     sheetPortalValue: string = '';
 
+    private _showQuickAccessAfterModelLoad: boolean = false;
     private _focusEditorOnSelectionUpdate: boolean = false;
+    private _focusSearchInputAfterPanelUpdate: boolean = false;
     private _tagSelectionEvents: Map<
         string,
         {
@@ -346,6 +348,12 @@ export default class SystemPortal extends Vue {
             appManager.systemPortal.onSystemPortalPaneUpdated.subscribe(
                 (pane) => {
                     this.selectedPane = pane ?? 'bots';
+                    if (this._focusSearchInputAfterPanelUpdate) {
+                        this._focusSearchInputAfterPanelUpdate = false;
+                        if (this.selectedPane === 'search') {
+                            this._focusSearchInput();
+                        }
+                    }
                 }
             )
         );
@@ -387,11 +395,7 @@ export default class SystemPortal extends Vue {
                             typeof value === 'string' ? value : '';
                     }
                     if (!this.isFocusingTagsSearch) {
-                        const value = calculateBotValue(
-                            null,
-                            bot,
-                            SYSTEM_PORTAL_SEARCH
-                        );
+                        const value = getBotTag(bot, SYSTEM_PORTAL_SEARCH);
                         this.searchTagsValue =
                             typeof value === 'string' ? value : '';
                     }
@@ -431,7 +435,7 @@ export default class SystemPortal extends Vue {
                             e.startIndex ?? 0,
                             e.endIndex ?? e.startIndex ?? 0
                         );
-                    } else {
+                    } else if (hasValue(e.lineNumber)) {
                         this.selectBotAndTagByLineNumber(
                             sim,
                             e.botId,
@@ -441,6 +445,8 @@ export default class SystemPortal extends Vue {
                             e.columnNumber ?? 1,
                             true
                         );
+                    } else {
+                        this.selectBotAndTag(sim, e.botId, e.tag, e.space);
                     }
                 }
             })
@@ -490,11 +496,79 @@ export default class SystemPortal extends Vue {
     showSearch() {
         this._selectPane('search');
         this._closeSheetPortal();
+        this._saveSelectedTextForSearch();
+        this._focusSearchInputAfterPanelUpdate = true;
+        this._focusSearchInput();
+    }
+
+    showQuickAccess() {
+        if (!this._runQuickAccessAction()) {
+            if (!this.selectedBot) {
+                const items = appManager.systemPortal.items;
+                if (items.hasPortal && items.items.length > 0) {
+                    const firstArea = items.items.find(
+                        (a) => a.areas.length > 0 && a.areas[0].bots.length > 0
+                    );
+                    if (firstArea) {
+                        const sim =
+                            appManager.simulationManager.simulations.get(
+                                firstArea.simulationId
+                            );
+                        const bot = firstArea.areas[0].bots[0];
+                        if (sim && bot) {
+                            this._showQuickAccessAfterModelLoad = true;
+                            this.selectBotAndTag(
+                                sim,
+                                bot.bot.id,
+                                'system',
+                                null
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private _runQuickAccessAction() {
+        const editor = <TagValueEditor>this.$refs.multilineEditor;
+        const monacoEditor = editor?.monacoEditor()?.editor;
+        if (monacoEditor) {
+            monacoEditor.focus();
+            setTimeout(() => {
+                const action = monacoEditor.getAction(
+                    'editor.action.quickOutline2'
+                );
+                action.run();
+            }, 100);
+            return true;
+        }
+        return false;
+    }
+
+    private _saveSelectedTextForSearch() {
+        const el = document.activeElement;
+        if (
+            el &&
+            (el instanceof HTMLInputElement ||
+                el instanceof HTMLTextAreaElement)
+        ) {
+            const text = el.value
+                .substring(el.selectionStart ?? 0, el.selectionEnd ?? 0)
+                .trim();
+            if (hasValue(text)) {
+                this._updateSearchValue(text);
+            }
+        }
+    }
+
+    private _focusSearchInput() {
         this.$nextTick(() => {
             const input = this.getSearchTagsInput();
             if (input) {
                 input.focus();
                 input.setSelectionRange(0, input.value.length);
+                this._focusSearchInputAfterPanelUpdate = false;
             }
         });
     }
@@ -576,6 +650,10 @@ export default class SystemPortal extends Vue {
 
     updateSearch(event: InputEvent) {
         const value = (event.target as HTMLInputElement).value;
+        this._updateSearchValue(value);
+    }
+
+    private _updateSearchValue(value: string) {
         this.searchTagsValue = value;
 
         const sim = appManager.simulationManager.primary;
@@ -736,14 +814,19 @@ export default class SystemPortal extends Vue {
         botId: string,
         tag: string,
         space: string,
-        startIndex: number,
-        endIndex: number,
+        startIndex: number = null,
+        endIndex: number = null,
         forceOpen: boolean = false
     ) {
         let tags: BotTags = {
             [SYSTEM_PORTAL_BOT]: createBotLink([botId]),
             [SYSTEM_PORTAL_TAG]: tag,
             [SYSTEM_PORTAL_TAG_SPACE]: space ?? null,
+            [SYSTEM_PORTAL_PANE]: 'bots',
+            [SYSTEM_PORTAL_DIFF]: null,
+            [SYSTEM_PORTAL_DIFF_BOT]: null,
+            [SYSTEM_PORTAL_DIFF_TAG]: null,
+            [SYSTEM_PORTAL_DIFF_TAG_SPACE]: null,
         };
         this._setTagSelection(botId, tag, space, startIndex, endIndex);
 
@@ -754,6 +837,16 @@ export default class SystemPortal extends Vue {
                 sim.helper.userBot.tags[SYSTEM_PORTAL_TAG] ||
             tags[SYSTEM_PORTAL_TAG_SPACE] !=
                 sim.helper.userBot.tags[SYSTEM_PORTAL_TAG_SPACE] ||
+            tags[SYSTEM_PORTAL_PANE] !=
+                sim.helper.userBot.tags[SYSTEM_PORTAL_PANE] ||
+            tags[SYSTEM_PORTAL_DIFF] !=
+                sim.helper.userBot.tags[SYSTEM_PORTAL_DIFF] ||
+            tags[SYSTEM_PORTAL_DIFF_BOT] !=
+                sim.helper.userBot.tags[SYSTEM_PORTAL_DIFF_BOT] ||
+            tags[SYSTEM_PORTAL_DIFF_TAG] !=
+                sim.helper.userBot.tags[SYSTEM_PORTAL_DIFF_TAG] ||
+            tags[SYSTEM_PORTAL_DIFF_TAG_SPACE] !=
+                sim.helper.userBot.tags[SYSTEM_PORTAL_DIFF_TAG_SPACE] ||
             (forceOpen && !this.hasPortal)
         ) {
             if (!this.hasPortal) {
@@ -780,6 +873,11 @@ export default class SystemPortal extends Vue {
                     action.selectionEnd
                 );
             }
+
+            if (this._showQuickAccessAfterModelLoad) {
+                this._showQuickAccessAfterModelLoad = false;
+                this._runQuickAccessAction();
+            }
         }
     }
 
@@ -794,19 +892,24 @@ export default class SystemPortal extends Vue {
             const model = monacoEditor.getModel();
             if (model && model.uri.toString() === modelUri) {
                 setTimeout(() => {
-                    const position = model.getPositionAt(selectionStart);
-                    const endPosition = model.getPositionAt(selectionEnd);
-                    monacoEditor.setSelection({
-                        startLineNumber: position.lineNumber,
-                        startColumn: position.column,
-                        endLineNumber: endPosition.lineNumber,
-                        endColumn: endPosition.column,
-                    });
-                    monacoEditor.revealLinesInCenter(
-                        position.lineNumber,
-                        endPosition.lineNumber,
-                        1 /* Immediate scrolling */
-                    );
+                    if (
+                        typeof selectionStart === 'number' &&
+                        typeof selectionEnd === 'number'
+                    ) {
+                        const position = model.getPositionAt(selectionStart);
+                        const endPosition = model.getPositionAt(selectionEnd);
+                        monacoEditor.setSelection({
+                            startLineNumber: position.lineNumber,
+                            startColumn: position.column,
+                            endLineNumber: endPosition.lineNumber,
+                            endColumn: endPosition.column,
+                        });
+                        monacoEditor.revealLinesInCenter(
+                            position.lineNumber,
+                            endPosition.lineNumber,
+                            1 /* Immediate scrolling */
+                        );
+                    }
                     monacoEditor.focus();
                 }, 100);
                 return true;
@@ -980,14 +1083,19 @@ export default class SystemPortal extends Vue {
         this._setSimUserBotTags(recent.simulationId, tags);
     }
 
-    onTagFocusChanged(tag: SystemPortalSelectionTag, focused: boolean) {
+    onTagFocusChanged(
+        selectedBotSimId: string,
+        tag: SystemPortalSelectionTag,
+        focused: boolean
+    ) {
         if (focused) {
             this.selectTag(tag);
 
             if (this.selectedBot && this.selectedTag) {
-                const sim = appManager.simulationManager.simulations.get(
-                    this.selectedBotSimId
-                );
+                const sim =
+                    appManager.simulationManager.simulations.get(
+                        selectedBotSimId
+                    );
                 sim.helper.setEditingBot(
                     this.selectedBot,
                     this.selectedTag,

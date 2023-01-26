@@ -39,6 +39,7 @@ let folders = [
     `${__dirname}/src/aux-records-aws`,
     `${__dirname}/src/timesync`,
     `${__dirname}/src/js-interpreter`,
+    `${__dirname}/src/vue-shortkey`,
 ];
 
 let patterns = [

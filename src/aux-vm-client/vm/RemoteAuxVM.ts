@@ -3,6 +3,7 @@ import {
     StateUpdatedEvent,
     RuntimeStateVersion,
     BotAction,
+    StoredAux,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '@casual-simulation/aux-vm/AuxUser';
 import {
@@ -21,7 +22,6 @@ import {
 } from '@casual-simulation/causal-trees';
 import { Observable, Subject } from 'rxjs';
 import { proxy, Remote, createEndpoint } from 'comlink';
-import { StoredAux } from '@casual-simulation/aux-vm/StoredAux';
 
 /**
  * Defines a VM that is able to wrap a remote aux channel.

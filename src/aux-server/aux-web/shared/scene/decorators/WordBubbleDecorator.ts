@@ -69,7 +69,7 @@ export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
             this.wordBubble.updateMatrixWorld(true);
         }
 
-        if (!hasBubble) {
+        if (!hasBubble || !this._label || !this._label.text3D) {
             return;
         }
 

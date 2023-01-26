@@ -19,6 +19,11 @@ export default {
       }
     },
 
+    cameraId: {
+        type: String,
+        default: null
+    },
+
     track: {
       type: [Function, Boolean],
       default: true
@@ -78,24 +83,29 @@ export default {
         }
       };
 
-      switch (this.camera) {
-        case "auto":
-          base.video.facingMode = { ideal: "environment" };
+      if (this.cameraId) {
+        base.video.deviceId = { exact: this.cameraId };
+        return base;
+      } else {
+        switch (this.camera) {
+            case "auto":
+            base.video.facingMode = { ideal: "environment" };
 
-          return base;
-        case "rear":
-          base.video.facingMode = { exact: "environment" };
+            return base;
+            case "rear":
+            base.video.facingMode = { exact: "environment" };
 
-          return base;
-        case "front":
-          base.video.facingMode = { exact: "user" };
+            return base;
+            case "front":
+            base.video.facingMode = { exact: "user" };
 
-          return base;
-        case "off":
-          return undefined;
+            return base;
+            case "off":
+            return undefined;
 
-        default:
-          return undefined;
+            default:
+            return undefined;
+        }
       }
     }
   },
@@ -148,6 +158,8 @@ export default {
         if (this.destroyed) {
           this.cameraInstance.stop();
         }
+
+        this.$emit('streamAquired', this.cameraInstance.stream);
       }
     },
 

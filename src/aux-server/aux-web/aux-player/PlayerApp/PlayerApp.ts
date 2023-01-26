@@ -71,6 +71,7 @@ import BotSheet from '../../shared/vue-components/BotSheet/BotSheet';
 import { BotRenderer, getRenderer } from '../../shared/scene/BotRenderer';
 import UploadFiles from '../../shared/vue-components/UploadFiles/UploadFiles';
 import ShowInputModal from '../../shared/vue-components/ShowInputModal/ShowInputModal';
+import ShowConfirmModal from '../../shared/vue-components/ShowConfirmModal/ShowConfirmModal';
 import MeetPortal from '../../shared/vue-components/MeetPortal/MeetPortal';
 import TagPortal from '../../shared/vue-components/TagPortal/TagPortal';
 import CustomPortals from '../../shared/vue-components/CustomPortals/CustomPortals';
@@ -127,6 +128,7 @@ declare function sa_event(name: string, callback: Function): void;
         'bot-sheet': BotSheet,
         'upload-files': UploadFiles,
         'show-input': ShowInputModal,
+        'show-confirm': ShowConfirmModal,
         'meet-portal': MeetPortal,
         'tag-portal': TagPortal,
         'custom-portals': CustomPortals,
@@ -176,6 +178,21 @@ export default class PlayerApp extends Vue {
      * Whether to show the QR Code Scanner.
      */
     showQRScanner: boolean = false;
+
+    /**
+     * Whether to allow switching the camera type.
+     */
+    allowSwitchingCameraType: boolean = true;
+
+    /**
+     * The camera device ID that was selected.
+     */
+    selectedCameraId: string = null;
+
+    /**
+     * The list of supported cameras.
+     */
+    supportedCameras: { deviceId: string; label: string }[] = [];
 
     /**
      * The extra sidebar items shown in the app.
@@ -266,6 +283,7 @@ export default class PlayerApp extends Vue {
     private _currentAudioRecording: AudioRecording;
     private _recordingSub: Subscription;
     private _currentRecording: MediaRecording;
+    private _currentQRMediaStream: MediaStream;
 
     get version() {
         return appManager.version.latestTaggedVersion;
@@ -277,6 +295,12 @@ export default class PlayerApp extends Vue {
 
     get isAdmin() {
         return this.loginInfo && this.loginInfo.roles.indexOf(ADMIN_ROLE) >= 0;
+    }
+
+    get canSwitchCameras() {
+        return (
+            this.allowSwitchingCameraType && this.supportedCameras.length > 1
+        );
     }
 
     vmOrigin() {
@@ -365,6 +389,7 @@ export default class PlayerApp extends Vue {
         this.chatBarBackgroundStyle = null;
         this._audioRecorder = createDefaultAudioRecorder();
         this._recorder = new Recorder();
+        this.supportedCameras = [];
         this._subs.push(
             appManager.updateAvailableObservable.subscribe(
                 (updateAvailable) => {
@@ -596,6 +621,58 @@ export default class PlayerApp extends Vue {
         return this.barcodeFormat || '';
     }
 
+    onQRStreamAquired(stream: MediaStream) {
+        this._currentQRMediaStream = stream;
+    }
+
+    changeQRStream() {
+        const currentDeviceId = this._currentQRMediaStream
+            ? this._getDeviceIdForStream(this._currentQRMediaStream)
+            : null;
+        const indexOfCurrent = this.supportedCameras.findIndex(
+            (c) => c.deviceId === currentDeviceId
+        );
+        let nextIndex = 0;
+        if (indexOfCurrent >= 0) {
+            if (indexOfCurrent + 1 >= this.supportedCameras.length) {
+                nextIndex = 0;
+            } else {
+                nextIndex = indexOfCurrent + 1;
+            }
+        }
+
+        const a = this.supportedCameras[nextIndex];
+        this.selectedCameraId = a?.deviceId ?? null;
+    }
+
+    private _getDeviceIdForStream(stream: MediaStream) {
+        const videoTracks = stream.getVideoTracks();
+        if (videoTracks.length > 0) {
+            const track = videoTracks[0];
+            const settings = track.getSettings();
+            return settings.deviceId;
+        }
+        return null;
+    }
+
+    private async _updateSupportedCameras() {
+        if (navigator && navigator.mediaDevices) {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            let supportedCameras = [] as typeof this.supportedCameras;
+            for (let device of devices) {
+                if (device.kind === 'videoinput') {
+                    supportedCameras.push({
+                        deviceId: device.deviceId,
+                        label: device.label,
+                    });
+                }
+            }
+            this.supportedCameras = supportedCameras;
+        } else {
+            this.supportedCameras = [];
+        }
+    }
+
     private _simulationAdded(simulation: BrowserSimulation) {
         const index = this.simulations.findIndex((s) => s.id === simulation.id);
         if (index >= 0) {
@@ -654,6 +731,11 @@ export default class PlayerApp extends Vue {
                     if (this.showQRScanner !== e.open) {
                         this.camera = e.cameraType;
                         this.showQRScanner = e.open;
+                        this.selectedCameraId = null;
+                        this.allowSwitchingCameraType =
+                            !e.disallowSwitchingCameras;
+                        this._currentQRMediaStream = null;
+                        this._updateSupportedCameras();
                         if (e.open) {
                             this._superAction(
                                 ON_QR_CODE_SCANNER_OPENED_ACTION_NAME

@@ -6,6 +6,7 @@ import {
     Scene,
     Vector3,
     Matrix4,
+    Quaternion,
 } from '@casual-simulation/three';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
@@ -18,6 +19,7 @@ import {
     PortalCameraControlsMode,
     DEFAULT_PORTAL_CAMERA_CONTROLS_MODE,
     asyncResult,
+    getBotShape,
 } from '@casual-simulation/aux-common';
 import { SubscriptionLike, Subject, Observable, Subscription } from 'rxjs';
 import { tap, startWith } from 'rxjs/operators';
@@ -41,8 +43,12 @@ import { DimensionGroup } from './DimensionGroup';
 import { DimensionGroup3D } from './DimensionGroup3D';
 import { AuxBot3D } from './AuxBot3D';
 import { Grid3D } from './Grid3D';
-import { CoordinateSystem } from './CoordinateSystem';
+import { CoordinateTransformer, latLonToCartesian } from './CoordinateSystem';
 import { AnimationHelper } from './AnimationHelper';
+import {
+    Rotation,
+    Vector3 as CasualOSVector3,
+} from '@casual-simulation/aux-common/math';
 
 /**
  * Defines a class that is able to render a simulation.
@@ -62,11 +68,7 @@ export abstract class Simulation3D
      * Takes a position in AUX coordinates and produces a transformation matrix
      * in world coordinates.
      */
-    private _coordinateTransformer: (pos: {
-        x: number;
-        y: number;
-        z: number;
-    }) => Matrix4;
+    private _coordinateTransformer: CoordinateTransformer;
 
     closed: boolean;
 
@@ -74,17 +76,11 @@ export abstract class Simulation3D
      * The function that should be used to transform 3D coordinates from AUX space to the target coordinate system.
      * Returns a matrix that represents the transformation from the given position and identity rotation to the target coordinate system.
      */
-    get coordinateTransformer(): (pos: {
-        x: number;
-        y: number;
-        z: number;
-    }) => Matrix4 {
+    get coordinateTransformer(): CoordinateTransformer {
         return this._coordinateTransformer;
     }
 
-    set coordinateTransformer(
-        value: (pos: { x: number; y: number; z: number }) => Matrix4
-    ) {
+    set coordinateTransformer(value: CoordinateTransformer) {
         this._coordinateTransformer = value;
         this.ensureUpdate(this.bots.map((b) => b.bot.id));
     }
@@ -413,7 +409,50 @@ export abstract class Simulation3D
                 for (let b of bots) {
                     if (b instanceof AuxBot3D) {
                         group.boundBot = b;
-                        b.container.add(group);
+
+                        const form = getBotShape(null, b.bot);
+                        if (form === 'spherePortal') {
+                            group.coordinateTransformer = (pos) => {
+                                const translated = latLonToCartesian(
+                                    0.5,
+                                    new Vector3(pos.y, pos.x, pos.z)
+                                );
+
+                                const surfaceNormal = new CasualOSVector3(
+                                    translated.x,
+                                    translated.y,
+                                    translated.z
+                                ).normalize();
+                                const up = new CasualOSVector3(0, 0, 1);
+
+                                const east = surfaceNormal
+                                    .cross(up)
+                                    .normalize();
+                                const north = surfaceNormal.cross(east);
+
+                                const rotation = new Rotation({
+                                    direction: north,
+                                    upwards: surfaceNormal,
+                                    errorHandling: 'error',
+                                });
+
+                                const m = new Matrix4().compose(
+                                    translated,
+                                    new Quaternion(
+                                        rotation.quaternion.x,
+                                        rotation.quaternion.y,
+                                        rotation.quaternion.z,
+                                        rotation.quaternion.w
+                                    ), //new Quaternion(0,0,0,1), //new Quaternion(rotation.quaternion.x, rotation.quaternion.y, rotation.quaternion.z, rotation.quaternion.w),
+                                    new Vector3(1, 1, 1)
+                                );
+
+                                return m;
+                            };
+                            b.container.add(group);
+                        } else {
+                            b.container.add(group);
+                        }
                         added = true;
                         break;
                     }

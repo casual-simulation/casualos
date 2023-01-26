@@ -865,8 +865,8 @@ export default class BotTable extends Vue {
         botId: string,
         tag: string,
         space: string,
-        startIndex: number,
-        endIndex: number
+        startIndex?: number,
+        endIndex?: number
     ) {
         let tags: BotTags = {
             [SHEET_PORTAL]: botId,
@@ -923,19 +923,24 @@ export default class BotTable extends Vue {
             const model = monacoEditor.getModel();
             if (model && model.uri.toString() === modelUri) {
                 setTimeout(() => {
-                    const position = model.getPositionAt(selectionStart);
-                    const endPosition = model.getPositionAt(selectionEnd);
-                    monacoEditor.setSelection({
-                        startLineNumber: position.lineNumber,
-                        startColumn: position.column,
-                        endLineNumber: endPosition.lineNumber,
-                        endColumn: endPosition.column,
-                    });
-                    monacoEditor.revealLinesInCenter(
-                        position.lineNumber,
-                        endPosition.lineNumber,
-                        1 /* Immediate scrolling */
-                    );
+                    if (
+                        typeof selectionStart === 'number' &&
+                        typeof selectionEnd === 'number'
+                    ) {
+                        const position = model.getPositionAt(selectionStart);
+                        const endPosition = model.getPositionAt(selectionEnd);
+                        monacoEditor.setSelection({
+                            startLineNumber: position.lineNumber,
+                            startColumn: position.column,
+                            endLineNumber: endPosition.lineNumber,
+                            endColumn: endPosition.column,
+                        });
+                        monacoEditor.revealLinesInCenter(
+                            position.lineNumber,
+                            endPosition.lineNumber,
+                            1 /* Immediate scrolling */
+                        );
+                    }
                     monacoEditor.focus();
                 }, 100);
                 return true;

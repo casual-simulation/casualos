@@ -26,6 +26,7 @@ import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
 import type { RecordFileFailure } from '@casual-simulation/aux-records';
 import { AuxRuntime } from '../runtime/AuxRuntime';
+import { InstUpdate } from './StoredAux';
 
 /**
  * Defines a symbol that can be used to signal to the runtime that the action should not be mapped for bots.
@@ -79,7 +80,6 @@ export type ExtraActions =
     | GoToDimensionAction
     | GoToURLAction
     | OpenURLAction
-    | ImportAUXAction
     | ShowInputForTagAction
     | SetForcedOfflineAction
     | ShellAction
@@ -124,7 +124,9 @@ export type AsyncActions =
     | AsyncResultAction
     | AsyncErrorAction
     | ShowInputAction
+    | ShowConfirmAction
     | ShareAction
+    | ImportAUXAction
     | RegisterBuiltinPortalAction
     | RegisterPrefixAction
     | RunScriptAction
@@ -881,6 +883,11 @@ export interface OpenQRCodeScannerAction extends Action {
      * The camera that should be used.
      */
     cameraType: CameraType;
+
+    /**
+     * Whether to not allow switching the camera.
+     */
+    disallowSwitchingCameras: boolean;
 }
 
 /**
@@ -898,6 +905,11 @@ export interface OpenBarcodeScannerAction extends Action {
      * The camera that should be used.
      */
     cameraType: CameraType;
+
+    /**
+     * Whether to not allow switching the camera.
+     */
+    disallowSwitchingCameras: boolean;
 }
 
 /**
@@ -1031,7 +1043,7 @@ export interface UnloadServerAction extends Action {
 /**
  * An event that is used to load an AUX from a remote location.
  */
-export interface ImportAUXAction extends Action {
+export interface ImportAUXAction extends AsyncAction {
     type: 'import_aux';
 
     /**
@@ -1258,26 +1270,6 @@ export interface ListInstUpdatesAction extends Action {
 }
 
 /**
- * Defines an interface that represents an update that has been applied to an inst.
- */
-export interface InstUpdate {
-    /**
-     * The ID of the update.
-     */
-    id: number;
-
-    /**
-     * The update content.
-     */
-    update: string;
-
-    /**
-     * The time that the update occurred at.
-     */
-    timestamp: number;
-}
-
-/**
  * Defines an event that is used to get the state of the inst with a particular set of updates.
  */
 export interface GetInstStateFromUpdatesAction extends Action {
@@ -1362,6 +1354,43 @@ export interface ShowInputAction extends AsyncAction {
      * The options for the input box.
      */
     options: Partial<ShowInputOptions>;
+}
+
+/**
+ * Defines an event that is used to show a confirmation dialog.
+ */
+export interface ShowConfirmAction extends AsyncAction {
+    type: 'show_confirm';
+
+    /**
+     * The options for the confirmation dialog.
+     */
+    options: ShowConfirmOptions;
+}
+
+/**
+ * Defines an interface that represents the options that can be used for a confirmation dialog.
+ */
+export interface ShowConfirmOptions {
+    /**
+     * The title that should be shown for the dialog.
+     */
+    title: string;
+
+    /**
+     * The content of the dialog.
+     */
+    content: string;
+
+    /**
+     * The text that should be shown on the "Confirm" button.
+     */
+    confirmText?: string;
+
+    /**
+     * The text that should be shown on the "Cancel" button.
+     */
+    cancelText?: string;
 }
 
 /**
@@ -3132,6 +3161,15 @@ export interface SnapGrid {
      * Defaults to false.
      */
     showGrid?: boolean;
+
+    /**
+     * The type of grid that this snap grid should be.
+     * Defaults to the type of grid that the portal bot uses.
+     *
+     * - "grid" indicates that the snap target should be a flat grid.
+     * - "sphere" indicates that the snap target should be a sphere.
+     */
+    type?: 'grid' | 'sphere';
 }
 
 /**
@@ -4391,6 +4429,85 @@ export interface DetachRuntimeAction extends AsyncAction {
     uncopiable: true;
 }
 
+/**
+ * Defines an interface for a debugger trace that represents when a tag was updated.
+ */
+export interface DebuggerTagUpdate {
+    /**
+     * The ID of the bot that was updated.
+     */
+    botId: string;
+
+    /**
+     * The tag that was updated.
+     */
+    tag: string;
+
+    /**
+     * The old value of the tag.
+     */
+    oldValue: any;
+
+    /**
+     * The new value for the tag.
+     */
+    newValue: any;
+}
+
+/**
+ * Defines an interface for a debugger trace that represents when a tag mask was updated.
+ */
+export interface DebuggerTagMaskUpdate extends DebuggerTagUpdate {
+    /**
+     * The space of the tag mask.
+     */
+    space: string;
+}
+
+/**
+ * Defines an interface for a debugger trace that is sent right before when the debugger starts executing a script.
+ */
+export interface DebuggerScriptEnterTrace {
+    /**
+     * The ID of the bot that the debugger started executing.
+     */
+    botId: string;
+
+    /**
+     * The tag of the bot that the debugger started executing.
+     */
+    tag: string;
+
+    /**
+     * The type of entry into the script.
+     * - "call" means that the script was started by a function call.
+     * - "task" means that execution in the script was started by the resumption of a task (setTimeout(), setInterval(), async/await, etc).
+     */
+    enterType: 'call' | 'task';
+}
+
+/**
+ * Defines an interface for a debugger trace that is sent right after when the debugger stops executing a script.
+ */
+export interface DebuggerScriptExitTrace {
+    /**
+     * The ID of the bot.
+     */
+    botId: string;
+
+    /**
+     * The ID of the tag that the debugger stopped executing.
+     */
+    tag: string;
+
+    /**
+     * The type of exit from the script.
+     * - "return" means the script stopped because it returned a value.
+     * - "throw" means the script stopped because it
+     */
+    exitType: 'return' | 'throw';
+}
+
 /**z
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
@@ -4653,6 +4770,7 @@ export function openQRCodeScanner(
         type: 'show_qr_code_scanner',
         open: open,
         cameraType: cameraType,
+        disallowSwitchingCameras: false,
     };
 }
 
@@ -4682,6 +4800,7 @@ export function openBarcodeScanner(
         type: 'show_barcode_scanner',
         open: open,
         cameraType: cameraType,
+        disallowSwitchingCameras: false,
     };
 }
 
@@ -4794,11 +4913,16 @@ export function goToDimension(dimension: string): GoToDimensionAction {
 /**
  * Creates a new ImportAUXAction.
  * @param url The URL that should be loaded.
+ * @param taskId The ID of the async task.
  */
-export function importAUX(url: string): ImportAUXAction {
+export function importAUX(
+    url: string,
+    taskId?: string | number
+): ImportAUXAction {
     return {
         type: 'import_aux',
         url: url,
+        taskId,
     };
 }
 
@@ -4836,6 +4960,22 @@ export function showInput(
         taskId,
         currentValue,
         options: options || {},
+    };
+}
+
+/**
+ * Creates a new ShowConfirmAction.
+ * @param options The options for the action.
+ * @param taskId The ID of the async task.
+ */
+export function showConfirm(
+    options: ShowConfirmOptions,
+    taskId?: number | string
+): ShowConfirmAction {
+    return {
+        type: 'show_confirm',
+        options,
+        taskId,
     };
 }
 

@@ -13,7 +13,8 @@
                 <md-button class="md-primary" @click="doCopy">Copy!</md-button>
             </md-dialog-actions>
         </md-dialog>
-        <hotkey :keys="['ctrl', 'v']" @triggered="onPaste" />
+        <div v-shortkey="['ctrl-cmd', 'v']" @shortkey="onPaste" />
+        <!-- <hotkey :keys="['ctrl', 'v']" @triggered="onPaste" :propagate="true" /> -->
     </div>
 </template>
 <script src="./ClipboardModal.ts"></script>

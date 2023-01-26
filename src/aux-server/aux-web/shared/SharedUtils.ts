@@ -1,5 +1,10 @@
-import { Bot } from '@casual-simulation/aux-common';
+import {
+    applyUpdatesToInst,
+    Bot,
+    StoredAuxVersion2,
+} from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
+import { remote } from '@casual-simulation/causal-trees';
 
 /**
  * Pads the given string with zeros up to the given length.
@@ -46,13 +51,6 @@ export function copyToClipboard(text: string) {
 
 export function getOptionalValue(obj: any, defaultValue: any): any {
     return obj !== undefined && obj !== null ? obj : defaultValue;
-}
-
-/**
- * Determines if the current device is a Mac.
- */
-export function isMac(): boolean {
-    return /(Mac)/i.test(navigator.platform);
 }
 
 /**
@@ -136,4 +134,18 @@ export function loadScript(src: string): Promise<void> {
 
         document.body.appendChild(el);
     });
+}
+
+export async function addStoredAuxV2ToSimulation(
+    sim: Simulation,
+    stored: StoredAuxVersion2
+) {
+    await sim.helper.transaction(
+        remote(
+            applyUpdatesToInst(stored.updates),
+            undefined,
+            undefined,
+            undefined
+        )
+    );
 }

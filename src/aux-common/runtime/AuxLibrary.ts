@@ -43,6 +43,7 @@ import {
     importAUX as calcImportAUX,
     showInputForTag as calcShowInputForTag,
     showInput as calcShowInput,
+    showConfirm as calcShowConfirm,
     replaceDragBot as calcReplaceDragBot,
     goToDimension as calcGoToDimension,
     goToURL as calcGoToURL,
@@ -313,6 +314,11 @@ import {
     TagMapper,
     detachRuntime,
     KNOWN_TAGS,
+    ShowConfirmOptions,
+    isStoredVersion2,
+    StoredAux,
+    StoredAuxVersion2,
+    StoredAuxVersion1,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -402,6 +408,7 @@ import {
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
 import { INTERPRETABLE_FUNCTION } from './AuxCompiler';
 import type { AuxRuntime } from './AuxRuntime';
+import { constructInitializationUpdate } from '../partitions/PartitionUtils';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -1173,6 +1180,15 @@ export interface SnapGridTarget {
      * Defaults to false.
      */
     showGrid?: boolean;
+
+    /**
+     * The type of grid that this snap grid should be.
+     * Defaults to the type of grid that the portal bot uses.
+     *
+     * - "grid" indicates that the snap target should be a flat grid.
+     * - "sphere" indicates that the snap target should be a sphere.
+     */
+    type?: 'grid' | 'sphere';
 }
 
 export type JoinRoomResult = JoinRoomSuccess | JoinRoomFailure;
@@ -1648,6 +1664,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getWakeLockConfiguration,
                 download: downloadData,
                 downloadBots,
+                downloadBotsAsInitialzationUpdate,
 
                 downloadServer,
                 downloadInst: downloadServer,
@@ -1732,6 +1749,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getDimensionalDepth,
                 showInputForTag,
                 showInput: makeMockableFunction(showInput, 'os.showInput'),
+                showConfirm,
                 goToDimension,
                 goToURL,
                 openURL,
@@ -3391,7 +3409,39 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             state[bot.id] = bot;
         }
 
-        let data = JSON.stringify(getDownloadState(state));
+        let data = JSON.stringify(getVersion1DownloadState(state));
+        if (isPdf(filename)) {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(data);
+            const base64 = fromByteArray(bytes);
+            data = embedBase64InPdf(base64);
+        }
+
+        const downloadedFilename = formatAuxFilename(filename);
+
+        return addAction(
+            download(
+                data,
+                downloadedFilename,
+                mime.getType(downloadedFilename) || 'application/json'
+            )
+        );
+    }
+
+    /**
+     * Downloads the given list of bots.
+     * @param bots The bots that should be downloaded.
+     * @param filename The name of the file that the bots should be downloaded as.
+     */
+    function downloadBotsAsInitialzationUpdate(
+        bots: Bot[],
+        filename: string
+    ): DownloadAction {
+        const update = constructInitializationUpdate(
+            calcCreateInitalizationUpdate(bots)
+        );
+
+        let data = JSON.stringify(getVersion2DownloadState(update));
         if (isPdf(filename)) {
             const encoder = new TextEncoder();
             const bytes = encoder.encode(data);
@@ -3555,21 +3605,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *                  If given JSON, then it will be imported as if it was a .aux file.
      *                  If given a URL, then it will be downloaded and then imported.
      */
-    function importAUX(urlOrJSON: string): ImportAUXAction | ApplyStateAction {
+    function importAUX(urlOrJSON: string): Promise<void> {
         try {
-            const bots = parseBotsFromData(urlOrJSON);
-            if (bots) {
-                let state: BotsState = {};
-                for (let bot of bots) {
-                    state[bot.id] = bot;
+            const aux = parseStoredAuxFromData(urlOrJSON);
+            if (aux) {
+                if (isStoredVersion2(aux)) {
+                    return applyUpdatesToInst(aux.updates);
+                } else {
+                    const state = getUploadState(aux);
+                    if (state) {
+                        const event = addState(state);
+                        addAction(event);
+                        let promise = Promise.resolve();
+                        (<any>promise)[ORIGINAL_OBJECT] = event;
+                        return promise;
+                    }
                 }
-                const uploaded = getUploadState(state);
-                const event = addState(uploaded);
-                return addAction(event);
             }
         } catch {}
-        const event = calcImportAUX(urlOrJSON);
-        return addAction(event);
+        const task = context.createTask();
+        const event = calcImportAUX(urlOrJSON, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**
@@ -3621,6 +3677,49 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return bots;
+    }
+
+    /**
+     * Parses the given JSON or PDF data and returns the list of bots that were contained in it.
+     * @param jsonOrPdf The JSON or PDF data to parse.
+     */
+    function parseStoredAuxFromData(
+        jsonOrPdf: string | ArrayBuffer
+    ): StoredAux {
+        let data: any;
+
+        if (typeof jsonOrPdf === 'string') {
+            try {
+                data = JSON.parse(jsonOrPdf);
+            } catch (e) {
+                try {
+                    data = getEmbeddedBase64FromPdf(jsonOrPdf);
+                    const bytes = toByteArray(data);
+                    const decoder = new TextDecoder();
+                    const text = decoder.decode(bytes);
+                    data = JSON.parse(text);
+                } catch (err) {
+                    data = null;
+                }
+            }
+        } else {
+            try {
+                const str = new TextDecoder().decode(jsonOrPdf);
+                data = getEmbeddedBase64FromPdf(str);
+                const bytes = toByteArray(data);
+                const decoder = new TextDecoder();
+                const text = decoder.decode(bytes);
+                data = JSON.parse(text);
+            } catch (err) {
+                data = null;
+            }
+        }
+
+        if (!hasValue(data)) {
+            return null;
+        }
+
+        return data;
     }
 
     /**
@@ -3798,6 +3897,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ) {
         const task = context.createTask();
         const event = calcShowInput(currentValue, options, task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Shows a confirmation dialog. Returns a promise that resolves with true if the "Confirm" button is clicked and false if the "Cancel" button is clicked or the dialog is closed.
+     * @param options The options that indicate how the confirmation dialog shold be customized.
+     */
+    function showConfirm(options: ShowConfirmOptions): Promise<boolean> {
+        if (!options) {
+            throw new Error(
+                'You must provide an options object for os.showConfirm()'
+            );
+        }
+        const task = context.createTask();
+        const event = calcShowConfirm(options, task.taskId);
         return addAsyncAction(task, event);
     }
 
@@ -4034,6 +4148,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             portalTag: t.portalTag,
             priority: t.priority,
             showGrid: t.showGrid,
+            type:
+                t.type && (t.type === 'sphere' || t.type === 'grid')
+                    ? t.type
+                    : undefined,
         }));
     }
 
@@ -6003,11 +6121,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         if (!event) {
             return;
         }
+        const original = getOriginalObject(event);
         let actions = [];
         let selectors = Array.isArray(selector) ? selector : [selector];
         for (let s of selectors) {
             const r = calcRemote(
-                event,
+                original,
                 convertSessionSelector(s),
                 allowBatching
             );
@@ -9072,13 +9191,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return promise;
     }
 
-    function getDownloadState(state: BotsState): {
-        version: number;
-        state: BotsState;
-    } {
+    function getVersion1DownloadState(state: BotsState): StoredAuxVersion1 {
         return {
             version: 1,
             state,
+        };
+    }
+
+    function getVersion2DownloadState(update: InstUpdate): StoredAuxVersion2 {
+        return {
+            version: 2,
+            updates: [update],
         };
     }
 

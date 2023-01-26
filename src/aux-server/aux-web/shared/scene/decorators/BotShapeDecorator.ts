@@ -648,7 +648,11 @@ export class BotShapeDecorator
             this._createEgg();
         } else if (this._shape === 'hex') {
             this._createHex();
-        } else if (this._shape === 'portal' || this._shape === 'dimension') {
+        } else if (
+            this._shape === 'portal' ||
+            this._shape === 'dimension' ||
+            this._shape === 'spherePortal'
+        ) {
             this._createPortal();
         } else if (this._shape === 'circle') {
             this._createCircle();

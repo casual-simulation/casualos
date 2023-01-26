@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CoordinateSystem latLonToCartesian() should return a Vector3 for the given latitude and longitude and altitude 1`] = `
+Vector3 {
+  "x": 15.457679690014206,
+  "y": 3.285631246305953,
+  "z": 2.502951440643694,
+}
+`;

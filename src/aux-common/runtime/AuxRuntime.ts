@@ -69,6 +69,7 @@ import {
     parseBotRotation,
     formatBotRotation,
     parseTaggedNumber,
+    REPLACE_BOT_SYMBOL,
 } from '../bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import {
@@ -77,6 +78,8 @@ import {
     getInterpretableFunction,
     AuxCompilerBreakpoint,
     isInterpretableFunction,
+    FUNCTION_METADATA,
+    AuxScriptMetadata,
 } from './AuxCompiler';
 import {
     AuxGlobalContext,
@@ -114,7 +117,12 @@ import {
     RuntimeStop,
     RuntimeStopState,
 } from './CompiledBot';
-import { ScriptError, ActionResult, RanOutOfEnergyError } from './AuxResults';
+import {
+    ScriptError,
+    ActionResult,
+    RanOutOfEnergyError,
+    ProcessActionResult,
+} from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import {
@@ -154,6 +162,7 @@ import type {
     DeclarativeEnvironmentRecord as DeclarativeEnvironmentRecordType,
     DefinePropertyOrThrow as DefinePropertyOrThrowType,
     Descriptor as DescriptorType,
+    ExecutionContextStack,
     Value as ValueType,
 } from '@casual-simulation/engine262';
 import {
@@ -163,7 +172,13 @@ import {
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
 import { v4 as uuid } from 'uuid';
 import { importInterpreter as _dynamicImportInterpreter } from './AuxRuntimeDynamicImports';
-import { UNMAPPABLE } from '../bots/BotEvents';
+import {
+    DebuggerScriptEnterTrace,
+    DebuggerScriptExitTrace,
+    DebuggerTagMaskUpdate,
+    DebuggerTagUpdate,
+    UNMAPPABLE,
+} from '../bots/BotEvents';
 
 let Interpreter: typeof InterpreterType;
 let DeclarativeEnvironmentRecord: typeof DeclarativeEnvironmentRecordType;
@@ -253,6 +268,21 @@ export class AuxRuntime
     private _globalObject: any;
     private _interpretedApi: AuxLibrary['api'];
     private _interpretedTagSpecificApi: AuxLibrary['tagSpecificApi'];
+    private _beforeActionListeners: ((action: BotAction) => void)[] = [];
+    private _scriptActionEnqueuedListeners: ((action: BotAction) => void)[] =
+        [];
+    private _scriptUpdatedTagListeners: ((
+        update: DebuggerTagUpdate
+    ) => void)[] = [];
+    private _scriptUpdatedTagMaskListeners: ((
+        update: DebuggerTagMaskUpdate
+    ) => void)[] = [];
+    // private _beforeScriptEnterListeners: ((
+    //     trace: DebuggerScriptEnterTrace
+    // ) => void)[] = [];
+    // private _afterScriptExitListeners: ((
+    //     trace: DebuggerScriptExitTrace
+    // ) => void)[] = [];
 
     /**
      * The counter that is used to generate function names.
@@ -507,9 +537,23 @@ export class AuxRuntime
      * @param actions The actions to process.
      */
     process(actions: BotAction[]) {
+        if (this._beforeActionListeners.length > 0) {
+            for (let func of this._beforeActionListeners) {
+                for (let action of actions) {
+                    try {
+                        func(action);
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+            }
+        }
+
         this._processBatch();
-        this._processCore(actions);
+        const result = this._processCore(actions);
         this._processBatch();
+
+        return result;
     }
 
     private _getExecutingDebugger() {
@@ -536,7 +580,7 @@ export class AuxRuntime
             forceSyncScripts,
             interpreter
         );
-        runtime._autoBatch = false;
+        runtime._autoBatch = true;
         let idCount = 0;
         if (!options?.useRealUUIDs) {
             runtime._globalContext.uuid = () => {
@@ -649,6 +693,47 @@ export class AuxRuntime
                 allErrors.push(...errors);
                 return allErrors;
             },
+            onBeforeUserAction: (listener: (action: BotAction) => void) => {
+                runtime._beforeActionListeners.push(listener);
+            },
+            onScriptActionEnqueued: (listener: (action: BotAction) => void) => {
+                runtime._scriptActionEnqueuedListeners.push(listener);
+            },
+            onAfterScriptUpdatedTag: (
+                listener: (update: DebuggerTagUpdate) => void
+            ) => {
+                runtime._scriptUpdatedTagListeners.push(listener);
+            },
+            onAfterScriptUpdatedTagMask: (
+                listener: (update: DebuggerTagMaskUpdate) => void
+            ) => {
+                runtime._scriptUpdatedTagMaskListeners.push(listener);
+            },
+            getCallStack() {
+                if (!interpreter) {
+                    throw new Error(
+                        'getCallStack() is only supported on pausable debuggers.'
+                    );
+                }
+                return runtime._mapCallStack(
+                    interpreter.agent.executionContextStack
+                );
+            },
+            async performUserAction(...actions: BotAction[]) {
+                const result = await runtime.process(actions);
+                return result.map((r) => (r ? r.results : null));
+            },
+            // TODO: Determine whether to support this
+            // onBeforeScriptEnter: (
+            //     listener: (trace: DebuggerScriptEnterTrace) => void
+            // ) => {
+            //     runtime._beforeScriptEnterListeners.push(listener);
+            // },
+            // onAfterScriptExit: (
+            //     listener: (trace: DebuggerScriptExitTrace) => void
+            // ) => {
+            //     runtime._afterScriptExitListeners.push(listener);
+            // },
             setPauseTrigger(
                 b: RuntimeBot | string | PauseTrigger,
                 tag: string,
@@ -764,188 +849,7 @@ export class AuxRuntime
                     const pause: DebuggerPause = {
                         pauseId: stop.stopId,
                         state: stop.state,
-                        callStack: stop.stack.map((s) => {
-                            const callSite: any = (s as any).callSite;
-                            const funcName: string = callSite.getFunctionName();
-
-                            let funcLocation: DebuggerFunctionLocation = {};
-
-                            if (funcName) {
-                                const f = runtime._functionMap.get(funcName);
-                                if (f) {
-                                    funcLocation.name =
-                                        f.metadata.diagnosticFunctionName;
-                                    const location =
-                                        runtime._compiler.calculateOriginalLineLocation(
-                                            f,
-                                            {
-                                                lineNumber: callSite.lineNumber,
-                                                column: callSite.columnNumber,
-                                            }
-                                        );
-
-                                    funcLocation.lineNumber =
-                                        location.lineNumber + 1;
-                                    funcLocation.columnNumber =
-                                        location.column + 1;
-
-                                    const tagName = f.metadata.context
-                                        .tag as string;
-                                    const bot = f.metadata.context.bot as Bot;
-
-                                    if (bot) {
-                                        funcLocation.botId = bot.id;
-                                    }
-                                    if (tagName) {
-                                        funcLocation.tag = tagName;
-                                    }
-                                } else {
-                                    funcLocation.name = funcName;
-                                }
-                            }
-
-                            if (
-                                !hasValue(funcLocation.lineNumber) &&
-                                !hasValue(funcLocation.columnNumber) &&
-                                hasValue(callSite.lineNumber) &&
-                                hasValue(callSite.columnNumber)
-                            ) {
-                                funcLocation.lineNumber = callSite.lineNumber;
-                                funcLocation.columnNumber =
-                                    callSite.columnNumber;
-                            }
-
-                            if (
-                                !hasValue(funcLocation.lineNumber) &&
-                                !hasValue(funcLocation.columnNumber) &&
-                                !hasValue(funcLocation.name)
-                            ) {
-                                funcLocation = null;
-                            }
-
-                            const ret: DebuggerCallFrame = {
-                                location: funcLocation,
-                                listVariables() {
-                                    let variables: DebuggerVariable[] = [];
-
-                                    if (
-                                        s.LexicalEnvironment instanceof
-                                        DeclarativeEnvironmentRecord
-                                    ) {
-                                        addBindingsFromEnvironment(
-                                            s.LexicalEnvironment,
-                                            'block'
-                                        );
-                                    }
-
-                                    if (
-                                        s.VariableEnvironment instanceof
-                                        DeclarativeEnvironmentRecord
-                                    ) {
-                                        addBindingsFromEnvironment(
-                                            s.VariableEnvironment,
-                                            'frame'
-                                        );
-
-                                        let parent =
-                                            s.VariableEnvironment.OuterEnv;
-                                        while (parent) {
-                                            if (
-                                                parent instanceof
-                                                DeclarativeEnvironmentRecord
-                                            ) {
-                                                addBindingsFromEnvironment(
-                                                    parent,
-                                                    'closure'
-                                                );
-                                            }
-                                            parent = parent.OuterEnv;
-                                        }
-                                    }
-
-                                    return variables;
-
-                                    function addBindingsFromEnvironment(
-                                        env: DeclarativeEnvironmentRecordType,
-                                        scope: DebuggerVariable['scope']
-                                    ) {
-                                        for (let [
-                                            nameValue,
-                                            binding,
-                                        ] of env.bindings.entries()) {
-                                            const name =
-                                                interpreter.copyFromValue(
-                                                    nameValue
-                                                );
-
-                                            const initialized =
-                                                !!binding.initialized;
-                                            const mutable = !!binding.mutable;
-
-                                            const value = initialized
-                                                ? interpreter.reverseProxyObject(
-                                                      binding.value,
-                                                      false
-                                                  )
-                                                : undefined;
-
-                                            const variable: DebuggerVariable = {
-                                                name,
-                                                value,
-                                                writable: mutable,
-                                                scope,
-                                            };
-                                            if (!initialized) {
-                                                variable.initialized = false;
-                                            }
-
-                                            variables.push(variable);
-                                        }
-                                    }
-                                },
-                                setVariableValue(name: string, value: any) {
-                                    if (
-                                        s.LexicalEnvironment instanceof
-                                        DeclarativeEnvironmentRecord
-                                    ) {
-                                        const nameValue =
-                                            interpreter.copyToValue(name);
-                                        const proxiedValue =
-                                            interpreter.proxyObject(value);
-
-                                        if (nameValue.Type !== 'normal') {
-                                            throw interpreter.copyFromValue(
-                                                nameValue.Value
-                                            );
-                                        }
-
-                                        if (proxiedValue.Type !== 'normal') {
-                                            throw interpreter.copyFromValue(
-                                                proxiedValue.Value
-                                            );
-                                        }
-
-                                        const result =
-                                            s.LexicalEnvironment.SetMutableBinding(
-                                                nameValue.Value,
-                                                proxiedValue.Value,
-                                                Value.true
-                                            );
-
-                                        if (result.Type !== 'normal') {
-                                            throw interpreter.copyFromValue(
-                                                result.Value
-                                            );
-                                        }
-                                        return interpreter.copyFromValue(
-                                            result.Value
-                                        );
-                                    }
-                                },
-                            };
-
-                            return ret;
-                        }),
+                        callStack: runtime._mapCallStack(stop.stack),
                         trigger: {
                             triggerId: stop.breakpoint.id,
                             botId: stop.breakpoint.botId,
@@ -965,6 +869,18 @@ export class AuxRuntime
             [GET_RUNTIME]() {
                 return runtime;
             },
+
+            get configBot() {
+                return runtime.userBot;
+            },
+
+            getPortalBots() {
+                let portalBots = new Map<string, RuntimeBot>();
+                for (let [portal, id] of runtime._portalBots) {
+                    portalBots.set(portal, runtime.currentState[id]?.script);
+                }
+                return portalBots;
+            },
             create,
         };
 
@@ -973,8 +889,192 @@ export class AuxRuntime
         return debug;
     }
 
-    private _processCore(actions: BotAction[]): MaybeRuntimePromise<void> {
+    private _mapCallStack(stack: ExecutionContextStack) {
+        const interpreter = this._interpreter;
+        return stack.map((s) => {
+            const callSite: any = (s as any).callSite;
+            const funcName: string = callSite.getFunctionName();
+
+            let funcLocation: DebuggerFunctionLocation = {};
+
+            if (funcName) {
+                const f = this._functionMap.get(funcName);
+                if (f) {
+                    funcLocation.name = f.metadata.diagnosticFunctionName;
+                    const location =
+                        this._compiler.calculateOriginalLineLocation(f, {
+                            lineNumber: callSite.lineNumber,
+                            column: callSite.columnNumber,
+                        });
+
+                    funcLocation.lineNumber = location.lineNumber + 1;
+                    funcLocation.columnNumber = location.column + 1;
+
+                    const tagName = f.metadata.context.tag as string;
+                    const bot = f.metadata.context.bot as Bot;
+
+                    if (bot) {
+                        funcLocation.botId = bot.id;
+                    }
+                    if (tagName) {
+                        funcLocation.tag = tagName;
+                    }
+                } else {
+                    funcLocation.name = funcName;
+                }
+            }
+
+            if (
+                !hasValue(funcLocation.lineNumber) &&
+                !hasValue(funcLocation.columnNumber) &&
+                hasValue(callSite.lineNumber) &&
+                hasValue(callSite.columnNumber)
+            ) {
+                funcLocation.lineNumber = callSite.lineNumber;
+                funcLocation.columnNumber = callSite.columnNumber;
+            }
+
+            if (
+                !hasValue(funcLocation.lineNumber) &&
+                !hasValue(funcLocation.columnNumber) &&
+                !hasValue(funcLocation.name)
+            ) {
+                funcLocation = null;
+            }
+
+            const ret: DebuggerCallFrame = {
+                location: funcLocation,
+                listVariables() {
+                    let variables: DebuggerVariable[] = [];
+
+                    if (
+                        s.LexicalEnvironment instanceof
+                        DeclarativeEnvironmentRecord
+                    ) {
+                        addBindingsFromEnvironment(
+                            s.LexicalEnvironment,
+                            'block'
+                        );
+                    }
+
+                    if (
+                        s.VariableEnvironment instanceof
+                        DeclarativeEnvironmentRecord
+                    ) {
+                        addBindingsFromEnvironment(
+                            s.VariableEnvironment,
+                            'frame'
+                        );
+
+                        let parent = s.VariableEnvironment.OuterEnv;
+                        while (parent) {
+                            if (
+                                parent instanceof DeclarativeEnvironmentRecord
+                            ) {
+                                addBindingsFromEnvironment(parent, 'closure');
+                            }
+                            parent = parent.OuterEnv;
+                        }
+                    }
+
+                    return variables;
+
+                    function addBindingsFromEnvironment(
+                        env: DeclarativeEnvironmentRecordType,
+                        scope: DebuggerVariable['scope']
+                    ) {
+                        for (let [
+                            nameValue,
+                            binding,
+                        ] of env.bindings.entries()) {
+                            const name = interpreter.copyFromValue(nameValue);
+
+                            const initialized = !!binding.initialized;
+                            const mutable = !!binding.mutable;
+
+                            const value = initialized
+                                ? interpreter.reverseProxyObject(
+                                      binding.value,
+                                      false
+                                  )
+                                : undefined;
+
+                            const variable: DebuggerVariable = {
+                                name,
+                                value,
+                                writable: mutable,
+                                scope,
+                            };
+                            if (!initialized) {
+                                variable.initialized = false;
+                            }
+
+                            variables.push(variable);
+                        }
+                    }
+                },
+                setVariableValue(name: string, value: any) {
+                    if (
+                        s.LexicalEnvironment instanceof
+                        DeclarativeEnvironmentRecord
+                    ) {
+                        const nameValue = interpreter.copyToValue(name);
+                        const proxiedValue = interpreter.proxyObject(value);
+
+                        if (nameValue.Type !== 'normal') {
+                            throw interpreter.copyFromValue(nameValue.Value);
+                        }
+
+                        if (proxiedValue.Type !== 'normal') {
+                            throw interpreter.copyFromValue(proxiedValue.Value);
+                        }
+
+                        const result = s.LexicalEnvironment.SetMutableBinding(
+                            nameValue.Value,
+                            proxiedValue.Value,
+                            Value.true
+                        );
+
+                        if (result.Type !== 'normal') {
+                            throw interpreter.copyFromValue(result.Value);
+                        }
+                        return interpreter.copyFromValue(result.Value);
+                    }
+                },
+            };
+
+            return ret;
+        });
+    }
+
+    private _processCore(
+        actions: BotAction[]
+    ): MaybeRuntimePromise<ProcessActionResult[]> {
         const _this = this;
+        const results = [] as ProcessActionResult[];
+
+        function processAction(
+            action: BotAction,
+            addToResults: boolean
+        ): MaybeRuntimePromise<void> {
+            let promise = _this._processAction(action);
+
+            if (addToResults) {
+                if (isRuntimePromise(promise)) {
+                    return markAsRuntimePromise(
+                        promise.then((result) => {
+                            results.push(result);
+                        })
+                    );
+                } else {
+                    results.push(promise);
+                }
+                return;
+            }
+
+            return promise as unknown as MaybeRuntimePromise<void>;
+        }
+
         function handleRejection(
             action: BotAction,
             rejection: { rejected: boolean; newActions: BotAction[] }
@@ -983,7 +1083,7 @@ export class AuxRuntime
                 null,
                 rejection.newActions,
                 (action) => {
-                    return _this._processAction(action);
+                    return processAction(action, false);
                 }
             );
             if (rejection.rejected) {
@@ -992,26 +1092,36 @@ export class AuxRuntime
 
             if (promise) {
                 return markAsRuntimePromise(
-                    promise.then((p) => _this._processAction(action))
+                    promise.then((p) => processAction(action, true))
                 );
             } else {
-                return _this._processAction(action);
+                return processAction(action, true);
             }
         }
-
-        return processListOfMaybePromises(null, actions, (action) => {
+        let promise = processListOfMaybePromises(null, actions, (action) => {
             let rejection = this._rejectAction(action);
+
+            let result: MaybeRuntimePromise<void>;
             if (isRuntimePromise(rejection)) {
-                return markAsRuntimePromise(
+                result = markAsRuntimePromise(
                     rejection.then((result) => handleRejection(action, result))
                 );
             } else {
-                return handleRejection(action, rejection);
+                result = handleRejection(action, rejection);
             }
+            return result;
         });
+
+        if (isRuntimePromise(promise)) {
+            return markAsRuntimePromise(promise.then(() => results));
+        } else {
+            return results;
+        }
     }
 
-    private _processAction(action: BotAction): MaybeRuntimePromise<void> {
+    private _processAction(
+        action: BotAction
+    ): MaybeRuntimePromise<ProcessActionResult> {
         if (action.type === 'action') {
             const result = this._shout(
                 action.eventName,
@@ -1021,10 +1131,17 @@ export class AuxRuntime
             );
             if (isRuntimePromise(result)) {
                 return markAsRuntimePromise(
-                    result.then((result) => this._processCore(result.actions))
+                    result
+                        .then((result) => this._processCore(result.actions))
+                        .then(() => result)
                 );
             } else {
-                return this._processCore(result.actions);
+                let promise = this._processCore(result.actions);
+                if (isRuntimePromise(promise)) {
+                    return markAsRuntimePromise(promise.then(() => result));
+                } else {
+                    return result;
+                }
             }
         } else if (action.type === 'run_script') {
             const result = this._execute(action.script, false, false);
@@ -1041,6 +1158,7 @@ export class AuxRuntime
                                         false
                                     );
                                 }
+                                return null;
                             });
                         } else {
                             if (hasValue(action.taskId)) {
@@ -1055,6 +1173,7 @@ export class AuxRuntime
                                 }
                             }
                         }
+                        return null;
                     })
                 );
             } else {
@@ -1073,6 +1192,7 @@ export class AuxRuntime
                                     this._scheduleJobQueueCheck();
                                 }
                             }
+                            return null;
                         })
                     );
                 }
@@ -1090,7 +1210,12 @@ export class AuxRuntime
             }
         } else if (action.type === 'apply_state') {
             const events = breakIntoIndividualEvents(this.currentState, action);
-            return this._processCore(events);
+            const promise = this._processCore(events);
+            if (isRuntimePromise(promise)) {
+                return markAsRuntimePromise(promise.then(() => null));
+            } else {
+                return null;
+            }
         } else if (action.type === 'async_result') {
             const value =
                 action.mapBotsInResult === true
@@ -1160,11 +1285,19 @@ export class AuxRuntime
                 this._actionBatch.push(action);
             }
             if (hasValue(action.taskId)) {
-                return this._processCore([asyncResult(action.taskId, null)]);
+                const promise = this._processCore([
+                    asyncResult(action.taskId, null),
+                ]);
+                if (isRuntimePromise(promise)) {
+                    return markAsRuntimePromise(promise.then(() => null));
+                } else {
+                    return null;
+                }
             }
         } else {
             this._actionBatch.push(action);
         }
+        return null;
     }
 
     private _registerPortalBot(portalId: string, botId: string) {
@@ -1807,7 +1940,54 @@ export class AuxRuntime
             let newBot: CompiledBot = this._createCompiledBot(bot, false);
 
             if (!!existing) {
-                newBot.script.vars = existing.script.vars;
+                const changes = existing.script.changes;
+                const maskChanges = existing.script.maskChanges;
+
+                for (let key in changes) {
+                    newBot.tags[key] =
+                        newBot.values[key] =
+                        newBot.script.changes[key] =
+                            changes[key];
+                }
+                let maskTags = new Set<string>();
+                for (let space of TAG_MASK_SPACE_PRIORITIES) {
+                    const masks = maskChanges[space];
+                    let newMasks: BotTagMasks;
+                    let addNewMasks = false;
+                    let hasNewMasks = false;
+                    if (!newBot?.masks?.[space]) {
+                        addNewMasks = true;
+                        newMasks = {};
+                    } else {
+                        newMasks = newBot.masks[space];
+                    }
+                    if (masks) {
+                        if (!newBot.script.maskChanges[space]) {
+                            newBot.script.maskChanges[space] = {};
+                        }
+                        for (let key in masks) {
+                            hasNewMasks = true;
+                            maskTags.add(key);
+                            const value =
+                                (newMasks[key] =
+                                newBot.script.maskChanges[space][key] =
+                                    masks[key]);
+
+                            if (!maskTags.has(key)) {
+                                newBot.values[key] = value;
+                            }
+                        }
+                    }
+
+                    if (addNewMasks && hasNewMasks) {
+                        if (!newBot.masks) {
+                            newBot.masks = {};
+                        }
+                        newBot.masks[space] = newMasks;
+                    }
+                }
+
+                existing.script[REPLACE_BOT_SYMBOL](newBot.script);
             }
 
             let precalculated: PrecalculatedBot = {
@@ -2080,6 +2260,18 @@ export class AuxRuntime
             queueMicrotask(() => {
                 this._processBatch();
             });
+        }
+    }
+
+    notifyActionEnqueued(action: BotAction): void {
+        if (this._scriptActionEnqueuedListeners.length > 0) {
+            for (let listener of this._scriptActionEnqueuedListeners) {
+                try {
+                    listener(action);
+                } catch (err) {
+                    console.error(err);
+                }
+            }
         }
     }
 
@@ -2393,6 +2585,7 @@ export class AuxRuntime
             );
         }
 
+        const oldValue = bot.values[tag];
         const space = getBotSpace(bot);
         const mode = this._editModeProvider.getEditMode(space);
         if (mode === RealtimeEditMode.Immediate) {
@@ -2407,6 +2600,21 @@ export class AuxRuntime
             newValue = formatBotVector(newValue);
         } else if (newValue instanceof Rotation) {
             newValue = formatBotRotation(newValue);
+        }
+
+        if (this._scriptUpdatedTagListeners.length > 0) {
+            for (let listener of this._scriptUpdatedTagListeners) {
+                try {
+                    listener({
+                        botId: bot.id,
+                        tag,
+                        oldValue,
+                        newValue,
+                    });
+                } catch (err) {
+                    console.error(err);
+                }
+            }
         }
 
         return {
@@ -2435,6 +2643,7 @@ export class AuxRuntime
             );
         }
 
+        let oldValuesAndSpaces = [];
         let updated = false;
         for (let space of spaces) {
             const mode = this._editModeProvider.getEditMode(space);
@@ -2445,6 +2654,7 @@ export class AuxRuntime
                 if (!bot.masks[space]) {
                     bot.masks[space] = {};
                 }
+                let oldValue = bot.masks[space][tag];
                 if (isTagEdit(value)) {
                     if (!bot.originalTagMaskEditValues[space]) {
                         bot.originalTagMaskEditValues[space] = {};
@@ -2461,6 +2671,11 @@ export class AuxRuntime
                     bot.masks[space][tag] = value;
                 }
                 updated = true;
+
+                oldValuesAndSpaces.push({
+                    space,
+                    oldValue,
+                });
             }
         }
         if (updated) {
@@ -2475,6 +2690,24 @@ export class AuxRuntime
             value = formatBotVector(value);
         } else if (value instanceof Rotation) {
             value = formatBotRotation(value);
+        }
+
+        if (updated && this._scriptUpdatedTagMaskListeners.length > 0) {
+            for (let listener of this._scriptUpdatedTagMaskListeners) {
+                for (let { oldValue, space } of oldValuesAndSpaces) {
+                    try {
+                        listener({
+                            botId: bot.id,
+                            tag,
+                            oldValue,
+                            newValue: value,
+                            space,
+                        });
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+            }
         }
 
         return {
@@ -2737,6 +2970,21 @@ export class AuxRuntime
                 ctx.creator = ctx.bot
                     ? this._getRuntimeBot(ctx.bot.script.tags.creator)
                     : null;
+
+                //  TODO: Determine whether to support this
+                // if (this._beforeScriptEnterListeners.length > 0) {
+                //     for (let listener of this._beforeScriptEnterListeners) {
+                //         try {
+                //             listener({
+                //                 botId: ctx.bot.id,
+                //                 tag: ctx.tag,
+                //                 enterType: 'call',
+                //             });
+                //         } catch (err) {
+                //             console.error(err);
+                //         }
+                //     }
+                // }
             },
             onError: (err, ctx, meta) => {
                 const data = this._handleError(err, ctx.bot, ctx.tag);
@@ -3050,6 +3298,47 @@ export class AuxRuntime
     // }
 
     private _processJobQueueNow() {
+        // TODO: Determine whether to support this
+        // let scriptJobs: { botId: string; tag: string }[] = [];
+        // for (let job of this._interpreter.agent.jobQueue) {
+        //     if (
+        //         job.callerScriptOrModule &&
+        //         FUNCTION_METADATA in job.callerScriptOrModule
+        //     ) {
+        //         const meta: AuxScriptMetadata = (
+        //             job.callerScriptOrModule as any
+        //         )[FUNCTION_METADATA] as AuxScriptMetadata;
+        //         const context = meta.context as {
+        //             bot: CompiledBot;
+        //             tag: string;
+        //         };
+        //         const botId = context.bot.id;
+        //         const tag = context.tag;
+        //         scriptJobs.push({
+        //             botId,
+        //             tag,
+        //         });
+        //     }
+        // }
+        // if (
+        //     scriptJobs.length > 0 &&
+        //     this._beforeScriptEnterListeners.length > 0
+        // ) {
+        //     for (let job of scriptJobs) {
+        //         for (let listener of this._beforeScriptEnterListeners) {
+        //             try {
+        //                 listener({
+        //                     enterType: 'task',
+        //                     botId: job.botId,
+        //                     tag: job.tag,
+        //                 });
+        //             } catch (err) {
+        //                 console.error(err);
+        //             }
+        //         }
+        //     }
+        // }
+
         const queueGen = this._interpreter.runJobQueue();
         while (true) {
             const next = queueGen.next();
