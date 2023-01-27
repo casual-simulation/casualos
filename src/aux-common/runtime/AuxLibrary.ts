@@ -3437,6 +3437,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         bots: Bot[],
         filename: string
     ): DownloadAction {
+        bots = bots.map((b) =>
+            isRuntimeBot(b) ? createBot(b.id, b.tags.toJSON(), b.space) : b
+        );
         const update = constructInitializationUpdate(
             calcCreateInitalizationUpdate(bots)
         );
@@ -6069,9 +6072,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function createInitializationUpdate(
         bots: RuntimeBot[]
     ): Promise<InstUpdate> {
+        const convertedBots = bots.map((b) =>
+            isRuntimeBot(b) ? createBot(b.id, b.tags.toJSON(), b.space) : b
+        );
         const task = context.createTask(true, true);
         const event = calcRemote(
-            calcCreateInitalizationUpdate(bots),
+            calcCreateInitalizationUpdate(convertedBots),
             undefined,
             undefined,
             task.taskId
