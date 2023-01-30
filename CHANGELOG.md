@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V3.1.22
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Improved the records system to authenticate and authorize requests much more quickly than before.
+    -   In order to take advantage of the improvements, you may need to request a new record key.
+
 ## V3.1.21
 
 #### Date: 1/30/2023
