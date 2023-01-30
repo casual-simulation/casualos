@@ -8,6 +8,7 @@ import { ServerError } from './Errors';
 import { v4 as uuid } from 'uuid';
 import { randomBytes } from 'tweetnacl';
 import {
+    hashHighEntropyPasswordWithSalt,
     hashPasswordWithSalt,
     verifyPassword,
     verifyPasswordAgainstHashes,
@@ -353,7 +354,12 @@ export class AuthController {
                 userId: loginRequest.userId,
                 sessionId: sessionId,
                 requestId: loginRequest.requestId,
-                secretHash: hashPasswordWithSalt(sessionSecret, sessionId),
+                // sessionSecret and sessionId are high-entropy (128 bits of random data)
+                // so we should use a hash that is optimized for high-entropy inputs.
+                secretHash: hashHighEntropyPasswordWithSalt(
+                    sessionSecret,
+                    sessionId
+                ),
                 grantedTimeMs: now,
                 revokeTimeMs: null,
                 expireTimeMs: now + SESSION_LIFETIME_MS,

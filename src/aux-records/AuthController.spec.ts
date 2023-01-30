@@ -13,7 +13,10 @@ import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { v4 as uuid } from 'uuid';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
-import { hashPasswordWithSalt } from '@casual-simulation/crypto';
+import {
+    hashHighEntropyPasswordWithSalt,
+    hashPasswordWithSalt,
+} from '@casual-simulation/crypto';
 import { fromBase64String, toBase64String } from './Utils';
 import { padStart } from 'lodash';
 
@@ -456,11 +459,17 @@ describe('AuthController', () => {
                     expireTimeMs: 150 + SESSION_LIFETIME_MS,
                 });
 
+                expect(randomBytesMock).toHaveBeenCalledTimes(2);
+                expect(randomBytesMock).toHaveBeenNthCalledWith(1, 16); // Should request 16 bytes (128 bits) for the session ID
+                expect(randomBytesMock).toHaveBeenNthCalledWith(2, 16); // Should request 16 bytes (128 bits) for the session secret
+
                 expect(authStore.sessions).toEqual([
                     {
                         userId: 'myid',
                         sessionId: fromByteArray(sessionId),
-                        secretHash: hashPasswordWithSalt(
+
+                        // It should treat session secrets as high-entropy
+                        secretHash: hashHighEntropyPasswordWithSalt(
                             fromByteArray(sessionSecret),
                             fromByteArray(sessionId)
                         ),
@@ -897,73 +906,161 @@ describe('AuthController', () => {
                 });
             });
 
-            it('should return the User ID if given a valid key', async () => {
-                const requestId = 'requestId';
-                const sessionId = toBase64String('sessionId');
-                const code = 'code';
-                const userId = 'myid';
+            describe('v1 hashes', () => {
+                it('should return the User ID if given a valid key', async () => {
+                    const requestId = 'requestId';
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    const userId = 'myid';
 
-                const sessionKey = formatV1SessionKey(
-                    userId,
-                    sessionId,
-                    code,
-                    200
-                );
+                    const sessionKey = formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        code,
+                        200
+                    );
 
-                await authStore.saveSession({
-                    requestId,
-                    sessionId,
-                    secretHash: hashPasswordWithSalt(code, sessionId),
-                    expireTimeMs: 200,
-                    grantedTimeMs: 100,
-                    previousSessionId: null,
-                    nextSessionId: null,
-                    revokeTimeMs: null,
-                    userId,
-                    ipAddress: '127.0.0.1',
+                    await authStore.saveSession({
+                        requestId,
+                        sessionId,
+                        secretHash: hashPasswordWithSalt(code, sessionId),
+                        expireTimeMs: 200,
+                        grantedTimeMs: 100,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    const result = await controller.validateSessionKey(
+                        sessionKey
+                    );
+
+                    expect(result).toEqual({
+                        success: true,
+                        userId: userId,
+                        sessionId: sessionId,
+                    });
                 });
 
-                const result = await controller.validateSessionKey(sessionKey);
+                it('should fail if the session secret doesnt match the hash', async () => {
+                    const requestId = 'requestId';
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    const userId = 'myid';
 
-                expect(result).toEqual({
-                    success: true,
-                    userId: userId,
-                    sessionId: sessionId,
+                    const sessionKey = formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        'wrong',
+                        123
+                    );
+
+                    await authStore.saveSession({
+                        requestId,
+                        sessionId,
+                        secretHash: hashPasswordWithSalt(code, sessionId),
+                        expireTimeMs: 200,
+                        grantedTimeMs: 100,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    const result = await controller.validateSessionKey(
+                        sessionKey
+                    );
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'invalid_key',
+                        errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    });
                 });
             });
 
-            it('should fail if the session secret doesnt match the hash', async () => {
-                const requestId = 'requestId';
-                const sessionId = toBase64String('sessionId');
-                const code = 'code';
-                const userId = 'myid';
+            describe('v2 hashes', () => {
+                it('should return the User ID if given a valid key', async () => {
+                    const requestId = 'requestId';
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    const userId = 'myid';
 
-                const sessionKey = formatV1SessionKey(
-                    userId,
-                    sessionId,
-                    'wrong',
-                    123
-                );
+                    const sessionKey = formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        code,
+                        200
+                    );
 
-                await authStore.saveSession({
-                    requestId,
-                    sessionId,
-                    secretHash: hashPasswordWithSalt(code, sessionId),
-                    expireTimeMs: 200,
-                    grantedTimeMs: 100,
-                    previousSessionId: null,
-                    nextSessionId: null,
-                    revokeTimeMs: null,
-                    userId,
-                    ipAddress: '127.0.0.1',
+                    await authStore.saveSession({
+                        requestId,
+                        sessionId,
+                        secretHash: hashHighEntropyPasswordWithSalt(
+                            code,
+                            sessionId
+                        ),
+                        expireTimeMs: 200,
+                        grantedTimeMs: 100,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    const result = await controller.validateSessionKey(
+                        sessionKey
+                    );
+
+                    expect(result).toEqual({
+                        success: true,
+                        userId: userId,
+                        sessionId: sessionId,
+                    });
                 });
 
-                const result = await controller.validateSessionKey(sessionKey);
+                it('should fail if the session secret doesnt match the hash', async () => {
+                    const requestId = 'requestId';
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    const userId = 'myid';
 
-                expect(result).toEqual({
-                    success: false,
-                    errorCode: 'invalid_key',
-                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    const sessionKey = formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        'wrong',
+                        123
+                    );
+
+                    await authStore.saveSession({
+                        requestId,
+                        sessionId,
+                        secretHash: hashHighEntropyPasswordWithSalt(
+                            code,
+                            sessionId
+                        ),
+                        expireTimeMs: 200,
+                        grantedTimeMs: 100,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    const result = await controller.validateSessionKey(
+                        sessionKey
+                    );
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'invalid_key',
+                        errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    });
                 });
             });
 
