@@ -283,6 +283,10 @@ import {
     INTERPRETABLE_FUNCTION,
     isInterpretableFunction,
 } from './AuxCompiler';
+import {
+    constructInitializationUpdate,
+    getStateFromUpdates,
+} from '../partitions/PartitionUtils';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -3275,6 +3279,110 @@ describe('AuxLibrary', () => {
                     createBot(bot2.id, bot2.tags),
                 ]);
                 expect(bots).toEqual(bots2);
+            });
+        });
+
+        describe('os.downloadBotsAsInitalizationUpdate()', () => {
+            let dateNowMock: jest.Mock<number>;
+            let originalDateNow: typeof Date['now'];
+
+            beforeEach(() => {
+                originalDateNow = Date.now;
+                Date.now = dateNowMock = jest.fn();
+            });
+
+            afterEach(() => {
+                Date.now = originalDateNow;
+            });
+
+            it('should emit a DownloadAction with the given bots formatted as an initialization update', () => {
+                dateNowMock.mockReturnValueOnce(1);
+                const action = library.api.os.downloadBotsAsInitialzationUpdate(
+                    [bot1, bot2],
+                    'test'
+                );
+                expect(action.type).toEqual('download');
+                expect(context.actions).toEqual([action]);
+
+                const json = JSON.parse(action.data);
+
+                expect(json).toEqual({
+                    version: 2,
+                    updates: [
+                        {
+                            id: 0,
+                            timestamp: 1,
+                            update: expect.any(String),
+                        },
+                    ],
+                });
+
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(json.updates)
+                );
+
+                expect(state).toEqual({
+                    test1: createBot('test1'),
+                    test2: createBot('test2'),
+                });
+            });
+
+            it('should use the JSON version of the given bots', () => {
+                dateNowMock.mockReturnValueOnce(1);
+
+                let bot = {
+                    id: 'test1',
+                    tags: {
+                        value: new Error('wrong'),
+                        toJSON() {
+                            return {
+                                finalValue: 999,
+                            };
+                        },
+                    },
+                    raw: {},
+                    masks: {},
+                    listeners: {},
+                    links: {},
+                    changes: {},
+                    maskChanges: {},
+                    toJSON() {
+                        return createBot('test1', {
+                            otherValue: 123,
+                        });
+                    },
+                };
+
+                const action = library.api.os.downloadBotsAsInitialzationUpdate(
+                    [bot, bot2],
+                    'test'
+                );
+                expect(action.type).toEqual('download');
+                expect(context.actions).toEqual([action]);
+
+                const json = JSON.parse(action.data);
+
+                expect(json).toEqual({
+                    version: 2,
+                    updates: [
+                        {
+                            id: 0,
+                            timestamp: 1,
+                            update: expect.any(String),
+                        },
+                    ],
+                });
+
+                const state = getStateFromUpdates(
+                    getInstStateFromUpdates(json.updates)
+                );
+
+                expect(state).toEqual({
+                    test1: createBot('test1', {
+                        finalValue: 999,
+                    }),
+                    test2: createBot('test2'),
+                });
             });
         });
 
@@ -8125,7 +8233,10 @@ describe('AuxLibrary', () => {
                     bot2,
                 ]);
                 const expected = remote(
-                    createInitializationUpdate([bot1, bot2]),
+                    createInitializationUpdate([
+                        createBot(bot1.id, bot1.raw),
+                        createBot(bot2.id, bot2.raw),
+                    ]),
                     undefined,
                     undefined,
                     'uuid'
@@ -8136,6 +8247,52 @@ describe('AuxLibrary', () => {
 
                 const task = context.tasks.get('uuid');
                 expect(task.allowRemoteResolution).toBe(true);
+            });
+
+            it('should use the JSON version of the given bots', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                let bot: any = {
+                    id: 'test1',
+                    tags: {
+                        value: new Error('wrong'),
+                        toJSON() {
+                            return {
+                                finalValue: 999,
+                            };
+                        },
+                    },
+                    raw: {},
+                    masks: {},
+                    listeners: {},
+                    links: {},
+                    changes: {},
+                    maskChanges: {},
+                    toJSON() {
+                        return createBot('test1', {
+                            otherValue: 123,
+                        });
+                    },
+                };
+
+                const action: any = library.api.os.createInitializationUpdate([
+                    bot,
+                    bot2,
+                ]);
+
+                const expected = remote(
+                    createInitializationUpdate([
+                        createBot('test1', {
+                            finalValue: 999,
+                        }),
+                        createBot('test2', {}),
+                    ]),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

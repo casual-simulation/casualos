@@ -1,5 +1,17 @@
 # CasualOS Changelog
 
+## V3.1.21
+
+#### Date: 1/30/2023
+
+### :rocket: Improvements
+
+-   Improved the ab-1 bootstrapper to support Version 2 AUX Files.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue with `os.downloadBotsAsInitializationUpdate()` and `os.createInitializationUpdate()` where they could not download bots that contained script syntax errors.
+
 ## V3.1.20
 
 #### Date: 1/19/2023
