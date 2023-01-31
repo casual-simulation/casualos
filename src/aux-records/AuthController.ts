@@ -860,6 +860,72 @@ export class AuthController {
             };
         }
     }
+
+    /**
+     * Gets the information for a specific user.
+     * @param request The request.
+     */
+    async getUserInfo(request: GetUserInfoRequest): Promise<GetUserInfoResult> {
+        if (typeof request.userId !== 'string' || request.userId === '') {
+            return {
+                success: false,
+                errorCode: 'unacceptable_user_id',
+                errorMessage:
+                    'The given userId is invalid. It must be a string.',
+            };
+        } else if (
+            typeof request.sessionKey !== 'string' ||
+            request.sessionKey === ''
+        ) {
+            return {
+                success: false,
+                errorCode: 'unacceptable_session_key',
+                errorMessage:
+                    'The given session key is invalid. It must be a string.',
+            };
+        }
+
+        try {
+            const keyResult = await this.validateSessionKey(request.sessionKey);
+            if (keyResult.success === false) {
+                return keyResult;
+            } else if (keyResult.userId !== request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            }
+
+            const result = await this._store.findUser(request.userId);
+
+            if (!result) {
+                throw new Error(
+                    'Unable to find user even though a valid session key was presented!'
+                );
+            }
+
+            return {
+                success: true,
+                userId: result.id,
+                name: result.name,
+                email: result.email,
+                phoneNumber: result.phoneNumber,
+                avatarPortraitUrl: result.avatarPortraitUrl,
+                avatarUrl: result.avatarUrl,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error ocurred while getting user info',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
 }
 
 export interface LoginRequest {
@@ -1208,6 +1274,65 @@ export interface ReplaceSessionFailure {
     errorCode:
         | 'unacceptable_session_key'
         | 'unacceptable_ip_address'
+        | ValidateSessionKeyFailure['errorCode']
+        | ServerError;
+    errorMessage: string;
+}
+
+/**
+ * Defines an interface for requests to get a user's info.
+ */
+export interface GetUserInfoRequest {
+    /**
+     * The session key that should be used to authenticate the request.
+     */
+    sessionKey: string;
+
+    /**
+     * The ID of the user whose info should be retrieved.
+     */
+    userId: string;
+}
+
+export type GetUserInfoResult = GetUserInfoSuccess | GetUserInfoFailure;
+
+export interface GetUserInfoSuccess {
+    success: true;
+    /**
+     * The ID of the user that was retrieved.
+     */
+    userId: string;
+
+    /**
+     * The name of the user.
+     */
+    name: string;
+
+    /**
+     * The URL of the avatar for the user.
+     */
+    avatarUrl: string;
+
+    /**
+     * The URL of the avatar portrait for the user.
+     */
+    avatarPortraitUrl: string;
+
+    /**
+     * The email address of the user.
+     */
+    email: string;
+
+    /**
+     * The phone number of the user.
+     */
+    phoneNumber: string;
+}
+
+export interface GetUserInfoFailure {
+    success: false;
+    errorCode:
+        | 'unacceptable_user_id'
         | ValidateSessionKeyFailure['errorCode']
         | ServerError;
     errorMessage: string;
