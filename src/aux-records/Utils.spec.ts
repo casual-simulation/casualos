@@ -463,6 +463,8 @@ describe('getStatusCode()', () => {
         ['unacceptable_expire_time', 400] as const,
         ['address_type_not_supported', 501] as const,
         ['server_error', 500] as const,
+        ['invalid_origin', 403] as const,
+        ['operation_not_found', 404] as const,
         ['other', 400] as const,
     ];
 

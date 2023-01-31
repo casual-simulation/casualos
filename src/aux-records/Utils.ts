@@ -330,6 +330,8 @@ export function getStatusCode(
             return 404;
         } else if (response.errorCode === 'session_not_found') {
             return 404;
+        } else if (response.errorCode === 'operation_not_found') {
+            return 404;
         } else if (response.errorCode === 'session_already_revoked') {
             return 200;
         } else if (response.errorCode === 'invalid_code') {
@@ -337,6 +339,8 @@ export function getStatusCode(
         } else if (response.errorCode === 'invalid_key') {
             return 403;
         } else if (response.errorCode === 'invalid_request') {
+            return 403;
+        } else if (response.errorCode === 'invalid_origin') {
             return 403;
         } else if (response.errorCode === 'session_expired') {
             return 401;

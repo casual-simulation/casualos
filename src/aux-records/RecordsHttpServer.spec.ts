@@ -8,9 +8,12 @@ import {
     validateOrigin,
     getSessionKey,
 } from './RecordsHttpServer';
-import { AuthController } from './AuthController';
+import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import { MemoryAuthStore } from './MemoryAuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
+import { formatV1SessionKey } from './AuthUtils';
+
+console.log = jest.fn();
 
 describe('RecordsHttpServer', () => {
     let authStore: MemoryAuthStore;
@@ -49,6 +52,7 @@ describe('RecordsHttpServer', () => {
         let userId: string;
 
         beforeEach(async () => {
+            authenticatedHeaders['origin'] = 'https://account-origin.com';
             let requestResult = await authController.requestLogin({
                 address: 'test@example.com',
                 addressType: 'email',
@@ -85,19 +89,122 @@ describe('RecordsHttpServer', () => {
 
         it('should return the metadata for the given token', async () => {
             const result = await server.handleRequest(
-                httpGet(`/api/{token:${userId}}/metadata`, authenticatedHeaders)
+                httpGet(
+                    `/api/{userId:${userId}}/metadata`,
+                    authenticatedHeaders
+                )
             );
 
             expect(result).toEqual({
                 statusCode: 200,
                 body: JSON.stringify({
-                    name: null,
-                    avatarURL: null,
-                    avatarPortraitUrl: null,
+                    success: true,
                     email: 'test@example.com',
                     phoneNumber: null,
                 }),
             });
+        });
+
+        it('should return a 403 status code if the origin is invalid', async () => {
+            authenticatedHeaders['origin'] = 'https://wrong.origin.com';
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/{userId:${userId}}/metadata`,
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 403,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
+                }),
+            });
+        });
+
+        it('should return a 403 status code if the session key is invalid', async () => {
+            authenticatedHeaders[
+                'authorization'
+            ] = `Bearer ${formatV1SessionKey(
+                'wrong user',
+                'wrong session',
+                'wrong secret',
+                1000
+            )}`;
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/{userId:${userId}}/metadata`,
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 403,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                }),
+            });
+        });
+
+        it('should return a 401 status code if no session key is provided', async () => {
+            delete authenticatedHeaders['authorization'];
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/{userId:${userId}}/metadata`,
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 401,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                }),
+            });
+        });
+
+        it('should return a 400 status code if the session key is wrongly formatted', async () => {
+            authenticatedHeaders['authorization'] = `Bearer wrong`;
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/{userId:${userId}}/metadata`,
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'unacceptable_session_key',
+                    errorMessage:
+                        'The given session key is invalid. It must be a correctly formatted string.',
+                }),
+            });
+        });
+    });
+
+    it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
+        const result = await server.handleRequest(
+            httpRequest('GET', `/api/missing`, null)
+        );
+
+        expect(result).toEqual({
+            statusCode: 404,
+            body: JSON.stringify({
+                success: false,
+                errorCode: 'operation_not_found',
+                errorMessage:
+                    'An operation could not be found for the given request.',
+            }),
         });
     });
 
@@ -105,14 +212,23 @@ describe('RecordsHttpServer', () => {
         url: string,
         headers: GenericHttpHeaders = defaultHeaders
     ): GenericHttpRequest {
+        return httpRequest('GET', url, null, headers);
+    }
+
+    function httpRequest(
+        method: GenericHttpRequest['method'],
+        url: string,
+        body: GenericHttpRequest['body'],
+        headers: GenericHttpHeaders = defaultHeaders
+    ): GenericHttpRequest {
         const { path, pathParams, query } = parseUrl(url);
 
         return {
             path,
-            body: null,
+            body,
             headers,
             pathParams,
-            method: 'GET',
+            method,
             query,
         };
     }
@@ -336,10 +452,11 @@ function parsePathParams(path: string | string[]): (string | PathParam)[] {
     }
     let result = [] as (string | PathParam)[];
     for (let segment of path) {
-        if (segment.startsWith('{') && segment.endsWith('}')) {
-            let splitPoint = segment.indexOf(':');
-            let name = segment.slice(1, splitPoint);
-            let value = segment.slice(splitPoint + 1, segment.length - 1);
+        let p = decodeURI(segment);
+        if (p.startsWith('{') && p.endsWith('}')) {
+            let splitPoint = p.indexOf(':');
+            let name = p.slice(1, splitPoint);
+            let value = p.slice(splitPoint + 1, p.length - 1);
             result.push({
                 name,
                 value,
@@ -348,6 +465,8 @@ function parsePathParams(path: string | string[]): (string | PathParam)[] {
             result.push(segment);
         }
     }
+
+    return result;
 }
 
 function getPathParams(path: (string | PathParam)[]) {

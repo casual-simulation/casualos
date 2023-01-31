@@ -74,6 +74,25 @@ export interface GenericPathParameters {
     [key: string]: string;
 }
 
+const NOT_LOGGED_IN_RESULT = {
+    success: false,
+    errorCode: 'not_logged_in',
+    errorMessage:
+        'The user is not logged in. A session key must be provided for this operation.',
+};
+
+const INVALID_ORIGIN_RESULT = {
+    success: false,
+    errorCode: 'invalid_origin',
+    errorMessage: 'The request must be made from an authorized origin.',
+};
+
+const OPERATION_NOT_FOUND_RESULT = {
+    success: false,
+    errorCode: 'operation_not_found',
+    errorMessage: 'An operation could not be found for the given request.',
+};
+
 /**
  * Defines a class that represents a generic HTTP server suitable for Records HTTP Requests.
  */
@@ -111,12 +130,12 @@ export class RecordsHttpServer {
             request.method === 'GET' &&
             request.path.startsWith('/api/') &&
             request.path.endsWith('/metadata') &&
-            !!request.pathParams.token
+            !!request.pathParams.userId
         ) {
             return this._getUserInfo(request);
         }
 
-        return null;
+        return returnResult(OPERATION_NOT_FOUND_RESULT);
     }
 
     /**
@@ -133,60 +152,32 @@ export class RecordsHttpServer {
         }
 
         if (!validateOrigin(request, this._allowedAccountOrigins)) {
-            return {
-                statusCode: 403,
-                body: 'Invalid origin.',
-            };
+            return returnResult(INVALID_ORIGIN_RESULT);
         }
 
-        const validation = await this._validateSessionKey(request);
-        if (validation.success === false) {
-            return {
-                statusCode: getStatusCode(validation),
-                body: JSON.stringify(validation),
-            };
+        const sessionKey = getSessionKey(request);
+
+        if (!sessionKey) {
+            return returnResult(NOT_LOGGED_IN_RESULT);
         }
 
-        const issuer = decodeURIComponent(request.pathParams.token);
+        const result = await this._auth.getUserInfo({
+            sessionKey: sessionKey,
+            userId: request.pathParams.userId,
+        });
 
-        if (validation.userId !== issuer) {
-            return {
-                statusCode: 403,
-                body: JSON.stringify({
-                    success: false,
-                    errorCode: 'not_authorized',
-                    errorMessage: 'You are not authorized.',
-                }),
-            };
+        if (!result.success) {
+            return returnResult(result);
         }
 
-        // get all items from the table (only first 1MB data, you can use `LastEvaluatedKey` to get the rest of data)
-        // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property
-        // https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Scan.html
-        const data = await docClient
-            .get({
-                TableName: USERS_TABLE,
-                Key: { id: issuer },
-            })
-            .promise();
-        const item = data.Item;
-
-        if (!item) {
-            return {
-                statusCode: 404,
-            };
-        }
-
-        return {
-            statusCode: 200,
-            body: JSON.stringify({
-                name: item.name,
-                avatarUrl: item.avatarUrl,
-                avatarPortraitUrl: item.avatarPortraitUrl,
-                email: item.email,
-                phoneNumber: item.phoneNumber,
-            }),
-        };
+        return returnResult({
+            success: true,
+            name: result.name,
+            avatarUrl: result.avatarUrl,
+            avatarPortraitUrl: result.avatarPortraitUrl,
+            email: result.email,
+            phoneNumber: result.phoneNumber,
+        });
     }
 
     private async _validateSessionKey(
@@ -204,6 +195,15 @@ export class RecordsHttpServer {
         }
         return await this._auth.validateSessionKey(sessionKey);
     }
+}
+
+export function returnResult<
+    T extends { success: false; errorCode: string } | { success: true }
+>(result: T): GenericHttpResponse {
+    return {
+        statusCode: getStatusCode(result),
+        body: JSON.stringify(result),
+    };
 }
 
 /**
