@@ -16,7 +16,12 @@ import {
 } from '@casual-simulation/crypto';
 import { fromByteArray } from 'base64-js';
 import { AuthMessenger } from './AuthMessenger';
-import { cleanupObject, fromBase64String, toBase64String } from './Utils';
+import {
+    cleanupObject,
+    fromBase64String,
+    RegexRule,
+    toBase64String,
+} from './Utils';
 import { formatV1SessionKey, parseSessionKey, randomCode } from './AuthUtils';
 
 /**
@@ -928,6 +933,10 @@ export class AuthController {
         }
     }
 
+    /**
+     * Attempts to update a user's metadata.
+     * @param request The request for the operation.
+     */
     async updateUserInfo(
         request: UpdateUserInfoRequest
     ): Promise<UpdateUserInfoResult> {
@@ -1001,6 +1010,54 @@ export class AuthController {
         } catch (err) {
             console.error(
                 '[AuthController] Error ocurred while getting user info',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Lists the email rules that should be used.
+     */
+    async listEmailRules(): Promise<ListEmailRulesResult> {
+        try {
+            const rules = await this._store.listEmailRules();
+
+            return {
+                success: true,
+                rules,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error ocurred while listing email rules',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Lists the SMS rules that should be used.
+     */
+    async listSmsRules(): Promise<ListSmsRulesResult> {
+        try {
+            const rules = await this._store.listSmsRules();
+
+            return {
+                success: true,
+                rules,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error ocurred while listing email rules',
                 err
             );
             return {
@@ -1466,5 +1523,33 @@ export interface UpdateUserInfoFailure {
         | 'unacceptable_update'
         | ValidateSessionKeyFailure['errorCode']
         | ServerError;
+    errorMessage: string;
+}
+
+export type ListEmailRulesResult =
+    | ListEmailRulesSuccess
+    | ListEmailRulesFailure;
+
+export interface ListEmailRulesSuccess {
+    success: true;
+    rules: RegexRule[];
+}
+
+export interface ListEmailRulesFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export type ListSmsRulesResult = ListSmsRulesSuccess | ListSmsRulesFailure;
+
+export interface ListSmsRulesSuccess {
+    success: true;
+    rules: RegexRule[];
+}
+
+export interface ListSmsRulesFailure {
+    success: false;
+    errorCode: ServerError;
     errorMessage: string;
 }

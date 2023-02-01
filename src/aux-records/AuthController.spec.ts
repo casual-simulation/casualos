@@ -2523,6 +2523,48 @@ describe('AuthController', () => {
             );
         });
     });
+
+    describe('listEmailRules()', () => {
+        it('should return the list of email rules stored in the store', async () => {
+            authStore.emailRules.push({
+                type: 'allow',
+                pattern: 'abc',
+            });
+
+            const result = await controller.listEmailRules();
+
+            expect(result).toEqual({
+                success: true,
+                rules: [
+                    {
+                        type: 'allow',
+                        pattern: 'abc',
+                    },
+                ],
+            });
+        });
+    });
+
+    describe('listSmsRules()', () => {
+        it('should return the list of email rules stored in the store', async () => {
+            authStore.smsRules.push({
+                type: 'allow',
+                pattern: 'abc',
+            });
+
+            const result = await controller.listSmsRules();
+
+            expect(result).toEqual({
+                success: true,
+                rules: [
+                    {
+                        type: 'allow',
+                        pattern: 'abc',
+                    },
+                ],
+            });
+        });
+    });
 });
 
 function codeNumber(code: Uint8Array): string {

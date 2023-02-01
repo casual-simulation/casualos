@@ -147,6 +147,16 @@ export class RecordsHttpServer {
             !!request.pathParams.userId
         ) {
             return this._putUserInfo(request);
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/emailRules'
+        ) {
+            return this._getEmailRules(request);
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/smsRules'
+        ) {
+            return this._getSmsRules(request);
         }
 
         return returnResult(OPERATION_NOT_FOUND_RESULT);
@@ -237,6 +247,42 @@ export class RecordsHttpServer {
             success: true,
             userId: result.userId,
         });
+    }
+
+    private async _getEmailRules(request: GenericHttpRequest) {
+        const result = await this._auth.listEmailRules();
+
+        if (!result.success) {
+            return returnResult(result);
+        }
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify(
+                result.rules.map((rule) => ({
+                    type: rule.type,
+                    pattern: rule.pattern,
+                }))
+            ),
+        };
+    }
+
+    private async _getSmsRules(request: GenericHttpRequest) {
+        const result = await this._auth.listSmsRules();
+
+        if (!result.success) {
+            return returnResult(result);
+        }
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify(
+                result.rules.map((rule) => ({
+                    type: rule.type,
+                    pattern: rule.pattern,
+                }))
+            ),
+        };
     }
 
     private async _validateSessionKey(

@@ -342,6 +342,72 @@ describe('RecordsHttpServer', () => {
         });
     });
 
+    describe('GET /api/emailRules', () => {
+        it('should get the list of email rules', async () => {
+            authStore.emailRules.push(
+                {
+                    type: 'allow',
+                    pattern: 'hello',
+                },
+                {
+                    type: 'deny',
+                    pattern: 'other',
+                }
+            );
+
+            const result = await server.handleRequest(
+                httpGet(`/api/emailRules`, defaultHeaders)
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: JSON.stringify([
+                    {
+                        type: 'allow',
+                        pattern: 'hello',
+                    },
+                    {
+                        type: 'deny',
+                        pattern: 'other',
+                    },
+                ]),
+            });
+        });
+    });
+
+    describe('GET /api/smsRules', () => {
+        it('should get the list of sms rules', async () => {
+            authStore.smsRules.push(
+                {
+                    type: 'allow',
+                    pattern: 'hello',
+                },
+                {
+                    type: 'deny',
+                    pattern: 'other',
+                }
+            );
+
+            const result = await server.handleRequest(
+                httpGet(`/api/smsRules`, defaultHeaders)
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: JSON.stringify([
+                    {
+                        type: 'allow',
+                        pattern: 'hello',
+                    },
+                    {
+                        type: 'deny',
+                        pattern: 'other',
+                    },
+                ]),
+            });
+        });
+    });
+
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
         const result = await server.handleRequest(
             httpRequest('GET', `/api/missing`, null)

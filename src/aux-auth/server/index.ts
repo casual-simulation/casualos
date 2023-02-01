@@ -125,9 +125,17 @@ async function start() {
     const recordsFilesCollection = db.collection<any>('recordsFilesInfo');
     const filesCollection = db.collection<any>('recordsFilesData');
     const recordsEventsCollection = db.collection<any>('recordsEvents');
+    const emailRules = db.collection<any>('emailRules');
+    const smsRules = db.collection<any>('smsRules');
     const tempRecords = [] as AppRecord[];
 
-    const authStore = new MongoDBAuthStore(users, loginRequests, sessions);
+    const authStore = new MongoDBAuthStore(
+        users,
+        loginRequests,
+        sessions,
+        emailRules,
+        smsRules
+    );
     const recordsStore = new MongoDBRecordsStore(
         recordsCollection,
         recordsKeysCollection
