@@ -1,4 +1,4 @@
-import { getStatusCode } from './Utils';
+import { getStatusCode, tryParseJson } from './Utils';
 import { AuthController, ValidateSessionKeyResult } from './AuthController';
 
 /**
@@ -93,6 +93,13 @@ const OPERATION_NOT_FOUND_RESULT = {
     errorMessage: 'An operation could not be found for the given request.',
 };
 
+const UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON = {
+    success: false,
+    errorCode: 'unacceptable_request',
+    errorMessage:
+        'The request body was not properly formatted. It should be valid JSON.',
+};
+
 /**
  * Defines a class that represents a generic HTTP server suitable for Records HTTP Requests.
  */
@@ -133,6 +140,13 @@ export class RecordsHttpServer {
             !!request.pathParams.userId
         ) {
             return this._getUserInfo(request);
+        } else if (
+            request.method === 'PUT' &&
+            request.path.startsWith('/api/') &&
+            request.path.endsWith('/metadata') &&
+            !!request.pathParams.userId
+        ) {
+            return this._putUserInfo(request);
         }
 
         return returnResult(OPERATION_NOT_FOUND_RESULT);
@@ -147,7 +161,7 @@ export class RecordsHttpServer {
     ): Promise<GenericHttpResponse> {
         if (request.method !== 'GET') {
             throw new Error(
-                `getIssuerMetadata only accept GET method, you tried: ${request.method}`
+                `getUserInfo only accept GET method, you tried: ${request.method}`
             );
         }
 
@@ -177,6 +191,51 @@ export class RecordsHttpServer {
             avatarPortraitUrl: result.avatarPortraitUrl,
             email: result.email,
             phoneNumber: result.phoneNumber,
+        });
+    }
+
+    private async _putUserInfo(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (request.method !== 'PUT') {
+            throw new Error(
+                `putUserInfo only accept PUT method, you tried: ${request.method}`
+            );
+        }
+
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const sessionKey = getSessionKey(request);
+
+        if (!sessionKey) {
+            return returnResult(NOT_LOGGED_IN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success) {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const result = await this._auth.updateUserInfo({
+            sessionKey: sessionKey,
+            userId: request.pathParams.userId,
+            update: jsonResult.value,
+        });
+
+        if (!result.success) {
+            return returnResult(result);
+        }
+
+        return returnResult({
+            success: true,
+            userId: result.userId,
         });
     }
 

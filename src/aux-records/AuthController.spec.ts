@@ -2403,6 +2403,39 @@ describe('AuthController', () => {
             });
         });
 
+        it('should not update special properties for the user', async () => {
+            const result = await controller.updateUserInfo({
+                userId,
+                sessionKey,
+                update: {
+                    id: 'new id',
+                    allSessionRevokeTimeMs: 99,
+                    currentLoginRequestId: 'request id',
+                    name: 'New Name',
+                    email: 'new email',
+                    phoneNumber: 'new phone number',
+                } as any,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+            });
+
+            const user = await authStore.findUser(userId);
+
+            expect(user).toEqual({
+                id: userId,
+                name: 'New Name',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                email: 'new email',
+                phoneNumber: 'new phone number',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+        });
+
         describe('data validation', () => {
             const invalidIdCases = [
                 ['null', null as any],

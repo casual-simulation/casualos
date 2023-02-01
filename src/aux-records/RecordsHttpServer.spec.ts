@@ -192,6 +192,156 @@ describe('RecordsHttpServer', () => {
         });
     });
 
+    describe('PUT /api/{userId}/metadata', () => {
+        let sessionKey: string;
+        let userId: string;
+
+        beforeEach(async () => {
+            authenticatedHeaders['origin'] = 'https://account-origin.com';
+            let requestResult = await authController.requestLogin({
+                address: 'test@example.com',
+                addressType: 'email',
+                ipAddress: '123.456.789',
+            });
+
+            if (!requestResult.success) {
+                throw new Error('Unable to request a login!');
+            }
+
+            const message = authMessenger.messages.find(
+                (m) => m.address === 'test@example.com'
+            );
+
+            if (!message) {
+                throw new Error('Message not found!');
+            }
+
+            const loginResult = await authController.completeLogin({
+                code: message.code,
+                ipAddress: '123.456.789',
+                requestId: requestResult.requestId,
+                userId: requestResult.userId,
+            });
+
+            if (!loginResult.success) {
+                throw new Error('Unable to login!');
+            }
+
+            sessionKey = loginResult.sessionKey;
+            userId = loginResult.userId;
+            authenticatedHeaders['authorization'] = `Bearer ${sessionKey}`;
+        });
+
+        it('should update the metadata for the given userId', async () => {
+            const result = await server.handleRequest(
+                httpPut(
+                    `/api/{userId:${userId}}/metadata`,
+                    JSON.stringify({
+                        name: 'Kal',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: true,
+                    userId,
+                }),
+            });
+        });
+
+        it('should return a 403 status code if the origin is invalid', async () => {
+            authenticatedHeaders['origin'] = 'https://wrong.origin.com';
+            const result = await server.handleRequest(
+                httpPut(
+                    `/api/{userId:${userId}}/metadata`,
+                    JSON.stringify({
+                        name: 'Kal',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 403,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
+                }),
+            });
+        });
+
+        it('should return a 401 status code if no session key is provided', async () => {
+            delete authenticatedHeaders['authorization'];
+            const result = await server.handleRequest(
+                httpPut(
+                    `/api/{userId:${userId}}/metadata`,
+                    JSON.stringify({
+                        name: 'Kal',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 401,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                }),
+            });
+        });
+
+        it('should return a 400 status code if the session key is wrongly formatted', async () => {
+            authenticatedHeaders['authorization'] = `Bearer wrong`;
+            const result = await server.handleRequest(
+                httpPut(
+                    `/api/{userId:${userId}}/metadata`,
+                    JSON.stringify({
+                        name: 'Kal',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'unacceptable_session_key',
+                    errorMessage:
+                        'The given session key is invalid. It must be a correctly formatted string.',
+                }),
+            });
+        });
+
+        it('should return a 400 status code if not given JSON', async () => {
+            const result = await server.handleRequest(
+                httpPut(
+                    `/api/{userId:${userId}}/metadata`,
+                    '{',
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request body was not properly formatted. It should be valid JSON.',
+                }),
+            });
+        });
+    });
+
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
         const result = await server.handleRequest(
             httpRequest('GET', `/api/missing`, null)
@@ -213,6 +363,14 @@ describe('RecordsHttpServer', () => {
         headers: GenericHttpHeaders = defaultHeaders
     ): GenericHttpRequest {
         return httpRequest('GET', url, null, headers);
+    }
+
+    function httpPut(
+        url: string,
+        body: any,
+        headers: GenericHttpHeaders = defaultHeaders
+    ): GenericHttpRequest {
+        return httpRequest('PUT', url, body, headers);
     }
 
     function httpRequest(

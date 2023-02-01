@@ -362,6 +362,8 @@ export function getStatusCode(
             return 400;
         } else if (response.errorCode === 'unacceptable_expire_time') {
             return 400;
+        } else if (response.errorCode === 'unacceptable_request') {
+            return 400;
         } else if (response.errorCode === 'address_type_not_supported') {
             return 501;
         } else if (response.errorCode === 'server_error') {
@@ -385,4 +387,34 @@ export function cleanupObject<T extends Object>(obj: T): Partial<T> {
         obj,
         (o) => typeof o === 'undefined' || o === null
     ) as Partial<T>;
+}
+
+/**
+ * Tries to parse the given JSON string into a JavaScript Value.
+ * @param json The JSON to parse.
+ */
+export function tryParseJson(json: string): JsonParseResult {
+    try {
+        return {
+            success: true,
+            value: JSON.parse(json),
+        };
+    } catch (err) {
+        return {
+            success: false,
+            error: err,
+        };
+    }
+}
+
+export type JsonParseResult = JsonParseSuccess | JsonParseFailure;
+
+export interface JsonParseSuccess {
+    success: true;
+    value: any;
+}
+
+export interface JsonParseFailure {
+    success: false;
+    error: Error;
 }

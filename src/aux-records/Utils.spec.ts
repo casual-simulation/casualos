@@ -10,6 +10,7 @@ import {
     createSigningKey,
     getStatusCode,
     cleanupObject,
+    tryParseJson,
 } from './Utils';
 
 const cases = [['abc', 'YWJj']];
@@ -462,6 +463,7 @@ describe('getStatusCode()', () => {
         ['unacceptable_ip_address', 500] as const,
         ['unacceptable_address_type', 400] as const,
         ['unacceptable_expire_time', 400] as const,
+        ['unacceptable_request', 400] as const,
         ['address_type_not_supported', 501] as const,
         ['server_error', 500] as const,
         ['invalid_origin', 403] as const,
@@ -495,6 +497,24 @@ describe('cleanupObject()', () => {
             test: 0,
             value: false,
             empty: '',
+        });
+    });
+});
+
+describe('tryParseJson()', () => {
+    it('should be able to parse the given JSON into a value', () => {
+        expect(tryParseJson('{ "hello": 123 }')).toEqual({
+            success: true,
+            value: {
+                hello: 123,
+            },
+        });
+    });
+
+    it('should return an unsucessful result if the string is not JSON', () => {
+        expect(tryParseJson('{')).toEqual({
+            success: false,
+            error: expect.any(Error),
         });
     });
 });
