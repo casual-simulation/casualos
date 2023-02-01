@@ -9,6 +9,7 @@ import {
     signRequest,
     createSigningKey,
     getStatusCode,
+    cleanupObject,
 } from './Utils';
 
 const cases = [['abc', 'YWJj']];
@@ -475,5 +476,25 @@ describe('getStatusCode()', () => {
                 errorCode: code,
             })
         ).toBe(expectedStatus);
+    });
+});
+
+describe('cleanupObject()', () => {
+    it('should omit undefined and null properties of an object', () => {
+        let result = cleanupObject({
+            hello: 'world',
+            test: 0,
+            value: false,
+            empty: '',
+            n: null,
+            u: undefined,
+        });
+
+        expect(result).toEqual({
+            hello: 'world',
+            test: 0,
+            value: false,
+            empty: '',
+        });
     });
 });

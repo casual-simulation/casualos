@@ -3,6 +3,7 @@ import {
     AuthLoginRequest,
     AuthSession,
     AuthStore,
+    AuthUser,
 } from './AuthStore';
 import { ServerError } from './Errors';
 import { v4 as uuid } from 'uuid';
@@ -15,7 +16,7 @@ import {
 } from '@casual-simulation/crypto';
 import { fromByteArray } from 'base64-js';
 import { AuthMessenger } from './AuthMessenger';
-import { fromBase64String, toBase64String } from './Utils';
+import { cleanupObject, fromBase64String, toBase64String } from './Utils';
 import { formatV1SessionKey, parseSessionKey, randomCode } from './AuthUtils';
 
 /**
@@ -926,6 +927,89 @@ export class AuthController {
             };
         }
     }
+
+    async updateUserInfo(
+        request: UpdateUserInfoRequest
+    ): Promise<UpdateUserInfoResult> {
+        if (typeof request.userId !== 'string' || request.userId === '') {
+            return {
+                success: false,
+                errorCode: 'unacceptable_user_id',
+                errorMessage:
+                    'The given userId is invalid. It must be a string.',
+            };
+        } else if (
+            typeof request.sessionKey !== 'string' ||
+            request.sessionKey === ''
+        ) {
+            return {
+                success: false,
+                errorCode: 'unacceptable_session_key',
+                errorMessage:
+                    'The given session key is invalid. It must be a string.',
+            };
+        } else if (
+            typeof request.update !== 'object' ||
+            request.update === null ||
+            Array.isArray(request.update)
+        ) {
+            return {
+                success: false,
+                errorCode: 'unacceptable_update',
+                errorMessage:
+                    'The given update is invalid. It must be an object.',
+            };
+        }
+
+        try {
+            const keyResult = await this.validateSessionKey(request.sessionKey);
+            if (keyResult.success === false) {
+                return keyResult;
+            } else if (keyResult.userId !== request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            }
+
+            const user = await this._store.findUser(request.userId);
+
+            if (!user) {
+                throw new Error(
+                    'Unable to find user even though a valid session key was presented!'
+                );
+            }
+
+            const cleaned = cleanupObject({
+                name: request.update.name,
+                avatarUrl: request.update.avatarUrl,
+                avatarPortraitUrl: request.update.avatarPortraitUrl,
+                email: request.update.email,
+                phoneNumber: request.update.phoneNumber,
+            });
+
+            await this._store.saveUser({
+                ...user,
+                ...cleaned,
+            });
+
+            return {
+                success: true,
+                userId: user.id,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error ocurred while getting user info',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
 }
 
 export interface LoginRequest {
@@ -1333,6 +1417,53 @@ export interface GetUserInfoFailure {
     success: false;
     errorCode:
         | 'unacceptable_user_id'
+        | ValidateSessionKeyFailure['errorCode']
+        | ServerError;
+    errorMessage: string;
+}
+
+/**
+ * Defines an interface for a request to update user info.
+ */
+export interface UpdateUserInfoRequest {
+    /**
+     * The session key that should be used to authenticate the request.
+     */
+    sessionKey: string;
+
+    /**
+     * The ID of the user whose info should be updated.
+     */
+    userId: string;
+
+    /**
+     * The new info for the user.
+     */
+    update: Partial<
+        Pick<
+            AuthUser,
+            'name' | 'email' | 'phoneNumber' | 'avatarUrl' | 'avatarPortraitUrl'
+        >
+    >;
+}
+
+export type UpdateUserInfoResult =
+    | UpdateUserInfoSuccess
+    | UpdateUserInfoFailure;
+
+export interface UpdateUserInfoSuccess {
+    success: true;
+    /**
+     * The ID of the user that was retrieved.
+     */
+    userId: string;
+}
+
+export interface UpdateUserInfoFailure {
+    success: false;
+    errorCode:
+        | 'unacceptable_user_id'
+        | 'unacceptable_update'
         | ValidateSessionKeyFailure['errorCode']
         | ServerError;
     errorMessage: string;

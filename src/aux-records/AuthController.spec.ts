@@ -2273,6 +2273,223 @@ describe('AuthController', () => {
             );
         });
     });
+
+    describe('updateUserInfo()', () => {
+        const userId = 'myid';
+        const requestId = 'requestId';
+        const sessionId = toBase64String('sessionId');
+        const code = 'code';
+
+        const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+
+        beforeEach(async () => {
+            await authStore.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            await authStore.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                expireTimeMs: 1000,
+                grantedTimeMs: 999,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+        });
+
+        it('should update the info for the given user ID', async () => {
+            const result = await controller.updateUserInfo({
+                userId,
+                sessionKey,
+                update: {
+                    name: 'New Name',
+                    avatarUrl: 'New Avatar URL',
+                    avatarPortraitUrl: 'New Portrait',
+                    email: 'new email',
+                    phoneNumber: 'new phone number',
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+            });
+
+            const user = await authStore.findUser(userId);
+
+            expect(user).toEqual({
+                id: userId,
+                name: 'New Name',
+                avatarUrl: 'New Avatar URL',
+                avatarPortraitUrl: 'New Portrait',
+                email: 'new email',
+                phoneNumber: 'new phone number',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+        });
+
+        it('should return an invalid_key result if the user ID doesnt match the session key', async () => {
+            const result = await controller.updateUserInfo({
+                userId: 'wrong',
+                sessionKey,
+                update: {
+                    name: 'New Name',
+                    avatarUrl: 'New Avatar URL',
+                    avatarPortraitUrl: 'New Portrait',
+                    email: 'new email',
+                    phoneNumber: 'new phone number',
+                },
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_key',
+                errorMessage: INVALID_KEY_ERROR_MESSAGE,
+            });
+
+            const user = await authStore.findUser(userId);
+
+            expect(user).toEqual({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+        });
+
+        it('should preserve values that arent included in the update', async () => {
+            const result = await controller.updateUserInfo({
+                userId,
+                sessionKey,
+                update: {
+                    name: 'New Name',
+                    email: 'new email',
+                    phoneNumber: 'new phone number',
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+            });
+
+            const user = await authStore.findUser(userId);
+
+            expect(user).toEqual({
+                id: userId,
+                name: 'New Name',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                email: 'new email',
+                phoneNumber: 'new phone number',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+        });
+
+        describe('data validation', () => {
+            const invalidIdCases = [
+                ['null', null as any],
+                ['empty', ''],
+                ['number', 123],
+                ['boolean', false],
+                ['object', {}],
+                ['array', []],
+                ['undefined', undefined],
+            ];
+
+            it.each(invalidIdCases)(
+                'it should fail if given a %s userId',
+                async (desc, id) => {
+                    const result = await controller.updateUserInfo({
+                        userId: id,
+                        sessionKey: 'key',
+                        update: {
+                            name: 'New Name',
+                            avatarUrl: 'New Avatar URL',
+                            avatarPortraitUrl: 'New Portrait',
+                            email: 'new email',
+                            phoneNumber: 'new phone number',
+                        },
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_user_id',
+                        errorMessage:
+                            'The given userId is invalid. It must be a string.',
+                    });
+                }
+            );
+
+            it.each(invalidIdCases)(
+                'it should fail if given a %s session key',
+                async (desc, id) => {
+                    const result = await controller.updateUserInfo({
+                        userId: 'userId',
+                        sessionKey: id,
+                        update: {
+                            name: 'New Name',
+                            avatarUrl: 'New Avatar URL',
+                            avatarPortraitUrl: 'New Portrait',
+                            email: 'new email',
+                            phoneNumber: 'new phone number',
+                        },
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_session_key',
+                        errorMessage:
+                            'The given session key is invalid. It must be a string.',
+                    });
+                }
+            );
+
+            const invalidUpdateCases = [
+                ['null', null as any] as const,
+                ['string', 'abc'] as const,
+                ['boolean', true] as const,
+                ['number', 123] as const,
+                ['array', []] as const,
+                ['undefined', undefined as any] as const,
+            ];
+
+            it.each(invalidUpdateCases)(
+                'it should fail if given a %s update',
+                async (desc, update) => {
+                    const result = await controller.updateUserInfo({
+                        userId: userId,
+                        sessionKey: sessionKey,
+                        update: update as any,
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_update',
+                        errorMessage:
+                            'The given update is invalid. It must be an object.',
+                    });
+                }
+            );
+        });
+    });
 });
 
 function codeNumber(code: Uint8Array): string {

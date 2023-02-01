@@ -1,5 +1,5 @@
 import { fromByteArray, toByteArray } from 'base64-js';
-import _, { padStart, sortBy, StringChain } from 'lodash';
+import _, { omitBy, padStart, sortBy, StringChain } from 'lodash';
 import { sha256, hmac } from 'hash.js';
 
 /**
@@ -374,4 +374,15 @@ export function getStatusCode(
     }
 
     return 200;
+}
+
+/**
+ * Clones the given object into a new object that only has non-null and not-undefined properties.
+ * @param obj The object to cleanup.
+ */
+export function cleanupObject<T extends Object>(obj: T): Partial<T> {
+    return omitBy(
+        obj,
+        (o) => typeof o === 'undefined' || o === null
+    ) as Partial<T>;
 }
