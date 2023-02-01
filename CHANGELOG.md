@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.22
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added a log to help debug an initialization issue.
+
 ## V3.1.21
 
 #### Date: 1/30/2023
