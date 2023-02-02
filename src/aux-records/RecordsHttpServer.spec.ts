@@ -473,7 +473,7 @@ describe('RecordsHttpServer', () => {
     });
 
     describe('POST /api/v2/replaceSession', () => {
-        it('should return the list of sessions for the user', async () => {
+        it('should replace the current session', async () => {
             const result = await server.handleRequest(
                 httpPost(
                     `/api/v2/replaceSession`,
@@ -506,6 +506,9 @@ describe('RecordsHttpServer', () => {
             const session = await authStore.findSession(uid, sid);
 
             expect(session.ipAddress).toBe('999.999.999.999');
+
+            const old = await authStore.findSession(userId, sessionId);
+            expect(old.revokeTimeMs).toBeGreaterThanOrEqual(old.grantedTimeMs);
         });
 
         it('should return a 403 status code if the request is made from a non-account origin', async () => {
@@ -554,6 +557,134 @@ describe('RecordsHttpServer', () => {
                     errorCode: 'unacceptable_session_key',
                     errorMessage:
                         'The given session key is invalid. It must be a correctly formatted string.',
+                }),
+            });
+        });
+    });
+
+    describe('POST /api/v2/revokeAllSessions', () => {
+        it('should revoke all the sessions', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/revokeAllSessions`,
+                    JSON.stringify({
+                        userId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: true,
+                }),
+            });
+
+            const user = await authStore.findUser(userId);
+            expect(user.allSessionRevokeTimeMs).toBeGreaterThan(0);
+        });
+
+        it('should return a 403 status code if the request is made from a non-account origin', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/revokeAllSessions`,
+                    JSON.stringify({
+                        userId,
+                    }),
+                    defaultHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 403,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
+                }),
+            });
+        });
+
+        it('should return a 401 status code when no session key is included', async () => {
+            delete authenticatedHeaders['authorization'];
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/revokeAllSessions`,
+                    JSON.stringify({
+                        userId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 401,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                }),
+            });
+        });
+
+        it('should return a 400 status code when the session key is wrongly formatted', async () => {
+            authenticatedHeaders['authorization'] = 'Bearer wrong';
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/revokeAllSessions`,
+                    JSON.stringify({
+                        userId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'unacceptable_session_key',
+                    errorMessage:
+                        'The given session key is invalid. It must be a correctly formatted string.',
+                }),
+            });
+        });
+
+        it('should return a 400 status code when the body is not JSON', async () => {
+            const result = await server.handleRequest(
+                httpPost(`/api/v2/revokeAllSessions`, '{', authenticatedHeaders)
+            );
+
+            expect(result).toEqual({
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request body was not properly formatted. It should be valid JSON.',
+                }),
+            });
+        });
+
+        it('should return a 400 status code when the body is not a JSON object', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/revokeAllSessions`,
+                    'true',
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request body was not properly formatted. It should be valid JSON.',
                 }),
             });
         });

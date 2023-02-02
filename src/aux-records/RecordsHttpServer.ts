@@ -183,9 +183,45 @@ export class RecordsHttpServer {
             request.path === '/api/v2/replaceSession'
         ) {
             return this._postReplaceSession(request);
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/revokeAllSessions'
+        ) {
+            return this._postRevokeAllSessions(request);
         }
 
         return returnResult(OPERATION_NOT_FOUND_RESULT);
+    }
+
+    private async _postRevokeAllSessions(request: GenericHttpRequest) {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const { userId } = jsonResult.value;
+
+        const authorization = getSessionKey(request);
+
+        if (!authorization) {
+            return returnResult(NOT_LOGGED_IN_RESULT);
+        }
+
+        const result = await this._auth.revokeAllSessions({
+            userId: userId,
+            sessionKey: authorization,
+        });
+
+        return returnResult(result);
     }
 
     private async _postReplaceSession(
