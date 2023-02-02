@@ -1,5 +1,10 @@
 import { getStatusCode, tryParseJson } from './Utils';
-import { AuthController, ValidateSessionKeyResult } from './AuthController';
+import {
+    AuthController,
+    INVALID_KEY_ERROR_MESSAGE,
+    ValidateSessionKeyResult,
+} from './AuthController';
+import { parseSessionKey } from './AuthUtils';
 
 /**
  * Defines an interface for a generic HTTP request.
@@ -81,6 +86,12 @@ const NOT_LOGGED_IN_RESULT = {
         'The user is not logged in. A session key must be provided for this operation.',
 };
 
+const UNACCEPTABLE_SESSION_KEY = {
+    success: false,
+    errorCode: 'unacceptable_session_key',
+    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+};
+
 const INVALID_ORIGIN_RESULT = {
     success: false,
     errorCode: 'invalid_origin',
@@ -157,9 +168,46 @@ export class RecordsHttpServer {
             request.path === '/api/smsRules'
         ) {
             return this._getSmsRules(request);
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/sessions'
+        ) {
+            return this._getSessions(request);
         }
 
         return returnResult(OPERATION_NOT_FOUND_RESULT);
+    }
+
+    private async _getSessions(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const expireTime = request.query.expireTimeMs;
+        const expireTimeMs = !!expireTime ? parseInt(expireTime) : null;
+        const sessionKey = getSessionKey(request);
+
+        if (!sessionKey) {
+            return returnResult(NOT_LOGGED_IN_RESULT);
+        }
+
+        const parsed = parseSessionKey(sessionKey);
+
+        if (!parsed) {
+            return returnResult(UNACCEPTABLE_SESSION_KEY);
+        }
+
+        const [userId] = parsed;
+
+        const result = await this._auth.listSessions({
+            userId,
+            sessionKey,
+            expireTimeMs,
+        });
+
+        return returnResult(result);
     }
 
     /**

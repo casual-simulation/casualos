@@ -1313,7 +1313,7 @@ export interface ListSessionsSuccess {
     success: true;
 
     /**
-     *
+     *The list of sessions.
      */
     sessions: ListedSession[];
 }

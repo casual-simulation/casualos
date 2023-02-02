@@ -11,7 +11,7 @@ import {
 import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import { MemoryAuthStore } from './MemoryAuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
-import { formatV1SessionKey } from './AuthUtils';
+import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
 
 console.log = jest.fn();
 
@@ -25,8 +25,13 @@ describe('RecordsHttpServer', () => {
 
     let allowedAccountOrigins: Set<string>;
     let allowedApiOrigins: Set<string>;
+    let sessionKey: string;
+    let userId: string;
+    let sessionId: string;
+    let expireTimeMs: number;
+    let sessionSecret: string;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         allowedAccountOrigins = new Set(['https://account-origin.com']);
 
         allowedApiOrigins = new Set(['https://api-origin.com']);
@@ -45,48 +50,49 @@ describe('RecordsHttpServer', () => {
         authenticatedHeaders = {
             ...defaultHeaders,
         };
+
+        authenticatedHeaders['origin'] = 'https://account-origin.com';
+        let requestResult = await authController.requestLogin({
+            address: 'test@example.com',
+            addressType: 'email',
+            ipAddress: '123.456.789',
+        });
+
+        if (!requestResult.success) {
+            throw new Error('Unable to request a login!');
+        }
+
+        const message = authMessenger.messages.find(
+            (m) => m.address === 'test@example.com'
+        );
+
+        if (!message) {
+            throw new Error('Message not found!');
+        }
+
+        const loginResult = await authController.completeLogin({
+            code: message.code,
+            ipAddress: '123.456.789',
+            requestId: requestResult.requestId,
+            userId: requestResult.userId,
+        });
+
+        if (!loginResult.success) {
+            throw new Error('Unable to login!');
+        }
+
+        sessionKey = loginResult.sessionKey;
+        userId = loginResult.userId;
+
+        let [uid, sid, secret, expire] = parseSessionKey(sessionKey);
+        sessionId = sid;
+        sessionSecret = secret;
+        expireTimeMs = expire;
+
+        authenticatedHeaders['authorization'] = `Bearer ${sessionKey}`;
     });
 
     describe('GET /api/{token}/metadata', () => {
-        let sessionKey: string;
-        let userId: string;
-
-        beforeEach(async () => {
-            authenticatedHeaders['origin'] = 'https://account-origin.com';
-            let requestResult = await authController.requestLogin({
-                address: 'test@example.com',
-                addressType: 'email',
-                ipAddress: '123.456.789',
-            });
-
-            if (!requestResult.success) {
-                throw new Error('Unable to request a login!');
-            }
-
-            const message = authMessenger.messages.find(
-                (m) => m.address === 'test@example.com'
-            );
-
-            if (!message) {
-                throw new Error('Message not found!');
-            }
-
-            const loginResult = await authController.completeLogin({
-                code: message.code,
-                ipAddress: '123.456.789',
-                requestId: requestResult.requestId,
-                userId: requestResult.userId,
-            });
-
-            if (!loginResult.success) {
-                throw new Error('Unable to login!');
-            }
-
-            sessionKey = loginResult.sessionKey;
-            userId = loginResult.userId;
-            authenticatedHeaders['authorization'] = `Bearer ${sessionKey}`;
-        });
-
         it('should return the metadata for the given token', async () => {
             const result = await server.handleRequest(
                 httpGet(
@@ -193,45 +199,6 @@ describe('RecordsHttpServer', () => {
     });
 
     describe('PUT /api/{userId}/metadata', () => {
-        let sessionKey: string;
-        let userId: string;
-
-        beforeEach(async () => {
-            authenticatedHeaders['origin'] = 'https://account-origin.com';
-            let requestResult = await authController.requestLogin({
-                address: 'test@example.com',
-                addressType: 'email',
-                ipAddress: '123.456.789',
-            });
-
-            if (!requestResult.success) {
-                throw new Error('Unable to request a login!');
-            }
-
-            const message = authMessenger.messages.find(
-                (m) => m.address === 'test@example.com'
-            );
-
-            if (!message) {
-                throw new Error('Message not found!');
-            }
-
-            const loginResult = await authController.completeLogin({
-                code: message.code,
-                ipAddress: '123.456.789',
-                requestId: requestResult.requestId,
-                userId: requestResult.userId,
-            });
-
-            if (!loginResult.success) {
-                throw new Error('Unable to login!');
-            }
-
-            sessionKey = loginResult.sessionKey;
-            userId = loginResult.userId;
-            authenticatedHeaders['authorization'] = `Bearer ${sessionKey}`;
-        });
-
         it('should update the metadata for the given userId', async () => {
             const result = await server.handleRequest(
                 httpPut(
@@ -404,6 +371,103 @@ describe('RecordsHttpServer', () => {
                         pattern: 'other',
                     },
                 ]),
+            });
+        });
+    });
+
+    describe('GET /api/v2/sessions', () => {
+        it('should return the list of sessions for the user', async () => {
+            const result = await server.handleRequest(
+                httpGet(`/api/v2/sessions`, authenticatedHeaders)
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: expect.any(String),
+            });
+
+            expect(JSON.parse(result.body as string)).toEqual({
+                success: true,
+                sessions: [
+                    {
+                        userId: userId,
+                        sessionId: sessionId,
+                        grantedTimeMs: expect.any(Number),
+                        expireTimeMs: expireTimeMs,
+                        revokeTimeMs: null,
+                        ipAddress: '123.456.789',
+                        currentSession: true,
+                        nextSessionId: null,
+                    },
+                ],
+            });
+        });
+
+        it('should use the expireTimeMs query parameter', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/sessions?expireTimeMs=${expireTimeMs}`,
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: expect.any(String),
+            });
+
+            expect(JSON.parse(result.body as string)).toEqual({
+                success: true,
+                sessions: [],
+            });
+        });
+
+        it('should return a 403 status code if the request is made from a non-account origin', async () => {
+            const result = await server.handleRequest(
+                httpGet(`/api/v2/sessions`, defaultHeaders)
+            );
+
+            expect(result).toEqual({
+                statusCode: 403,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
+                }),
+            });
+        });
+
+        it('should return a 401 status code when no session key is included', async () => {
+            delete authenticatedHeaders['authorization'];
+            const result = await server.handleRequest(
+                httpGet(`/api/v2/sessions`, authenticatedHeaders)
+            );
+
+            expect(result).toEqual({
+                statusCode: 401,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                }),
+            });
+        });
+
+        it('should return a 400 status code when an incorrectly formatted sesssion key is provided', async () => {
+            authenticatedHeaders['authorization'] = 'Bearer wrong';
+            const result = await server.handleRequest(
+                httpGet(`/api/v2/sessions`, authenticatedHeaders)
+            );
+
+            expect(result).toEqual({
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'unacceptable_session_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                }),
             });
         });
     });
