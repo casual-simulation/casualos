@@ -472,6 +472,93 @@ describe('RecordsHttpServer', () => {
         });
     });
 
+    describe('POST /api/v2/replaceSession', () => {
+        it('should return the list of sessions for the user', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/replaceSession`,
+                    '',
+                    authenticatedHeaders,
+                    '999.999.999.999'
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: expect.any(String),
+            });
+
+            let data = JSON.parse(result.body as string);
+
+            expect(data).toEqual({
+                success: true,
+                userId,
+                sessionKey: expect.any(String),
+                expireTimeMs: expect.any(Number),
+            });
+
+            const parsed = parseSessionKey(data.sessionKey);
+
+            expect(parsed).not.toBe(null);
+
+            const [uid, sid] = parsed;
+
+            const session = await authStore.findSession(uid, sid);
+
+            expect(session.ipAddress).toBe('999.999.999.999');
+        });
+
+        it('should return a 403 status code if the request is made from a non-account origin', async () => {
+            const result = await server.handleRequest(
+                httpPost(`/api/v2/replaceSession`, '', defaultHeaders)
+            );
+
+            expect(result).toEqual({
+                statusCode: 403,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
+                }),
+            });
+        });
+
+        it('should return a 401 status code when no session key is included', async () => {
+            delete authenticatedHeaders['authorization'];
+            const result = await server.handleRequest(
+                httpPost(`/api/v2/replaceSession`, '', authenticatedHeaders)
+            );
+
+            expect(result).toEqual({
+                statusCode: 401,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                }),
+            });
+        });
+
+        it('should return a 400 status code when an incorrectly formatted sesssion key is provided', async () => {
+            authenticatedHeaders['authorization'] = 'Bearer wrong';
+            const result = await server.handleRequest(
+                httpPost(`/api/v2/replaceSession`, '', authenticatedHeaders)
+            );
+
+            expect(result).toEqual({
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'unacceptable_session_key',
+                    errorMessage:
+                        'The given session key is invalid. It must be a correctly formatted string.',
+                }),
+            });
+        });
+    });
+
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
         const result = await server.handleRequest(
             httpRequest('GET', `/api/missing`, null)
@@ -490,24 +577,36 @@ describe('RecordsHttpServer', () => {
 
     function httpGet(
         url: string,
-        headers: GenericHttpHeaders = defaultHeaders
+        headers: GenericHttpHeaders = defaultHeaders,
+        ipAddress: string = '123.456.789'
     ): GenericHttpRequest {
-        return httpRequest('GET', url, null, headers);
+        return httpRequest('GET', url, null, headers, ipAddress);
     }
 
     function httpPut(
         url: string,
         body: any,
-        headers: GenericHttpHeaders = defaultHeaders
+        headers: GenericHttpHeaders = defaultHeaders,
+        ipAddress: string = '123.456.789'
     ): GenericHttpRequest {
-        return httpRequest('PUT', url, body, headers);
+        return httpRequest('PUT', url, body, headers, ipAddress);
+    }
+
+    function httpPost(
+        url: string,
+        body: any,
+        headers: GenericHttpHeaders = defaultHeaders,
+        ipAddress: string = '123.456.789'
+    ): GenericHttpRequest {
+        return httpRequest('POST', url, body, headers, ipAddress);
     }
 
     function httpRequest(
         method: GenericHttpRequest['method'],
         url: string,
         body: GenericHttpRequest['body'],
-        headers: GenericHttpHeaders = defaultHeaders
+        headers: GenericHttpHeaders = defaultHeaders,
+        ipAddress: string = '123.456.789'
     ): GenericHttpRequest {
         const { path, pathParams, query } = parseUrl(url);
 
@@ -518,6 +617,7 @@ describe('RecordsHttpServer', () => {
             pathParams,
             method,
             query,
+            ipAddress,
         };
     }
 });
@@ -541,6 +641,7 @@ describe('validateOrigin()', () => {
                     headers: {
                         origin: 'https://example.com',
                     },
+                    ipAddress: '123.456',
                 },
                 origins
             )
@@ -565,6 +666,7 @@ describe('validateOrigin()', () => {
                     headers: {
                         origin: 'https://wrong.com',
                     },
+                    ipAddress: '123.456',
                 },
                 origins
             )
@@ -587,6 +689,7 @@ describe('validateOrigin()', () => {
                     query: {},
                     pathParams: {},
                     headers: {},
+                    ipAddress: '123.456',
                 },
                 origins
             )
@@ -609,6 +712,7 @@ describe('validateOrigin()', () => {
                     query: {},
                     pathParams: {},
                     headers: {},
+                    ipAddress: '123.456',
                 },
                 origins
             )
@@ -631,6 +735,7 @@ describe('validateOrigin()', () => {
                     query: {},
                     pathParams: {},
                     headers: {},
+                    ipAddress: '123.456',
                 },
                 origins
             )
@@ -650,6 +755,7 @@ describe('getSessionKey()', () => {
                 headers: {
                     authorization: 'Bearer abc',
                 },
+                ipAddress: '123.456',
             })
         ).toBe('abc');
     });
@@ -663,6 +769,7 @@ describe('getSessionKey()', () => {
                 query: {},
                 pathParams: {},
                 headers: {},
+                ipAddress: '123.456',
             })
         ).toBe(null);
     });
@@ -678,6 +785,7 @@ describe('getSessionKey()', () => {
                 headers: {
                     authorization: 'Wrong abc',
                 },
+                ipAddress: '123.456',
             })
         ).toBe(null);
     });

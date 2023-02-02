@@ -43,6 +43,11 @@ export interface GenericHttpRequest {
      * The body of the HTTP request.
      */
     body: string | Uint8Array | null;
+
+    /**
+     * The IP address that the request is from.
+     */
+    ipAddress: string;
 }
 
 /**
@@ -173,9 +178,34 @@ export class RecordsHttpServer {
             request.path === '/api/v2/sessions'
         ) {
             return this._getSessions(request);
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/replaceSession'
+        ) {
+            return this._postReplaceSession(request);
         }
 
         return returnResult(OPERATION_NOT_FOUND_RESULT);
+    }
+
+    private async _postReplaceSession(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const sessionKey = getSessionKey(request);
+        if (!sessionKey) {
+            return returnResult(NOT_LOGGED_IN_RESULT);
+        }
+
+        const result = await this._auth.replaceSession({
+            sessionKey: sessionKey,
+            ipAddress: request.ipAddress,
+        });
+
+        return returnResult(result);
     }
 
     private async _getSessions(
