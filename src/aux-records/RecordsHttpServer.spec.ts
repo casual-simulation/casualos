@@ -12,6 +12,7 @@ import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import { MemoryAuthStore } from './MemoryAuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
+import { AuthSession } from './AuthStore';
 
 console.log = jest.fn();
 
@@ -219,94 +220,17 @@ describe('RecordsHttpServer', () => {
             });
         });
 
-        it('should return a 403 status code if the origin is invalid', async () => {
-            authenticatedHeaders['origin'] = 'https://wrong.origin.com';
-            const result = await server.handleRequest(
-                httpPut(
-                    `/api/{userId:${userId}}/metadata`,
-                    JSON.stringify({
-                        name: 'Kal',
-                    }),
-                    authenticatedHeaders
-                )
-            );
-
-            expect(result).toEqual({
-                statusCode: 403,
-                body: JSON.stringify({
-                    success: false,
-                    errorCode: 'invalid_origin',
-                    errorMessage:
-                        'The request must be made from an authorized origin.',
-                }),
-            });
-        });
-
-        it('should return a 401 status code if no session key is provided', async () => {
-            delete authenticatedHeaders['authorization'];
-            const result = await server.handleRequest(
-                httpPut(
-                    `/api/{userId:${userId}}/metadata`,
-                    JSON.stringify({
-                        name: 'Kal',
-                    }),
-                    authenticatedHeaders
-                )
-            );
-
-            expect(result).toEqual({
-                statusCode: 401,
-                body: JSON.stringify({
-                    success: false,
-                    errorCode: 'not_logged_in',
-                    errorMessage:
-                        'The user is not logged in. A session key must be provided for this operation.',
-                }),
-            });
-        });
-
-        it('should return a 400 status code if the session key is wrongly formatted', async () => {
-            authenticatedHeaders['authorization'] = `Bearer wrong`;
-            const result = await server.handleRequest(
-                httpPut(
-                    `/api/{userId:${userId}}/metadata`,
-                    JSON.stringify({
-                        name: 'Kal',
-                    }),
-                    authenticatedHeaders
-                )
-            );
-
-            expect(result).toEqual({
-                statusCode: 400,
-                body: JSON.stringify({
-                    success: false,
-                    errorCode: 'unacceptable_session_key',
-                    errorMessage:
-                        'The given session key is invalid. It must be a correctly formatted string.',
-                }),
-            });
-        });
-
-        it('should return a 400 status code if not given JSON', async () => {
-            const result = await server.handleRequest(
-                httpPut(
-                    `/api/{userId:${userId}}/metadata`,
-                    '{',
-                    authenticatedHeaders
-                )
-            );
-
-            expect(result).toEqual({
-                statusCode: 400,
-                body: JSON.stringify({
-                    success: false,
-                    errorCode: 'unacceptable_request',
-                    errorMessage:
-                        'The request body was not properly formatted. It should be valid JSON.',
-                }),
-            });
-        });
+        testOrigin('PUT', `/api/{userId:${userId}}/metadata`, () =>
+            JSON.stringify({
+                name: 'Kal',
+            })
+        );
+        testAuthorization('PUT', `/api/{userId:${userId}}/metadata`, () =>
+            JSON.stringify({
+                name: 'Kal',
+            })
+        );
+        testBodyIsJson('PUT', `/api/{userId:${userId}}/metadata`);
     });
 
     describe('GET /api/emailRules', () => {
@@ -422,54 +346,8 @@ describe('RecordsHttpServer', () => {
             });
         });
 
-        it('should return a 403 status code if the request is made from a non-account origin', async () => {
-            const result = await server.handleRequest(
-                httpGet(`/api/v2/sessions`, defaultHeaders)
-            );
-
-            expect(result).toEqual({
-                statusCode: 403,
-                body: JSON.stringify({
-                    success: false,
-                    errorCode: 'invalid_origin',
-                    errorMessage:
-                        'The request must be made from an authorized origin.',
-                }),
-            });
-        });
-
-        it('should return a 401 status code when no session key is included', async () => {
-            delete authenticatedHeaders['authorization'];
-            const result = await server.handleRequest(
-                httpGet(`/api/v2/sessions`, authenticatedHeaders)
-            );
-
-            expect(result).toEqual({
-                statusCode: 401,
-                body: JSON.stringify({
-                    success: false,
-                    errorCode: 'not_logged_in',
-                    errorMessage:
-                        'The user is not logged in. A session key must be provided for this operation.',
-                }),
-            });
-        });
-
-        it('should return a 400 status code when an incorrectly formatted sesssion key is provided', async () => {
-            authenticatedHeaders['authorization'] = 'Bearer wrong';
-            const result = await server.handleRequest(
-                httpGet(`/api/v2/sessions`, authenticatedHeaders)
-            );
-
-            expect(result).toEqual({
-                statusCode: 400,
-                body: JSON.stringify({
-                    success: false,
-                    errorCode: 'unacceptable_session_key',
-                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
-                }),
-            });
-        });
+        testOrigin('GET', '/api/v2/sessions');
+        testAuthorization('GET', '/api/v2/sessions');
     });
 
     describe('POST /api/v2/replaceSession', () => {
@@ -511,55 +389,8 @@ describe('RecordsHttpServer', () => {
             expect(old.revokeTimeMs).toBeGreaterThanOrEqual(old.grantedTimeMs);
         });
 
-        it('should return a 403 status code if the request is made from a non-account origin', async () => {
-            const result = await server.handleRequest(
-                httpPost(`/api/v2/replaceSession`, '', defaultHeaders)
-            );
-
-            expect(result).toEqual({
-                statusCode: 403,
-                body: JSON.stringify({
-                    success: false,
-                    errorCode: 'invalid_origin',
-                    errorMessage:
-                        'The request must be made from an authorized origin.',
-                }),
-            });
-        });
-
-        it('should return a 401 status code when no session key is included', async () => {
-            delete authenticatedHeaders['authorization'];
-            const result = await server.handleRequest(
-                httpPost(`/api/v2/replaceSession`, '', authenticatedHeaders)
-            );
-
-            expect(result).toEqual({
-                statusCode: 401,
-                body: JSON.stringify({
-                    success: false,
-                    errorCode: 'not_logged_in',
-                    errorMessage:
-                        'The user is not logged in. A session key must be provided for this operation.',
-                }),
-            });
-        });
-
-        it('should return a 400 status code when an incorrectly formatted sesssion key is provided', async () => {
-            authenticatedHeaders['authorization'] = 'Bearer wrong';
-            const result = await server.handleRequest(
-                httpPost(`/api/v2/replaceSession`, '', authenticatedHeaders)
-            );
-
-            expect(result).toEqual({
-                statusCode: 400,
-                body: JSON.stringify({
-                    success: false,
-                    errorCode: 'unacceptable_session_key',
-                    errorMessage:
-                        'The given session key is invalid. It must be a correctly formatted string.',
-                }),
-            });
-        });
+        testOrigin('POST', '/api/v2/replaceSession', () => '');
+        testAuthorization('POST', '/api/v2/replaceSession', () => '');
     });
 
     describe('POST /api/v2/revokeAllSessions', () => {
@@ -585,109 +416,77 @@ describe('RecordsHttpServer', () => {
             expect(user.allSessionRevokeTimeMs).toBeGreaterThan(0);
         });
 
-        it('should return a 403 status code if the request is made from a non-account origin', async () => {
-            const result = await server.handleRequest(
-                httpPost(
-                    `/api/v2/revokeAllSessions`,
-                    JSON.stringify({
-                        userId,
-                    }),
-                    defaultHeaders
-                )
+        testUrl('POST', '/api/v2/revokeAllSessions', () =>
+            JSON.stringify({
+                userId,
+            })
+        );
+    });
+
+    describe('POST /api/v2/revokeSession', () => {
+        it('should revoke the given session ID for the given user', async () => {
+            let session: AuthSession = await authStore.findSession(
+                userId,
+                sessionId
             );
+            expect(session.revokeTimeMs).toBeNull();
 
-            expect(result).toEqual({
-                statusCode: 403,
-                body: JSON.stringify({
-                    success: false,
-                    errorCode: 'invalid_origin',
-                    errorMessage:
-                        'The request must be made from an authorized origin.',
-                }),
-            });
-        });
-
-        it('should return a 401 status code when no session key is included', async () => {
-            delete authenticatedHeaders['authorization'];
             const result = await server.handleRequest(
                 httpPost(
-                    `/api/v2/revokeAllSessions`,
+                    `/api/v2/revokeSession`,
                     JSON.stringify({
                         userId,
+                        sessionId,
                     }),
                     authenticatedHeaders
                 )
             );
 
             expect(result).toEqual({
-                statusCode: 401,
+                statusCode: 200,
                 body: JSON.stringify({
-                    success: false,
-                    errorCode: 'not_logged_in',
-                    errorMessage:
-                        'The user is not logged in. A session key must be provided for this operation.',
+                    success: true,
                 }),
             });
+
+            session = await authStore.findSession(userId, sessionId);
+            expect(session.revokeTimeMs).toBeGreaterThan(0);
         });
 
-        it('should return a 400 status code when the session key is wrongly formatted', async () => {
-            authenticatedHeaders['authorization'] = 'Bearer wrong';
+        it('should revoke the given session key', async () => {
+            let session: AuthSession = await authStore.findSession(
+                userId,
+                sessionId
+            );
+            expect(session.revokeTimeMs).toBeNull();
+
             const result = await server.handleRequest(
                 httpPost(
-                    `/api/v2/revokeAllSessions`,
+                    `/api/v2/revokeSession`,
                     JSON.stringify({
-                        userId,
+                        sessionKey,
                     }),
                     authenticatedHeaders
                 )
             );
 
             expect(result).toEqual({
-                statusCode: 400,
+                statusCode: 200,
                 body: JSON.stringify({
-                    success: false,
-                    errorCode: 'unacceptable_session_key',
-                    errorMessage:
-                        'The given session key is invalid. It must be a correctly formatted string.',
+                    success: true,
                 }),
             });
+
+            session = await authStore.findSession(userId, sessionId);
+            expect(session.revokeTimeMs).toBeGreaterThan(0);
         });
 
-        it('should return a 400 status code when the body is not JSON', async () => {
-            const result = await server.handleRequest(
-                httpPost(`/api/v2/revokeAllSessions`, '{', authenticatedHeaders)
-            );
-
-            expect(result).toEqual({
-                statusCode: 400,
-                body: JSON.stringify({
-                    success: false,
-                    errorCode: 'unacceptable_request',
-                    errorMessage:
-                        'The request body was not properly formatted. It should be valid JSON.',
-                }),
-            });
-        });
-
-        it('should return a 400 status code when the body is not a JSON object', async () => {
-            const result = await server.handleRequest(
-                httpPost(
-                    `/api/v2/revokeAllSessions`,
-                    'true',
-                    authenticatedHeaders
-                )
-            );
-
-            expect(result).toEqual({
-                statusCode: 400,
-                body: JSON.stringify({
-                    success: false,
-                    errorCode: 'unacceptable_request',
-                    errorMessage:
-                        'The request body was not properly formatted. It should be valid JSON.',
-                }),
-            });
-        });
+        testUrl('POST', '/api/v2/revokeSession', () =>
+            JSON.stringify({
+                userId,
+                sessionId,
+            })
+        );
     });
 
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
@@ -705,6 +504,112 @@ describe('RecordsHttpServer', () => {
             }),
         });
     });
+
+    function testUrl(
+        method: GenericHttpRequest['method'],
+        url: string,
+        createBody: () => string
+    ) {
+        testOrigin(method, url, createBody);
+        testAuthorization(method, url, createBody);
+        testBodyIsJson(method, url);
+    }
+
+    function testOrigin(
+        method: GenericHttpRequest['method'],
+        url: string,
+        createBody: () => string | null = () => null
+    ) {
+        it('should return a 403 status code if the request is made from a non-account origin', async () => {
+            const result = await server.handleRequest(
+                httpRequest(method, url, createBody(), defaultHeaders)
+            );
+
+            expect(result).toEqual({
+                statusCode: 403,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
+                }),
+            });
+        });
+    }
+
+    function testAuthorization(
+        method: GenericHttpRequest['method'],
+        url: string,
+        createBody: () => string | null = () => null
+    ) {
+        it('should return a 401 status code when no session key is included', async () => {
+            delete authenticatedHeaders['authorization'];
+            const result = await server.handleRequest(
+                httpRequest(method, url, createBody(), authenticatedHeaders)
+            );
+
+            expect(result).toEqual({
+                statusCode: 401,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                }),
+            });
+        });
+
+        it('should return a 400 status code when the session key is wrongly formatted', async () => {
+            authenticatedHeaders['authorization'] = 'Bearer wrong';
+            const result = await server.handleRequest(
+                httpRequest(method, url, createBody(), authenticatedHeaders)
+            );
+
+            expect(result).toEqual({
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'unacceptable_session_key',
+                    errorMessage:
+                        'The given session key is invalid. It must be a correctly formatted string.',
+                }),
+            });
+        });
+    }
+
+    function testBodyIsJson(method: GenericHttpRequest['method'], url: string) {
+        it('should return a 400 status code when the body is not JSON', async () => {
+            const result = await server.handleRequest(
+                httpRequest(method, url, '{', authenticatedHeaders)
+            );
+
+            expect(result).toEqual({
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request body was not properly formatted. It should be valid JSON.',
+                }),
+            });
+        });
+
+        it('should return a 400 status code when the body is not a JSON object', async () => {
+            const result = await server.handleRequest(
+                httpRequest(method, url, 'true', authenticatedHeaders)
+            );
+
+            expect(result).toEqual({
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request body was not properly formatted. It should be valid JSON.',
+                }),
+            });
+        });
+    }
 
     function httpGet(
         url: string,

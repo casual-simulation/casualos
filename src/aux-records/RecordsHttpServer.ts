@@ -94,7 +94,8 @@ const NOT_LOGGED_IN_RESULT = {
 const UNACCEPTABLE_SESSION_KEY = {
     success: false,
     errorCode: 'unacceptable_session_key',
-    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+    errorMessage:
+        'The given session key is invalid. It must be a correctly formatted string.',
 };
 
 const INVALID_ORIGIN_RESULT = {
@@ -188,9 +189,62 @@ export class RecordsHttpServer {
             request.path === '/api/v2/revokeAllSessions'
         ) {
             return this._postRevokeAllSessions(request);
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/revokeSession'
+        ) {
+            return this._postRevokeSession(request);
         }
 
         return returnResult(OPERATION_NOT_FOUND_RESULT);
+    }
+
+    private async _postRevokeSession(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        let {
+            userId,
+            sessionId,
+            sessionKey: sessionKeyToRevoke,
+        } = jsonResult.value;
+
+        // Parse the User ID and Session ID from the sessionKey that is provided in
+        // session key that should be revoked
+        if (!!sessionKeyToRevoke) {
+            const parsed = parseSessionKey(sessionKeyToRevoke);
+            if (parsed) {
+                userId = parsed[0];
+                sessionId = parsed[1];
+            }
+        }
+
+        const authorization = getSessionKey(request);
+
+        if (!authorization) {
+            return returnResult(NOT_LOGGED_IN_RESULT);
+        }
+
+        const result = await this._auth.revokeSession({
+            userId,
+            sessionId,
+            sessionKey: authorization,
+        });
+
+        return returnResult(result);
     }
 
     private async _postRevokeAllSessions(request: GenericHttpRequest) {
@@ -343,7 +397,7 @@ export class RecordsHttpServer {
 
         const jsonResult = tryParseJson(request.body);
 
-        if (!jsonResult.success) {
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
