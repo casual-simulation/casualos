@@ -13,6 +13,7 @@ import { MemoryAuthStore } from './MemoryAuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
 import { AuthSession } from './AuthStore';
+import { LivekitController } from './LivekitController';
 
 console.log = jest.fn();
 
@@ -23,6 +24,7 @@ describe('RecordsHttpServer', () => {
     let server: RecordsHttpServer;
     let defaultHeaders: GenericHttpHeaders;
     let authenticatedHeaders: GenericHttpHeaders;
+    let livekitController: LivekitController;
 
     let allowedAccountOrigins: Set<string>;
     let allowedApiOrigins: Set<string>;
@@ -32,6 +34,9 @@ describe('RecordsHttpServer', () => {
     let expireTimeMs: number;
     let sessionSecret: string;
 
+    const livekitEndpoint: string = 'https://livekit-endpoint.com';
+    const livekitApiKey: string = 'livekit_api_key';
+    const livekitSecretKey: string = 'livekit_secret_key';
     const accountCorsHeaders = {
         'Access-Control-Allow-Origin': 'https://account-origin.com',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
@@ -42,18 +47,27 @@ describe('RecordsHttpServer', () => {
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     };
 
-    beforeEach(async () => {
-        allowedAccountOrigins = new Set(['https://account-origin.com']);
+    const accountOrigin = 'https://account-origin.com';
+    const apiOrigin = 'https://api-origin.com';
 
-        allowedApiOrigins = new Set(['https://api-origin.com']);
+    beforeEach(async () => {
+        allowedAccountOrigins = new Set([accountOrigin]);
+
+        allowedApiOrigins = new Set([apiOrigin]);
 
         authStore = new MemoryAuthStore();
         authMessenger = new MemoryAuthMessenger();
         authController = new AuthController(authStore, authMessenger);
+        livekitController = new LivekitController(
+            livekitApiKey,
+            livekitSecretKey,
+            livekitEndpoint
+        );
         server = new RecordsHttpServer(
             allowedAccountOrigins,
             allowedApiOrigins,
-            authController
+            authController,
+            livekitController
         );
         defaultHeaders = {
             origin: 'test.com',
@@ -62,7 +76,7 @@ describe('RecordsHttpServer', () => {
             ...defaultHeaders,
         };
 
-        authenticatedHeaders['origin'] = 'https://account-origin.com';
+        authenticatedHeaders['origin'] = accountOrigin;
         let requestResult = await authController.requestLogin({
             address: 'test@example.com',
             addressType: 'email',
@@ -246,7 +260,13 @@ describe('RecordsHttpServer', () => {
                 name: 'Kal',
             })
         );
-        testBodyIsJson('PUT', `/api/{userId:${userId}}/metadata`);
+        testBodyIsJson((body) =>
+            httpPut(
+                `/api/{userId:${userId}}/metadata`,
+                body,
+                authenticatedHeaders
+            )
+        );
     });
 
     describe('GET /api/emailRules', () => {
@@ -550,7 +570,9 @@ describe('RecordsHttpServer', () => {
                         requestId,
                         code,
                     }),
-                    authenticatedHeaders
+                    {
+                        origin: 'https://account-origin.com',
+                    }
                 )
             );
 
@@ -582,7 +604,9 @@ describe('RecordsHttpServer', () => {
                         requestId,
                         code: 'wrong',
                     }),
-                    authenticatedHeaders
+                    {
+                        origin: 'https://account-origin.com',
+                    }
                 )
             );
 
@@ -606,7 +630,9 @@ describe('RecordsHttpServer', () => {
                         requestId: 'wrong',
                         code,
                     }),
-                    authenticatedHeaders
+                    {
+                        origin: 'https://account-origin.com',
+                    }
                 )
             );
 
@@ -628,7 +654,117 @@ describe('RecordsHttpServer', () => {
                 code,
             })
         );
-        testBodyIsJson('POST', '/api/v2/completeLogin');
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/completeLogin', body, authenticatedHeaders)
+        );
+    });
+
+    describe('POST /api/v2/login', () => {
+        it('should return a login request and send a auth message with the code', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/login`,
+                    JSON.stringify({
+                        address: 'test@example.com',
+                        addressType: 'email',
+                    }),
+                    {
+                        origin: 'https://account-origin.com',
+                    },
+                    '123.456.789'
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: expect.any(String),
+                headers: accountCorsHeaders,
+            });
+
+            const data = JSON.parse(result.body as string);
+
+            expect(data).toEqual({
+                success: true,
+                userId,
+                requestId: expect.any(String),
+                address: 'test@example.com',
+                addressType: 'email',
+                expireTimeMs: expect.any(Number),
+            });
+
+            const messages = authMessenger.messages.filter(
+                (m) => m.address === 'test@example.com'
+            );
+            const lastMessage = messages[messages.length - 1];
+
+            expect(lastMessage).not.toBeFalsy();
+
+            const loginResult = await authController.completeLogin({
+                code: lastMessage.code,
+                ipAddress: '123.456.789',
+                requestId: data.requestId,
+                userId: data.userId,
+            });
+
+            expect(loginResult.success).toBe(true);
+        });
+
+        testOrigin('POST', '/api/v2/login', () =>
+            JSON.stringify({
+                address: 'test@example.com',
+                addressType: 'email',
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/login', body, authenticatedHeaders)
+        );
+    });
+
+    describe('POST /api/v2/meet/token', () => {
+        const roomName = 'test';
+        const userName = 'userName';
+
+        it('should create a new livekit token', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/meet/token`,
+                    JSON.stringify({
+                        roomName,
+                        userName,
+                    }),
+                    {
+                        origin: 'https://api-origin.com',
+                    }
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: expect.any(String),
+                headers: apiCorsHeaders,
+            });
+
+            const data = JSON.parse(result.body as string);
+
+            expect(data).toEqual({
+                success: true,
+                roomName,
+                token: expect.any(String),
+                url: livekitEndpoint,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/meet/token', () =>
+            JSON.stringify({
+                roomName,
+                userName,
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/meet/token', body, {
+                origin: apiOrigin,
+            })
+        );
     });
 
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
@@ -658,7 +794,9 @@ describe('RecordsHttpServer', () => {
     ) {
         testOrigin(method, url, createBody);
         testAuthorization(method, url, createBody);
-        testBodyIsJson(method, url);
+        testBodyIsJson((body) =>
+            httpRequest(method, url, body, authenticatedHeaders)
+        );
     }
 
     function testOrigin(
@@ -726,11 +864,10 @@ describe('RecordsHttpServer', () => {
         });
     }
 
-    function testBodyIsJson(method: GenericHttpRequest['method'], url: string) {
+    function testBodyIsJson(getRequest: (body: string) => GenericHttpRequest) {
         it('should return a 400 status code when the body is not JSON', async () => {
-            const result = await server.handleRequest(
-                httpRequest(method, url, '{', authenticatedHeaders)
-            );
+            const request = getRequest('{');
+            const result = await server.handleRequest(request);
 
             expect(result).toEqual({
                 statusCode: 400,
@@ -740,14 +877,17 @@ describe('RecordsHttpServer', () => {
                     errorMessage:
                         'The request body was not properly formatted. It should be valid JSON.',
                 }),
-                headers: accountCorsHeaders,
+                headers: {
+                    'Access-Control-Allow-Origin': request.headers.origin,
+                    'Access-Control-Allow-Headers':
+                        'Content-Type, Authorization',
+                },
             });
         });
 
         it('should return a 400 status code when the body is not a JSON object', async () => {
-            const result = await server.handleRequest(
-                httpRequest(method, url, 'true', authenticatedHeaders)
-            );
+            const request = getRequest('true');
+            const result = await server.handleRequest(request);
 
             expect(result).toEqual({
                 statusCode: 400,
@@ -757,7 +897,11 @@ describe('RecordsHttpServer', () => {
                     errorMessage:
                         'The request body was not properly formatted. It should be valid JSON.',
                 }),
-                headers: accountCorsHeaders,
+                headers: {
+                    'Access-Control-Allow-Origin': request.headers.origin,
+                    'Access-Control-Allow-Headers':
+                        'Content-Type, Authorization',
+                },
             });
         });
     }

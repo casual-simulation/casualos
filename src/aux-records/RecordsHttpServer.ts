@@ -5,6 +5,7 @@ import {
     ValidateSessionKeyResult,
 } from './AuthController';
 import { parseSessionKey } from './AuthUtils';
+import { LivekitController } from './LivekitController';
 
 /**
  * Defines an interface for a generic HTTP request.
@@ -122,6 +123,7 @@ const UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON = {
  */
 export class RecordsHttpServer {
     private _auth: AuthController;
+    private _livekit: LivekitController;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -136,11 +138,13 @@ export class RecordsHttpServer {
     constructor(
         allowedAccountOrigins: Set<string>,
         allowedApiOrigins: Set<string>,
-        authController: AuthController
+        authController: AuthController,
+        livekitController: LivekitController
     ) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
         this._auth = authController;
+        this._livekit = livekitController;
     }
 
     /**
@@ -235,6 +239,24 @@ export class RecordsHttpServer {
                 await this._postCompleteLogin(request),
                 this._allowedAccountOrigins
             );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/login'
+        ) {
+            return formatResponse(
+                request,
+                await this._postLogin(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/meet/token'
+        ) {
+            return formatResponse(
+                request,
+                await this._postMeetToken(request),
+                this._allowedApiOrigins
+            );
         }
 
         return formatResponse(
@@ -242,6 +264,57 @@ export class RecordsHttpServer {
             returnResult(OPERATION_NOT_FOUND_RESULT),
             true
         );
+    }
+
+    private async _postMeetToken(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const { roomName, userName } = jsonResult.value;
+        const result = await this._livekit.issueToken(roomName, userName);
+
+        return returnResult(result);
+    }
+
+    private async _postLogin(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const { address, addressType } = jsonResult.value;
+
+        const result = await this._auth.requestLogin({
+            address,
+            addressType,
+            ipAddress: request.ipAddress,
+        });
+
+        return returnResult(result);
     }
 
     private async _postCompleteLogin(
