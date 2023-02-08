@@ -156,47 +156,121 @@ export class RecordsHttpServer {
             request.path.endsWith('/metadata') &&
             !!request.pathParams.userId
         ) {
-            return this._getUserInfo(request);
+            return formatResponse(
+                request,
+                await this._getUserInfo(request),
+                this._allowedAccountOrigins
+            );
         } else if (
             request.method === 'PUT' &&
             request.path.startsWith('/api/') &&
             request.path.endsWith('/metadata') &&
             !!request.pathParams.userId
         ) {
-            return this._putUserInfo(request);
+            return formatResponse(
+                request,
+                await this._putUserInfo(request),
+                this._allowedAccountOrigins
+            );
         } else if (
             request.method === 'GET' &&
             request.path === '/api/emailRules'
         ) {
-            return this._getEmailRules(request);
+            return formatResponse(
+                request,
+                await this._getEmailRules(request),
+                this._allowedAccountOrigins
+            );
         } else if (
             request.method === 'GET' &&
             request.path === '/api/smsRules'
         ) {
-            return this._getSmsRules(request);
+            return formatResponse(
+                request,
+                await this._getSmsRules(request),
+                this._allowedAccountOrigins
+            );
         } else if (
             request.method === 'GET' &&
             request.path === '/api/v2/sessions'
         ) {
-            return this._getSessions(request);
+            return formatResponse(
+                request,
+                await this._getSessions(request),
+                this._allowedAccountOrigins
+            );
         } else if (
             request.method === 'POST' &&
             request.path === '/api/v2/replaceSession'
         ) {
-            return this._postReplaceSession(request);
+            return formatResponse(
+                request,
+                await this._postReplaceSession(request),
+                this._allowedAccountOrigins
+            );
         } else if (
             request.method === 'POST' &&
             request.path === '/api/v2/revokeAllSessions'
         ) {
-            return this._postRevokeAllSessions(request);
+            return formatResponse(
+                request,
+                await this._postRevokeAllSessions(request),
+                this._allowedAccountOrigins
+            );
         } else if (
             request.method === 'POST' &&
             request.path === '/api/v2/revokeSession'
         ) {
-            return this._postRevokeSession(request);
+            return formatResponse(
+                request,
+                await this._postRevokeSession(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/completeLogin'
+        ) {
+            return formatResponse(
+                request,
+                await this._postCompleteLogin(request),
+                this._allowedAccountOrigins
+            );
         }
 
-        return returnResult(OPERATION_NOT_FOUND_RESULT);
+        return formatResponse(
+            request,
+            returnResult(OPERATION_NOT_FOUND_RESULT),
+            true
+        );
+    }
+
+    private async _postCompleteLogin(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const { userId, requestId, code } = jsonResult.value;
+
+        const result = await this._auth.completeLogin({
+            userId,
+            requestId,
+            code,
+            ipAddress: request.ipAddress,
+        });
+
+        return returnResult(result);
     }
 
     private async _postRevokeSession(
@@ -521,6 +595,37 @@ export function parseAuthorization(authorization: string): string {
         return authToken;
     }
     return null;
+}
+
+export function formatResponse(
+    request: GenericHttpRequest,
+    response: GenericHttpResponse,
+    origins: Set<string> | boolean
+) {
+    const origin = request.headers['origin'];
+    let headers = {} as any;
+    if (
+        origins === true ||
+        (typeof origins === 'object' && validateOrigin(request, origins))
+    ) {
+        headers['Access-Control-Allow-Origin'] = origin;
+        headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+    }
+
+    return {
+        ...response,
+        headers,
+    };
+}
+
+export function wrapHandler(
+    func: (request: GenericHttpRequest) => Promise<GenericHttpResponse>,
+    allowedOrigins: boolean | Set<string>
+): (request: GenericHttpRequest) => Promise<GenericHttpResponse> {
+    return async (request) => {
+        const response = await func(request);
+        return formatResponse(request, response, allowedOrigins);
+    };
 }
 
 export interface NoSessionKeyResult {

@@ -32,6 +32,16 @@ describe('RecordsHttpServer', () => {
     let expireTimeMs: number;
     let sessionSecret: string;
 
+    const accountCorsHeaders = {
+        'Access-Control-Allow-Origin': 'https://account-origin.com',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    };
+
+    const apiCorsHeaders = {
+        'Access-Control-Allow-Origin': 'https://api-origin.com',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    };
+
     beforeEach(async () => {
         allowedAccountOrigins = new Set(['https://account-origin.com']);
 
@@ -109,6 +119,7 @@ describe('RecordsHttpServer', () => {
                     email: 'test@example.com',
                     phoneNumber: null,
                 }),
+                headers: accountCorsHeaders,
             });
         });
 
@@ -129,6 +140,7 @@ describe('RecordsHttpServer', () => {
                     errorMessage:
                         'The request must be made from an authorized origin.',
                 }),
+                headers: {},
             });
         });
 
@@ -155,6 +167,7 @@ describe('RecordsHttpServer', () => {
                     errorCode: 'invalid_key',
                     errorMessage: INVALID_KEY_ERROR_MESSAGE,
                 }),
+                headers: accountCorsHeaders,
             });
         });
 
@@ -175,6 +188,7 @@ describe('RecordsHttpServer', () => {
                     errorMessage:
                         'The user is not logged in. A session key must be provided for this operation.',
                 }),
+                headers: accountCorsHeaders,
             });
         });
 
@@ -195,6 +209,7 @@ describe('RecordsHttpServer', () => {
                     errorMessage:
                         'The given session key is invalid. It must be a correctly formatted string.',
                 }),
+                headers: accountCorsHeaders,
             });
         });
     });
@@ -217,6 +232,7 @@ describe('RecordsHttpServer', () => {
                     success: true,
                     userId,
                 }),
+                headers: accountCorsHeaders,
             });
         });
 
@@ -262,6 +278,7 @@ describe('RecordsHttpServer', () => {
                         pattern: 'other',
                     },
                 ]),
+                headers: {},
             });
         });
     });
@@ -295,6 +312,7 @@ describe('RecordsHttpServer', () => {
                         pattern: 'other',
                     },
                 ]),
+                headers: {},
             });
         });
     });
@@ -308,6 +326,7 @@ describe('RecordsHttpServer', () => {
             expect(result).toEqual({
                 statusCode: 200,
                 body: expect.any(String),
+                headers: accountCorsHeaders,
             });
 
             expect(JSON.parse(result.body as string)).toEqual({
@@ -338,6 +357,7 @@ describe('RecordsHttpServer', () => {
             expect(result).toEqual({
                 statusCode: 200,
                 body: expect.any(String),
+                headers: accountCorsHeaders,
             });
 
             expect(JSON.parse(result.body as string)).toEqual({
@@ -364,6 +384,7 @@ describe('RecordsHttpServer', () => {
             expect(result).toEqual({
                 statusCode: 200,
                 body: expect.any(String),
+                headers: accountCorsHeaders,
             });
 
             let data = JSON.parse(result.body as string);
@@ -410,6 +431,7 @@ describe('RecordsHttpServer', () => {
                 body: JSON.stringify({
                     success: true,
                 }),
+                headers: accountCorsHeaders,
             });
 
             const user = await authStore.findUser(userId);
@@ -447,6 +469,7 @@ describe('RecordsHttpServer', () => {
                 body: JSON.stringify({
                     success: true,
                 }),
+                headers: accountCorsHeaders,
             });
 
             session = await authStore.findSession(userId, sessionId);
@@ -475,6 +498,7 @@ describe('RecordsHttpServer', () => {
                 body: JSON.stringify({
                     success: true,
                 }),
+                headers: accountCorsHeaders,
             });
 
             session = await authStore.findSession(userId, sessionId);
@@ -487,6 +511,124 @@ describe('RecordsHttpServer', () => {
                 sessionId,
             })
         );
+    });
+
+    describe('POST /api/v2/completeLogin', () => {
+        let requestId: string;
+        let code: string;
+        beforeEach(async () => {
+            const request = await authController.requestLogin({
+                address: 'test@example.com',
+                addressType: 'email',
+                ipAddress: '123.456.789',
+            });
+
+            if (!request.success) {
+                throw new Error('Unable to request login for user.');
+            }
+
+            requestId = request.requestId;
+
+            const messages = authMessenger.messages.filter(
+                (m) => m.address === 'test@example.com'
+            );
+            const message = messages[messages.length - 1];
+
+            if (!message) {
+                throw new Error('Message not found!');
+            }
+
+            code = message.code;
+        });
+
+        it('should return a session key after completing the login', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/completeLogin`,
+                    JSON.stringify({
+                        userId,
+                        requestId,
+                        code,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: expect.any(String),
+                headers: accountCorsHeaders,
+            });
+
+            const data = JSON.parse(result.body as string);
+
+            expect(data).toEqual({
+                success: true,
+                userId,
+                sessionKey: expect.any(String),
+                expireTimeMs: expect.any(Number),
+            });
+
+            expect(parseSessionKey(data.sessionKey)).not.toBeNull();
+            expect(data.expireTimeMs).toBeGreaterThan(0);
+        });
+
+        it('should return an invalid_code result if the code is wrong', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/completeLogin`,
+                    JSON.stringify({
+                        userId,
+                        requestId,
+                        code: 'wrong',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 403,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'invalid_code',
+                    errorMessage: 'The code is invalid.',
+                }),
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return an invalid_request result if the request id is wrong', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/completeLogin`,
+                    JSON.stringify({
+                        userId,
+                        requestId: 'wrong',
+                        code,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 403,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The login request is invalid.',
+                }),
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/completeLogin', () =>
+            JSON.stringify({
+                userId,
+                requestId,
+                code,
+            })
+        );
+        testBodyIsJson('POST', '/api/v2/completeLogin');
     });
 
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
@@ -502,6 +644,10 @@ describe('RecordsHttpServer', () => {
                 errorMessage:
                     'An operation could not be found for the given request.',
             }),
+            headers: {
+                'Access-Control-Allow-Origin': 'test.com',
+                'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            },
         });
     });
 
@@ -533,6 +679,7 @@ describe('RecordsHttpServer', () => {
                     errorMessage:
                         'The request must be made from an authorized origin.',
                 }),
+                headers: {},
             });
         });
     }
@@ -556,6 +703,7 @@ describe('RecordsHttpServer', () => {
                     errorMessage:
                         'The user is not logged in. A session key must be provided for this operation.',
                 }),
+                headers: accountCorsHeaders,
             });
         });
 
@@ -573,6 +721,7 @@ describe('RecordsHttpServer', () => {
                     errorMessage:
                         'The given session key is invalid. It must be a correctly formatted string.',
                 }),
+                headers: accountCorsHeaders,
             });
         });
     }
@@ -591,6 +740,7 @@ describe('RecordsHttpServer', () => {
                     errorMessage:
                         'The request body was not properly formatted. It should be valid JSON.',
                 }),
+                headers: accountCorsHeaders,
             });
         });
 
@@ -607,6 +757,7 @@ describe('RecordsHttpServer', () => {
                     errorMessage:
                         'The request body was not properly formatted. It should be valid JSON.',
                 }),
+                headers: accountCorsHeaders,
             });
         });
     }
