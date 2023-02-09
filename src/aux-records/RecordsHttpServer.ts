@@ -6,6 +6,8 @@ import {
 } from './AuthController';
 import { parseSessionKey } from './AuthUtils';
 import { LivekitController } from './LivekitController';
+import { RecordsController } from './RecordsController';
+import { EventRecordsController } from './EventRecordsController';
 
 /**
  * Defines an interface for a generic HTTP request.
@@ -86,10 +88,10 @@ export interface GenericPathParameters {
 }
 
 const NOT_LOGGED_IN_RESULT = {
-    success: false,
-    errorCode: 'not_logged_in',
+    success: false as const,
+    errorCode: 'not_logged_in' as const,
     errorMessage:
-        'The user is not logged in. A session key must be provided for this operation.',
+        'The user is not logged in. A session key must be provided for this operation.' as const,
 };
 
 const UNACCEPTABLE_SESSION_KEY = {
@@ -124,6 +126,8 @@ const UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON = {
 export class RecordsHttpServer {
     private _auth: AuthController;
     private _livekit: LivekitController;
+    private _records: RecordsController;
+    private _events: EventRecordsController;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -139,12 +143,16 @@ export class RecordsHttpServer {
         allowedAccountOrigins: Set<string>,
         allowedApiOrigins: Set<string>,
         authController: AuthController,
-        livekitController: LivekitController
+        livekitController: LivekitController,
+        recordsController: RecordsController,
+        eventsController: EventRecordsController
     ) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
         this._auth = authController;
         this._livekit = livekitController;
+        this._records = recordsController;
+        this._events = eventsController;
     }
 
     /**
@@ -257,6 +265,15 @@ export class RecordsHttpServer {
                 await this._postMeetToken(request),
                 this._allowedApiOrigins
             );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/records/events/count'
+        ) {
+            return formatResponse(
+                request,
+                await this._postRecordsEventsCount(request),
+                this._allowedApiOrigins
+            );
         }
 
         return formatResponse(
@@ -264,6 +281,65 @@ export class RecordsHttpServer {
             returnResult(OPERATION_NOT_FOUND_RESULT),
             true
         );
+    }
+
+    private async _postRecordsEventsCount(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const { recordKey, eventName, count } = jsonResult.value;
+
+        if (!recordKey || typeof recordKey !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'recordKey is required and must be a string.',
+            });
+        }
+        if (!eventName || typeof eventName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'eventName is required and must be a string.',
+            });
+        }
+        if (typeof count !== 'number') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'count is required and must be a number.',
+            });
+        }
+
+        const validation = await this._validateSessionKey(request);
+
+        if (!validation.success) {
+            return returnResult(validation);
+        }
+
+        const userId = validation.userId;
+
+        const result = await this._events.addCount(
+            recordKey,
+            eventName,
+            count,
+            userId
+        );
+
+        return returnResult(result);
     }
 
     private async _postMeetToken(
@@ -602,16 +678,10 @@ export class RecordsHttpServer {
 
     private async _validateSessionKey(
         event: GenericHttpRequest
-    ): Promise<ValidateSessionKeyResult | NoSessionKeyResult> {
+    ): Promise<ValidateSessionKeyResult | typeof NOT_LOGGED_IN_RESULT> {
         const sessionKey = getSessionKey(event);
         if (!sessionKey) {
-            return {
-                success: false,
-                userId: null,
-                errorCode: 'no_session_key',
-                errorMessage:
-                    'A session key was not provided, but it is required for this operation.',
-            };
+            return NOT_LOGGED_IN_RESULT;
         }
         return await this._auth.validateSessionKey(sessionKey);
     }

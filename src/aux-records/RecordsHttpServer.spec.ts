@@ -7,6 +7,7 @@ import {
     RecordsHttpServer,
     validateOrigin,
     getSessionKey,
+    GenericHttpResponse,
 } from './RecordsHttpServer';
 import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import { MemoryAuthStore } from './MemoryAuthStore';
@@ -14,6 +15,12 @@ import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
 import { AuthSession } from './AuthStore';
 import { LivekitController } from './LivekitController';
+import { RecordsController } from './RecordsController';
+import { RecordsStore } from './RecordsStore';
+import { MemoryRecordsStore } from './MemoryRecordsStore';
+import { EventRecordsController } from './EventRecordsController';
+import { EventRecordsStore } from './EventRecordsStore';
+import { MemoryEventRecordsStore } from './MemoryEventRecordsStore';
 
 console.log = jest.fn();
 
@@ -24,7 +31,12 @@ describe('RecordsHttpServer', () => {
     let server: RecordsHttpServer;
     let defaultHeaders: GenericHttpHeaders;
     let authenticatedHeaders: GenericHttpHeaders;
+    let apiHeaders: GenericHttpHeaders;
     let livekitController: LivekitController;
+    let recordsController: RecordsController;
+    let recordsStore: RecordsStore;
+    let eventsController: EventRecordsController;
+    let eventsStore: EventRecordsStore;
 
     let allowedAccountOrigins: Set<string>;
     let allowedApiOrigins: Set<string>;
@@ -33,6 +45,7 @@ describe('RecordsHttpServer', () => {
     let sessionId: string;
     let expireTimeMs: number;
     let sessionSecret: string;
+    let recordKey: string;
 
     const livekitEndpoint: string = 'https://livekit-endpoint.com';
     const livekitApiKey: string = 'livekit_api_key';
@@ -49,6 +62,7 @@ describe('RecordsHttpServer', () => {
 
     const accountOrigin = 'https://account-origin.com';
     const apiOrigin = 'https://api-origin.com';
+    const recordName = 'testRecord';
 
     beforeEach(async () => {
         allowedAccountOrigins = new Set([accountOrigin]);
@@ -63,11 +77,23 @@ describe('RecordsHttpServer', () => {
             livekitSecretKey,
             livekitEndpoint
         );
+
+        recordsStore = new MemoryRecordsStore();
+        recordsController = new RecordsController(recordsStore);
+
+        eventsStore = new MemoryEventRecordsStore();
+        eventsController = new EventRecordsController(
+            recordsController,
+            eventsStore
+        );
+
         server = new RecordsHttpServer(
             allowedAccountOrigins,
             allowedApiOrigins,
             authController,
-            livekitController
+            livekitController,
+            recordsController,
+            eventsController
         );
         defaultHeaders = {
             origin: 'test.com',
@@ -75,8 +101,12 @@ describe('RecordsHttpServer', () => {
         authenticatedHeaders = {
             ...defaultHeaders,
         };
+        apiHeaders = {
+            ...defaultHeaders,
+        };
 
         authenticatedHeaders['origin'] = accountOrigin;
+        apiHeaders['origin'] = apiOrigin;
         let requestResult = await authController.requestLogin({
             address: 'test@example.com',
             addressType: 'email',
@@ -114,7 +144,20 @@ describe('RecordsHttpServer', () => {
         sessionSecret = secret;
         expireTimeMs = expire;
 
-        authenticatedHeaders['authorization'] = `Bearer ${sessionKey}`;
+        apiHeaders['authorization'] = authenticatedHeaders[
+            'authorization'
+        ] = `Bearer ${sessionKey}`;
+
+        const recordKeyResult = await recordsController.createPublicRecordKey(
+            recordName,
+            'subjectfull',
+            userId
+        );
+        if (!recordKeyResult.success) {
+            throw new Error('Unable to create record key!');
+        }
+
+        recordKey = recordKeyResult.recordKey;
     });
 
     describe('GET /api/{token}/metadata', () => {
@@ -255,10 +298,14 @@ describe('RecordsHttpServer', () => {
                 name: 'Kal',
             })
         );
-        testAuthorization('PUT', `/api/{userId:${userId}}/metadata`, () =>
-            JSON.stringify({
-                name: 'Kal',
-            })
+        testAuthorization(() =>
+            httpPut(
+                `/api/{userId:${userId}}/metadata`,
+                JSON.stringify({
+                    name: 'Kal',
+                }),
+                authenticatedHeaders
+            )
         );
         testBodyIsJson((body) =>
             httpPut(
@@ -387,7 +434,9 @@ describe('RecordsHttpServer', () => {
         });
 
         testOrigin('GET', '/api/v2/sessions');
-        testAuthorization('GET', '/api/v2/sessions');
+        testAuthorization(() =>
+            httpGet('/api/v2/sessions', authenticatedHeaders)
+        );
     });
 
     describe('POST /api/v2/replaceSession', () => {
@@ -431,7 +480,9 @@ describe('RecordsHttpServer', () => {
         });
 
         testOrigin('POST', '/api/v2/replaceSession', () => '');
-        testAuthorization('POST', '/api/v2/replaceSession', () => '');
+        testAuthorization(() =>
+            httpPost('/api/v2/replaceSession', '', authenticatedHeaders)
+        );
     });
 
     describe('POST /api/v2/revokeAllSessions', () => {
@@ -576,20 +627,18 @@ describe('RecordsHttpServer', () => {
                 )
             );
 
-            expect(result).toEqual({
+            expectResponseBodyToEqual(result, {
                 statusCode: 200,
-                body: expect.any(String),
+                body: {
+                    success: true,
+                    userId,
+                    sessionKey: expect.any(String),
+                    expireTimeMs: expect.any(Number),
+                },
                 headers: accountCorsHeaders,
             });
 
             const data = JSON.parse(result.body as string);
-
-            expect(data).toEqual({
-                success: true,
-                userId,
-                sessionKey: expect.any(String),
-                expireTimeMs: expect.any(Number),
-            });
 
             expect(parseSessionKey(data.sessionKey)).not.toBeNull();
             expect(data.expireTimeMs).toBeGreaterThan(0);
@@ -610,13 +659,13 @@ describe('RecordsHttpServer', () => {
                 )
             );
 
-            expect(result).toEqual({
+            expectResponseBodyToEqual(result, {
                 statusCode: 403,
-                body: JSON.stringify({
+                body: {
                     success: false,
                     errorCode: 'invalid_code',
                     errorMessage: 'The code is invalid.',
-                }),
+                },
                 headers: accountCorsHeaders,
             });
         });
@@ -636,13 +685,13 @@ describe('RecordsHttpServer', () => {
                 )
             );
 
-            expect(result).toEqual({
+            expectResponseBodyToEqual(result, {
                 statusCode: 403,
-                body: JSON.stringify({
+                body: {
                     success: false,
                     errorCode: 'invalid_request',
                     errorMessage: 'The login request is invalid.',
-                }),
+                },
                 headers: accountCorsHeaders,
             });
         });
@@ -738,19 +787,15 @@ describe('RecordsHttpServer', () => {
                 )
             );
 
-            expect(result).toEqual({
+            expectResponseBodyToEqual(result, {
                 statusCode: 200,
-                body: expect.any(String),
+                body: {
+                    success: true,
+                    roomName,
+                    token: expect.any(String),
+                    url: livekitEndpoint,
+                },
                 headers: apiCorsHeaders,
-            });
-
-            const data = JSON.parse(result.body as string);
-
-            expect(data).toEqual({
-                success: true,
-                roomName,
-                token: expect.any(String),
-                url: livekitEndpoint,
             });
         });
 
@@ -764,6 +809,127 @@ describe('RecordsHttpServer', () => {
             httpPost('/api/v2/meet/token', body, {
                 origin: apiOrigin,
             })
+        );
+    });
+
+    describe('POST /api/v2/records/events/count', () => {
+        it('should add to the record event count', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/events/count`,
+                    JSON.stringify({
+                        recordKey,
+                        eventName: 'testEvent',
+                        count: 2,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    eventName: 'testEvent',
+                    countAdded: 2,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request when given a non-string recordKey', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/events/count`,
+                    JSON.stringify({
+                        recordKey: 123,
+                        eventName: 'testEvent',
+                        count: 2,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'recordKey is required and must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request when given a non-string eventName', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/events/count`,
+                    JSON.stringify({
+                        recordKey,
+                        eventName: 123,
+                        count: 2,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'eventName is required and must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request when given a non-number count', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/events/count`,
+                    JSON.stringify({
+                        recordKey,
+                        eventName: 'testEvent',
+                        count: 'abc',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'count is required and must be a number.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testAuthorization(() =>
+            httpPost(
+                '/api/v2/records/events/count',
+                JSON.stringify({
+                    recordKey,
+                    eventName: 'testEvent',
+                    count: 2,
+                }),
+                apiHeaders
+            )
+        );
+        testOrigin('POST', '/api/v2/records/events/count', () =>
+            JSON.stringify({
+                recordKey,
+                eventName: 'testEvent',
+                count: 2,
+            })
+        );
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/records/events/count', body, apiHeaders)
         );
     });
 
@@ -787,13 +953,27 @@ describe('RecordsHttpServer', () => {
         });
     });
 
+    function expectResponseBodyToEqual(
+        response: GenericHttpResponse,
+        expected: any
+    ) {
+        const json = JSON.parse(response.body as string);
+
+        expect({
+            ...response,
+            body: json,
+        }).toEqual(expected);
+    }
+
     function testUrl(
         method: GenericHttpRequest['method'],
         url: string,
         createBody: () => string
     ) {
         testOrigin(method, url, createBody);
-        testAuthorization(method, url, createBody);
+        testAuthorization(() =>
+            httpRequest(method, url, createBody(), authenticatedHeaders)
+        );
         testBodyIsJson((body) =>
             httpRequest(method, url, body, authenticatedHeaders)
         );
@@ -823,15 +1003,15 @@ describe('RecordsHttpServer', () => {
     }
 
     function testAuthorization(
-        method: GenericHttpRequest['method'],
-        url: string,
-        createBody: () => string | null = () => null
+        getRequest: () => GenericHttpRequest
+        // method: GenericHttpRequest['method'],
+        // url: string,
+        // createBody: () => string | null = () => null
     ) {
         it('should return a 401 status code when no session key is included', async () => {
-            delete authenticatedHeaders['authorization'];
-            const result = await server.handleRequest(
-                httpRequest(method, url, createBody(), authenticatedHeaders)
-            );
+            let request = getRequest();
+            delete request.headers.authorization;
+            const result = await server.handleRequest(request);
 
             expect(result).toEqual({
                 statusCode: 401,
@@ -841,15 +1021,18 @@ describe('RecordsHttpServer', () => {
                     errorMessage:
                         'The user is not logged in. A session key must be provided for this operation.',
                 }),
-                headers: accountCorsHeaders,
+                headers: {
+                    'Access-Control-Allow-Origin': request.headers.origin,
+                    'Access-Control-Allow-Headers':
+                        'Content-Type, Authorization',
+                },
             });
         });
 
         it('should return a 400 status code when the session key is wrongly formatted', async () => {
-            authenticatedHeaders['authorization'] = 'Bearer wrong';
-            const result = await server.handleRequest(
-                httpRequest(method, url, createBody(), authenticatedHeaders)
-            );
+            let request = getRequest();
+            request.headers['authorization'] = 'Bearer wrong';
+            const result = await server.handleRequest(request);
 
             expect(result).toEqual({
                 statusCode: 400,
@@ -859,7 +1042,11 @@ describe('RecordsHttpServer', () => {
                     errorMessage:
                         'The given session key is invalid. It must be a correctly formatted string.',
                 }),
-                headers: accountCorsHeaders,
+                headers: {
+                    'Access-Control-Allow-Origin': request.headers.origin,
+                    'Access-Control-Allow-Headers':
+                        'Content-Type, Authorization',
+                },
             });
         });
     }
