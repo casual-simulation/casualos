@@ -8,6 +8,7 @@ import { parseSessionKey } from './AuthUtils';
 import { LivekitController } from './LivekitController';
 import { RecordsController } from './RecordsController';
 import { EventRecordsController } from './EventRecordsController';
+import { DataRecordsController } from './DataRecordsController';
 
 /**
  * Defines an interface for a generic HTTP request.
@@ -128,6 +129,8 @@ export class RecordsHttpServer {
     private _livekit: LivekitController;
     private _records: RecordsController;
     private _events: EventRecordsController;
+    private _data: DataRecordsController;
+    private _manualData: DataRecordsController;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -145,7 +148,9 @@ export class RecordsHttpServer {
         authController: AuthController,
         livekitController: LivekitController,
         recordsController: RecordsController,
-        eventsController: EventRecordsController
+        eventsController: EventRecordsController,
+        dataController: DataRecordsController,
+        manualDataController: DataRecordsController
     ) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -153,6 +158,8 @@ export class RecordsHttpServer {
         this._livekit = livekitController;
         this._records = recordsController;
         this._events = eventsController;
+        this._data = dataController;
+        this._manualData = manualDataController;
     }
 
     /**
@@ -283,6 +290,15 @@ export class RecordsHttpServer {
                 await this._getRecordsEventsCount(request),
                 this._allowedApiOrigins
             );
+        } else if (
+            request.method === 'DELETE' &&
+            request.path === '/api/v2/records/manual/data'
+        ) {
+            return formatResponse(
+                request,
+                await this._eraseManualRecordData(request),
+                this._allowedApiOrigins
+            );
         }
 
         return formatResponse(
@@ -290,6 +306,60 @@ export class RecordsHttpServer {
             returnResult(OPERATION_NOT_FOUND_RESULT),
             true
         );
+    }
+
+    private async _baseEraseRecordData(
+        request: GenericHttpRequest,
+        controller: DataRecordsController
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const { recordKey, address } = jsonResult.value;
+
+        if (!recordKey || typeof recordKey !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'recordKey is required and must be a string.',
+            });
+        }
+        if (!address || typeof address !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'address is required and must be a string.',
+            });
+        }
+
+        const validation = await this._validateSessionKey(request);
+        if (
+            validation.success === false &&
+            validation.errorCode !== 'no_session_key'
+        ) {
+            return returnResult(validation);
+        }
+
+        const userId = validation.userId;
+        const result = await controller.eraseData(recordKey, address, userId);
+        return returnResult(result);
+    }
+
+    private _eraseManualRecordData(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        return this._baseEraseRecordData(request, this._manualData);
     }
 
     private async _getRecordsEventsCount(

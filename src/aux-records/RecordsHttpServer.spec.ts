@@ -21,6 +21,9 @@ import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { EventRecordsController } from './EventRecordsController';
 import { EventRecordsStore } from './EventRecordsStore';
 import { MemoryEventRecordsStore } from './MemoryEventRecordsStore';
+import { DataRecordsController } from './DataRecordsController';
+import { DataRecordsStore } from './DataRecordsStore';
+import { MemoryDataRecordsStore } from './MemoryDataRecordsStore';
 
 console.log = jest.fn();
 
@@ -37,6 +40,11 @@ describe('RecordsHttpServer', () => {
     let recordsStore: RecordsStore;
     let eventsController: EventRecordsController;
     let eventsStore: EventRecordsStore;
+    let dataController: DataRecordsController;
+    let dataStore: DataRecordsStore;
+
+    let manualDataController: DataRecordsController;
+    let manualDataStore: DataRecordsStore;
 
     let allowedAccountOrigins: Set<string>;
     let allowedApiOrigins: Set<string>;
@@ -87,13 +95,27 @@ describe('RecordsHttpServer', () => {
             eventsStore
         );
 
+        dataStore = new MemoryDataRecordsStore();
+        dataController = new DataRecordsController(
+            recordsController,
+            dataStore
+        );
+
+        manualDataStore = new MemoryDataRecordsStore();
+        manualDataController = new DataRecordsController(
+            recordsController,
+            manualDataStore
+        );
+
         server = new RecordsHttpServer(
             allowedAccountOrigins,
             allowedApiOrigins,
             authController,
             livekitController,
             recordsController,
-            eventsController
+            eventsController,
+            dataController,
+            manualDataController
         );
         defaultHeaders = {
             origin: 'test.com',
@@ -1025,6 +1047,110 @@ describe('RecordsHttpServer', () => {
         );
     });
 
+    describe('DELETE /api/v2/records/manual/data', () => {
+        beforeEach(async () => {
+            await manualDataController.recordData(
+                recordKey,
+                'testAddress',
+                'hello, world!',
+                userId,
+                null,
+                null
+            );
+        });
+
+        it('should delete the given manual data record', async () => {
+            const result = await server.handleRequest(
+                httpDelete(
+                    `/api/v2/records/manual/data`,
+                    JSON.stringify({
+                        recordKey,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'testAddress',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when given a non-string recordKey', async () => {
+            const result = await server.handleRequest(
+                httpDelete(
+                    `/api/v2/records/manual/data`,
+                    JSON.stringify({
+                        recordKey: 123,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'recordKey is required and must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when given a non-string address', async () => {
+            const result = await server.handleRequest(
+                httpDelete(
+                    `/api/v2/records/manual/data`,
+                    JSON.stringify({
+                        recordKey,
+                        address: 123,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'address is required and must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('DELETE', '/api/v2/records/manual/data', () =>
+            JSON.stringify({
+                recordKey,
+                address: 'testAddress',
+            })
+        );
+        testAuthorization(
+            () =>
+                httpDelete(
+                    '/api/v2/records/manual/data',
+                    JSON.stringify({
+                        recordKey,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                ),
+            'The user must be logged in in order to erase data using the provided record key.'
+        );
+        testBodyIsJson((body) =>
+            httpDelete('/api/v2/records/manual/data', body, apiHeaders)
+        );
+    });
+
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
         const result = await server.handleRequest(
             httpRequest('GET', `/api/missing`, null)
@@ -1095,7 +1221,10 @@ describe('RecordsHttpServer', () => {
     }
 
     function testAuthorization(
-        getRequest: () => GenericHttpRequest
+        getRequest: () => GenericHttpRequest,
+        expectedMessage:
+            | string
+            | RegExp = /(The user is not logged in\. A session key must be provided for this operation\.)|(The user must be logged in in order to record events.)/
         // method: GenericHttpRequest['method'],
         // url: string,
         // createBody: () => string | null = () => null
@@ -1110,9 +1239,7 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'not_logged_in',
-                    errorMessage: expect.stringMatching(
-                        /(The user is not logged in\. A session key must be provided for this operation\.)|(The user must be logged in in order to record events.)/
-                    ),
+                    errorMessage: expect.stringMatching(expectedMessage),
                 },
                 headers: {
                     'Access-Control-Allow-Origin': request.headers.origin,
@@ -1210,6 +1337,15 @@ describe('RecordsHttpServer', () => {
         ipAddress: string = '123.456.789'
     ): GenericHttpRequest {
         return httpRequest('POST', url, body, headers, ipAddress);
+    }
+
+    function httpDelete(
+        url: string,
+        body: any,
+        headers: GenericHttpHeaders = defaultHeaders,
+        ipAddress: string = '123.456.789'
+    ): GenericHttpRequest {
+        return httpRequest('DELETE', url, body, headers, ipAddress);
     }
 
     function httpRequest(
