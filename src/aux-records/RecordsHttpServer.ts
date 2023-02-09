@@ -299,6 +299,15 @@ export class RecordsHttpServer {
                 await this._eraseManualRecordData(request),
                 this._allowedApiOrigins
             );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/manual/data'
+        ) {
+            return formatResponse(
+                request,
+                await this._getManualRecordData(request),
+                true
+            );
         }
 
         return formatResponse(
@@ -306,6 +315,37 @@ export class RecordsHttpServer {
             returnResult(OPERATION_NOT_FOUND_RESULT),
             true
         );
+    }
+
+    private async _baseGetRecordData(
+        request: GenericHttpRequest,
+        controller: DataRecordsController
+    ): Promise<GenericHttpResponse> {
+        const { recordName, address } = request.query || {};
+
+        if (!recordName || typeof recordName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'recordName is required and must be a string.',
+            });
+        }
+        if (!address || typeof address !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'address is required and must be a string.',
+            });
+        }
+
+        const result = await controller.getData(recordName, address);
+        return returnResult(result);
+    }
+
+    private _getManualRecordData(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        return this._baseGetRecordData(request, this._manualData);
     }
 
     private async _baseEraseRecordData(

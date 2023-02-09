@@ -1082,6 +1082,40 @@ describe('RecordsHttpServer', () => {
             });
         });
 
+        it('should support subjectless records', async () => {
+            const keyResult = await recordsController.createPublicRecordKey(
+                recordName,
+                'subjectless',
+                userId
+            );
+
+            if (!keyResult.success) {
+                throw new Error('Unable to create subjectless key');
+            }
+
+            delete apiHeaders['authorization'];
+            const result = await server.handleRequest(
+                httpDelete(
+                    `/api/v2/records/manual/data`,
+                    JSON.stringify({
+                        recordKey: keyResult.recordKey,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'testAddress',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
         it('should return an unacceptable_request result when given a non-string recordKey', async () => {
             const result = await server.handleRequest(
                 httpDelete(
@@ -1149,6 +1183,100 @@ describe('RecordsHttpServer', () => {
         testBodyIsJson((body) =>
             httpDelete('/api/v2/records/manual/data', body, apiHeaders)
         );
+    });
+
+    describe('GET /api/v2/records/manual/data', () => {
+        beforeEach(async () => {
+            await manualDataController.recordData(
+                recordKey,
+                'testAddress',
+                'hello, world!',
+                userId,
+                null,
+                null
+            );
+        });
+
+        it('should be able to get the data from an address', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/manual/data?recordName=${recordName}&address=testAddress`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    data: 'hello, world!',
+                    deletePolicy: true,
+                    updatePolicy: true,
+                    subjectId: userId,
+                    publisherId: userId,
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a recordName', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/manual/data?address=testAddress`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'recordName is required and must be a string.',
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a address', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/manual/data?recordName=${recordName}`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'address is required and must be a string.',
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return a 404 when trying to get data that doesnt exist', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/manual/data?recordName=${recordName}&address=missing`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: 'The data was not found.',
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
     });
 
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
@@ -1269,6 +1397,13 @@ describe('RecordsHttpServer', () => {
                 },
             });
         });
+    }
+
+    function corsHeaders(origin: string) {
+        return {
+            'Access-Control-Allow-Origin': origin,
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        };
     }
 
     function testBodyIsJson(getRequest: (body: string) => GenericHttpRequest) {
