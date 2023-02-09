@@ -933,6 +933,98 @@ describe('RecordsHttpServer', () => {
         );
     });
 
+    describe('GET /api/v2/records/events/count', () => {
+        beforeEach(async () => {
+            await eventsController.addCount(recordKey, 'testEvent', 5, userId);
+
+            delete apiHeaders['authorization'];
+        });
+
+        it('should get the current record event count', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/count?recordName=${recordName}&eventName=${'testEvent'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    eventName: 'testEvent',
+                    count: 5,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return 0 when the event name doesnt exist', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/count?recordName=${recordName}&eventName=${'missing'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    eventName: 'missing',
+                    count: 0,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result if recordName is omitted', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/count?eventName=${'testEvent'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'recordName is required and must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result if eventName is omitted', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/count?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'eventName is required and must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/events/count?recordName=recordName&eventName=testEvent`
+        );
+    });
+
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
         const result = await server.handleRequest(
             httpRequest('GET', `/api/missing`, null)
@@ -1013,14 +1105,15 @@ describe('RecordsHttpServer', () => {
             delete request.headers.authorization;
             const result = await server.handleRequest(request);
 
-            expect(result).toEqual({
+            expectResponseBodyToEqual(result, {
                 statusCode: 401,
-                body: JSON.stringify({
+                body: {
                     success: false,
                     errorCode: 'not_logged_in',
-                    errorMessage:
-                        'The user is not logged in. A session key must be provided for this operation.',
-                }),
+                    errorMessage: expect.stringMatching(
+                        /(The user is not logged in\. A session key must be provided for this operation\.)|(The user must be logged in in order to record events.)/
+                    ),
+                },
                 headers: {
                     'Access-Control-Allow-Origin': request.headers.origin,
                     'Access-Control-Allow-Headers':

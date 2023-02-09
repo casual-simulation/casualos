@@ -274,6 +274,15 @@ export class RecordsHttpServer {
                 await this._postRecordsEventsCount(request),
                 this._allowedApiOrigins
             );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/events/count'
+        ) {
+            return formatResponse(
+                request,
+                await this._getRecordsEventsCount(request),
+                this._allowedApiOrigins
+            );
         }
 
         return formatResponse(
@@ -281,6 +290,34 @@ export class RecordsHttpServer {
             returnResult(OPERATION_NOT_FOUND_RESULT),
             true
         );
+    }
+
+    private async _getRecordsEventsCount(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const { recordName, eventName } = request.query || {};
+
+        if (!recordName || typeof recordName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'recordName is required and must be a string.',
+            });
+        }
+        if (!eventName || typeof eventName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'eventName is required and must be a string.',
+            });
+        }
+
+        const result = await this._events.getCount(recordName, eventName);
+        return returnResult(result);
     }
 
     private async _postRecordsEventsCount(
@@ -326,7 +363,10 @@ export class RecordsHttpServer {
 
         const validation = await this._validateSessionKey(request);
 
-        if (!validation.success) {
+        if (
+            validation.success === false &&
+            validation.errorCode !== 'no_session_key'
+        ) {
             return returnResult(validation);
         }
 
@@ -678,10 +718,16 @@ export class RecordsHttpServer {
 
     private async _validateSessionKey(
         event: GenericHttpRequest
-    ): Promise<ValidateSessionKeyResult | typeof NOT_LOGGED_IN_RESULT> {
+    ): Promise<ValidateSessionKeyResult | NoSessionKeyResult> {
         const sessionKey = getSessionKey(event);
         if (!sessionKey) {
-            return NOT_LOGGED_IN_RESULT;
+            return {
+                success: false,
+                userId: null,
+                errorCode: 'no_session_key',
+                errorMessage:
+                    'A session key was not provided, but it is required for this operation.',
+            };
         }
         return await this._auth.validateSessionKey(sessionKey);
     }
