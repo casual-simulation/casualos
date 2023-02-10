@@ -20,6 +20,9 @@ import {
     EventRecordsController,
     RecordKey,
     getStatusCode,
+    RecordsHttpServer,
+    GenericHttpRequest,
+    GenericHttpHeaders,
 } from '@casual-simulation/aux-records';
 import { MongoDBRecordsStore } from './MongoDBRecordsStore';
 import { MongoDBDataRecordsStore, DataRecord } from './MongoDBDataRecordsStore';
@@ -171,324 +174,80 @@ async function start() {
 
     const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
 
+    const allowedRecordsOrigins = new Set([
+        'http://localhost:3000',
+        'http://localhost:3002',
+        'http://player.localhost:3000',
+        'https://localhost:3000',
+        'https://localhost:3002',
+        'https://player.localhost:3000',
+        'https://casualos.com',
+        'https://casualos.me',
+        'https://ab1.link',
+        'https://publicos.com',
+        'https://alpha.casualos.com',
+        'https://static.casualos.com',
+        'https://stable.casualos.com',
+        ...getAllowedAPIOrigins(),
+    ]);
+
+    const server = new RecordsHttpServer(
+        allowedRecordsOrigins,
+        allowedRecordsOrigins,
+        authController,
+        livekitController,
+        recordsManager,
+        eventManager,
+        dataManager,
+        manualDataManager,
+        fileController
+    );
+
+    async function handleRequest(req: Request, res: Response) {
+        const query: GenericHttpRequest['query'] = {};
+        for (let key in req.query) {
+            const value = req.query[key];
+            if (typeof value === 'string') {
+                query[key] = value;
+            } else if (Array.isArray(value)) {
+                query[key] = value[0] as string;
+            }
+        }
+
+        const headers: GenericHttpHeaders = {};
+        for (let key in req.headers) {
+            const value = req.headers[key];
+            if (typeof value === 'string') {
+                headers[key] = value;
+            } else {
+                headers[key] = value[0];
+            }
+        }
+
+        const response = await server.handleRequest({
+            method: req.method as any,
+            path: req.path,
+            body: req.body,
+            ipAddress: req.ip,
+            pathParams: req.params,
+            query,
+            headers,
+        });
+
+        for (let key in response.headers) {
+            res.setHeader(key, response.headers[key]);
+        }
+
+        res.status(response.statusCode);
+
+        if (response.body) {
+            res.send(response.body);
+        }
+    }
+
     app.use(express.json());
 
     app.use(express.static(dist));
-
-    app.post(
-        '/api/v2/login',
-        asyncMiddleware(async (req, res) => {
-            const { address, addressType } = req.body;
-
-            const requestResult = await authController.requestLogin({
-                address,
-                addressType,
-                ipAddress: req.ip,
-            });
-
-            return returnResponse(res, requestResult);
-        })
-    );
-
-    app.post(
-        '/api/v2/completeLogin',
-        asyncMiddleware(async (req, res) => {
-            const { userId, requestId, code } = req.body;
-
-            const result = await authController.completeLogin({
-                userId,
-                requestId,
-                code,
-                ipAddress: req.ip,
-            });
-
-            return returnResponse(res, result);
-        })
-    );
-
-    app.post(
-        '/api/v2/revokeSession',
-        asyncMiddleware(async (req, res) => {
-            let { userId, sessionId, sessionKey } = req.body;
-
-            if (!!sessionKey) {
-                const parsed = parseSessionKey(sessionKey);
-                if (parsed) {
-                    userId = parsed[0];
-                    sessionId = parsed[1];
-                }
-            }
-
-            const authorization = getSessionKey(req);
-            const result = await authController.revokeSession({
-                userId,
-                sessionId,
-                sessionKey: authorization,
-            });
-
-            return returnResponse(res, result);
-        })
-    );
-
-    app.post(
-        '/api/v2/revokeAllSessions',
-        asyncMiddleware(async (req, res) => {
-            const { userId } = req.body;
-            const authorization = getSessionKey(req);
-            const result = await authController.revokeAllSessions({
-                userId: userId,
-                sessionKey: authorization,
-            });
-
-            return returnResponse(res, result);
-        })
-    );
-
-    app.post(
-        '/api/v2/replaceSession',
-        asyncMiddleware(async (req, res) => {
-            const authorization = getSessionKey(req);
-            const result = await authController.replaceSession({
-                sessionKey: authorization,
-                ipAddress: req.ip,
-            });
-
-            return returnResponse(res, result);
-        })
-    );
-
-    app.get(
-        '/api/v2/sessions',
-        asyncMiddleware(async (req, res) => {
-            const expireTime = req.query.expireTimeMs;
-            const expireTimeMs = !!expireTime
-                ? parseInt(expireTime as string)
-                : null;
-
-            const authorization = getSessionKey(req);
-
-            const parsed = parseSessionKey(authorization);
-            if (!parsed) {
-                res.sendStatus(401);
-                return;
-            }
-
-            const [userId] = parsed;
-            const result = await authController.listSessions({
-                userId: userId,
-                sessionKey: authorization,
-                expireTimeMs,
-            });
-
-            return returnResponse(res, result);
-        })
-    );
-
-    app.options('/api/v2/records', (req, res) => {
-        handleRecordsCorsHeaders(req, res);
-        res.status(200).send();
-    });
-
-    app.post(
-        '/api/v2/records/key',
-        asyncMiddleware(async (req, res) => {
-            handleRecordsCorsHeaders(req, res);
-            const { recordName, policy } = req.body;
-            const authorization = req.headers.authorization;
-
-            const userId = await getUserId(authorization);
-            const result = await recordsManager.createPublicRecordKey(
-                recordName,
-                policy,
-                userId
-            );
-
-            return returnResponse(res, result);
-        })
-    );
-
-    app.post(
-        '/api/v2/records/data',
-        asyncMiddleware(async (req, res) => {
-            handleRecordsCorsHeaders(req, res);
-            const { recordKey, address, data, updatePolicy, deletePolicy } =
-                req.body;
-            const authorization = req.headers.authorization;
-
-            const userId = await getUserId(authorization);
-            const result = await dataManager.recordData(
-                recordKey as string,
-                address as string,
-                data,
-                userId,
-                updatePolicy,
-                deletePolicy
-            );
-
-            return returnResponse(res, result);
-        })
-    );
-
-    app.get(
-        '/api/v2/records/data',
-        asyncMiddleware(async (req, res) => {
-            handleRecordsCorsHeaders(req, res);
-            const { recordName, address } = req.query;
-
-            const result = await dataManager.getData(
-                recordName as string,
-                address as string
-            );
-
-            return returnResponse(res, result);
-        })
-    );
-
-    app.get(
-        '/api/v2/records/data/list',
-        asyncMiddleware(async (req, res) => {
-            handleRecordsCorsHeaders(req, res);
-            const { recordName, address } = req.query;
-
-            const result = await dataManager.listData(
-                recordName as string,
-                address as string
-            );
-
-            return returnResponse(res, result);
-        })
-    );
-
-    app.delete(
-        '/api/v2/records/data',
-        asyncMiddleware(async (req, res) => {
-            handleRecordsCorsHeaders(req, res);
-            const { recordKey, address } = req.body;
-            const authorization = req.headers.authorization;
-
-            const userId = await getUserId(authorization);
-
-            const result = await dataManager.eraseData(
-                recordKey as string,
-                address as string,
-                userId
-            );
-
-            return returnResponse(res, result);
-        })
-    );
-
-    app.post(
-        '/api/v2/records/manual/data',
-        asyncMiddleware(async (req, res) => {
-            handleRecordsCorsHeaders(req, res);
-            const { recordKey, address, data, updatePolicy, deletePolicy } =
-                req.body;
-            const authorization = req.headers.authorization;
-
-            const userId = await getUserId(authorization);
-            const result = await manualDataManager.recordData(
-                recordKey as string,
-                address as string,
-                data,
-                userId,
-                updatePolicy,
-                deletePolicy
-            );
-
-            return returnResponse(res, result);
-        })
-    );
-
-    app.get(
-        '/api/v2/records/manual/data',
-        asyncMiddleware(async (req, res) => {
-            handleRecordsCorsHeaders(req, res);
-            const { recordName, address } = req.query;
-
-            const result = await manualDataManager.getData(
-                recordName as string,
-                address as string
-            );
-
-            res.status(200).send(result);
-        })
-    );
-
-    app.delete(
-        '/api/v2/records/manual/data',
-        asyncMiddleware(async (req, res) => {
-            handleRecordsCorsHeaders(req, res);
-            const { recordKey, address } = req.body;
-            const authorization = req.headers.authorization;
-
-            const userId = await getUserId(authorization);
-
-            const result = await manualDataManager.eraseData(
-                recordKey as string,
-                address as string,
-                userId
-            );
-
-            return returnResponse(res, result);
-        })
-    );
-
-    app.post(
-        '/api/v2/records/file',
-        asyncMiddleware(async (req, res) => {
-            handleRecordsCorsHeaders(req, res);
-            const {
-                recordKey,
-                fileSha256Hex,
-                fileByteLength,
-                fileMimeType,
-                fileDescription,
-            } = req.body;
-            const authorization = req.headers.authorization;
-
-            const userId = await getUserId(authorization);
-
-            let headers: {
-                [name: string]: string;
-            } = {};
-            for (let name in req.headers) {
-                let values = req.headers[name];
-                headers[name] = Array.isArray(values) ? values[0] : values;
-            }
-
-            const result = await fileController.recordFile(recordKey, userId, {
-                fileSha256Hex,
-                fileByteLength,
-                fileMimeType,
-                fileDescription,
-                headers,
-            });
-
-            return returnResponse(res, result);
-        })
-    );
-
-    app.delete(
-        '/api/v2/records/file',
-        asyncMiddleware(async (req, res) => {
-            handleRecordsCorsHeaders(req, res);
-            const { recordKey, fileUrl } = req.body;
-            const authorization = req.headers.authorization;
-
-            const userId = await getUserId(authorization);
-            const url = new URL(fileUrl);
-            const fileKey = url.pathname.slice('/api/v2/records/file/'.length);
-
-            const result = await fileController.eraseFile(
-                recordKey,
-                fileKey,
-                userId
-            );
-
-            return returnResponse(res, result);
-        })
-    );
 
     app.use(
         '/api/v2/records/file/*',
@@ -552,192 +311,20 @@ async function start() {
         })
     );
 
-    app.get(
-        '/api/v2/records/events/count',
+    app.get('/api/:userId/metadata', async (req, res) => {
+        await handleRequest(req, res);
+    });
+
+    app.put('/api/:userId/metadata', async (req, res) => {
+        await handleRequest(req, res);
+    });
+
+    app.all(
+        '/api/*',
         asyncMiddleware(async (req, res) => {
-            handleRecordsCorsHeaders(req, res);
-            const { recordName, eventName } = req.query;
-
-            const result = await eventManager.getCount(
-                recordName as string,
-                eventName as string
-            );
-
-            return returnResponse(res, result);
+            await handleRequest(req, res);
         })
     );
-
-    app.post(
-        '/api/v2/records/events/count',
-        asyncMiddleware(async (req, res) => {
-            handleRecordsCorsHeaders(req, res);
-            const { recordKey, eventName, count } = req.body;
-            const authorization = req.headers.authorization;
-
-            const userId = await getUserId(authorization);
-            const result = await eventManager.addCount(
-                recordKey as string,
-                eventName as string,
-                count,
-                userId
-            );
-
-            return returnResponse(res, result);
-        })
-    );
-
-    app.post(
-        '/api/v2/meet/token',
-        asyncMiddleware(async (req, res) => {
-            handleRecordsCorsHeaders(req, res);
-
-            const { roomName, userName } = req.body;
-            const result = await livekitController.issueToken(
-                roomName,
-                userName
-            );
-            return returnResponse(res, result);
-        })
-    );
-
-    app.options('/api/v2/meet/token', (req, res) => {
-        handleRecordsCorsHeaders(req, res);
-        res.status(200).send();
-    });
-
-    app.get('/api/:issuer/metadata', async (req, res) => {
-        try {
-            const issuer = req.params.issuer;
-            const sessionKey = getSessionKey(req);
-
-            const validation = await authController.validateSessionKey(
-                sessionKey
-            );
-            if (validation.success === false) {
-                return returnResponse(res, validation);
-            }
-
-            if (validation.userId !== issuer) {
-                return {
-                    statusCode: 403,
-                    body: JSON.stringify({
-                        success: false,
-                        errorCode: 'not_authorized',
-                        errorMessage: 'You are not authorized.',
-                    }),
-                };
-            }
-
-            const user = await users.findOne({ _id: issuer });
-
-            if (!user) {
-                res.sendStatus(404);
-                return;
-            }
-
-            res.send({
-                name: user.name,
-                avatarUrl: user.avatarUrl,
-                avatarPortraitUrl: user.avatarPortraitUrl,
-                email: user.email,
-                phoneNumber: user.phoneNumber,
-            });
-        } catch (err) {
-            console.error(err);
-            res.sendStatus(500);
-        }
-    });
-
-    app.get('/api/emailRules', async (req, res) => {
-        try {
-            res.send([
-                { type: 'deny', pattern: '^test@casualsimulation\\.org$' },
-                { type: 'allow', pattern: '@casualsimulation\\.org$' },
-            ] as EmailRule[]);
-        } catch (err) {
-            console.error(err);
-            res.sendStatus(500);
-        }
-    });
-
-    app.get('/api/smsRules', async (req, res) => {
-        try {
-            res.send([
-                { type: 'deny', pattern: '^\\+1999' },
-                { type: 'allow', pattern: '^\\+1' },
-            ] as EmailRule[]);
-        } catch (err) {
-            console.error(err);
-            res.sendStatus(500);
-        }
-    });
-
-    app.put('/api/:token/metadata', async (req, res) => {
-        const token = req.params.token;
-
-        try {
-            console.log('Body', req.body);
-            const data: AppMetadata = req.body;
-
-            const validationResult = await authController.validateSessionKey(
-                token
-            );
-            if (validationResult.success) {
-                const issuer = validationResult.userId;
-
-                await users.updateOne(
-                    { _id: issuer },
-                    {
-                        $set: {
-                            _id: issuer,
-                            name: data.name,
-                            avatarUrl: data.avatarUrl,
-                            avatarPortraitUrl: data.avatarPortraitUrl,
-                            email: data.email,
-                            phoneNumber: data.phoneNumber,
-                        },
-                    },
-                    {
-                        upsert: true,
-                    }
-                );
-
-                res.status(200).send();
-            } else if (validationResult.success === false) {
-                if (validationResult.errorCode === 'invalid_key') {
-                    res.status(400).send();
-                } else if (validationResult.errorCode === 'session_expired') {
-                    res.status(403).send();
-                } else {
-                    res.status(500).send();
-                }
-            }
-        } catch (err) {
-            console.error(err);
-            res.sendStatus(500);
-        }
-    });
-
-    const allowedRecordsOrigins = new Set([
-        'http://localhost:3000',
-        'http://localhost:3002',
-        'http://player.localhost:3000',
-        'https://localhost:3000',
-        'https://localhost:3002',
-        'https://player.localhost:3000',
-        'https://casualos.com',
-        'https://casualos.me',
-        'https://ab1.link',
-        'https://publicos.com',
-        'https://alpha.casualos.com',
-        'https://static.casualos.com',
-        'https://stable.casualos.com',
-        ...getAllowedAPIOrigins(),
-    ]);
-
-    app.all('/api/*', (req, res) => {
-        res.sendStatus(404);
-    });
 
     app.get('*', (req, res) => {
         res.sendFile(path.join(dist, 'index.html'));
@@ -746,29 +333,6 @@ async function start() {
     app.listen(2998, () => {
         console.log('[AuxAuth] Listening on port 2998');
     });
-
-    function getSessionKey(req: Request): string {
-        const authorization = req.headers.authorization;
-        if (hasValue(authorization) && authorization.startsWith('Bearer ')) {
-            return authorization.substring('Bearer '.length);
-        }
-        return null;
-    }
-
-    async function getUserId(authorization: string): Promise<string> {
-        if (hasValue(authorization) && authorization.startsWith('Bearer ')) {
-            const authToken = authorization.substring('Bearer '.length);
-            const validationResult = await authController.validateSessionKey(
-                authToken
-            );
-            if (validationResult.success) {
-                return validationResult.userId;
-            } else {
-                console.log('Validation error', validationResult, authToken);
-            }
-        }
-        return null;
-    }
 
     function handleRecordsCorsHeaders(req: Request, res: Response) {
         if (allowedRecordsOrigins.has(req.headers.origin as string)) {
