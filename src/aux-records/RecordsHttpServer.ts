@@ -339,6 +339,34 @@ export class RecordsHttpServer {
                 await this._recordFile(request),
                 this._allowedApiOrigins
             );
+        } else if (
+            request.method === 'DELETE' &&
+            request.path === '/api/v2/records/data'
+        ) {
+            return formatResponse(
+                request,
+                await this._eraseData(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/data'
+        ) {
+            return formatResponse(request, await this._getData(request), true);
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/data/list'
+        ) {
+            return formatResponse(request, await this._listData(request), true);
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/records/data'
+        ) {
+            return formatResponse(
+                request,
+                await this._recordData(request),
+                this._allowedApiOrigins
+            );
         }
 
         return formatResponse(
@@ -346,6 +374,34 @@ export class RecordsHttpServer {
             returnResult(OPERATION_NOT_FOUND_RESULT),
             true
         );
+    }
+
+    private async _listData(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        const { recordName, address } = request.query || {};
+
+        if (!recordName || typeof recordName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'recordName is required and must be a string.',
+            });
+        }
+        if (
+            address !== null &&
+            typeof address !== 'undefined' &&
+            typeof address !== 'string'
+        ) {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'address must be null or a string.',
+            });
+        }
+
+        const result = await this._data.listData(recordName, address || null);
+        return returnResult(result);
     }
 
     private async _recordFile(
@@ -551,6 +607,12 @@ export class RecordsHttpServer {
         return returnResult(result);
     }
 
+    private async _recordData(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        return this._baseRecordData(request, this._data);
+    }
+
     private _manualRecordData(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
@@ -580,6 +642,12 @@ export class RecordsHttpServer {
 
         const result = await controller.getData(recordName, address);
         return returnResult(result);
+    }
+
+    private _getData(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        return this._baseGetRecordData(request, this._data);
     }
 
     private _getManualRecordData(
@@ -634,6 +702,12 @@ export class RecordsHttpServer {
         const userId = validation.userId;
         const result = await controller.eraseData(recordKey, address, userId);
         return returnResult(result);
+    }
+
+    private _eraseData(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        return this._baseEraseRecordData(request, this._data);
     }
 
     private _eraseManualRecordData(

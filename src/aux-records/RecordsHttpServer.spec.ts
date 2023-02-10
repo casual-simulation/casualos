@@ -1949,6 +1949,540 @@ describe('RecordsHttpServer', () => {
         );
     });
 
+    describe('DELETE /api/v2/records/data', () => {
+        beforeEach(async () => {
+            await dataController.recordData(
+                recordKey,
+                'testAddress',
+                'hello, world!',
+                userId,
+                null,
+                null
+            );
+        });
+
+        it('should delete the data at the given address', async () => {
+            const result = await server.handleRequest(
+                httpDelete(
+                    '/api/v2/records/data',
+                    JSON.stringify({
+                        recordKey,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'testAddress',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await dataStore.getData(recordName, 'testAddress');
+
+            expect(data).toEqual({
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
+
+        it('should support subjectless records', async () => {
+            const keyResult = await recordsController.createPublicRecordKey(
+                recordName,
+                'subjectless',
+                userId
+            );
+
+            if (!keyResult.success) {
+                throw new Error('Unable to create subjectless record key!');
+            }
+
+            const result = await server.handleRequest(
+                httpDelete(
+                    '/api/v2/records/data',
+                    JSON.stringify({
+                        recordKey: keyResult.recordKey,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'testAddress',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await dataStore.getData(recordName, 'testAddress');
+
+            expect(data).toEqual({
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
+
+        it('should return an unacceptable_request if given a non-string recordKey', async () => {
+            const result = await server.handleRequest(
+                httpDelete(
+                    '/api/v2/records/data',
+                    JSON.stringify({
+                        recordKey: 123,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'recordKey is required and must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request if given a non-string address', async () => {
+            const result = await server.handleRequest(
+                httpDelete(
+                    '/api/v2/records/data',
+                    JSON.stringify({
+                        recordKey,
+                        address: 123,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'address is required and must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('DELETE', '/api/v2/records/data', () =>
+            JSON.stringify({
+                recordKey,
+                address: 'testAddress',
+            })
+        );
+
+        testAuthorization(
+            () =>
+                httpDelete(
+                    '/api/v2/records/data',
+                    JSON.stringify({
+                        recordKey,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                ),
+            'The user must be logged in in order to erase data using the provided record key.'
+        );
+
+        testBodyIsJson((body) =>
+            httpDelete('/api/v2/records/data', body, apiHeaders)
+        );
+    });
+
+    describe('GET /api/v2/records/data', () => {
+        beforeEach(async () => {
+            await dataController.recordData(
+                recordKey,
+                'testAddress',
+                'hello, world!',
+                userId,
+                null,
+                null
+            );
+        });
+
+        it('should be able to get the data', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/data?recordName=${recordName}&address=testAddress`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    data: 'hello, world!',
+                    publisherId: userId,
+                    subjectId: userId,
+                    updatePolicy: true,
+                    deletePolicy: true,
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a recordName', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/data?address=testAddress`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'recordName is required and must be a string.',
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a address', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/data?recordName=${recordName}`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'address is required and must be a string.',
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return a 404 when trying to get data that doesnt exist', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/data?recordName=${recordName}&address=missing`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'data_not_found',
+                    errorMessage: 'The data was not found.',
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+    });
+
+    describe('GET /api/v2/records/data/list', () => {
+        beforeEach(async () => {
+            await dataController.recordData(
+                recordKey,
+                'address3',
+                'crazy message!',
+                userId,
+                null,
+                null
+            );
+            await dataController.recordData(
+                recordKey,
+                'address1',
+                'hello, world!',
+                userId,
+                null,
+                null
+            );
+            await dataController.recordData(
+                recordKey,
+                'address2',
+                'other message!',
+                userId,
+                null,
+                null
+            );
+        });
+
+        it('should return a list of data', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/data/list?recordName=${recordName}`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    items: [
+                        {
+                            address: 'address3',
+                            data: 'crazy message!',
+                        },
+                        {
+                            address: 'address1',
+                            data: 'hello, world!',
+                        },
+                        {
+                            address: 'address2',
+                            data: 'other message!',
+                        },
+                    ],
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should be able to list data by address', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/data/list?recordName=${recordName}&address=address1`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    items: [
+                        {
+                            address: 'address3',
+                            data: 'crazy message!',
+                        },
+                        {
+                            address: 'address2',
+                            data: 'other message!',
+                        },
+                    ],
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a recordName', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/data/list?address=testAddress`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'recordName is required and must be a string.',
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+    });
+
+    describe('POST /api/v2/records/data', () => {
+        it('should save the given manual data record', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/data`,
+                    JSON.stringify({
+                        recordKey,
+                        address: 'testAddress',
+                        data: 'hello, world',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'testAddress',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await dataStore.getData(recordName, 'testAddress');
+            expect(data).toEqual({
+                success: true,
+                data: 'hello, world',
+                subjectId: userId,
+                publisherId: userId,
+                updatePolicy: true,
+                deletePolicy: true,
+            });
+        });
+
+        it('should support subjectless records', async () => {
+            const keyResult = await recordsController.createPublicRecordKey(
+                recordName,
+                'subjectless',
+                userId
+            );
+
+            if (!keyResult.success) {
+                throw new Error('Unable to create subjectless key');
+            }
+
+            delete apiHeaders['authorization'];
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/data`,
+                    JSON.stringify({
+                        recordKey: keyResult.recordKey,
+                        address: 'testAddress',
+                        data: 'hello, world',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'testAddress',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await dataStore.getData(recordName, 'testAddress');
+            expect(data).toEqual({
+                success: true,
+                data: 'hello, world',
+                subjectId: null,
+                publisherId: userId,
+                updatePolicy: true,
+                deletePolicy: true,
+            });
+        });
+
+        it('should return an unacceptable_request result when given a non-string address', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/data`,
+                    JSON.stringify({
+                        recordKey,
+                        address: 123,
+                        data: 'hello, world',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'address is required and must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when given a non-string recordKey', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/data`,
+                    JSON.stringify({
+                        recordKey: 123,
+                        address: 'testAddress',
+                        data: 'hello, world',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'recordKey is required and must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when given undefined data', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/data`,
+                    JSON.stringify({
+                        recordKey,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'data is required.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/records/data`, () =>
+            JSON.stringify({
+                recordKey,
+                address: 'testAddress',
+                data: 'hello, world',
+            })
+        );
+        testAuthorization(
+            () =>
+                httpPost(
+                    '/api/v2/records/data',
+                    JSON.stringify({
+                        recordKey,
+                        address: 'testAddress',
+                        data: 'hello, world',
+                    }),
+                    apiHeaders
+                ),
+            'The user must be logged in in order to record data.'
+        );
+        testBodyIsJson((body) =>
+            httpPost(`/api/v2/records/data`, body, apiHeaders)
+        );
+    });
+
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
         const result = await server.handleRequest(
             httpRequest('GET', `/api/missing`, null)
