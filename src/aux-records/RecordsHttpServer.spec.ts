@@ -1515,15 +1515,6 @@ describe('RecordsHttpServer', () => {
         let fileUrl: string;
 
         beforeEach(async () => {
-            // presignUrlMock.mockResolvedValueOnce({
-            //     success: true,
-            //     uploadUrl: 'testUrl',
-            //     uploadMethod: 'POST',
-            //     uploadHeaders: {
-            //         myHeader: 'myValue',
-            //     },
-            // });
-
             const fileResult = await filesController.recordFile(
                 recordKey,
                 userId,
@@ -1679,6 +1670,282 @@ describe('RecordsHttpServer', () => {
 
         testBodyIsJson((body) =>
             httpDelete('/api/v2/records/file', body, apiHeaders)
+        );
+    });
+
+    describe('POST /api/v2/records/file', () => {
+        it('should create an un-uploaded file record', async () => {
+            const hash = getHash('hello');
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey,
+                        fileSha256Hex: hash,
+                        fileByteLength: 10,
+                        fileMimeType: 'application/json',
+                        fileDescription: 'description',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    uploadUrl: `http://localhost:9191/${recordName}/${hash}.json`,
+                    fileName: `${hash}.json`,
+                    uploadMethod: 'POST',
+                    uploadHeaders: {
+                        'content-type': 'application/json',
+                        'record-name': recordName,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await filesStore.getFileRecord(
+                recordName,
+                `${hash}.json`
+            );
+            expect(data).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                fileName: `${hash}.json`,
+                publisherId: userId,
+                subjectId: userId,
+                sizeInBytes: 10,
+                description: 'description',
+                url: `${recordName}/${hash}.json`,
+                uploaded: false,
+            });
+        });
+
+        it('should support subjectless record keys', async () => {
+            const keyResult = await recordsController.createPublicRecordKey(
+                recordName,
+                'subjectless',
+                userId
+            );
+
+            if (!keyResult.success) {
+                throw new Error('Unable to create subjectless record key!');
+            }
+
+            const hash = getHash('hello');
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey: keyResult.recordKey,
+                        fileSha256Hex: hash,
+                        fileByteLength: 10,
+                        fileMimeType: 'application/json',
+                        fileDescription: 'description',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    uploadUrl: `http://localhost:9191/${recordName}/${hash}.json`,
+                    fileName: `${hash}.json`,
+                    uploadMethod: 'POST',
+                    uploadHeaders: {
+                        'content-type': 'application/json',
+                        'record-name': recordName,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await filesStore.getFileRecord(
+                recordName,
+                `${hash}.json`
+            );
+            expect(data).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                fileName: `${hash}.json`,
+                publisherId: userId,
+                subjectId: null,
+                sizeInBytes: 10,
+                description: 'description',
+                url: `${recordName}/${hash}.json`,
+                uploaded: false,
+            });
+        });
+
+        it('should return an unacceptable_request if given a non-string recordKey', async () => {
+            const hash = getHash('hello');
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey: 123,
+                        fileSha256Hex: hash,
+                        fileByteLength: 10,
+                        fileMimeType: 'application/json',
+                        fileDescription: 'description',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'recordKey is required and must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request if given a non-string fileSha256Hex', async () => {
+            const hash = getHash('hello');
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey,
+                        fileSha256Hex: 123,
+                        fileByteLength: 10,
+                        fileMimeType: 'application/json',
+                        fileDescription: 'description',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'fileSha256Hex is required and must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request if given a non-number fileByteLength', async () => {
+            const hash = getHash('hello');
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey,
+                        fileSha256Hex: hash,
+                        fileByteLength: 'abc',
+                        fileMimeType: 'application/json',
+                        fileDescription: 'description',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'fileByteLength is required and must be a number.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request if given a non-string fileMimeType', async () => {
+            const hash = getHash('hello');
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey,
+                        fileSha256Hex: hash,
+                        fileByteLength: 10,
+                        fileMimeType: 123,
+                        fileDescription: 'description',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'fileMimeType is required and must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request if given a non-string fileDescription', async () => {
+            const hash = getHash('hello');
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey,
+                        fileSha256Hex: hash,
+                        fileByteLength: 10,
+                        fileMimeType: 'application/json',
+                        fileDescription: 123,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'fileDescription must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/records/file', () =>
+            JSON.stringify({
+                recordKey,
+                fileSha256Hex: 'hash',
+                fileByteLength: 10,
+                fileMimeType: 'application/json',
+                fileDescription: 'description',
+            })
+        );
+
+        testAuthorization(
+            () =>
+                httpPost(
+                    '/api/v2/records/file',
+                    JSON.stringify({
+                        recordKey,
+                        fileSha256Hex: 'hash',
+                        fileByteLength: 10,
+                        fileMimeType: 'application/json',
+                        fileDescription: 'description',
+                    }),
+                    apiHeaders
+                ),
+            'The user must be logged in in order to record files.'
+        );
+
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/records/file', body, apiHeaders)
         );
     });
 

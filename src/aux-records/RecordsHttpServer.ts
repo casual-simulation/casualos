@@ -330,6 +330,15 @@ export class RecordsHttpServer {
                 await this._eraseFile(request),
                 this._allowedApiOrigins
             );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/records/file'
+        ) {
+            return formatResponse(
+                request,
+                await this._recordFile(request),
+                this._allowedApiOrigins
+            );
         }
 
         return formatResponse(
@@ -337,6 +346,88 @@ export class RecordsHttpServer {
             returnResult(OPERATION_NOT_FOUND_RESULT),
             true
         );
+    }
+
+    private async _recordFile(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const {
+            recordKey,
+            fileSha256Hex,
+            fileByteLength,
+            fileMimeType,
+            fileDescription,
+        } = jsonResult.value;
+
+        if (!recordKey || typeof recordKey !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'recordKey is required and must be a string.',
+            });
+        }
+        if (!fileSha256Hex || typeof fileSha256Hex !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'fileSha256Hex is required and must be a string.',
+            });
+        }
+        if (!fileByteLength || typeof fileByteLength !== 'number') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'fileByteLength is required and must be a number.',
+            });
+        }
+        if (!fileMimeType || typeof fileMimeType !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'fileMimeType is required and must be a string.',
+            });
+        }
+        if (!!fileDescription && typeof fileDescription !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'fileDescription must be a string.',
+            });
+        }
+
+        const validation = await this._validateSessionKey(request);
+        if (
+            validation.success === false &&
+            validation.errorCode !== 'no_session_key'
+        ) {
+            return returnResult(validation);
+        }
+        const userId = validation.userId;
+
+        const result = await this._files.recordFile(recordKey, userId, {
+            fileSha256Hex,
+            fileByteLength,
+            fileMimeType,
+            fileDescription,
+            headers: {},
+        });
+
+        return returnResult(result);
     }
 
     private async _eraseFile(
