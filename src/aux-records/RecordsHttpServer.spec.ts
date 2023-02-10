@@ -15,7 +15,7 @@ import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
 import { AuthSession } from './AuthStore';
 import { LivekitController } from './LivekitController';
-import { RecordsController } from './RecordsController';
+import { isRecordKey, RecordsController } from './RecordsController';
 import { RecordsStore } from './RecordsStore';
 import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { EventRecordsController } from './EventRecordsController';
@@ -2480,6 +2480,128 @@ describe('RecordsHttpServer', () => {
         );
         testBodyIsJson((body) =>
             httpPost(`/api/v2/records/data`, body, apiHeaders)
+        );
+    });
+
+    describe('POST /api/v2/records/key', () => {
+        it('should create a record key', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/key`,
+                    JSON.stringify({
+                        recordName: 'test',
+                        policy: 'subjectfull',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordKey: expect.any(String),
+                    recordName: 'test',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = JSON.parse(result.body as string);
+
+            expect(isRecordKey(data.recordKey)).toBe(true);
+
+            const validation = await recordsController.validatePublicRecordKey(
+                data.recordKey
+            );
+            expect(validation).toEqual({
+                success: true,
+                recordName: 'test',
+                ownerId: userId,
+                policy: 'subjectfull',
+            });
+        });
+
+        it('should create a subjectless record key', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/key`,
+                    JSON.stringify({
+                        recordName: 'test',
+                        policy: 'subjectless',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordKey: expect.any(String),
+                    recordName: 'test',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = JSON.parse(result.body as string);
+
+            expect(isRecordKey(data.recordKey)).toBe(true);
+
+            const validation = await recordsController.validatePublicRecordKey(
+                data.recordKey
+            );
+            expect(validation).toEqual({
+                success: true,
+                recordName: 'test',
+                ownerId: userId,
+                policy: 'subjectless',
+            });
+        });
+
+        it('should return a unacceptable_request error if the recordName is not a string', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/key`,
+                    JSON.stringify({
+                        recordName: 123,
+                        policy: 'subjectfull',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'recordName is required and must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', '/api/v2/records/key', () =>
+            JSON.stringify({
+                recordName: 'test',
+                policy: 'subjectfull',
+            })
+        );
+
+        testAuthorization(() =>
+            httpPost(
+                '/api/v2/records/key',
+                JSON.stringify({
+                    recordName: 'test',
+                    policy: 'subjectfull',
+                }),
+                apiHeaders
+            )
+        );
+
+        testBodyIsJson((body) =>
+            httpPost('/api/v2/records/key', body, apiHeaders)
         );
     });
 
