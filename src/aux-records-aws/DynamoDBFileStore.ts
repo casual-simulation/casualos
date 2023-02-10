@@ -1,4 +1,8 @@
-import { FileRecordsStore, signRequest } from '@casual-simulation/aux-records';
+import {
+    FileRecordsStore,
+    GetFileNameFromUrlResult,
+    signRequest,
+} from '@casual-simulation/aux-records';
 import {
     PresignFileUploadRequest,
     PresignFileUploadResult,
@@ -42,6 +46,44 @@ export class DynamoDBFileStore implements FileRecordsStore {
         this._aws = aws;
         this._s3Host = s3Host;
         this._s3Options = s3Options;
+    }
+
+    async getFileNameFromUrl(
+        fileUrl: string
+    ): Promise<GetFileNameFromUrlResult> {
+        const host = this._fileHost();
+        if (fileUrl.startsWith(host)) {
+            let recordNameAndFileName = fileUrl.slice(host.length + 1);
+            let firstSlash = recordNameAndFileName.indexOf('/');
+            if (firstSlash < 0) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_url',
+                    errorMessage: 'The URL does not match an expected format.',
+                };
+            }
+            let recordName = recordNameAndFileName.slice(0, firstSlash);
+            let fileName = recordNameAndFileName.slice(firstSlash + 1);
+
+            if (recordName && fileName) {
+                return {
+                    success: true,
+                    recordName,
+                    fileName,
+                };
+            }
+            return {
+                success: false,
+                errorCode: 'unacceptable_url',
+                errorMessage: 'The URL does not match an expected format.',
+            };
+        }
+
+        return {
+            success: false,
+            errorCode: 'unacceptable_url',
+            errorMessage: 'The URL does not match an expected format.',
+        };
     }
 
     async presignFileUpload(
@@ -311,6 +353,14 @@ export class DynamoDBFileStore implements FileRecordsStore {
         }
 
         return new URL(filePath, `https://${this._bucket}.s3.amazonaws.com`);
+    }
+
+    private _fileHost() {
+        if (this._s3Host) {
+            return this._s3Host;
+        }
+
+        return `https://${this._bucket}.s3.amazonaws.com`;
     }
 
     private _fileKey(recordName: string, fileName: string): string {

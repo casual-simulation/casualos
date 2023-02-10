@@ -6,6 +6,7 @@ import {
     AddFileResult,
     MarkFileRecordAsUploadedResult,
     EraseFileStoreResult,
+    GetFileNameFromUrlResult,
 } from '@casual-simulation/aux-records';
 import { Collection } from 'mongodb';
 
@@ -19,6 +20,32 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
     constructor(collection: Collection<FileRecord>, fileUploadUrl: string) {
         this._collection = collection;
         this._fileUploadUrl = fileUploadUrl;
+    }
+
+    async getFileNameFromUrl(
+        fileUrl: string
+    ): Promise<GetFileNameFromUrlResult> {
+        if (fileUrl.startsWith(this._fileUploadUrl)) {
+            let fileName = fileUrl.slice(this._fileUploadUrl.length + 1);
+            if (fileName) {
+                return {
+                    success: true,
+                    recordName: null,
+                    fileName,
+                };
+            }
+            return {
+                success: false,
+                errorCode: 'invalid_url',
+                errorMessage: 'The URL does not match an expected format.',
+            };
+        }
+
+        return {
+            success: false,
+            errorCode: 'invalid_url',
+            errorMessage: 'The URL does not match an expected format.',
+        };
     }
 
     async presignFileUpload(

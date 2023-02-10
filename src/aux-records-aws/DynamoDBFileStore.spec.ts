@@ -459,4 +459,30 @@ describe('DynamoDBFileStore', () => {
             });
         });
     });
+
+    describe('getFileNameFromUrl()', () => {
+        it('should be able to parse the record name and file name from a standard S3 URL', async () => {
+            const result = await store.getFileNameFromUrl(
+                'https://test-bucket.s3.amazonaws.com/record-name/file-name.aux'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'record-name',
+                fileName: 'file-name.aux',
+            });
+        });
+
+        it('should be able to parse file names with slashes in them', async () => {
+            const result = await store.getFileNameFromUrl(
+                'https://test-bucket.s3.amazonaws.com/record-name/file-name/other-name.aux'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'record-name',
+                fileName: 'file-name/other-name.aux',
+            });
+        });
+    });
 });

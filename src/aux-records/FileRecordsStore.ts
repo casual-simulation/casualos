@@ -60,6 +60,12 @@ export interface FileRecordsStore {
         recordName: string,
         fileName: string
     ): Promise<EraseFileStoreResult>;
+
+    /**
+     * Attempts to get the record name and file name from the given URL.
+     * @param fileUrl The URL.
+     */
+    getFileNameFromUrl(fileUrl: string): Promise<GetFileNameFromUrlResult>;
 }
 
 export type GetFileRecordResult = GetFileRecordSuccess | GetFileRecordFailure;
@@ -212,4 +218,29 @@ export interface EraseFileStoreResult {
 
     errorCode?: ServerError | 'file_not_found';
     errorMessage?: string;
+}
+
+export type GetFileNameFromUrlResult =
+    | GetFileNameFromUrlSuccess
+    | GetFileNameFromUrlFailure;
+
+export interface GetFileNameFromUrlSuccess {
+    success: true;
+
+    /**
+     * The name of the record that the URL references.
+     * Null if the URL contains no record name.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the file that the URL references.
+     */
+    fileName: string;
+}
+
+export interface GetFileNameFromUrlFailure {
+    success: false;
+    errorCode: ServerError | 'invalid_url';
+    errorMessage: string;
 }
