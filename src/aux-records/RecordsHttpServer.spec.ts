@@ -2605,6 +2605,27 @@ describe('RecordsHttpServer', () => {
         );
     });
 
+    describe('OPTIONS /api/v2/records', () => {
+        it('should return a 204 response', async () => {
+            const result = await server.handleRequest(
+                httpRequest('OPTIONS', `/api/v2/records`, null, {
+                    origin: apiHeaders['origin'],
+                })
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 204,
+                body: undefined,
+                headers: {
+                    'Access-Control-Allow-Origin': apiHeaders['origin'],
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                    'Access-Control-Allow-Headers':
+                        'Content-Type, Authorization',
+                },
+            });
+        });
+    });
+
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
         const result = await server.handleRequest(
             httpRequest('GET', `/api/missing`, null)
@@ -2629,7 +2650,9 @@ describe('RecordsHttpServer', () => {
         response: GenericHttpResponse,
         expected: any
     ) {
-        const json = JSON.parse(response.body as string);
+        const json = response.body
+            ? JSON.parse(response.body as string)
+            : undefined;
 
         expect({
             ...response,

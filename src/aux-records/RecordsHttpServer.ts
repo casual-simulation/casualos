@@ -37,7 +37,7 @@ export interface GenericHttpRequest {
      *
      * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods
      */
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD';
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD' | 'OPTIONS';
 
     /**
      * The headers for the request.
@@ -376,6 +376,12 @@ export class RecordsHttpServer {
                 await this._createRecordKey(request),
                 this._allowedApiOrigins
             );
+        } else if (request.method === 'OPTIONS') {
+            return formatResponse(
+                request,
+                await this._handleOptions(request),
+                true
+            );
         }
 
         return formatResponse(
@@ -383,6 +389,22 @@ export class RecordsHttpServer {
             returnResult(OPERATION_NOT_FOUND_RESULT),
             true
         );
+    }
+
+    private async _handleOptions(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        return {
+            statusCode: 204,
+            headers: {
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            },
+        };
     }
 
     private async _createRecordKey(
@@ -1269,7 +1291,9 @@ export function formatResponse(
     origins: Set<string> | boolean
 ) {
     const origin = request.headers['origin'];
-    let headers = {} as any;
+    let headers = {
+        ...(response.headers || {}),
+    } as any;
     if (
         origins === true ||
         (typeof origins === 'object' && validateOrigin(request, origins))
