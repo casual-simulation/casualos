@@ -24,6 +24,10 @@ import { MemoryEventRecordsStore } from './MemoryEventRecordsStore';
 import { DataRecordsController } from './DataRecordsController';
 import { DataRecordsStore } from './DataRecordsStore';
 import { MemoryDataRecordsStore } from './MemoryDataRecordsStore';
+import { FileRecordsController } from './FileRecordsController';
+import { FileRecordsStore } from './FileRecordsStore';
+import { MemoryFileRecordsStore } from './MemoryFileRecordsStore';
+import { getHash } from '@casual-simulation/crypto';
 
 console.log = jest.fn();
 
@@ -42,9 +46,11 @@ describe('RecordsHttpServer', () => {
     let eventsStore: EventRecordsStore;
     let dataController: DataRecordsController;
     let dataStore: DataRecordsStore;
-
     let manualDataController: DataRecordsController;
     let manualDataStore: DataRecordsStore;
+
+    let filesStore: FileRecordsStore;
+    let filesController: FileRecordsController;
 
     let allowedAccountOrigins: Set<string>;
     let allowedApiOrigins: Set<string>;
@@ -107,6 +113,12 @@ describe('RecordsHttpServer', () => {
             manualDataStore
         );
 
+        filesStore = new MemoryFileRecordsStore();
+        filesController = new FileRecordsController(
+            recordsController,
+            filesStore
+        );
+
         server = new RecordsHttpServer(
             allowedAccountOrigins,
             allowedApiOrigins,
@@ -115,7 +127,8 @@ describe('RecordsHttpServer', () => {
             recordsController,
             eventsController,
             dataController,
-            manualDataController
+            manualDataController,
+            filesController
         );
         defaultHeaders = {
             origin: 'test.com',
@@ -860,6 +873,42 @@ describe('RecordsHttpServer', () => {
             });
         });
 
+        it('should support subjectless records', async () => {
+            const keyResult = await recordsController.createPublicRecordKey(
+                recordName,
+                'subjectless',
+                userId
+            );
+
+            if (!keyResult.success) {
+                throw new Error('Unable to create subjectless key');
+            }
+
+            delete apiHeaders['authorization'];
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/events/count`,
+                    JSON.stringify({
+                        recordKey: keyResult.recordKey,
+                        eventName: 'testEvent',
+                        count: 2,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    eventName: 'testEvent',
+                    countAdded: 2,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
         it('should return an unacceptable_request when given a non-string recordKey', async () => {
             const result = await server.handleRequest(
                 httpPost(
@@ -1277,6 +1326,360 @@ describe('RecordsHttpServer', () => {
                 headers: corsHeaders(defaultHeaders['origin']),
             });
         });
+    });
+
+    describe('POST /api/v2/records/manual/data', () => {
+        it('should save the given manual data record', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/manual/data`,
+                    JSON.stringify({
+                        recordKey,
+                        address: 'testAddress',
+                        data: 'hello, world',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'testAddress',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await manualDataStore.getData(
+                recordName,
+                'testAddress'
+            );
+            expect(data).toEqual({
+                success: true,
+                data: 'hello, world',
+                subjectId: userId,
+                publisherId: userId,
+                updatePolicy: true,
+                deletePolicy: true,
+            });
+        });
+
+        it('should support subjectless records', async () => {
+            const keyResult = await recordsController.createPublicRecordKey(
+                recordName,
+                'subjectless',
+                userId
+            );
+
+            if (!keyResult.success) {
+                throw new Error('Unable to create subjectless key');
+            }
+
+            delete apiHeaders['authorization'];
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/manual/data`,
+                    JSON.stringify({
+                        recordKey: keyResult.recordKey,
+                        address: 'testAddress',
+                        data: 'hello, world',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'testAddress',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await manualDataStore.getData(
+                recordName,
+                'testAddress'
+            );
+            expect(data).toEqual({
+                success: true,
+                data: 'hello, world',
+                subjectId: null,
+                publisherId: userId,
+                updatePolicy: true,
+                deletePolicy: true,
+            });
+        });
+
+        it('should return an unacceptable_request result when given a non-string address', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/manual/data`,
+                    JSON.stringify({
+                        recordKey,
+                        address: 123,
+                        data: 'hello, world',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'address is required and must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when given a non-string recordKey', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/manual/data`,
+                    JSON.stringify({
+                        recordKey: 123,
+                        address: 'testAddress',
+                        data: 'hello, world',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'recordKey is required and must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when given undefined data', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/manual/data`,
+                    JSON.stringify({
+                        recordKey,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'data is required.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/records/manual/data`, () =>
+            JSON.stringify({
+                recordKey,
+                address: 'testAddress',
+                data: 'hello, world',
+            })
+        );
+        testAuthorization(
+            () =>
+                httpPost(
+                    '/api/v2/records/manual/data',
+                    JSON.stringify({
+                        recordKey,
+                        address: 'testAddress',
+                        data: 'hello, world',
+                    }),
+                    apiHeaders
+                ),
+            'The user must be logged in in order to record data.'
+        );
+        testBodyIsJson((body) =>
+            httpPost(`/api/v2/records/manual/data`, body, apiHeaders)
+        );
+    });
+
+    describe('DELETE /api/v2/records/file', () => {
+        let fileName: string;
+        let fileUrl: string;
+
+        beforeEach(async () => {
+            // presignUrlMock.mockResolvedValueOnce({
+            //     success: true,
+            //     uploadUrl: 'testUrl',
+            //     uploadMethod: 'POST',
+            //     uploadHeaders: {
+            //         myHeader: 'myValue',
+            //     },
+            // });
+
+            const fileResult = await filesController.recordFile(
+                recordKey,
+                userId,
+                {
+                    fileSha256Hex: getHash('hello'),
+                    fileByteLength: 10,
+                    fileDescription: 'desc',
+                    fileMimeType: 'application/json',
+                    headers: {},
+                }
+            );
+            if (!fileResult.success) {
+                throw new Error('Unable to record file!');
+            }
+            fileName = fileResult.fileName;
+            fileUrl = fileResult.uploadUrl;
+        });
+
+        it('should delete the file with the given name', async () => {
+            const result = await server.handleRequest(
+                httpDelete(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey,
+                        fileUrl,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    fileName,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await filesStore.getFileRecord(recordName, fileName);
+            expect(data).toEqual({
+                success: false,
+                errorCode: 'file_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
+
+        it('should support subjectless record keys', async () => {
+            const keyResult = await recordsController.createPublicRecordKey(
+                recordName,
+                'subjectless',
+                userId
+            );
+
+            if (!keyResult.success) {
+                throw new Error('Unable to create subjectless record key!');
+            }
+
+            const result = await server.handleRequest(
+                httpDelete(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey: keyResult.recordKey,
+                        fileUrl,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    fileName,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await filesStore.getFileRecord(recordName, fileName);
+            expect(data).toEqual({
+                success: false,
+                errorCode: 'file_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
+
+        it('should return an unacceptable_request if given a non-string recordKey', async () => {
+            const result = await server.handleRequest(
+                httpDelete(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey: 123,
+                        fileUrl,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'recordKey is required and must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request if given a non-string fileUrl', async () => {
+            const result = await server.handleRequest(
+                httpDelete(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey,
+                        fileUrl: 123,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'fileUrl is required and must be a string.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('DELETE', '/api/v2/records/file', () =>
+            JSON.stringify({
+                recordKey,
+                fileUrl,
+            })
+        );
+        testAuthorization(
+            () =>
+                httpDelete(
+                    '/api/v2/records/file',
+                    JSON.stringify({
+                        recordKey,
+                        fileUrl,
+                    }),
+                    apiHeaders
+                ),
+            'The user must be logged in in order to erase files.'
+        );
+
+        testBodyIsJson((body) =>
+            httpDelete('/api/v2/records/file', body, apiHeaders)
+        );
     });
 
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
