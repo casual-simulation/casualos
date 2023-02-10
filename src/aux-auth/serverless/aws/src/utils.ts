@@ -68,6 +68,8 @@ export function getAuthController(docClient: any): AuthController {
     const USER_ADDRESSES_TABLE = process.env.USER_ADDRESSES_TABLE;
     const LOGIN_REQUESTS_TABLE = process.env.LOGIN_REQUESTS_TABLE;
     const SESSIONS_TABLE = process.env.SESSIONS_TABLE;
+    const EMAIL_TABLE = process.env.EMAIL_TABLE;
+    const SMS_TABLE = process.env.SMS_TABLE;
 
     const authStore = new DynamoDBAuthStore(
         docClient,
@@ -75,7 +77,9 @@ export function getAuthController(docClient: any): AuthController {
         USER_ADDRESSES_TABLE,
         LOGIN_REQUESTS_TABLE,
         SESSIONS_TABLE,
-        'ExpireTimeIndex'
+        'ExpireTimeIndex',
+        EMAIL_TABLE,
+        SMS_TABLE
     );
 
     const messenger = getAuthMessenger();
