@@ -241,6 +241,6 @@ export interface GetFileNameFromUrlSuccess {
 
 export interface GetFileNameFromUrlFailure {
     success: false;
-    errorCode: ServerError | 'invalid_url';
+    errorCode: ServerError | 'unacceptable_url';
     errorMessage: string;
 }
