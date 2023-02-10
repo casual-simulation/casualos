@@ -39,7 +39,7 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
             if (nextSlash < 0) {
                 return {
                     success: false,
-                    errorCode: 'invalid_url',
+                    errorCode: 'unacceptable_url',
                     errorMessage: 'The URL does not match an expected format.',
                 };
             }
@@ -55,14 +55,14 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
             }
             return {
                 success: false,
-                errorCode: 'invalid_url',
+                errorCode: 'unacceptable_url',
                 errorMessage: 'The URL does not match an expected format.',
             };
         }
 
         return {
             success: false,
-            errorCode: 'invalid_url',
+            errorCode: 'unacceptable_url',
             errorMessage: 'The URL does not match an expected format.',
         };
     }

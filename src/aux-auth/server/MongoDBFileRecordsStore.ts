@@ -36,14 +36,14 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
             }
             return {
                 success: false,
-                errorCode: 'invalid_url',
+                errorCode: 'unacceptable_url',
                 errorMessage: 'The URL does not match an expected format.',
             };
         }
 
         return {
             success: false,
-            errorCode: 'invalid_url',
+            errorCode: 'unacceptable_url',
             errorMessage: 'The URL does not match an expected format.',
         };
     }
