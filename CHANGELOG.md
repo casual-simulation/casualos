@@ -18,6 +18,7 @@
         -   Dates: `📅`
         -   Vectors: `➡️`
         -   Rotations: `🔁`
+-   Fixed an issue where JSX syntax highlighting would fail if the script contained a return statement.
 
 ## V3.1.22
 
