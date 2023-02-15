@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.23
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the multi-line editor could get stuck in an infinite loop while trying to resize itself to fit on the screen.
+
 ## V3.1.22
 
 #### Date: 2/15/2023
