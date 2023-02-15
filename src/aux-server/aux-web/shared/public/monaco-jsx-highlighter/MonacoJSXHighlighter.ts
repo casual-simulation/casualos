@@ -63,6 +63,9 @@ export const JSXTypes = {
             }
         ),
     },
+    // JSXEmptyExpression: {
+    //     highlightScope: HI
+    // }
 };
 
 export const JSXCommentContexts = {
@@ -220,7 +223,8 @@ class MonacoJSXHighlighter {
                 JSXExpressionContainer: ['expression'],
                 JSXIdentifier: [],
                 JSXAttribute: ['name', 'value'],
-                JSXSpreadAttribute: []
+                JSXSpreadAttribute: [],
+                JSXEmptyExpression: []
             },
         });
     }
