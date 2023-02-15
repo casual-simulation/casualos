@@ -135,7 +135,8 @@ class MonacoJSXHighlighter {
                 script = `async function _() {\n${script}\n}`;
                 this._lineOffset = -1;
             } else {
-                this._lineOffset = 0;
+                script = `function _() {\n${script}\n}`;
+                this._lineOffset = -1;
             }
             resolve(this._transpiler.parse(script));
         } catch (e) {
