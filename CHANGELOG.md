@@ -1,5 +1,17 @@
 # CasualOS Changelog
 
+## V3.1.22
+
+#### Date: 2/15/2023
+
+### :rocket: Improvements
+
+-   Added a log to help debug an initialization issue.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where custom apps may sometimes ignore JSX updates when using app hooks.
+
 ## V3.1.21
 
 #### Date: 1/30/2023

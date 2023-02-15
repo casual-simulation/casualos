@@ -304,6 +304,7 @@ export class AppManager {
     }
 
     private async _initDeviceConfig() {
+        console.log('[AppManager] Initializing Device Config');
         const nav: any = navigator;
         let arSupported = false;
         if (nav.xr) {

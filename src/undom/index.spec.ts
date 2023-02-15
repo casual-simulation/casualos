@@ -11,7 +11,9 @@ describe('undom', () => {
         let html = document.documentElement;
 
         expect(html).toBeInstanceOf(document.Element);
-        expect(html).toHaveProperty('nodeName', '#document');
+        expect(html).toHaveProperty('nodeName', 'HTML');
+        expect(html.parentNode === document).toBe(true);
+        expect(html.parentNode).toHaveProperty('nodeName', '#document');
 
         expect(document.head).toBeInstanceOf(document.Element);
         expect(document.head).toHaveProperty('nodeName', 'HEAD');
@@ -20,6 +22,11 @@ describe('undom', () => {
         expect(document.body).toBeInstanceOf(document.Element);
         expect(document.body).toHaveProperty('nodeName', 'BODY');
         expect(document.body).toHaveProperty('parentNode', html);
+
+        expect(document.childNodes).toHaveLength(1);
+        expect(document.childNodes[0].nodeName).toBe('HTML');
+        expect(document.childNodes[0].parentNode === document).toBe(true);
+        expect(document.body.parentNode === document.childNodes[0]).toBe(true);
     });
 
     describe('createElement()', () => {
@@ -162,7 +169,7 @@ describe('undom', () => {
             document = undom();
         });
 
-        describe('#appendChild', () => {
+        describe('#appendChild()', () => {
             it('should set parentNode', () => {
                 let child = document.createElement('span');
                 let parent = document.createElement('div');
@@ -252,15 +259,87 @@ describe('undom', () => {
                     expect(mutations[0].addedNodes[0] === child).toBe(true);
                     expect(mutations[0].nextSibling).toBeUndefined();
                 });
+
+                it('should send mutations to observers that are attached to the document', async () => {
+                    let child = document.createElement('span');
+                    let parent = document.createElement('div');
+
+                    document.body.appendChild(parent);
+
+                    observer.observe(document, {
+                        subtree: true,
+                    });
+
+                    parent.appendChild(child);
+                    expect(child).toHaveProperty('parentNode', parent);
+
+                    await waitAsync();
+
+                    expect(mutations).toHaveLength(1);
+                    expect(mutations[0].type).toBe('childList');
+                    expect(mutations[0].target === parent).toBe(true);
+                    expect(mutations[0].addedNodes).toHaveLength(1);
+                    expect(mutations[0].addedNodes[0] === child).toBe(true);
+                    expect(mutations[0].nextSibling).toBeUndefined();
+                });
+
+                it('should send mutations to the parent observer even if the child was created with a different document', async () => {
+                    const doc2 = undom();
+
+                    let child = doc2.createElement('span');
+                    let parent = document.createElement('div');
+                    observer.observe(parent, {
+                        subtree: true,
+                    });
+
+                    parent.appendChild(child);
+                    expect(child).toHaveProperty('parentNode', parent);
+
+                    await waitAsync();
+
+                    expect(mutations).toHaveLength(1);
+                    expect(mutations[0].type).toBe('childList');
+                    expect(mutations[0].target === parent).toBe(true);
+                    expect(mutations[0].addedNodes).toHaveLength(1);
+                    expect(mutations[0].addedNodes[0] === child).toBe(true);
+                    expect(mutations[0].nextSibling).toBeUndefined();
+                });
+
+                it('should send mutations to the observer even if the parent was created with a different document', async () => {
+                    const doc2 = undom();
+
+                    let child = doc2.createElement('span');
+                    let parent = doc2.createElement('div');
+
+                    document.body.appendChild(parent);
+
+                    observer.observe(document, {
+                        subtree: true,
+                    });
+
+                    parent.appendChild(child);
+
+                    expect(child).toHaveProperty('parentNode', parent);
+
+                    await waitAsync();
+
+                    expect(mutations).toHaveLength(1);
+                    expect(mutations[0].type).toBe('childList');
+                    expect(mutations[0].target === parent).toBe(true);
+                    expect(mutations[0].addedNodes).toHaveLength(1);
+                    expect(mutations[0].addedNodes[0] === child).toBe(true);
+                    expect(mutations[0].nextSibling).toBeUndefined();
+                });
             });
+        });
 
-            // describe('actions', () => {
-            //     let actions: any[] = [];
-
-            //     beforeEach(() => {
-
-            //     });
-            // });
+        describe('#insertBefore()', () => {
+            it('should set parentNode', () => {
+                let child = document.createElement('span');
+                let parent = document.createElement('div');
+                parent.appendChild(child);
+                expect(child).toHaveProperty('parentNode', parent);
+            });
         });
 
         describe('#replaceChild()', () => {
@@ -391,6 +470,38 @@ describe('undom', () => {
                     type: [fn3],
                 });
             });
+
+            describe('mutations', () => {
+                let mutations: MutationRecord[];
+                let observer: MutationObserver;
+                beforeEach(() => {
+                    mutations = [];
+                    observer = new document.defaultView.MutationObserver(
+                        (m: any[]) => mutations.push(...m)
+                    );
+                });
+
+                it('should emit a event_listener mutation', async () => {
+                    observer.observe(document, {
+                        subtree: true,
+                    });
+
+                    const div = document.createElement('div');
+                    div.addEventListener('click', () => {});
+
+                    await waitAsync();
+
+                    expect(mutations.length).toBe(1);
+                    expect(mutations[0].type).toBe('event_listener');
+                    expect(mutations[0].target).toBe(null);
+                    expect((mutations[0] as any).listenerName).toBe('click');
+                    expect((mutations[0] as any).listenerDelta).toBe(1);
+
+                    // expect(mutations[0].addedNodes).toHaveLength(1);
+                    // expect(mutations[0].addedNodes[0] === child).toBe(true);
+                    // expect(mutations[0].nextSibling).toBeUndefined();
+                });
+            });
         });
 
         describe('#removeEventListener', () => {
@@ -429,6 +540,37 @@ describe('undom', () => {
 
                 el.removeEventListener('type', fn);
                 expect(el.__handlers).toEqual({ type: [] });
+            });
+
+            describe('mutations', () => {
+                let mutations: MutationRecord[];
+                let observer: MutationObserver;
+                beforeEach(() => {
+                    mutations = [];
+                    observer = new document.defaultView.MutationObserver(
+                        (m: any[]) => mutations.push(...m)
+                    );
+                });
+
+                it('should emit a event_listener mutation', async () => {
+                    const div = document.createElement('div');
+                    let listener = () => {};
+                    div.addEventListener('click', listener);
+
+                    observer.observe(document, {
+                        subtree: true,
+                    });
+
+                    div.removeEventListener('click', listener);
+
+                    await waitAsync();
+
+                    expect(mutations.length).toBe(1);
+                    expect(mutations[0].type).toBe('event_listener');
+                    expect(mutations[0].target).toBe(null);
+                    expect((mutations[0] as any).listenerName).toBe('click');
+                    expect((mutations[0] as any).listenerDelta).toBe(-1);
+                });
             });
         });
 
