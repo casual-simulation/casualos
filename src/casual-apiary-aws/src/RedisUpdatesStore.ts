@@ -8,6 +8,7 @@ export class RedisUpdatesStore implements UpdatesStore {
     private _redis: RedisClient;
 
     private rpush: (args: [string, ...string[]]) => Promise<number>;
+    private incr: (args: [string]) => Promise<number>;
     private lrange: (
         key: string,
         start: number,
@@ -32,6 +33,10 @@ export class RedisUpdatesStore implements UpdatesStore {
         this.lrange = spanify(
             'Redis LRANGE',
             promisify(this._redis.lrange).bind(this._redis)
+        );
+        this.incr = spanify(
+            'Redis INCR',
+            promisify(this._redis.incr).bind(this._redis)
         );
     }
 
@@ -60,7 +65,12 @@ export class RedisUpdatesStore implements UpdatesStore {
 
     async addUpdates(branch: string, updates: string[]): Promise<void> {
         const key = branchKey(this._globalNamespace, branch);
-        await this.rpush([key, ...updates.map((u) => `${u}:${Date.now()}`)]);
+        const countKey = `${key}/updateCount`;
+
+        await Promise.all([
+            this.rpush([key, ...updates.map((u) => `${u}:${Date.now()}`)]),
+            this.incr(countKey),
+        ]);
     }
 
     async clearUpdates(branch: string): Promise<void> {
