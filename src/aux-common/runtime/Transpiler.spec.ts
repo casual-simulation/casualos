@@ -620,6 +620,12 @@ describe('Transpiler', () => {
                     `h("span",{ "onClick": async () => { await os.tip("Hello!"); } },)`
                 );
             });
+
+            it('should support empty expressions nested in elements', () => {
+                const result = transpiler.transpile(`<span>{}</span>`);
+
+                expect(result).toBe(`h("span",null,'',)`);
+            });
         });
 
         it('should support dynamic import statements', () => {
