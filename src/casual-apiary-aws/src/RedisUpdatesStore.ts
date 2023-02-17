@@ -65,7 +65,7 @@ export class RedisUpdatesStore implements UpdatesStore {
 
     async addUpdates(branch: string, updates: string[]): Promise<void> {
         const key = branchKey(this._globalNamespace, branch);
-        const countKey = `${key}/updateCount`;
+        const countKey = countKey(this._globalNamespace, branch);
 
         await Promise.all([
             this.rpush([key, ...updates.map((u) => `${u}:${Date.now()}`)]),
@@ -81,4 +81,8 @@ export class RedisUpdatesStore implements UpdatesStore {
 
 function branchKey(globalNamespace: string, branch: string) {
     return `/${globalNamespace}/updates/${branch}`;
+}
+
+function countKey(globalNamespace: string, branch: string) {
+    return `/${globalNamespace}/updateCount/${branch}`;
 }
