@@ -164,6 +164,10 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
             success: true,
         };
     }
+
+    getAllowedUploadHeaders(): string[] {
+        return ['record-name', 'content-type'];
+    }
 }
 
 interface StoredFile {

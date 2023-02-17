@@ -66,6 +66,11 @@ export interface FileRecordsStore {
      * @param fileUrl The URL.
      */
     getFileNameFromUrl(fileUrl: string): Promise<GetFileNameFromUrlResult>;
+
+    /**
+     * Gets the list of headers that should be allowed via CORS.
+     */
+    getAllowedUploadHeaders(): string[];
 }
 
 export type GetFileRecordResult = GetFileRecordSuccess | GetFileRecordFailure;

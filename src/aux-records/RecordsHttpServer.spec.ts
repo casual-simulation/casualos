@@ -1949,6 +1949,30 @@ describe('RecordsHttpServer', () => {
         );
     });
 
+    describe('OPTIONS /api/v2/records/file/*', () => {
+        it('should return Access-Control-Allow-Headers with the headers that the file store returns', async () => {
+            const result = await server.handleRequest(
+                httpRequest('OPTIONS', '/api/v2/records/file/hash.txt', null, {
+                    'access-control-request-method': 'POST',
+                    'access-control-request-headers':
+                        'record-name, Content-Type',
+                    origin: apiOrigin,
+                })
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 204,
+                headers: {
+                    'Access-Control-Allow-Methods': 'POST',
+                    'Access-Control-Allow-Headers':
+                        'record-name, content-type, authorization',
+                    'Access-Control-Allow-Origin': apiOrigin,
+                    'Access-Control-Max-Age': '14400', // 4 hours in seconds
+                },
+            });
+        });
+    });
+
     describe('DELETE /api/v2/records/data', () => {
         beforeEach(async () => {
             await dataController.recordData(

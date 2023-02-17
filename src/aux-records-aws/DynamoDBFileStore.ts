@@ -48,6 +48,17 @@ export class DynamoDBFileStore implements FileRecordsStore {
         this._s3Options = s3Options;
     }
 
+    getAllowedUploadHeaders(): string[] {
+        return [
+            'content-type',
+            'content-length',
+            'cache-control',
+            'x-amz-acl',
+            'x-amz-storage-class',
+            'x-amz-security-token',
+        ];
+    }
+
     async getFileNameFromUrl(
         fileUrl: string
     ): Promise<GetFileNameFromUrlResult> {

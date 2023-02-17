@@ -253,6 +253,10 @@ export class FileRecordsController {
             };
         }
     }
+
+    getAllowedUploadHeaders() {
+        return this._store.getAllowedUploadHeaders();
+    }
 }
 
 /**

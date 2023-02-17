@@ -22,6 +22,10 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
         this._fileUploadUrl = fileUploadUrl;
     }
 
+    getAllowedUploadHeaders(): string[] {
+        return ['record-name', 'content-type'];
+    }
+
     async getFileNameFromUrl(
         fileUrl: string
     ): Promise<GetFileNameFromUrlResult> {

@@ -340,6 +340,15 @@ export class RecordsHttpServer {
                 this._allowedApiOrigins
             );
         } else if (
+            request.method === 'OPTIONS' &&
+            request.path.startsWith('/api/v2/records/file/')
+        ) {
+            return formatResponse(
+                request,
+                await this._handleRecordFileOptions(request),
+                this._allowedApiOrigins
+            );
+        } else if (
             request.method === 'DELETE' &&
             request.path === '/api/v2/records/data'
         ) {
@@ -477,6 +486,33 @@ export class RecordsHttpServer {
 
         const result = await this._data.listData(recordName, address || null);
         return returnResult(result);
+    }
+
+    private async _handleRecordFileOptions(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const headers = this._files.getAllowedUploadHeaders();
+
+        const allAllowedHeaders = new Set([
+            ...headers.map((h) => h.toLocaleLowerCase()),
+            'content-type',
+            'authorization',
+        ]);
+
+        return {
+            statusCode: 204,
+            headers: {
+                'Access-Control-Allow-Headers': [...allAllowedHeaders].join(
+                    ', '
+                ),
+                'Access-Control-Allow-Methods': 'POST',
+                'Access-Control-Max-Age': '14400',
+            },
+        };
     }
 
     private async _recordFile(
@@ -1298,8 +1334,13 @@ export function formatResponse(
         origins === true ||
         (typeof origins === 'object' && validateOrigin(request, origins))
     ) {
-        headers['Access-Control-Allow-Origin'] = origin;
-        headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+        if (!headers['Access-Control-Allow-Origin']) {
+            headers['Access-Control-Allow-Origin'] = origin;
+        }
+        if (!headers['Access-Control-Allow-Headers']) {
+            headers['Access-Control-Allow-Headers'] =
+                'Content-Type, Authorization';
+        }
     }
 
     return {
