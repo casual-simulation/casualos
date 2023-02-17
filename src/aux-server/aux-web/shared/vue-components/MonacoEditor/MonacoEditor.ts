@@ -79,7 +79,7 @@ export default class MonacoEditor extends Vue {
         if (this._editor) {
             // Uses native or polyfill, depending on browser support.
             this._resizeObserver = new ResizeObserver(
-                debouceObserverUpdates(this.$el, () => {
+                debounceObserverUpdates(this.$el, () => {
                     this.resize();
                 })
             );
@@ -102,12 +102,15 @@ export default class MonacoEditor extends Vue {
 
     resize() {
         if (this._editor) {
-            // this.$el.style.display = 'none';
-            this._editor.layout({ width: 1, height: 1 });
-            setTimeout(() => {
-                // this.$el.style.display = 'block';
-                this._editor.layout();
-            }, 1);
+            const container = this.getEditorContainer();
+
+            if (container) {
+                const rect = container.getBoundingClientRect();
+                this._editor.layout({
+                    width: rect.width,
+                    height: rect.height,
+                });
+            }
         }
     }
 
@@ -129,14 +132,19 @@ export default class MonacoEditor extends Vue {
             });
         });
     }
+
+    private getEditorContainer() {
+        return this.$refs.editor as HTMLElement;
+    }
 }
 
-function debouceObserverUpdates(
+function debounceObserverUpdates(
     target: Element,
     callback: Function
 ): (entries: ResizeObserverEntry[]) => void {
     let lastHeight = NaN;
     let lastWidth = NaN;
+
     return (entries) => {
         for (let entry of entries) {
             if (entry.target === target) {

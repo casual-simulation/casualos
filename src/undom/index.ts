@@ -153,12 +153,24 @@ export abstract class RootNode {
     }
 }
 
+const documentObservers = new Map<any, unknown[]>();
+
+function getObservers<T>(document: any): T[] {
+    let observers = documentObservers.get(document);
+    if (!observers) {
+        observers = [] as T[];
+        documentObservers.set(document, observers);
+    }
+
+    return observers as T[];
+}
+
 /** Create a minimally viable DOM Document
  *	@returns {Document} document
  */
 export default function undom(options: UndomOptions = {}): globalThis.Document {
-    let observers = [] as MutationObserver[],
-        pendingMutations = false;
+    // let observers = [] as MutationObserver[],
+    let pendingMutations = false;
 
     class Node extends RootNode {
         childNodes: Node[];
@@ -285,6 +297,22 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
             if (this.parentNode) {
                 this.parentNode.removeChild(this);
             }
+        }
+
+        contains(otherNode: Node): boolean {
+            if (!otherNode) {
+                return false;
+            }
+            let parent = otherNode.parentNode;
+            while (parent) {
+                if (this === parent) {
+                    return true;
+                }
+
+                parent = parent.parentNode;
+            }
+
+            return false;
         }
     }
 
@@ -681,6 +709,39 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         attributeNamespace: string;
     }
 
+    class MutationObserver {
+        callback: (records: any[]) => void;
+        _records: MutationRecord[];
+        _target: Node;
+        _options: any;
+
+        constructor(callback: (records: MutationRecord[]) => void) {
+            this.callback = callback;
+            this._records = [];
+        }
+        observe(target: any, options: any) {
+            this.disconnect();
+            this._target = target;
+            this._options = options || {};
+            const observers = getObservers<MutationObserver>(
+                target.ownerDocument
+            );
+            observers.push(this);
+        }
+        disconnect() {
+            if (this._target) {
+                const observers = getObservers<MutationObserver>(
+                    this._target.ownerDocument
+                );
+                this._target = null;
+                splice(observers, this);
+            }
+        }
+        takeRecords() {
+            return this._records.splice(0, this._records.length);
+        }
+    }
+
     function mutation(
         target: Node,
         type: string,
@@ -699,60 +760,75 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         if (pauseMutations) {
             return;
         }
-        record.target = target;
+        record.target = target as any;
         record.type = type;
 
-        for (let i = observers.length; i--; ) {
-            let ob = observers[i],
-                match =
-                    (!target && ob._options.subtree) || target === ob._target;
-            if (!match && ob._options.subtree) {
-                do {
-                    if ((match = target === ob._target)) break;
-                } while ((target = target.parentNode));
+        let targetDocument = target;
+
+        while (targetDocument) {
+            if (targetDocument.parentNode) {
+                targetDocument = targetDocument.parentNode;
+            } else {
+                break;
             }
-            if (match) {
-                ob._records.push(record as MutationRecord);
-                if (!pendingMutations) {
-                    pendingMutations = true;
-                    setImmediate(flushMutations);
+        }
+
+        if (targetDocument && targetDocument.nodeName !== '#document') {
+            targetDocument = targetDocument.ownerDocument;
+        }
+
+        if (!target) {
+            for (let [doc, observers] of documentObservers) {
+                for (let observer of observers) {
+                    const o = observer as MutationObserver;
+                    if (o._options.subtree) {
+                        pushRecord(o, record as MutationRecord);
+                    }
                 }
+            }
+        } else {
+            let observers = documentObservers.get(targetDocument);
+
+            if (!observers) {
+                return;
+            }
+
+            for (let observer of observers) {
+                let match = false;
+                const o = observer as MutationObserver;
+                if (o._options.subtree) {
+                    match = o._target === target || o._target.contains(target);
+                } else {
+                    match = o._target === target;
+                }
+
+                if (match) {
+                    pushRecord(o, record as MutationRecord);
+                }
+            }
+        }
+
+        function pushRecord(
+            observer: MutationObserver,
+            record: MutationRecord
+        ) {
+            observer._records.push(record as MutationRecord);
+            if (!pendingMutations) {
+                pendingMutations = true;
+                setImmediate(flushMutations);
             }
         }
     }
 
     function flushMutations() {
         pendingMutations = false;
-        for (let i = observers.length; i--; ) {
-            let ob = observers[i];
-            if (ob._records.length) {
-                ob.callback(ob.takeRecords());
+        for (let [doc, observers] of documentObservers) {
+            for (let i = 0; i < observers.length; i++) {
+                let ob = observers[i] as MutationObserver;
+                if (ob._records.length) {
+                    ob.callback(ob.takeRecords());
+                }
             }
-        }
-    }
-
-    class MutationObserver {
-        callback: (records: MutationRecord[]) => void;
-        _records: MutationRecord[];
-        _target: any;
-        _options: any;
-
-        constructor(callback: (records: MutationRecord[]) => void) {
-            this.callback = callback;
-            this._records = [];
-        }
-        observe(target: any, options: any) {
-            this.disconnect();
-            this._target = target;
-            this._options = options || {};
-            observers.push(this);
-        }
-        disconnect() {
-            this._target = null;
-            splice(observers, this);
-        }
-        takeRecords() {
-            return this._records.splice(0, this._records.length);
         }
     }
 
@@ -812,11 +888,18 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
                 DOMException: UnDOMException,
             })
         );
+        const html = document.createElement('html');
         assign(document, {
-            documentElement: document,
+            documentElement: html,
         });
-        document.appendChild((document.head = document.createElement('head')));
-        document.appendChild((document.body = document.createElement('body')));
+        const head = document.createElement('head');
+        const body = document.createElement('body');
+
+        document.appendChild(html);
+        document.head = head;
+        document.body = body;
+        html.appendChild(head);
+        html.appendChild(body);
         return document;
     }
 

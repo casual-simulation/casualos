@@ -94,6 +94,9 @@ import {
     arSupported,
     UNMAPPABLE,
     updatedBot,
+    DATE_TAG_PREFIX,
+    VECTOR_TAG_PREFIX,
+    ROTATION_TAG_PREFIX,
 } from '../bots';
 import { v4 as uuid } from 'uuid';
 import { waitAsync } from '../test/TestHelpers';
@@ -123,7 +126,7 @@ import { merge } from '../utils';
 import { flatMap, pickBy } from 'lodash';
 import { SubscriptionLike } from 'rxjs';
 import { DateTime } from 'luxon';
-import { Vector2, Vector3, Rotation } from '../math';
+import { Vector2, Vector3, Rotation, Quaternion } from '../math';
 import {
     allDataTypeCases,
     customDataTypeCases,
@@ -9211,6 +9214,207 @@ describe('AuxRuntime', () => {
                 expect(bot.values.abc).toEqual('a123456');
                 expect(runtime.getValue(bot, 'abc')).toEqual('a123456');
             });
+        });
+
+        describe('getTagMask()', () => {
+            it('should get the tag mask value from the bot', async () => {
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    })
+                );
+
+                runtime.stateUpdated(
+                    stateUpdatedEvent({
+                        test: {
+                            masks: {
+                                [TEMPORARY_BOT_PARTITION_ID]: {
+                                    test: 123,
+                                },
+                            },
+                        },
+                    })
+                );
+
+                const bot = runtime.currentState['test'];
+                const value = runtime.getTagMask(bot, 'test');
+
+                expect(value).toBe(123);
+            });
+
+            const noConvertValueCases = [
+                ['string', 'abc'] as const,
+                ['string as number', '123'] as const,
+                ['string as true', 'true'] as const,
+                ['string as false', 'false'] as const,
+                ['string as true', 'true'] as const,
+                ['number', 123] as const,
+                ['boolean', 456] as const,
+                ['object', { hello: 123 }] as const,
+                ['array', [123, 'hello']] as const,
+                ['undefined', undefined as any] as const,
+            ];
+
+            it.each(noConvertValueCases)(
+                'should not convert %s',
+                (desc, value) => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    [TEMPORARY_BOT_PARTITION_ID]: {
+                                        test: value,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    const bot = runtime.currentState['test'];
+                    const result = runtime.getTagMask(bot, 'test');
+
+                    expect(result).toBe(value);
+                }
+            );
+
+            const convertCases = [
+                [
+                    'string as tagged string',
+                    `${STRING_TAG_PREFIX}abc`,
+                    'abc',
+                ] as const,
+                [
+                    'string as tagged number',
+                    `${NUMBER_TAG_PREFIX}123`,
+                    123,
+                ] as const,
+                [
+                    'string as DNA true tag',
+                    `${DNA_TAG_PREFIX}true`,
+                    true,
+                ] as const,
+                [
+                    'string as DNA false tag',
+                    `${DNA_TAG_PREFIX}false`,
+                    false,
+                ] as const,
+                [
+                    'string as DNA number tag',
+                    `${DNA_TAG_PREFIX}123`,
+                    123,
+                ] as const,
+                [
+                    'string as DNA object tag',
+                    `${DNA_TAG_PREFIX}{ "hello": true }`,
+                    { hello: true },
+                ] as const,
+                [
+                    'string as DNA array tag',
+                    `${DNA_TAG_PREFIX}[123, "hello"]`,
+                    [123, 'hello'],
+                ] as const,
+                [
+                    'string as date tag',
+                    formatBotDate(DateTime.utc(2023, 2, 15, 2, 3, 4, 5)),
+                    DateTime.utc(2023, 2, 15, 2, 3, 4, 5),
+                ] as const,
+                [
+                    'string as Vector2 tag',
+                    formatBotVector(new Vector2(1, 2)),
+                    new Vector2(1, 2),
+                ] as const,
+                [
+                    'string as Vector3 tag',
+                    formatBotVector(new Vector3(1, 2, 3)),
+                    new Vector3(1, 2, 3),
+                ] as const,
+                [
+                    'string as Rotation tag',
+                    formatBotRotation(new Rotation(new Quaternion(1, 2, 3, 1))),
+                    new Rotation(new Quaternion(1, 2, 3, 1)),
+                ] as const,
+                ['null to undefined', null as any, undefined as any] as const,
+            ];
+
+            it.each(convertCases)(
+                'should convert %s',
+                (desc, given, expected) => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    [TEMPORARY_BOT_PARTITION_ID]: {
+                                        test: given,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    const bot = runtime.currentState['test'];
+                    const value1 = runtime.getTagMask(bot, 'test');
+                    const value2 = runtime.getTagMask(bot, 'test');
+
+                    expect(value1).toEqual(expected);
+                    expect(value1 === value2).toBe(true);
+                }
+            );
+
+            const invalidCases = [
+                ['JSON', `${DNA_TAG_PREFIX}{ "wrong": 123 `],
+                ['dates', `${DATE_TAG_PREFIX}wrong`],
+                ['numbers', `${NUMBER_TAG_PREFIX}not a number`],
+                ['vectors', `${VECTOR_TAG_PREFIX}not a vector`],
+                ['rotations', `${ROTATION_TAG_PREFIX}not a rotation`],
+            ];
+
+            it.each(invalidCases)(
+                'should properly handle invalid %s',
+                (desc, value) => {
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: createBot('test', {
+                                abc: 'def',
+                            }),
+                        })
+                    );
+
+                    runtime.stateUpdated(
+                        stateUpdatedEvent({
+                            test: {
+                                masks: {
+                                    [TEMPORARY_BOT_PARTITION_ID]: {
+                                        test: value,
+                                    },
+                                },
+                            },
+                        })
+                    );
+
+                    const bot = runtime.currentState['test'];
+                    const result = runtime.getTagMask(bot, 'test');
+
+                    expect(result).toEqual(value);
+                }
+            );
         });
 
         describe('getListener()', () => {

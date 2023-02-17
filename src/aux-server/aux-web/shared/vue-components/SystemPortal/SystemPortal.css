@@ -371,6 +371,7 @@
 
 .editor-code {
     flex: 1 1 auto;
+    position: relative;
 }
 
 .pin-tag-button {
