@@ -235,17 +235,20 @@ async function start() {
         });
 
         for (let key in response.headers) {
-            res.setHeader(key, response.headers[key]);
+            const value = response.headers[key];
+            if (hasValue(value)) {
+                res.setHeader(key, value);
+            }
         }
 
         res.status(response.statusCode);
 
         if (response.body) {
             res.send(response.body);
+        } else {
+            res.send();
         }
     }
-
-    app.use(express.json());
 
     app.use(express.static(dist));
 
@@ -301,13 +304,17 @@ async function start() {
                 return;
             }
 
-            res.setHeader('record-name', file.recordName);
-            res.setHeader('content-type', file.mimeType);
             if (file.body instanceof Binary) {
                 res.status(200).send(file.body.buffer);
             } else {
                 res.status(200).send(file.body);
             }
+        })
+    );
+
+    app.use(
+        express.text({
+            type: 'application/json',
         })
     );
 
@@ -328,6 +335,10 @@ async function start() {
 
     app.get('*', (req, res) => {
         res.sendFile(path.join(dist, 'index.html'));
+    });
+
+    app.all('*', (req, res) => {
+        res.sendStatus(404);
     });
 
     app.listen(2998, () => {
