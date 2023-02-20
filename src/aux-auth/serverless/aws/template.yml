@@ -250,12 +250,12 @@ Resources:
                 GetMetadata:
                     Type: Api
                     Properties:
-                        Path: /api/{token}/metadata
+                        Path: /api/{userId}/metadata
                         Method: GET
                 PutMetadata:
                     Type: Api
                     Properties:
-                        Path: /api/{token}/metadata
+                        Path: /api/{userId}/metadata
                         Method: PUT
                 KeepWarm:
                     Type: Schedule
