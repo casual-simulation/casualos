@@ -36,8 +36,12 @@ describe('AuxGlobalContext', () => {
     let factory: TestScriptBotFactory;
     let notifier: RuntimeBatcher;
     let processor: RuntimeInterpreterGeneratorProcessor;
+    let realDateNow: any;
+    let dateNowMock: jest.Mock<number>;
 
     beforeEach(() => {
+        realDateNow = Date.now;
+        dateNowMock = Date.now = jest.fn();
         factory = new TestScriptBotFactory();
         notifier = {
             notifyChange: jest.fn(),
@@ -46,6 +50,9 @@ describe('AuxGlobalContext', () => {
         processor = {
             processGenerator: jest.fn(),
         };
+
+        dateNowMock.mockReturnValue(123);
+
         context = new MemoryGlobalContext(
             {
                 hash: 'hash',
@@ -66,6 +73,10 @@ describe('AuxGlobalContext', () => {
             notifier,
             processor
         );
+    });
+
+    afterEach(() => {
+        Date.now = realDateNow;
     });
 
     describe('addToContext()', () => {
@@ -1082,6 +1093,43 @@ describe('AuxGlobalContext', () => {
                 (processor.processGenerator as any).mock.calls[0][0] ===
                     generator
             ).toBe(true);
+        });
+    });
+
+    describe('startTime', () => {
+        let realPerfNow: any;
+
+        beforeEach(() => {
+            realPerfNow = performance.now;
+            const perfNowMock = (performance.now = jest.fn());
+            perfNowMock.mockReturnValue(NaN); // performance.now() should not be used because it is based on the time origin and not absolute time.
+        });
+
+        afterEach(() => {
+            performance.now = realPerfNow;
+        });
+
+        it('should return the time that the context was created', () => {
+            expect(context.startTime).toBe(123);
+        });
+    });
+
+    describe('localTime', () => {
+        let realPerfNow: any;
+
+        beforeEach(() => {
+            realPerfNow = performance.now;
+            const perfNowMock = (performance.now = jest.fn());
+            perfNowMock.mockReturnValue(NaN); // performance.now() should not be used because it is based on the time origin and not absolute time.
+        });
+
+        afterEach(() => {
+            performance.now = realPerfNow;
+        });
+
+        it('should return the number of miliseconds since the start time', () => {
+            dateNowMock.mockReturnValueOnce(555);
+            expect(context.localTime).toBe(555 - 123);
         });
     });
 });
