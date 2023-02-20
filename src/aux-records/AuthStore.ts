@@ -1,3 +1,4 @@
+import { RegexRule } from 'Utils';
 import { ServerError } from './Errors';
 
 /**
@@ -111,6 +112,16 @@ export interface AuthStore {
      * @param requestId The ID of the login request.
      */
     setCurrentLoginRequest(userId: string, requestId: string): Promise<void>;
+
+    /**
+     * Gets the list of email rules.
+     */
+    listEmailRules(): Promise<RegexRule[]>;
+
+    /**
+     * Gets the list of SMS rules.
+     */
+    listSmsRules(): Promise<RegexRule[]>;
 }
 
 export type AddressType = 'email' | 'phone';

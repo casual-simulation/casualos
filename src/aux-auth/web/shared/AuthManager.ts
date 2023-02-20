@@ -446,12 +446,14 @@ export class AuthManager {
     }
 
     private async _putAppMetadata(metadata: AppMetadata): Promise<AppMetadata> {
-        // TODO:
         const response = await axios.put(
             `${this.apiEndpoint}/api/${encodeURIComponent(
-                this.savedSessionKey
+                this.userId
             )}/metadata`,
-            metadata
+            metadata,
+            {
+                headers: this._authenticationHeaders(),
+            }
         );
         return response.data;
     }

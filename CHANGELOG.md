@@ -4,6 +4,11 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Improved the records system to authenticate and authorize requests much more quickly than before.
+    -   In order to take advantage of the improvements, you may need to request a new record key.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where the multi-line editor could get stuck in an infinite loop while trying to resize itself to fit on the screen.

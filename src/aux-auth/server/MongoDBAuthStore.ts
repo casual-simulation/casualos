@@ -1,3 +1,4 @@
+import { RegexRule } from '@casual-simulation/aux-records';
 import {
     AddressType,
     AuthLoginRequest,
@@ -13,15 +14,39 @@ export class MongoDBAuthStore implements AuthStore {
     private _users: Collection<MongoDBAuthUser>;
     private _loginRequests: Collection<MongoDBLoginRequest>;
     private _sessions: Collection<MongoDBAuthSession>;
+    private _emailRules: Collection<MongoDBEmailRule>;
+    private _smsRules: Collection<MongoDBSmsRule>;
 
     constructor(
         users: Collection<MongoDBAuthUser>,
         loginRequests: Collection<MongoDBLoginRequest>,
-        sessions: Collection<MongoDBAuthSession>
+        sessions: Collection<MongoDBAuthSession>,
+        emailRules: Collection<MongoDBEmailRule>,
+        smsRules: Collection<MongoDBSmsRule>
     ) {
         this._users = users;
         this._loginRequests = loginRequests;
         this._sessions = sessions;
+        this._emailRules = emailRules;
+        this._smsRules = smsRules;
+    }
+
+    async listEmailRules(): Promise<RegexRule[]> {
+        const result = await this._emailRules.find().toArray();
+
+        return result.map((r) => ({
+            type: r.type,
+            pattern: r.pattern,
+        }));
+    }
+
+    async listSmsRules(): Promise<RegexRule[]> {
+        const result = await this._smsRules.find().toArray();
+
+        return result.map((r) => ({
+            type: r.type,
+            pattern: r.pattern,
+        }));
     }
 
     async findUser(userId: string): Promise<AuthUser> {
@@ -394,4 +419,24 @@ export interface MongoDBAuthSession {
      * The IP Address that the session was granted to.
      */
     ipAddress: string;
+}
+
+/**
+ * Defines an interface that represents an email rule stored in MongoDB.
+ */
+export interface MongoDBEmailRule extends RegexRule {
+    /**
+     * The ID of the rule.
+     */
+    _id: string;
+}
+
+/**
+ * Defines an interface that represents an sms rule stored in MongoDB.
+ */
+export interface MongoDBSmsRule extends RegexRule {
+    /**
+     * The ID of the rule.
+     */
+    _id: string;
 }
