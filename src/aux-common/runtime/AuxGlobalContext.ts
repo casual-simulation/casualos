@@ -656,7 +656,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     forceUnguessableTaskIds: boolean = false;
 
     get localTime() {
-        return performance.now() - this._startTime;
+        return Date.now() - this._startTime;
     }
 
     get startTime() {
@@ -707,7 +707,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         this._botWatcherMap = new Map();
         this._portalWatcherMap = new Map();
         this._mocks = new Map();
-        this._startTime = performance.now();
+        this._startTime = Date.now();
         this.pseudoRandomNumberGenerator = null;
     }
 

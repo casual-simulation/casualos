@@ -217,6 +217,7 @@ Resources:
             Principal: apigateway.amazonaws.com
     HandleConnectLogGroup:
         Type: AWS::Logs::LogGroup
+        DeletionPolicy: Delete
         Properties:
             LogGroupName: !Sub '/aws/lambda/${HandleConnectFunction}'
             RetentionInDays: 14
@@ -253,6 +254,7 @@ Resources:
             Principal: apigateway.amazonaws.com
     HandleDisconnectLogGroup:
         Type: AWS::Logs::LogGroup
+        DeletionPolicy: Delete
         Properties:
             LogGroupName: !Sub '/aws/lambda/${HandleDisconnectFunction}'
             RetentionInDays: 14
@@ -289,6 +291,7 @@ Resources:
             Principal: apigateway.amazonaws.com
     HandleMessageLogGroup:
         Type: AWS::Logs::LogGroup
+        DeletionPolicy: Delete
         Properties:
             LogGroupName: !Sub '/aws/lambda/${HandleMessageFunction}'
             RetentionInDays: 14
@@ -323,6 +326,7 @@ Resources:
                         Method: ANY
     HandleWebhooksLogGroup:
         Type: AWS::Logs::LogGroup
+        DeletionPolicy: Delete
         Properties:
             LogGroupName: !Sub '/aws/lambda/${HandleWebhooksFunction}'
             RetentionInDays: 14
@@ -357,6 +361,7 @@ Resources:
                         Method: GET
     HandleInstDataLogGroup:
         Type: AWS::Logs::LogGroup
+        DeletionPolicy: Delete
         Properties:
             LogGroupName: !Sub '/aws/lambda/${HandleInstDataFunction}'
             RetentionInDays: 14
