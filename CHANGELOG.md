@@ -25,6 +25,7 @@
         -   Rotations: `🔁`
 -   Fixed an issue where JSX syntax highlighting would fail if the script contained a return statement.
 -   Fixed an issue where empty `{}` expressions in JSX would cause compilation to fail.
+-   Fixed an issue where using `animateTag()` with a custom start time wouldn't work.
 
 ## V3.1.22
 
