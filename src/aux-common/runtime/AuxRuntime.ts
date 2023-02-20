@@ -2716,11 +2716,11 @@ export class AuxRuntime
         };
     }
 
-    getTagMask(bot: CompiledBot, tag: string): RealtimeEditMode {
+    getTagMask(bot: CompiledBot, tag: string): any {
         for (let space of TAG_MASK_SPACE_PRIORITIES) {
             const tagValue = bot.masks?.[space]?.[tag];
             if (hasValue(tagValue)) {
-                return tagValue;
+                return this._compileTagMaskValue(bot, tag, space, tagValue);
             }
         }
 
@@ -2904,6 +2904,61 @@ export class AuxRuntime
         }
 
         return { value, listener };
+    }
+
+    private _compileTagMaskValue(
+        bot: CompiledBot,
+        tag: string,
+        space: BotSpace,
+        value: any
+    ): any {
+        let changedValue = false;
+        let newValue = value;
+        if (isFormula(value)) {
+            const parsed = value.substring(DNA_TAG_PREFIX.length);
+            const transformed = replaceMacros(parsed);
+            try {
+                newValue = JSON.parse(transformed);
+                changedValue = true;
+            } catch (ex) {
+                newValue = ex;
+            }
+        }
+        if (isTaggedString(value)) {
+            newValue = parseTaggedString(value);
+            changedValue = true;
+        } else if (isTaggedNumber(value)) {
+            const parsed = parseTaggedNumber(value);
+            if (isNumber(parsed)) {
+                newValue = parseNumber(parsed);
+                changedValue = true;
+            }
+        } else if (isBotDate(value)) {
+            const result = parseBotDate(value);
+            if (result) {
+                newValue = result;
+                changedValue = true;
+            }
+        } else if (isBotVector(value)) {
+            const result = parseBotVector(value);
+            if (result) {
+                newValue = result;
+                changedValue = true;
+            }
+        } else if (isBotRotation(value)) {
+            const result = parseBotRotation(value);
+            if (result) {
+                newValue = result;
+                changedValue = true;
+            }
+        }
+
+        if (changedValue) {
+            bot.masks[space][tag] = newValue;
+            return newValue;
+        } else {
+            return value;
+        }
     }
 
     private _compile(

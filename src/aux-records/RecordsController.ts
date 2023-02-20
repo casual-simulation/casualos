@@ -2,6 +2,7 @@ import { PublicRecordKeyPolicy, RecordsStore } from './RecordsStore';
 import { toBase64String, fromBase64String } from './Utils';
 import {
     createRandomPassword,
+    hashHighEntropyPasswordWithSalt,
     hashPasswordWithSalt,
     verifyPasswordAgainstHashes,
 } from '@casual-simulation/crypto';
@@ -73,7 +74,10 @@ export class RecordsController {
                 const passwordBytes = randomBytes(16);
                 const password = fromByteArray(passwordBytes); // convert to human-readable string
                 const salt = record.secretSalt;
-                const passwordHash = hashPasswordWithSalt(password, salt);
+                const passwordHash = hashHighEntropyPasswordWithSalt(
+                    password,
+                    salt
+                );
 
                 await this._store.addRecordKey({
                     recordName: name,
@@ -91,7 +95,10 @@ export class RecordsController {
                 const passwordBytes = randomBytes(16);
                 const password = fromByteArray(passwordBytes); // convert to human-readable string
                 const salt = fromByteArray(randomBytes(16));
-                const passwordHash = hashPasswordWithSalt(password, salt);
+                const passwordHash = hashHighEntropyPasswordWithSalt(
+                    password,
+                    salt
+                );
 
                 await this._store.addRecord({
                     name,
@@ -155,20 +162,44 @@ export class RecordsController {
                 };
             }
 
-            const hash = hashPasswordWithSalt(password, record.secretSalt);
+            // Check v2 hashes first because they are much quicker to check
+            const hashV2 = hashHighEntropyPasswordWithSalt(
+                password,
+                record.secretSalt
+            );
 
             let valid = false;
             let resultPolicy: PublicRecordKeyPolicy = DEFAULT_RECORD_KEY_POLICY;
-            if (record.secretHashes.some((h) => h === hash)) {
+            if (record.secretHashes.some((h) => h === hashV2)) {
                 valid = true;
             } else {
                 const key = await this._store.getRecordKeyByRecordAndHash(
                     name,
-                    hash
+                    hashV2
                 );
                 if (!!key) {
                     resultPolicy = key.policy;
                     valid = true;
+                } else {
+                    // Check v1 hashes
+                    const hash = hashPasswordWithSalt(
+                        password,
+                        record.secretSalt
+                    );
+
+                    if (record.secretHashes.some((h) => h === hash)) {
+                        valid = true;
+                    } else {
+                        const key =
+                            await this._store.getRecordKeyByRecordAndHash(
+                                name,
+                                hash
+                            );
+                        if (!!key) {
+                            resultPolicy = key.policy;
+                            valid = true;
+                        }
+                    }
                 }
             }
 

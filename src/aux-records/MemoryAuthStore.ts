@@ -1,4 +1,5 @@
 import { sortBy } from 'lodash';
+import { RegexRule } from './Utils';
 import {
     AddressType,
     AuthLoginRequest,
@@ -14,6 +15,9 @@ export class MemoryAuthStore implements AuthStore {
     private _loginRequests: AuthLoginRequest[] = [];
     private _sessions: AuthSession[] = [];
 
+    private _emailRules: RegexRule[] = [];
+    private _smsRules: RegexRule[] = [];
+
     get users(): AuthUser[] {
         return this._users;
     }
@@ -24,6 +28,14 @@ export class MemoryAuthStore implements AuthStore {
 
     get sessions() {
         return this._sessions;
+    }
+
+    get emailRules() {
+        return this._emailRules;
+    }
+
+    get smsRules() {
+        return this._smsRules;
     }
 
     async saveUser(user: AuthUser): Promise<void> {
@@ -191,6 +203,14 @@ export class MemoryAuthStore implements AuthStore {
             success: true,
             sessions: orderedSessions.slice(0, 10),
         };
+    }
+
+    async listEmailRules(): Promise<RegexRule[]> {
+        return this._emailRules.slice();
+    }
+
+    async listSmsRules(): Promise<RegexRule[]> {
+        return this._smsRules.slice();
     }
 
     private _findUserIndex(id: string): number {

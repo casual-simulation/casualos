@@ -1,4 +1,4 @@
-import { sha256 } from 'hash.js';
+import { hmac, sha256 } from 'hash.js';
 import stringify from 'fast-json-stable-stringify';
 import scrypt from 'scrypt-async';
 import { randomBytes } from 'tweetnacl';
@@ -98,6 +98,8 @@ export function verifyPassword(password: string, hash: string): boolean {
 
 /**
  * Hashes the given password using the given salt and returns the resulting base64 encoded hash.
+ *
+ * Returns a V1 hash that indicates that scrypt was used for the hashing process.
  * @param password The password to hash.
  * @param salt The salt to use for the password. Must be a base64 encoded string.
  */
@@ -116,6 +118,36 @@ export function hashPasswordWithSalt(password: string, salt: string): string {
     const hashBytes = deriveKey(passwordBytes, saltBytes);
 
     return `vH1.${fromByteArray(hashBytes.hash)}`;
+}
+
+/**
+ * Hashes the given password with the given salt using HMAC-SHA-256 and returns the resulting base64 encoded hash.
+ * This function is designed for high-entropy passwords (at least 128 bits of unguessable information) and is not designed
+ * for regular passwords. Use hashPasswordWithSalt() for regular low-entropy passwords.
+ *
+ * Returns a V2 hash that indicates that HMAC-SHA-256 was used for the hashing process.
+ * @param password The password that should be hashed.
+ * @param salt The salt to use for the password. Must be a base64 encoded string.
+ */
+export function hashHighEntropyPasswordWithSalt(
+    password: string,
+    salt: string
+): string {
+    if (!password) {
+        throw new Error('Invalid password. Must not be null or undefined.');
+    }
+    if (!salt) {
+        throw new Error('Invalid salt. Must not be null or undefined.');
+    }
+
+    const textEncoder = new TextEncoder();
+    const passwordBytes = textEncoder.encode(password);
+    const saltBytes = toByteArray(salt);
+
+    const h = hmac(<any>sha256, saltBytes);
+    h.update(passwordBytes);
+    const hashBytes = new Uint8Array(h.digest());
+    return `vH2.${fromByteArray(hashBytes)}`;
 }
 
 /**
@@ -138,23 +170,54 @@ export function verifyPasswordAgainstHashes(
     if (!hashes) {
         throw new Error('Invalid hashes. Must not be null or undefined.');
     }
-    hashes = hashes.filter((h) => h.startsWith('vH1.'));
-    if (hashes.length <= 0) {
+
+    let version1Hashes = [] as string[];
+    let version2Hashes = [] as string[];
+
+    for (let hash of hashes) {
+        if (hash.startsWith('vH1.')) {
+            version1Hashes.push(hash);
+        } else if (hash.startsWith('vH2.')) {
+            version2Hashes.push(hash);
+        }
+    }
+
+    if (version1Hashes.length <= 0 && version2Hashes.length <= 0) {
         throw new Error(
             'Invalid hashes. Must contain at least one valid hash.'
         );
     }
+
     const textEncoder = new TextEncoder();
     const passwordBytes = textEncoder.encode(password);
     const saltBytes = toByteArray(salt);
-    const passwordHash = deriveKey(passwordBytes, saltBytes);
-    const passwordHashBase64 = fromByteArray(passwordHash.hash);
 
-    for (const hash of hashes) {
-        const withoutVersion = hash.slice('vH1.'.length);
+    if (version2Hashes.length > 0) {
+        // Check version 2 hashes first since they are faster to compute.
+        const h = hmac(<any>sha256, saltBytes);
+        h.update(passwordBytes);
+        const hashBytes = new Uint8Array(h.digest());
+        const hashBase64 = fromByteArray(hashBytes);
 
-        if (withoutVersion === passwordHashBase64) {
-            return true;
+        for (const hash of version2Hashes) {
+            const withoutVersion = hash.slice('vH2.'.length);
+
+            if (withoutVersion === hashBase64) {
+                return true;
+            }
+        }
+    }
+
+    if (version1Hashes.length > 0) {
+        const passwordHash = deriveKey(passwordBytes, saltBytes);
+        const passwordHashBase64 = fromByteArray(passwordHash.hash);
+
+        for (const hash of version1Hashes) {
+            const withoutVersion = hash.slice('vH1.'.length);
+
+            if (withoutVersion === passwordHashBase64) {
+                return true;
+            }
         }
     }
 

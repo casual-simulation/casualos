@@ -1,5 +1,5 @@
 import { fromByteArray, toByteArray } from 'base64-js';
-import _, { padStart, sortBy, StringChain } from 'lodash';
+import _, { omitBy, padStart, sortBy, StringChain } from 'lodash';
 import { sha256, hmac } from 'hash.js';
 
 /**
@@ -330,6 +330,8 @@ export function getStatusCode(
             return 404;
         } else if (response.errorCode === 'session_not_found') {
             return 404;
+        } else if (response.errorCode === 'operation_not_found') {
+            return 404;
         } else if (response.errorCode === 'session_already_revoked') {
             return 200;
         } else if (response.errorCode === 'invalid_code') {
@@ -337,6 +339,8 @@ export function getStatusCode(
         } else if (response.errorCode === 'invalid_key') {
             return 403;
         } else if (response.errorCode === 'invalid_request') {
+            return 403;
+        } else if (response.errorCode === 'invalid_origin') {
             return 403;
         } else if (response.errorCode === 'session_expired') {
             return 401;
@@ -358,6 +362,8 @@ export function getStatusCode(
             return 400;
         } else if (response.errorCode === 'unacceptable_expire_time') {
             return 400;
+        } else if (response.errorCode === 'unacceptable_request') {
+            return 400;
         } else if (response.errorCode === 'address_type_not_supported') {
             return 501;
         } else if (response.errorCode === 'server_error') {
@@ -370,4 +376,83 @@ export function getStatusCode(
     }
 
     return 200;
+}
+
+/**
+ * Clones the given object into a new object that only has non-null and not-undefined properties.
+ * @param obj The object to cleanup.
+ */
+export function cleanupObject<T extends Object>(obj: T): Partial<T> {
+    return omitBy(
+        obj,
+        (o) => typeof o === 'undefined' || o === null
+    ) as Partial<T>;
+}
+
+/**
+ * Tries to parse the given JSON string into a JavaScript Value.
+ * @param json The JSON to parse.
+ */
+export function tryParseJson(json: string): JsonParseResult {
+    try {
+        return {
+            success: true,
+            value: JSON.parse(json),
+        };
+    } catch (err) {
+        return {
+            success: false,
+            error: err,
+        };
+    }
+}
+
+export type JsonParseResult = JsonParseSuccess | JsonParseFailure;
+
+export interface JsonParseSuccess {
+    success: true;
+    value: any;
+}
+
+export interface JsonParseFailure {
+    success: false;
+    error: Error;
+}
+
+export interface RegexRule {
+    type: 'allow' | 'deny';
+    pattern: string;
+}
+
+/**
+ * Determines if the given value matches the given list of rules.
+ * @param value The value to test.
+ * @param rules The rules that the value should be tested against.
+ */
+export function isStringValid(value: string, rules: RegexRule[]) {
+    if (rules.length <= 0) {
+        return true;
+    }
+
+    const regexRules = rules.map((r) => ({
+        type: r.type,
+        pattern: new RegExp(r.pattern, 'i'),
+    }));
+
+    let good = false;
+    for (let rule of regexRules) {
+        if (rule.type === 'allow') {
+            if (rule.pattern.test(value)) {
+                good = true;
+                break;
+            }
+        } else if (rule.type === 'deny') {
+            if (rule.pattern.test(value)) {
+                good = false;
+                break;
+            }
+        }
+    }
+
+    return good;
 }

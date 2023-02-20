@@ -3,6 +3,7 @@ import {
     AddFileFailure,
     MarkFileRecordAsUploadedFailure,
     EraseFileStoreResult,
+    GetFileNameFromUrlResult,
 } from './FileRecordsStore';
 import { NotLoggedInError, ServerError } from './Errors';
 import {
@@ -41,7 +42,8 @@ export class FileRecordsController {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
-                    errorMessage: 'The user must be logged in in order to record files.',
+                    errorMessage:
+                        'The user must be logged in in order to record files.',
                 };
             }
 
@@ -129,10 +131,14 @@ export class FileRecordsController {
                 uploadMethod: presignResult.uploadMethod,
             };
         } catch (err) {
+            console.error(
+                '[FileRecordsController] An error occurred while recording a file:',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }
@@ -161,7 +167,8 @@ export class FileRecordsController {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
-                    errorMessage: 'The user must be logged in in order to erase files.',
+                    errorMessage:
+                        'The user must be logged in in order to erase files.',
                 };
             }
 
@@ -187,10 +194,14 @@ export class FileRecordsController {
                 fileName,
             };
         } catch (err) {
+            console.error(
+                '[FileRecordsController] An error occurred while erasing a file:',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }
@@ -213,12 +224,38 @@ export class FileRecordsController {
                 success: true,
             };
         } catch (err) {
+            console.error(
+                '[FileRecordsController] An error occurred while marking a file as uploaded:',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    async getFileNameFromUrl(
+        fileUrl: string
+    ): Promise<GetFileNameFromUrlResult> {
+        try {
+            return await this._store.getFileNameFromUrl(fileUrl);
+        } catch (err) {
+            console.error(
+                '[FileRecordsController] An error occurred while getting a file name:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    getAllowedUploadHeaders() {
+        return this._store.getAllowedUploadHeaders();
     }
 }
 

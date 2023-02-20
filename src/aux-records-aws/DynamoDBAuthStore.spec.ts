@@ -13,6 +13,7 @@ describe('DynamoDBAuthStore', () => {
         query: jest.fn(),
         update: jest.fn(),
         transactWrite: jest.fn(),
+        scan: jest.fn(),
     };
     let store: DynamoDBAuthStore;
 
@@ -24,6 +25,7 @@ describe('DynamoDBAuthStore', () => {
             query: jest.fn(),
             update: jest.fn(),
             transactWrite: jest.fn(),
+            scan: jest.fn(),
         };
         store = new DynamoDBAuthStore(
             dynamodb as any,
@@ -31,7 +33,9 @@ describe('DynamoDBAuthStore', () => {
             'user-addresses-table',
             'login-requests-table',
             'sessions-table',
-            'expire-time-index'
+            'expire-time-index',
+            'email-rules-table',
+            'sms-rules-table'
         );
 
         dynamodb.get.mockReturnValue(
@@ -1009,6 +1013,62 @@ describe('DynamoDBAuthStore', () => {
                 ExpressionAttributeValues: {
                     ':allSessionRevokeTimeMs': 999,
                 },
+            });
+        });
+    });
+
+    describe('listEmailRules()', () => {
+        it('should scan the email rules table', async () => {
+            dynamodb.scan.mockReturnValueOnce(
+                awsResult({
+                    Items: [
+                        {
+                            type: 'allow',
+                            pattern: 'cool',
+                        },
+                    ],
+                })
+            );
+
+            const result = await store.listEmailRules();
+
+            expect(result).toEqual([
+                {
+                    type: 'allow',
+                    pattern: 'cool',
+                },
+            ]);
+
+            expect(dynamodb.scan).toHaveBeenCalledWith({
+                TableName: 'email-rules-table',
+            });
+        });
+    });
+
+    describe('listSmsRules()', () => {
+        it('should scan the sms rules rules table', async () => {
+            dynamodb.scan.mockReturnValueOnce(
+                awsResult({
+                    Items: [
+                        {
+                            type: 'allow',
+                            pattern: 'cool',
+                        },
+                    ],
+                })
+            );
+
+            const result = await store.listSmsRules();
+
+            expect(result).toEqual([
+                {
+                    type: 'allow',
+                    pattern: 'cool',
+                },
+            ]);
+
+            expect(dynamodb.scan).toHaveBeenCalledWith({
+                TableName: 'sms-rules-table',
             });
         });
     });

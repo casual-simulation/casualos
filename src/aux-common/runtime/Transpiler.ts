@@ -277,6 +277,8 @@ export class Transpiler {
                     this._replaceJSXExpressionContainer(n, doc, text);
                 } else if (n.type === 'JSXFragment') {
                     this._replaceJSXFragment(n, doc, text);
+                } else if (n.type === 'JSXEmptyExpression') {
+                    this._replaceJSXEmptyExpression(n, doc, text);
                 } else if (
                     this._forceSync &&
                     n.type === 'FunctionDeclaration' &&
@@ -311,6 +313,7 @@ export class Transpiler {
                 JSXClosingElement: [],
                 JSXText: [],
                 JSXExpressionContainer: ['expression'],
+                JSXEmptyExpression: [],
             },
         });
     }
@@ -369,6 +372,40 @@ export class Transpiler {
             doc,
             text
         );
+    }
+
+    private _replaceJSXEmptyExpression(node: any, doc: Doc, text: Text): any {
+        const version = { '0': getClock(doc, 0) };
+
+        // Position for the opening "{"
+        const valueStartBegin = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.start,
+            undefined,
+            true
+        );
+
+        // Position for the closing "}"
+        const valueEndEnd = createRelativePositionFromStateVector(
+            text,
+            version,
+            node.end + 1,
+            -1,
+            true
+        );
+
+        // Delete the expression
+        const absoluteValueStartBegin =
+            createAbsolutePositionFromRelativePosition(valueStartBegin, doc);
+        const absoluteValueEndEnd = createAbsolutePositionFromRelativePosition(
+            valueEndEnd,
+            doc
+        );
+        const length =
+            absoluteValueEndEnd.index - absoluteValueStartBegin.index;
+        text.delete(absoluteValueStartBegin.index, length);
+        text.insert(absoluteValueEndEnd.index, "''");
     }
 
     private _insertJSXFactoryCall(
