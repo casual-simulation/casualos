@@ -8,6 +8,7 @@
 
 -   Improved the records system to authenticate and authorize requests much more quickly than before.
     -   In order to take advantage of the improvements, you may need to request a new record key.
+-   Updated the multi-line code editor to color-code parenthesis, curly braces, and square brackets so it is easier to tell which pairs go together.
 
 ### :bug: Bug Fixes
 
@@ -26,6 +27,7 @@
 -   Fixed an issue where JSX syntax highlighting would fail if the script contained a return statement.
 -   Fixed an issue where empty `{}` expressions in JSX would cause compilation to fail.
 -   Fixed an issue where using `animateTag()` with a custom start time wouldn't work.
+-   Fixed an issue where autocomplete would not work on instances with a large number of listeners.
 
 ## V3.1.22
 
