@@ -61,7 +61,7 @@
         "@casual-simulation/engine262": "0.0.1-4de2170374e22761996e46eb1362f4496ee57f8f",
         "@casual-simulation/fast-json-stable-stringify": "^3.1.11",
         "@casual-simulation/js-interpreter": "^3.1.19",
-        "@casual-simulation/monaco-editor": "0.34.3",
+        "@casual-simulation/monaco-editor": "0.35.3",
         "@casual-simulation/multi-streams-mixer": "^3.1.18",
         "@casual-simulation/three": "^0.140.3",
         "@casual-simulation/tunnel": "^3.1.11",
