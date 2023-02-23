@@ -195,8 +195,8 @@ describe('RecordsHttpServer', () => {
         recordKey = recordKeyResult.recordKey;
     });
 
-    describe('GET /api/{token}/metadata', () => {
-        it('should return the metadata for the given token', async () => {
+    describe('GET /api/{userId}/metadata', () => {
+        it('should return the metadata for the given userId', async () => {
             const result = await server.handleRequest(
                 httpGet(
                     `/api/{userId:${userId}}/metadata`,
@@ -211,6 +211,93 @@ describe('RecordsHttpServer', () => {
                     email: 'test@example.com',
                     phoneNumber: null,
                 }),
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should be able to decode URI components for the userId', async () => {
+            const userId =
+                'did:ethr:0xA31b9288725d2B99137f4af10CaFdaA67B80C769';
+            await authStore.saveNewUser({
+                id: userId,
+                email: 'other@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+            let requestResult = await authController.requestLogin({
+                address: 'other@example.com',
+                addressType: 'email',
+                ipAddress: '123.456.789',
+            });
+
+            if (!requestResult.success) {
+                throw new Error('Unable to request a login!');
+            }
+
+            const message = authMessenger.messages.find(
+                (m) => m.address === 'other@example.com'
+            );
+
+            if (!message) {
+                throw new Error('Message not found!');
+            }
+
+            const loginResult = await authController.completeLogin({
+                code: message.code,
+                ipAddress: '123.456.789',
+                requestId: requestResult.requestId,
+                userId: requestResult.userId,
+            });
+
+            if (!loginResult.success) {
+                throw new Error('Unable to login!');
+            }
+
+            sessionKey = loginResult.sessionKey;
+
+            apiHeaders['authorization'] = authenticatedHeaders[
+                'authorization'
+            ] = `Bearer ${sessionKey}`;
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/{userId:${encodeURIComponent(userId)}}/metadata`,
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: true,
+                    email: 'other@example.com',
+                    phoneNumber: null,
+                }),
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 400 status code if given an invalid encoded user ID', async () => {
+            const result = await server.handleRequest({
+                method: 'GET',
+                body: null,
+                headers: authenticatedHeaders,
+                pathParams: {
+                    userId: 'invali%d',
+                },
+                path: '/api/invali%d/metadata',
+                ipAddress: '123.456.789',
+                query: {},
+            });
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_user_id',
+                    errorMessage: expect.any(String),
+                },
                 headers: accountCorsHeaders,
             });
         });
@@ -324,6 +411,97 @@ describe('RecordsHttpServer', () => {
                     success: true,
                     userId,
                 }),
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should be able to decode URI components for the userId', async () => {
+            const userId =
+                'did:ethr:0xA31b9288725d2B99137f4af10CaFdaA67B80C769';
+            await authStore.saveNewUser({
+                id: userId,
+                email: 'other@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+            let requestResult = await authController.requestLogin({
+                address: 'other@example.com',
+                addressType: 'email',
+                ipAddress: '123.456.789',
+            });
+
+            if (!requestResult.success) {
+                throw new Error('Unable to request a login!');
+            }
+
+            const message = authMessenger.messages.find(
+                (m) => m.address === 'other@example.com'
+            );
+
+            if (!message) {
+                throw new Error('Message not found!');
+            }
+
+            const loginResult = await authController.completeLogin({
+                code: message.code,
+                ipAddress: '123.456.789',
+                requestId: requestResult.requestId,
+                userId: requestResult.userId,
+            });
+
+            if (!loginResult.success) {
+                throw new Error('Unable to login!');
+            }
+
+            sessionKey = loginResult.sessionKey;
+
+            apiHeaders['authorization'] = authenticatedHeaders[
+                'authorization'
+            ] = `Bearer ${sessionKey}`;
+
+            const result = await server.handleRequest(
+                httpPut(
+                    `/api/{userId:${encodeURIComponent(userId)}}/metadata`,
+                    JSON.stringify({
+                        name: 'Kal',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: true,
+                    userId,
+                }),
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 400 status code if given an invalid encoded user ID', async () => {
+            const result = await server.handleRequest({
+                method: 'PUT',
+                body: JSON.stringify({
+                    name: 'Kal',
+                }),
+                headers: authenticatedHeaders,
+                pathParams: {
+                    userId: 'invali%d',
+                },
+                path: '/api/invali%d/metadata',
+                ipAddress: '123.456.789',
+                query: {},
+            });
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_user_id',
+                    errorMessage: expect.any(String),
+                },
                 headers: accountCorsHeaders,
             });
         });

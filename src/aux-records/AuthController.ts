@@ -896,6 +896,9 @@ export class AuthController {
             if (keyResult.success === false) {
                 return keyResult;
             } else if (keyResult.userId !== request.userId) {
+                console.log(
+                    '[AuthController] [getUserInfo] Request User ID doesnt match session key User ID!'
+                );
                 return {
                     success: false,
                     errorCode: 'invalid_key',
@@ -975,6 +978,9 @@ export class AuthController {
             if (keyResult.success === false) {
                 return keyResult;
             } else if (keyResult.userId !== request.userId) {
+                console.log(
+                    '[AuthController] [updateUserInfo] Request User ID doesnt match session key User ID!'
+                );
                 return {
                     success: false,
                     errorCode: 'invalid_key',
