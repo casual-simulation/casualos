@@ -1,5 +1,34 @@
 # CasualOS Changelog
 
+## V3.1.23
+
+#### Date: 2/23/2023
+
+### :rocket: Improvements
+
+-   Improved the records system to authenticate and authorize requests much more quickly than before.
+    -   In order to take advantage of the improvements, you may need to request a new record key.
+-   Updated the multi-line code editor to color-code parenthesis, curly braces, and square brackets so it is easier to tell which pairs go together.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the multi-line editor could get stuck in an infinite loop while trying to resize itself to fit on the screen.
+-   Fixed an issue where tag masks would return the serialized version of a value instead of the computed version of the value.
+    -   Tag masks are designed to work a little differently from regular tags since it is much more common for tag mask values to be set programmatically instead of entered by hand.
+    -   This means that tag masks are designed to preserve the saved type as much as possible, unless it is clear that the value should be converted to a native type.
+    -   As a result, only marked values are converted from their string value into a native value.
+    -   For example, the string `"123"` will remain `"123"`, but the string `"🔢123"` will be converted to the number `123`. The same goes for other values like `"true"` and `"false"`.
+    -   Possible marks are:
+        -   Numbers: `🔢`
+        -   Mods: `🧬`
+        -   Dates: `📅`
+        -   Vectors: `➡️`
+        -   Rotations: `🔁`
+-   Fixed an issue where JSX syntax highlighting would fail if the script contained a return statement.
+-   Fixed an issue where empty `{}` expressions in JSX would cause compilation to fail.
+-   Fixed an issue where using `animateTag()` with a custom start time wouldn't work.
+-   Fixed an issue where autocomplete would not work on instances with a large number of listeners.
+
 ## V3.1.22
 
 #### Date: 2/15/2023

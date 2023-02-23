@@ -14,3 +14,4 @@ export * from './EventRecordsStore';
 export * from './MemoryEventRecordsStore';
 
 export * from './LivekitEvents';
+export * from './RecordsHttpServer';

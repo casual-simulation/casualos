@@ -7,6 +7,7 @@ import {
     ListSessionsDataResult,
     SaveNewUserResult,
 } from '@casual-simulation/aux-records/AuthStore';
+import { RegexRule } from '@casual-simulation/aux-records/Utils';
 import dynamodb from 'aws-sdk/clients/dynamodb';
 import { omitBy } from 'lodash';
 
@@ -17,6 +18,8 @@ export class DynamoDBAuthStore implements AuthStore {
     private _loginRequestsTableName: string;
     private _sessionsTableName: string;
     private _sessionsTableExpireTimeIndexName: string;
+    private _emailRulesTableName: string;
+    private _smsRulesTableName: string;
 
     constructor(
         dynamo: dynamodb.DocumentClient,
@@ -24,7 +27,9 @@ export class DynamoDBAuthStore implements AuthStore {
         userAddressesTableName: string,
         loginRequestsTableName: string,
         sessionsTableName: string,
-        sessionsTableExpireTimeIndexName: string
+        sessionsTableExpireTimeIndexName: string,
+        emailRulesTableName: string,
+        smsRulesTableName: string
     ) {
         this._dynamo = dynamo;
         this._usersTableName = usersTableName;
@@ -33,6 +38,8 @@ export class DynamoDBAuthStore implements AuthStore {
         this._sessionsTableName = sessionsTableName;
         this._sessionsTableExpireTimeIndexName =
             sessionsTableExpireTimeIndexName;
+        this._emailRulesTableName = emailRulesTableName;
+        this._smsRulesTableName = smsRulesTableName;
     }
 
     async setRevokeAllSessionsTimeForUser(
@@ -465,6 +472,46 @@ export class DynamoDBAuthStore implements AuthStore {
                 return session;
             }),
         };
+    }
+
+    async listEmailRules(): Promise<RegexRule[]> {
+        const result = await this._dynamo
+            .scan({
+                TableName: this._emailRulesTableName,
+            })
+            .promise();
+
+        if (!result.Items) {
+            return [];
+        }
+
+        return result.Items.map(
+            (i) =>
+                ({
+                    type: i.type,
+                    pattern: i.pattern,
+                } as RegexRule)
+        );
+    }
+
+    async listSmsRules(): Promise<RegexRule[]> {
+        const result = await this._dynamo
+            .scan({
+                TableName: this._smsRulesTableName,
+            })
+            .promise();
+
+        if (!result.Items) {
+            return [];
+        }
+
+        return result.Items.map(
+            (i) =>
+                ({
+                    type: i.type,
+                    pattern: i.pattern,
+                } as RegexRule)
+        );
     }
 }
 

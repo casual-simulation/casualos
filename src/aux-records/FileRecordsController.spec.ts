@@ -272,7 +272,7 @@ describe('FileRecordsController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'invalid_record_key',
-                errorMessage: 'Invalid record key.'
+                errorMessage: 'Invalid record key.',
             });
             expect(presignUrlMock).not.toHaveBeenCalled();
         });
@@ -298,7 +298,8 @@ describe('FileRecordsController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'not_logged_in',
-                errorMessage: 'The user must be logged in in order to record files.'
+                errorMessage:
+                    'The user must be logged in in order to record files.',
             });
             expect(presignUrlMock).not.toHaveBeenCalled();
         });
@@ -364,13 +365,17 @@ describe('FileRecordsController', () => {
                 },
             });
 
-            const result = (await manager.recordFile(subjectlessKey, 'subjectId', {
-                fileSha256Hex: 'testSha256',
-                fileByteLength: 100,
-                fileMimeType: 'text/plain',
-                fileDescription: 'testDescription',
-                headers: {},
-            })) as RecordFileSuccess;
+            const result = (await manager.recordFile(
+                subjectlessKey,
+                'subjectId',
+                {
+                    fileSha256Hex: 'testSha256',
+                    fileByteLength: 100,
+                    fileMimeType: 'text/plain',
+                    fileDescription: 'testDescription',
+                    headers: {},
+                }
+            )) as RecordFileSuccess;
 
             expect(result).toEqual({
                 success: true,
@@ -457,21 +462,22 @@ describe('FileRecordsController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'not_logged_in',
-                errorMessage: 'The user must be logged in in order to erase files.'
+                errorMessage:
+                    'The user must be logged in in order to erase files.',
             });
 
             await expect(
                 store.getFileRecord('testRecord', 'testFile.txt')
             ).resolves.toEqual({
                 success: true,
-                "description": "description",
-               "fileName": "testFile.txt",
-               "publisherId": "publisherId",
-               "recordName": "testRecord",
-               "sizeInBytes": 100,
-               "subjectId": "subjectId",
-               "uploaded": false,
-               "url": "testRecord/testFile.txt",
+                description: 'description',
+                fileName: 'testFile.txt',
+                publisherId: 'publisherId',
+                recordName: 'testRecord',
+                sizeInBytes: 100,
+                subjectId: 'subjectId',
+                uploaded: false,
+                url: 'testRecord/testFile.txt',
             });
         });
 
@@ -503,6 +509,20 @@ describe('FileRecordsController', () => {
                 success: false,
                 errorCode: 'file_not_found',
                 errorMessage: 'The file was not found in the store.',
+            });
+        });
+    });
+
+    describe('getFileNameFromUrl()', () => {
+        it('should return the file name for the given file URL', async () => {
+            const result = await manager.getFileNameFromUrl(
+                'http://localhost:9191/record-name/file-name.aux'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'record-name',
+                fileName: 'file-name.aux',
             });
         });
     });

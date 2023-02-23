@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`HashHelpers hashHighEntropyPasswordWithSalt() should return a consistent hash 1`] = `"vH2.rMXQq0dvdN9MYiSAudx1jbtNHlw4wrK5ATK1Bdg0alM="`;
+
+exports[`HashHelpers hashPasswordWithSalt() should return a consistent hash 1`] = `"vH1.1JLjog5qJ0Uw5LB87Wnq2xjw2dcVMjQt6DYLVtyJC6Y="`;

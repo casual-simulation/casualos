@@ -5,6 +5,10 @@
     margin-top: 8px;
 }
 
+.editor-code > .editor-wrapper {
+    position: absolute;
+}
+
 .code-editor-wrapper {
     position: relative;
     width: 100%;

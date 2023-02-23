@@ -9,6 +9,9 @@ import {
     signRequest,
     createSigningKey,
     getStatusCode,
+    cleanupObject,
+    tryParseJson,
+    isStringValid,
 } from './Utils';
 
 const cases = [['abc', 'YWJj']];
@@ -461,8 +464,11 @@ describe('getStatusCode()', () => {
         ['unacceptable_ip_address', 500] as const,
         ['unacceptable_address_type', 400] as const,
         ['unacceptable_expire_time', 400] as const,
+        ['unacceptable_request', 400] as const,
         ['address_type_not_supported', 501] as const,
         ['server_error', 500] as const,
+        ['invalid_origin', 403] as const,
+        ['operation_not_found', 404] as const,
         ['other', 400] as const,
     ];
 
@@ -473,5 +479,107 @@ describe('getStatusCode()', () => {
                 errorCode: code,
             })
         ).toBe(expectedStatus);
+    });
+});
+
+describe('cleanupObject()', () => {
+    it('should omit undefined and null properties of an object', () => {
+        let result = cleanupObject({
+            hello: 'world',
+            test: 0,
+            value: false,
+            empty: '',
+            n: null,
+            u: undefined,
+        });
+
+        expect(result).toEqual({
+            hello: 'world',
+            test: 0,
+            value: false,
+            empty: '',
+        });
+    });
+});
+
+describe('tryParseJson()', () => {
+    it('should be able to parse the given JSON into a value', () => {
+        expect(tryParseJson('{ "hello": 123 }')).toEqual({
+            success: true,
+            value: {
+                hello: 123,
+            },
+        });
+    });
+
+    it('should return an unsucessful result if the string is not JSON', () => {
+        expect(tryParseJson('{')).toEqual({
+            success: false,
+            error: expect.any(Error),
+        });
+    });
+});
+
+describe('isStringValid()', () => {
+    it('should return true if given no rules', () => {
+        expect(isStringValid('myEmail', [])).toBe(true);
+    });
+
+    it('should return true if the email passes one of the allow rules', () => {
+        expect(
+            isStringValid('myEmail@test.com', [
+                { pattern: '@test\\.com$', type: 'allow' },
+                { pattern: '@different\\.com$', type: 'allow' },
+            ])
+        ).toBe(true);
+    });
+
+    it('should return false if the email is denied by a rule', () => {
+        expect(
+            isStringValid('myEmail@test.com', [
+                { pattern: '@test\\.com$', type: 'deny' },
+                { pattern: '@different\\.com$', type: 'deny' },
+            ])
+        ).toBe(false);
+    });
+
+    it('should return false if the email is not allowed by a rule', () => {
+        expect(
+            isStringValid('myEmail@test.com', [
+                { pattern: '@different\\.com$', type: 'allow' },
+            ])
+        ).toBe(false);
+    });
+
+    it('should return false if the email is denied before being allowed', () => {
+        expect(
+            isStringValid('myEmail@test.com', [
+                { pattern: '@test\\.com$', type: 'deny' },
+                { pattern: '@test\\.com$', type: 'allow' },
+            ])
+        ).toBe(false);
+    });
+
+    it('should return true if the email is allowed before being denied', () => {
+        expect(
+            isStringValid('myEmail@test.com', [
+                { pattern: '@test\\.com$', type: 'allow' },
+                { pattern: '@test\\.com$', type: 'deny' },
+            ])
+        ).toBe(true);
+    });
+
+    it('should support SMS codes', () => {
+        expect(
+            isStringValid('+16165551234', [
+                { pattern: '^\\+1616', type: 'allow' },
+            ])
+        ).toBe(true);
+
+        expect(
+            isStringValid('+26165551234', [
+                { pattern: '^\\+1616', type: 'allow' },
+            ])
+        ).toBe(false);
     });
 });

@@ -13,7 +13,10 @@ import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { v4 as uuid } from 'uuid';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
-import { hashPasswordWithSalt } from '@casual-simulation/crypto';
+import {
+    hashHighEntropyPasswordWithSalt,
+    hashPasswordWithSalt,
+} from '@casual-simulation/crypto';
 import { fromBase64String, toBase64String } from './Utils';
 import { padStart } from 'lodash';
 
@@ -456,11 +459,17 @@ describe('AuthController', () => {
                     expireTimeMs: 150 + SESSION_LIFETIME_MS,
                 });
 
+                expect(randomBytesMock).toHaveBeenCalledTimes(2);
+                expect(randomBytesMock).toHaveBeenNthCalledWith(1, 16); // Should request 16 bytes (128 bits) for the session ID
+                expect(randomBytesMock).toHaveBeenNthCalledWith(2, 16); // Should request 16 bytes (128 bits) for the session secret
+
                 expect(authStore.sessions).toEqual([
                     {
                         userId: 'myid',
                         sessionId: fromByteArray(sessionId),
-                        secretHash: hashPasswordWithSalt(
+
+                        // It should treat session secrets as high-entropy
+                        secretHash: hashHighEntropyPasswordWithSalt(
                             fromByteArray(sessionSecret),
                             fromByteArray(sessionId)
                         ),
@@ -897,73 +906,161 @@ describe('AuthController', () => {
                 });
             });
 
-            it('should return the User ID if given a valid key', async () => {
-                const requestId = 'requestId';
-                const sessionId = toBase64String('sessionId');
-                const code = 'code';
-                const userId = 'myid';
+            describe('v1 hashes', () => {
+                it('should return the User ID if given a valid key', async () => {
+                    const requestId = 'requestId';
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    const userId = 'myid';
 
-                const sessionKey = formatV1SessionKey(
-                    userId,
-                    sessionId,
-                    code,
-                    200
-                );
+                    const sessionKey = formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        code,
+                        200
+                    );
 
-                await authStore.saveSession({
-                    requestId,
-                    sessionId,
-                    secretHash: hashPasswordWithSalt(code, sessionId),
-                    expireTimeMs: 200,
-                    grantedTimeMs: 100,
-                    previousSessionId: null,
-                    nextSessionId: null,
-                    revokeTimeMs: null,
-                    userId,
-                    ipAddress: '127.0.0.1',
+                    await authStore.saveSession({
+                        requestId,
+                        sessionId,
+                        secretHash: hashPasswordWithSalt(code, sessionId),
+                        expireTimeMs: 200,
+                        grantedTimeMs: 100,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    const result = await controller.validateSessionKey(
+                        sessionKey
+                    );
+
+                    expect(result).toEqual({
+                        success: true,
+                        userId: userId,
+                        sessionId: sessionId,
+                    });
                 });
 
-                const result = await controller.validateSessionKey(sessionKey);
+                it('should fail if the session secret doesnt match the hash', async () => {
+                    const requestId = 'requestId';
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    const userId = 'myid';
 
-                expect(result).toEqual({
-                    success: true,
-                    userId: userId,
-                    sessionId: sessionId,
+                    const sessionKey = formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        'wrong',
+                        123
+                    );
+
+                    await authStore.saveSession({
+                        requestId,
+                        sessionId,
+                        secretHash: hashPasswordWithSalt(code, sessionId),
+                        expireTimeMs: 200,
+                        grantedTimeMs: 100,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    const result = await controller.validateSessionKey(
+                        sessionKey
+                    );
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'invalid_key',
+                        errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    });
                 });
             });
 
-            it('should fail if the session secret doesnt match the hash', async () => {
-                const requestId = 'requestId';
-                const sessionId = toBase64String('sessionId');
-                const code = 'code';
-                const userId = 'myid';
+            describe('v2 hashes', () => {
+                it('should return the User ID if given a valid key', async () => {
+                    const requestId = 'requestId';
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    const userId = 'myid';
 
-                const sessionKey = formatV1SessionKey(
-                    userId,
-                    sessionId,
-                    'wrong',
-                    123
-                );
+                    const sessionKey = formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        code,
+                        200
+                    );
 
-                await authStore.saveSession({
-                    requestId,
-                    sessionId,
-                    secretHash: hashPasswordWithSalt(code, sessionId),
-                    expireTimeMs: 200,
-                    grantedTimeMs: 100,
-                    previousSessionId: null,
-                    nextSessionId: null,
-                    revokeTimeMs: null,
-                    userId,
-                    ipAddress: '127.0.0.1',
+                    await authStore.saveSession({
+                        requestId,
+                        sessionId,
+                        secretHash: hashHighEntropyPasswordWithSalt(
+                            code,
+                            sessionId
+                        ),
+                        expireTimeMs: 200,
+                        grantedTimeMs: 100,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    const result = await controller.validateSessionKey(
+                        sessionKey
+                    );
+
+                    expect(result).toEqual({
+                        success: true,
+                        userId: userId,
+                        sessionId: sessionId,
+                    });
                 });
 
-                const result = await controller.validateSessionKey(sessionKey);
+                it('should fail if the session secret doesnt match the hash', async () => {
+                    const requestId = 'requestId';
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    const userId = 'myid';
 
-                expect(result).toEqual({
-                    success: false,
-                    errorCode: 'invalid_key',
-                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    const sessionKey = formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        'wrong',
+                        123
+                    );
+
+                    await authStore.saveSession({
+                        requestId,
+                        sessionId,
+                        secretHash: hashHighEntropyPasswordWithSalt(
+                            code,
+                            sessionId
+                        ),
+                        expireTimeMs: 200,
+                        grantedTimeMs: 100,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    const result = await controller.validateSessionKey(
+                        sessionKey
+                    );
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'invalid_key',
+                        errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    });
                 });
             });
 
@@ -2045,6 +2142,427 @@ describe('AuthController', () => {
                     });
                 }
             );
+        });
+    });
+
+    describe('getUserInfo()', () => {
+        const userId = 'myid';
+        const requestId = 'requestId';
+        const sessionId = toBase64String('sessionId');
+        const code = 'code';
+
+        const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+
+        beforeEach(async () => {
+            await authStore.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            await authStore.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                expireTimeMs: 1000,
+                grantedTimeMs: 999,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+        });
+
+        it('should return the info for the given user ID', async () => {
+            const result = await controller.getUserInfo({
+                userId,
+                sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+            });
+        });
+
+        it('should return a invalid_key response when the user ID doesnt match the given session key', async () => {
+            const result = await controller.getUserInfo({
+                userId: 'myOtherUser',
+                sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_key',
+                errorMessage: INVALID_KEY_ERROR_MESSAGE,
+            });
+        });
+
+        it('should return a invalid_key response given an invalid session key', async () => {
+            const result = await controller.getUserInfo({
+                userId,
+                sessionKey: formatV1SessionKey(
+                    userId,
+                    sessionId,
+                    'wrong session secret',
+                    1000
+                ),
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_key',
+                errorMessage: INVALID_KEY_ERROR_MESSAGE,
+            });
+        });
+
+        describe('data validation', () => {
+            const invalidIdCases = [
+                ['null', null as any],
+                ['empty', ''],
+                ['number', 123],
+                ['boolean', false],
+                ['object', {}],
+                ['array', []],
+                ['undefined', undefined],
+            ];
+
+            it.each(invalidIdCases)(
+                'it should fail if given a %s userId',
+                async (desc, id) => {
+                    const result = await controller.getUserInfo({
+                        userId: id,
+                        sessionKey: 'key',
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_user_id',
+                        errorMessage:
+                            'The given userId is invalid. It must be a string.',
+                    });
+                }
+            );
+
+            it.each(invalidIdCases)(
+                'it should fail if given a %s session key',
+                async (desc, id) => {
+                    const result = await controller.getUserInfo({
+                        userId: 'userId',
+                        sessionKey: id,
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_session_key',
+                        errorMessage:
+                            'The given session key is invalid. It must be a string.',
+                    });
+                }
+            );
+        });
+    });
+
+    describe('updateUserInfo()', () => {
+        const userId = 'myid';
+        const requestId = 'requestId';
+        const sessionId = toBase64String('sessionId');
+        const code = 'code';
+
+        const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+
+        beforeEach(async () => {
+            await authStore.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            await authStore.saveSession({
+                requestId,
+                sessionId,
+                secretHash: hashPasswordWithSalt(code, sessionId),
+                expireTimeMs: 1000,
+                grantedTimeMs: 999,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: null,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
+        });
+
+        it('should update the info for the given user ID', async () => {
+            const result = await controller.updateUserInfo({
+                userId,
+                sessionKey,
+                update: {
+                    name: 'New Name',
+                    avatarUrl: 'New Avatar URL',
+                    avatarPortraitUrl: 'New Portrait',
+                    email: 'new email',
+                    phoneNumber: 'new phone number',
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+            });
+
+            const user = await authStore.findUser(userId);
+
+            expect(user).toEqual({
+                id: userId,
+                name: 'New Name',
+                avatarUrl: 'New Avatar URL',
+                avatarPortraitUrl: 'New Portrait',
+                email: 'new email',
+                phoneNumber: 'new phone number',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+        });
+
+        it('should return an invalid_key result if the user ID doesnt match the session key', async () => {
+            const result = await controller.updateUserInfo({
+                userId: 'wrong',
+                sessionKey,
+                update: {
+                    name: 'New Name',
+                    avatarUrl: 'New Avatar URL',
+                    avatarPortraitUrl: 'New Portrait',
+                    email: 'new email',
+                    phoneNumber: 'new phone number',
+                },
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_key',
+                errorMessage: INVALID_KEY_ERROR_MESSAGE,
+            });
+
+            const user = await authStore.findUser(userId);
+
+            expect(user).toEqual({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+        });
+
+        it('should preserve values that arent included in the update', async () => {
+            const result = await controller.updateUserInfo({
+                userId,
+                sessionKey,
+                update: {
+                    name: 'New Name',
+                    email: 'new email',
+                    phoneNumber: 'new phone number',
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+            });
+
+            const user = await authStore.findUser(userId);
+
+            expect(user).toEqual({
+                id: userId,
+                name: 'New Name',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                email: 'new email',
+                phoneNumber: 'new phone number',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+        });
+
+        it('should not update special properties for the user', async () => {
+            const result = await controller.updateUserInfo({
+                userId,
+                sessionKey,
+                update: {
+                    id: 'new id',
+                    allSessionRevokeTimeMs: 99,
+                    currentLoginRequestId: 'request id',
+                    name: 'New Name',
+                    email: 'new email',
+                    phoneNumber: 'new phone number',
+                } as any,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+            });
+
+            const user = await authStore.findUser(userId);
+
+            expect(user).toEqual({
+                id: userId,
+                name: 'New Name',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                email: 'new email',
+                phoneNumber: 'new phone number',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+        });
+
+        describe('data validation', () => {
+            const invalidIdCases = [
+                ['null', null as any],
+                ['empty', ''],
+                ['number', 123],
+                ['boolean', false],
+                ['object', {}],
+                ['array', []],
+                ['undefined', undefined],
+            ];
+
+            it.each(invalidIdCases)(
+                'it should fail if given a %s userId',
+                async (desc, id) => {
+                    const result = await controller.updateUserInfo({
+                        userId: id,
+                        sessionKey: 'key',
+                        update: {
+                            name: 'New Name',
+                            avatarUrl: 'New Avatar URL',
+                            avatarPortraitUrl: 'New Portrait',
+                            email: 'new email',
+                            phoneNumber: 'new phone number',
+                        },
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_user_id',
+                        errorMessage:
+                            'The given userId is invalid. It must be a string.',
+                    });
+                }
+            );
+
+            it.each(invalidIdCases)(
+                'it should fail if given a %s session key',
+                async (desc, id) => {
+                    const result = await controller.updateUserInfo({
+                        userId: 'userId',
+                        sessionKey: id,
+                        update: {
+                            name: 'New Name',
+                            avatarUrl: 'New Avatar URL',
+                            avatarPortraitUrl: 'New Portrait',
+                            email: 'new email',
+                            phoneNumber: 'new phone number',
+                        },
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_session_key',
+                        errorMessage:
+                            'The given session key is invalid. It must be a string.',
+                    });
+                }
+            );
+
+            const invalidUpdateCases = [
+                ['null', null as any] as const,
+                ['string', 'abc'] as const,
+                ['boolean', true] as const,
+                ['number', 123] as const,
+                ['array', []] as const,
+                ['undefined', undefined as any] as const,
+            ];
+
+            it.each(invalidUpdateCases)(
+                'it should fail if given a %s update',
+                async (desc, update) => {
+                    const result = await controller.updateUserInfo({
+                        userId: userId,
+                        sessionKey: sessionKey,
+                        update: update as any,
+                    });
+
+                    expect(result).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_update',
+                        errorMessage:
+                            'The given update is invalid. It must be an object.',
+                    });
+                }
+            );
+        });
+    });
+
+    describe('listEmailRules()', () => {
+        it('should return the list of email rules stored in the store', async () => {
+            authStore.emailRules.push({
+                type: 'allow',
+                pattern: 'abc',
+            });
+
+            const result = await controller.listEmailRules();
+
+            expect(result).toEqual({
+                success: true,
+                rules: [
+                    {
+                        type: 'allow',
+                        pattern: 'abc',
+                    },
+                ],
+            });
+        });
+    });
+
+    describe('listSmsRules()', () => {
+        it('should return the list of email rules stored in the store', async () => {
+            authStore.smsRules.push({
+                type: 'allow',
+                pattern: 'abc',
+            });
+
+            const result = await controller.listSmsRules();
+
+            expect(result).toEqual({
+                success: true,
+                rules: [
+                    {
+                        type: 'allow',
+                        pattern: 'abc',
+                    },
+                ],
+            });
         });
     });
 });

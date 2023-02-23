@@ -66,9 +66,11 @@ export async function connect(
         setSpan(context.serverlessSdk.span);
     }
 
-    console.log(
-        `Got WebSocket connection: ${event.requestContext.connectionId}`
-    );
+    console.log(`
+[handler] Got WebSocket connection: ${event.requestContext.connectionId}
+[handler] User Agent: ${event.requestContext.identity.userAgent}
+[handler] IP Address: ${event.requestContext.identity.sourceIp}
+`);
 
     return {
         statusCode: 200,
@@ -84,7 +86,7 @@ export async function disconnect(
     }
 
     console.log(
-        `Got WebSocket disconnect: ${event.requestContext.connectionId}`
+        `[handler] Got WebSocket disconnect: ${event.requestContext.connectionId}`
     );
     const [server, cleanup] = getCausalRepoServer(event);
     try {
