@@ -456,3 +456,16 @@ export function isStringValid(value: string, rules: RegexRule[]) {
 
     return good;
 }
+
+/**
+ * Attempts to decode the given URI component. Returns null if unable to be decoded.
+ * @param component The component to decode.
+ * @returns
+ */
+export function tryDecodeUriComponent(component: string): string | null {
+    try {
+        return decodeURIComponent(component);
+    } catch (err) {
+        return null;
+    }
+}

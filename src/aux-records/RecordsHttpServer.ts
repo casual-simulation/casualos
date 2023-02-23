@@ -1,4 +1,4 @@
-import { getStatusCode, tryParseJson } from './Utils';
+import { getStatusCode, tryDecodeUriComponent, tryParseJson } from './Utils';
 import {
     AuthController,
     INVALID_KEY_ERROR_MESSAGE,
@@ -101,6 +101,13 @@ const UNACCEPTABLE_SESSION_KEY = {
     errorCode: 'unacceptable_session_key',
     errorMessage:
         'The given session key is invalid. It must be a correctly formatted string.',
+};
+
+const UNACCEPTABLE_USER_ID = {
+    success: false,
+    errorCode: 'unacceptable_user_id',
+    errorMessage:
+        'The given user ID is invalid. It must be a correctly formatted string.',
 };
 
 const INVALID_ORIGIN_RESULT = {
@@ -1151,9 +1158,15 @@ export class RecordsHttpServer {
             return returnResult(NOT_LOGGED_IN_RESULT);
         }
 
+        const userId = tryDecodeUriComponent(request.pathParams.userId);
+
+        if (!userId) {
+            return returnResult(UNACCEPTABLE_USER_ID);
+        }
+
         const result = await this._auth.getUserInfo({
-            sessionKey: sessionKey,
-            userId: request.pathParams.userId,
+            sessionKey,
+            userId,
         });
 
         if (!result.success) {
@@ -1199,9 +1212,15 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
+        const userId = tryDecodeUriComponent(request.pathParams.userId);
+
+        if (!userId) {
+            return returnResult(UNACCEPTABLE_USER_ID);
+        }
+
         const result = await this._auth.updateUserInfo({
             sessionKey: sessionKey,
-            userId: request.pathParams.userId,
+            userId: userId,
             update: jsonResult.value,
         });
 

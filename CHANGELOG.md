@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.24
+
+#### Date: 2/23/2023
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where the auth system prevent useres from logging in if their User ID was in an old format.
+
 ## V3.1.23
 
 #### Date: 2/23/2023
