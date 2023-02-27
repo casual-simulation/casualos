@@ -135,6 +135,11 @@ export interface AuthUser {
     avatarPortraitUrl?: string | null;
 
     /**
+     * The ID of the stripe customer that is associated with this user.
+     */
+    stripeCustomerId?: string | null;
+
+    /**
      * The last Unix time that all the sessions were revoked at.
      */
     allSessionRevokeTimeMs: number | null | undefined;

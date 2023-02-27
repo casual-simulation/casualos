@@ -31,6 +31,14 @@ export interface StripeInterface {
     createCustomer(
         request: StripeCreateCustomerRequest
     ): Promise<StripeCreateCustomerResponse>;
+
+    /**
+     * Lists all the subscriptions that the given customer ID has.
+     * @param id The ID of the customer.
+     */
+    listActiveSubscriptionsForCustomer(
+        id: string
+    ): Promise<StripeListActiveSubscriptionsResponse>;
 }
 
 export interface StripePrice {
@@ -151,4 +159,113 @@ export interface StripeCreateCustomerResponse {
      * The ID of the created customer object.
      */
     id: string;
+}
+
+export interface StripeListActiveSubscriptionsResponse {
+    subscriptions: StripeSubscription[];
+}
+
+export interface StripeSubscription {
+    /**
+     * The ID of the subscription.
+     */
+    id: string;
+
+    /**
+     * The status of the subscription.
+     */
+    status:
+        | 'active'
+        | 'canceled'
+        | 'ended'
+        | 'past_due'
+        | 'unpaid'
+        | 'incomplete'
+        | 'incomplete_expired'
+        | 'trialing'
+        | 'paused';
+
+    /**
+     * The Unix time in seconds that the subscription was started at.
+     */
+    start_date: number;
+
+    /**
+     * The Unix time in seconds that the subscription ended at.
+     */
+    ended_at: number | null;
+
+    /**
+     * The Unix time in seconds when the subscription will be canceled.
+     */
+    cancel_at: number | null;
+
+    /**
+     * The Unix time in seconds when the subscription was canceled.
+     */
+    canceled_at: number | null;
+
+    /**
+     * The Unix time in seconds of the start of the current period that the subscription has been invoiced for.
+     */
+    current_period_start: number | null;
+
+    /**
+     * The Unix time in seconds of the end of the current period that the subscription has been invoiced for.
+     */
+    current_period_end: number | null;
+
+    /**
+     * The items contained by the subscription.
+     */
+    items: StripeSubscriptionItem[];
+}
+
+export interface StripeSubscriptionItem {
+    /**
+     * The ID of the subscription item.
+     */
+    id: string;
+
+    /**
+     * The price that this item was purchased at.
+     */
+    price: {
+        /**
+         * The ID of the price.
+         */
+        id: string;
+
+        /**
+         * The type of recurring interval that is used for this item's price.
+         */
+        interval: 'month' | 'year' | 'week' | 'day';
+
+        /**
+         * The number of intervals that have to happen in order for the subscription to be renewed.
+         */
+        interval_count: number;
+
+        /**
+         * The currency that the scription is renewed in.
+         */
+        currency: string;
+
+        /**
+         * The amount of units that are charged for each renewal.
+         */
+        unit_amount: number;
+
+        product: {
+            /**
+             * The ID of the product.
+             */
+            id: string;
+
+            /**
+             * The name of the product.
+             */
+            name: string;
+        };
+    };
 }
