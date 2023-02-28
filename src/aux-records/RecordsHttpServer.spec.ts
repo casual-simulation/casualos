@@ -13,7 +13,7 @@ import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import { MemoryAuthStore } from './MemoryAuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
-import { AuthSession } from './AuthStore';
+import { AuthSession, AuthUser } from './AuthStore';
 import { LivekitController } from './LivekitController';
 import { isRecordKey, RecordsController } from './RecordsController';
 import { RecordsStore } from './RecordsStore';
@@ -28,6 +28,8 @@ import { FileRecordsController } from './FileRecordsController';
 import { FileRecordsStore } from './FileRecordsStore';
 import { MemoryFileRecordsStore } from './MemoryFileRecordsStore';
 import { getHash } from '@casual-simulation/crypto';
+import { SubscriptionController } from './SubscriptionController';
+import { StripeInterface } from './StripeInterface';
 
 console.log = jest.fn();
 
@@ -51,6 +53,18 @@ describe('RecordsHttpServer', () => {
 
     let filesStore: FileRecordsStore;
     let filesController: FileRecordsController;
+
+    let stripeMock: {
+        listPricesForProduct: jest.Mock<any>;
+        createCheckoutSession: jest.Mock<any>;
+        createPortalSession: jest.Mock<any>;
+        createCustomer: jest.Mock<any>;
+        listActiveSubscriptionsForCustomer: jest.Mock<any>;
+        constructWebhookEvent: jest.Mock<any>;
+    };
+
+    let stripe: StripeInterface;
+    let subscriptionController: SubscriptionController;
 
     let allowedAccountOrigins: Set<string>;
     let allowedApiOrigins: Set<string>;
@@ -119,6 +133,31 @@ describe('RecordsHttpServer', () => {
             filesStore
         );
 
+        stripe = stripeMock = {
+            listPricesForProduct: jest.fn(),
+            createCheckoutSession: jest.fn(),
+            createPortalSession: jest.fn(),
+            createCustomer: jest.fn(),
+            listActiveSubscriptionsForCustomer: jest.fn(),
+            constructWebhookEvent: jest.fn(),
+        };
+
+        subscriptionController = new SubscriptionController(
+            stripe,
+            authController,
+            authStore,
+            {
+                lineItems: [
+                    {
+                        price: 'price_id',
+                        quantity: 1,
+                    },
+                ],
+                products: ['product_id'],
+                webhookSecret: 'webhook_secret',
+            }
+        );
+
         server = new RecordsHttpServer(
             allowedAccountOrigins,
             allowedApiOrigins,
@@ -128,7 +167,8 @@ describe('RecordsHttpServer', () => {
             eventsController,
             dataController,
             manualDataController,
-            filesController
+            filesController,
+            subscriptionController
         );
         defaultHeaders = {
             origin: 'test.com',
@@ -529,6 +569,200 @@ describe('RecordsHttpServer', () => {
                 authenticatedHeaders
             )
         );
+    });
+
+    describe('GET /api/{userId}/subscription', () => {
+        let user: AuthUser;
+        beforeEach(async () => {
+            user = await authStore.findUser(userId);
+            await authStore.saveUser({
+                ...user,
+                stripeCustomerId: 'customerId',
+            });
+            user = await authStore.findUser(userId);
+        });
+
+        it('should return a list of subscriptions for the user', async () => {
+            stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                {
+                    subscriptions: [
+                        {
+                            id: 'subscription_id',
+                            status: 'active',
+                            start_date: 123,
+                            ended_at: null,
+                            cancel_at: null,
+                            canceled_at: null,
+                            current_period_start: 456,
+                            current_period_end: 999,
+                            items: [
+                                {
+                                    id: 'item_id',
+                                    price: {
+                                        id: 'price_id',
+                                        interval: 'month',
+                                        interval_count: 1,
+                                        currency: 'usd',
+                                        unit_amount: 123,
+
+                                        product: {
+                                            id: 'product_id',
+                                            name: 'Product Name',
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                }
+            );
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/{userId:${userId}}/subscription`,
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: true,
+                    subscriptions: [
+                        {
+                            active: true,
+                            statusCode: 'active',
+                            productName: 'Product Name',
+                            startDate: 123,
+                            endedDate: null,
+                            cancelDate: null,
+                            canceledDate: null,
+                            currentPeriodStart: 456,
+                            currentPeriodEnd: 999,
+                            renewalInterval: 'month',
+                            intervalLength: 1,
+                            intervalCost: 123,
+                            currency: 'usd',
+                        },
+                    ],
+                }),
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 400 status code if given an invalid encoded user ID', async () => {
+            const result = await server.handleRequest({
+                method: 'GET',
+                body: null,
+                headers: authenticatedHeaders,
+                pathParams: {
+                    userId: 'invali%d',
+                },
+                path: '/api/invali%d/subscription',
+                ipAddress: '123.456.789',
+                query: {},
+            });
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_user_id',
+                    errorMessage: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 403 status code if the origin is invalid', async () => {
+            authenticatedHeaders['origin'] = 'https://wrong.origin.com';
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/{userId:${userId}}/subscription`,
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 403,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
+                }),
+                headers: {},
+            });
+        });
+
+        it('should return a 403 status code if the session key is invalid', async () => {
+            authenticatedHeaders[
+                'authorization'
+            ] = `Bearer ${formatV1SessionKey(
+                'wrong user',
+                'wrong session',
+                'wrong secret',
+                1000
+            )}`;
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/{userId:${userId}}/subscription`,
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 403,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                }),
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 401 status code if no session key is provided', async () => {
+            delete authenticatedHeaders['authorization'];
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/{userId:${userId}}/subscription`,
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 401,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                }),
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 400 status code if the session key is wrongly formatted', async () => {
+            authenticatedHeaders['authorization'] = `Bearer wrong`;
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/{userId:${userId}}/subscription`,
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'unacceptable_session_key',
+                    errorMessage:
+                        'The given session key is invalid. It must be a correctly formatted string.',
+                }),
+                headers: accountCorsHeaders,
+            });
+        });
     });
 
     describe('GET /api/emailRules', () => {

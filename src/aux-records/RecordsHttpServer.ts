@@ -10,6 +10,7 @@ import { RecordsController } from './RecordsController';
 import { EventRecordsController } from './EventRecordsController';
 import { DataRecordsController } from './DataRecordsController';
 import { FileRecordsController } from './FileRecordsController';
+import { SubscriptionController } from './SubscriptionController';
 
 /**
  * Defines an interface for a generic HTTP request.
@@ -140,6 +141,7 @@ export class RecordsHttpServer {
     private _data: DataRecordsController;
     private _manualData: DataRecordsController;
     private _files: FileRecordsController;
+    private _subscriptions: SubscriptionController;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -160,7 +162,8 @@ export class RecordsHttpServer {
         eventsController: EventRecordsController,
         dataController: DataRecordsController,
         manualDataController: DataRecordsController,
-        filesController: FileRecordsController
+        filesController: FileRecordsController,
+        subscriptionController: SubscriptionController
     ) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -171,6 +174,7 @@ export class RecordsHttpServer {
         this._data = dataController;
         this._manualData = manualDataController;
         this._files = filesController;
+        this._subscriptions = subscriptionController;
     }
 
     /**
@@ -200,6 +204,17 @@ export class RecordsHttpServer {
             return formatResponse(
                 request,
                 await this._putUserInfo(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path.startsWith('/api/') &&
+            request.path.endsWith('/subscription') &&
+            !!request.pathParams.userId
+        ) {
+            return formatResponse(
+                request,
+                await this._getSubscriptionInfo(request),
                 this._allowedAccountOrigins
             );
         } else if (
@@ -1133,6 +1148,54 @@ export class RecordsHttpServer {
         });
 
         return returnResult(result);
+    }
+
+    private async _getSubscriptionInfo(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const sessionKey = getSessionKey(request);
+
+        if (!sessionKey) {
+            return returnResult(NOT_LOGGED_IN_RESULT);
+        }
+
+        const userId = tryDecodeUriComponent(request.pathParams.userId);
+
+        if (!userId) {
+            return returnResult(UNACCEPTABLE_USER_ID);
+        }
+
+        const result = await this._subscriptions.getSubscriptionStatus({
+            sessionKey,
+            userId,
+        });
+
+        if (!result.success) {
+            return returnResult(result);
+        }
+
+        return returnResult({
+            success: true,
+            subscriptions: result.subscriptions.map((s) => ({
+                active: s.active,
+                statusCode: s.statusCode,
+                productName: s.productName,
+                startDate: s.startDate,
+                endedDate: s.endedDate,
+                cancelDate: s.cancelDate,
+                canceledDate: s.canceledDate,
+                currentPeriodStart: s.currentPeriodStart,
+                currentPeriodEnd: s.currentPeriodEnd,
+                renewalInterval: s.renewalInterval,
+                intervalLength: s.intervalLength,
+                intervalCost: s.intervalCost,
+                currency: s.currency,
+            })),
+        });
     }
 
     /**
