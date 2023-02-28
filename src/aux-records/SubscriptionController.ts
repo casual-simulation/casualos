@@ -7,6 +7,28 @@ import { AuthSession, AuthStore } from './AuthStore';
 import { StripeInterface } from './StripeInterface';
 import { ServerError } from './Errors';
 
+export interface SubscriptionConfiguration {
+    /**
+     * The line items that should be included in the checkout request.
+     */
+    lineItems: {
+        /**
+         * The ID of the price for the line item.
+         */
+        price: string;
+
+        /**
+         * The quantity to purchase.
+         */
+        quantity?: number;
+    }[];
+
+    /**
+     * The IDs of the products that should be recognized as active subscriptions for the user.
+     */
+    products: string[];
+}
+
 /**
  * Defines a class that is able to handle subscriptions.
  */
@@ -14,15 +36,18 @@ export class SubscriptionController {
     private _stripe: StripeInterface;
     private _auth: AuthController;
     private _authStore: AuthStore;
+    private _config: SubscriptionConfiguration;
 
     constructor(
         stripe: StripeInterface,
         auth: AuthController,
-        authStore: AuthStore
+        authStore: AuthStore,
+        config: SubscriptionConfiguration
     ) {
         this._stripe = stripe;
         this._auth = auth;
         this._authStore = authStore;
+        this._config = config;
     }
 
     /**
@@ -117,10 +142,160 @@ export class SubscriptionController {
      * Creates a link that the user can be redirected to in order to manage their subscription.
      * Returns a link that the user can be redirected to to initiate a purchase of the subscription.
      */
-    createManageSubscriptionLink(
+    async createManageSubscriptionLink(
         request: CreateManageSubscriptionRequest
     ): Promise<CreateManageSubscriptionResult> {
-        throw new Error('not implemented');
+        try {
+            if (typeof request.userId !== 'string' || request.userId === '') {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_user_id',
+                    errorMessage:
+                        'The given user ID is invalid. It must be a correctly formatted string.',
+                };
+            }
+
+            const keyResult = await this._auth.validateSessionKey(
+                request.sessionKey
+            );
+
+            if (keyResult.success === false) {
+                return keyResult;
+            } else if (keyResult.userId !== request.userId) {
+                console.log(
+                    '[SubscriptionController] [createManageSubscriptionLink] Request User ID doesnt match session key User ID!'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                };
+            }
+
+            console.log(
+                `[SubscriptionController] [createManageSubscriptionLink] Creating a checkout/management session for User (${keyResult.userId}).`
+            );
+            const user = await this._authStore.findUser(keyResult.userId);
+            let customerId = user.stripeCustomerId;
+
+            if (!customerId) {
+                console.log(
+                    '[SubscriptionController] [createManageSubscriptionLink] No Stripe Customer ID. Creating New Customer and Checkout Session in Stripe.'
+                );
+                const result = await this._stripe.createCustomer({
+                    name: user.name,
+                    email: user.email,
+                    phone: user.phoneNumber,
+                });
+
+                customerId = user.stripeCustomerId = result.id;
+                console.log(
+                    `[SubscriptionController] [createManageSubscriptionLink] Saving Stripe Customer ID (${customerId}) to User Record (${user.id}).`
+                );
+                await this._authStore.saveUser({
+                    ...user,
+                });
+
+                console.log(
+                    `[SubscriptionController] [createManageSubscriptionLink] Creating Checkout Session.`
+                );
+
+                const session = await this._stripe.createCheckoutSession({
+                    customer: customerId,
+                    success_url: request.successUrl,
+                    cancel_url: request.cancelUrl,
+                    line_items: this._config.lineItems,
+                    client_reference_id: user.id,
+                    customer_email: user.email,
+                    mode: 'subscription',
+                });
+
+                console.log(
+                    `[SubscriptionController] [createManageSubscriptionLink] Checkout Session Success!`
+                );
+                return {
+                    success: true,
+                    url: session.url,
+                };
+            }
+
+            console.log(
+                `[SubscriptionController] [createManageSubscriptionLink] User (${user.id}) Has Stripe Customer ID (${user.stripeCustomerId}). Checking active subscriptions for customer.`
+            );
+            const subs = await this._stripe.listActiveSubscriptionsForCustomer(
+                customerId
+            );
+
+            const hasSubscription = subs.subscriptions.some((s) => {
+                const isManagable =
+                    s.status === 'active' ||
+                    s.status === 'trialing' ||
+                    s.status === 'paused' ||
+                    s.status === 'incomplete' ||
+                    s.status === 'past_due' ||
+                    s.status === 'unpaid';
+
+                if (!isManagable) {
+                    return false;
+                }
+
+                const hasManagableProduct = this._config.products.some((p) =>
+                    s.items.some((i) => i.price.product.id === p)
+                );
+
+                return hasManagableProduct;
+            });
+
+            if (hasSubscription) {
+                console.log(
+                    `[SubscriptionController] [createManageSubscriptionLink] Customer has a managable subscription. Creating a portal session.`
+                );
+                const session = await this._stripe.createPortalSession({
+                    customer: customerId,
+                    return_url: request.returnUrl,
+                });
+
+                console.log(
+                    `[SubscriptionController] [createManageSubscriptionLink] Portal session success!`
+                );
+
+                return {
+                    success: true,
+                    url: session.url,
+                };
+            }
+
+            console.log(
+                `[SubscriptionController] [createManageSubscriptionLink] Customer does not have a managable subscription. Creating a checkout session.`
+            );
+            const session = await this._stripe.createCheckoutSession({
+                customer: customerId,
+                success_url: request.successUrl,
+                cancel_url: request.cancelUrl,
+                line_items: this._config.lineItems,
+                client_reference_id: user.id,
+                customer_email: user.email,
+                mode: 'subscription',
+            });
+
+            console.log(
+                `[SubscriptionController] [createManageSubscriptionLink] Checkout Session Success!`
+            );
+            return {
+                success: true,
+                url: session.url,
+            };
+        } catch (err) {
+            console.log(
+                '[SubscriptionController] An error occurred while creating a manage subscription link:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
     }
 
     /**
@@ -151,7 +326,7 @@ export interface CreateManageSubscriptionRequest {
     /**
      * The URL that the user should be sent to upon cancelling a subscription purchase.
      */
-    cancelkUrl: string;
+    cancelUrl: string;
 
     /**
      * The URL that the user should be returned to after managing their subscriptions.
