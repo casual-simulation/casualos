@@ -33,6 +33,21 @@ export interface SubscriptionConfiguration {
      * The webhook secret that should be used for validating webhooks.
      */
     webhookSecret: string;
+
+    /**
+     * The URL that the user should be sent to upon successfully purchasing a subscription.
+     */
+    successUrl: string;
+
+    /**
+     * The URL that the user should be sent to upon cancelling a subscription purchase.
+     */
+    cancelUrl: string;
+
+    /**
+     * The URL that the user should be returned to after managing their subscriptions.
+     */
+    returnUrl: string;
 }
 
 /**
@@ -208,8 +223,8 @@ export class SubscriptionController {
 
                 const session = await this._stripe.createCheckoutSession({
                     customer: customerId,
-                    success_url: request.successUrl,
-                    cancel_url: request.cancelUrl,
+                    success_url: this._config.successUrl,
+                    cancel_url: this._config.cancelUrl,
                     line_items: this._config.lineItems,
                     customer_email: user.email,
                     mode: 'subscription',
@@ -257,7 +272,7 @@ export class SubscriptionController {
                 );
                 const session = await this._stripe.createPortalSession({
                     customer: customerId,
-                    return_url: request.returnUrl,
+                    return_url: this._config.returnUrl,
                 });
 
                 console.log(
@@ -275,8 +290,8 @@ export class SubscriptionController {
             );
             const session = await this._stripe.createCheckoutSession({
                 customer: customerId,
-                success_url: request.successUrl,
-                cancel_url: request.cancelUrl,
+                success_url: this._config.successUrl,
+                cancel_url: this._config.cancelUrl,
                 line_items: this._config.lineItems,
                 customer_email: user.email,
                 mode: 'subscription',
@@ -422,21 +437,6 @@ export interface CreateManageSubscriptionRequest {
      * The User ID that the management session should be created for.
      */
     userId: string;
-
-    /**
-     * The URL that the user should be sent to upon successfully purchasing a subscription.
-     */
-    successUrl: string;
-
-    /**
-     * The URL that the user should be sent to upon cancelling a subscription purchase.
-     */
-    cancelUrl: string;
-
-    /**
-     * The URL that the user should be returned to after managing their subscriptions.
-     */
-    returnUrl: string;
 }
 
 export type CreateManageSubscriptionResult =

@@ -155,6 +155,9 @@ describe('RecordsHttpServer', () => {
                 ],
                 products: ['product_id'],
                 webhookSecret: 'webhook_secret',
+                cancelUrl: 'cancel_url',
+                successUrl: 'success_url',
+                returnUrl: 'return_url',
             }
         );
 
@@ -748,6 +751,193 @@ describe('RecordsHttpServer', () => {
             const result = await server.handleRequest(
                 httpGet(
                     `/api/{userId:${userId}}/subscription`,
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'unacceptable_session_key',
+                    errorMessage:
+                        'The given session key is invalid. It must be a correctly formatted string.',
+                }),
+                headers: accountCorsHeaders,
+            });
+        });
+    });
+
+    describe('POST /api/{userId}/subscription/manage', () => {
+        let user: AuthUser;
+        beforeEach(async () => {
+            user = await authStore.findUser(userId);
+            await authStore.saveUser({
+                ...user,
+                stripeCustomerId: 'customerId',
+            });
+            user = await authStore.findUser(userId);
+        });
+
+        it('should return the URL that the user should be redirected to', async () => {
+            stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                {
+                    subscriptions: [
+                        {
+                            id: 'subscription_id',
+                            status: 'active',
+                            start_date: 123,
+                            ended_at: null,
+                            cancel_at: null,
+                            canceled_at: null,
+                            current_period_start: 456,
+                            current_period_end: 999,
+                            items: [
+                                {
+                                    id: 'item_id',
+                                    price: {
+                                        id: 'price_id',
+                                        interval: 'month',
+                                        interval_count: 1,
+                                        currency: 'usd',
+                                        unit_amount: 123,
+
+                                        product: {
+                                            id: 'product_id',
+                                            name: 'Product Name',
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                }
+            );
+
+            stripeMock.createPortalSession.mockResolvedValueOnce({
+                url: 'portal_url',
+            });
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/{userId:${userId}}/subscription/manage`,
+                    '',
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: true,
+                    url: 'portal_url',
+                }),
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 400 status code if given an invalid encoded user ID', async () => {
+            const result = await server.handleRequest({
+                method: 'POST',
+                body: '',
+                headers: authenticatedHeaders,
+                pathParams: {
+                    userId: 'invali%d',
+                },
+                path: '/api/invali%d/subscription/manage',
+                ipAddress: '123.456.789',
+                query: {},
+            });
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_user_id',
+                    errorMessage: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 403 status code if the origin is invalid', async () => {
+            authenticatedHeaders['origin'] = 'https://wrong.origin.com';
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/{userId:${userId}}/subscription/manage`,
+                    '',
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 403,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'invalid_origin',
+                    errorMessage:
+                        'The request must be made from an authorized origin.',
+                }),
+                headers: {},
+            });
+        });
+
+        it('should return a 403 status code if the session key is invalid', async () => {
+            authenticatedHeaders[
+                'authorization'
+            ] = `Bearer ${formatV1SessionKey(
+                'wrong user',
+                'wrong session',
+                'wrong secret',
+                1000
+            )}`;
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/{userId:${userId}}/subscription/manage`,
+                    '',
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 403,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                }),
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 401 status code if no session key is provided', async () => {
+            delete authenticatedHeaders['authorization'];
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/{userId:${userId}}/subscription/manage`,
+                    '',
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 401,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user is not logged in. A session key must be provided for this operation.',
+                }),
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 400 status code if the session key is wrongly formatted', async () => {
+            authenticatedHeaders['authorization'] = `Bearer wrong`;
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/{userId:${userId}}/subscription/manage`,
+                    '',
                     authenticatedHeaders
                 )
             );

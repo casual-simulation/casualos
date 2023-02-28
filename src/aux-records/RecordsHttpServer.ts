@@ -218,6 +218,17 @@ export class RecordsHttpServer {
                 this._allowedAccountOrigins
             );
         } else if (
+            request.method === 'POST' &&
+            request.path.startsWith('/api/') &&
+            request.path.endsWith('/subscription/manage') &&
+            !!request.pathParams.userId
+        ) {
+            return formatResponse(
+                request,
+                await this._manageSubscription(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
             request.method === 'GET' &&
             request.path === '/api/emailRules'
         ) {
@@ -1195,6 +1206,40 @@ export class RecordsHttpServer {
                 intervalCost: s.intervalCost,
                 currency: s.currency,
             })),
+        });
+    }
+
+    private async _manageSubscription(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const sessionKey = getSessionKey(request);
+
+        if (!sessionKey) {
+            return returnResult(NOT_LOGGED_IN_RESULT);
+        }
+
+        const userId = tryDecodeUriComponent(request.pathParams.userId);
+
+        if (!userId) {
+            return returnResult(UNACCEPTABLE_USER_ID);
+        }
+
+        const result = await this._subscriptions.createManageSubscriptionLink({
+            sessionKey,
+            userId,
+        });
+
+        if (!result.success) {
+            return returnResult(result);
+        }
+
+        return returnResult({
+            success: true,
+            url: result.url,
         });
     }
 

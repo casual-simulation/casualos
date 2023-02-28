@@ -51,6 +51,9 @@ describe('SubscriptionController', () => {
             ],
             products: ['product_1_id', 'product_2_id', 'product_3_id'],
             webhookSecret: 'webhook_secret',
+            cancelUrl: 'cancel_url',
+            returnUrl: 'return_url',
+            successUrl: 'success_url',
         });
 
         const request = await auth.requestLogin({
@@ -304,9 +307,6 @@ describe('SubscriptionController', () => {
             const result = await controller.createManageSubscriptionLink({
                 sessionKey,
                 userId,
-                cancelUrl: 'cancel_url',
-                returnUrl: 'return_url',
-                successUrl: 'success_url',
             });
 
             expect(result).toEqual({
@@ -384,9 +384,6 @@ describe('SubscriptionController', () => {
             const result = await controller.createManageSubscriptionLink({
                 sessionKey,
                 userId,
-                cancelUrl: 'cancel_url',
-                returnUrl: 'return_url',
-                successUrl: 'success_url',
             });
 
             expect(result).toEqual({
@@ -456,9 +453,6 @@ describe('SubscriptionController', () => {
             const result = await controller.createManageSubscriptionLink({
                 sessionKey,
                 userId,
-                cancelUrl: 'cancel_url',
-                returnUrl: 'return_url',
-                successUrl: 'success_url',
             });
 
             expect(result).toEqual({
@@ -537,9 +531,6 @@ describe('SubscriptionController', () => {
             const result = await controller.createManageSubscriptionLink({
                 sessionKey,
                 userId,
-                cancelUrl: 'cancel_url',
-                returnUrl: 'return_url',
-                successUrl: 'success_url',
             });
 
             expect(result).toEqual({
@@ -618,9 +609,6 @@ describe('SubscriptionController', () => {
             const result = await controller.createManageSubscriptionLink({
                 sessionKey,
                 userId,
-                cancelUrl: 'cancel_url',
-                returnUrl: 'return_url',
-                successUrl: 'success_url',
             });
 
             expect(result).toEqual({
@@ -699,9 +687,6 @@ describe('SubscriptionController', () => {
             const result = await controller.createManageSubscriptionLink({
                 sessionKey,
                 userId,
-                cancelUrl: 'cancel_url',
-                returnUrl: 'return_url',
-                successUrl: 'success_url',
             });
 
             expect(result).toEqual({
@@ -780,9 +765,6 @@ describe('SubscriptionController', () => {
             const result = await controller.createManageSubscriptionLink({
                 sessionKey,
                 userId,
-                cancelUrl: 'cancel_url',
-                returnUrl: 'return_url',
-                successUrl: 'success_url',
             });
 
             expect(result).toEqual({
@@ -852,9 +834,6 @@ describe('SubscriptionController', () => {
             const result = await controller.createManageSubscriptionLink({
                 sessionKey,
                 userId,
-                cancelUrl: 'cancel_url',
-                returnUrl: 'return_url',
-                successUrl: 'success_url',
             });
 
             expect(result).toEqual({
@@ -924,9 +903,6 @@ describe('SubscriptionController', () => {
             const result = await controller.createManageSubscriptionLink({
                 sessionKey,
                 userId,
-                cancelUrl: 'cancel_url',
-                returnUrl: 'return_url',
-                successUrl: 'success_url',
             });
 
             expect(result).toEqual({
@@ -996,9 +972,6 @@ describe('SubscriptionController', () => {
             const result = await controller.createManageSubscriptionLink({
                 sessionKey,
                 userId,
-                cancelUrl: 'cancel_url',
-                returnUrl: 'return_url',
-                successUrl: 'success_url',
             });
 
             expect(result).toEqual({
@@ -1068,9 +1041,6 @@ describe('SubscriptionController', () => {
             const result = await controller.createManageSubscriptionLink({
                 sessionKey,
                 userId,
-                cancelUrl: 'cancel_url',
-                returnUrl: 'return_url',
-                successUrl: 'success_url',
             });
 
             expect(result).toEqual({
@@ -1112,9 +1082,6 @@ describe('SubscriptionController', () => {
             const result = await controller.createManageSubscriptionLink({
                 sessionKey,
                 userId: '',
-                cancelUrl: 'cancel_url',
-                returnUrl: 'return_url',
-                successUrl: 'success_url',
             });
 
             expect(result).toEqual({
@@ -1136,9 +1103,6 @@ describe('SubscriptionController', () => {
                     expireTime
                 ),
                 userId,
-                cancelUrl: 'cancel_url',
-                returnUrl: 'return_url',
-                successUrl: 'success_url',
             });
 
             expect(result).toEqual({
