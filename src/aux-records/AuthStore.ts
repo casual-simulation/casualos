@@ -34,6 +34,12 @@ export interface AuthStore {
     ): Promise<AuthUser>;
 
     /**
+     * Finds the user that is associated with the given Stripe Customer ID.
+     * @param customerId The ID of the customer.
+     */
+    findUserByStripeCustomerId(customerId: string): Promise<AuthUser>;
+
+    /**
      * Finds a login request for the given user and request ID.
      * @param userId The ID of the user.
      * @param requestId The ID of the request.
@@ -138,6 +144,11 @@ export interface AuthUser {
      * The ID of the stripe customer that is associated with this user.
      */
     stripeCustomerId?: string | null;
+
+    /**
+     * The current status of the user's subscription.
+     */
+    subscriptionStatus?: string | null;
 
     /**
      * The last Unix time that all the sessions were revoked at.

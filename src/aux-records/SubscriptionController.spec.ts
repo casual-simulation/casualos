@@ -21,6 +21,7 @@ describe('SubscriptionController', () => {
         createPortalSession: jest.Mock<any>;
         createCustomer: jest.Mock<any>;
         listActiveSubscriptionsForCustomer: jest.Mock<any>;
+        constructWebhookEvent: jest.Mock<any>;
     };
 
     let stripe: StripeInterface;
@@ -38,6 +39,7 @@ describe('SubscriptionController', () => {
             createPortalSession: jest.fn(),
             createCustomer: jest.fn(),
             listActiveSubscriptionsForCustomer: jest.fn(),
+            constructWebhookEvent: jest.fn(),
         };
 
         controller = new SubscriptionController(stripe, auth, authStore, {
@@ -48,6 +50,7 @@ describe('SubscriptionController', () => {
                 },
             ],
             products: ['product_1_id', 'product_2_id', 'product_3_id'],
+            webhookSecret: 'webhook_secret',
         });
 
         const request = await auth.requestLogin({
@@ -323,7 +326,6 @@ describe('SubscriptionController', () => {
                 customer_email: 'test@example.com',
                 success_url: 'success_url',
                 cancel_url: 'cancel_url',
-                client_reference_id: userId,
                 line_items: [
                     {
                         price: 'price_1_id',
@@ -477,7 +479,6 @@ describe('SubscriptionController', () => {
                 customer_email: 'test@example.com',
                 success_url: 'success_url',
                 cancel_url: 'cancel_url',
-                client_reference_id: userId,
                 line_items: [
                     {
                         price: 'price_1_id',
@@ -559,7 +560,6 @@ describe('SubscriptionController', () => {
                 customer_email: 'test@example.com',
                 success_url: 'success_url',
                 cancel_url: 'cancel_url',
-                client_reference_id: userId,
                 line_items: [
                     {
                         price: 'price_1_id',
@@ -641,7 +641,6 @@ describe('SubscriptionController', () => {
                 customer_email: 'test@example.com',
                 success_url: 'success_url',
                 cancel_url: 'cancel_url',
-                client_reference_id: userId,
                 line_items: [
                     {
                         price: 'price_1_id',
@@ -723,7 +722,6 @@ describe('SubscriptionController', () => {
                 customer_email: 'test@example.com',
                 success_url: 'success_url',
                 cancel_url: 'cancel_url',
-                client_reference_id: userId,
                 line_items: [
                     {
                         price: 'price_1_id',
@@ -1147,6 +1145,143 @@ describe('SubscriptionController', () => {
                 success: false,
                 errorCode: 'invalid_key',
                 errorMessage: INVALID_KEY_ERROR_MESSAGE,
+            });
+        });
+    });
+
+    describe('handleStripeWebhook()', () => {
+        let user: AuthUser;
+
+        beforeEach(async () => {
+            user = await authStore.findUserByAddress(
+                'test@example.com',
+                'email'
+            );
+            await authStore.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+            user = await authStore.findUserByAddress(
+                'test@example.com',
+                'email'
+            );
+            expect(user.stripeCustomerId).toBe('customer_id');
+            expect(user.subscriptionStatus).toBeFalsy();
+        });
+
+        const eventTypes = [
+            ['customer.subscription.created'],
+            ['customer.subscription.updated'],
+            ['customer.subscription.deleted'],
+        ] as const;
+
+        const statusTypes = [
+            ['active', true] as const,
+            ['trialing', true] as const,
+            ['canceled', false] as const,
+            ['ended', false] as const,
+            ['past_due', false] as const,
+            ['unpaid', false] as const,
+            ['incomplete', false] as const,
+            ['incomplete_expired', false] as const,
+            ['paused', false] as const,
+        ];
+
+        describe.each(eventTypes)('should handle %s events', (type) => {
+            it.each(statusTypes)(
+                'should handle %s subscriptions',
+                async (status, active) => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'subscription',
+                                status: status,
+                                customer: 'customer_id',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                        type: type,
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledTimes(1);
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledWith(
+                        'request_body',
+                        'request_signature',
+                        'webhook_secret'
+                    );
+
+                    const user = await authStore.findUser(userId);
+                    expect(user.subscriptionStatus).toBe(status);
+                }
+            );
+        });
+
+        it('should handle when constructWebhookEvent() throws an error', async () => {
+            stripeMock.constructWebhookEvent.mockImplementation(() => {
+                throw new Error('Unable to parse event!');
+            });
+
+            const result = await controller.handleStripeWebhook({
+                requestBody: 'request_body',
+                signature: 'request_signature',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: 'The request was not valid.',
+            });
+            expect(stripeMock.constructWebhookEvent).toHaveBeenCalledTimes(1);
+        });
+
+        it('should return an invalid_request if no signature is included', async () => {
+            stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                id: 'event_id',
+                object: 'event',
+                account: 'account_id',
+                api_version: 'api_version',
+                created: 123,
+                data: {
+                    object: {
+                        id: 'subscription',
+                        status: 'active',
+                        customer: 'customer_id',
+                    },
+                },
+                livemode: true,
+                pending_webhooks: 1,
+                request: {},
+                type: 'customer.subscription.created',
+            });
+
+            const result = await controller.handleStripeWebhook({
+                requestBody: 'request_body',
+                signature: '',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_request',
+                errorMessage: 'The request was not valid.',
             });
         });
     });

@@ -210,6 +210,7 @@ describe('RecordsHttpServer', () => {
                     success: true,
                     email: 'test@example.com',
                     phoneNumber: null,
+                    hasActiveSubscription: false,
                 }),
                 headers: accountCorsHeaders,
             });
@@ -273,6 +274,7 @@ describe('RecordsHttpServer', () => {
                     success: true,
                     email: 'other@example.com',
                     phoneNumber: null,
+                    hasActiveSubscription: false,
                 }),
                 headers: accountCorsHeaders,
             });

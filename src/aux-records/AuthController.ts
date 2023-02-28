@@ -19,6 +19,7 @@ import { AuthMessenger } from './AuthMessenger';
 import {
     cleanupObject,
     fromBase64String,
+    isActiveSubscription,
     RegexRule,
     toBase64String,
 } from './Utils';
@@ -922,6 +923,9 @@ export class AuthController {
                 phoneNumber: result.phoneNumber,
                 avatarPortraitUrl: result.avatarPortraitUrl,
                 avatarUrl: result.avatarUrl,
+                hasActiveSubscription: isActiveSubscription(
+                    result.subscriptionStatus
+                ),
             };
         } catch (err) {
             console.error(
@@ -1474,6 +1478,11 @@ export interface GetUserInfoSuccess {
      * The phone number of the user.
      */
     phoneNumber: string;
+
+    /**
+     * Whether the user has an active subscription.
+     */
+    hasActiveSubscription: boolean;
 }
 
 export interface GetUserInfoFailure {

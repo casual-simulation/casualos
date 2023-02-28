@@ -1180,6 +1180,7 @@ export class RecordsHttpServer {
             avatarPortraitUrl: result.avatarPortraitUrl,
             email: result.email,
             phoneNumber: result.phoneNumber,
+            hasActiveSubscription: result.hasActiveSubscription,
         });
     }
 

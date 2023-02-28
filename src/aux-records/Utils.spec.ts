@@ -12,6 +12,7 @@ import {
     cleanupObject,
     tryParseJson,
     isStringValid,
+    isActiveSubscription,
 } from './Utils';
 
 const cases = [['abc', 'YWJj']];
@@ -581,5 +582,26 @@ describe('isStringValid()', () => {
                 { pattern: '^\\+1616', type: 'allow' },
             ])
         ).toBe(false);
+    });
+});
+
+describe('isActiveSubscription()', () => {
+    const statusTypes = [
+        ['active', true] as const,
+        ['trialing', true] as const,
+        ['canceled', false] as const,
+        ['ended', false] as const,
+        ['past_due', false] as const,
+        ['unpaid', false] as const,
+        ['incomplete', false] as const,
+        ['incomplete_expired', false] as const,
+        ['paused', false] as const,
+        ['invalid status', false] as const,
+        [null as any, false] as const,
+        [undefined as any, false] as const,
+    ];
+
+    it.each(statusTypes)('should map %s to %s', (status, expected) => {
+        expect(isActiveSubscription(status)).toBe(expected);
     });
 });

@@ -4,8 +4,9 @@ import {
     ValidateSessionKeyFailure,
 } from './AuthController';
 import { AuthSession, AuthStore } from './AuthStore';
-import { StripeInterface } from './StripeInterface';
+import { StripeEvent, StripeInterface } from './StripeInterface';
 import { ServerError } from './Errors';
+import { isActiveSubscription } from './Utils';
 
 export interface SubscriptionConfiguration {
     /**
@@ -27,6 +28,11 @@ export interface SubscriptionConfiguration {
      * The IDs of the products that should be recognized as active subscriptions for the user.
      */
     products: string[];
+
+    /**
+     * The webhook secret that should be used for validating webhooks.
+     */
+    webhookSecret: string;
 }
 
 /**
@@ -205,7 +211,6 @@ export class SubscriptionController {
                     success_url: request.successUrl,
                     cancel_url: request.cancelUrl,
                     line_items: this._config.lineItems,
-                    client_reference_id: user.id,
                     customer_email: user.email,
                     mode: 'subscription',
                 });
@@ -273,7 +278,6 @@ export class SubscriptionController {
                 success_url: request.successUrl,
                 cancel_url: request.cancelUrl,
                 line_items: this._config.lineItems,
-                client_reference_id: user.id,
                 customer_email: user.email,
                 mode: 'subscription',
             });
@@ -301,7 +305,108 @@ export class SubscriptionController {
     /**
      * Handles the webhook from Stripe for updating the internal database.
      */
-    handleStripeWebhook() {}
+    async handleStripeWebhook(
+        request: HandleStripeWebhookRequest
+    ): Promise<HandleStripeWebhookResponse> {
+        try {
+            if (
+                typeof request.requestBody !== 'string' ||
+                request.requestBody === ''
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The request was not valid.',
+                };
+            }
+
+            if (
+                typeof request.signature !== 'string' ||
+                request.signature === ''
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The request was not valid.',
+                };
+            }
+
+            const body = request.requestBody;
+            const signature = request.signature;
+            let event: StripeEvent;
+            try {
+                event = this._stripe.constructWebhookEvent(
+                    body,
+                    signature,
+                    this._config.webhookSecret
+                );
+            } catch (err) {
+                console.log(
+                    `[SubscriptionController] [handleStripeWebhook] Unable to construct webhook event:`,
+                    err
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: 'The request was not valid.',
+                };
+            }
+
+            console.log(
+                `[SubscriptionController] [handleStripeWebhook] Got event: ${event.type}`
+            );
+            if (
+                event.type === 'customer.subscription.created' ||
+                event.type === 'customer.subscription.deleted' ||
+                event.type === 'customer.subscription.updated'
+            ) {
+                const subscription = event.data.object;
+                const status = subscription.status;
+                const active = isActiveSubscription(status);
+                const customerId = subscription.customer;
+
+                console.log(
+                    `[SubscriptionController] [handleStripeWebhook] Customer ID: ${customerId}. Subscription status: ${status}. Is Active: ${active}.`
+                );
+                const user = await this._authStore.findUserByStripeCustomerId(
+                    customerId
+                );
+
+                if (!user) {
+                    console.log(
+                        `[SubscriptionController] [handleStripeWebhook] No user found for Customer ID (${customerId})`
+                    );
+                    return {
+                        success: true,
+                    };
+                }
+
+                if (user.subscriptionStatus !== status) {
+                    console.log(
+                        `[SubscriptionController] [handleStripeWebhook] User subscription status doesn't match stored. Updating...`
+                    );
+                    await this._authStore.saveUser({
+                        ...user,
+                        subscriptionStatus: status,
+                    });
+                }
+            }
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.log(
+                '[SubscriptionController] An error occurred while handling a stripe webhook:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
 }
 
 /**
@@ -493,5 +598,31 @@ export interface GetSubscriptionStatusFailure {
     /**
      * The error message.
      */
+    errorMessage: string;
+}
+
+export interface HandleStripeWebhookRequest {
+    /**
+     * The raw request body.
+     */
+    requestBody: string;
+
+    /**
+     * The signature that was included with the request.
+     */
+    signature: string;
+}
+
+export type HandleStripeWebhookResponse =
+    | HandleStripeWebhookSuccess
+    | HandleStripeWebhookFailure;
+
+export interface HandleStripeWebhookSuccess {
+    success: true;
+}
+
+export interface HandleStripeWebhookFailure {
+    success: false;
+    errorCode: ServerError | 'invalid_request';
     errorMessage: string;
 }

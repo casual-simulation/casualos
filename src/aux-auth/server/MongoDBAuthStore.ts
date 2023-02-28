@@ -65,6 +65,22 @@ export class MongoDBAuthStore implements AuthStore {
         return null;
     }
 
+    async findUserByStripeCustomerId(customerId: string): Promise<AuthUser> {
+        const user = await this._users.findOne({
+            stripeCustomerId: customerId,
+        });
+
+        if (user) {
+            const { _id, ...rest } = user;
+            return {
+                id: _id,
+                ...rest,
+            };
+        }
+
+        return null;
+    }
+
     async setRevokeAllSessionsTimeForUser(
         userId: string,
         allSessionRevokeTimeMs: number
@@ -350,6 +366,8 @@ export interface MongoDBAuthUser {
     avatarUrl: string;
     allSessionRevokeTimeMs: number;
     currentLoginRequestId: string;
+    stripeCustomerId?: string;
+    subscriptionStatus?: string;
 }
 
 export interface MongoDBLoginRequest {

@@ -2193,6 +2193,7 @@ describe('AuthController', () => {
                 name: 'Test',
                 avatarUrl: 'avatar url',
                 avatarPortraitUrl: 'avatar portrait url',
+                hasActiveSubscription: false,
             });
         });
 
