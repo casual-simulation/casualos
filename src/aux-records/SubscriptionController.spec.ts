@@ -338,7 +338,6 @@ describe('SubscriptionController', () => {
             expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                 mode: 'subscription',
                 customer: 'stripe_customer',
-                customer_email: 'test@example.com',
                 success_url: 'success_url',
                 cancel_url: 'cancel_url',
                 line_items: [
@@ -347,6 +346,9 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
+                metadata: {
+                    userId,
+                },
             });
         });
 
@@ -485,7 +487,6 @@ describe('SubscriptionController', () => {
             expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                 mode: 'subscription',
                 customer: 'stripe_customer',
-                customer_email: 'test@example.com',
                 success_url: 'success_url',
                 cancel_url: 'cancel_url',
                 line_items: [
@@ -494,6 +495,9 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
+                metadata: {
+                    userId,
+                },
             });
         });
 
@@ -563,7 +567,6 @@ describe('SubscriptionController', () => {
             expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                 mode: 'subscription',
                 customer: 'stripe_customer',
-                customer_email: 'test@example.com',
                 success_url: 'success_url',
                 cancel_url: 'cancel_url',
                 line_items: [
@@ -572,6 +575,9 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
+                metadata: {
+                    userId,
+                },
             });
         });
 
@@ -641,7 +647,6 @@ describe('SubscriptionController', () => {
             expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                 mode: 'subscription',
                 customer: 'stripe_customer',
-                customer_email: 'test@example.com',
                 success_url: 'success_url',
                 cancel_url: 'cancel_url',
                 line_items: [
@@ -650,6 +655,9 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
+                metadata: {
+                    userId,
+                },
             });
         });
 
@@ -719,7 +727,6 @@ describe('SubscriptionController', () => {
             expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                 mode: 'subscription',
                 customer: 'stripe_customer',
-                customer_email: 'test@example.com',
                 success_url: 'success_url',
                 cancel_url: 'cancel_url',
                 line_items: [
@@ -728,6 +735,9 @@ describe('SubscriptionController', () => {
                         quantity: 1,
                     },
                 ],
+                metadata: {
+                    userId,
+                },
             });
         });
 

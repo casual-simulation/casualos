@@ -7,11 +7,13 @@ import { Subscription } from 'rxjs';
 import { debounce } from 'lodash';
 import Avatar from '../AuthAvatar/AuthAvatar';
 import Security from '../AuthSecurity/AuthSecurity';
+import AuthSubscription from '../AuthSubscription/AuthSubscription';
 
 @Component({
     components: {
         avatar: Avatar,
         security: Security,
+        subscription: AuthSubscription,
     },
 })
 export default class AuthHome extends Vue {

@@ -17,6 +17,11 @@ import type {
     ReplaceSessionResult,
 } from '@casual-simulation/aux-records/AuthController';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
+import type {
+    GetSubscriptionStatusResult,
+    SubscriptionStatus,
+    CreateManageSubscriptionResult,
+} from '@casual-simulation/aux-records/SubscriptionController';
 import { omitBy } from 'lodash';
 
 const EMAIL_KEY = 'userEmail';
@@ -197,6 +202,50 @@ export class AuthManager {
             return result.sessions;
         } else {
             return [];
+        }
+    }
+
+    async listSubscriptions(): Promise<SubscriptionStatus[]> {
+        const url = new URL(
+            `${this.apiEndpoint}/api/${this.userId}/subscription`
+        );
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+        });
+
+        const result = response.data as GetSubscriptionStatusResult;
+
+        if (result.success === true) {
+            return result.subscriptions;
+        } else {
+            if (result.errorCode === 'not_supported') {
+                return null;
+            }
+            return [];
+        }
+    }
+
+    async manageSubscriptions(): Promise<void> {
+        const url = new URL(
+            `${this.apiEndpoint}/api/${this.userId}/subscription/manage`
+        );
+        const response = await axios.post(
+            url.href,
+            {},
+            {
+                headers: this._authenticationHeaders(),
+            }
+        );
+
+        const result = response.data as CreateManageSubscriptionResult;
+
+        if (result.success === true) {
+            location.href = result.url;
+        } else {
+            console.error(
+                '[AuthManager] Unable to manage subscriptions!',
+                result
+            );
         }
     }
 

@@ -17,6 +17,7 @@
         "watch:docs": "cd docs && npm start",
         "watch:auth:web": "lerna exec --scope @casual-simulation/aux-auth -- npm run watch:web",
         "auth:serverless": "lerna exec --no-prefix --scope @casual-simulation/aux-auth -- npm run serverless",
+        "auth:merge:secrets": "lerna exec --no-prefix --scope @casual-simulation/aux-auth -- npm run merge:secrets",
         "rebuild": "npm run clean && npm run build",
         "build": "npm run clean && npm run build:libs && npm run build:server && npm run build:auth && npm run build:proxy && npm run build:redirector && npm run build:cli",
         "build:tar:docker": "npm run build && npm run tar:docket",

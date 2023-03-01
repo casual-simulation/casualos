@@ -45,6 +45,7 @@
                 <p v-show="updating">Updating...</p>
                 <p v-show="updated">Updated!</p>
 
+                <subscription />
                 <security />
             </div>
         </div>

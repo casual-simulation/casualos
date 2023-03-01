@@ -1,0 +1,22 @@
+.sr-only {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    top: auto;
+    overflow: hidden;
+}
+
+.subscription-title {
+    display: flex;
+    align-items: center;
+}
+
+.subscription-title > .md-title {
+    flex: 1;
+}
+
+.subscriptions-loading {
+    display: flex;
+    justify-content: center;
+}

@@ -72,10 +72,24 @@ export class StripeIntegration implements StripeInterface {
         const result = await this._stripe.subscriptions.list({
             customer: id,
             limit: 5,
-            expand: ['items.data.price.product'],
         });
 
-        // result.data[0].items.
+        const productIds = new Set<string>();
+        for (let s of result.data) {
+            for (let i of s.items.data) {
+                productIds.add(i.price.product as string);
+            }
+        }
+
+        const products = await this._stripe.products.list({
+            ids: [...productIds],
+        });
+
+        const productsById = new Map<string, Stripe.Product>();
+        for (let p of products.data) {
+            productsById.set(p.id, p);
+        }
+
         return {
             subscriptions: result.data.map((s) => ({
                 id: s.id,
@@ -88,7 +102,7 @@ export class StripeIntegration implements StripeInterface {
                 ended_at: s.ended_at,
                 items: s.items.data.map((i) => {
                     const price = i.price;
-                    const product = i.price.product as Stripe.Product;
+                    const product = productsById.get(i.price.product);
                     return {
                         id: i.id,
                         price: {
@@ -98,8 +112,8 @@ export class StripeIntegration implements StripeInterface {
                             unit_amount: price.unit_amount,
                             currency: price.currency,
                             product: {
-                                id: product.id,
-                                name: product.name,
+                                id: product?.id ?? (price.product as string),
+                                name: product.name ?? '',
                             },
                         },
                     } as StripeSubscriptionItem;

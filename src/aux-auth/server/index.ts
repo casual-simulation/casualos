@@ -10,6 +10,7 @@ import {
     ObjectId,
 } from 'mongodb';
 import pify from 'pify';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { hasValue } from '@casual-simulation/aux-common/bots/BotCalculations';
 import { Record } from '@casual-simulation/aux-common/bots/Bot';
 import {
@@ -47,7 +48,32 @@ import {
 } from './MongoDBAuthStore';
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
 import { StripeIntegration } from '../shared/StripeIntegration';
+import * as dotenv from 'dotenv';
 import Stripe from 'stripe';
+
+// Load env file
+const secretsFile = path.resolve(__dirname, '..', 'secrets.env.json');
+if (existsSync(secretsFile)) {
+    const json = readFileSync(secretsFile, { encoding: 'utf-8' });
+    const parsed = tryParseJson(json);
+
+    if (parsed.success) {
+        // console.log('[AuxAuth] Parsed!');
+        for (let key in parsed.value) {
+            console.log('[AuxAuth] Injecting Key from secrets.env.json', key);
+            const value = parsed.value[key];
+            if (value === null || value === undefined || value === '') {
+                delete process.env[key];
+            } else if (typeof value === 'object') {
+                process.env[key] = JSON.stringify(value);
+            } else {
+                process.env[key] = String(value);
+            }
+        }
+    }
+} else {
+    console.log('[AuxAuth] No secrets file.');
+}
 
 // declare var MAGIC_SECRET_KEY: string;
 
@@ -357,6 +383,14 @@ async function start() {
     });
 
     app.put('/api/:userId/metadata', async (req, res) => {
+        await handleRequest(req, res);
+    });
+
+    app.get('/api/:userId/subscription', async (req, res) => {
+        await handleRequest(req, res);
+    });
+
+    app.post('/api/:userId/subscription/manage', async (req, res) => {
         await handleRequest(req, res);
     });
 

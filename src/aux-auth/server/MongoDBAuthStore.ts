@@ -135,6 +135,7 @@ export class MongoDBAuthStore implements AuthStore {
     }
 
     async saveUser(user: AuthUser): Promise<void> {
+        user.subscriptionStatus;
         await this._users.updateOne(
             { _id: user.id },
             {
@@ -147,6 +148,8 @@ export class MongoDBAuthStore implements AuthStore {
                     avatarPortraitUrl: user.avatarPortraitUrl,
                     allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
                     currentLoginRequestId: user.currentLoginRequestId,
+                    stripeCustomerId: user.stripeCustomerId,
+                    subscriptionStatus: user.subscriptionStatus,
                 },
             },
             {
@@ -183,6 +186,8 @@ export class MongoDBAuthStore implements AuthStore {
             avatarUrl: user.avatarUrl,
             allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
             currentLoginRequestId: user.currentLoginRequestId,
+            stripeCustomerId: user.stripeCustomerId,
+            subscriptionStatus: user.subscriptionStatus,
         });
 
         return {

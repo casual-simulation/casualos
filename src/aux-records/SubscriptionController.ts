@@ -242,8 +242,10 @@ export class SubscriptionController {
                     success_url: this._config.successUrl,
                     cancel_url: this._config.cancelUrl,
                     line_items: this._config.lineItems,
-                    customer_email: user.email,
                     mode: 'subscription',
+                    metadata: {
+                        userId: user.id,
+                    },
                 });
 
                 console.log(
@@ -309,8 +311,10 @@ export class SubscriptionController {
                 success_url: this._config.successUrl,
                 cancel_url: this._config.cancelUrl,
                 line_items: this._config.lineItems,
-                customer_email: user.email,
                 mode: 'subscription',
+                metadata: {
+                    userId: user.id,
+                },
             });
 
             console.log(

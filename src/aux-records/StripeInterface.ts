@@ -92,7 +92,7 @@ export interface StripeCheckoutRequest {
     /**
      * The email address that should be used for the customer.
      */
-    customer_email: string;
+    customer_email?: string;
 
     /**
      * The URL that the user should be redirected to after a successful checkout.
@@ -108,6 +108,11 @@ export interface StripeCheckoutRequest {
      * The client reference ID that should be used for the checkout session.
      */
     client_reference_id?: string;
+
+    /**
+     * The metadata to use.
+     */
+    metadata?: any;
 }
 
 export interface StripeCheckoutResponse {
