@@ -78,6 +78,14 @@ export class SubscriptionController {
     async getSubscriptionStatus(
         request: GetSubscriptionStatusRequest
     ): Promise<GetSubscriptionStatusResult> {
+        if (!this._stripe) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This method is not supported.',
+            };
+        }
+
         try {
             if (typeof request.userId !== 'string' || request.userId === '') {
                 return {
@@ -166,6 +174,14 @@ export class SubscriptionController {
     async createManageSubscriptionLink(
         request: CreateManageSubscriptionRequest
     ): Promise<CreateManageSubscriptionResult> {
+        if (!this._stripe) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This method is not supported.',
+            };
+        }
+
         try {
             if (typeof request.userId !== 'string' || request.userId === '') {
                 return {
@@ -323,6 +339,14 @@ export class SubscriptionController {
     async handleStripeWebhook(
         request: HandleStripeWebhookRequest
     ): Promise<HandleStripeWebhookResponse> {
+        if (!this._stripe) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This method is not supported.',
+            };
+        }
+
         try {
             if (
                 typeof request.requestBody !== 'string' ||
@@ -461,7 +485,8 @@ export interface CreateManageSubscriptionFailure {
     errorCode:
         | ServerError
         | ValidateSessionKeyFailure['errorCode']
-        | 'unacceptable_user_id';
+        | 'unacceptable_user_id'
+        | 'not_supported';
 
     /**
      * The error message.
@@ -593,7 +618,8 @@ export interface GetSubscriptionStatusFailure {
     errorCode:
         | ServerError
         | ValidateSessionKeyFailure['errorCode']
-        | 'unacceptable_user_id';
+        | 'unacceptable_user_id'
+        | 'not_supported';
 
     /**
      * The error message.
@@ -623,6 +649,6 @@ export interface HandleStripeWebhookSuccess {
 
 export interface HandleStripeWebhookFailure {
     success: false;
-    errorCode: ServerError | 'invalid_request';
+    errorCode: ServerError | 'invalid_request' | 'not_supported';
     errorMessage: string;
 }

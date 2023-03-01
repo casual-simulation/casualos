@@ -275,6 +275,21 @@ describe('SubscriptionController', () => {
                     'The given user ID is invalid. It must be a correctly formatted string.',
             });
         });
+
+        it('should return a not_supported result if the controller has no stripe integration', async () => {
+            (controller as any)._stripe = null;
+
+            const result = await controller.getSubscriptionStatus({
+                sessionKey,
+                userId,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This method is not supported.',
+            });
+        });
     });
 
     describe('createManageSubscriptionLink()', () => {
@@ -1065,9 +1080,6 @@ describe('SubscriptionController', () => {
             const result = await controller.createManageSubscriptionLink({
                 sessionKey: 'wrong',
                 userId,
-                cancelUrl: 'cancel_url',
-                returnUrl: 'return_url',
-                successUrl: 'success_url',
             });
 
             expect(result).toEqual({
@@ -1109,6 +1121,21 @@ describe('SubscriptionController', () => {
                 success: false,
                 errorCode: 'invalid_key',
                 errorMessage: INVALID_KEY_ERROR_MESSAGE,
+            });
+        });
+
+        it('should return a not_supported result if the controller has no stripe integration', async () => {
+            (controller as any)._stripe = null;
+
+            const result = await controller.createManageSubscriptionLink({
+                sessionKey,
+                userId,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This method is not supported.',
             });
         });
     });
@@ -1246,6 +1273,21 @@ describe('SubscriptionController', () => {
                 success: false,
                 errorCode: 'invalid_request',
                 errorMessage: 'The request was not valid.',
+            });
+        });
+
+        it('should return a not_supported result if the controller has no stripe integration', async () => {
+            (controller as any)._stripe = null;
+
+            const result = await controller.handleStripeWebhook({
+                requestBody: 'test',
+                signature: 'signature',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This method is not supported.',
             });
         });
     });
