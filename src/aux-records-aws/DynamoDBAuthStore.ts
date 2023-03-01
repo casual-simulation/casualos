@@ -276,17 +276,18 @@ export class DynamoDBAuthStore implements AuthStore {
 
         const user = userResult.Items[0];
         if (user) {
+            const realUser = await this.findUser(user.id);
             return {
-                id: user.id,
-                email: user.email,
-                phoneNumber: user.phoneNumber,
-                avatarPortraitUrl: user.avatarPortraitUrl,
-                avatarUrl: user.avatarUrl,
-                name: user.name,
-                allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
-                currentLoginRequestId: user.currentLoginRequestId,
-                stripeCustomerId: user.stripeCustomerId,
-                subscriptionStatus: user.subscriptionStatus,
+                id: realUser.id,
+                email: realUser.email,
+                phoneNumber: realUser.phoneNumber,
+                avatarPortraitUrl: realUser.avatarPortraitUrl,
+                avatarUrl: realUser.avatarUrl,
+                name: realUser.name,
+                allSessionRevokeTimeMs: realUser.allSessionRevokeTimeMs,
+                currentLoginRequestId: realUser.currentLoginRequestId,
+                stripeCustomerId: realUser.stripeCustomerId,
+                subscriptionStatus: realUser.subscriptionStatus,
             };
         } else {
             return null;

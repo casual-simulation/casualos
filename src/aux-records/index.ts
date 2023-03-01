@@ -1,3 +1,6 @@
+export * from './AuthController';
+export * from './AuthStore';
+
 export * from './RecordsController';
 export * from './RecordsStore';
 export * from './MemoryRecordsStore';
@@ -15,3 +18,6 @@ export * from './MemoryEventRecordsStore';
 
 export * from './LivekitEvents';
 export * from './RecordsHttpServer';
+
+export * from './SubscriptionController';
+export * from './StripeInterface';

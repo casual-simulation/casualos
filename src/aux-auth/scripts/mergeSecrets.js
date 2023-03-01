@@ -46,6 +46,14 @@ async function start() {
         });
     }
 
+    if (!result?.handleRecords?.STRIPE_SECRET_KEY) {
+        questions.push({
+            type: 'text',
+            name: 'STRIPE_SECRET_KEY',
+            message: 'Please enter the Stripe Secret Key',
+        });
+    }
+
     if (questions.length > 0) {
         const response = await prompts(questions);
         result = _.merge({}, result, {

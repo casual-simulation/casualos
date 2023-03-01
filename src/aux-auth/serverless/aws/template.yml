@@ -257,6 +257,21 @@ Resources:
                     Properties:
                         Path: /api/{userId}/metadata
                         Method: PUT
+                GetSubscriptions:
+                    Type: Api
+                    Properties:
+                        Path: /api/{userId}/subscription
+                        Method: GET
+                ManageSubscriptions:
+                    Type: Api
+                    Properties:
+                        Path: /api/{userId}/subscription/manage
+                        Method: POST
+                StripeWebhook:
+                    Type: Api
+                    Properties:
+                        Path: /api/stripeWebhook
+                        Method: POST
                 KeepWarm:
                     Type: Schedule
                     Properties:
@@ -284,6 +299,13 @@ Resources:
             ProvisionedThroughput:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
+            GlobalSeconaryIndexes:
+                - IndexName: StripeCustomerIdsIndex
+                  KeySchema:
+                      - KeyType: HASH
+                        AttributeName: stripeCustomerId
+                  Projection:
+                      ProjectionType: KEYS_ONLY
 
     UserAddressesTable:
         Type: AWS::DynamoDB::Table
