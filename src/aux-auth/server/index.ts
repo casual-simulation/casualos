@@ -23,6 +23,12 @@ import {
     RecordsHttpServer,
     GenericHttpRequest,
     GenericHttpHeaders,
+    SubscriptionController,
+    tryParseJson,
+    SubscriptionConfiguration,
+    JsonParseResult,
+    StripeInterface,
+    tryParseSubscriptionConfig,
 } from '@casual-simulation/aux-records';
 import { MongoDBRecordsStore } from './MongoDBRecordsStore';
 import { MongoDBDataRecordsStore, DataRecord } from './MongoDBDataRecordsStore';
@@ -40,6 +46,8 @@ import {
     MongoDBLoginRequest,
 } from './MongoDBAuthStore';
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
+import { StripeIntegration } from '../shared/StripeIntegration';
+import Stripe from 'stripe';
 
 // declare var MAGIC_SECRET_KEY: string;
 
@@ -51,6 +59,9 @@ const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT ?? 'ws://localhost:7880';
 const MONGO_URL = process.env.MONGO_URL ?? 'mongodb://127.0.0.1:27017';
 const MONGO_USE_NEW_URL_PARSER =
     process.env.MONGO_USE_NEW_URL_PARSER ?? 'false';
+
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? null;
+const SUBSCRIPTION_CONFIG = process.env.SUBSCRIPTION_CONFIG ?? null;
 
 function getAuthMessenger(): AuthMessenger {
     const API_KEY = process.env.TEXT_IT_API_KEY;
@@ -172,6 +183,28 @@ async function start() {
     const messenger = getAuthMessenger();
     const authController = new AuthController(authStore, messenger);
 
+    const subscriptionConfig = tryParseSubscriptionConfig(SUBSCRIPTION_CONFIG);
+
+    let stripe: StripeInterface;
+    if (!!STRIPE_SECRET_KEY && subscriptionConfig) {
+        console.log('[AuxAuth] Integrating with Stripe.');
+        stripe = new StripeIntegration(
+            new Stripe(STRIPE_SECRET_KEY, {
+                apiVersion: '2022-11-15',
+            })
+        );
+    } else {
+        console.log('[AuxAuth] Disabling Stripe Features.');
+        stripe = null;
+    }
+
+    const subscriptionController = new SubscriptionController(
+        stripe,
+        authController,
+        authStore,
+        subscriptionConfig
+    );
+
     const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
 
     const allowedRecordsOrigins = new Set([
@@ -200,7 +233,8 @@ async function start() {
         eventManager,
         dataManager,
         manualDataManager,
-        fileController
+        fileController,
+        subscriptionController
     );
 
     async function handleRequest(req: Request, res: Response) {

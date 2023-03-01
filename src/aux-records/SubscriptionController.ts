@@ -6,7 +6,7 @@ import {
 import { AuthSession, AuthStore } from './AuthStore';
 import { StripeEvent, StripeInterface } from './StripeInterface';
 import { ServerError } from './Errors';
-import { isActiveSubscription } from './Utils';
+import { isActiveSubscription, JsonParseResult, tryParseJson } from './Utils';
 
 export interface SubscriptionConfiguration {
     /**
@@ -446,6 +446,37 @@ export class SubscriptionController {
             };
         }
     }
+}
+
+/**
+ * Attempts to parse the given JSON into a valid SubscriptionConfiguration object.
+ * @param config The JSON to parse.
+ */
+export function tryParseSubscriptionConfig(
+    config: string
+): SubscriptionConfiguration | null {
+    let subscriptionParseResult: JsonParseResult = tryParseJson(config);
+    let subscriptionConfig: SubscriptionConfiguration;
+
+    if (subscriptionParseResult.success && subscriptionParseResult.value) {
+        subscriptionConfig = subscriptionParseResult.value;
+        if (
+            typeof subscriptionConfig !== 'object' ||
+            typeof subscriptionConfig.cancelUrl !== 'string' ||
+            typeof subscriptionConfig.returnUrl !== 'string' ||
+            typeof subscriptionConfig.successUrl !== 'string' ||
+            typeof subscriptionConfig.lineItems !== 'object' ||
+            typeof subscriptionConfig.products !== 'object' ||
+            !Array.isArray(subscriptionConfig.lineItems) ||
+            !Array.isArray(subscriptionConfig.products) ||
+            subscriptionConfig.lineItems.some((li) => typeof li !== 'object') ||
+            subscriptionConfig.products.some((p) => typeof p !== 'string')
+        ) {
+            subscriptionConfig = null;
+        }
+    }
+
+    return subscriptionConfig;
 }
 
 /**
