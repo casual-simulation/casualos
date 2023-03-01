@@ -2,6 +2,7 @@ import { getStatusCode, tryDecodeUriComponent, tryParseJson } from './Utils';
 import {
     AuthController,
     INVALID_KEY_ERROR_MESSAGE,
+    INVALID_REQUEST_ERROR_MESSAGE,
     ValidateSessionKeyResult,
 } from './AuthController';
 import { parseSessionKey } from './AuthUtils';
@@ -229,6 +230,15 @@ export class RecordsHttpServer {
                 this._allowedAccountOrigins
             );
         } else if (
+            request.method === 'POST' &&
+            request.path === '/api/stripeWebhook'
+        ) {
+            return formatResponse(
+                request,
+                await this._stripeWebhook(request),
+                true
+            );
+        } else if (
             request.method === 'GET' &&
             request.path === '/api/emailRules'
         ) {
@@ -431,6 +441,39 @@ export class RecordsHttpServer {
             returnResult(OPERATION_NOT_FOUND_RESULT),
             true
         );
+    }
+
+    private async _stripeWebhook(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        let body: string = null;
+        if (typeof request.body === 'string') {
+            body = request.body;
+        } else if (ArrayBuffer.isView(request.body)) {
+            try {
+                const decoder = new TextDecoder();
+                body = decoder.decode(request.body);
+            } catch (err) {
+                console.log(
+                    '[RecordsHttpServer] Unable to decode request body!',
+                    err
+                );
+                return returnResult({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                });
+            }
+        }
+
+        const signature = request.headers['stripe-signature'];
+
+        const result = await this._subscriptions.handleStripeWebhook({
+            requestBody: body,
+            signature,
+        });
+
+        return returnResult(result);
     }
 
     private async _handleOptions(
@@ -1459,8 +1502,9 @@ export function formatResponse(
         ...(response.headers || {}),
     } as any;
     if (
-        origins === true ||
-        (typeof origins === 'object' && validateOrigin(request, origins))
+        !!origin &&
+        (origins === true ||
+            (typeof origins === 'object' && validateOrigin(request, origins)))
     ) {
         if (!headers['Access-Control-Allow-Origin']) {
             headers['Access-Control-Allow-Origin'] = origin;

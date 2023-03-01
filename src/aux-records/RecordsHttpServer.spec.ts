@@ -955,6 +955,79 @@ describe('RecordsHttpServer', () => {
         });
     });
 
+    describe('POST /api/stripeWebhook', () => {
+        let user: AuthUser;
+        beforeEach(async () => {
+            user = await authStore.findUser(userId);
+            await authStore.saveUser({
+                ...user,
+                stripeCustomerId: 'customer_id',
+            });
+            user = await authStore.findUser(userId);
+        });
+
+        const eventTypes = [
+            ['customer.subscription.created'],
+            ['customer.subscription.updated'],
+            ['customer.subscription.deleted'],
+        ] as const;
+
+        const statusTypes = [
+            ['active', true] as const,
+            ['trialing', true] as const,
+            ['canceled', false] as const,
+            ['ended', false] as const,
+            ['past_due', false] as const,
+            ['unpaid', false] as const,
+            ['incomplete', false] as const,
+            ['incomplete_expired', false] as const,
+            ['paused', false] as const,
+        ];
+
+        describe.each(eventTypes)('should handle %s events', (type) => {
+            it.each(statusTypes)(
+                'should handle %s subscriptions',
+                async (status, active) => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'subscription',
+                                status: status,
+                                customer: 'customer_id',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                        type: type,
+                    });
+
+                    const response = await server.handleRequest(
+                        httpPost('/api/stripeWebhook', 'request_body', {
+                            ['stripe-signature']: 'request_signature',
+                        })
+                    );
+
+                    expectResponseBodyToEqual(response, {
+                        statusCode: 200,
+                        body: {
+                            success: true,
+                        },
+                        headers: {},
+                    });
+
+                    const user = await authStore.findUser(userId);
+                    expect(user.subscriptionStatus).toBe(status);
+                }
+            );
+        });
+    });
+
     describe('GET /api/emailRules', () => {
         it('should get the list of email rules', async () => {
             authStore.emailRules.push(
