@@ -172,7 +172,8 @@ if (!!STRIPE_SECRET_KEY && !!STRIPE_PUBLISHABLE_KEY && subscriptionConfig) {
     stripe = new StripeIntegration(
         new Stripe(STRIPE_SECRET_KEY, {
             apiVersion: '2022-11-15',
-        })
+        }),
+        STRIPE_PUBLISHABLE_KEY
     );
 } else {
     console.log('[Records] Disabling Stripe Features.');
