@@ -210,6 +210,7 @@ describe('AuthManager', () => {
                     headers: {
                         Authorization: `Bearer ${manager.savedSessionKey}`,
                     },
+                    validateStatus: expect.any(Function),
                 },
             ]);
         });

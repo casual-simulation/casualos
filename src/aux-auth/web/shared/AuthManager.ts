@@ -30,6 +30,10 @@ const SESSION_KEY = 'sessionKey';
 
 declare const ASSUME_SUBSCRIPTIONS_SUPPORTED: boolean;
 
+if (typeof (globalThis as any).ASSUME_SUBSCRIPTIONS_SUPPORTED === 'undefined') {
+    (globalThis as any).ASSUME_SUBSCRIPTIONS_SUPPORTED = false;
+}
+
 export class AuthManager {
     private _userId: string;
     private _sessionId: string;
