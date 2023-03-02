@@ -208,8 +208,8 @@ async function start() {
     );
 
     const messenger = getAuthMessenger();
-    const authController = new AuthController(authStore, messenger);
 
+    let forceAllowSubscriptionFeatures = false;
     const subscriptionConfig = tryParseSubscriptionConfig(SUBSCRIPTION_CONFIG);
 
     let stripe: StripeInterface;
@@ -223,8 +223,18 @@ async function start() {
         );
     } else {
         console.log('[AuxAuth] Disabling Stripe Features.');
+        console.log(
+            '[AuxAuth] Allowing all subscription features because Stripe is not configured.'
+        );
         stripe = null;
+        forceAllowSubscriptionFeatures = true;
     }
+
+    const authController = new AuthController(
+        authStore,
+        messenger,
+        forceAllowSubscriptionFeatures
+    );
 
     const subscriptionController = new SubscriptionController(
         stripe,
