@@ -49,7 +49,7 @@
                         @updateAvatar="updateAvatar"
                     ></avatar>
                 </div>
-                <div v-if="hasActiveSubscription">
+                <div v-if="!subscriptionsSupported || hasActiveSubscription">
                     <md-field>
                         <label for="openAiKey">OpenAI API Key</label>
                         <md-input

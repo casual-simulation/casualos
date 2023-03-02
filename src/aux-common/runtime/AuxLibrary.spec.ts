@@ -4922,6 +4922,8 @@ describe('AuxLibrary', () => {
                         avatarUrl: 'myAvatarUrl',
                         avatarPortraitUrl: 'portraitUrl',
                         name: 'name',
+                        openAiKey: 'api key',
+                        hasActiveSubscription: true,
                     } as AuthData,
                     false
                 );
@@ -4939,6 +4941,8 @@ describe('AuxLibrary', () => {
                     'portraitUrl'
                 );
                 expect(resultBot.tags.name).toEqual('name');
+                expect(resultBot.tags.openAiKey).toEqual('api key');
+                expect(resultBot.tags.hasActiveSubscription).toEqual(true);
             });
 
             it('should emit a DefineGlobalBotAction', async () => {

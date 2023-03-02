@@ -29,12 +29,15 @@ export default class AuthHome extends Vue {
     updating: boolean = false;
     updated: boolean = false;
 
+    subscriptionsSupported: boolean = false;
+
     private _sub: Subscription;
 
     created() {
         this.metadata = null;
         this.updating = false;
         this.updated = false;
+        this.subscriptionsSupported = authManager.subscriptionsSupported;
 
         this._updateMetadata = this._updateMetadata.bind(this);
         this._updateMetadata = debounce(this._updateMetadata, 500);
@@ -47,6 +50,7 @@ export default class AuthHome extends Vue {
             this.originalAvatarUrl = authManager.avatarUrl;
             this.originalAvatarPortraitUrl = authManager.avatarPortraitUrl;
             this.originalPhone = authManager.phone;
+            this.subscriptionsSupported = authManager.subscriptionsSupported;
             this.hasActiveSubscription = authManager.hasActiveSubscription;
             this.originalOpenAiKey = authManager.openAiKey;
             this.metadata = {

@@ -2230,6 +2230,72 @@ describe('AuthController', () => {
             });
         });
 
+        it('should not include the openAiKey if the user has an inactive subscription', async () => {
+            await authStore.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                subscriptionStatus: 'canceled',
+                openAiKey: 'api_key',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            const result = await controller.getUserInfo({
+                userId,
+                sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                hasActiveSubscription: false,
+                openAiKey: null,
+            });
+        });
+
+        it('should include the openAiKey if subscription features are force automatically enabled', async () => {
+            await authStore.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                subscriptionStatus: 'canceled',
+                openAiKey: 'api_key',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            controller = new AuthController(authStore, messenger, true);
+
+            const result = await controller.getUserInfo({
+                userId,
+                sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                hasActiveSubscription: true,
+                openAiKey: 'api_key',
+            });
+        });
+
         it('should return a invalid_key response when the user ID doesnt match the given session key', async () => {
             const result = await controller.getUserInfo({
                 userId: 'myOtherUser',
@@ -2465,6 +2531,56 @@ describe('AuthController', () => {
                 phoneNumber: 'new phone number',
                 subscriptionStatus: 'canceled',
                 openAiKey: 'old api key',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+        });
+
+        it('should be able to update the openAiKey if subscription features are force enabled', async () => {
+            await authStore.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                subscriptionStatus: 'canceled',
+                openAiKey: 'old api key',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            controller = new AuthController(authStore, messenger, true);
+
+            const result = await controller.updateUserInfo({
+                userId,
+                sessionKey,
+                update: {
+                    name: 'New Name',
+                    avatarUrl: 'New Avatar URL',
+                    avatarPortraitUrl: 'New Portrait',
+                    email: 'new email',
+                    phoneNumber: 'new phone number',
+                    openAiKey: 'new API Key',
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+            });
+
+            const user = await authStore.findUser(userId);
+
+            expect(user).toEqual({
+                id: userId,
+                name: 'New Name',
+                avatarUrl: 'New Avatar URL',
+                avatarPortraitUrl: 'New Portrait',
+                email: 'new email',
+                phoneNumber: 'new phone number',
+                subscriptionStatus: 'canceled',
+                openAiKey: 'new API Key',
                 allSessionRevokeTimeMs: undefined,
                 currentLoginRequestId: undefined,
             });

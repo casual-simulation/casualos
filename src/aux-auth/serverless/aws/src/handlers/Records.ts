@@ -162,10 +162,9 @@ if (API_KEY && FLOW_ID) {
     messenger = new ConsoleAuthMessenger();
 }
 
-const authController = new AuthController(authStore, messenger);
-
 const subscriptionConfig = tryParseSubscriptionConfig(SUBSCRIPTION_CONFIG);
 
+let forceAllowSubscriptionFeatures = false;
 let stripe: StripeInterface;
 if (!!STRIPE_SECRET_KEY && !!STRIPE_PUBLISHABLE_KEY && subscriptionConfig) {
     console.log('[Records] Integrating with Stripe.');
@@ -177,8 +176,18 @@ if (!!STRIPE_SECRET_KEY && !!STRIPE_PUBLISHABLE_KEY && subscriptionConfig) {
     );
 } else {
     console.log('[Records] Disabling Stripe Features.');
+    console.log(
+        '[AuxAuth] Allowing all subscription features because Stripe is not configured.'
+    );
     stripe = null;
+    forceAllowSubscriptionFeatures = true;
 }
+
+const authController = new AuthController(
+    authStore,
+    messenger,
+    forceAllowSubscriptionFeatures
+);
 
 const subscriptionController = new SubscriptionController(
     stripe,

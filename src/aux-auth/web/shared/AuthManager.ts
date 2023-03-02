@@ -28,10 +28,13 @@ const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
 const SESSION_KEY = 'sessionKey';
 
+declare const ASSUME_SUBSCRIPTIONS_SUPPORTED: boolean;
+
 export class AuthManager {
     private _userId: string;
     private _sessionId: string;
     private _appMetadata: AppMetadata;
+    private _subscriptionsSupported: boolean;
 
     private _loginState: Subject<boolean>;
     private _emailRules: RegexRule[];
@@ -43,6 +46,7 @@ export class AuthManager {
         this._apiEndpoint = apiEndpoint;
         this._gitTag = gitTag;
         this._loginState = new BehaviorSubject<boolean>(false);
+        this._subscriptionsSupported = ASSUME_SUBSCRIPTIONS_SUPPORTED;
     }
 
     get userId() {
@@ -71,6 +75,10 @@ export class AuthManager {
 
     get name() {
         return this._appMetadata?.name;
+    }
+
+    get subscriptionsSupported() {
+        return this._subscriptionsSupported;
     }
 
     get hasActiveSubscription() {
@@ -219,6 +227,7 @@ export class AuthManager {
         );
         const response = await axios.get(url.href, {
             headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
         });
 
         const result = response.data as GetSubscriptionStatusResult;

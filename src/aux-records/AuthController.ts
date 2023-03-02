@@ -71,10 +71,16 @@ export const INVALID_KEY_ERROR_MESSAGE = 'The session key is invalid.';
 export class AuthController {
     private _store: AuthStore;
     private _messenger: AuthMessenger;
+    private _forceAllowSubscriptionFeatures: boolean;
 
-    constructor(authStore: AuthStore, messenger: AuthMessenger) {
+    constructor(
+        authStore: AuthStore,
+        messenger: AuthMessenger,
+        forceAllowSubscriptionFeatures: boolean = false
+    ) {
         this._store = authStore;
         this._messenger = messenger;
+        this._forceAllowSubscriptionFeatures = forceAllowSubscriptionFeatures;
     }
 
     async requestLogin(request: LoginRequest): Promise<LoginRequestResult> {
@@ -915,9 +921,9 @@ export class AuthController {
                 );
             }
 
-            const hasActiveSubscription = isActiveSubscription(
-                result.subscriptionStatus
-            );
+            const hasActiveSubscription =
+                this._forceAllowSubscriptionFeatures ||
+                isActiveSubscription(result.subscriptionStatus);
 
             return {
                 success: true,
@@ -1003,9 +1009,9 @@ export class AuthController {
                 );
             }
 
-            const hasActiveSubscription = isActiveSubscription(
-                user.subscriptionStatus
-            );
+            const hasActiveSubscription =
+                this._forceAllowSubscriptionFeatures ||
+                isActiveSubscription(user.subscriptionStatus);
 
             const cleaned = cleanupObject({
                 name: request.update.name,
