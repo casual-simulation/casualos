@@ -18,9 +18,15 @@ import Stripe from 'stripe';
  */
 export class StripeIntegration implements StripeInterface {
     private _stripe: Stripe;
+    private _publishableKey: string;
 
-    constructor(stripe: Stripe) {
+    get publishableKey() {
+        return this._publishableKey;
+    }
+
+    constructor(stripe: Stripe, publishableKey: string) {
         this._stripe = stripe;
+        this._publishableKey = publishableKey;
     }
 
     async listPricesForProduct(product: string): Promise<StripePrice[]> {
@@ -102,7 +108,7 @@ export class StripeIntegration implements StripeInterface {
                 ended_at: s.ended_at,
                 items: s.items.data.map((i) => {
                     const price = i.price;
-                    const product = productsById.get(i.price.product);
+                    const product = productsById.get(i.price.product as string);
                     return {
                         id: i.id,
                         price: {

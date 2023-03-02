@@ -3,6 +3,11 @@
  */
 export interface StripeInterface {
     /**
+     * Gets the publishable key.
+     */
+    publishableKey: string;
+
+    /**
      * Lists the prices for the given product.
      * @param product The ID of the product.
      */

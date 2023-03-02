@@ -46,6 +46,7 @@ async function start() {
         ['TEXT_IT_API_KEY', 'Please enter the API Key for TextIt'],
         ['TEXT_IT_FLOW_ID', 'Please enter the Flow ID for TextIt'],
         ['STRIPE_SECRET_KEY', 'Please enter the Stripe Secret Key'],
+        ['STRIPE_PUBLISHABLE_KEY', 'Please enter the Stripe Publishable Key'],
         ['SUBSCRIPTION_CONFIG', 'Please enter the Subscription Config'],
     ];
 

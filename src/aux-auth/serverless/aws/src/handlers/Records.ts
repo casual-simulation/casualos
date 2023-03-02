@@ -70,6 +70,7 @@ const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT;
 // const SMS_TABLE = process.env.SMS_TABLE;
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? null;
+const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY ?? null;
 const SUBSCRIPTION_CONFIG = process.env.SUBSCRIPTION_CONFIG ?? null;
 
 // Create a DocumentClient that represents the query to add an item
@@ -166,7 +167,7 @@ const authController = new AuthController(authStore, messenger);
 const subscriptionConfig = tryParseSubscriptionConfig(SUBSCRIPTION_CONFIG);
 
 let stripe: StripeInterface;
-if (!!STRIPE_SECRET_KEY && subscriptionConfig) {
+if (!!STRIPE_SECRET_KEY && !!STRIPE_PUBLISHABLE_KEY && subscriptionConfig) {
     console.log('[Records] Integrating with Stripe.');
     stripe = new StripeIntegration(
         new Stripe(STRIPE_SECRET_KEY, {

@@ -1,9 +1,6 @@
 <template>
     <div v-if="maybeSupported">
-        <div class="subscription-title">
-            <h2 class="md-title">Subscriptions</h2>
-        </div>
-
+        <h2 class="md-title">Subscriptions</h2>
         <div v-if="loading" class="subscriptions-loading">
             <div>
                 <md-progress-spinner
@@ -12,116 +9,148 @@
                     :md-stroke="2"
                 ></md-progress-spinner>
             </div>
-            <p class="sr-only">Loading Subscriptions...</p>
+            <p class="sr-only">Subscription Loading...</p>
         </div>
         <div v-else>
             <div v-if="subscriptions.length > 0" class="subscriptions-list">
-                <md-table>
-                    <md-table-row>
-                        <md-table-head>Product</md-table-head>
-                        <md-table-head>Cost</md-table-head>
-                        <md-table-head>Status</md-table-head>
-                    </md-table-row>
-
-                    <md-table-row v-for="subscription of subscriptions" :key="subscription.id">
-                        <md-table-cell>{{ subscription.productName }}</md-table-cell>
-                        <md-table-cell>{{ getSubscriptionPrice(subscription) }}</md-table-cell>
-                        <md-table-cell>
-                            <span v-if="subscription.canceledDate">
-                                Canceled <relative-time :seconds="subscription.canceledDate" />
-                            </span>
-                            <span v-else-if="subscription.cancelDate">
-                                Cancels <relative-time :seconds="subscription.cancelDate" />
-                            </span>
-                            <span v-else-if="subscription.endedDate">
-                                Ends <relative-time :seconds="subscription.endedDate" />
-                            </span>
-                            <span v-else-if="subscription.currentPeriodEnd">
-                                Renews <relative-time :seconds="subscription.currentPeriodEnd" />
-                            </span>
-                            <!-- <span v-if="session.revokeTimeMs"
-                                >Revoked <relative-time :millis="session.revokeTimeMs"
-                            /></span>
-                            <span v-else>Expires <relative-time :millis="session.expireTimeMs" /></span> -->
-                        </md-table-cell>
-                        <md-table-cell>
-                            <md-button @click="manageSubscription">Manage</md-button>
-                            <!-- <md-menu md-align-trigger>
-                                <md-button
-                                    md-menu-trigger
-                                    class="md-icon-button"
-                                >
-                                    <md-icon>more_vert</md-icon>
-                                    <span class="sr-only">Subscription Options</span>
-                                    <md-tooltip>Subscription Options</md-tooltip>
-                                </md-button>
-                                <md-menu-content>
-                                    <md-menu-item 
-                                        >Manage Subscription</md-menu-item
-                                    >
-                                </md-menu-content>
-                            </md-menu> -->
-                        </md-table-cell>
-                    </md-table-row>
-                </md-table>
-            </div>
-            <div v-else class="add-subscription">
-                <md-button @click="manageSubscription" class="md-flat md-primary"
-                    >Add Subscription</md-button
+                <md-card
+                    v-for="subscription of subscriptions"
+                    :key="subscription.id"
+                    class="subscription-card"
                 >
-            </div>
-        </div>
+                    <md-card-header>
+                        <h3 class="md-title">{{ subscription.productName }}</h3>
+                    </md-card-header>
 
-        <!-- <div>
-            <md-table>
-                <md-table-row>
-                    <md-table-head>ID</md-table-head>
-                    <md-table-head>Location</md-table-head>
-                    <md-table-head>Status</md-table-head>
-                    <md-table-head>Granted</md-table-head>
-                </md-table-row>
-
-                <md-table-row v-for="session of sessions" :key="session.sessionId">
-                    <md-table-cell>{{ session.sessionId.substring(0, 8) }}</md-table-cell>
-                    <md-table-cell><session-location :session="session" /></md-table-cell>
-                    <md-table-cell>
-                        <span v-if="session.revokeTimeMs"
-                            >Revoked <relative-time :millis="session.revokeTimeMs"
-                        /></span>
-                        <span v-else>Expires <relative-time :millis="session.expireTimeMs" /></span>
-                    </md-table-cell>
-                    <md-table-cell><relative-time :millis="session.grantedTimeMs" /></md-table-cell>
-                    <md-table-cell>
-                        <md-menu md-align-trigger>
-                            <md-button
-                                v-if="!session.revokeTimeMs"
-                                md-menu-trigger
-                                class="md-icon-button"
+                    <md-card-content>
+                        <div class="subscription-price">
+                            <span class="price">{{ getSubscriptionPrice(subscription) }}</span>
+                            <span class="period">per<br />{{ subscription.renewalInterval }}</span>
+                        </div>
+                        <div class="subscription-status">
+                            <div
+                                v-if="subscription.statusCode === 'canceled'"
+                                class="status-indicator"
                             >
-                                <md-icon>more_vert</md-icon>
-                                <span class="sr-only">Session Options</span>
-                                <md-tooltip>Session Options</md-tooltip>
-                            </md-button>
-                            <md-menu-content>
-                                <md-menu-item @click="revokeSession(session)"
-                                    >Revoke Session</md-menu-item
+                                <div class="status canceled">Canceled</div>
+                                <div class="time">
+                                    <relative-time :seconds="subscription.canceledDate" />
+                                </div>
+                            </div>
+                            <div
+                                v-else-if="subscription.statusCode === 'incomplete'"
+                                class="status-indicator"
+                            >
+                                <div class="status warn">Incomplete</div>
+                                <div class="time">
+                                    Your subscription was not able to be activated due to payment
+                                    issues. Check your payment settings.
+                                </div>
+                            </div>
+                            <div
+                                v-else-if="subscription.statusCode === 'past_due'"
+                                class="status-indicator"
+                            >
+                                <div class="status warn">Past Due</div>
+                                <div class="time">
+                                    Ends
+                                    <relative-time
+                                        :seconds="
+                                            subscription.endedDate || subscription.currentPeriodEnd
+                                        "
+                                    />
+                                </div>
+                            </div>
+                            <div
+                                v-else-if="subscription.statusCode === 'active'"
+                                class="status-indicator"
+                            >
+                                <div
+                                    class="status"
+                                    :class="{
+                                        active: !subscription.canceledDate,
+                                        warn: !!subscription.canceledDate,
+                                    }"
                                 >
-                            </md-menu-content>
-                        </md-menu>
-                    </md-table-cell>
-                </md-table-row>
-            </md-table>
-        </div> -->
+                                    Active
+                                </div>
+                                <div class="time">
+                                    <span v-if="subscription.canceledDate"> Ends </span>
+                                    <span v-else> Renews </span>
+                                    <relative-time :seconds="subscription.currentPeriodEnd" />
+                                </div>
+                            </div>
+                            <div
+                                v-else-if="subscription.statusCode === 'trialing'"
+                                class="status-indicator"
+                            >
+                                <div
+                                    class="status"
+                                    :class="{
+                                        active: !subscription.canceledDate,
+                                        warn: !!subscription.canceledDate,
+                                    }"
+                                >
+                                    Trial
+                                </div>
+                                <div class="time">
+                                    <span v-if="subscription.canceledDate"> Ends </span>
+                                    <span v-else> Subscription starts </span>
+                                    <relative-time :seconds="subscription.currentPeriodEnd" />
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            v-if="subscription.productName.indexOf('Beta') > 0"
+                            class="subscribe-features"
+                        >
+                            <div>This includes:</div>
+                            <ul>
+                                <li>Access to casualos.com</li>
+                                <li>Use GPT-3 to Build (OpenAI API key not included)</li>
+                                <li>Unlimited ABs</li>
+                            </ul>
+                        </div>
+                        <md-card-actions>
+                            <md-button @click="manageSubscription" class="md-primary"
+                                >Manage</md-button
+                            >
+                        </md-card-actions>
+                    </md-card-content>
+                </md-card>
+            </div>
 
-        <!-- <md-dialog-confirm
-            :md-active.sync="showConfirmRevokeAllSessions"
-            md-title="Revoke All Sessions?"
-            md-content="Are you sure you want to revoke all of the active sessions? This will log you out everywhere."
-            md-confirm-text="Revoke"
-            md-cancel-text="Cancel"
-            @md-cancel="cancelRevokeAllSessions"
-            @md-confirm="revokeAllSessions"
-        /> -->
+            <md-card v-else class="subscription-card">
+                <md-card-header>
+                    <h3 class="md-title">Beta Program</h3>
+                </md-card-header>
+                <md-card-content>
+                    <div class="add-subscription">
+                        <div class="subscription-hook">
+                            Join the CasualOS Beta Program for early access to features and a
+                            community of builders.
+                        </div>
+                        <div class="subscription-price">
+                            <span class="price">$50</span>
+                            <span class="period">per<br />month</span>
+                        </div>
+                        <div class="subscribe-button">
+                            <md-button @click="manageSubscription" class="md-raised md-primary"
+                                >Subscribe</md-button
+                            >
+                        </div>
+                        <div class="subscribe-features">
+                            <div>This includes:</div>
+                            <ul>
+                                <li>Access to casualos.com</li>
+                                <li>Use GPT-3 to Build (OpenAI API key not included)</li>
+                                <li>Unlimited ABs</li>
+                            </ul>
+                        </div>
+                    </div>
+                </md-card-content>
+            </md-card>
+        </div>
     </div>
 </template>
 <script src="./AuthSubscription.ts"></script>

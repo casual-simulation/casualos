@@ -120,6 +120,7 @@ export class SubscriptionController {
                 return {
                     success: true,
                     userId: keyResult.userId,
+                    publishableKey: this._stripe.publishableKey,
                     subscriptions: [],
                 };
             }
@@ -152,6 +153,7 @@ export class SubscriptionController {
             return {
                 success: true,
                 userId: keyResult.userId,
+                publishableKey: this._stripe.publishableKey,
                 subscriptions,
             };
         } catch (err) {
@@ -552,6 +554,11 @@ export interface GetSubscriptionStatusSuccess {
      * The ID of the user.
      */
     userId: string;
+
+    /**
+     * The publishable stripe API key.
+     */
+    publishableKey: string;
 
     /**
      * The list of subscriptions that the user has.

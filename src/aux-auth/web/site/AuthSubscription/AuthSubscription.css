@@ -20,3 +20,82 @@
     display: flex;
     justify-content: center;
 }
+
+.subscription-card {
+    max-width: 300px;
+}
+
+.add-subscription {
+}
+
+.subscription-hook {
+    font-size: 16px;
+    opacity: 0.75;
+    margin-bottom: 12px;
+}
+
+.subscription-price {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.subscription-price > .price {
+    font-weight: 700;
+    font-size: 26px;
+    margin-right: 4px;
+}
+
+.subscription-price > .period {
+    font-weight: 300;
+    font-size: 13px;
+    line-height: 1.15;
+    opacity: 0.5;
+}
+
+.subscribe-button {
+    width: 100%;
+    display: flex;
+    margin-bottom: 12px;
+}
+
+.subscribe-button > .md-button {
+    flex: 1;
+    margin: 0;
+}
+
+.subscribe-features {
+}
+
+.subscribe-features > ul > li {
+    margin-bottom: 4px;
+}
+
+.subscription-status {
+    /* opacity: .75; */
+    margin-bottom: 12px;
+}
+
+.status-indicator {
+    --cancel-color: #ee5959;
+}
+
+.status-indicator .status {
+    font-weight: 700;
+}
+
+.status-indicator .active {
+    color: var(--md-theme-default-primary-on-background, #448aff);
+}
+
+.status-indicator .warn {
+    color: var(--md-theme-default-accent-on-background, #ff5252);
+}
+
+.status-indicator .canceled {
+    color: var(--cancel-color);
+}
+
+.status-indicator .time {
+    opacity: 0.75;
+}

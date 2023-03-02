@@ -49,6 +49,18 @@ Parameters:
         Type: String
         Description: The WebSocket endpoint that the Livekit server(s) are available at.
         Default: ''
+    StripeSecretKeyParameter:
+        Type: String
+        Description: The Secret Key that should be used to access the Stripe API.
+        Default: ''
+    StripePublishableKeyParameter:
+        Type: String
+        Description: The Publishable Key that should be used to access the Stripe API.
+        Default: ''
+    SubscriptionConfigParameter:
+        Type: String
+        Description: The configuration that should be used for subscriptions.
+        Defualt: ''
     AllowedOriginsParameter:
         Type: String
         Description: The allowed origin domains that are able to make requests for the internal auth site APIs. This value should be a space-separated string that includes the origins that the auth site is hosted on.
@@ -116,6 +128,9 @@ Resources:
                     # Make table name accessible as environment variable from function code during execution
                     TEXT_IT_API_KEY: !Ref TextItAPIKeyParameter
                     TEXT_IT_FLOW_ID: !Ref TextItFlowIDParameter
+                    STRIPE_SECRET_KEY: !Ref StripeSecretKeyParameter
+                    STRIPE_PUBLISHABLE_KEY: !Ref StripePublishableKeyParameter
+                    SUBSCRIPTION_CONFIG: !Ref SubscriptionConfigParameter
                     PUBLIC_RECORDS_TABLE: !Ref PublicRecordsTable
                     PUBLIC_RECORDS_KEYS_TABLE: !Ref PublicRecordsKeysTable
                     DATA_TABLE: !Ref DataTable

@@ -1234,6 +1234,7 @@ export class RecordsHttpServer {
 
         return returnResult({
             success: true,
+            publishableKey: result.publishableKey,
             subscriptions: result.subscriptions.map((s) => ({
                 active: s.active,
                 statusCode: s.statusCode,

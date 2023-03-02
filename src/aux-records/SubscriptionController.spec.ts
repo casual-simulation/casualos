@@ -34,6 +34,7 @@ describe('SubscriptionController', () => {
         auth = new AuthController(authStore, authMessenger);
 
         stripe = stripeMock = {
+            publishableKey: 'publishable_key',
             listPricesForProduct: jest.fn(),
             createCheckoutSession: jest.fn(),
             createPortalSession: jest.fn(),
@@ -103,6 +104,7 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: true,
                 userId,
+                publishableKey: 'publishable_key',
                 subscriptions: [],
             });
         });
@@ -132,11 +134,12 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: true,
                 userId,
+                publishableKey: 'publishable_key',
                 subscriptions: [],
             });
         });
 
-        it('should be able to list subscriptions that thge user has', async () => {
+        it('should be able to list subscriptions that the user has', async () => {
             await authStore.saveUser({
                 ...user,
                 stripeCustomerId: 'stripe_customer',
@@ -189,6 +192,7 @@ describe('SubscriptionController', () => {
             expect(result).toEqual({
                 success: true,
                 userId,
+                publishableKey: 'publishable_key',
                 subscriptions: [
                     {
                         active: true,

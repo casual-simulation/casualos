@@ -4,6 +4,7 @@
             <!-- <h1 class="md-title">You are logged in!</h1> -->
 
             <div v-if="metadata">
+                <h2 class="md-title">Profile</h2>
                 <div>
                     <md-field>
                         <label for="name">Name</label>

@@ -87,6 +87,7 @@ const MONGO_USE_NEW_URL_PARSER =
     process.env.MONGO_USE_NEW_URL_PARSER ?? 'false';
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? null;
+const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY ?? null;
 const SUBSCRIPTION_CONFIG = process.env.SUBSCRIPTION_CONFIG ?? null;
 
 function getAuthMessenger(): AuthMessenger {
@@ -212,12 +213,13 @@ async function start() {
     const subscriptionConfig = tryParseSubscriptionConfig(SUBSCRIPTION_CONFIG);
 
     let stripe: StripeInterface;
-    if (!!STRIPE_SECRET_KEY && subscriptionConfig) {
+    if (!!STRIPE_SECRET_KEY && !!STRIPE_PUBLISHABLE_KEY && subscriptionConfig) {
         console.log('[AuxAuth] Integrating with Stripe.');
         stripe = new StripeIntegration(
             new Stripe(STRIPE_SECRET_KEY, {
                 apiVersion: '2022-11-15',
-            })
+            }),
+            STRIPE_PUBLISHABLE_KEY
         );
     } else {
         console.log('[AuxAuth] Disabling Stripe Features.');

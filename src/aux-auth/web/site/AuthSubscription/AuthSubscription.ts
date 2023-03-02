@@ -8,8 +8,6 @@ import { debounce, sortBy } from 'lodash';
 import { tap } from 'rxjs/operators';
 import type { ListedSession } from '@casual-simulation/aux-records/AuthController';
 import type { SubscriptionStatus } from '@casual-simulation/aux-records/SubscriptionController';
-import { DateTime } from 'luxon';
-import SessionLocation from '../SessionLocation/SessionLocation';
 import RelativeTime from '../RelativeTime/RelativeTime';
 import { DateTime } from 'luxon';
 
@@ -17,7 +15,6 @@ declare const ASSUME_SUBSCRIPTIONS_SUPPORTED: boolean;
 
 @Component({
     components: {
-        'session-location': SessionLocation,
         'relative-time': RelativeTime,
     },
 })
@@ -65,16 +62,7 @@ export default class AuthSecurity extends Vue {
 
         const cost = priceFormat.format(sub.intervalCost / 100);
 
-        return `${cost} / ${sub.renewalInterval}`;
-    }
-
-    /**
-     * Gets the human readable version of a date that is formatted in Unix time (in seconds).
-     */
-    getDate(date: number) {
-        const dt = DateTime.fromSeconds(date);
-
-        return `${dt.toLocaleString(DateTime.DATE_SHORT)}`;
+        return cost; //`${cost} / ${sub.renewalInterval}`;
     }
 
     private async _loadSubscriptions() {

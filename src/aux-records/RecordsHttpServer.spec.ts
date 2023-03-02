@@ -134,6 +134,7 @@ describe('RecordsHttpServer', () => {
         );
 
         stripe = stripeMock = {
+            publishableKey: 'publishable_key',
             listPricesForProduct: jest.fn(),
             createCheckoutSession: jest.fn(),
             createPortalSession: jest.fn(),
@@ -631,6 +632,7 @@ describe('RecordsHttpServer', () => {
                 statusCode: 200,
                 body: JSON.stringify({
                     success: true,
+                    publishableKey: 'publishable_key',
                     subscriptions: [
                         {
                             active: true,
