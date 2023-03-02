@@ -1,4 +1,4 @@
-import { RegexRule } from 'Utils';
+import { RegexRule } from './Utils';
 import { ServerError } from './Errors';
 
 /**
@@ -139,6 +139,11 @@ export interface AuthUser {
     phoneNumber: string | null;
     avatarUrl?: string | null;
     avatarPortraitUrl?: string | null;
+
+    /**
+     * The OpenAI API Key that the user has configured in their account.
+     */
+    openAiKey?: string | null;
 
     /**
      * The ID of the stripe customer that is associated with this user.

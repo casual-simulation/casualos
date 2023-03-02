@@ -149,6 +149,7 @@ export class MongoDBAuthStore implements AuthStore {
                     allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
                     currentLoginRequestId: user.currentLoginRequestId,
                     stripeCustomerId: user.stripeCustomerId,
+                    openAiKey: user.openAiKey,
                     subscriptionStatus: user.subscriptionStatus,
                 },
             },
@@ -188,6 +189,7 @@ export class MongoDBAuthStore implements AuthStore {
             currentLoginRequestId: user.currentLoginRequestId,
             stripeCustomerId: user.stripeCustomerId,
             subscriptionStatus: user.subscriptionStatus,
+            openAiKey: user.openAiKey,
         });
 
         return {
@@ -373,6 +375,7 @@ export interface MongoDBAuthUser {
     currentLoginRequestId: string;
     stripeCustomerId?: string;
     subscriptionStatus?: string;
+    openAiKey?: string;
 }
 
 export interface MongoDBLoginRequest {

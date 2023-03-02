@@ -73,6 +73,14 @@ export class AuthManager {
         return this._appMetadata?.name;
     }
 
+    get hasActiveSubscription() {
+        return this._appMetadata?.hasActiveSubscription;
+    }
+
+    get openAiKey() {
+        return this._appMetadata?.openAiKey;
+    }
+
     get userInfoLoaded() {
         return !!this._userId && !!this.savedSessionKey && !!this._appMetadata;
     }
@@ -448,6 +456,7 @@ export class AuthManager {
             name: this.name,
             email: this.email,
             phoneNumber: this.phone,
+            openAiKey: this.openAiKey,
             ...newMetadata,
         });
         await this.loadUserInfo();
@@ -494,7 +503,9 @@ export class AuthManager {
         }
     }
 
-    private async _putAppMetadata(metadata: AppMetadata): Promise<AppMetadata> {
+    private async _putAppMetadata(
+        metadata: Omit<AppMetadata, 'hasActiveSubscription'>
+    ): Promise<AppMetadata> {
         const response = await axios.put(
             `${this.apiEndpoint}/api/${encodeURIComponent(
                 this.userId

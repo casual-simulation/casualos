@@ -8,13 +8,19 @@
                 <div>
                     <md-field>
                         <label for="name">Name</label>
-                        <md-input v-model="metadata.name" type="text" placeholder="Name"></md-input>
+                        <md-input
+                            id="name"
+                            v-model="metadata.name"
+                            type="text"
+                            placeholder="Name"
+                        ></md-input>
                     </md-field>
                 </div>
                 <div class="button-field">
                     <md-field class="md-disabled">
                         <label for="email">Email</label>
                         <md-input
+                            id="email"
                             v-model="metadata.email"
                             type="text"
                             placeholder="Email"
@@ -26,8 +32,9 @@
                 </div>
                 <div class="button-field">
                     <md-field class="md-disabled">
-                        <label for="email">Phone</label>
+                        <label for="phone">Phone</label>
                         <md-input
+                            id="phone"
                             v-model="metadata.phone"
                             type="text"
                             placeholder="Phone"
@@ -41,6 +48,17 @@
                         :render="metadata.avatarPortraitUrl"
                         @updateAvatar="updateAvatar"
                     ></avatar>
+                </div>
+                <div v-if="hasActiveSubscription">
+                    <md-field>
+                        <label for="openAiKey">OpenAI API Key</label>
+                        <md-input
+                            id="openAiKey"
+                            v-model="metadata.openAiKey"
+                            type="text"
+                            placeholder="Enter your OpenAI API Key"
+                        ></md-input>
+                    </md-field>
                 </div>
 
                 <p v-show="updating">Updating...</p>

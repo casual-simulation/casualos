@@ -55,6 +55,7 @@ describe('RecordsHttpServer', () => {
     let filesController: FileRecordsController;
 
     let stripeMock: {
+        publishableKey: string;
         listPricesForProduct: jest.Mock<any>;
         createCheckoutSession: jest.Mock<any>;
         createPortalSession: jest.Mock<any>;
@@ -248,14 +249,42 @@ describe('RecordsHttpServer', () => {
                 )
             );
 
-            expect(result).toEqual({
+            expectResponseBodyToEqual(result, {
                 statusCode: 200,
-                body: JSON.stringify({
+                body: {
                     success: true,
                     email: 'test@example.com',
                     phoneNumber: null,
                     hasActiveSubscription: false,
-                }),
+                    openAiKey: null,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return the openAiKey for active subscriptions', async () => {
+            const user = await authStore.findUser(userId);
+            await authStore.saveUser({
+                ...user,
+                subscriptionStatus: 'active',
+                openAiKey: 'api key',
+            });
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/{userId:${userId}}/metadata`,
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    hasActiveSubscription: true,
+                    openAiKey: 'api key',
+                },
                 headers: accountCorsHeaders,
             });
         });
@@ -312,14 +341,15 @@ describe('RecordsHttpServer', () => {
                 )
             );
 
-            expect(result).toEqual({
+            expectResponseBodyToEqual(result, {
                 statusCode: 200,
-                body: JSON.stringify({
+                body: {
                     success: true,
                     email: 'other@example.com',
                     phoneNumber: null,
                     hasActiveSubscription: false,
-                }),
+                    openAiKey: null,
+                },
                 headers: accountCorsHeaders,
             });
         });
@@ -458,6 +488,44 @@ describe('RecordsHttpServer', () => {
                     userId,
                 }),
                 headers: accountCorsHeaders,
+            });
+
+            const user = await authStore.findUser(userId);
+            expect(user).toMatchObject({
+                id: userId,
+                name: 'Kal',
+            });
+        });
+
+        it('should be able to update the openAiKey when the user has an active subscription', async () => {
+            let user = await authStore.findUser(userId);
+            await authStore.saveUser({
+                ...user,
+                subscriptionStatus: 'active',
+            });
+            const result = await server.handleRequest(
+                httpPut(
+                    `/api/{userId:${userId}}/metadata`,
+                    JSON.stringify({
+                        openAiKey: 'api key',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: true,
+                    userId,
+                }),
+                headers: accountCorsHeaders,
+            });
+
+            user = await authStore.findUser(userId);
+            expect(user).toMatchObject({
+                id: userId,
+                openAiKey: 'api key',
             });
         });
 

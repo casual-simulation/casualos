@@ -80,6 +80,7 @@ export class DynamoDBAuthStore implements AuthStore {
                         currentLoginRequestId: user.currentLoginRequestId,
                         stripeCustomerId: user.stripeCustomerId,
                         subscriptionStatus: user.subscriptionStatus,
+                        openAiKey: user.openAiKey,
                     }),
                 },
             },
@@ -140,6 +141,9 @@ export class DynamoDBAuthStore implements AuthStore {
                         avatarPortraitUrl: user.avatarPortraitUrl,
                         allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
                         currentLoginRequestId: user.currentLoginRequestId,
+                        stripeCustomerId: user.stripeCustomerId,
+                        subscriptionStatus: user.subscriptionStatus,
+                        openAiKey: user.openAiKey,
                     }),
                     ConditionExpression: 'attribute_not_exists(id)',
                 },
@@ -251,6 +255,7 @@ export class DynamoDBAuthStore implements AuthStore {
                 currentLoginRequestId: user.currentLoginRequestId,
                 stripeCustomerId: user.stripeCustomerId,
                 subscriptionStatus: user.subscriptionStatus,
+                openAiKey: user.openAiKey,
             };
         } else {
             return null;
@@ -276,19 +281,7 @@ export class DynamoDBAuthStore implements AuthStore {
 
         const user = userResult.Items[0];
         if (user) {
-            const realUser = await this.findUser(user.id);
-            return {
-                id: realUser.id,
-                email: realUser.email,
-                phoneNumber: realUser.phoneNumber,
-                avatarPortraitUrl: realUser.avatarPortraitUrl,
-                avatarUrl: realUser.avatarUrl,
-                name: realUser.name,
-                allSessionRevokeTimeMs: realUser.allSessionRevokeTimeMs,
-                currentLoginRequestId: realUser.currentLoginRequestId,
-                stripeCustomerId: realUser.stripeCustomerId,
-                subscriptionStatus: realUser.subscriptionStatus,
-            };
+            return await this.findUser(user.id);
         } else {
             return null;
         }

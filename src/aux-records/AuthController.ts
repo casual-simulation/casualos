@@ -915,6 +915,10 @@ export class AuthController {
                 );
             }
 
+            const hasActiveSubscription = isActiveSubscription(
+                result.subscriptionStatus
+            );
+
             return {
                 success: true,
                 userId: result.id,
@@ -923,9 +927,8 @@ export class AuthController {
                 phoneNumber: result.phoneNumber,
                 avatarPortraitUrl: result.avatarPortraitUrl,
                 avatarUrl: result.avatarUrl,
-                hasActiveSubscription: isActiveSubscription(
-                    result.subscriptionStatus
-                ),
+                hasActiveSubscription,
+                openAiKey: hasActiveSubscription ? result.openAiKey : null,
             };
         } catch (err) {
             console.error(
@@ -1000,12 +1003,19 @@ export class AuthController {
                 );
             }
 
+            const hasActiveSubscription = isActiveSubscription(
+                user.subscriptionStatus
+            );
+
             const cleaned = cleanupObject({
                 name: request.update.name,
                 avatarUrl: request.update.avatarUrl,
                 avatarPortraitUrl: request.update.avatarPortraitUrl,
                 email: request.update.email,
                 phoneNumber: request.update.phoneNumber,
+                openAiKey: hasActiveSubscription
+                    ? request.update.openAiKey
+                    : undefined,
             });
 
             await this._store.saveUser({
@@ -1483,6 +1493,11 @@ export interface GetUserInfoSuccess {
      * Whether the user has an active subscription.
      */
     hasActiveSubscription: boolean;
+
+    /**
+     * The OpenAI API Key that the user has configured in their account.
+     */
+    openAiKey: string | null;
 }
 
 export interface GetUserInfoFailure {
@@ -1514,7 +1529,12 @@ export interface UpdateUserInfoRequest {
     update: Partial<
         Pick<
             AuthUser,
-            'name' | 'email' | 'phoneNumber' | 'avatarUrl' | 'avatarPortraitUrl'
+            | 'name'
+            | 'email'
+            | 'phoneNumber'
+            | 'avatarUrl'
+            | 'avatarPortraitUrl'
+            | 'openAiKey'
         >
     >;
 }

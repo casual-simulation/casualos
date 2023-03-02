@@ -16,6 +16,7 @@ describe('SubscriptionController', () => {
     let authMessenger: MemoryAuthMessenger;
 
     let stripeMock: {
+        publishableKey: string;
         listPricesForProduct: jest.Mock<any>;
         createCheckoutSession: jest.Mock<any>;
         createPortalSession: jest.Mock<any>;

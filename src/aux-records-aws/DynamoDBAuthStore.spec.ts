@@ -116,6 +116,7 @@ describe('DynamoDBAuthStore', () => {
                 currentLoginRequestId: 'abc',
                 stripeCustomerId: 'customerId',
                 subscriptionStatus: 'active',
+                openAiKey: 'api key',
             });
 
             expect(dynamodb.transactWrite).toHaveBeenCalledWith({
@@ -134,6 +135,7 @@ describe('DynamoDBAuthStore', () => {
                                 currentLoginRequestId: 'abc',
                                 stripeCustomerId: 'customerId',
                                 subscriptionStatus: 'active',
+                                openAiKey: 'api key',
                             },
                         },
                     },
@@ -175,6 +177,9 @@ describe('DynamoDBAuthStore', () => {
                 name: 'name',
                 allSessionRevokeTimeMs: 123,
                 currentLoginRequestId: 'abc',
+                stripeCustomerId: 'customerId',
+                subscriptionStatus: 'active',
+                openAiKey: 'api key',
             });
 
             expect(result).toEqual({
@@ -195,6 +200,9 @@ describe('DynamoDBAuthStore', () => {
                                 phoneNumber: 'phone',
                                 allSessionRevokeTimeMs: 123,
                                 currentLoginRequestId: 'abc',
+                                stripeCustomerId: 'customerId',
+                                subscriptionStatus: 'active',
+                                openAiKey: 'api key',
                             },
                             ConditionExpression: 'attribute_not_exists(id)',
                         },
@@ -397,6 +405,9 @@ describe('DynamoDBAuthStore', () => {
                         phoneNumber: 'myphone',
                         allSessionRevokeTimeMs: 123,
                         currentLoginRequestId: 'requestId',
+                        stripeCustomerId: 'customerId',
+                        subscriptionStatus: 'active',
+                        openAiKey: 'api key',
                     },
                 })
             );
@@ -412,6 +423,9 @@ describe('DynamoDBAuthStore', () => {
                 phoneNumber: 'myphone',
                 allSessionRevokeTimeMs: 123,
                 currentLoginRequestId: 'requestId',
+                stripeCustomerId: 'customerId',
+                subscriptionStatus: 'active',
+                openAiKey: 'api key',
             });
             expect(dynamodb.get).toHaveBeenCalledWith({
                 TableName: 'users-table',
@@ -462,6 +476,9 @@ describe('DynamoDBAuthStore', () => {
                         phoneNumber: 'myphone',
                         allSessionRevokeTimeMs: 123,
                         currentLoginRequestId: 'requestId',
+                        stripeCustomerId: 'customerId',
+                        subscriptionStatus: 'active',
+                        openAiKey: 'api key',
                     },
                 })
             );
@@ -477,6 +494,9 @@ describe('DynamoDBAuthStore', () => {
                 phoneNumber: 'myphone',
                 allSessionRevokeTimeMs: 123,
                 currentLoginRequestId: 'requestId',
+                stripeCustomerId: 'customerId',
+                subscriptionStatus: 'active',
+                openAiKey: 'api key',
             });
 
             expect(dynamodb.get).toHaveBeenCalledWith({
@@ -702,16 +722,26 @@ describe('DynamoDBAuthStore', () => {
                     Items: [
                         {
                             id: 'userId',
-                            avatarPortraitUrl: 'portrait',
-                            avatarUrl: 'url',
-                            name: 'name',
-                            email: 'myemail',
-                            phoneNumber: 'myphone',
-                            allSessionRevokeTimeMs: 123,
-                            currentLoginRequestId: 'requestId',
                             stripeCustomerId: 'customerId',
                         },
                     ],
+                })
+            );
+            dynamodb.get.mockReturnValueOnce(
+                awsResult({
+                    Item: {
+                        id: 'userId',
+                        avatarPortraitUrl: 'portrait',
+                        avatarUrl: 'url',
+                        name: 'name',
+                        email: 'myemail',
+                        phoneNumber: 'myphone',
+                        allSessionRevokeTimeMs: 123,
+                        currentLoginRequestId: 'requestId',
+                        stripeCustomerId: 'customerId',
+                        subscriptionStatus: 'active',
+                        openAiKey: 'api key',
+                    },
                 })
             );
 
@@ -727,6 +757,8 @@ describe('DynamoDBAuthStore', () => {
                 allSessionRevokeTimeMs: 123,
                 currentLoginRequestId: 'requestId',
                 stripeCustomerId: 'customerId',
+                subscriptionStatus: 'active',
+                openAiKey: 'api key',
             });
             expect(dynamodb.query).toHaveBeenCalledWith({
                 TableName: 'users-table',
@@ -736,6 +768,12 @@ describe('DynamoDBAuthStore', () => {
                     ':stripeCustomerId': 'customerId',
                 },
                 Limit: 1,
+            });
+            expect(dynamodb.get).toHaveBeenCalledWith({
+                TableName: 'users-table',
+                Key: {
+                    id: 'userId',
+                },
             });
         });
 
