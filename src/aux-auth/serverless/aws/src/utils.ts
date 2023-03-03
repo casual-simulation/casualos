@@ -63,43 +63,6 @@ export function formatResponse(
     };
 }
 
-export function getAuthController(docClient: any): AuthController {
-    const USERS_TABLE = process.env.USERS_TABLE;
-    const USER_ADDRESSES_TABLE = process.env.USER_ADDRESSES_TABLE;
-    const LOGIN_REQUESTS_TABLE = process.env.LOGIN_REQUESTS_TABLE;
-    const SESSIONS_TABLE = process.env.SESSIONS_TABLE;
-    const EMAIL_TABLE = process.env.EMAIL_TABLE;
-    const SMS_TABLE = process.env.SMS_TABLE;
-
-    const authStore = new DynamoDBAuthStore(
-        docClient,
-        USERS_TABLE,
-        USER_ADDRESSES_TABLE,
-        LOGIN_REQUESTS_TABLE,
-        SESSIONS_TABLE,
-        'ExpireTimeIndex',
-        EMAIL_TABLE,
-        SMS_TABLE
-    );
-
-    const messenger = getAuthMessenger();
-
-    return new AuthController(authStore, messenger);
-}
-
-function getAuthMessenger(): AuthMessenger {
-    const API_KEY = process.env.TEXT_IT_API_KEY;
-    const FLOW_ID = process.env.TEXT_IT_FLOW_ID;
-
-    if (API_KEY && FLOW_ID) {
-        console.log('[utils] Using TextIt Auth Messenger.');
-        return new TextItAuthMessenger(API_KEY, FLOW_ID);
-    } else {
-        console.log('[utils] Using Console Auth Messenger.');
-        return new ConsoleAuthMessenger();
-    }
-}
-
 export interface NoSessionKeyResult {
     success: false;
     userId: null;

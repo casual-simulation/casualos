@@ -65,6 +65,22 @@ export class MongoDBAuthStore implements AuthStore {
         return null;
     }
 
+    async findUserByStripeCustomerId(customerId: string): Promise<AuthUser> {
+        const user = await this._users.findOne({
+            stripeCustomerId: customerId,
+        });
+
+        if (user) {
+            const { _id, ...rest } = user;
+            return {
+                id: _id,
+                ...rest,
+            };
+        }
+
+        return null;
+    }
+
     async setRevokeAllSessionsTimeForUser(
         userId: string,
         allSessionRevokeTimeMs: number
@@ -119,6 +135,7 @@ export class MongoDBAuthStore implements AuthStore {
     }
 
     async saveUser(user: AuthUser): Promise<void> {
+        user.subscriptionStatus;
         await this._users.updateOne(
             { _id: user.id },
             {
@@ -131,6 +148,9 @@ export class MongoDBAuthStore implements AuthStore {
                     avatarPortraitUrl: user.avatarPortraitUrl,
                     allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
                     currentLoginRequestId: user.currentLoginRequestId,
+                    stripeCustomerId: user.stripeCustomerId,
+                    openAiKey: user.openAiKey,
+                    subscriptionStatus: user.subscriptionStatus,
                 },
             },
             {
@@ -167,6 +187,9 @@ export class MongoDBAuthStore implements AuthStore {
             avatarUrl: user.avatarUrl,
             allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
             currentLoginRequestId: user.currentLoginRequestId,
+            stripeCustomerId: user.stripeCustomerId,
+            subscriptionStatus: user.subscriptionStatus,
+            openAiKey: user.openAiKey,
         });
 
         return {
@@ -350,6 +373,9 @@ export interface MongoDBAuthUser {
     avatarUrl: string;
     allSessionRevokeTimeMs: number;
     currentLoginRequestId: string;
+    stripeCustomerId?: string;
+    subscriptionStatus?: string;
+    openAiKey?: string;
 }
 
 export interface MongoDBLoginRequest {

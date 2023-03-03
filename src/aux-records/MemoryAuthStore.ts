@@ -98,6 +98,11 @@ export class MemoryAuthStore implements AuthStore {
         return user;
     }
 
+    async findUserByStripeCustomerId(customerId: string): Promise<AuthUser> {
+        const user = this._users.find((u) => u.stripeCustomerId === customerId);
+        return user;
+    }
+
     async findLoginRequest(
         userId: string,
         requestId: string

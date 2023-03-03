@@ -427,7 +427,10 @@ export class RecordsManager {
                     const buffer = await event.data.arrayBuffer();
                     data = new Uint8Array(buffer);
                     byteLength = data.byteLength;
-                    mimeType = event.mimeType || event.data.type;
+                    mimeType =
+                        event.mimeType ||
+                        event.data.type ||
+                        'application/octet-stream';
                     hash = getHash(data);
                 } else if (event.data instanceof ArrayBuffer) {
                     data = new Uint8Array(event.data);
@@ -454,7 +457,12 @@ export class RecordsManager {
                             data = new Uint8Array(obj.data);
                         }
                         byteLength = data.byteLength;
-                        mimeType = event.mimeType || obj.mimeType;
+                        mimeType =
+                            event.mimeType ||
+                            obj.mimeType ||
+                            (typeof obj.data === 'string'
+                                ? 'text/plain'
+                                : 'application/octet-stream');
                         hash = getHash(data);
                     } else {
                         let json = stringify(event.data);

@@ -7,9 +7,7 @@ import {
     getAllowedAPIOrigins,
     allowedOrigins,
     validateSessionKey,
-    getAuthController,
 } from '../utils';
-import { getStatusCode } from '@casual-simulation/aux-records/Utils';
 import {
     RecordsController,
     DataRecordsController,
@@ -18,6 +16,9 @@ import {
     RecordsHttpServer,
     GenericHttpRequest,
     GenericHttpHeaders,
+    StripeInterface,
+    SubscriptionController,
+    tryParseSubscriptionConfig,
 } from '@casual-simulation/aux-records';
 import { AuthController } from '@casual-simulation/aux-records/AuthController';
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
@@ -27,6 +28,8 @@ import {
     DynamoDBFileStore,
     DynamoDBEventStore,
     cleanupObject,
+    DynamoDBAuthStore,
+    TextItAuthMessenger,
 } from '@casual-simulation/aux-records-aws';
 import type {
     APIGatewayProxyEvent,
@@ -37,6 +40,9 @@ import type {
 import AWS from 'aws-sdk';
 import { LivekitController } from '@casual-simulation/aux-records/LivekitController';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
+import { StripeIntegration } from '../../../../shared/StripeIntegration';
+import Stripe from 'stripe';
+import { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
 
 declare var S3_ENDPOINT: string;
 declare var DYNAMODB_ENDPOINT: string;
@@ -58,10 +64,14 @@ const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
 const LIVEKIT_SECRET_KEY = process.env.LIVEKIT_SECRET_KEY;
 const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT;
 
-const USERS_TABLE = process.env.USERS_TABLE;
+// const USERS_TABLE = process.env.USERS_TABLE;
 
-const EMAIL_TABLE = process.env.EMAIL_TABLE;
-const SMS_TABLE = process.env.SMS_TABLE;
+// const EMAIL_TABLE = process.env.EMAIL_TABLE;
+// const SMS_TABLE = process.env.SMS_TABLE;
+
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? null;
+const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY ?? null;
+const SUBSCRIPTION_CONFIG = process.env.SUBSCRIPTION_CONFIG ?? null;
 
 // Create a DocumentClient that represents the query to add an item
 const dynamodb = require('aws-sdk/clients/dynamodb');
@@ -120,7 +130,71 @@ const livekitController = new LivekitController(
     LIVEKIT_ENDPOINT
 );
 
-const authController = getAuthController(docClient);
+const USERS_TABLE = process.env.USERS_TABLE;
+const USER_ADDRESSES_TABLE = process.env.USER_ADDRESSES_TABLE;
+const LOGIN_REQUESTS_TABLE = process.env.LOGIN_REQUESTS_TABLE;
+const SESSIONS_TABLE = process.env.SESSIONS_TABLE;
+const EMAIL_TABLE = process.env.EMAIL_TABLE;
+const SMS_TABLE = process.env.SMS_TABLE;
+const STRIPE_CUSTOMER_ID_INDEX_NAME = 'StripeCustomerIdsIndex';
+
+const authStore = new DynamoDBAuthStore(
+    docClient,
+    USERS_TABLE,
+    USER_ADDRESSES_TABLE,
+    LOGIN_REQUESTS_TABLE,
+    SESSIONS_TABLE,
+    'ExpireTimeIndex',
+    EMAIL_TABLE,
+    SMS_TABLE,
+    STRIPE_CUSTOMER_ID_INDEX_NAME
+);
+
+const API_KEY = process.env.TEXT_IT_API_KEY;
+const FLOW_ID = process.env.TEXT_IT_FLOW_ID;
+
+let messenger: AuthMessenger;
+if (API_KEY && FLOW_ID) {
+    console.log('[Records] Using TextIt Auth Messenger.');
+    messenger = new TextItAuthMessenger(API_KEY, FLOW_ID);
+} else {
+    console.log('[Records] Using Console Auth Messenger.');
+    messenger = new ConsoleAuthMessenger();
+}
+
+const subscriptionConfig = tryParseSubscriptionConfig(SUBSCRIPTION_CONFIG);
+
+let forceAllowSubscriptionFeatures = false;
+let stripe: StripeInterface;
+if (!!STRIPE_SECRET_KEY && !!STRIPE_PUBLISHABLE_KEY && subscriptionConfig) {
+    console.log('[Records] Integrating with Stripe.');
+    stripe = new StripeIntegration(
+        new Stripe(STRIPE_SECRET_KEY, {
+            apiVersion: '2022-11-15',
+        }),
+        STRIPE_PUBLISHABLE_KEY
+    );
+} else {
+    console.log('[Records] Disabling Stripe Features.');
+    console.log(
+        '[AuxAuth] Allowing all subscription features because Stripe is not configured.'
+    );
+    stripe = null;
+    forceAllowSubscriptionFeatures = true;
+}
+
+const authController = new AuthController(
+    authStore,
+    messenger,
+    forceAllowSubscriptionFeatures
+);
+
+const subscriptionController = new SubscriptionController(
+    stripe,
+    authController,
+    authStore,
+    subscriptionConfig
+);
 
 const allowedApiOrigins = new Set([
     'http://localhost:3000',
@@ -148,7 +222,8 @@ const httpServer = new RecordsHttpServer(
     eventsController,
     dataController,
     manualDataController,
-    filesController
+    filesController,
+    subscriptionController
 );
 
 async function handleEventBridgeEvent(event: EventBridgeEvent<any, any>) {
@@ -162,7 +237,7 @@ async function handleS3Event(event: S3Event) {
 
             if (bucketName !== FILES_BUCKET) {
                 console.warn(
-                    `[RecordsV2] Got event for wrong bucket: ${bucketName}`
+                    `[Records1] Got event for wrong bucket: ${bucketName}`
                 );
                 return;
             }
@@ -172,7 +247,7 @@ async function handleS3Event(event: S3Event) {
             const firstSlash = key.indexOf('/');
 
             if (firstSlash < 0) {
-                console.warn('[RecordsV2] Unable to process key:', key);
+                console.warn('[Records] Unable to process key:', key);
                 return;
             }
 
@@ -186,10 +261,10 @@ async function handleS3Event(event: S3Event) {
 
             if (result.success === false) {
                 if (result.errorCode === 'file_not_found') {
-                    console.error('[RecordsV2] File not found:', key);
+                    console.error('[Records] File not found:', key);
                 }
             } else {
-                console.log('[RecordsV2] File marked as uploaded:', key);
+                console.log('[Records] File marked as uploaded:', key);
             }
         })
     );

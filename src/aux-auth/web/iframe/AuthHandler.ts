@@ -324,6 +324,8 @@ export class AuthHandler implements AuxAuth {
             avatarUrl: authManager.avatarUrl,
             avatarPortraitUrl: authManager.avatarPortraitUrl,
             name: authManager.name,
+            hasActiveSubscription: authManager.hasActiveSubscription,
+            openAiKey: authManager.openAiKey,
         };
 
         this._queueTokenRefresh(this._token);

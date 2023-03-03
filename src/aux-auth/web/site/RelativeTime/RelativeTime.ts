@@ -7,15 +7,20 @@ import { DateTime } from 'luxon';
     components: {},
 })
 export default class RelativeTime extends Vue {
-    @Prop() millis: number;
+    @Prop({ required: false }) millis: number;
+    @Prop({ required: false }) seconds: number;
 
     get relativeTime() {
-        const time = DateTime.fromMillis(this.millis);
+        const time = this.millis
+            ? DateTime.fromMillis(this.millis)
+            : DateTime.fromSeconds(this.seconds);
         return time.toRelative();
     }
 
     get commonTime() {
-        const time = DateTime.fromMillis(this.millis);
+        const time = this.millis
+            ? DateTime.fromMillis(this.millis)
+            : DateTime.fromSeconds(this.seconds);
         return time.toLocaleString(DateTime.DATETIME_FULL);
     }
 }

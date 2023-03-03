@@ -469,3 +469,11 @@ export function tryDecodeUriComponent(component: string): string | null {
         return null;
     }
 }
+
+/**
+ * Determines whether the given subscription status should be treated as an active subscription.
+ * @param status The status.
+ */
+export function isActiveSubscription(status: string): boolean {
+    return status === 'active' || status === 'trialing';
+}

@@ -35,7 +35,8 @@ describe('DynamoDBAuthStore', () => {
             'sessions-table',
             'expire-time-index',
             'email-rules-table',
-            'sms-rules-table'
+            'sms-rules-table',
+            'stripe-customer-id-index'
         );
 
         dynamodb.get.mockReturnValue(
@@ -100,6 +101,67 @@ describe('DynamoDBAuthStore', () => {
                 ],
             });
         });
+
+        it('should be able to save stripeCustomerId and subscriptionStatus', async () => {
+            dynamodb.transactWrite.mockReturnValueOnce(awsResult({}));
+
+            await store.saveUser({
+                id: 'userId',
+                email: 'email',
+                phoneNumber: 'phone',
+                avatarPortraitUrl: 'portrait',
+                avatarUrl: 'url',
+                name: 'name',
+                allSessionRevokeTimeMs: 123,
+                currentLoginRequestId: 'abc',
+                stripeCustomerId: 'customerId',
+                subscriptionStatus: 'active',
+                openAiKey: 'api key',
+            });
+
+            expect(dynamodb.transactWrite).toHaveBeenCalledWith({
+                TransactItems: [
+                    {
+                        Put: {
+                            TableName: 'users-table',
+                            Item: {
+                                id: 'userId',
+                                avatarPortraitUrl: 'portrait',
+                                avatarUrl: 'url',
+                                name: 'name',
+                                email: 'email',
+                                phoneNumber: 'phone',
+                                allSessionRevokeTimeMs: 123,
+                                currentLoginRequestId: 'abc',
+                                stripeCustomerId: 'customerId',
+                                subscriptionStatus: 'active',
+                                openAiKey: 'api key',
+                            },
+                        },
+                    },
+                    {
+                        Put: {
+                            TableName: 'user-addresses-table',
+                            Item: {
+                                address: 'email',
+                                addressType: 'email',
+                                userId: 'userId',
+                            },
+                        },
+                    },
+                    {
+                        Put: {
+                            TableName: 'user-addresses-table',
+                            Item: {
+                                address: 'phone',
+                                addressType: 'phone',
+                                userId: 'userId',
+                            },
+                        },
+                    },
+                ],
+            });
+        });
     });
 
     describe('saveNewUser()', () => {
@@ -115,6 +177,9 @@ describe('DynamoDBAuthStore', () => {
                 name: 'name',
                 allSessionRevokeTimeMs: 123,
                 currentLoginRequestId: 'abc',
+                stripeCustomerId: 'customerId',
+                subscriptionStatus: 'active',
+                openAiKey: 'api key',
             });
 
             expect(result).toEqual({
@@ -135,6 +200,9 @@ describe('DynamoDBAuthStore', () => {
                                 phoneNumber: 'phone',
                                 allSessionRevokeTimeMs: 123,
                                 currentLoginRequestId: 'abc',
+                                stripeCustomerId: 'customerId',
+                                subscriptionStatus: 'active',
+                                openAiKey: 'api key',
                             },
                             ConditionExpression: 'attribute_not_exists(id)',
                         },
@@ -337,6 +405,9 @@ describe('DynamoDBAuthStore', () => {
                         phoneNumber: 'myphone',
                         allSessionRevokeTimeMs: 123,
                         currentLoginRequestId: 'requestId',
+                        stripeCustomerId: 'customerId',
+                        subscriptionStatus: 'active',
+                        openAiKey: 'api key',
                     },
                 })
             );
@@ -352,6 +423,9 @@ describe('DynamoDBAuthStore', () => {
                 phoneNumber: 'myphone',
                 allSessionRevokeTimeMs: 123,
                 currentLoginRequestId: 'requestId',
+                stripeCustomerId: 'customerId',
+                subscriptionStatus: 'active',
+                openAiKey: 'api key',
             });
             expect(dynamodb.get).toHaveBeenCalledWith({
                 TableName: 'users-table',
@@ -402,6 +476,9 @@ describe('DynamoDBAuthStore', () => {
                         phoneNumber: 'myphone',
                         allSessionRevokeTimeMs: 123,
                         currentLoginRequestId: 'requestId',
+                        stripeCustomerId: 'customerId',
+                        subscriptionStatus: 'active',
+                        openAiKey: 'api key',
                     },
                 })
             );
@@ -417,6 +494,9 @@ describe('DynamoDBAuthStore', () => {
                 phoneNumber: 'myphone',
                 allSessionRevokeTimeMs: 123,
                 currentLoginRequestId: 'requestId',
+                stripeCustomerId: 'customerId',
+                subscriptionStatus: 'active',
+                openAiKey: 'api key',
             });
 
             expect(dynamodb.get).toHaveBeenCalledWith({
@@ -632,6 +712,81 @@ describe('DynamoDBAuthStore', () => {
                     id: 'userId',
                 },
             });
+        });
+    });
+
+    describe('findUserByStripeCustomerId()', () => {
+        it('should search the users table for the user', async () => {
+            dynamodb.query.mockReturnValueOnce(
+                awsResult({
+                    Items: [
+                        {
+                            id: 'userId',
+                            stripeCustomerId: 'customerId',
+                        },
+                    ],
+                })
+            );
+            dynamodb.get.mockReturnValueOnce(
+                awsResult({
+                    Item: {
+                        id: 'userId',
+                        avatarPortraitUrl: 'portrait',
+                        avatarUrl: 'url',
+                        name: 'name',
+                        email: 'myemail',
+                        phoneNumber: 'myphone',
+                        allSessionRevokeTimeMs: 123,
+                        currentLoginRequestId: 'requestId',
+                        stripeCustomerId: 'customerId',
+                        subscriptionStatus: 'active',
+                        openAiKey: 'api key',
+                    },
+                })
+            );
+
+            const result = await store.findUserByStripeCustomerId('customerId');
+
+            expect(result).toEqual({
+                id: 'userId',
+                avatarPortraitUrl: 'portrait',
+                avatarUrl: 'url',
+                name: 'name',
+                email: 'myemail',
+                phoneNumber: 'myphone',
+                allSessionRevokeTimeMs: 123,
+                currentLoginRequestId: 'requestId',
+                stripeCustomerId: 'customerId',
+                subscriptionStatus: 'active',
+                openAiKey: 'api key',
+            });
+            expect(dynamodb.query).toHaveBeenCalledWith({
+                TableName: 'users-table',
+                IndexName: 'stripe-customer-id-index',
+                KeyConditionExpression: 'stripeCustomerId = :stripeCustomerId',
+                ExpressionAttributeValues: {
+                    ':stripeCustomerId': 'customerId',
+                },
+                Limit: 1,
+            });
+            expect(dynamodb.get).toHaveBeenCalledWith({
+                TableName: 'users-table',
+                Key: {
+                    id: 'userId',
+                },
+            });
+        });
+
+        it('should return null if no user is found', async () => {
+            dynamodb.query.mockReturnValueOnce(
+                awsResult({
+                    Items: [],
+                })
+            );
+
+            const result = await store.findUserByStripeCustomerId('customerId');
+
+            expect(result).toBe(null);
         });
     });
 

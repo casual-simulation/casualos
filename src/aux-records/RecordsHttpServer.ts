@@ -2,6 +2,7 @@ import { getStatusCode, tryDecodeUriComponent, tryParseJson } from './Utils';
 import {
     AuthController,
     INVALID_KEY_ERROR_MESSAGE,
+    INVALID_REQUEST_ERROR_MESSAGE,
     ValidateSessionKeyResult,
 } from './AuthController';
 import { parseSessionKey } from './AuthUtils';
@@ -10,6 +11,7 @@ import { RecordsController } from './RecordsController';
 import { EventRecordsController } from './EventRecordsController';
 import { DataRecordsController } from './DataRecordsController';
 import { FileRecordsController } from './FileRecordsController';
+import { SubscriptionController } from './SubscriptionController';
 
 /**
  * Defines an interface for a generic HTTP request.
@@ -140,6 +142,7 @@ export class RecordsHttpServer {
     private _data: DataRecordsController;
     private _manualData: DataRecordsController;
     private _files: FileRecordsController;
+    private _subscriptions: SubscriptionController;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -160,7 +163,8 @@ export class RecordsHttpServer {
         eventsController: EventRecordsController,
         dataController: DataRecordsController,
         manualDataController: DataRecordsController,
-        filesController: FileRecordsController
+        filesController: FileRecordsController,
+        subscriptionController: SubscriptionController
     ) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -171,6 +175,7 @@ export class RecordsHttpServer {
         this._data = dataController;
         this._manualData = manualDataController;
         this._files = filesController;
+        this._subscriptions = subscriptionController;
     }
 
     /**
@@ -201,6 +206,37 @@ export class RecordsHttpServer {
                 request,
                 await this._putUserInfo(request),
                 this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path.startsWith('/api/') &&
+            request.path.endsWith('/subscription') &&
+            !!request.pathParams.userId
+        ) {
+            return formatResponse(
+                request,
+                await this._getSubscriptionInfo(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path.startsWith('/api/') &&
+            request.path.endsWith('/subscription/manage') &&
+            !!request.pathParams.userId
+        ) {
+            return formatResponse(
+                request,
+                await this._manageSubscription(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/stripeWebhook'
+        ) {
+            return formatResponse(
+                request,
+                await this._stripeWebhook(request),
+                true
             );
         } else if (
             request.method === 'GET' &&
@@ -405,6 +441,39 @@ export class RecordsHttpServer {
             returnResult(OPERATION_NOT_FOUND_RESULT),
             true
         );
+    }
+
+    private async _stripeWebhook(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        let body: string = null;
+        if (typeof request.body === 'string') {
+            body = request.body;
+        } else if (ArrayBuffer.isView(request.body)) {
+            try {
+                const decoder = new TextDecoder();
+                body = decoder.decode(request.body);
+            } catch (err) {
+                console.log(
+                    '[RecordsHttpServer] Unable to decode request body!',
+                    err
+                );
+                return returnResult({
+                    success: false,
+                    errorCode: 'invalid_request',
+                    errorMessage: INVALID_REQUEST_ERROR_MESSAGE,
+                });
+            }
+        }
+
+        const signature = request.headers['stripe-signature'];
+
+        const result = await this._subscriptions.handleStripeWebhook({
+            requestBody: body,
+            signature,
+        });
+
+        return returnResult(result);
     }
 
     private async _handleOptions(
@@ -1135,6 +1204,89 @@ export class RecordsHttpServer {
         return returnResult(result);
     }
 
+    private async _getSubscriptionInfo(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const sessionKey = getSessionKey(request);
+
+        if (!sessionKey) {
+            return returnResult(NOT_LOGGED_IN_RESULT);
+        }
+
+        const userId = tryDecodeUriComponent(request.pathParams.userId);
+
+        if (!userId) {
+            return returnResult(UNACCEPTABLE_USER_ID);
+        }
+
+        const result = await this._subscriptions.getSubscriptionStatus({
+            sessionKey,
+            userId,
+        });
+
+        if (!result.success) {
+            return returnResult(result);
+        }
+
+        return returnResult({
+            success: true,
+            publishableKey: result.publishableKey,
+            subscriptions: result.subscriptions.map((s) => ({
+                active: s.active,
+                statusCode: s.statusCode,
+                productName: s.productName,
+                startDate: s.startDate,
+                endedDate: s.endedDate,
+                cancelDate: s.cancelDate,
+                canceledDate: s.canceledDate,
+                currentPeriodStart: s.currentPeriodStart,
+                currentPeriodEnd: s.currentPeriodEnd,
+                renewalInterval: s.renewalInterval,
+                intervalLength: s.intervalLength,
+                intervalCost: s.intervalCost,
+                currency: s.currency,
+            })),
+        });
+    }
+
+    private async _manageSubscription(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const sessionKey = getSessionKey(request);
+
+        if (!sessionKey) {
+            return returnResult(NOT_LOGGED_IN_RESULT);
+        }
+
+        const userId = tryDecodeUriComponent(request.pathParams.userId);
+
+        if (!userId) {
+            return returnResult(UNACCEPTABLE_USER_ID);
+        }
+
+        const result = await this._subscriptions.createManageSubscriptionLink({
+            sessionKey,
+            userId,
+        });
+
+        if (!result.success) {
+            return returnResult(result);
+        }
+
+        return returnResult({
+            success: true,
+            url: result.url,
+        });
+    }
+
     /**
      * Endpoint to retrieve info about a user.
      * @param request The request.
@@ -1180,6 +1332,8 @@ export class RecordsHttpServer {
             avatarPortraitUrl: result.avatarPortraitUrl,
             email: result.email,
             phoneNumber: result.phoneNumber,
+            hasActiveSubscription: result.hasActiveSubscription,
+            openAiKey: result.openAiKey,
         });
     }
 
@@ -1350,8 +1504,9 @@ export function formatResponse(
         ...(response.headers || {}),
     } as any;
     if (
-        origins === true ||
-        (typeof origins === 'object' && validateOrigin(request, origins))
+        !!origin &&
+        (origins === true ||
+            (typeof origins === 'object' && validateOrigin(request, origins)))
     ) {
         if (!headers['Access-Control-Allow-Origin']) {
             headers['Access-Control-Allow-Origin'] = origin;

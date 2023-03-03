@@ -2,6 +2,7 @@ import {
     CompleteLoginSuccess,
     LoginRequestSuccess,
 } from '@casual-simulation/aux-records/AuthController';
+import { formatV1SessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import { resourceUsage } from 'process';
 import { AuthManager } from './AuthManager';
 
@@ -167,6 +168,51 @@ describe('AuthManager', () => {
 
             expect(manager.userId).toBe(null);
             expect(manager.savedSessionKey).toBe(null);
+        });
+    });
+
+    describe('listSubscriptions()', () => {
+        it('should send a load subscriptions request with the current sessionKey', async () => {
+            setResponse({
+                data: {
+                    success: true,
+                    subscriptions: [
+                        {
+                            id: 'sub_1',
+                        },
+                        {
+                            id: 'sub_2',
+                        },
+                    ],
+                },
+            });
+
+            manager.savedSessionKey = formatV1SessionKey(
+                'userId',
+                'sessionId',
+                'sessionSecret',
+                123
+            );
+            (manager as any)._userId = 'userId';
+            const response = await manager.listSubscriptions();
+
+            expect(response).toEqual([
+                {
+                    id: 'sub_1',
+                },
+                {
+                    id: 'sub_2',
+                },
+            ]);
+            expect(getLastGet()).toEqual([
+                'http://myendpoint.localhost/api/userId/subscription',
+                {
+                    headers: {
+                        Authorization: `Bearer ${manager.savedSessionKey}`,
+                    },
+                    validateStatus: expect.any(Function),
+                },
+            ]);
         });
     });
 });

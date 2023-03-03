@@ -11,53 +11,110 @@ async function start() {
         'aws',
         'env.json'
     );
-    const secretsFile = path.resolve(
+    const serverlessSecretsFile = path.resolve(
         __dirname,
         '..',
         'serverless',
         'aws',
         'secrets.env.json'
     );
+    const serverSecretsFile = path.resolve(
+        __dirname,
+        '..',
+        'server',
+        'secrets.env.json'
+    );
     const env = JSON.parse(readFileSync(envFile, 'utf8'));
-    const secretsExists = existsSync(secretsFile);
-    const secrets = secretsExists
-        ? JSON.parse(readFileSync(secretsFile, 'utf8'))
+    const serverlessSecretsExists = existsSync(serverlessSecretsFile);
+    const serverlessSecrets = serverlessSecretsExists
+        ? JSON.parse(readFileSync(serverlessSecretsFile, 'utf8'))
         : {};
 
-    let result = _.merge({}, env, secrets);
+    let serverlessResult = _.merge({}, env, serverlessSecrets);
+    let needsUpdate = !serverlessSecretsExists;
 
-    let needsUpdate = !secretsExists;
+    const serverSecretsExists = existsSync(serverSecretsFile);
+    const serverSecrets = serverSecretsExists
+        ? JSON.parse(readFileSync(serverSecretsFile, 'utf8'))
+        : {};
+
+    let serverResult = _.merge({}, serverSecrets);
 
     let questions = [];
 
-    if (!result?.handleRecords?.TEXT_IT_API_KEY) {
-        questions.push({
-            type: 'text',
-            name: 'TEXT_IT_API_KEY',
-            message: 'Please enter the API Key for TextIt',
-        });
+    const environmentVariables = [
+        ['TEXT_IT_API_KEY', 'Please enter the API Key for TextIt'],
+        ['TEXT_IT_FLOW_ID', 'Please enter the Flow ID for TextIt'],
+        ['STRIPE_SECRET_KEY', 'Please enter the Stripe Secret Key'],
+        ['STRIPE_PUBLISHABLE_KEY', 'Please enter the Stripe Publishable Key'],
+        ['SUBSCRIPTION_CONFIG', 'Please enter the Subscription Config'],
+    ];
+
+    for (let [name, desc] of environmentVariables) {
+        if (!serverlessResult?.handleRecords?.[name] || !serverResult?.[name]) {
+            questions.push({
+                type: 'text',
+                name: name,
+                message: desc,
+            });
+        }
     }
 
-    if (!result?.handleRecords?.TEXT_IT_FLOW_ID) {
+    // if ( ||
+    //     !serverResult?.TEXT_IT_API_KEY) {
+
+    // }
+
+    // if (!serverlessResult?.handleRecords?.TEXT_IT_FLOW_ID) {
+    //     questions.push({
+    //         type: 'text',
+    //         name: 'TEXT_IT_FLOW_ID',
+    //         message: '',
+    //     });
+    // }
+
+    // if (!serverlessResult?.handleRecords?.STRIPE_SECRET_KEY) {
+    //     questions.push({
+    //         type: 'text',
+    //         name: 'STRIPE_SECRET_KEY',
+    //         message: 'Please enter the Stripe Secret Key',
+    //     });
+    // }
+
+    // if (!serverlessResult?.handleRecords?.SUBSCRIPTION_CONFIG) {
+    //     questions.push({
+    //         type: 'text',
+    //         name: 'SUBSCRIPTION_CONFIG',
+    //         message: 'Please enter the Subscription Config',
+    //     });
+    // }
+
+    if (!result?.handleRecords?.STRIPE_SECRET_KEY) {
         questions.push({
             type: 'text',
-            name: 'TEXT_IT_FLOW_ID',
-            message: 'Please enter the Flow ID for TextIt',
+            name: 'STRIPE_SECRET_KEY',
+            message: 'Please enter the Stripe Secret Key',
         });
     }
 
     if (questions.length > 0) {
         const response = await prompts(questions);
-        result = _.merge({}, result, {
+        serverlessResult = _.merge({}, serverlessResult, {
             handleRecords: {
                 ...response,
             },
         });
+        serverResult = _.merge({}, serverResult, response);
+
         needsUpdate = true;
     }
 
     if (needsUpdate) {
-        writeFileSync(secretsFile, JSON.stringify(result, null, 4));
+        writeFileSync(
+            serverlessSecretsFile,
+            JSON.stringify(serverlessResult, null, 4)
+        );
+        writeFileSync(serverSecretsFile, JSON.stringify(serverResult, null, 4));
     }
 }
 

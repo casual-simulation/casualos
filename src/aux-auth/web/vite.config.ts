@@ -84,6 +84,9 @@ export default defineConfig(({ command, mode }) => {
                         'undefined' &&
                         command !== 'build')
             ),
+            ASSUME_SUBSCRIPTIONS_SUPPORTED: JSON.stringify(
+                command === 'serve' || !!process.env.SUBSCRIPTION_CONFIG
+            ),
         },
         publicDir,
         resolve: {
