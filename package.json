@@ -84,7 +84,6 @@
         "@types/pify": "^5.0.1",
         "@types/redis": "^2.8.32",
         "@types/sinon": "^10.0.6",
-        "@types/stripe": "6.32.1",
         "@types/stripe-v3": "^3.1.7",
         "@types/sshpk": "^1.10.7",
         "@types/useragent": "^2.3.1",
