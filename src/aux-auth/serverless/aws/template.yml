@@ -311,6 +311,8 @@ Resources:
             AttributeDefinitions:
                 - AttributeName: id
                   AttributeType: S
+                - AttributeName: stripeCustomerId
+                  AttributeType: S
             ProvisionedThroughput:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
