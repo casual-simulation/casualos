@@ -314,7 +314,7 @@ Resources:
             ProvisionedThroughput:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
-            GlobalSeconaryIndexes:
+            GlobalSecondaryIndexes:
                 - IndexName: StripeCustomerIdsIndex
                   KeySchema:
                       - KeyType: HASH
