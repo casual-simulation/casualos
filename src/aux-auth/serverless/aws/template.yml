@@ -321,6 +321,9 @@ Resources:
                         AttributeName: stripeCustomerId
                   Projection:
                       ProjectionType: KEYS_ONLY
+                  ProvisionedThroughput:
+                      ReadCapacityUnits: 1
+                      WriteCapacityUnits: 1
 
     UserAddressesTable:
         Type: AWS::DynamoDB::Table
