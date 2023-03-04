@@ -60,7 +60,7 @@ Parameters:
     SubscriptionConfigParameter:
         Type: String
         Description: The configuration that should be used for subscriptions.
-        Defualt: ''
+        Default: ''
     AllowedOriginsParameter:
         Type: String
         Description: The allowed origin domains that are able to make requests for the internal auth site APIs. This value should be a space-separated string that includes the origins that the auth site is hosted on.
