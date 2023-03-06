@@ -21,6 +21,7 @@ import type {
     GetSubscriptionStatusResult,
     SubscriptionStatus,
     CreateManageSubscriptionResult,
+    GetSubscriptionStatusSuccess,
 } from '@casual-simulation/aux-records/SubscriptionController';
 import { omitBy } from 'lodash';
 
@@ -225,7 +226,7 @@ export class AuthManager {
         }
     }
 
-    async listSubscriptions(): Promise<SubscriptionStatus[]> {
+    async listSubscriptions(): Promise<GetSubscriptionStatusSuccess> {
         const url = new URL(
             `${this.apiEndpoint}/api/${this.userId}/subscription`
         );
@@ -237,12 +238,12 @@ export class AuthManager {
         const result = response.data as GetSubscriptionStatusResult;
 
         if (result.success === true) {
-            return result.subscriptions;
+            return result;
         } else {
             if (result.errorCode === 'not_supported') {
                 return null;
             }
-            return [];
+            return null;
         }
     }
 

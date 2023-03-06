@@ -9,6 +9,7 @@ import {
     StripePortalRequest,
     StripePortalResponse,
     StripePrice,
+    StripeProduct,
     StripeSubscriptionItem,
 } from '@casual-simulation/aux-records';
 import Stripe from 'stripe';
@@ -35,6 +36,14 @@ export class StripeIntegration implements StripeInterface {
         });
 
         return prices.data;
+    }
+
+    async getProductAndPriceInfo(product: string): Promise<StripeProduct> {
+        const p = await this._stripe.products.retrieve(product, {
+            expand: ['default_price'],
+        });
+
+        return p as StripeProduct;
     }
 
     async createCheckoutSession(

@@ -3,31 +3,66 @@ import {
     INVALID_KEY_ERROR_MESSAGE,
     ValidateSessionKeyFailure,
 } from './AuthController';
-import { AuthSession, AuthStore } from './AuthStore';
-import { StripeEvent, StripeInterface } from './StripeInterface';
+import { AuthSession, AuthStore, AuthUser } from './AuthStore';
+import {
+    StripeCheckoutResponse,
+    StripeEvent,
+    StripeInterface,
+} from './StripeInterface';
 import { ServerError } from './Errors';
 import { isActiveSubscription, JsonParseResult, tryParseJson } from './Utils';
 
 export interface SubscriptionConfiguration {
     /**
-     * The line items that should be included in the checkout request.
+     * The information that should be used for subscriptions.
      */
-    lineItems: {
+    subscriptions: {
         /**
-         * The ID of the price for the line item.
+         * The ID of the subscription.
+         * Only used for the API.
          */
-        price: string;
+        id: string;
 
         /**
-         * The quantity to purchase.
+         * The ID of the product that needs to be purchased for the subscription.
          */
-        quantity?: number;
+        product: string;
+
+        /**
+         * The list of features that should be shown for this subscription tier.
+         */
+        featureList: string[];
+
+        /**
+         * The list of products that are eligible for this subscription tier.
+         */
+        eligibleProducts: string[];
+
+        /**
+         * Whether this subscription should be the default.
+         */
+        defaultSubscription?: boolean;
     }[];
+
+    // /**
+    //  * The line items that should be included in the checkout request.
+    //  */
+    // lineItems: {
+    //     /**
+    //      * The ID of the price for the line item.
+    //      */
+    //     price: string;
+
+    //     /**
+    //      * The quantity to purchase.
+    //      */
+    //     quantity?: number;
+    // }[];
 
     /**
      * The IDs of the products that should be recognized as active subscriptions for the user.
      */
-    products: string[];
+    // products: string[];
 
     /**
      * The webhook secret that should be used for validating webhooks.
@@ -122,6 +157,8 @@ export class SubscriptionController {
                     userId: keyResult.userId,
                     publishableKey: this._stripe.publishableKey,
                     subscriptions: [],
+                    purchasableSubscriptions:
+                        await this._getPurchasableSubscriptions(),
                 };
             }
 
@@ -150,11 +187,16 @@ export class SubscriptionController {
                     };
                 });
 
+            const purchasableSubscriptions =
+                subscriptions.length > 0
+                    ? []
+                    : await this._getPurchasableSubscriptions();
             return {
                 success: true,
                 userId: keyResult.userId,
                 publishableKey: this._stripe.publishableKey,
                 subscriptions,
+                purchasableSubscriptions,
             };
         } catch (err) {
             console.log(
@@ -167,6 +209,35 @@ export class SubscriptionController {
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    private async _getPurchasableSubscriptions(): Promise<
+        PurchasableSubscription[]
+    > {
+        const promises = this._config.subscriptions.map(async (s) => ({
+            sub: s,
+            info: await this._stripe.getProductAndPriceInfo(s.product),
+        }));
+        const productInfo = await Promise.all(promises);
+
+        return productInfo
+            .filter((i) => !!i.info)
+            .map((i) => ({
+                id: i.sub.id,
+                name: i.info.name,
+                description: i.info.description,
+                featureList: i.sub.featureList,
+                prices: [
+                    {
+                        id: 'default',
+                        currency: i.info.default_price.currency,
+                        cost: i.info.default_price.unit_amount,
+                        interval: i.info.default_price.recurring.interval,
+                        intervalLength:
+                            i.info.default_price.recurring.interval_count,
+                    },
+                ],
+            }));
     }
 
     /**
@@ -194,6 +265,30 @@ export class SubscriptionController {
                 };
             }
 
+            if (
+                !!request.subscriptionId &&
+                typeof request.subscriptionId !== 'string'
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The given Subscription ID is invalid. If provided, it must be a correctly formatted string.',
+                };
+            }
+
+            if (
+                !!request.expectedPrice &&
+                typeof request.expectedPrice !== 'object'
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The given Price ID is invalid. If provided, it must be an object.',
+                };
+            }
+
             const keyResult = await this._auth.validateSessionKey(
                 request.sessionKey
             );
@@ -211,6 +306,14 @@ export class SubscriptionController {
                 };
             }
 
+            // if (this._config.subscriptions.length <= 0) {
+            //     return {
+            //         success: false,
+            //         errorCode: 'not_supported',
+            //         errorMessage: 'This method is not supported.',
+            //     };
+            // }
+
             console.log(
                 `[SubscriptionController] [createManageSubscriptionLink] Creating a checkout/management session for User (${keyResult.userId}).`
             );
@@ -218,6 +321,14 @@ export class SubscriptionController {
             let customerId = user.stripeCustomerId;
 
             if (!customerId) {
+                if (this._config.subscriptions.length <= 0) {
+                    return {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'New subscriptions are not supported.',
+                    };
+                }
+
                 console.log(
                     '[SubscriptionController] [createManageSubscriptionLink] No Stripe Customer ID. Creating New Customer and Checkout Session in Stripe.'
                 );
@@ -235,28 +346,11 @@ export class SubscriptionController {
                     ...user,
                 });
 
-                console.log(
-                    `[SubscriptionController] [createManageSubscriptionLink] Creating Checkout Session.`
+                return await this._createCheckoutSession(
+                    request,
+                    user,
+                    customerId
                 );
-
-                const session = await this._stripe.createCheckoutSession({
-                    customer: customerId,
-                    success_url: this._config.successUrl,
-                    cancel_url: this._config.cancelUrl,
-                    line_items: this._config.lineItems,
-                    mode: 'subscription',
-                    metadata: {
-                        userId: user.id,
-                    },
-                });
-
-                console.log(
-                    `[SubscriptionController] [createManageSubscriptionLink] Checkout Session Success!`
-                );
-                return {
-                    success: true,
-                    url: session.url,
-                };
             }
 
             console.log(
@@ -279,8 +373,11 @@ export class SubscriptionController {
                     return false;
                 }
 
-                const hasManagableProduct = this._config.products.some((p) =>
-                    s.items.some((i) => i.price.product.id === p)
+                const hasManagableProduct = this._config.subscriptions.some(
+                    (sub) =>
+                        sub.eligibleProducts.some((p) =>
+                            s.items.some((i) => i.price.product.id === p)
+                        )
                 );
 
                 return hasManagableProduct;
@@ -308,24 +405,7 @@ export class SubscriptionController {
             console.log(
                 `[SubscriptionController] [createManageSubscriptionLink] Customer does not have a managable subscription. Creating a checkout session.`
             );
-            const session = await this._stripe.createCheckoutSession({
-                customer: customerId,
-                success_url: this._config.successUrl,
-                cancel_url: this._config.cancelUrl,
-                line_items: this._config.lineItems,
-                mode: 'subscription',
-                metadata: {
-                    userId: user.id,
-                },
-            });
-
-            console.log(
-                `[SubscriptionController] [createManageSubscriptionLink] Checkout Session Success!`
-            );
-            return {
-                success: true,
-                url: session.url,
-            };
+            return await this._createCheckoutSession(request, user, customerId);
         } catch (err) {
             console.log(
                 '[SubscriptionController] An error occurred while creating a manage subscription link:',
@@ -337,6 +417,96 @@ export class SubscriptionController {
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    private async _createCheckoutSession(
+        request: CreateManageSubscriptionRequest,
+        user: AuthUser,
+        customerId: string
+    ): Promise<CreateManageSubscriptionResult> {
+        let sub: SubscriptionConfiguration['subscriptions'][0];
+        if (!request.subscriptionId) {
+            sub = this._config.subscriptions.find(
+                (s) => s.id === request.subscriptionId
+            );
+            if (sub) {
+                console.log(
+                    `[SubscriptionController] [createManageSubscriptionLink] Using specified subscription (${request.subscriptionId}).`
+                );
+            }
+        }
+
+        if (!sub) {
+            sub = this._config.subscriptions.find((s) => s.defaultSubscription);
+            if (sub) {
+                console.log(
+                    `[SubscriptionController] [createManageSubscriptionLink] Using default subscription.`
+                );
+            }
+        }
+
+        if (!sub) {
+            sub = this._config.subscriptions[0];
+            console.log(
+                `[SubscriptionController] [createManageSubscriptionLink] Using first subscription.`
+            );
+        }
+
+        const productInfo = await this._stripe.getProductAndPriceInfo(
+            sub.product
+        );
+
+        if (request.expectedPrice) {
+            if (
+                request.expectedPrice.currency !==
+                    productInfo.default_price.currency ||
+                request.expectedPrice.cost !==
+                    productInfo.default_price.unit_amount ||
+                request.expectedPrice.interval !==
+                    productInfo.default_price.recurring.interval ||
+                request.expectedPrice.intervalLength !==
+                    productInfo.default_price.recurring.interval_count
+            ) {
+                console.log(
+                    `[SubscriptionController] [createManageSubscriptionLink] Expected price does not match actual price.`
+                );
+                return {
+                    success: false,
+                    errorCode: 'price_does_not_match',
+                    errorMessage:
+                        'The expected price does not match the actual price.',
+                };
+            }
+        }
+
+        console.log(
+            `[SubscriptionController] [createManageSubscriptionLink] Creating Checkout Session.`
+        );
+
+        const session = await this._stripe.createCheckoutSession({
+            customer: customerId,
+            success_url: this._config.successUrl,
+            cancel_url: this._config.cancelUrl,
+            line_items: [
+                {
+                    price: productInfo.default_price.id,
+                    quantity: 1,
+                },
+            ],
+            mode: 'subscription',
+            metadata: {
+                userId: user.id,
+            },
+        });
+
+        console.log(
+            `[SubscriptionController] [createManageSubscriptionLink] Checkout Session Success!`
+        );
+
+        return {
+            success: true,
+            url: session.url,
+        };
     }
 
     /**
@@ -471,18 +641,30 @@ export function tryParseSubscriptionConfig(
             typeof subscriptionConfig.cancelUrl !== 'string' ||
             typeof subscriptionConfig.returnUrl !== 'string' ||
             typeof subscriptionConfig.successUrl !== 'string' ||
-            typeof subscriptionConfig.lineItems !== 'object' ||
-            typeof subscriptionConfig.products !== 'object' ||
-            !Array.isArray(subscriptionConfig.lineItems) ||
-            !Array.isArray(subscriptionConfig.products) ||
-            subscriptionConfig.lineItems.some((li) => typeof li !== 'object') ||
-            subscriptionConfig.products.some((p) => typeof p !== 'string')
+            typeof subscriptionConfig.subscriptions !== 'object' ||
+            !Array.isArray(subscriptionConfig.subscriptions) ||
+            subscriptionConfig.subscriptions.some(
+                (s) => !isValidSubscription(s)
+            )
         ) {
             subscriptionConfig = null;
         }
     }
 
     return subscriptionConfig;
+}
+
+function isValidSubscription(
+    sub: SubscriptionConfiguration['subscriptions'][0]
+) {
+    return (
+        sub &&
+        typeof sub.id === 'string' &&
+        Array.isArray(sub.featureList) &&
+        Array.isArray(sub.eligibleProducts) &&
+        typeof sub.product === 'string' &&
+        typeof sub.defaultSubscription === 'boolean'
+    );
 }
 
 /**
@@ -498,6 +680,21 @@ export interface CreateManageSubscriptionRequest {
      * The User ID that the management session should be created for.
      */
     userId: string;
+
+    /**
+     * The subscription that was selected for purcahse by the user.
+     */
+    subscriptionId?: string;
+
+    /**
+     * The price that the user expects to pay.
+     */
+    expectedPrice?: {
+        currency: string;
+        cost: number;
+        interval: 'month' | 'year' | 'week' | 'day';
+        intervalLength: number;
+    };
 }
 
 export type CreateManageSubscriptionResult =
@@ -523,6 +720,8 @@ export interface CreateManageSubscriptionFailure {
         | ServerError
         | ValidateSessionKeyFailure['errorCode']
         | 'unacceptable_user_id'
+        | 'unacceptable_request'
+        | 'price_does_not_match'
         | 'not_supported';
 
     /**
@@ -564,6 +763,11 @@ export interface GetSubscriptionStatusSuccess {
      * The list of subscriptions that the user has.
      */
     subscriptions: SubscriptionStatus[];
+
+    /**
+     * The list of subscriptions that the user can purchase.
+     */
+    purchasableSubscriptions: PurchasableSubscription[];
 }
 
 export interface SubscriptionStatus {
@@ -649,6 +853,58 @@ export interface SubscriptionStatus {
      * The currency that was used.
      */
     currency: string;
+}
+
+export interface PurchasableSubscription {
+    /**
+     * The ID of the subscription tier.
+     */
+    id: string;
+
+    /**
+     * The name of the product.
+     */
+    name: string;
+
+    /**
+     * The description of the product.
+     */
+    description: string;
+
+    /**
+     * The list of features included in the product.
+     */
+    featureList: string[];
+
+    /**
+     * The list of prices that the subscription can be purchased at.
+     */
+    prices: {
+        /**
+         * The ID of the price.
+         */
+        id: string;
+
+        /**
+         * How frequently the subscription will renew when this price is purchased.
+         */
+        interval: 'month' | 'year' | 'week' | 'day';
+
+        /**
+         * The number of months/years/weeks/days that the interval lasts for.
+         */
+        intervalLength: number;
+
+        /**
+         * The currency that this price is listed in.
+         */
+        currency: string;
+
+        /**
+         * The cost of this price.
+         */
+        cost: number;
+    }[];
 }
 
 export interface GetSubscriptionStatusFailure {

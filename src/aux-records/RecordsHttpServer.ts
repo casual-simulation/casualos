@@ -1250,6 +1250,15 @@ export class RecordsHttpServer {
                 intervalCost: s.intervalCost,
                 currency: s.currency,
             })),
+            purchasableSubscriptions: result.purchasableSubscriptions.map(
+                (s) => ({
+                    id: s.id,
+                    name: s.name,
+                    description: s.description,
+                    featureList: s.featureList,
+                    prices: s.prices,
+                })
+            ),
         });
     }
 

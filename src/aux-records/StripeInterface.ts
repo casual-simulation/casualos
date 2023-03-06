@@ -14,6 +14,12 @@ export interface StripeInterface {
     listPricesForProduct(product: string): Promise<StripePrice[]>;
 
     /**
+     * Gets the information about the given product.
+     * @param product The product.
+     */
+    getProductAndPriceInfo(product: string): Promise<StripeProduct>;
+
+    /**
      * Creates a new checkout session for a user to use.
      * @param request The checkout session request.
      */
@@ -63,6 +69,31 @@ export interface StripePrice {
      * The ID of the price.
      */
     id: string;
+
+    /**
+     * The information about how this price has recurring payments.
+     */
+    recurring: {
+        /**
+         * The type of recurring interval that is used for this item's price.
+         */
+        interval: 'month' | 'year' | 'week' | 'day';
+
+        /**
+         * The number of intervals that have to happen in order for the subscription to be renewed.
+         */
+        interval_count: number;
+    };
+
+    /**
+     * The currency that the scription is renewed in.
+     */
+    currency: string;
+
+    /**
+     * The amount of units that are charged for each renewal.
+     */
+    unit_amount: number;
 }
 
 /**
@@ -400,4 +431,26 @@ export interface StripeEventRequest {
      * The idempotency key transmitted during the request, if any. *Note: This property is populated only for events on or after May 23, 2017*.
      */
     idempotency_key: string | null;
+}
+
+export interface StripeProduct {
+    /**
+     * The ID of the product.
+     */
+    id: string;
+
+    /**
+     * The name of the product.
+     */
+    name: string;
+
+    /**
+     * The description of the product.
+     */
+    description: string;
+
+    /**
+     * The default price for the product.
+     */
+    default_price: StripePrice;
 }

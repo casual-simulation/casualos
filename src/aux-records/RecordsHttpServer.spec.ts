@@ -29,7 +29,7 @@ import { FileRecordsStore } from './FileRecordsStore';
 import { MemoryFileRecordsStore } from './MemoryFileRecordsStore';
 import { getHash } from '@casual-simulation/crypto';
 import { SubscriptionController } from './SubscriptionController';
-import { StripeInterface } from './StripeInterface';
+import { StripeInterface, StripeProduct } from './StripeInterface';
 
 console.log = jest.fn();
 
@@ -56,6 +56,7 @@ describe('RecordsHttpServer', () => {
 
     let stripeMock: {
         publishableKey: string;
+        getProductAndPriceInfo: jest.Mock<Promise<StripeProduct | null>>;
         listPricesForProduct: jest.Mock<any>;
         createCheckoutSession: jest.Mock<any>;
         createPortalSession: jest.Mock<any>;
@@ -136,6 +137,7 @@ describe('RecordsHttpServer', () => {
 
         stripe = stripeMock = {
             publishableKey: 'publishable_key',
+            getProductAndPriceInfo: jest.fn(),
             listPricesForProduct: jest.fn(),
             createCheckoutSession: jest.fn(),
             createPortalSession: jest.fn(),
@@ -144,18 +146,47 @@ describe('RecordsHttpServer', () => {
             constructWebhookEvent: jest.fn(),
         };
 
+        stripeMock.getProductAndPriceInfo.mockImplementation(async (id) => {
+            if (id === 'product_id') {
+                return {
+                    id,
+                    default_price: {
+                        id: 'price_id',
+                        currency: 'usd',
+                        recurring: {
+                            interval: 'month',
+                            interval_count: 1,
+                        },
+                        unit_amount: 100,
+                    },
+                    name: 'Product Name',
+                    description: 'Product Description',
+                };
+            }
+            return null;
+        });
+
         subscriptionController = new SubscriptionController(
             stripe,
             authController,
             authStore,
             {
-                lineItems: [
+                subscriptions: [
                     {
-                        price: 'price_id',
-                        quantity: 1,
+                        id: 'sub_id',
+                        eligibleProducts: ['product_id'],
+                        featureList: ['Feature 1', 'Feature 2'],
+                        product: 'product_id',
+                        defaultSubscription: true,
                     },
                 ],
-                products: ['product_id'],
+                // lineItems: [
+                //     {
+                //         price: 'price_id',
+                //         quantity: 1,
+                //     },
+                // ],
+                // products: ['product_id'],
                 webhookSecret: 'webhook_secret',
                 cancelUrl: 'cancel_url',
                 successUrl: 'success_url',
@@ -696,9 +727,9 @@ describe('RecordsHttpServer', () => {
                 )
             );
 
-            expect(result).toEqual({
+            expectResponseBodyToEqual(result, {
                 statusCode: 200,
-                body: JSON.stringify({
+                body: {
                     success: true,
                     publishableKey: 'publishable_key',
                     subscriptions: [
@@ -718,7 +749,50 @@ describe('RecordsHttpServer', () => {
                             currency: 'usd',
                         },
                     ],
-                }),
+                    purchasableSubscriptions: [],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a list of purchasable subscriptions for the user', async () => {
+            stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                {
+                    subscriptions: [],
+                }
+            );
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/{userId:${userId}}/subscription`,
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [],
+                    purchasableSubscriptions: [
+                        {
+                            id: 'sub_id',
+                            name: 'Product Name',
+                            description: 'Product Description',
+                            featureList: ['Feature 1', 'Feature 2'],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    cost: 100,
+                                    currency: 'usd',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                },
+                            ],
+                        },
+                    ],
+                },
                 headers: accountCorsHeaders,
             });
         });

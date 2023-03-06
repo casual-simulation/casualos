@@ -119,8 +119,64 @@
                     </md-card-content>
                 </md-card>
             </div>
+            <div v-else class="subscriptions-list">
+                <md-card
+                    v-for="subscription of purchasableSubscriptions"
+                    :key="subscription.id"
+                    class="subscription-card"
+                >
+                    <md-card-header>
+                        <h3 class="md-title">{{ subscription.name }}</h3>
+                    </md-card-header>
 
-            <md-card v-else class="subscription-card">
+                    <md-card-content>
+                        <div class="add-subscription">
+                            <div class="subscription-hook">
+                                {{ subscription.description }}
+                            </div>
+                            <div
+                                v-for="price of subscription.prices"
+                                :key="price.id"
+                                class="subscription-price"
+                            >
+                                <span class="price">{{
+                                    formatPrice(price.cost, price.currency)
+                                }}</span>
+                                <span class="period">per<br />{{ price.interval }}</span>
+                            </div>
+                            <!-- <div class="subscribe-button">
+                                <md-button @click="manageSubscription" class="md-raised md-primary"
+                                    >Subscribe</md-button
+                                >
+                            </div> -->
+                            <div class="subscribe-features">
+                                <div>This includes:</div>
+                                <ul>
+                                    <li
+                                        v-for="(feature, index) of subscription.featureList"
+                                        :key="index"
+                                    >
+                                        {{ feature }}
+                                    </li>
+                                </ul>
+                                <!-- <ul>
+                                    <li>Access to casualos.com</li>
+                                    <li>Use GPT-3 to Build (OpenAI API key not included)</li>
+                                    <li>Unlimited ABs</li>
+                                </ul> -->
+                            </div>
+                        </div>
+                    </md-card-content>
+
+                    <md-card-actions>
+                        <md-button @click="manageSubscription" class="md-primary"
+                            >Subscribe</md-button
+                        >
+                    </md-card-actions>
+                </md-card>
+            </div>
+
+            <!-- <md-card v-else class="subscription-card">
                 <md-card-header>
                     <h3 class="md-title">Beta Program</h3>
                 </md-card-header>
@@ -149,7 +205,7 @@
                         </div>
                     </div>
                 </md-card-content>
-            </md-card>
+            </md-card> -->
         </div>
     </div>
 </template>

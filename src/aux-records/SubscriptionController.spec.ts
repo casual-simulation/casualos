@@ -5,7 +5,7 @@ import { MemoryAuthStore } from './MemoryAuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { AuthMessenger } from './AuthMessenger';
 import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
-import { StripeInterface } from './StripeInterface';
+import { StripeInterface, StripeProduct } from './StripeInterface';
 
 console.log = jest.fn();
 
@@ -17,6 +17,7 @@ describe('SubscriptionController', () => {
 
     let stripeMock: {
         publishableKey: string;
+        getProductAndPriceInfo: jest.Mock<Promise<StripeProduct | null>>;
         listPricesForProduct: jest.Mock<any>;
         createCheckoutSession: jest.Mock<any>;
         createPortalSession: jest.Mock<any>;
@@ -36,6 +37,7 @@ describe('SubscriptionController', () => {
 
         stripe = stripeMock = {
             publishableKey: 'publishable_key',
+            getProductAndPriceInfo: jest.fn(),
             listPricesForProduct: jest.fn(),
             createCheckoutSession: jest.fn(),
             createPortalSession: jest.fn(),
@@ -44,14 +46,47 @@ describe('SubscriptionController', () => {
             constructWebhookEvent: jest.fn(),
         };
 
+        stripeMock.getProductAndPriceInfo.mockImplementation(async (id) => {
+            if (id === 'product_99_id') {
+                return {
+                    id,
+                    name: 'Product 99',
+                    description: 'A product named 99.',
+                    default_price: {
+                        id: 'price_99',
+                        currency: 'usd',
+                        recurring: {
+                            interval: 'month',
+                            interval_count: 1,
+                        },
+                        unit_amount: 100,
+                    },
+                };
+            }
+            return null;
+        });
+
         controller = new SubscriptionController(stripe, auth, authStore, {
-            lineItems: [
+            subscriptions: [
                 {
-                    price: 'price_1_id',
-                    quantity: 1,
+                    id: 'sub_1',
+                    product: 'product_99_id',
+                    eligibleProducts: [
+                        'product_99_id',
+                        'product_1_id',
+                        'product_2_id',
+                        'product_3_id',
+                    ],
+                    featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
                 },
             ],
-            products: ['product_1_id', 'product_2_id', 'product_3_id'],
+            // lineItems: [
+            //     {
+            //         price: 'price_1_id',
+            //         quantity: 1,
+            //     },
+            // ],
+            // products: ['product_1_id', 'product_2_id', 'product_3_id'],
             webhookSecret: 'webhook_secret',
             cancelUrl: 'cancel_url',
             returnUrl: 'return_url',
@@ -107,6 +142,23 @@ describe('SubscriptionController', () => {
                 userId,
                 publishableKey: 'publishable_key',
                 subscriptions: [],
+                purchasableSubscriptions: [
+                    {
+                        id: 'sub_1',
+                        name: 'Product 99',
+                        description: 'A product named 99.',
+                        featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
+                        prices: [
+                            {
+                                id: 'default',
+                                interval: 'month',
+                                intervalLength: 1,
+                                currency: 'usd',
+                                cost: 100,
+                            },
+                        ],
+                    },
+                ],
             });
         });
 
@@ -137,6 +189,23 @@ describe('SubscriptionController', () => {
                 userId,
                 publishableKey: 'publishable_key',
                 subscriptions: [],
+                purchasableSubscriptions: [
+                    {
+                        id: 'sub_1',
+                        name: 'Product 99',
+                        description: 'A product named 99.',
+                        featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
+                        prices: [
+                            {
+                                id: 'default',
+                                interval: 'month',
+                                intervalLength: 1,
+                                currency: 'usd',
+                                cost: 100,
+                            },
+                        ],
+                    },
+                ],
             });
         });
 
@@ -211,6 +280,7 @@ describe('SubscriptionController', () => {
                         currency: 'usd',
                     },
                 ],
+                purchasableSubscriptions: [],
             });
         });
 
@@ -347,7 +417,7 @@ describe('SubscriptionController', () => {
                 cancel_url: 'cancel_url',
                 line_items: [
                     {
-                        price: 'price_1_id',
+                        price: 'price_99',
                         quantity: 1,
                     },
                 ],
@@ -496,7 +566,7 @@ describe('SubscriptionController', () => {
                 cancel_url: 'cancel_url',
                 line_items: [
                     {
-                        price: 'price_1_id',
+                        price: 'price_99',
                         quantity: 1,
                     },
                 ],
@@ -576,7 +646,7 @@ describe('SubscriptionController', () => {
                 cancel_url: 'cancel_url',
                 line_items: [
                     {
-                        price: 'price_1_id',
+                        price: 'price_99',
                         quantity: 1,
                     },
                 ],
@@ -656,7 +726,7 @@ describe('SubscriptionController', () => {
                 cancel_url: 'cancel_url',
                 line_items: [
                     {
-                        price: 'price_1_id',
+                        price: 'price_99',
                         quantity: 1,
                     },
                 ],
@@ -736,7 +806,7 @@ describe('SubscriptionController', () => {
                 cancel_url: 'cancel_url',
                 line_items: [
                     {
-                        price: 'price_1_id',
+                        price: 'price_99',
                         quantity: 1,
                     },
                 ],

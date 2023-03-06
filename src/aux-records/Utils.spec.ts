@@ -471,6 +471,7 @@ describe('getStatusCode()', () => {
         ['invalid_origin', 403] as const,
         ['operation_not_found', 404] as const,
         ['other', 400] as const,
+        ['price_does_not_match', 412] as const,
     ];
 
     it.each(cases)('should map error code %s to %s', (code, expectedStatus) => {
