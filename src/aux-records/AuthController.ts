@@ -23,7 +23,12 @@ import {
     RegexRule,
     toBase64String,
 } from './Utils';
-import { formatV1SessionKey, parseSessionKey, randomCode } from './AuthUtils';
+import {
+    formatV1OpenAiKey,
+    formatV1SessionKey,
+    parseSessionKey,
+    randomCode,
+} from './AuthUtils';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -1023,6 +1028,10 @@ export class AuthController {
                     ? request.update.openAiKey
                     : undefined,
             });
+
+            if (cleaned.openAiKey) {
+                cleaned.openAiKey = formatV1OpenAiKey(cleaned.openAiKey);
+            }
 
             await this._store.saveUser({
                 ...user,

@@ -7,18 +7,33 @@ import {
     LOGIN_REQUEST_LIFETIME_MS,
     SESSION_LIFETIME_MS,
 } from './AuthController';
-import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
+import {
+    formatV1OpenAiKey,
+    formatV1SessionKey,
+    parseSessionKey,
+} from './AuthUtils';
 import { MemoryAuthStore } from './MemoryAuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { v4 as uuid } from 'uuid';
 import { randomBytes } from 'tweetnacl';
-import { fromByteArray } from 'base64-js';
+import { fromByteArray, toByteArray } from 'base64-js';
 import {
     hashHighEntropyPasswordWithSalt,
     hashPasswordWithSalt,
 } from '@casual-simulation/crypto';
 import { fromBase64String, toBase64String } from './Utils';
 import { padStart } from 'lodash';
+
+jest.mock('tweetnacl', () => {
+    const originalModule = jest.requireActual('tweetnacl');
+
+    //Mock the default export and named export 'foo'
+    return {
+        __esModule: true,
+        ...originalModule,
+        randomBytes: jest.fn(),
+    };
+});
 
 const originalDateNow = Date.now;
 
@@ -28,7 +43,6 @@ jest.mock('uuid');
 console.log = jest.fn();
 
 const randomBytesMock: jest.Mock<Uint8Array, [number]> = <any>randomBytes;
-jest.mock('tweetnacl');
 
 describe('AuthController', () => {
     let authStore: MemoryAuthStore;
@@ -2482,10 +2496,12 @@ describe('AuthController', () => {
                 email: 'new email',
                 phoneNumber: 'new phone number',
                 subscriptionStatus: 'active',
-                openAiKey: 'new API Key',
+                openAiKey: expect.any(String),
                 allSessionRevokeTimeMs: undefined,
                 currentLoginRequestId: undefined,
             });
+
+            expect(user.openAiKey).toBe(formatV1OpenAiKey('new API Key'));
         });
 
         it('should not be able to update the openAiKey if the user does not have an active subscription', async () => {
@@ -2580,10 +2596,12 @@ describe('AuthController', () => {
                 email: 'new email',
                 phoneNumber: 'new phone number',
                 subscriptionStatus: 'canceled',
-                openAiKey: 'new API Key',
+                openAiKey: expect.any(String),
                 allSessionRevokeTimeMs: undefined,
                 currentLoginRequestId: undefined,
             });
+
+            expect(user.openAiKey).toBe(formatV1OpenAiKey('new API Key'));
         });
 
         it('should return an invalid_key result if the user ID doesnt match the session key', async () => {

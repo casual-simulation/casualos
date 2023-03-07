@@ -6,7 +6,11 @@ import {
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
 import { isStringValid, RegexRule } from './Utils';
-import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
+import {
+    isOpenAiKey,
+    parseOpenAiKey,
+    parseSessionKey,
+} from '@casual-simulation/aux-records/AuthUtils';
 import type {
     CompleteLoginResult,
     LoginRequestResult,
