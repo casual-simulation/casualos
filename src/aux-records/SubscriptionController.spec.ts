@@ -427,6 +427,158 @@ describe('SubscriptionController', () => {
             });
         });
 
+        describe('checkout scenarios', () => {
+            beforeEach(async () => {
+                stripeMock.getProductAndPriceInfo.mockImplementation(
+                    async (id) => {
+                        if (id === 'product_99_id') {
+                            return {
+                                id,
+                                name: 'Product 99',
+                                description: 'A product named 99.',
+                                default_price: {
+                                    id: 'price_99',
+                                    currency: 'usd',
+                                    recurring: {
+                                        interval: 'month',
+                                        interval_count: 1,
+                                    },
+                                    unit_amount: 100,
+                                },
+                            };
+                        } else if (id === 'product_100_id') {
+                            return {
+                                id,
+                                name: 'Product 100',
+                                description: 'A product named 100.',
+                                default_price: {
+                                    id: 'price_100',
+                                    currency: 'usd',
+                                    recurring: {
+                                        interval: 'month',
+                                        interval_count: 1,
+                                    },
+                                    unit_amount: 1000,
+                                },
+                            };
+                        }
+                        return null;
+                    }
+                );
+
+                controller = new SubscriptionController(
+                    stripe,
+                    auth,
+                    authStore,
+                    {
+                        subscriptions: [
+                            {
+                                id: 'sub_1',
+                                product: 'product_99_id',
+                                eligibleProducts: [
+                                    'product_99_id',
+                                    'product_1_id',
+                                    'product_2_id',
+                                    'product_3_id',
+                                ],
+                                featureList: [
+                                    'Feature 1',
+                                    'Feature 2',
+                                    'Feature 3',
+                                ],
+                                defaultSubscription: true,
+                            },
+                            {
+                                id: 'sub_2',
+                                product: 'product_100_id',
+                                eligibleProducts: ['product_100_id'],
+                                featureList: [
+                                    'Feature 1',
+                                    'Feature 2',
+                                    'Feature 3',
+                                ],
+                            },
+                        ],
+                        webhookSecret: 'webhook_secret',
+                        cancelUrl: 'cancel_url',
+                        returnUrl: 'return_url',
+                        successUrl: 'success_url',
+                    }
+                );
+
+                stripeMock.createCustomer.mockResolvedValueOnce({
+                    id: 'stripe_customer',
+                });
+                stripeMock.createPortalSession.mockRejectedValueOnce(
+                    new Error('Should not be hit')
+                );
+                stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                    url: 'checkout_url',
+                });
+
+                await authStore.saveUser({
+                    ...user,
+                    name: 'test name',
+                });
+            });
+
+            it('should return a create subscription URL for the given subscription ID', async () => {
+                const result = await controller.createManageSubscriptionLink({
+                    sessionKey,
+                    userId,
+                    subscriptionId: 'sub_2',
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    url: 'checkout_url',
+                });
+                expect(stripeMock.createCustomer).toHaveBeenCalledTimes(1);
+                expect(stripeMock.createCustomer).toHaveBeenCalledWith({
+                    name: 'test name',
+                    email: 'test@example.com',
+                    phone: null,
+                });
+                expect(stripeMock.createCheckoutSession).toHaveBeenCalledTimes(
+                    1
+                );
+                expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
+                    mode: 'subscription',
+                    customer: 'stripe_customer',
+                    success_url: 'success_url',
+                    cancel_url: 'cancel_url',
+                    line_items: [
+                        {
+                            price: 'price_100',
+                            quantity: 1,
+                        },
+                    ],
+                    metadata: {
+                        userId,
+                    },
+                });
+            });
+
+            it('should return a price_does_not_match if the expected price does not match the subscription', async () => {
+                const result = await controller.createManageSubscriptionLink({
+                    sessionKey,
+                    userId,
+                    expectedPrice: {
+                        currency: 'usd',
+                        cost: 9,
+                        interval: 'month',
+                        intervalLength: 1,
+                    },
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'price_does_not_match',
+                    errorMessage: expect.any(String),
+                });
+            });
+        });
+
         it('should return a portal session URL if the user has a subscription to one of the listed products', async () => {
             stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
                 {
@@ -1264,9 +1416,15 @@ describe('SubscriptionController', () => {
         ];
 
         describe.each(eventTypes)('should handle %s events', (type) => {
-            it.each(statusTypes)(
-                'should handle %s subscriptions',
-                async (status, active) => {
+            describe.each(statusTypes)('%s', (status, active) => {
+                beforeEach(async () => {
+                    await authStore.saveUser({
+                        ...user,
+                        subscriptionStatus: 'anything',
+                    });
+                });
+
+                it('should handle subscriptions', async () => {
                     stripeMock.constructWebhookEvent.mockReturnValueOnce({
                         id: 'event_id',
                         object: 'event',
@@ -1278,6 +1436,17 @@ describe('SubscriptionController', () => {
                                 id: 'subscription',
                                 status: status,
                                 customer: 'customer_id',
+                                items: {
+                                    object: 'list',
+                                    data: [
+                                        {
+                                            price: {
+                                                id: 'price_1',
+                                                product: 'product_1_id',
+                                            },
+                                        },
+                                    ],
+                                },
                             },
                         },
                         livemode: true,
@@ -1307,8 +1476,64 @@ describe('SubscriptionController', () => {
 
                     const user = await authStore.findUser(userId);
                     expect(user.subscriptionStatus).toBe(status);
-                }
-            );
+                });
+
+                it('should do nothing for products that are not configured', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'subscription',
+                                status: status,
+                                customer: 'customer_id',
+                                items: {
+                                    object: 'list',
+                                    data: [
+                                        {
+                                            price: {
+                                                id: 'price_1',
+                                                product: 'wrong_product_id',
+                                            },
+                                        },
+                                    ],
+                                },
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                        type: type,
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledTimes(1);
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledWith(
+                        'request_body',
+                        'request_signature',
+                        'webhook_secret'
+                    );
+
+                    const user = await authStore.findUser(userId);
+
+                    // Do nothing
+                    expect(user.subscriptionStatus).toBe('anything');
+                });
+            });
         });
 
         it('should handle when constructWebhookEvent() throws an error', async () => {

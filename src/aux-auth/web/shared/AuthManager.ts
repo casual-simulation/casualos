@@ -22,6 +22,7 @@ import type {
     SubscriptionStatus,
     CreateManageSubscriptionResult,
     GetSubscriptionStatusSuccess,
+    CreateManageSubscriptionRequest,
 } from '@casual-simulation/aux-records/SubscriptionController';
 import { omitBy } from 'lodash';
 
@@ -247,17 +248,18 @@ export class AuthManager {
         }
     }
 
-    async manageSubscriptions(): Promise<void> {
+    async manageSubscriptions(
+        options?: Pick<
+            CreateManageSubscriptionRequest,
+            'subscriptionId' | 'expectedPrice'
+        >
+    ): Promise<void> {
         const url = new URL(
             `${this.apiEndpoint}/api/${this.userId}/subscription/manage`
         );
-        const response = await axios.post(
-            url.href,
-            {},
-            {
-                headers: this._authenticationHeaders(),
-            }
-        );
+        const response = await axios.post(url.href, !!options ? options : {}, {
+            headers: this._authenticationHeaders(),
+        });
 
         const result = response.data as CreateManageSubscriptionResult;
 

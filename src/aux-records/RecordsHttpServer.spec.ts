@@ -980,6 +980,93 @@ describe('RecordsHttpServer', () => {
             });
         });
 
+        it('should include the given Subscription ID and expected price info', async () => {
+            stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                {
+                    subscriptions: [],
+                }
+            );
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'create_url',
+            });
+
+            stripeMock.createPortalSession.mockResolvedValueOnce({
+                url: 'portal_url',
+            });
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/{userId:${userId}}/subscription/manage`,
+                    JSON.stringify({
+                        subscriptionId: 'sub-1',
+                        expectedPrice: {
+                            currency: 'usd',
+                            cost: 100,
+                            interval: 'month',
+                            intervalLength: 1,
+                        },
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expect(result).toEqual({
+                statusCode: 200,
+                body: JSON.stringify({
+                    success: true,
+                    url: 'create_url',
+                }),
+                headers: accountCorsHeaders,
+            });
+            expect(stripeMock.getProductAndPriceInfo).toHaveBeenCalledWith(
+                'product_id'
+            );
+        });
+
+        it('should return a price_does_not_match error if the expected price does not match', async () => {
+            stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                {
+                    subscriptions: [],
+                }
+            );
+            stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                url: 'create_url',
+            });
+
+            stripeMock.createPortalSession.mockResolvedValueOnce({
+                url: 'portal_url',
+            });
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/{userId:${userId}}/subscription/manage`,
+                    JSON.stringify({
+                        subscriptionId: 'sub-1',
+                        expectedPrice: {
+                            currency: 'usd',
+                            cost: 1000,
+                            interval: 'month',
+                            intervalLength: 1,
+                        },
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 412,
+                body: {
+                    success: false,
+                    errorCode: 'price_does_not_match',
+                    errorMessage: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+            expect(stripeMock.getProductAndPriceInfo).toHaveBeenCalledWith(
+                'product_id'
+            );
+        });
+
         it('should return a 400 status code if given an invalid encoded user ID', async () => {
             const result = await server.handleRequest({
                 method: 'POST',

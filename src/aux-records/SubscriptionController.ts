@@ -425,7 +425,7 @@ export class SubscriptionController {
         customerId: string
     ): Promise<CreateManageSubscriptionResult> {
         let sub: SubscriptionConfiguration['subscriptions'][0];
-        if (!request.subscriptionId) {
+        if (request.subscriptionId) {
             sub = this._config.subscriptions.find(
                 (s) => s.id === request.subscriptionId
             );
@@ -576,6 +576,23 @@ export class SubscriptionController {
                 event.type === 'customer.subscription.updated'
             ) {
                 const subscription = event.data.object;
+
+                const items = subscription.items.data as Array<any>;
+                const matches = items.some((i) =>
+                    this._config.subscriptions.some((s) =>
+                        s.eligibleProducts.some((p) => p === i.price.product)
+                    )
+                );
+
+                if (!matches) {
+                    console.log(
+                        `[SubscriptionController] [handleStripeWebhook] No item in the subscription matches an eligible product in the config.`
+                    );
+                    return {
+                        success: true,
+                    };
+                }
+
                 const status = subscription.status;
                 const active = isActiveSubscription(status);
                 const customerId = subscription.customer;

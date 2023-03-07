@@ -120,6 +120,9 @@
                 </md-card>
             </div>
             <div v-else class="subscriptions-list">
+                <div v-if="purchasableSubscriptions.length <= 0">
+                    There are no purchasable subscriptions.
+                </div>
                 <md-card
                     v-for="subscription of purchasableSubscriptions"
                     :key="subscription.id"
@@ -134,21 +137,17 @@
                             <div class="subscription-hook">
                                 {{ subscription.description }}
                             </div>
-                            <div
-                                v-for="price of subscription.prices"
-                                :key="price.id"
-                                class="subscription-price"
-                            >
+                            <div class="subscription-price">
                                 <span class="price">{{
-                                    formatPrice(price.cost, price.currency)
+                                    formatPrice(
+                                        subscription.prices[0].cost,
+                                        subscription.prices[0].currency
+                                    )
                                 }}</span>
-                                <span class="period">per<br />{{ price.interval }}</span>
-                            </div>
-                            <!-- <div class="subscribe-button">
-                                <md-button @click="manageSubscription" class="md-raised md-primary"
-                                    >Subscribe</md-button
+                                <span class="period"
+                                    >per<br />{{ subscription.prices[0].interval }}</span
                                 >
-                            </div> -->
+                            </div>
                             <div class="subscribe-features">
                                 <div>This includes:</div>
                                 <ul>
@@ -159,17 +158,14 @@
                                         {{ feature }}
                                     </li>
                                 </ul>
-                                <!-- <ul>
-                                    <li>Access to casualos.com</li>
-                                    <li>Use GPT-3 to Build (OpenAI API key not included)</li>
-                                    <li>Unlimited ABs</li>
-                                </ul> -->
                             </div>
                         </div>
                     </md-card-content>
 
                     <md-card-actions>
-                        <md-button @click="manageSubscription" class="md-primary"
+                        <md-button
+                            @click="subscribe(subscription.id, subscription.prices[0])"
+                            class="md-primary"
                             >Subscribe</md-button
                         >
                     </md-card-actions>

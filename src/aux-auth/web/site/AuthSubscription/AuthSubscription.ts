@@ -58,6 +58,16 @@ export default class AuthSecurity extends Vue {
         await authManager.manageSubscriptions();
     }
 
+    async subscribe(
+        subscriptionId: string,
+        expectedPrice: PurchasableSubscription['prices'][0]
+    ) {
+        await authManager.manageSubscriptions({
+            subscriptionId,
+            expectedPrice,
+        });
+    }
+
     getSubscriptionPrice(sub: SubscriptionStatus): string {
         const priceFormat = new Intl.NumberFormat(undefined, {
             style: 'currency',
