@@ -196,14 +196,17 @@ describe('AuthManager', () => {
             (manager as any)._userId = 'userId';
             const response = await manager.listSubscriptions();
 
-            expect(response).toEqual([
-                {
-                    id: 'sub_1',
-                },
-                {
-                    id: 'sub_2',
-                },
-            ]);
+            expect(response).toEqual({
+                success: true,
+                subscriptions: [
+                    {
+                        id: 'sub_1',
+                    },
+                    {
+                        id: 'sub_2',
+                    },
+                ],
+            });
             expect(getLastGet()).toEqual([
                 'http://myendpoint.localhost/api/userId/subscription',
                 {
