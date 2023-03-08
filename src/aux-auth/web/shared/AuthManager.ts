@@ -6,7 +6,11 @@ import {
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
 import { isStringValid, RegexRule } from './Utils';
-import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
+import {
+    isOpenAiKey,
+    parseOpenAiKey,
+    parseSessionKey,
+} from '@casual-simulation/aux-records/AuthUtils';
 import type {
     CompleteLoginResult,
     LoginRequestResult,
@@ -17,16 +21,30 @@ import type {
     ReplaceSessionResult,
 } from '@casual-simulation/aux-records/AuthController';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
+import type {
+    GetSubscriptionStatusResult,
+    SubscriptionStatus,
+    CreateManageSubscriptionResult,
+    GetSubscriptionStatusSuccess,
+    CreateManageSubscriptionRequest,
+} from '@casual-simulation/aux-records/SubscriptionController';
 import { omitBy } from 'lodash';
 
 const EMAIL_KEY = 'userEmail';
 const ACCEPTED_TERMS_KEY = 'acceptedTerms';
 const SESSION_KEY = 'sessionKey';
 
+declare const ASSUME_SUBSCRIPTIONS_SUPPORTED: boolean;
+
+if (typeof (globalThis as any).ASSUME_SUBSCRIPTIONS_SUPPORTED === 'undefined') {
+    (globalThis as any).ASSUME_SUBSCRIPTIONS_SUPPORTED = false;
+}
+
 export class AuthManager {
     private _userId: string;
     private _sessionId: string;
     private _appMetadata: AppMetadata;
+    private _subscriptionsSupported: boolean;
 
     private _loginState: Subject<boolean>;
     private _emailRules: RegexRule[];
@@ -38,6 +56,7 @@ export class AuthManager {
         this._apiEndpoint = apiEndpoint;
         this._gitTag = gitTag;
         this._loginState = new BehaviorSubject<boolean>(false);
+        this._subscriptionsSupported = ASSUME_SUBSCRIPTIONS_SUPPORTED;
     }
 
     get userId() {
@@ -66,6 +85,18 @@ export class AuthManager {
 
     get name() {
         return this._appMetadata?.name;
+    }
+
+    get subscriptionsSupported() {
+        return this._subscriptionsSupported;
+    }
+
+    get hasActiveSubscription() {
+        return this._appMetadata?.hasActiveSubscription;
+    }
+
+    get openAiKey() {
+        return this._appMetadata?.openAiKey;
     }
 
     get userInfoLoaded() {
@@ -197,6 +228,52 @@ export class AuthManager {
             return result.sessions;
         } else {
             return [];
+        }
+    }
+
+    async listSubscriptions(): Promise<GetSubscriptionStatusSuccess> {
+        const url = new URL(
+            `${this.apiEndpoint}/api/${this.userId}/subscription`
+        );
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as GetSubscriptionStatusResult;
+
+        if (result.success === true) {
+            return result;
+        } else {
+            if (result.errorCode === 'not_supported') {
+                return null;
+            }
+            return null;
+        }
+    }
+
+    async manageSubscriptions(
+        options?: Pick<
+            CreateManageSubscriptionRequest,
+            'subscriptionId' | 'expectedPrice'
+        >
+    ): Promise<void> {
+        const url = new URL(
+            `${this.apiEndpoint}/api/${this.userId}/subscription/manage`
+        );
+        const response = await axios.post(url.href, !!options ? options : {}, {
+            headers: this._authenticationHeaders(),
+        });
+
+        const result = response.data as CreateManageSubscriptionResult;
+
+        if (result.success === true) {
+            location.href = result.url;
+        } else {
+            console.error(
+                '[AuthManager] Unable to manage subscriptions!',
+                result
+            );
         }
     }
 
@@ -399,6 +476,7 @@ export class AuthManager {
             name: this.name,
             email: this.email,
             phoneNumber: this.phone,
+            openAiKey: this.openAiKey,
             ...newMetadata,
         });
         await this.loadUserInfo();
@@ -445,7 +523,9 @@ export class AuthManager {
         }
     }
 
-    private async _putAppMetadata(metadata: AppMetadata): Promise<AppMetadata> {
+    private async _putAppMetadata(
+        metadata: Omit<AppMetadata, 'hasActiveSubscription'>
+    ): Promise<AppMetadata> {
         const response = await axios.put(
             `${this.apiEndpoint}/api/${encodeURIComponent(
                 this.userId

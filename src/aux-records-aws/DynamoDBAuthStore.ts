@@ -20,6 +20,7 @@ export class DynamoDBAuthStore implements AuthStore {
     private _sessionsTableExpireTimeIndexName: string;
     private _emailRulesTableName: string;
     private _smsRulesTableName: string;
+    private _stripeCustomerIdIndexName: string;
 
     constructor(
         dynamo: dynamodb.DocumentClient,
@@ -29,7 +30,8 @@ export class DynamoDBAuthStore implements AuthStore {
         sessionsTableName: string,
         sessionsTableExpireTimeIndexName: string,
         emailRulesTableName: string,
-        smsRulesTableName: string
+        smsRulesTableName: string,
+        stripeCustomerIdIndexName: string
     ) {
         this._dynamo = dynamo;
         this._usersTableName = usersTableName;
@@ -40,6 +42,7 @@ export class DynamoDBAuthStore implements AuthStore {
             sessionsTableExpireTimeIndexName;
         this._emailRulesTableName = emailRulesTableName;
         this._smsRulesTableName = smsRulesTableName;
+        this._stripeCustomerIdIndexName = stripeCustomerIdIndexName;
     }
 
     async setRevokeAllSessionsTimeForUser(
@@ -75,6 +78,9 @@ export class DynamoDBAuthStore implements AuthStore {
                         avatarPortraitUrl: user.avatarPortraitUrl,
                         allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
                         currentLoginRequestId: user.currentLoginRequestId,
+                        stripeCustomerId: user.stripeCustomerId,
+                        subscriptionStatus: user.subscriptionStatus,
+                        openAiKey: user.openAiKey,
                     }),
                 },
             },
@@ -135,6 +141,9 @@ export class DynamoDBAuthStore implements AuthStore {
                         avatarPortraitUrl: user.avatarPortraitUrl,
                         allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
                         currentLoginRequestId: user.currentLoginRequestId,
+                        stripeCustomerId: user.stripeCustomerId,
+                        subscriptionStatus: user.subscriptionStatus,
+                        openAiKey: user.openAiKey,
                     }),
                     ConditionExpression: 'attribute_not_exists(id)',
                 },
@@ -244,7 +253,35 @@ export class DynamoDBAuthStore implements AuthStore {
                 name: user.name,
                 allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
                 currentLoginRequestId: user.currentLoginRequestId,
+                stripeCustomerId: user.stripeCustomerId,
+                subscriptionStatus: user.subscriptionStatus,
+                openAiKey: user.openAiKey,
             };
+        } else {
+            return null;
+        }
+    }
+
+    async findUserByStripeCustomerId(customerId: string): Promise<AuthUser> {
+        const userResult = await this._dynamo
+            .query({
+                TableName: this._usersTableName,
+                IndexName: this._stripeCustomerIdIndexName,
+                KeyConditionExpression: 'stripeCustomerId = :stripeCustomerId',
+                ExpressionAttributeValues: {
+                    ':stripeCustomerId': customerId,
+                },
+                Limit: 1,
+            })
+            .promise();
+
+        if (!userResult.Items || userResult.Items.length <= 0) {
+            return null;
+        }
+
+        const user = userResult.Items[0];
+        if (user) {
+            return await this.findUser(user.id);
         } else {
             return null;
         }
@@ -450,6 +487,7 @@ export class DynamoDBAuthStore implements AuthStore {
                 IndexName: this._sessionsTableExpireTimeIndexName,
                 KeyConditionExpression: query,
                 ExpressionAttributeValues: values,
+                ScanIndexForward: false,
                 Limit: 10,
             })
             .promise();

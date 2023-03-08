@@ -7,11 +7,17 @@ import { Subscription } from 'rxjs';
 import { debounce } from 'lodash';
 import Avatar from '../AuthAvatar/AuthAvatar';
 import Security from '../AuthSecurity/AuthSecurity';
+import AuthSubscription from '../AuthSubscription/AuthSubscription';
+import {
+    isOpenAiKey,
+    parseOpenAiKey,
+} from '@casual-simulation/aux-records/AuthUtils';
 
 @Component({
     components: {
         avatar: Avatar,
         security: Security,
+        subscription: AuthSubscription,
     },
 })
 export default class AuthHome extends Vue {
@@ -21,9 +27,13 @@ export default class AuthHome extends Vue {
     originalPhone: string = null;
     originalAvatarUrl: string = null;
     originalAvatarPortraitUrl: string = null;
+    originalOpenAiKey: string = null;
+    hasActiveSubscription: boolean = false;
 
     updating: boolean = false;
     updated: boolean = false;
+
+    subscriptionsSupported: boolean = false;
 
     private _sub: Subscription;
 
@@ -31,6 +41,7 @@ export default class AuthHome extends Vue {
         this.metadata = null;
         this.updating = false;
         this.updated = false;
+        this.subscriptionsSupported = authManager.subscriptionsSupported;
 
         this._updateMetadata = this._updateMetadata.bind(this);
         this._updateMetadata = debounce(this._updateMetadata, 500);
@@ -43,12 +54,23 @@ export default class AuthHome extends Vue {
             this.originalAvatarUrl = authManager.avatarUrl;
             this.originalAvatarPortraitUrl = authManager.avatarPortraitUrl;
             this.originalPhone = authManager.phone;
+            this.subscriptionsSupported = authManager.subscriptionsSupported;
+            this.hasActiveSubscription = authManager.hasActiveSubscription;
+
+            const key = authManager.openAiKey;
+
+            if (isOpenAiKey(key)) {
+                this.originalOpenAiKey = parseOpenAiKey(key)?.[0] ?? key;
+            } else {
+                this.originalOpenAiKey = key;
+            }
             this.metadata = {
                 email: authManager.email,
                 avatarUrl: authManager.avatarUrl,
                 avatarPortraitUrl: authManager.avatarPortraitUrl,
                 name: authManager.name,
                 phone: authManager.phone,
+                openAiKey: this.originalOpenAiKey,
             };
         });
     }
@@ -65,6 +87,16 @@ export default class AuthHome extends Vue {
     @Watch('metadata.name')
     updateName() {
         if (this.originalName === this.metadata.name) {
+            return;
+        }
+        this.updating = true;
+        this.updated = false;
+        this._updateMetadata();
+    }
+
+    @Watch('metadata.openAiKey')
+    updateOpenAiKey() {
+        if (this.originalOpenAiKey === this.metadata.openAiKey) {
             return;
         }
         this.updating = true;
@@ -91,6 +123,11 @@ export default class AuthHome extends Vue {
         let hasChange = false;
         if (this.originalName !== this.metadata.name) {
             newMetadata.name = this.metadata.name;
+            hasChange = true;
+        }
+
+        if (this.originalOpenAiKey !== this.metadata.openAiKey) {
+            newMetadata.openAiKey = this.metadata.openAiKey;
             hasChange = true;
         }
 

@@ -133,3 +133,36 @@ export function parseV1SessionKey(
         return null;
     }
 }
+
+/**
+ * Formats the given OpenAI Key into a string that is detectable as an OpenAI Key.
+ * @param apiKey The API Key that should be formatted.
+ */
+export function formatV1OpenAiKey(apiKey: string): string {
+    return `vAI1.${toBase64String(apiKey)}`;
+}
+
+/**
+ * Determines if the given string represents an OpenAI Key.
+ * @param apiKey The API Key.
+ */
+export function isOpenAiKey(apiKey: string): boolean {
+    return typeof apiKey === 'string' && apiKey.startsWith(`vAI1.`);
+}
+
+/**
+ * Parses the given OpenAI Key.
+ * @param key The key that should be parsed.
+ */
+export function parseOpenAiKey(key: string): [key: string] {
+    if (!key || typeof key !== 'string') {
+        return null;
+    }
+
+    if (!key.startsWith('vAI1.')) {
+        return null;
+    }
+
+    const withoutVersion = key.slice('vAI1.'.length);
+    return [fromBase64String(withoutVersion)];
+}

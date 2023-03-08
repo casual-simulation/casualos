@@ -10,6 +10,7 @@ import {
     ObjectId,
 } from 'mongodb';
 import pify from 'pify';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { hasValue } from '@casual-simulation/aux-common/bots/BotCalculations';
 import { Record } from '@casual-simulation/aux-common/bots/Bot';
 import {
@@ -23,6 +24,12 @@ import {
     RecordsHttpServer,
     GenericHttpRequest,
     GenericHttpHeaders,
+    SubscriptionController,
+    tryParseJson,
+    SubscriptionConfiguration,
+    JsonParseResult,
+    StripeInterface,
+    tryParseSubscriptionConfig,
 } from '@casual-simulation/aux-records';
 import { MongoDBRecordsStore } from './MongoDBRecordsStore';
 import { MongoDBDataRecordsStore, DataRecord } from './MongoDBDataRecordsStore';
@@ -40,6 +47,33 @@ import {
     MongoDBLoginRequest,
 } from './MongoDBAuthStore';
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
+import { StripeIntegration } from '../shared/StripeIntegration';
+import * as dotenv from 'dotenv';
+import Stripe from 'stripe';
+
+// Load env file
+const secretsFile = path.resolve(__dirname, '..', 'secrets.env.json');
+if (existsSync(secretsFile)) {
+    const json = readFileSync(secretsFile, { encoding: 'utf-8' });
+    const parsed = tryParseJson(json);
+
+    if (parsed.success) {
+        // console.log('[AuxAuth] Parsed!');
+        for (let key in parsed.value) {
+            console.log('[AuxAuth] Injecting Key from secrets.env.json', key);
+            const value = parsed.value[key];
+            if (value === null || value === undefined || value === '') {
+                delete process.env[key];
+            } else if (typeof value === 'object') {
+                process.env[key] = JSON.stringify(value);
+            } else {
+                process.env[key] = String(value);
+            }
+        }
+    }
+} else {
+    console.log('[AuxAuth] No secrets file.');
+}
 
 // declare var MAGIC_SECRET_KEY: string;
 
@@ -51,6 +85,10 @@ const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT ?? 'ws://localhost:7880';
 const MONGO_URL = process.env.MONGO_URL ?? 'mongodb://127.0.0.1:27017';
 const MONGO_USE_NEW_URL_PARSER =
     process.env.MONGO_USE_NEW_URL_PARSER ?? 'false';
+
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? null;
+const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY ?? null;
+const SUBSCRIPTION_CONFIG = process.env.SUBSCRIPTION_CONFIG ?? null;
 
 function getAuthMessenger(): AuthMessenger {
     const API_KEY = process.env.TEXT_IT_API_KEY;
@@ -170,7 +208,40 @@ async function start() {
     );
 
     const messenger = getAuthMessenger();
-    const authController = new AuthController(authStore, messenger);
+
+    let forceAllowSubscriptionFeatures = false;
+    const subscriptionConfig = tryParseSubscriptionConfig(SUBSCRIPTION_CONFIG);
+
+    let stripe: StripeInterface;
+    if (!!STRIPE_SECRET_KEY && !!STRIPE_PUBLISHABLE_KEY && subscriptionConfig) {
+        console.log('[AuxAuth] Integrating with Stripe.');
+        stripe = new StripeIntegration(
+            new Stripe(STRIPE_SECRET_KEY, {
+                apiVersion: '2022-11-15',
+            }),
+            STRIPE_PUBLISHABLE_KEY
+        );
+    } else {
+        console.log('[AuxAuth] Disabling Stripe Features.');
+        console.log(
+            '[AuxAuth] Allowing all subscription features because Stripe is not configured.'
+        );
+        stripe = null;
+        forceAllowSubscriptionFeatures = true;
+    }
+
+    const authController = new AuthController(
+        authStore,
+        messenger,
+        forceAllowSubscriptionFeatures
+    );
+
+    const subscriptionController = new SubscriptionController(
+        stripe,
+        authController,
+        authStore,
+        subscriptionConfig
+    );
 
     const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
 
@@ -200,7 +271,8 @@ async function start() {
         eventManager,
         dataManager,
         manualDataManager,
-        fileController
+        fileController,
+        subscriptionController
     );
 
     async function handleRequest(req: Request, res: Response) {
@@ -323,6 +395,14 @@ async function start() {
     });
 
     app.put('/api/:userId/metadata', async (req, res) => {
+        await handleRequest(req, res);
+    });
+
+    app.get('/api/:userId/subscription', async (req, res) => {
+        await handleRequest(req, res);
+    });
+
+    app.post('/api/:userId/subscription/manage', async (req, res) => {
         await handleRequest(req, res);
     });
 

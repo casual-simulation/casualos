@@ -1,5 +1,8 @@
 import {
+    formatV1OpenAiKey,
     formatV1SessionKey,
+    isOpenAiKey,
+    parseOpenAiKey,
     parseSessionKey,
     randomCode,
     RANDOM_CODE_LENGTH,
@@ -106,5 +109,35 @@ describe('parseSessionKey()', () => {
 
             expect(result).toBe(null);
         });
+    });
+});
+
+describe('formatV1OpenAiKey()', () => {
+    it('should format the OpenAI Key', () => {
+        const result = formatV1OpenAiKey('api key');
+
+        const [version, apiKey] = result.split('.');
+
+        expect(version).toBe('vAI1');
+        expect(apiKey).toBe(toBase64String('api key'));
+    });
+});
+
+describe('isOpenAiKey()', () => {
+    it('should determine if the given value is an OpenAI Key', () => {
+        expect(isOpenAiKey('api key')).toBe(false);
+        expect(isOpenAiKey(123 as any)).toBe(false);
+        expect(isOpenAiKey('vAI1.hello')).toBe(true);
+    });
+});
+
+describe('parseOpenAIKey()', () => {
+    it('should parse the given key', () => {
+        expect(parseOpenAiKey(`vAI1.${toBase64String('hello')}`)).toEqual([
+            'hello',
+        ]);
+        expect(parseOpenAiKey(123 as any)).toEqual(null);
+        expect(parseOpenAiKey('vAI2.hello')).toEqual(null);
+        expect(parseOpenAiKey('')).toEqual(null);
     });
 });

@@ -19,10 +19,16 @@ import { AuthMessenger } from './AuthMessenger';
 import {
     cleanupObject,
     fromBase64String,
+    isActiveSubscription,
     RegexRule,
     toBase64String,
 } from './Utils';
-import { formatV1SessionKey, parseSessionKey, randomCode } from './AuthUtils';
+import {
+    formatV1OpenAiKey,
+    formatV1SessionKey,
+    parseSessionKey,
+    randomCode,
+} from './AuthUtils';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -70,10 +76,16 @@ export const INVALID_KEY_ERROR_MESSAGE = 'The session key is invalid.';
 export class AuthController {
     private _store: AuthStore;
     private _messenger: AuthMessenger;
+    private _forceAllowSubscriptionFeatures: boolean;
 
-    constructor(authStore: AuthStore, messenger: AuthMessenger) {
+    constructor(
+        authStore: AuthStore,
+        messenger: AuthMessenger,
+        forceAllowSubscriptionFeatures: boolean = false
+    ) {
         this._store = authStore;
         this._messenger = messenger;
+        this._forceAllowSubscriptionFeatures = forceAllowSubscriptionFeatures;
     }
 
     async requestLogin(request: LoginRequest): Promise<LoginRequestResult> {
@@ -914,6 +926,10 @@ export class AuthController {
                 );
             }
 
+            const hasActiveSubscription =
+                this._forceAllowSubscriptionFeatures ||
+                isActiveSubscription(result.subscriptionStatus);
+
             return {
                 success: true,
                 userId: result.id,
@@ -922,6 +938,8 @@ export class AuthController {
                 phoneNumber: result.phoneNumber,
                 avatarPortraitUrl: result.avatarPortraitUrl,
                 avatarUrl: result.avatarUrl,
+                hasActiveSubscription,
+                openAiKey: hasActiveSubscription ? result.openAiKey : null,
             };
         } catch (err) {
             console.error(
@@ -996,13 +1014,24 @@ export class AuthController {
                 );
             }
 
+            const hasActiveSubscription =
+                this._forceAllowSubscriptionFeatures ||
+                isActiveSubscription(user.subscriptionStatus);
+
             const cleaned = cleanupObject({
                 name: request.update.name,
                 avatarUrl: request.update.avatarUrl,
                 avatarPortraitUrl: request.update.avatarPortraitUrl,
                 email: request.update.email,
                 phoneNumber: request.update.phoneNumber,
+                openAiKey: hasActiveSubscription
+                    ? request.update.openAiKey
+                    : undefined,
             });
+
+            if (cleaned.openAiKey) {
+                cleaned.openAiKey = formatV1OpenAiKey(cleaned.openAiKey);
+            }
 
             await this._store.saveUser({
                 ...user,
@@ -1474,6 +1503,16 @@ export interface GetUserInfoSuccess {
      * The phone number of the user.
      */
     phoneNumber: string;
+
+    /**
+     * Whether the user has an active subscription.
+     */
+    hasActiveSubscription: boolean;
+
+    /**
+     * The OpenAI API Key that the user has configured in their account.
+     */
+    openAiKey: string | null;
 }
 
 export interface GetUserInfoFailure {
@@ -1505,7 +1544,12 @@ export interface UpdateUserInfoRequest {
     update: Partial<
         Pick<
             AuthUser,
-            'name' | 'email' | 'phoneNumber' | 'avatarUrl' | 'avatarPortraitUrl'
+            | 'name'
+            | 'email'
+            | 'phoneNumber'
+            | 'avatarUrl'
+            | 'avatarPortraitUrl'
+            | 'openAiKey'
         >
     >;
 }

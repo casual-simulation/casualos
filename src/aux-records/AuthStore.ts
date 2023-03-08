@@ -1,4 +1,4 @@
-import { RegexRule } from 'Utils';
+import { RegexRule } from './Utils';
 import { ServerError } from './Errors';
 
 /**
@@ -32,6 +32,12 @@ export interface AuthStore {
         address: string,
         addressType: AddressType
     ): Promise<AuthUser>;
+
+    /**
+     * Finds the user that is associated with the given Stripe Customer ID.
+     * @param customerId The ID of the customer.
+     */
+    findUserByStripeCustomerId(customerId: string): Promise<AuthUser>;
 
     /**
      * Finds a login request for the given user and request ID.
@@ -133,6 +139,21 @@ export interface AuthUser {
     phoneNumber: string | null;
     avatarUrl?: string | null;
     avatarPortraitUrl?: string | null;
+
+    /**
+     * The OpenAI API Key that the user has configured in their account.
+     */
+    openAiKey?: string | null;
+
+    /**
+     * The ID of the stripe customer that is associated with this user.
+     */
+    stripeCustomerId?: string | null;
+
+    /**
+     * The current status of the user's subscription.
+     */
+    subscriptionStatus?: string | null;
 
     /**
      * The last Unix time that all the sessions were revoked at.

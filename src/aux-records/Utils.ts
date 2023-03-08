@@ -370,6 +370,8 @@ export function getStatusCode(
             return 500;
         } else if (response.errorCode === 'unauthorized_to_create_record_key') {
             return 403;
+        } else if (response.errorCode === 'price_does_not_match') {
+            return 412;
         } else {
             return 400;
         }
@@ -468,4 +470,12 @@ export function tryDecodeUriComponent(component: string): string | null {
     } catch (err) {
         return null;
     }
+}
+
+/**
+ * Determines whether the given subscription status should be treated as an active subscription.
+ * @param status The status.
+ */
+export function isActiveSubscription(status: string): boolean {
+    return status === 'active' || status === 'trialing';
 }
