@@ -12,7 +12,11 @@ import {
 import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import { MemoryAuthStore } from './MemoryAuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
-import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
+import {
+    formatV1OpenAiKey,
+    formatV1SessionKey,
+    parseSessionKey,
+} from './AuthUtils';
 import { AuthSession, AuthUser } from './AuthStore';
 import { LivekitController } from './LivekitController';
 import { isRecordKey, RecordsController } from './RecordsController';
@@ -556,7 +560,7 @@ describe('RecordsHttpServer', () => {
             user = await authStore.findUser(userId);
             expect(user).toMatchObject({
                 id: userId,
-                openAiKey: 'api key',
+                openAiKey: formatV1OpenAiKey('api key'),
             });
         });
 
@@ -1230,6 +1234,17 @@ describe('RecordsHttpServer', () => {
                                 id: 'subscription',
                                 status: status,
                                 customer: 'customer_id',
+                                items: {
+                                    object: 'list',
+                                    data: [
+                                        {
+                                            price: {
+                                                id: 'price_1',
+                                                product: 'product_id',
+                                            },
+                                        },
+                                    ],
+                                },
                             },
                         },
                         livemode: true,
