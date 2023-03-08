@@ -119,8 +119,60 @@
                     </md-card-content>
                 </md-card>
             </div>
+            <div v-else class="subscriptions-list">
+                <div v-if="purchasableSubscriptions.length <= 0">
+                    There are no purchasable subscriptions.
+                </div>
+                <md-card
+                    v-for="subscription of purchasableSubscriptions"
+                    :key="subscription.id"
+                    class="subscription-card"
+                >
+                    <md-card-header>
+                        <h3 class="md-title">{{ subscription.name }}</h3>
+                    </md-card-header>
 
-            <md-card v-else class="subscription-card">
+                    <md-card-content>
+                        <div class="add-subscription">
+                            <div class="subscription-hook">
+                                {{ subscription.description }}
+                            </div>
+                            <div class="subscription-price">
+                                <span class="price">{{
+                                    formatPrice(
+                                        subscription.prices[0].cost,
+                                        subscription.prices[0].currency
+                                    )
+                                }}</span>
+                                <span class="period"
+                                    >per<br />{{ subscription.prices[0].interval }}</span
+                                >
+                            </div>
+                            <div class="subscribe-features">
+                                <div>This includes:</div>
+                                <ul>
+                                    <li
+                                        v-for="(feature, index) of subscription.featureList"
+                                        :key="index"
+                                    >
+                                        {{ feature }}
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </md-card-content>
+
+                    <md-card-actions>
+                        <md-button
+                            @click="subscribe(subscription.id, subscription.prices[0])"
+                            class="md-primary"
+                            >Subscribe</md-button
+                        >
+                    </md-card-actions>
+                </md-card>
+            </div>
+
+            <!-- <md-card v-else class="subscription-card">
                 <md-card-header>
                     <h3 class="md-title">Beta Program</h3>
                 </md-card-header>
@@ -149,7 +201,7 @@
                         </div>
                     </div>
                 </md-card-content>
-            </md-card>
+            </md-card> -->
         </div>
     </div>
 </template>

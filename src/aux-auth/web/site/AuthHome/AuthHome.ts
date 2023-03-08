@@ -8,6 +8,10 @@ import { debounce } from 'lodash';
 import Avatar from '../AuthAvatar/AuthAvatar';
 import Security from '../AuthSecurity/AuthSecurity';
 import AuthSubscription from '../AuthSubscription/AuthSubscription';
+import {
+    isOpenAiKey,
+    parseOpenAiKey,
+} from '@casual-simulation/aux-records/AuthUtils';
 
 @Component({
     components: {
@@ -52,14 +56,21 @@ export default class AuthHome extends Vue {
             this.originalPhone = authManager.phone;
             this.subscriptionsSupported = authManager.subscriptionsSupported;
             this.hasActiveSubscription = authManager.hasActiveSubscription;
-            this.originalOpenAiKey = authManager.openAiKey;
+
+            const key = authManager.openAiKey;
+
+            if (isOpenAiKey(key)) {
+                this.originalOpenAiKey = parseOpenAiKey(key)?.[0] ?? key;
+            } else {
+                this.originalOpenAiKey = key;
+            }
             this.metadata = {
                 email: authManager.email,
                 avatarUrl: authManager.avatarUrl,
                 avatarPortraitUrl: authManager.avatarPortraitUrl,
                 name: authManager.name,
                 phone: authManager.phone,
-                openAiKey: authManager.openAiKey,
+                openAiKey: this.originalOpenAiKey,
             };
         });
     }

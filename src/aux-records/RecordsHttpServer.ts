@@ -11,7 +11,10 @@ import { RecordsController } from './RecordsController';
 import { EventRecordsController } from './EventRecordsController';
 import { DataRecordsController } from './DataRecordsController';
 import { FileRecordsController } from './FileRecordsController';
-import { SubscriptionController } from './SubscriptionController';
+import {
+    CreateManageSubscriptionRequest,
+    SubscriptionController,
+} from './SubscriptionController';
 
 /**
  * Defines an interface for a generic HTTP request.
@@ -1250,6 +1253,15 @@ export class RecordsHttpServer {
                 intervalCost: s.intervalCost,
                 currency: s.currency,
             })),
+            purchasableSubscriptions: result.purchasableSubscriptions.map(
+                (s) => ({
+                    id: s.id,
+                    name: s.name,
+                    description: s.description,
+                    featureList: s.featureList,
+                    prices: s.prices,
+                })
+            ),
         });
     }
 
@@ -1272,9 +1284,29 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_USER_ID);
         }
 
+        let subscriptionId: CreateManageSubscriptionRequest['subscriptionId'];
+        let expectedPrice: CreateManageSubscriptionRequest['expectedPrice'];
+
+        if (typeof request.body === 'string' && request.body) {
+            let body = tryParseJson(request.body);
+            if (body.success) {
+                if (typeof body.value.subscriptionId === 'string') {
+                    subscriptionId = body.value.subscriptionId;
+                }
+                if (typeof body.value.expectedPrice === 'object') {
+                    expectedPrice = body.value.expectedPrice;
+                }
+            }
+        }
+
+        console.log('sub id', subscriptionId);
+        console.log('expected price', expectedPrice);
+
         const result = await this._subscriptions.createManageSubscriptionLink({
             sessionKey,
             userId,
+            subscriptionId,
+            expectedPrice,
         });
 
         if (!result.success) {

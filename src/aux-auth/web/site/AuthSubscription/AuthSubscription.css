@@ -22,7 +22,13 @@
 }
 
 .subscription-card {
-    max-width: 300px;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+.subscription-card > .md-card-content {
+    flex: 1;
 }
 
 .add-subscription {
@@ -65,6 +71,11 @@
 }
 
 .subscribe-features {
+}
+
+.subscriptions-list {
+    display: flex;
+    gap: 13px;
 }
 
 .subscribe-features > ul > li {

@@ -6,7 +6,11 @@ import {
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
 import { isStringValid, RegexRule } from './Utils';
-import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
+import {
+    isOpenAiKey,
+    parseOpenAiKey,
+    parseSessionKey,
+} from '@casual-simulation/aux-records/AuthUtils';
 import type {
     CompleteLoginResult,
     LoginRequestResult,
@@ -21,6 +25,8 @@ import type {
     GetSubscriptionStatusResult,
     SubscriptionStatus,
     CreateManageSubscriptionResult,
+    GetSubscriptionStatusSuccess,
+    CreateManageSubscriptionRequest,
 } from '@casual-simulation/aux-records/SubscriptionController';
 import { omitBy } from 'lodash';
 
@@ -225,7 +231,7 @@ export class AuthManager {
         }
     }
 
-    async listSubscriptions(): Promise<SubscriptionStatus[]> {
+    async listSubscriptions(): Promise<GetSubscriptionStatusSuccess> {
         const url = new URL(
             `${this.apiEndpoint}/api/${this.userId}/subscription`
         );
@@ -237,26 +243,27 @@ export class AuthManager {
         const result = response.data as GetSubscriptionStatusResult;
 
         if (result.success === true) {
-            return result.subscriptions;
+            return result;
         } else {
             if (result.errorCode === 'not_supported') {
                 return null;
             }
-            return [];
+            return null;
         }
     }
 
-    async manageSubscriptions(): Promise<void> {
+    async manageSubscriptions(
+        options?: Pick<
+            CreateManageSubscriptionRequest,
+            'subscriptionId' | 'expectedPrice'
+        >
+    ): Promise<void> {
         const url = new URL(
             `${this.apiEndpoint}/api/${this.userId}/subscription/manage`
         );
-        const response = await axios.post(
-            url.href,
-            {},
-            {
-                headers: this._authenticationHeaders(),
-            }
-        );
+        const response = await axios.post(url.href, !!options ? options : {}, {
+            headers: this._authenticationHeaders(),
+        });
 
         const result = response.data as CreateManageSubscriptionResult;
 
