@@ -487,6 +487,7 @@ export class DynamoDBAuthStore implements AuthStore {
                 IndexName: this._sessionsTableExpireTimeIndexName,
                 KeyConditionExpression: query,
                 ExpressionAttributeValues: values,
+                ScanIndexForward: false,
                 Limit: 10,
             })
             .promise();
