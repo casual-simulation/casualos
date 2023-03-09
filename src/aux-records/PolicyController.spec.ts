@@ -5,7 +5,14 @@ import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { MemoryAuthStore } from './MemoryAuthStore';
 import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { PolicyController } from './PolicyController';
-import { DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT } from './PolicyPermissions';
+import {
+    ADMIN_ROLE_NAME,
+    DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+    PolicyDocument,
+    PUBLIC_READ_MARKER,
+} from './PolicyPermissions';
+import { PolicyStore } from './PolicyStore';
+import { MemoryPolicyStore } from './MemoryPolicyStore';
 import { RecordsController } from './RecordsController';
 
 describe('PolicyController', () => {
@@ -16,12 +23,15 @@ describe('PolicyController', () => {
     let recordsStore: MemoryRecordsStore;
     let recordsController: RecordsController;
 
+    let store: MemoryPolicyStore;
     let controller: PolicyController;
 
     let userId: string;
     let sessionKey: string;
     let recordKey: string;
     let recordName: string;
+
+    let wrongRecordKey: string;
 
     beforeEach(async () => {
         authStore = new MemoryAuthStore();
@@ -30,7 +40,12 @@ describe('PolicyController', () => {
         recordsStore = new MemoryRecordsStore();
         recordsController = new RecordsController(recordsStore);
 
-        controller = new PolicyController();
+        store = new MemoryPolicyStore();
+        controller = new PolicyController(
+            authController,
+            recordsController,
+            store
+        );
 
         const loginRequest = await authController.requestLogin({
             address: 'test@example.com',
@@ -45,6 +60,10 @@ describe('PolicyController', () => {
         const code = authMessenger.messages.find(
             (m) => m.address === 'test@example.com'
         );
+
+        if (!code) {
+            throw new Error('Message not found!');
+        }
 
         const loginResult = await authController.completeLogin({
             code: code.code,
@@ -72,29 +91,392 @@ describe('PolicyController', () => {
 
         recordName = createRecordKeyResult.recordName;
         recordKey = createRecordKeyResult.recordKey;
+
+        const createWrongRecordKeyResult =
+            await recordsController.createPublicRecordKey(
+                'wrongRecord',
+                'subjectfull',
+                userId
+            );
+        if (!createWrongRecordKeyResult.success) {
+            throw new Error('Unable to create record key!');
+        }
+
+        wrongRecordKey = createWrongRecordKeyResult.recordKey;
     });
 
     describe('authorizeRequest()', () => {
         describe('data.create', () => {
             it('should allow the request if given a record key', async () => {
                 const result = await controller.authorizeRequest({
+                    recordName,
                     action: 'data.create',
                     address: 'myAddress',
-                    recordKey: '',
-                    existingResourceMarkers: ['publicRead'],
+                    recordKey: recordKey,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
                 });
 
                 expect(result).toEqual({
                     allowed: true,
-                    selectedRole: 'admin',
-                    selectedPolicy: DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                    role: ADMIN_ROLE_NAME,
+                    actionPolicy: DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                    actionPermission: {
+                        type: 'data.create',
+                        role: ADMIN_ROLE_NAME,
+                        addresses: true,
+                    },
                     subjectPolicy: 'subjectfull',
+                    resourceMarkers: [
+                        {
+                            marker: PUBLIC_READ_MARKER,
+                            policy: DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                            permission: {
+                                type: 'policy.assign',
+                                role: ADMIN_ROLE_NAME,
+                                policies: true,
+                            },
+                        },
+                    ],
                 });
             });
 
-            // it('should return a result indicating whether the request is allowed or not', async () => {
+            it('should allow the request if the user has the admin role assigned', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
 
-            // });
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    role: ADMIN_ROLE_NAME,
+                    actionPolicy: DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                    actionPermission: {
+                        type: 'data.create',
+                        role: ADMIN_ROLE_NAME,
+                        addresses: true,
+                    },
+                    subjectPolicy: 'subjectfull',
+                    resourceMarkers: [
+                        {
+                            marker: PUBLIC_READ_MARKER,
+                            policy: DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                            permission: {
+                                type: 'policy.assign',
+                                role: ADMIN_ROLE_NAME,
+                                policies: true,
+                            },
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the user has data.create and policy.assign access to the given resource marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.create',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    role: 'developer',
+                    actionPolicy: secretPolicy,
+                    actionPermission: {
+                        type: 'data.create',
+                        role: 'developer',
+                        addresses: true,
+                    },
+                    subjectPolicy: 'subjectfull',
+                    resourceMarkers: [
+                        {
+                            marker: 'secret',
+                            policy: secretPolicy,
+                            permission: {
+                                type: 'policy.assign',
+                                role: 'developer',
+                                policies: true,
+                            },
+                        },
+                    ],
+                });
+            });
+
+            it('should deny the request if given no userId or record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if the does not have data.create access to the given resource marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.create',
+                            role: 'wrong',
+                            addresses: true,
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if the data.create permission does not allow the given address', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.create',
+                            role: 'developer',
+                            addresses: '^allowed_address$',
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.create',
+                    address: 'not_allowed_address',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should allow the request if the user does not have policy.assign access to the given resource marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.create',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if the user has no role assigned', async () => {
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if given a record key to a different record', async () => {
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    recordKey: wrongRecordKey,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if there is no policy for the given marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should allow the request if the user is an admin even though there is no policy for the given marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    role: ADMIN_ROLE_NAME,
+                    actionPolicy: DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                    actionPermission: {
+                        type: 'data.create',
+                        role: ADMIN_ROLE_NAME,
+                        addresses: true,
+                    },
+                    subjectPolicy: 'subjectfull',
+                    resourceMarkers: [
+                        {
+                            marker: 'secret',
+                            policy: DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                            permission: {
+                                type: 'policy.assign',
+                                role: ADMIN_ROLE_NAME,
+                                policies: true,
+                            },
+                        },
+                    ],
+                });
+            });
+
+            it('should deny the request if the request is coming from an inst and no role has been provided to said inst', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId,
+                    instances: ['instance'],
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
         });
 
         it('should deny the request if given an unrecognized action', async () => {
