@@ -3504,6 +3504,16 @@ export interface AuthData {
      * Null if the user does not have an avatar.
      */
     avatarPortraitUrl: string;
+
+    /**
+     * The OpenAI API Key that is configured for use.
+     */
+    openAiKey: string | null;
+
+    /**
+     * Whether the user has an active subscription to the beta program.
+     */
+    hasActiveSubscription: boolean;
 }
 
 /**

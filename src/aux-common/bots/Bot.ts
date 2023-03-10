@@ -2295,6 +2295,8 @@ export const KNOWN_TAGS: string[] = [
 
     'avatarAddress',
     'name',
+    'hasActiveSubscription',
+    'openAiKey',
 
     CLICK_ACTION_NAME,
     'onAnyBotClicked',

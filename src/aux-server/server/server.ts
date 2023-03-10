@@ -62,18 +62,12 @@ import {
     nodeSimulationForBranch,
 } from '@casual-simulation/aux-vm-node';
 import { DenoSimulationImpl, DenoVM } from '@casual-simulation/aux-vm-deno';
-import {
-    WebhooksModule2,
-    FilesModule2,
-    CheckoutModule2,
-    BackupModule2,
-} from './modules';
+import { WebhooksModule2, FilesModule2, BackupModule2 } from './modules';
 import { DirectoryService } from './directory/DirectoryService';
 import { MongoDBDirectoryStore } from './directory/MongoDBDirectoryStore';
 import { DirectoryStore } from './directory/DirectoryStore';
 import { DirectoryClient } from './directory/DirectoryClient';
 import { WebSocketClient, requestUrl } from '@casual-simulation/tunnel';
-import Stripe from 'stripe';
 import { RedisStageStore } from './redis/RedisStageStore';
 import {
     MemoryStageStore,
@@ -1014,7 +1008,6 @@ export class Server {
     private _createRepoManager(serverDevice: DeviceInfo, serverUser: AuxUser) {
         const bridge = new ConnectionBridge(serverDevice);
         const client = new CausalRepoClient(bridge.clientConnection);
-        const checkout = this._createCheckoutModule();
         const backup = this._createBackupModule();
         const setupChannel = this._createSetupChannelModule();
         const webhooks = this._createWebhooksClient();
@@ -1029,7 +1022,6 @@ export class Server {
                 new FilesModule2(this._config.drives),
                 new WebhooksModule2(),
                 ...gpioModules,
-                checkout.module,
                 backup.module,
                 setupChannel.module,
             ],
@@ -1058,31 +1050,12 @@ export class Server {
         return {
             connections: [
                 bridge.serverConnection,
-                checkout.connection,
                 backup.connection,
                 setupChannel.connection,
                 webhooks.connection,
             ],
             manager,
             webhooksClient: webhooks.client,
-        };
-    }
-
-    private _createCheckoutModule() {
-        // TODO: Allow generating device info from users
-        const checkoutUser = getCheckoutUser();
-        const checkoutDevice = deviceInfoFromUser(checkoutUser);
-        const bridge = new ConnectionBridge(checkoutDevice);
-        const client = new CausalRepoClient(bridge.clientConnection);
-        const module = new CheckoutModule2(
-            (key) => new Stripe(key),
-            checkoutUser,
-            client
-        );
-
-        return {
-            connection: bridge.serverConnection,
-            module,
         };
     }
 
@@ -1205,15 +1178,6 @@ function getServerUser(): AuxUser {
         name: 'Server',
         username: 'Server',
         token: 'server-tokenbc',
-    };
-}
-
-function getCheckoutUser(): AuxUser {
-    return {
-        id: 'server-checkout',
-        name: 'Server',
-        username: 'Server',
-        token: 'server-checkout-token',
     };
 }
 

@@ -1,5 +1,20 @@
 # CasualOS Changelog
 
+## V3.1.25
+
+#### Date: 3/10/2023
+
+### :rocket: Improvements
+
+-   Added the ability to configure Records system deployments to support Beta Program Subscriptions through Stripe.
+    -   If configured, then users can subscribe to the Beta Program through their account portal.
+    -   Once subscribed, they can store their OpenAI API Key in their account profile.
+    -   This additional information will then be included in the `authBot` (returned from `os.requestAuthBot()`) as a couple tags:
+        -   `hasActiveSubscription` - Whether the user has a currently active beta program subscription.
+        -   `openAiKey` - The API Key that the user has saved in their account.
+    -   If not configured, then every user will have access to all of the Beta Program features.
+    -   Of course, since CausalOS is Open Source, anyone is free to take the source code and make their own deployments with all Beta Features enabled by default.
+
 ## V3.1.24
 
 #### Date: 2/23/2023

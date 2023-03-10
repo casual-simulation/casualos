@@ -4268,6 +4268,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                         avatarAddress: data.avatarUrl,
                         avatarPortraitAddress: data.avatarPortraitUrl,
                         name: data.name,
+                        openAiKey: data.openAiKey,
+                        hasActiveSubscription: data.hasActiveSubscription,
                     },
                     TEMPORARY_BOT_PARTITION_ID
                 )
