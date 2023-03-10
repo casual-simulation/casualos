@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm-browser",
-    "version": "3.1.25-alpha.4368143274",
+    "version": "3.1.25-alpha.4388028584",
     "description": "A set of utilities required to securely run an AUX in a web browser.",
     "keywords": [
         "aux"
@@ -40,13 +40,13 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.1.25-alpha.4368143274",
-        "@casual-simulation/aux-records": "^3.1.25-alpha.4368143274",
-        "@casual-simulation/aux-vm": "^3.1.25-alpha.4368143274",
-        "@casual-simulation/aux-vm-client": "^3.1.25-alpha.4368143274",
-        "@casual-simulation/causal-trees": "^3.1.25-alpha.4368143274",
-        "@casual-simulation/crypto": "^3.1.25-alpha.4368143274",
-        "@casual-simulation/crypto-browser": "^3.1.25-alpha.4368143274",
+        "@casual-simulation/aux-common": "^3.1.25-alpha.4388028584",
+        "@casual-simulation/aux-records": "^3.1.25-alpha.4388028584",
+        "@casual-simulation/aux-vm": "^3.1.25-alpha.4388028584",
+        "@casual-simulation/aux-vm-client": "^3.1.25-alpha.4388028584",
+        "@casual-simulation/causal-trees": "^3.1.25-alpha.4388028584",
+        "@casual-simulation/crypto": "^3.1.25-alpha.4388028584",
+        "@casual-simulation/crypto-browser": "^3.1.25-alpha.4388028584",
         "comlink": "4.3.1",
         "livekit-client": "1.4.2",
         "lodash": "4.17.21",
