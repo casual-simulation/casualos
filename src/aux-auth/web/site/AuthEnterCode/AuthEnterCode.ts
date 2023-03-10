@@ -58,7 +58,7 @@ export default class AuthLogin extends Vue {
                 );
 
                 if (result.success) {
-                    this._checkLoginStatus();
+                    await this._checkLoginStatus();
                 } else if (result.success === false) {
                     if (result.errorCode === 'invalid_code') {
                         this.showInvalidCodeError = true;

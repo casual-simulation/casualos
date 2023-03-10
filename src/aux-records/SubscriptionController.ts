@@ -628,7 +628,7 @@ export class SubscriptionController {
                 success: true,
             };
         } catch (err) {
-            console.log(
+            console.error(
                 '[SubscriptionController] An error occurred while handling a stripe webhook:',
                 err
             );

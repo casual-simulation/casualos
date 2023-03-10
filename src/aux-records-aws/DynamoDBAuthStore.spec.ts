@@ -1074,6 +1074,7 @@ describe('DynamoDBAuthStore', () => {
                 ExpressionAttributeValues: {
                     ':userId': 'myuserid',
                 },
+                ScanIndexForward: false,
                 Limit: 10,
             });
         });
@@ -1147,6 +1148,7 @@ describe('DynamoDBAuthStore', () => {
                     ':userId': 'myuserid',
                     ':expireTimeMs': 50,
                 },
+                ScanIndexForward: false,
                 Limit: 10,
             });
         });
