@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/casual-apiary-aws",
-    "version": "3.1.24",
+    "version": "3.1.25",
     "private": true,
     "description": "Serverless CasualOS on AWS",
     "main": "handler.js",
@@ -19,8 +19,8 @@
         "deploy:auxbackend": "serverless deploy --stage auxbackend-prod"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.1.24",
-        "@casual-simulation/aux-vm": "^3.1.24",
+        "@casual-simulation/aux-common": "^3.1.25",
+        "@casual-simulation/aux-vm": "^3.1.25",
         "@casual-simulation/causal-trees": "^3.1.23",
         "@casual-simulation/fast-json-stable-stringify": "^3.1.11",
         "aws-sdk": "^2.968.0",
