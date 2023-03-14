@@ -20,6 +20,7 @@ import {
     cleanupObject,
     fromBase64String,
     isActiveSubscription,
+    isStringValid,
     RegexRule,
     toBase64String,
 } from './Utils';
@@ -70,6 +71,16 @@ export const MAX_LOGIN_REQUEST_ATTEMPTS = 5;
  * The error message that should be used for invalid_key error messages.
  */
 export const INVALID_KEY_ERROR_MESSAGE = 'The session key is invalid.';
+
+/**
+ * The maximum allowed length for an email address.
+ */
+export const MAX_EMAIL_ADDRESS_LENGTH = 200;
+
+/**
+ * The maximum allowed length for an SMS address.
+ */
+export const MAX_SMS_ADDRESS_LENGTH = 30;
 
 /**
  * Defines a class that is able to authenticate users.
@@ -125,6 +136,24 @@ export class AuthController {
             };
         }
 
+        if (request.addressType === 'email') {
+            if (request.address.length > MAX_EMAIL_ADDRESS_LENGTH) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_address',
+                    errorMessage: `The given email address is too long. It must be ${MAX_EMAIL_ADDRESS_LENGTH} characters or shorter in length.`,
+                };
+            }
+        } else if (request.addressType === 'phone') {
+            if (request.address.length > MAX_SMS_ADDRESS_LENGTH) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_address',
+                    errorMessage: `The given SMS address is too long. It must be ${MAX_SMS_ADDRESS_LENGTH} digits or shorter in length.`,
+                };
+            }
+        }
+
         try {
             let newUser = false;
             const supported = await this._messenger.supportsAddressType(
@@ -160,6 +189,19 @@ export class AuthController {
                     allSessionRevokeTimeMs: null,
                     currentLoginRequestId: null,
                 };
+
+                if (
+                    !(await this._validateAddress(
+                        request.address,
+                        request.addressType
+                    ))
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_address',
+                        errorMessage: 'The given address is not accepted.',
+                    };
+                }
             }
 
             const requestTime = Date.now();
@@ -241,6 +283,26 @@ export class AuthController {
                 errorCode: 'server_error',
                 errorMessage: 'A server error occurred.',
             };
+        }
+    }
+
+    private async _validateAddress(
+        address: string,
+        addressType: AddressType
+    ): Promise<boolean> {
+        try {
+            const rules =
+                addressType === 'email'
+                    ? await this._store.listEmailRules()
+                    : await this._store.listSmsRules();
+
+            if (rules) {
+                return isStringValid(address, rules);
+            } else {
+                return true;
+            }
+        } catch (err) {
+            return false;
         }
     }
 

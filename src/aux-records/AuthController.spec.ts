@@ -336,6 +336,144 @@ describe('AuthController', () => {
             });
         });
 
+        it('should fail if the given email is longer than 200 characters long', async () => {
+            const salt = new Uint8Array([1, 2, 3]);
+            const code = new Uint8Array([4, 5, 6, 7]);
+
+            nowMock.mockReturnValue(100);
+            randomBytesMock.mockReturnValueOnce(salt).mockReturnValueOnce(code);
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            authStore.emailRules.push({
+                pattern: '^test@casualsimulation\\.org$',
+                type: 'deny',
+            });
+
+            const address = 'a'.repeat(201);
+
+            const response = await controller.requestLogin({
+                address: address,
+                addressType: 'email',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'unacceptable_address',
+                errorMessage:
+                    'The given email address is too long. It must be 200 characters or shorter in length.',
+            });
+
+            expect(authStore.users).toEqual([]);
+            expect(authStore.loginRequests).toEqual([]);
+            expect(messenger.messages).toEqual([]);
+
+            expect(randomBytesMock).not.toHaveBeenCalled();
+            expect(randomBytesMock).not.toHaveBeenCalled();
+        });
+
+        it('should fail if the given phone number is longer than 30 characters long', async () => {
+            const salt = new Uint8Array([1, 2, 3]);
+            const code = new Uint8Array([4, 5, 6, 7]);
+
+            nowMock.mockReturnValue(100);
+            randomBytesMock.mockReturnValueOnce(salt).mockReturnValueOnce(code);
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            authStore.emailRules.push({
+                pattern: '^test@casualsimulation\\.org$',
+                type: 'deny',
+            });
+
+            const address = '5'.repeat(31);
+
+            const response = await controller.requestLogin({
+                address: address,
+                addressType: 'phone',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'unacceptable_address',
+                errorMessage:
+                    'The given SMS address is too long. It must be 30 digits or shorter in length.',
+            });
+
+            expect(authStore.users).toEqual([]);
+            expect(authStore.loginRequests).toEqual([]);
+            expect(messenger.messages).toEqual([]);
+
+            expect(randomBytesMock).not.toHaveBeenCalled();
+            expect(randomBytesMock).not.toHaveBeenCalled();
+        });
+
+        it('should fail if the given email does not match an email rule', async () => {
+            const salt = new Uint8Array([1, 2, 3]);
+            const code = new Uint8Array([4, 5, 6, 7]);
+
+            nowMock.mockReturnValue(100);
+            randomBytesMock.mockReturnValueOnce(salt).mockReturnValueOnce(code);
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            authStore.emailRules.push({
+                pattern: '^test@casualsimulation\\.org$',
+                type: 'deny',
+            });
+
+            const response = await controller.requestLogin({
+                address: 'test@casualsimulation.org',
+                addressType: 'email',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'unacceptable_address',
+                errorMessage: 'The given address is not accepted.',
+            });
+
+            expect(authStore.users).toEqual([]);
+            expect(authStore.loginRequests).toEqual([]);
+            expect(messenger.messages).toEqual([]);
+
+            expect(randomBytesMock).not.toHaveBeenCalled();
+            expect(randomBytesMock).not.toHaveBeenCalled();
+        });
+
+        it('should fail if the given phone number does not match an SMS rule', async () => {
+            const salt = new Uint8Array([1, 2, 3]);
+            const code = new Uint8Array([4, 5, 6, 7]);
+
+            nowMock.mockReturnValue(100);
+            randomBytesMock.mockReturnValueOnce(salt).mockReturnValueOnce(code);
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            authStore.smsRules.push({
+                pattern: '^5555555555$',
+                type: 'deny',
+            });
+
+            const response = await controller.requestLogin({
+                address: '5555555555',
+                addressType: 'phone',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'unacceptable_address',
+                errorMessage: 'The given address is not accepted.',
+            });
+
+            expect(authStore.users).toEqual([]);
+            expect(authStore.loginRequests).toEqual([]);
+            expect(messenger.messages).toEqual([]);
+
+            expect(randomBytesMock).not.toHaveBeenCalled();
+            expect(randomBytesMock).not.toHaveBeenCalled();
+        });
+
         describe('data validation', () => {
             const invalidAddressCases = [
                 ['null', null as any],
