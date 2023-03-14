@@ -34,6 +34,7 @@ import { MemoryFileRecordsStore } from './MemoryFileRecordsStore';
 import { getHash } from '@casual-simulation/crypto';
 import { SubscriptionController } from './SubscriptionController';
 import { StripeInterface, StripeProduct } from './StripeInterface';
+import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 
 console.log = jest.fn();
 
@@ -98,14 +99,36 @@ describe('RecordsHttpServer', () => {
     const apiOrigin = 'https://api-origin.com';
     const recordName = 'testRecord';
 
+    let subscriptionConfig: SubscriptionConfiguration;
+
     beforeEach(async () => {
         allowedAccountOrigins = new Set([accountOrigin]);
 
         allowedApiOrigins = new Set([apiOrigin]);
 
+        subscriptionConfig = {
+            subscriptions: [
+                {
+                    id: 'sub_id',
+                    eligibleProducts: ['product_id'],
+                    featureList: ['Feature 1', 'Feature 2'],
+                    product: 'product_id',
+                    defaultSubscription: true,
+                },
+            ],
+            webhookSecret: 'webhook_secret',
+            cancelUrl: 'cancel_url',
+            successUrl: 'success_url',
+            returnUrl: 'return_url',
+        };
+
         authStore = new MemoryAuthStore();
         authMessenger = new MemoryAuthMessenger();
-        authController = new AuthController(authStore, authMessenger);
+        authController = new AuthController(
+            authStore,
+            authMessenger,
+            subscriptionConfig
+        );
         livekitController = new LivekitController(
             livekitApiKey,
             livekitSecretKey,
@@ -174,28 +197,7 @@ describe('RecordsHttpServer', () => {
             stripe,
             authController,
             authStore,
-            {
-                subscriptions: [
-                    {
-                        id: 'sub_id',
-                        eligibleProducts: ['product_id'],
-                        featureList: ['Feature 1', 'Feature 2'],
-                        product: 'product_id',
-                        defaultSubscription: true,
-                    },
-                ],
-                // lineItems: [
-                //     {
-                //         price: 'price_id',
-                //         quantity: 1,
-                //     },
-                // ],
-                // products: ['product_id'],
-                webhookSecret: 'webhook_secret',
-                cancelUrl: 'cancel_url',
-                successUrl: 'success_url',
-                returnUrl: 'return_url',
-            }
+            subscriptionConfig
         );
 
         server = new RecordsHttpServer(
@@ -292,6 +294,7 @@ describe('RecordsHttpServer', () => {
                     phoneNumber: null,
                     hasActiveSubscription: false,
                     openAiKey: null,
+                    subscriptionTier: null,
                 },
                 headers: accountCorsHeaders,
             });
@@ -319,6 +322,7 @@ describe('RecordsHttpServer', () => {
                     phoneNumber: null,
                     hasActiveSubscription: true,
                     openAiKey: 'api key',
+                    subscriptionTier: 'beta',
                 },
                 headers: accountCorsHeaders,
             });
@@ -384,6 +388,7 @@ describe('RecordsHttpServer', () => {
                     phoneNumber: null,
                     hasActiveSubscription: false,
                     openAiKey: null,
+                    subscriptionTier: null,
                 },
                 headers: accountCorsHeaders,
             });
