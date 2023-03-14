@@ -14,6 +14,7 @@ export interface AppMetadata {
     email: string;
     phoneNumber: string;
     hasActiveSubscription: boolean;
+    subscriptionTier: string;
     openAiKey: string;
 }
 

@@ -26,7 +26,6 @@ import {
     GenericHttpHeaders,
     SubscriptionController,
     tryParseJson,
-    SubscriptionConfiguration,
     JsonParseResult,
     StripeInterface,
     tryParseSubscriptionConfig,
@@ -233,6 +232,7 @@ async function start() {
     const authController = new AuthController(
         authStore,
         messenger,
+        subscriptionConfig,
         forceAllowSubscriptionFeatures
     );
 

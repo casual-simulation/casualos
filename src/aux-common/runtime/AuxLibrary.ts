@@ -4270,6 +4270,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                         name: data.name,
                         openAiKey: data.openAiKey,
                         hasActiveSubscription: data.hasActiveSubscription,
+                        subscriptionTier: data.subscriptionTier,
                     },
                     TEMPORARY_BOT_PARTITION_ID
                 )

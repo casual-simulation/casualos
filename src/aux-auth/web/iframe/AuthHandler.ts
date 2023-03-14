@@ -317,7 +317,6 @@ export class AuthHandler implements AuxAuth {
         if (!authManager.userInfoLoaded) {
             await authManager.loadUserInfo();
         }
-        authManager.loadUserInfo;
         this._token = authManager.savedSessionKey;
         this._loginData = {
             userId: this._userId ?? authManager.userId,
@@ -325,6 +324,7 @@ export class AuthHandler implements AuxAuth {
             avatarPortraitUrl: authManager.avatarPortraitUrl,
             name: authManager.name,
             hasActiveSubscription: authManager.hasActiveSubscription,
+            subscriptionTier: authManager.subscriptionTier,
             openAiKey: authManager.openAiKey,
         };
 

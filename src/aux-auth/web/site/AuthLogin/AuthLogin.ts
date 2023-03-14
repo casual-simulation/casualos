@@ -165,7 +165,7 @@ export default class AuthLogin extends Vue {
     private async _loginWithPhoneNumber(sms: string) {
         try {
             if (!(await authManager.validateSmsNumber(sms))) {
-                this.showEmailError = true;
+                this.showSmsError = true;
                 this.processing = false;
                 return;
             }
