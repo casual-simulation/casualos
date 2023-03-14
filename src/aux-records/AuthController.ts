@@ -29,6 +29,7 @@ import {
     parseSessionKey,
     randomCode,
 } from './AuthUtils';
+import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -77,14 +78,17 @@ export class AuthController {
     private _store: AuthStore;
     private _messenger: AuthMessenger;
     private _forceAllowSubscriptionFeatures: boolean;
+    private _subscriptionConfig: SubscriptionConfiguration;
 
     constructor(
         authStore: AuthStore,
         messenger: AuthMessenger,
+        subscriptionConfig: SubscriptionConfiguration,
         forceAllowSubscriptionFeatures: boolean = false
     ) {
         this._store = authStore;
         this._messenger = messenger;
+        this._subscriptionConfig = subscriptionConfig;
         this._forceAllowSubscriptionFeatures = forceAllowSubscriptionFeatures;
     }
 
@@ -930,6 +934,37 @@ export class AuthController {
                 this._forceAllowSubscriptionFeatures ||
                 isActiveSubscription(result.subscriptionStatus);
 
+            let sub: SubscriptionConfiguration['subscriptions'][0];
+            if (result.subscriptionId) {
+                sub = this._subscriptionConfig.subscriptions.find(
+                    (s) => s.id === result.subscriptionId
+                );
+            }
+            if (!sub) {
+                sub = this._subscriptionConfig.subscriptions.find(
+                    (s) => s.defaultSubscription
+                );
+                if (sub) {
+                    console.log(
+                        '[AuthController] [getUserInfo] Using default subscription for user.'
+                    );
+                }
+            }
+
+            if (!sub) {
+                sub = this._subscriptionConfig.subscriptions[0];
+                if (sub) {
+                    console.log(
+                        '[AuthController] [getUserInfo] Using first subscription for user.'
+                    );
+                }
+            }
+
+            let tier = 'beta';
+            if (sub && sub.tier) {
+                tier = sub.tier;
+            }
+
             return {
                 success: true,
                 userId: result.id,
@@ -939,6 +974,7 @@ export class AuthController {
                 avatarPortraitUrl: result.avatarPortraitUrl,
                 avatarUrl: result.avatarUrl,
                 hasActiveSubscription,
+                subscriptionTier: hasActiveSubscription ? tier : null,
                 openAiKey: hasActiveSubscription ? result.openAiKey : null,
             };
         } catch (err) {
@@ -1508,6 +1544,11 @@ export interface GetUserInfoSuccess {
      * Whether the user has an active subscription.
      */
     hasActiveSubscription: boolean;
+
+    /**
+     * The subscription tier that the user is subscribed to.
+     */
+    subscriptionTier: string;
 
     /**
      * The OpenAI API Key that the user has configured in their account.

@@ -70,6 +70,18 @@ To deploy this project to AWS Lambda, follow these steps:
                  * Whether this subscription is the preferred subscription for the user to purchase.
                  */
                 defaultSubscription: boolean;
+
+                /**
+                 * Whether the subscription should be offered for purchase.
+                 * Defaults to true.
+                 */
+                purchasable?: boolean;
+
+                /**
+                 * The tier that the subscription represents.
+                 * Defaults to "beta".
+                 */
+                tier?: 'beta';
             }[];
 
             /**

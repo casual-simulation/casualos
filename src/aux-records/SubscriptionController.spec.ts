@@ -6,6 +6,7 @@ import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { AuthMessenger } from './AuthMessenger';
 import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
 import { StripeInterface, StripeProduct } from './StripeInterface';
+import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 
 console.log = jest.fn();
 
@@ -29,11 +30,43 @@ describe('SubscriptionController', () => {
     let stripe: StripeInterface;
     let userId: string;
     let sessionKey: string;
+    let config: SubscriptionConfiguration;
 
     beforeEach(async () => {
         authStore = new MemoryAuthStore();
         authMessenger = new MemoryAuthMessenger();
-        auth = new AuthController(authStore, authMessenger);
+
+        config = {
+            subscriptions: [
+                {
+                    id: 'sub_1',
+                    product: 'product_99_id',
+                    eligibleProducts: [
+                        'product_99_id',
+                        'product_1_id',
+                        'product_2_id',
+                        'product_3_id',
+                    ],
+                    featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
+                },
+                {
+                    id: 'sub_2',
+                    product: 'product_1000_id',
+                    eligibleProducts: ['product_1000_id'],
+                    featureList: [
+                        'Feature 1000',
+                        'Feature 2000',
+                        'Feature 3000',
+                    ],
+                    purchasable: false,
+                },
+            ],
+            webhookSecret: 'webhook_secret',
+            cancelUrl: 'cancel_url',
+            returnUrl: 'return_url',
+            successUrl: 'success_url',
+        };
+        auth = new AuthController(authStore, authMessenger, config);
 
         stripe = stripeMock = {
             publishableKey: 'publishable_key',
@@ -62,36 +95,31 @@ describe('SubscriptionController', () => {
                         unit_amount: 100,
                     },
                 };
+            } else if (id === 'product_1000_id') {
+                return {
+                    id,
+                    name: 'Product 1000',
+                    description: 'A product named 1000.',
+                    default_price: {
+                        id: 'default_price',
+                        currency: 'usd',
+                        recurring: {
+                            interval: 'month',
+                            interval_count: 1,
+                        },
+                        unit_amount: 9999,
+                    },
+                };
             }
             return null;
         });
 
-        controller = new SubscriptionController(stripe, auth, authStore, {
-            subscriptions: [
-                {
-                    id: 'sub_1',
-                    product: 'product_99_id',
-                    eligibleProducts: [
-                        'product_99_id',
-                        'product_1_id',
-                        'product_2_id',
-                        'product_3_id',
-                    ],
-                    featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
-                },
-            ],
-            // lineItems: [
-            //     {
-            //         price: 'price_1_id',
-            //         quantity: 1,
-            //     },
-            // ],
-            // products: ['product_1_id', 'product_2_id', 'product_3_id'],
-            webhookSecret: 'webhook_secret',
-            cancelUrl: 'cancel_url',
-            returnUrl: 'return_url',
-            successUrl: 'success_url',
-        });
+        controller = new SubscriptionController(
+            stripe,
+            auth,
+            authStore,
+            config
+        );
 
         const request = await auth.requestLogin({
             address: 'test@example.com',
@@ -1642,6 +1670,7 @@ describe('SubscriptionController', () => {
 
                     const user = await authStore.findUser(userId);
                     expect(user.subscriptionStatus).toBe(status);
+                    expect(user.subscriptionId).toBe('sub_1');
                 });
 
                 it('should do nothing for products that are not configured', async () => {

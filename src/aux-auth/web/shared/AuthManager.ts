@@ -95,6 +95,10 @@ export class AuthManager {
         return this._appMetadata?.hasActiveSubscription;
     }
 
+    get subscriptionTier() {
+        return this._appMetadata?.subscriptionTier;
+    }
+
     get openAiKey() {
         return this._appMetadata?.openAiKey;
     }
@@ -524,7 +528,10 @@ export class AuthManager {
     }
 
     private async _putAppMetadata(
-        metadata: Omit<AppMetadata, 'hasActiveSubscription'>
+        metadata: Omit<
+            AppMetadata,
+            'hasActiveSubscription' | 'subscriptionTier'
+        >
     ): Promise<AppMetadata> {
         const response = await axios.put(
             `${this.apiEndpoint}/api/${encodeURIComponent(

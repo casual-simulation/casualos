@@ -23,6 +23,7 @@ import {
 } from '@casual-simulation/crypto';
 import { fromBase64String, toBase64String } from './Utils';
 import { padStart } from 'lodash';
+import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 
 jest.mock('tweetnacl', () => {
     const originalModule = jest.requireActual('tweetnacl');
@@ -48,13 +49,43 @@ describe('AuthController', () => {
     let authStore: MemoryAuthStore;
     let messenger: MemoryAuthMessenger;
     let controller: AuthController;
+    let subscriptionConfig: SubscriptionConfiguration;
     let nowMock: jest.Mock<number>;
 
     beforeEach(() => {
         nowMock = Date.now = jest.fn();
         authStore = new MemoryAuthStore();
         messenger = new MemoryAuthMessenger();
-        controller = new AuthController(authStore, messenger);
+        subscriptionConfig = {
+            subscriptions: [
+                {
+                    id: 'sub_2',
+                    product: 'product_2',
+                    eligibleProducts: ['product_2'],
+                    featureList: [],
+                    purchasable: true,
+                    tier: 'alpha',
+                },
+                {
+                    id: 'sub_1',
+                    product: 'product_1',
+                    eligibleProducts: ['product_1'],
+                    featureList: [],
+                    purchasable: true,
+                    tier: 'beta',
+                    defaultSubscription: true,
+                },
+            ],
+            webhookSecret: 'webhook',
+            successUrl: 'success_url',
+            cancelUrl: 'cancel_url',
+            returnUrl: 'return_url',
+        };
+        controller = new AuthController(
+            authStore,
+            messenger,
+            subscriptionConfig
+        );
 
         uuidMock.mockReset();
         randomBytesMock.mockReset();
@@ -2208,6 +2239,7 @@ describe('AuthController', () => {
                 avatarUrl: 'avatar url',
                 avatarPortraitUrl: 'avatar portrait url',
                 hasActiveSubscription: false,
+                subscriptionTier: null,
                 openAiKey: null,
             });
         });
@@ -2240,6 +2272,41 @@ describe('AuthController', () => {
                 avatarUrl: 'avatar url',
                 avatarPortraitUrl: 'avatar portrait url',
                 hasActiveSubscription: true,
+                subscriptionTier: 'beta', // should use the default subscription
+                openAiKey: 'api_key',
+            });
+        });
+
+        it('should include the subscription tier from the subscription matching the user subscriptionId', async () => {
+            await authStore.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                subscriptionStatus: 'active',
+                subscriptionId: 'sub_2',
+                openAiKey: 'api_key',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            const result = await controller.getUserInfo({
+                userId,
+                sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                hasActiveSubscription: true,
+                subscriptionTier: 'alpha',
                 openAiKey: 'api_key',
             });
         });
@@ -2272,6 +2339,7 @@ describe('AuthController', () => {
                 avatarUrl: 'avatar url',
                 avatarPortraitUrl: 'avatar portrait url',
                 hasActiveSubscription: false,
+                subscriptionTier: null,
                 openAiKey: null,
             });
         });
@@ -2290,7 +2358,12 @@ describe('AuthController', () => {
                 currentLoginRequestId: undefined,
             });
 
-            controller = new AuthController(authStore, messenger, true);
+            controller = new AuthController(
+                authStore,
+                messenger,
+                subscriptionConfig,
+                true
+            );
 
             const result = await controller.getUserInfo({
                 userId,
@@ -2306,6 +2379,7 @@ describe('AuthController', () => {
                 avatarUrl: 'avatar url',
                 avatarPortraitUrl: 'avatar portrait url',
                 hasActiveSubscription: true,
+                subscriptionTier: 'beta',
                 openAiKey: 'api_key',
             });
         });
@@ -2566,7 +2640,12 @@ describe('AuthController', () => {
                 currentLoginRequestId: undefined,
             });
 
-            controller = new AuthController(authStore, messenger, true);
+            controller = new AuthController(
+                authStore,
+                messenger,
+                subscriptionConfig,
+                true
+            );
 
             const result = await controller.updateUserInfo({
                 userId,

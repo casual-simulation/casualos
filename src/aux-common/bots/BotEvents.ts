@@ -3514,6 +3514,11 @@ export interface AuthData {
      * Whether the user has an active subscription to the beta program.
      */
     hasActiveSubscription: boolean;
+
+    /**
+     * The subscription tier that is currently active for the user.
+     */
+    subscriptionTier: string | null;
 }
 
 /**

@@ -1365,6 +1365,7 @@ export class RecordsHttpServer {
             email: result.email,
             phoneNumber: result.phoneNumber,
             hasActiveSubscription: result.hasActiveSubscription,
+            subscriptionTier: result.subscriptionTier,
             openAiKey: result.openAiKey,
         });
     }

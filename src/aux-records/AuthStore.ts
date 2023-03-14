@@ -156,6 +156,12 @@ export interface AuthUser {
     subscriptionStatus?: string | null;
 
     /**
+     * The ID of the purchasable subscription that the user has.
+     * Note that this is the ID of the subscription in the config, not the ID of the stripe subscription.
+     */
+    subscriptionId?: string;
+
+    /**
      * The last Unix time that all the sessions were revoked at.
      */
     allSessionRevokeTimeMs: number | null | undefined;

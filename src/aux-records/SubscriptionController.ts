@@ -11,69 +11,7 @@ import {
 } from './StripeInterface';
 import { ServerError } from './Errors';
 import { isActiveSubscription, JsonParseResult, tryParseJson } from './Utils';
-
-export interface SubscriptionConfiguration {
-    /**
-     * The information that should be used for subscriptions.
-     */
-    subscriptions: {
-        /**
-         * The ID of the subscription.
-         * Only used for the API.
-         */
-        id: string;
-
-        /**
-         * The ID of the product that needs to be purchased for the subscription.
-         */
-        product: string;
-
-        /**
-         * The list of features that should be shown for this subscription tier.
-         */
-        featureList: string[];
-
-        /**
-         * The list of products that are eligible for this subscription tier.
-         */
-        eligibleProducts: string[];
-
-        /**
-         * Whether this subscription should be the default.
-         */
-        defaultSubscription?: boolean;
-    }[];
-
-    /**
-     * The configuration that should be passed to https://stripe.com/docs/api/checkout/sessions when creating a checkout session.
-     */
-    checkoutConfig?: any;
-
-    /**
-     * The configuration that should be passed to https://stripe.com/docs/api/customer_portal when creating a portal session.
-     */
-    portalConfig?: any;
-
-    /**
-     * The webhook secret that should be used for validating webhooks.
-     */
-    webhookSecret: string;
-
-    /**
-     * The URL that the user should be sent to upon successfully purchasing a subscription.
-     */
-    successUrl: string;
-
-    /**
-     * The URL that the user should be sent to upon cancelling a subscription purchase.
-     */
-    cancelUrl: string;
-
-    /**
-     * The URL that the user should be returned to after managing their subscriptions.
-     */
-    returnUrl: string;
-}
+import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 
 /**
  * Defines a class that is able to handle subscriptions.
@@ -204,10 +142,12 @@ export class SubscriptionController {
     private async _getPurchasableSubscriptions(): Promise<
         PurchasableSubscription[]
     > {
-        const promises = this._config.subscriptions.map(async (s) => ({
-            sub: s,
-            info: await this._stripe.getProductAndPriceInfo(s.product),
-        }));
+        const promises = this._config.subscriptions
+            .filter((s) => s.purchasable ?? true)
+            .map(async (s) => ({
+                sub: s,
+                info: await this._stripe.getProductAndPriceInfo(s.product),
+            }));
         const productInfo = await Promise.all(promises);
 
         return productInfo
@@ -570,13 +510,24 @@ export class SubscriptionController {
                 const subscription = event.data.object;
 
                 const items = subscription.items.data as Array<any>;
-                const matches = items.some((i) =>
-                    this._config.subscriptions.some((s) =>
-                        s.eligibleProducts.some((p) => p === i.price.product)
-                    )
-                );
 
-                if (!matches) {
+                let item: any;
+                let sub: SubscriptionConfiguration['subscriptions'][0];
+                items_loop: for (let i of items) {
+                    for (let s of this._config.subscriptions) {
+                        if (
+                            s.eligibleProducts.some(
+                                (p) => p === i.price.product
+                            )
+                        ) {
+                            sub = s;
+                            item = i;
+                            break items_loop;
+                        }
+                    }
+                }
+
+                if (!item || !sub) {
                     console.log(
                         `[SubscriptionController] [handleStripeWebhook] No item in the subscription matches an eligible product in the config.`
                     );
@@ -585,12 +536,17 @@ export class SubscriptionController {
                     };
                 }
 
+                console.log(
+                    `[SubscriptionController] [handleStripeWebhook] Subscription (${sub.id}) found!`
+                );
+
                 const status = subscription.status;
                 const active = isActiveSubscription(status);
+                const tier = sub.tier ?? 'beta';
                 const customerId = subscription.customer;
 
                 console.log(
-                    `[SubscriptionController] [handleStripeWebhook] Customer ID: ${customerId}. Subscription status: ${status}. Is Active: ${active}.`
+                    `[SubscriptionController] [handleStripeWebhook] Customer ID: ${customerId}. Subscription status: ${status}. Tier: ${tier}. Is Active: ${active}.`
                 );
                 const user = await this._authStore.findUserByStripeCustomerId(
                     customerId
@@ -605,13 +561,17 @@ export class SubscriptionController {
                     };
                 }
 
-                if (user.subscriptionStatus !== status) {
+                if (
+                    user.subscriptionStatus !== status ||
+                    user.subscriptionId !== sub.id
+                ) {
                     console.log(
                         `[SubscriptionController] [handleStripeWebhook] User subscription status doesn't match stored. Updating...`
                     );
                     await this._authStore.saveUser({
                         ...user,
                         subscriptionStatus: status,
+                        subscriptionId: sub.id,
                     });
                 }
             }
