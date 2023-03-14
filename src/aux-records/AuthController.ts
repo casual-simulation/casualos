@@ -196,6 +196,9 @@ export class AuthController {
                         request.addressType
                     ))
                 ) {
+                    console.log(
+                        `[AuthController] [requestLogin] Login attempt rejected for new user with address (type: ${request.addressType}) that is not allowed.`
+                    );
                     return {
                         success: false,
                         errorCode: 'unacceptable_address',
