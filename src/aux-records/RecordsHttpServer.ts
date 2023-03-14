@@ -243,24 +243,6 @@ export class RecordsHttpServer {
             );
         } else if (
             request.method === 'GET' &&
-            request.path === '/api/emailRules'
-        ) {
-            return formatResponse(
-                request,
-                await this._getEmailRules(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
-            request.path === '/api/smsRules'
-        ) {
-            return formatResponse(
-                request,
-                await this._getSmsRules(request),
-                this._allowedAccountOrigins
-            );
-        } else if (
-            request.method === 'GET' &&
             request.path === '/api/v2/sessions'
         ) {
             return formatResponse(
@@ -1419,42 +1401,6 @@ export class RecordsHttpServer {
             success: true,
             userId: result.userId,
         });
-    }
-
-    private async _getEmailRules(request: GenericHttpRequest) {
-        const result = await this._auth.listEmailRules();
-
-        if (!result.success) {
-            return returnResult(result);
-        }
-
-        return {
-            statusCode: 200,
-            body: JSON.stringify(
-                result.rules.map((rule) => ({
-                    type: rule.type,
-                    pattern: rule.pattern,
-                }))
-            ),
-        };
-    }
-
-    private async _getSmsRules(request: GenericHttpRequest) {
-        const result = await this._auth.listSmsRules();
-
-        if (!result.success) {
-            return returnResult(result);
-        }
-
-        return {
-            statusCode: 200,
-            body: JSON.stringify(
-                result.rules.map((rule) => ({
-                    type: rule.type,
-                    pattern: rule.pattern,
-                }))
-            ),
-        };
     }
 
     private async _validateSessionKey(

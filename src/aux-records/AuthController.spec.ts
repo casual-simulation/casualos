@@ -269,6 +269,92 @@ describe('AuthController', () => {
                 expect(uuidMock).not.toHaveBeenCalled();
             });
 
+            it('should create a new login request for the existing user even if the address is denied by a rule', async () => {
+                await authStore.saveUser({
+                    id: 'myid',
+                    email: type === 'email' ? address : null,
+                    phoneNumber: type === 'phone' ? address : null,
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                });
+
+                const salt = new Uint8Array([1, 2, 3]);
+                const code = new Uint8Array([4, 5, 6, 7]);
+
+                nowMock.mockReturnValue(100);
+                randomBytesMock
+                    .mockReturnValueOnce(salt)
+                    .mockReturnValueOnce(code);
+                uuidMock.mockReturnValueOnce('uuid1');
+
+                if (type === 'email') {
+                    authStore.emailRules.push({
+                        pattern: `^${address}$`,
+                        type: 'deny',
+                    });
+                } else {
+                    authStore.smsRules.push({
+                        pattern: `^${address}$`,
+                        type: 'deny',
+                    });
+                }
+
+                const response = await controller.requestLogin({
+                    address: address,
+                    addressType: type,
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(response).toEqual({
+                    success: true,
+                    userId: 'myid',
+                    requestId: fromByteArray(salt),
+                    address: address,
+                    addressType: type,
+                    expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
+                });
+
+                expect(authStore.users).toEqual([
+                    {
+                        id: 'myid',
+                        email: type === 'email' ? address : null,
+                        phoneNumber: type === 'phone' ? address : null,
+                        currentLoginRequestId: fromByteArray(salt),
+                    },
+                ]);
+
+                expect(authStore.loginRequests).toEqual([
+                    {
+                        userId: 'myid',
+                        requestId: fromByteArray(salt),
+                        secretHash: hashPasswordWithSalt(
+                            codeNumber(code),
+                            fromByteArray(salt)
+                        ),
+                        requestTimeMs: 100,
+                        expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
+                        completedTimeMs: null,
+                        attemptCount: 0,
+                        address: address,
+                        addressType: type,
+                        ipAddress: '127.0.0.1',
+                    },
+                ]);
+                expect(messenger.messages).toEqual([
+                    {
+                        address: address,
+                        addressType: type,
+                        code: codeNumber(code),
+                    },
+                ]);
+
+                expect(randomBytesMock).toHaveBeenCalledWith(
+                    LOGIN_REQUEST_ID_BYTE_LENGTH
+                );
+                expect(randomBytesMock).toHaveBeenCalledWith(4);
+                expect(uuidMock).not.toHaveBeenCalled();
+            });
+
             it('should fail if the given address type is not supported by the messenger', async () => {
                 const mockFn = (messenger.supportsAddressType = jest.fn());
                 mockFn.mockReturnValue(false);

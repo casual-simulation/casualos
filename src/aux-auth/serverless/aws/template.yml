@@ -252,16 +252,6 @@ Resources:
                     Properties:
                         Path: /api/v2/replaceSession
                         Method: POST
-                GetEmailRules:
-                    Type: Api
-                    Properties:
-                        Path: /api/emailRules
-                        Method: GET
-                GetSmsRules:
-                    Type: Api
-                    Properties:
-                        Path: /api/smsRules
-                        Method: GET
                 GetMetadata:
                     Type: Api
                     Properties:

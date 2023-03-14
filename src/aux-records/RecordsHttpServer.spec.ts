@@ -1280,7 +1280,7 @@ describe('RecordsHttpServer', () => {
     });
 
     describe('GET /api/emailRules', () => {
-        it('should get the list of email rules', async () => {
+        it('should return a 404', async () => {
             authStore.emailRules.push(
                 {
                     type: 'allow',
@@ -1296,19 +1296,19 @@ describe('RecordsHttpServer', () => {
                 httpGet(`/api/emailRules`, defaultHeaders)
             );
 
-            expect(result).toEqual({
-                statusCode: 200,
-                body: JSON.stringify([
-                    {
-                        type: 'allow',
-                        pattern: 'hello',
-                    },
-                    {
-                        type: 'deny',
-                        pattern: 'other',
-                    },
-                ]),
-                headers: {},
+            expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'operation_not_found',
+                    errorMessage:
+                        'An operation could not be found for the given request.',
+                },
+                headers: {
+                    'Access-Control-Allow-Origin': 'test.com',
+                    'Access-Control-Allow-Headers':
+                        'Content-Type, Authorization',
+                },
             });
         });
     });
@@ -1330,19 +1330,19 @@ describe('RecordsHttpServer', () => {
                 httpGet(`/api/smsRules`, defaultHeaders)
             );
 
-            expect(result).toEqual({
-                statusCode: 200,
-                body: JSON.stringify([
-                    {
-                        type: 'allow',
-                        pattern: 'hello',
-                    },
-                    {
-                        type: 'deny',
-                        pattern: 'other',
-                    },
-                ]),
-                headers: {},
+            expectResponseBodyToEqual(result, {
+                statusCode: 404,
+                body: {
+                    success: false,
+                    errorCode: 'operation_not_found',
+                    errorMessage:
+                        'An operation could not be found for the given request.',
+                },
+                headers: {
+                    'Access-Control-Allow-Origin': 'test.com',
+                    'Access-Control-Allow-Headers':
+                        'Content-Type, Authorization',
+                },
             });
         });
     });
