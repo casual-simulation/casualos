@@ -73,6 +73,16 @@ To deploy this project to AWS Lambda, follow these steps:
             }[];
 
             /**
+             * The configuration that should be passed to https://stripe.com/docs/api/checkout/sessions when creating a checkout session.
+             */
+            checkoutConfig?: any;
+
+            /**
+             * The configuration that should be passed to https://stripe.com/docs/api/customer_portal when creating a portal session.
+             */
+            portalConfig?: any;
+
+            /**
              * The Stripe Webhook Secret (see https://stripe.com/docs/webhooks/signatures) that should be used to
              * validate Stripe webhook events.
              */

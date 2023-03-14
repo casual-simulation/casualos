@@ -44,25 +44,15 @@ export interface SubscriptionConfiguration {
         defaultSubscription?: boolean;
     }[];
 
-    // /**
-    //  * The line items that should be included in the checkout request.
-    //  */
-    // lineItems: {
-    //     /**
-    //      * The ID of the price for the line item.
-    //      */
-    //     price: string;
-
-    //     /**
-    //      * The quantity to purchase.
-    //      */
-    //     quantity?: number;
-    // }[];
+    /**
+     * The configuration that should be passed to https://stripe.com/docs/api/checkout/sessions when creating a checkout session.
+     */
+    checkoutConfig?: any;
 
     /**
-     * The IDs of the products that should be recognized as active subscriptions for the user.
+     * The configuration that should be passed to https://stripe.com/docs/api/customer_portal when creating a portal session.
      */
-    // products: string[];
+    portalConfig?: any;
 
     /**
      * The webhook secret that should be used for validating webhooks.
@@ -388,6 +378,7 @@ export class SubscriptionController {
                     `[SubscriptionController] [createManageSubscriptionLink] Customer has a managable subscription. Creating a portal session.`
                 );
                 const session = await this._stripe.createPortalSession({
+                    ...(this._config.portalConfig ?? {}),
                     customer: customerId,
                     return_url: this._config.returnUrl,
                 });
@@ -484,6 +475,7 @@ export class SubscriptionController {
         );
 
         const session = await this._stripe.createCheckoutSession({
+            ...(this._config.checkoutConfig ?? {}),
             customer: customerId,
             success_url: this._config.successUrl,
             cancel_url: this._config.cancelUrl,
