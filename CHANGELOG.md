@@ -1,5 +1,16 @@
 # CasualOS Changelog
 
+## V3.1.26
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added additional configuration options for the Records system.
+    -   It is now possible to indicate whether a subscription is purchasable. Setting this to `false` will prevent it from showing to users who haven't purchased a subscription.
+    -   It is also now possible to povide additional configuration options for Stripe Checkout sessions and Stripe Customer Portal management sessions.
+-   Improved the login system to evaluate email/sms rules on the server. As a result, existing users are no longer subject to the email/sms rules. This makes the rules effective for blocking specific emails/sms from signing up, but they won't interfere with already existing users.
+
 ## V3.1.25
 
 #### Date: 3/10/2023
