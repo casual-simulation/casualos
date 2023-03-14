@@ -5,12 +5,7 @@ import {
     CreatePublicRecordKeyResult,
     PublicRecordKeyPolicy,
 } from '@casual-simulation/aux-records';
-import { isStringValid, RegexRule } from './Utils';
-import {
-    isOpenAiKey,
-    parseOpenAiKey,
-    parseSessionKey,
-} from '@casual-simulation/aux-records/AuthUtils';
+import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
     CompleteLoginResult,
     LoginRequestResult,
@@ -47,8 +42,6 @@ export class AuthManager {
     private _subscriptionsSupported: boolean;
 
     private _loginState: Subject<boolean>;
-    private _emailRules: RegexRule[];
-    private _phoneRules: RegexRule[];
     private _apiEndpoint: string;
     private _gitTag: string;
 
@@ -95,6 +88,10 @@ export class AuthManager {
         return this._appMetadata?.hasActiveSubscription;
     }
 
+    get subscriptionTier() {
+        return this._appMetadata?.subscriptionTier;
+    }
+
     get openAiKey() {
         return this._appMetadata?.openAiKey;
     }
@@ -108,27 +105,18 @@ export class AuthManager {
     }
 
     async validateEmail(email: string): Promise<boolean> {
-        if (!this._emailRules) {
-            const rules = await this._getEmailRules();
-            this._emailRules = rules.map((r) => ({
-                type: r.type,
-                pattern: r.pattern,
-            }));
+        // Validation is handled on the server
+        const indexOfAt = email.indexOf('@');
+        if (indexOfAt < 0 || indexOfAt >= email.length) {
+            return false;
         }
 
-        return isStringValid(email, this._emailRules);
+        return true;
     }
 
     async validateSmsNumber(sms: string): Promise<boolean> {
-        if (!this._phoneRules) {
-            const rules = await this._getSmsRules();
-            this._phoneRules = rules.map((r) => ({
-                type: r.type,
-                pattern: r.pattern,
-            }));
-        }
-
-        return isStringValid(sms, this._phoneRules);
+        // Validation is handled on the server
+        return true;
     }
 
     isLoggedIn(): boolean {
@@ -524,7 +512,10 @@ export class AuthManager {
     }
 
     private async _putAppMetadata(
-        metadata: Omit<AppMetadata, 'hasActiveSubscription'>
+        metadata: Omit<
+            AppMetadata,
+            'hasActiveSubscription' | 'subscriptionTier'
+        >
     ): Promise<AppMetadata> {
         const response = await axios.put(
             `${this.apiEndpoint}/api/${encodeURIComponent(
@@ -542,27 +533,6 @@ export class AuthManager {
         return {
             Authorization: `Bearer ${this.savedSessionKey}`,
         };
-    }
-
-    private async _getEmailRules(): Promise<RegexRule[]> {
-        const response = await axios.get(`${this.apiEndpoint}/api/emailRules`);
-        return response.data;
-    }
-
-    private async _getSmsRules(): Promise<RegexRule[]> {
-        try {
-            const response = await axios.get(
-                `${this.apiEndpoint}/api/smsRules`
-            );
-            return response.data;
-        } catch (err) {
-            if (axios.isAxiosError(err)) {
-                if (err.response.status === 404) {
-                    return [];
-                }
-            }
-            throw err;
-        }
     }
 
     get apiEndpoint(): string {

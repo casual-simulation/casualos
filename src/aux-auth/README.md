@@ -70,7 +70,29 @@ To deploy this project to AWS Lambda, follow these steps:
                  * Whether this subscription is the preferred subscription for the user to purchase.
                  */
                 defaultSubscription: boolean;
+
+                /**
+                 * Whether the subscription should be offered for purchase.
+                 * Defaults to true.
+                 */
+                purchasable?: boolean;
+
+                /**
+                 * The tier that the subscription represents.
+                 * Defaults to "beta".
+                 */
+                tier?: 'beta';
             }[];
+
+            /**
+             * The configuration that should be passed to https://stripe.com/docs/api/checkout/sessions when creating a checkout session.
+             */
+            checkoutConfig?: any;
+
+            /**
+             * The configuration that should be passed to https://stripe.com/docs/api/customer_portal when creating a portal session.
+             */
+            portalConfig?: any;
 
             /**
              * The Stripe Webhook Secret (see https://stripe.com/docs/webhooks/signatures) that should be used to
