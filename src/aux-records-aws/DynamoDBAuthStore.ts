@@ -80,6 +80,7 @@ export class DynamoDBAuthStore implements AuthStore {
                         currentLoginRequestId: user.currentLoginRequestId,
                         stripeCustomerId: user.stripeCustomerId,
                         subscriptionStatus: user.subscriptionStatus,
+                        subscriptionId: user.subscriptionId,
                         openAiKey: user.openAiKey,
                     }),
                 },
@@ -143,6 +144,7 @@ export class DynamoDBAuthStore implements AuthStore {
                         currentLoginRequestId: user.currentLoginRequestId,
                         stripeCustomerId: user.stripeCustomerId,
                         subscriptionStatus: user.subscriptionStatus,
+                        subscriptionId: user.subscriptionId,
                         openAiKey: user.openAiKey,
                     }),
                     ConditionExpression: 'attribute_not_exists(id)',
@@ -255,6 +257,7 @@ export class DynamoDBAuthStore implements AuthStore {
                 currentLoginRequestId: user.currentLoginRequestId,
                 stripeCustomerId: user.stripeCustomerId,
                 subscriptionStatus: user.subscriptionStatus,
+                subscriptionId: user.subscriptionId,
                 openAiKey: user.openAiKey,
             };
         } else {

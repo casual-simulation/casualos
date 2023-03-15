@@ -186,6 +186,7 @@ if (!!STRIPE_SECRET_KEY && !!STRIPE_PUBLISHABLE_KEY && subscriptionConfig) {
 const authController = new AuthController(
     authStore,
     messenger,
+    subscriptionConfig,
     forceAllowSubscriptionFeatures
 );
 

@@ -23,6 +23,7 @@ import {
 } from '@casual-simulation/crypto';
 import { fromBase64String, toBase64String } from './Utils';
 import { padStart } from 'lodash';
+import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 
 jest.mock('tweetnacl', () => {
     const originalModule = jest.requireActual('tweetnacl');
@@ -48,13 +49,43 @@ describe('AuthController', () => {
     let authStore: MemoryAuthStore;
     let messenger: MemoryAuthMessenger;
     let controller: AuthController;
+    let subscriptionConfig: SubscriptionConfiguration;
     let nowMock: jest.Mock<number>;
 
     beforeEach(() => {
         nowMock = Date.now = jest.fn();
         authStore = new MemoryAuthStore();
         messenger = new MemoryAuthMessenger();
-        controller = new AuthController(authStore, messenger);
+        subscriptionConfig = {
+            subscriptions: [
+                {
+                    id: 'sub_2',
+                    product: 'product_2',
+                    eligibleProducts: ['product_2'],
+                    featureList: [],
+                    purchasable: true,
+                    tier: 'alpha',
+                },
+                {
+                    id: 'sub_1',
+                    product: 'product_1',
+                    eligibleProducts: ['product_1'],
+                    featureList: [],
+                    purchasable: true,
+                    tier: 'beta',
+                    defaultSubscription: true,
+                },
+            ],
+            webhookSecret: 'webhook',
+            successUrl: 'success_url',
+            cancelUrl: 'cancel_url',
+            returnUrl: 'return_url',
+        };
+        controller = new AuthController(
+            authStore,
+            messenger,
+            subscriptionConfig
+        );
 
         uuidMock.mockReset();
         randomBytesMock.mockReset();
@@ -238,6 +269,92 @@ describe('AuthController', () => {
                 expect(uuidMock).not.toHaveBeenCalled();
             });
 
+            it('should create a new login request for the existing user even if the address is denied by a rule', async () => {
+                await authStore.saveUser({
+                    id: 'myid',
+                    email: type === 'email' ? address : null,
+                    phoneNumber: type === 'phone' ? address : null,
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                });
+
+                const salt = new Uint8Array([1, 2, 3]);
+                const code = new Uint8Array([4, 5, 6, 7]);
+
+                nowMock.mockReturnValue(100);
+                randomBytesMock
+                    .mockReturnValueOnce(salt)
+                    .mockReturnValueOnce(code);
+                uuidMock.mockReturnValueOnce('uuid1');
+
+                if (type === 'email') {
+                    authStore.emailRules.push({
+                        pattern: `^${address}$`,
+                        type: 'deny',
+                    });
+                } else {
+                    authStore.smsRules.push({
+                        pattern: `^${address}$`,
+                        type: 'deny',
+                    });
+                }
+
+                const response = await controller.requestLogin({
+                    address: address,
+                    addressType: type,
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(response).toEqual({
+                    success: true,
+                    userId: 'myid',
+                    requestId: fromByteArray(salt),
+                    address: address,
+                    addressType: type,
+                    expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
+                });
+
+                expect(authStore.users).toEqual([
+                    {
+                        id: 'myid',
+                        email: type === 'email' ? address : null,
+                        phoneNumber: type === 'phone' ? address : null,
+                        currentLoginRequestId: fromByteArray(salt),
+                    },
+                ]);
+
+                expect(authStore.loginRequests).toEqual([
+                    {
+                        userId: 'myid',
+                        requestId: fromByteArray(salt),
+                        secretHash: hashPasswordWithSalt(
+                            codeNumber(code),
+                            fromByteArray(salt)
+                        ),
+                        requestTimeMs: 100,
+                        expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
+                        completedTimeMs: null,
+                        attemptCount: 0,
+                        address: address,
+                        addressType: type,
+                        ipAddress: '127.0.0.1',
+                    },
+                ]);
+                expect(messenger.messages).toEqual([
+                    {
+                        address: address,
+                        addressType: type,
+                        code: codeNumber(code),
+                    },
+                ]);
+
+                expect(randomBytesMock).toHaveBeenCalledWith(
+                    LOGIN_REQUEST_ID_BYTE_LENGTH
+                );
+                expect(randomBytesMock).toHaveBeenCalledWith(4);
+                expect(uuidMock).not.toHaveBeenCalled();
+            });
+
             it('should fail if the given address type is not supported by the messenger', async () => {
                 const mockFn = (messenger.supportsAddressType = jest.fn());
                 mockFn.mockReturnValue(false);
@@ -303,6 +420,144 @@ describe('AuthController', () => {
                 expect(randomBytesMock).toHaveBeenCalled();
                 expect(uuidMock).toHaveBeenCalled();
             });
+        });
+
+        it('should fail if the given email is longer than 200 characters long', async () => {
+            const salt = new Uint8Array([1, 2, 3]);
+            const code = new Uint8Array([4, 5, 6, 7]);
+
+            nowMock.mockReturnValue(100);
+            randomBytesMock.mockReturnValueOnce(salt).mockReturnValueOnce(code);
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            authStore.emailRules.push({
+                pattern: '^test@casualsimulation\\.org$',
+                type: 'deny',
+            });
+
+            const address = 'a'.repeat(201);
+
+            const response = await controller.requestLogin({
+                address: address,
+                addressType: 'email',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'unacceptable_address',
+                errorMessage:
+                    'The given email address is too long. It must be 200 characters or shorter in length.',
+            });
+
+            expect(authStore.users).toEqual([]);
+            expect(authStore.loginRequests).toEqual([]);
+            expect(messenger.messages).toEqual([]);
+
+            expect(randomBytesMock).not.toHaveBeenCalled();
+            expect(randomBytesMock).not.toHaveBeenCalled();
+        });
+
+        it('should fail if the given phone number is longer than 30 characters long', async () => {
+            const salt = new Uint8Array([1, 2, 3]);
+            const code = new Uint8Array([4, 5, 6, 7]);
+
+            nowMock.mockReturnValue(100);
+            randomBytesMock.mockReturnValueOnce(salt).mockReturnValueOnce(code);
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            authStore.emailRules.push({
+                pattern: '^test@casualsimulation\\.org$',
+                type: 'deny',
+            });
+
+            const address = '5'.repeat(31);
+
+            const response = await controller.requestLogin({
+                address: address,
+                addressType: 'phone',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'unacceptable_address',
+                errorMessage:
+                    'The given SMS address is too long. It must be 30 digits or shorter in length.',
+            });
+
+            expect(authStore.users).toEqual([]);
+            expect(authStore.loginRequests).toEqual([]);
+            expect(messenger.messages).toEqual([]);
+
+            expect(randomBytesMock).not.toHaveBeenCalled();
+            expect(randomBytesMock).not.toHaveBeenCalled();
+        });
+
+        it('should fail if the given email does not match an email rule', async () => {
+            const salt = new Uint8Array([1, 2, 3]);
+            const code = new Uint8Array([4, 5, 6, 7]);
+
+            nowMock.mockReturnValue(100);
+            randomBytesMock.mockReturnValueOnce(salt).mockReturnValueOnce(code);
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            authStore.emailRules.push({
+                pattern: '^test@casualsimulation\\.org$',
+                type: 'deny',
+            });
+
+            const response = await controller.requestLogin({
+                address: 'test@casualsimulation.org',
+                addressType: 'email',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'unacceptable_address',
+                errorMessage: 'The given address is not accepted.',
+            });
+
+            expect(authStore.users).toEqual([]);
+            expect(authStore.loginRequests).toEqual([]);
+            expect(messenger.messages).toEqual([]);
+
+            expect(randomBytesMock).not.toHaveBeenCalled();
+            expect(randomBytesMock).not.toHaveBeenCalled();
+        });
+
+        it('should fail if the given phone number does not match an SMS rule', async () => {
+            const salt = new Uint8Array([1, 2, 3]);
+            const code = new Uint8Array([4, 5, 6, 7]);
+
+            nowMock.mockReturnValue(100);
+            randomBytesMock.mockReturnValueOnce(salt).mockReturnValueOnce(code);
+            uuidMock.mockReturnValueOnce('uuid1');
+
+            authStore.smsRules.push({
+                pattern: '^5555555555$',
+                type: 'deny',
+            });
+
+            const response = await controller.requestLogin({
+                address: '5555555555',
+                addressType: 'phone',
+                ipAddress: '127.0.0.1',
+            });
+
+            expect(response).toEqual({
+                success: false,
+                errorCode: 'unacceptable_address',
+                errorMessage: 'The given address is not accepted.',
+            });
+
+            expect(authStore.users).toEqual([]);
+            expect(authStore.loginRequests).toEqual([]);
+            expect(messenger.messages).toEqual([]);
+
+            expect(randomBytesMock).not.toHaveBeenCalled();
+            expect(randomBytesMock).not.toHaveBeenCalled();
         });
 
         describe('data validation', () => {
@@ -2208,6 +2463,7 @@ describe('AuthController', () => {
                 avatarUrl: 'avatar url',
                 avatarPortraitUrl: 'avatar portrait url',
                 hasActiveSubscription: false,
+                subscriptionTier: null,
                 openAiKey: null,
             });
         });
@@ -2240,6 +2496,41 @@ describe('AuthController', () => {
                 avatarUrl: 'avatar url',
                 avatarPortraitUrl: 'avatar portrait url',
                 hasActiveSubscription: true,
+                subscriptionTier: 'beta', // should use the default subscription
+                openAiKey: 'api_key',
+            });
+        });
+
+        it('should include the subscription tier from the subscription matching the user subscriptionId', async () => {
+            await authStore.saveUser({
+                id: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                subscriptionStatus: 'active',
+                subscriptionId: 'sub_2',
+                openAiKey: 'api_key',
+                allSessionRevokeTimeMs: undefined,
+                currentLoginRequestId: undefined,
+            });
+
+            const result = await controller.getUserInfo({
+                userId,
+                sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                hasActiveSubscription: true,
+                subscriptionTier: 'alpha',
                 openAiKey: 'api_key',
             });
         });
@@ -2272,6 +2563,7 @@ describe('AuthController', () => {
                 avatarUrl: 'avatar url',
                 avatarPortraitUrl: 'avatar portrait url',
                 hasActiveSubscription: false,
+                subscriptionTier: null,
                 openAiKey: null,
             });
         });
@@ -2290,7 +2582,12 @@ describe('AuthController', () => {
                 currentLoginRequestId: undefined,
             });
 
-            controller = new AuthController(authStore, messenger, true);
+            controller = new AuthController(
+                authStore,
+                messenger,
+                subscriptionConfig,
+                true
+            );
 
             const result = await controller.getUserInfo({
                 userId,
@@ -2306,6 +2603,7 @@ describe('AuthController', () => {
                 avatarUrl: 'avatar url',
                 avatarPortraitUrl: 'avatar portrait url',
                 hasActiveSubscription: true,
+                subscriptionTier: 'beta',
                 openAiKey: 'api_key',
             });
         });
@@ -2566,7 +2864,12 @@ describe('AuthController', () => {
                 currentLoginRequestId: undefined,
             });
 
-            controller = new AuthController(authStore, messenger, true);
+            controller = new AuthController(
+                authStore,
+                messenger,
+                subscriptionConfig,
+                true
+            );
 
             const result = await controller.updateUserInfo({
                 userId,
