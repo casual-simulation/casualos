@@ -299,12 +299,11 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                     cameraRig.mainCamera.matrixWorld
                 );
 
-                let errorHandlingMode: LookRotation['errorHandling'] = 'error';
                 if (this._game && this._game.isImmersive) {
                     // Use the World UP in VR/AR so that billboarded items don't
                     // rotate with the player's head
                     this._rotationObj.up.set(0, 0, 1);
-                    errorHandlingMode = 'nudge';
+                    // errorHandlingMode = 'nudge';
                 } else {
                     const cameraRotation =
                         new Quaternion().setFromRotationMatrix(
@@ -336,7 +335,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                         this._rotationObj.up.y,
                         this._rotationObj.up.z
                     ),
-                    errorHandling: errorHandlingMode,
+                    errorHandling: 'nudge',
                 });
 
                 const parentRotationWorld = new Quaternion();

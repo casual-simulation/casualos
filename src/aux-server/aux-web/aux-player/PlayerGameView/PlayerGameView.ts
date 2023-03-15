@@ -323,6 +323,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         try {
             // wait for the map to load
             await this._mapView.when();
+            this._mapView.ui.components = [];
             this.hasMap = true;
             if (externalRenderer) {
                 this._coordinateTransformer = (pos) => {

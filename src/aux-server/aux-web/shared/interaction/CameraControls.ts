@@ -669,7 +669,28 @@ export class CameraControls {
                     // Hack to get Input to ignore the event
                     __ignoreForInput: true,
                 });
-                element.dispatchEvent(copy);
+
+                // NOTE: Hack so that event listeners can call setPointerCapture() and
+                // not crash due to the browser throwing an exception.
+                const originalSetPointerCapture =
+                    Element.prototype.setPointerCapture;
+                const originalReleasePointerCapture =
+                    Element.prototype.releasePointerCapture;
+                try {
+                    Element.prototype.setPointerCapture =
+                        Element.prototype.releasePointerCapture = () => {};
+                    element.dispatchEvent(copy);
+                } catch (err) {
+                    console.warn(
+                        'Error occurred while dispatching event:',
+                        err
+                    );
+                } finally {
+                    Element.prototype.setPointerCapture =
+                        originalSetPointerCapture;
+                    Element.prototype.releasePointerCapture =
+                        originalReleasePointerCapture;
+                }
             }
         }
     }
