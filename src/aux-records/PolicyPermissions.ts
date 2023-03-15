@@ -19,6 +19,17 @@ export type AvailablePermissions =
     | ListRolesPermission
     | CreateRecordKeyPermission;
 
+export type AvailableDataPermissions =
+    | CreateDataPermission
+    | ReadDataPermission
+    | UpdateDataPermission
+    | DeleteDataPermission
+    | ListDataPermission;
+
+export type AvailablePolicyPermissions =
+    | AssignPolicyPermission
+    | ListPoliciesPermission;
+
 /**
  * Defines an interface that describes common options for all permissions.
  */

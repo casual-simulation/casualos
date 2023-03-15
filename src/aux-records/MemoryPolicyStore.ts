@@ -1,6 +1,8 @@
 import {
     DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+    DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
     PolicyDocument,
+    PUBLIC_READ_MARKER,
 } from './PolicyPermissions';
 import { PolicyStore } from './PolicyStore';
 
@@ -29,11 +31,15 @@ export class MemoryPolicyStore implements PolicyStore {
         recordName: string,
         marker: string
     ): Promise<PolicyDocument[]> {
+        const policies = [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT];
+        if (marker === PUBLIC_READ_MARKER) {
+            policies.push(DEFAULT_PUBLIC_READ_POLICY_DOCUMENT);
+        }
         const policy = this.policies[recordName]?.[marker];
         if (policy) {
-            return [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT, policy];
+            policies.push(policy);
         }
-        return [DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT];
+        return policies;
     }
 
     async listRolesForUser(
@@ -41,6 +47,14 @@ export class MemoryPolicyStore implements PolicyStore {
         userId: string
     ): Promise<Set<string>> {
         const roles = this.roles[recordName]?.[userId];
+        return roles ?? new Set();
+    }
+
+    async listRolesForInst(
+        recordName: string,
+        inst: string
+    ): Promise<Set<string>> {
+        const roles = this.roles[recordName]?.[inst];
         return roles ?? new Set();
     }
 }

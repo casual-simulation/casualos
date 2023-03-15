@@ -20,4 +20,11 @@ export interface PolicyStore {
      * @param userId The ID of the user.
      */
     listRolesForUser(recordName: string, userId: string): Promise<Set<string>>;
+
+    /**
+     * Lists the roles that are assigned to the given inst.
+     * @param recordName The name of the record.
+     * @param inst The name of the inst.
+     */
+    listRolesForInst(recordName: string, inst: string): Promise<Set<string>>;
 }

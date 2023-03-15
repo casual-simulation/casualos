@@ -36,7 +36,18 @@ describe('PolicyController', () => {
     beforeEach(async () => {
         authStore = new MemoryAuthStore();
         authMessenger = new MemoryAuthMessenger();
-        authController = new AuthController(authStore, authMessenger, true);
+        authController = new AuthController(
+            authStore,
+            authMessenger,
+            {
+                subscriptions: [],
+                successUrl: 'success_url',
+                cancelUrl: 'cancel_url',
+                returnUrl: 'return_url',
+                webhookSecret: 'secret',
+            },
+            true
+        );
         recordsStore = new MemoryRecordsStore();
         recordsController = new RecordsController(recordsStore);
 
@@ -118,25 +129,38 @@ describe('PolicyController', () => {
 
                 expect(result).toEqual({
                     allowed: true,
-                    role: ADMIN_ROLE_NAME,
-                    actionPolicy: DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
-                    actionPermission: {
-                        type: 'data.create',
+                    subject: {
                         role: ADMIN_ROLE_NAME,
-                        addresses: true,
-                    },
-                    subjectPolicy: 'subjectfull',
-                    resourceMarkers: [
-                        {
-                            marker: PUBLIC_READ_MARKER,
-                            policy: DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
-                            permission: {
-                                type: 'policy.assign',
-                                role: ADMIN_ROLE_NAME,
-                                policies: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.create',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.create',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                    },
+                                ],
                             },
-                        },
-                    ],
+                        ],
+                    },
+                    instances: [],
                 });
             });
 
@@ -155,25 +179,38 @@ describe('PolicyController', () => {
 
                 expect(result).toEqual({
                     allowed: true,
-                    role: ADMIN_ROLE_NAME,
-                    actionPolicy: DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
-                    actionPermission: {
-                        type: 'data.create',
+                    subject: {
                         role: ADMIN_ROLE_NAME,
-                        addresses: true,
-                    },
-                    subjectPolicy: 'subjectfull',
-                    resourceMarkers: [
-                        {
-                            marker: PUBLIC_READ_MARKER,
-                            policy: DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
-                            permission: {
-                                type: 'policy.assign',
-                                role: ADMIN_ROLE_NAME,
-                                policies: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.create',
+                                        grantingPermission: {
+                                            type: 'data.create',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                    },
+                                ],
                             },
-                        },
-                    ],
+                        ],
+                    },
+                    instances: [],
                 });
             });
 
@@ -211,25 +248,113 @@ describe('PolicyController', () => {
 
                 expect(result).toEqual({
                     allowed: true,
-                    role: 'developer',
-                    actionPolicy: secretPolicy,
-                    actionPermission: {
-                        type: 'data.create',
+                    subject: {
                         role: 'developer',
-                        addresses: true,
-                    },
-                    subjectPolicy: 'subjectfull',
-                    resourceMarkers: [
-                        {
-                            marker: 'secret',
-                            policy: secretPolicy,
-                            permission: {
-                                type: 'policy.assign',
-                                role: 'developer',
-                                policies: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.create',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'data.create',
+                                            role: 'developer',
+                                            addresses: true,
+                                        },
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: 'developer',
+                                            policies: true,
+                                        },
+                                    },
+                                ],
                             },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user has data.create but does not have policy.assign access', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.create',
+                            role: 'developer',
+                            addresses: true,
                         },
                     ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if the user has data.create but does not have policy.assign access from the same role', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer', 'other']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.create',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        {
+                            // Even though this permission allows setting all policies,
+                            // The user is not able to use multiple roles to satisy the data.create action
+                            type: 'policy.assign',
+                            role: 'other',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
                 });
             });
 
@@ -329,7 +454,7 @@ describe('PolicyController', () => {
                 });
             });
 
-            it('should allow the request if the user does not have policy.assign access to the given resource marker', async () => {
+            it('should deny the request if the user does not have policy.assign access to the given resource marker', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set(['developer']),
                 };
@@ -434,25 +559,38 @@ describe('PolicyController', () => {
 
                 expect(result).toEqual({
                     allowed: true,
-                    role: ADMIN_ROLE_NAME,
-                    actionPolicy: DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
-                    actionPermission: {
-                        type: 'data.create',
+                    subject: {
                         role: ADMIN_ROLE_NAME,
-                        addresses: true,
-                    },
-                    subjectPolicy: 'subjectfull',
-                    resourceMarkers: [
-                        {
-                            marker: 'secret',
-                            policy: DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
-                            permission: {
-                                type: 'policy.assign',
-                                role: ADMIN_ROLE_NAME,
-                                policies: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.create',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.create',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                    },
+                                ],
                             },
-                        },
-                    ],
+                        ],
+                    },
+                    instances: [],
                 });
             });
 
@@ -475,6 +613,144 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should skip inst role checks when a record key is used', async () => {
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId,
+                    recordKey,
+                    instances: ['instance'],
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    subject: {
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.create',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.create',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance',
+                            authorizationType: 'not_required',
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if all the instances have roles for the data', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId,
+                    instances: ['instance'],
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    subject: {
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.create',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.create',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'data.create',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'data.create',
+                                                role: ADMIN_ROLE_NAME,
+                                                addresses: true,
+                                            },
+                                        },
+                                        {
+                                            action: 'policy.assign',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'policy.assign',
+                                                role: ADMIN_ROLE_NAME,
+                                                policies: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
                 });
             });
         });
