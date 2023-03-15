@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where billboarded bots could break the mapPortal.
+-   Fixed an issue where quickly tapping on the screen in the mapPortal could cause user controls to stop working.
 
 ## V3.1.26
 
