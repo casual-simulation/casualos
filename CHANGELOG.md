@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.27
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where billboarded bots could break the mapPortal.
+
 ## V3.1.26
 
 #### Date: 3/14/2023
