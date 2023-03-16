@@ -20,6 +20,7 @@ import {
     AmbientLight,
     Ray,
     MathUtils as ThreeMath,
+    Plane,
 } from '@casual-simulation/three';
 import { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
 import { MiniSimulation3D } from './MiniSimulation3D';
@@ -28,7 +29,7 @@ import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { appManager } from '../../shared/AppManager';
 import { tap, mergeMap, first } from 'rxjs/operators';
-import { flatMap, uniq } from 'lodash';
+import { flatMap } from 'lodash';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
 import {
     BrowserSimulation,
@@ -104,6 +105,7 @@ import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { Physics } from '../../shared/scene/Physics';
 import { gltfPool } from '../../shared/scene/decorators/BotShapeDecorator';
 import { addStoredAuxV2ToSimulation } from '../../shared/SharedUtils';
+import { EARTH_RADIUS } from './MapPortalGrid3D';
 
 const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
 const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
@@ -212,6 +214,16 @@ export class PlayerGame extends Game {
      * The maximum width of the miniGridPortal in px.
      */
     private _miniPortalMaxWidth: number = 700;
+
+    /**
+     * The clipping planes that should be used for the map portal.
+     */
+    private _mapPortalClippingPlane: Plane = null;
+
+    /**
+     * The clipping planes that should be used for the mini map portal.
+     */
+    private _miniMapPortalClippingPlane: Plane = null;
 
     defaultPlayerZoom: number = null;
     defaultPlayerRotationX: number = null;
@@ -1268,9 +1280,15 @@ export class PlayerGame extends Game {
         this.renderer.clear();
         // this.renderer.clearDepth();
 
-        // Render the map portal scene with the map portal main camera.
-        // this.mapRenderer
-        this.renderer.render(this.mapScene, this.mapCameraRig.mainCamera);
+        try {
+            if (this._mapPortalClippingPlane) {
+                this.renderer.clippingPlanes = [this._mapPortalClippingPlane];
+            }
+            // Render the map portal scene with the map portal main camera.
+            this.renderer.render(this.mapScene, this.mapCameraRig.mainCamera);
+        } finally {
+            this.renderer.clippingPlanes = [];
+        }
     }
 
     /**
@@ -1295,11 +1313,21 @@ export class PlayerGame extends Game {
         this.renderer.setScissorTest(true);
         this.renderer.clear();
 
-        // Render the miniMapPortal scene with the miniMapPortal main camera.
-        this.renderer.render(
-            this.miniMapScene,
-            this.miniMapCameraRig.mainCamera
-        );
+        try {
+            if (this._miniMapPortalClippingPlane) {
+                this.renderer.clippingPlanes = [
+                    this._miniMapPortalClippingPlane,
+                ];
+            }
+
+            // Render the miniMapPortal scene with the miniMapPortal main camera.
+            this.renderer.render(
+                this.miniMapScene,
+                this.miniMapCameraRig.mainCamera
+            );
+        } finally {
+            this.renderer.clippingPlanes = [];
+        }
     }
 
     /**
@@ -1654,6 +1682,22 @@ export class PlayerGame extends Game {
                     camera.far = contextCam.far;
                     camera.updateMatrixWorld(true);
 
+                    const { distance, normal } = calculateMapClipPlane(
+                        camera.position
+                    );
+
+                    if (!this._mapPortalClippingPlane) {
+                        this._mapPortalClippingPlane = new Plane(
+                            new Vector3(normal.x, normal.y, normal.z),
+                            -distance
+                        );
+                    } else {
+                        this._mapPortalClippingPlane.set(
+                            new Vector3(normal.x, normal.y, normal.z),
+                            -distance
+                        );
+                    }
+
                     this.mapDirectionalLight.position.fromArray(
                         context.sunLight.direction
                     );
@@ -1727,6 +1771,22 @@ export class PlayerGame extends Game {
                     camera.near = contextCam.near;
                     camera.far = contextCam.far;
                     camera.updateMatrixWorld(true);
+
+                    const { distance, normal } = calculateMapClipPlane(
+                        camera.position
+                    );
+
+                    if (!this._miniMapPortalClippingPlane) {
+                        this._miniMapPortalClippingPlane = new Plane(
+                            new Vector3(normal.x, normal.y, normal.z),
+                            -distance
+                        );
+                    } else {
+                        this._miniMapPortalClippingPlane.set(
+                            new Vector3(normal.x, normal.y, normal.z),
+                            -distance
+                        );
+                    }
 
                     this.miniMapDirectionalLight.position.fromArray(
                         context.sunLight.direction
@@ -2308,4 +2368,46 @@ function convertVector3(vector: Vector3, scale: number): string {
 
 function convertVector2(vector: Vector2): string {
     return `${VECTOR_TAG_PREFIX}${vector.x},${vector.y}`;
+}
+
+function calculateMapClipPlane(cameraPosition: Vector3) {
+    // Find the far clipping plane.
+    // This should be a plane that travels through all points on
+    // the surface of the earth (represented as a sphere) which, when used to form a line (PO)
+    // between the point (P) and the observer (O), are tangent to the sphere.
+    // This is found by the following formulas:
+    //
+    // P is on the surface of the sphere:
+    // p.x^2 + p.y^2 + p.z^2 = r^2
+    //
+    // C is the center of the sphere.
+    // O is the observer.
+    //
+    // The lines PO and CO are perpendicular to each other.
+    // This means that the dot product of PO and CO = 0.
+    // As such, we can use these two formulas to find the plane:
+    // r^2 - o.x*p.x - o.y*p.y - o.z*p.z = 0
+    //
+    // The intersection of the plane with the sphere gives us a circle, the
+    // center of which is the far clipping plane point.
+    // We can find the point by these formulas:
+    // See https://math.stackexchange.com/a/2807316
+    const origin = cameraPosition.clone();
+    const ox = origin.x;
+    const oy = origin.y;
+    const oz = origin.z;
+    const radius = EARTH_RADIUS;
+    const radiusSquared = radius * radius;
+    const farClippingPlanePoint = new Vector3(
+        (ox * radiusSquared) / (ox * ox + oy * oy + oz * oz),
+        (oy * radiusSquared) / (ox * ox + oy * oy + oz * oz),
+        (oz * radiusSquared) / (ox * ox + oy * oy + oz * oz)
+    );
+
+    const distance = farClippingPlanePoint.length();
+    const normal = origin.normalize();
+    return {
+        distance,
+        normal,
+    };
 }
