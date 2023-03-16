@@ -8,6 +8,7 @@
 
 -   Fixed an issue where billboarded bots could break the mapPortal.
 -   Fixed an issue where quickly tapping on the screen in the mapPortal could cause user controls to stop working.
+-   Fixed an issue where large bots were visible through the Earth in the mapPortal and miniMapPortal.
 
 ## V3.1.26
 
