@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V3.1.27
+
+#### Date: 3/16/2023
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where billboarded bots could break the mapPortal.
+-   Fixed an issue where quickly tapping on the screen in the mapPortal could cause user controls to stop working.
+-   Fixed an issue where large bots were visible through the Earth in the mapPortal and miniMapPortal.
+
 ## V3.1.26
 
 #### Date: 3/14/2023

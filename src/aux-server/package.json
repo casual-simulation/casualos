@@ -90,7 +90,7 @@
         "deno-vm": "^0.8.1",
         "downloadjs": "^1.4.7",
         "es6-promise": "^4.2.5",
-        "esri-loader": "3.3.0",
+        "esri-loader": "3.7.0",
         "estraverse": "^5.2.0",
         "event-stream": "^4.0.1",
         "express": "^4.16.4",
