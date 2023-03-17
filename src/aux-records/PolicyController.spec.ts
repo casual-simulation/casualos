@@ -672,7 +672,8 @@ describe('PolicyController', () => {
             it('should allow the request if all the instances have roles for the data', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set([ADMIN_ROLE_NAME]),
-                    ['instance']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
                 };
 
                 const result = await controller.authorizeRequest({
@@ -680,7 +681,7 @@ describe('PolicyController', () => {
                     action: 'data.create',
                     address: 'myAddress',
                     userId,
-                    instances: ['instance'],
+                    instances: ['instance1', 'instance2'],
                     resourceMarkers: [PUBLIC_READ_MARKER],
                 });
 
@@ -719,7 +720,39 @@ describe('PolicyController', () => {
                     },
                     instances: [
                         {
-                            inst: 'instance',
+                            inst: 'instance1',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'data.create',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'data.create',
+                                                role: ADMIN_ROLE_NAME,
+                                                addresses: true,
+                                            },
+                                        },
+                                        {
+                                            action: 'policy.assign',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'policy.assign',
+                                                role: ADMIN_ROLE_NAME,
+                                                policies: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            inst: 'instance2',
                             authorizationType: 'allowed',
                             role: ADMIN_ROLE_NAME,
                             markers: [
@@ -751,6 +784,30 @@ describe('PolicyController', () => {
                             ],
                         },
                     ],
+                });
+            });
+
+            it('should deny the request if more than 2 instances are provided', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance3']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId,
+                    instances: ['instance1', 'instance2', 'instance3'],
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
                 });
             });
         });
