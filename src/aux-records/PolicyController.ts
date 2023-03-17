@@ -77,6 +77,8 @@ export class PolicyController {
         try {
             if (request.action === 'data.create') {
                 return this._authorizeDataCreateRequest(request);
+            } else if (request.action === 'data.read') {
+                return this._authorizeDataReadRequest(request);
             }
 
             return {
@@ -92,6 +94,76 @@ export class PolicyController {
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    private _authorizeDataReadRequest(
+        request: AuthorizeReadDataRequest
+    ): Promise<AuthorizeResult> {
+        return this._authorizeRequest(
+            request,
+            request.resourceMarkers,
+            (context, type, id) => {
+                return this._authorizeDataRead(context, type, id);
+            }
+        );
+    }
+
+    private async _authorizeDataRead(
+        context: RolesContext<AuthorizeReadDataRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericAuthorization> {
+        const authorizations: MarkerAuthorization[] = [];
+        let role: string | true | null = null;
+
+        for (let marker of context.markers) {
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byData('data.read', context.request.address),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._byAdminRole(context.recordKeyResult),
+                              this._bySubjectRole(
+                                  context,
+                                  type,
+                                  context.request.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                return null;
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            authorizations.push({
+                marker: marker.marker,
+                actions: [
+                    {
+                        action: context.request.action,
+                        grantingPolicy: actionPermission.policy,
+                        grantingPermission: actionPermission.permission,
+                    },
+                ],
+            });
+        }
+
+        if (!role) {
+            return null;
+        }
+
+        return {
+            role,
+            markers: authorizations,
+        };
     }
 
     private async _authorizeDataCreateRequest(
@@ -569,7 +641,9 @@ interface PossiblePermission {
     permission: AvailablePermissions;
 }
 
-export type AuthorizeRequest = AuthorizeDataCreateRequest;
+export type AuthorizeRequest =
+    | AuthorizeDataCreateRequest
+    | AuthorizeReadDataRequest;
 
 export interface AuthorizeRequestBase {
     /**
@@ -608,6 +682,20 @@ export interface AuthorizeDataCreateRequest extends AuthorizeRequestBase {
 
     /**
      * The list of resource markers that should be applied to the data.
+     */
+    resourceMarkers: string[];
+}
+
+export interface AuthorizeReadDataRequest extends AuthorizeRequestBase {
+    action: 'data.read';
+
+    /**
+     * The address that the record is placed at.
+     */
+    address: string;
+
+    /**
+     * The list of resource markers that are applied to the data.
      */
     resourceMarkers: string[];
 }

@@ -812,6 +812,346 @@ describe('PolicyController', () => {
             });
         });
 
+        describe('data.read', () => {
+            it('should allow the request if given a record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    recordKey: recordKey,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result.allowed).toBe(true);
+            });
+
+            it('should allow the request if it is readable by everyone', async () => {
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result.allowed).toBe(true);
+            });
+
+            it('should allow the request if the user has data.read permission for the marker', async () => {
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                };
+
+                store.policies = {
+                    [recordName]: {
+                        ['secret']: secretPolicy,
+                    },
+                };
+
+                store.roles = {
+                    [recordName]: {
+                        [userId]: new Set(['developer']),
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result.allowed).toBe(true);
+            });
+
+            it('should allow the request if no User ID is provided but the policy allows public reading', async () => {
+                const publicPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.read',
+                            role: true,
+                            addresses: true,
+                        },
+                    ],
+                };
+
+                store.policies = {
+                    [recordName]: {
+                        ['public']: publicPolicy,
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    resourceMarkers: ['public'],
+                });
+
+                expect(result.allowed).toBe(true);
+            });
+
+            it('should deny the request if the user does not have a data.read permission for the marker', async () => {
+                store.roles = {
+                    [recordName]: {
+                        [userId]: new Set(['developer']),
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if no User ID is provided and the policy does not allow public reading', async () => {
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if the user has data.read permission but it does not allow the given address', async () => {
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: '^different$',
+                        },
+                    ],
+                };
+
+                store.policies = {
+                    [recordName]: {
+                        ['secret']: secretPolicy,
+                    },
+                };
+
+                store.roles = {
+                    [recordName]: {
+                        [userId]: new Set(['developer']),
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if the user has no role assigned', async () => {
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                };
+
+                store.policies = {
+                    [recordName]: {
+                        ['secret']: secretPolicy,
+                    },
+                };
+
+                store.roles = {
+                    [recordName]: {
+                        [userId]: new Set(),
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if given a record key to a different record', async () => {
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    recordKey: wrongRecordKey,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if there is no policy for the marker', async () => {
+                store.roles = {
+                    [recordName]: {
+                        [userId]: new Set(['developer']),
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should allow the request if the user has admin permissions even if there is no policy for the marker', async () => {
+                store.roles = {
+                    [recordName]: {
+                        [userId]: new Set([ADMIN_ROLE_NAME]),
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result.allowed).toBe(true);
+            });
+
+            it('should deny the request if the request is coming from an inst and no role has been provided to said inst', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    userId,
+                    instances: ['instance'],
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should skip inst role checks when a record key is used', async () => {
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId,
+                    recordKey,
+                    instances: ['instance'],
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result.allowed).toBe(true);
+            });
+
+            it('should allow the request if all the instances have roles for the data', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    userId,
+                    instances: ['instance1', 'instance2'],
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result.allowed).toEqual(true);
+            });
+
+            it('should deny the request if more than 2 instances are provided', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance3']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId,
+                    instances: ['instance1', 'instance2', 'instance3'],
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                });
+            });
+        });
+
         it('should deny the request if given an unrecognized action', async () => {
             const result = await controller.authorizeRequest({
                 action: 'missing',
