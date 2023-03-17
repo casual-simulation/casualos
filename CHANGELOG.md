@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.28
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Improved the mapPortal to be able to correctly show large bots which are placed past the horizion but should still be visible because they peak above the horizion.
+
 ## V3.1.27
 
 #### Date: 3/16/2023
