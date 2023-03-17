@@ -5,7 +5,7 @@ volumes:
 
 services:
     auth:
-        image: 'casualsimulation/aux-auth:latest'
+        image: 'ghcr.io/casual-simulation/aux-auth:latest'
         restart: always
         ports:
             - '2998:2998'

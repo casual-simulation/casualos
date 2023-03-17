@@ -20,6 +20,9 @@ import {
     AmbientLight,
     Ray,
     MathUtils as ThreeMath,
+    Plane,
+    SphereGeometry,
+    MeshBasicMaterial,
 } from '@casual-simulation/three';
 import { PlayerPageSimulation3D } from './PlayerPageSimulation3D';
 import { MiniSimulation3D } from './MiniSimulation3D';
@@ -28,7 +31,7 @@ import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { appManager } from '../../shared/AppManager';
 import { tap, mergeMap, first } from 'rxjs/operators';
-import { flatMap, uniq } from 'lodash';
+import { flatMap } from 'lodash';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
 import {
     BrowserSimulation,
@@ -104,6 +107,7 @@ import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { Physics } from '../../shared/scene/Physics';
 import { gltfPool } from '../../shared/scene/decorators/BotShapeDecorator';
 import { addStoredAuxV2ToSimulation } from '../../shared/SharedUtils';
+import { EARTH_RADIUS } from './MapPortalGrid3D';
 
 const MINI_PORTAL_SLIDER_HALF_HEIGHT = 36 / 2;
 const MINI_PORTAL_SLIDER_HALF_WIDTH = 30 / 2;
@@ -1269,7 +1273,6 @@ export class PlayerGame extends Game {
         // this.renderer.clearDepth();
 
         // Render the map portal scene with the map portal main camera.
-        // this.mapRenderer
         this.renderer.render(this.mapScene, this.mapCameraRig.mainCamera);
     }
 
@@ -1395,9 +1398,23 @@ export class PlayerGame extends Game {
         this.miniScene.add(invDirectional);
     }
 
+    private _createGlobeMask() {
+        return new Mesh(
+            new SphereGeometry(EARTH_RADIUS, 40, 40),
+            new MeshBasicMaterial({
+                color: 'red',
+                colorWrite: false,
+                stencilWrite: false,
+                depthWrite: true,
+            })
+        );
+    }
+
     protected setupMapScene() {
         this.mapScene = new Scene();
         this.mapScene.autoUpdate = false;
+
+        this.mapScene.add(this._createGlobeMask());
 
         // miniGridPortal camera.
         this.mapCameraRig = this._createMapCameraRig(
@@ -1420,6 +1437,8 @@ export class PlayerGame extends Game {
     protected setupMiniMapScene() {
         this.miniMapScene = new Scene();
         this.miniMapScene.autoUpdate = false;
+
+        this.miniMapScene.add(this._createGlobeMask());
 
         // miniGridPortal camera.
         this.miniMapCameraRig = this._createMapCameraRig(

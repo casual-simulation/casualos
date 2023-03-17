@@ -1,13 +1,22 @@
 # CasualOS Changelog
 
-## V3.1.27
+## V3.1.28
 
 #### Date: TBD
+
+### :rocket: Improvements
+
+-   Improved the mapPortal to be able to correctly show large bots which are placed past the horizion but should still be visible because they peak above the horizion.
+
+## V3.1.27
+
+#### Date: 3/16/2023
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where billboarded bots could break the mapPortal.
 -   Fixed an issue where quickly tapping on the screen in the mapPortal could cause user controls to stop working.
+-   Fixed an issue where large bots were visible through the Earth in the mapPortal and miniMapPortal.
 
 ## V3.1.26
 

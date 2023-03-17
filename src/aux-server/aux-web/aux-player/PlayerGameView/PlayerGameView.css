@@ -11,7 +11,9 @@
 }
 
 .map-canvas > .esri-view-root,
-.map-canvas > .esri-view-root > .esri-view-surface {
+.map-canvas > .esri-view-root > .esri-view-surface,
+.map-viewport > .esri-view > .esri-view-root,
+.map-viewport > .esri-view > .esri-view-root > .esri-view-surface {
     width: 100%;
     height: 100%;
 }
