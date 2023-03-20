@@ -13,7 +13,11 @@ import {
     RecordsController,
     ValidatePublicRecordKeyFailure,
 } from './RecordsController';
-import { update } from 'lodash';
+import {
+    PolicyController,
+    returnAuthorizationResult,
+} from './PolicyController';
+import { PUBLIC_READ_MARKER } from './PolicyPermissions';
 
 /**
  * Defines a class that is able to manage data (key/value) records.
@@ -21,15 +25,16 @@ import { update } from 'lodash';
 export class DataRecordsController {
     private _manager: RecordsController;
     private _store: DataRecordsStore;
+    private _policies: PolicyController;
 
     /**
      * Creates a DataRecordsController.
      * @param manager The records manager that should be used to validate record keys.
      * @param store The store that should be used to save data.
      */
-    constructor(manager: RecordsController, store: DataRecordsStore) {
-        this._manager = manager;
+    constructor(policies: PolicyController, store: DataRecordsStore) {
         this._store = store;
+        this._policies = policies;
     }
 
     /**
@@ -43,7 +48,7 @@ export class DataRecordsController {
      * @param deletePolicy the delete policy that the new data should use.
      */
     async recordData(
-        recordKey: string,
+        recordKeyOrRecordName: string,
         address: string,
         data: string,
         subjectId: string,
@@ -51,18 +56,32 @@ export class DataRecordsController {
         deletePolicy: UserPolicy
     ): Promise<RecordDataResult> {
         try {
-            const result = await this._manager.validatePublicRecordKey(
-                recordKey
-            );
-            if (result.success === false) {
-                return {
-                    success: false,
-                    errorCode: result.errorCode,
-                    errorMessage: result.errorMessage,
-                };
+            const result = await this._policies.authorizeRequest({
+                action: 'data.create',
+                recordKeyOrRecordName,
+                address: address,
+                userId: subjectId,
+                resourceMarkers: [PUBLIC_READ_MARKER],
+            });
+
+            if (result.allowed === false) {
+                return returnAuthorizationResult(result);
             }
 
-            if (!subjectId && result.policy !== 'subjectless') {
+            const policy = result.subject.subjectPolicy;
+
+            // const result = await this._manager.validatePublicRecordKey(
+            //     recordKey
+            // );
+            // if (result.success === false) {
+            //     return {
+            //         success: false,
+            //         errorCode: result.errorCode,
+            //         errorMessage: result.errorMessage,
+            //     };
+            // }
+
+            if (!subjectId && policy !== 'subjectless') {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
@@ -71,7 +90,7 @@ export class DataRecordsController {
                 };
             }
 
-            if (result.policy === 'subjectless') {
+            if (policy === 'subjectless') {
                 subjectId = null;
             }
 
@@ -100,7 +119,7 @@ export class DataRecordsController {
                 };
             }
 
-            if (result.policy === 'subjectless') {
+            if (policy === 'subjectless') {
                 if (updatePolicy !== true) {
                     return {
                         success: false,
@@ -143,7 +162,7 @@ export class DataRecordsController {
                 recordName,
                 address,
                 data,
-                result.ownerId,
+                result.authorizerId,
                 subjectId,
                 updatePolicy,
                 deletePolicy
@@ -321,6 +340,7 @@ export interface RecordDataFailure {
         | NotAuthorizedError
         | ValidatePublicRecordKeyFailure['errorCode']
         | SetDataResult['errorCode']
+        | 'unacceptable_request'
         | 'not_supported'
         | 'invalid_update_policy'
         | 'invalid_delete_policy';

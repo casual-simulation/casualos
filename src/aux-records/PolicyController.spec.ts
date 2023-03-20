@@ -13,16 +13,18 @@ import {
 } from './PolicyPermissions';
 import { PolicyStore } from './PolicyStore';
 import { MemoryPolicyStore } from './MemoryPolicyStore';
-import { RecordsController } from './RecordsController';
+import {
+    formatV1RecordKey,
+    parseRecordKey,
+    RecordsController,
+} from './RecordsController';
+import {
+    createTestControllers,
+    createTestRecordKey,
+    createTestUser,
+} from './TestUtils';
 
 describe('PolicyController', () => {
-    let authStore: MemoryAuthStore;
-    let authMessenger: MemoryAuthMessenger;
-    let authController: AuthController;
-
-    let recordsStore: MemoryRecordsStore;
-    let recordsController: RecordsController;
-
     let store: MemoryPolicyStore;
     let controller: PolicyController;
 
@@ -34,102 +36,42 @@ describe('PolicyController', () => {
     let wrongRecordKey: string;
 
     beforeEach(async () => {
-        authStore = new MemoryAuthStore();
-        authMessenger = new MemoryAuthMessenger();
-        authController = new AuthController(
-            authStore,
-            authMessenger,
-            {
-                subscriptions: [],
-                successUrl: 'success_url',
-                cancelUrl: 'cancel_url',
-                returnUrl: 'return_url',
-                webhookSecret: 'secret',
-            },
-            true
-        );
-        recordsStore = new MemoryRecordsStore();
-        recordsController = new RecordsController(recordsStore);
+        const services = createTestControllers();
 
-        store = new MemoryPolicyStore();
-        controller = new PolicyController(
-            authController,
-            recordsController,
-            store
-        );
+        store = services.policyStore;
+        controller = services.policies;
 
-        const loginRequest = await authController.requestLogin({
-            address: 'test@example.com',
-            addressType: 'email',
-            ipAddress: '123.456.789',
-        });
+        const user = await createTestUser(services);
 
-        if (!loginRequest.success) {
-            throw new Error('Unable to request login!');
-        }
+        userId = user.userId;
+        sessionKey = user.sessionKey;
 
-        const code = authMessenger.messages.find(
-            (m) => m.address === 'test@example.com'
-        );
+        const testRecordKey = await createTestRecordKey(services, userId);
+        recordKey = testRecordKey.recordKey;
+        recordName = testRecordKey.recordName;
 
-        if (!code) {
-            throw new Error('Message not found!');
-        }
-
-        const loginResult = await authController.completeLogin({
-            code: code.code,
-            requestId: loginRequest.requestId,
-            userId: loginRequest.userId,
-            ipAddress: '123.456.789',
-        });
-
-        if (!loginResult.success) {
-            throw new Error('Unable to login!');
-        }
-
-        userId = loginResult.userId;
-        sessionKey = loginResult.sessionKey;
-
-        const createRecordKeyResult =
-            await recordsController.createPublicRecordKey(
-                'testRecord',
-                'subjectfull',
-                userId
-            );
-        if (!createRecordKeyResult.success) {
-            throw new Error('Unable to create record key!');
-        }
-
-        recordName = createRecordKeyResult.recordName;
-        recordKey = createRecordKeyResult.recordKey;
-
-        const createWrongRecordKeyResult =
-            await recordsController.createPublicRecordKey(
-                'wrongRecord',
-                'subjectfull',
-                userId
-            );
-        if (!createWrongRecordKeyResult.success) {
-            throw new Error('Unable to create record key!');
-        }
-
-        wrongRecordKey = createWrongRecordKeyResult.recordKey;
+        const [name, password] = parseRecordKey(recordKey);
+        wrongRecordKey = formatV1RecordKey('wrong record name', password);
     });
 
     describe('authorizeRequest()', () => {
         describe('data.create', () => {
             it('should allow the request if given a record key', async () => {
                 const result = await controller.authorizeRequest({
-                    recordName,
                     action: 'data.create',
                     address: 'myAddress',
-                    recordKey: recordKey,
+                    recordKeyOrRecordName: recordKey,
+                    userId,
                     resourceMarkers: [PUBLIC_READ_MARKER],
                 });
 
                 expect(result).toEqual({
                     allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
                     subject: {
+                        userId,
                         role: ADMIN_ROLE_NAME,
                         subjectPolicy: 'subjectfull',
                         markers: [
@@ -170,7 +112,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.create',
                     address: 'myAddress',
                     userId,
@@ -179,7 +121,11 @@ describe('PolicyController', () => {
 
                 expect(result).toEqual({
                     allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
                     subject: {
+                        userId,
                         role: ADMIN_ROLE_NAME,
                         subjectPolicy: 'subjectfull',
                         markers: [
@@ -239,7 +185,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.create',
                     address: 'myAddress',
                     userId,
@@ -248,7 +194,11 @@ describe('PolicyController', () => {
 
                 expect(result).toEqual({
                     allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
                     subject: {
+                        userId,
                         role: 'developer',
                         subjectPolicy: 'subjectfull',
                         markers: [
@@ -301,7 +251,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.create',
                     address: 'myAddress',
                     userId,
@@ -343,7 +293,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.create',
                     address: 'myAddress',
                     userId,
@@ -360,7 +310,7 @@ describe('PolicyController', () => {
 
             it('should deny the request if given no userId or record key', async () => {
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.create',
                     address: 'myAddress',
                     resourceMarkers: [PUBLIC_READ_MARKER],
@@ -368,9 +318,9 @@ describe('PolicyController', () => {
 
                 expect(result).toEqual({
                     allowed: false,
-                    errorCode: 'not_authorized',
+                    errorCode: 'not_logged_in',
                     errorMessage:
-                        'You are not authorized to perform this action.',
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
                 });
             });
 
@@ -399,7 +349,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.create',
                     address: 'myAddress',
                     userId,
@@ -439,7 +389,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.create',
                     address: 'not_allowed_address',
                     userId,
@@ -474,7 +424,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.create',
                     address: 'myAddress',
                     userId,
@@ -491,7 +441,7 @@ describe('PolicyController', () => {
 
             it('should deny the request if the user has no role assigned', async () => {
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.create',
                     address: 'myAddress',
                     userId,
@@ -506,20 +456,18 @@ describe('PolicyController', () => {
                 });
             });
 
-            it('should deny the request if given a record key to a different record', async () => {
+            it('should deny the request if given an invalid record key', async () => {
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: wrongRecordKey,
                     action: 'data.create',
                     address: 'myAddress',
-                    recordKey: wrongRecordKey,
                     resourceMarkers: [PUBLIC_READ_MARKER],
                 });
 
                 expect(result).toEqual({
                     allowed: false,
-                    errorCode: 'not_authorized',
-                    errorMessage:
-                        'You are not authorized to perform this action.',
+                    errorCode: 'record_not_found',
+                    errorMessage: 'Record not found.',
                 });
             });
 
@@ -529,7 +477,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.create',
                     address: 'myAddress',
                     userId,
@@ -550,7 +498,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.create',
                     address: 'myAddress',
                     userId,
@@ -559,7 +507,11 @@ describe('PolicyController', () => {
 
                 expect(result).toEqual({
                     allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
                     subject: {
+                        userId,
                         role: ADMIN_ROLE_NAME,
                         subjectPolicy: 'subjectfull',
                         markers: [
@@ -600,7 +552,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.create',
                     address: 'myAddress',
                     userId,
@@ -618,18 +570,21 @@ describe('PolicyController', () => {
 
             it('should skip inst role checks when a record key is used', async () => {
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordKey,
                     action: 'data.create',
                     address: 'myAddress',
                     userId,
-                    recordKey,
                     instances: ['instance'],
                     resourceMarkers: [PUBLIC_READ_MARKER],
                 });
 
                 expect(result).toEqual({
                     allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
                     subject: {
+                        userId,
                         role: ADMIN_ROLE_NAME,
                         subjectPolicy: 'subjectfull',
                         markers: [
@@ -677,7 +632,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.create',
                     address: 'myAddress',
                     userId,
@@ -687,7 +642,11 @@ describe('PolicyController', () => {
 
                 expect(result).toEqual({
                     allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
                     subject: {
+                        userId,
                         role: ADMIN_ROLE_NAME,
                         subjectPolicy: 'subjectfull',
                         markers: [
@@ -796,7 +755,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.create',
                     address: 'myAddress',
                     userId,
@@ -815,10 +774,9 @@ describe('PolicyController', () => {
         describe('data.read', () => {
             it('should allow the request if given a record key', async () => {
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordKey,
                     action: 'data.read',
                     address: 'myAddress',
-                    recordKey: recordKey,
                     resourceMarkers: ['secret'],
                 });
 
@@ -827,7 +785,7 @@ describe('PolicyController', () => {
 
             it('should allow the request if it is readable by everyone', async () => {
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.read',
                     address: 'myAddress',
                     resourceMarkers: [PUBLIC_READ_MARKER],
@@ -860,7 +818,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.read',
                     address: 'myAddress',
                     userId,
@@ -888,7 +846,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.read',
                     address: 'myAddress',
                     resourceMarkers: ['public'],
@@ -905,7 +863,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.read',
                     address: 'myAddress',
                     userId,
@@ -922,7 +880,7 @@ describe('PolicyController', () => {
 
             it('should deny the request if no User ID is provided and the policy does not allow public reading', async () => {
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.read',
                     address: 'myAddress',
                     resourceMarkers: ['secret'],
@@ -930,9 +888,9 @@ describe('PolicyController', () => {
 
                 expect(result).toEqual({
                     allowed: false,
-                    errorCode: 'not_authorized',
+                    errorCode: 'not_logged_in',
                     errorMessage:
-                        'You are not authorized to perform this action.',
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
                 });
             });
 
@@ -960,7 +918,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.read',
                     address: 'myAddress',
                     userId,
@@ -999,7 +957,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.read',
                     address: 'myAddress',
                     userId,
@@ -1016,18 +974,16 @@ describe('PolicyController', () => {
 
             it('should deny the request if given a record key to a different record', async () => {
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: wrongRecordKey,
                     action: 'data.read',
                     address: 'myAddress',
-                    recordKey: wrongRecordKey,
                     resourceMarkers: ['secret'],
                 });
 
                 expect(result).toEqual({
                     allowed: false,
-                    errorCode: 'not_authorized',
-                    errorMessage:
-                        'You are not authorized to perform this action.',
+                    errorCode: 'record_not_found',
+                    errorMessage: 'Record not found.',
                 });
             });
 
@@ -1039,7 +995,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.read',
                     address: 'myAddress',
                     userId,
@@ -1062,7 +1018,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.read',
                     address: 'myAddress',
                     userId,
@@ -1078,7 +1034,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.read',
                     address: 'myAddress',
                     userId,
@@ -1096,11 +1052,10 @@ describe('PolicyController', () => {
 
             it('should skip inst role checks when a record key is used', async () => {
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordKey,
                     action: 'data.create',
                     address: 'myAddress',
                     userId,
-                    recordKey,
                     instances: ['instance'],
                     resourceMarkers: [PUBLIC_READ_MARKER],
                 });
@@ -1116,7 +1071,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.read',
                     address: 'myAddress',
                     userId,
@@ -1136,7 +1091,7 @@ describe('PolicyController', () => {
                 };
 
                 const result = await controller.authorizeRequest({
-                    recordName,
+                    recordKeyOrRecordName: recordName,
                     action: 'data.create',
                     address: 'myAddress',
                     userId,

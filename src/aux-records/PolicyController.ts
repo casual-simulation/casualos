@@ -1,6 +1,8 @@
 import { AuthController } from './AuthController';
 import {
+    isRecordKey,
     RecordsController,
+    ValidatePublicRecordKeyFailure,
     ValidatePublicRecordKeyResult,
 } from './RecordsController';
 import { ServerError } from './Errors';
@@ -128,7 +130,7 @@ export class PolicyController {
                               this._bySubjectRole(
                                   context,
                                   type,
-                                  context.request.recordName,
+                                  context.recordName,
                                   id
                               )
                           )
@@ -206,7 +208,7 @@ export class PolicyController {
                               this._bySubjectRole(
                                   context,
                                   subjectType,
-                                  context.request.recordName,
+                                  context.recordName,
                                   id
                               )
                           )
@@ -295,12 +297,24 @@ export class PolicyController {
             return NOT_AUTHORIZED_TO_MANY_INSTANCES_RESULT;
         }
 
-        const recordKeyResult = !!request.recordKey
-            ? await this._records.validatePublicRecordKey(request.recordKey)
-            : null;
-
-        if (!this._isSupportedRecordKey(recordKeyResult, request.recordName)) {
-            return NOT_AUTHORIZED_RESULT;
+        let recordKeyResult: ValidatePublicRecordKeyResult | null = null;
+        let recordName: string;
+        const recordKeyProvided = isRecordKey(request.recordKeyOrRecordName);
+        if (recordKeyProvided) {
+            recordKeyResult = await this._records.validatePublicRecordKey(
+                request.recordKeyOrRecordName
+            );
+            if (recordKeyResult.success === true) {
+                recordName = recordKeyResult.recordName;
+            } else {
+                return {
+                    allowed: false,
+                    errorCode: recordKeyResult.errorCode,
+                    errorMessage: recordKeyResult.errorMessage,
+                };
+            }
+        } else {
+            recordName = request.recordKeyOrRecordName;
         }
 
         const subjectPolicy =
@@ -309,7 +323,7 @@ export class PolicyController {
                 : 'subjectfull';
 
         const markers = await this._listPermissionsForMarkers(
-            request.recordName,
+            recordName,
             resourceMarkers
         );
 
@@ -317,6 +331,7 @@ export class PolicyController {
             userRoles: null,
             instRoles: {},
             markers,
+            recordName,
             recordKeyResult,
             subjectPolicy,
             request,
@@ -328,6 +343,14 @@ export class PolicyController {
             request.userId
         );
         if (!userAuthorization) {
+            if (!request.userId && !recordKeyProvided) {
+                return {
+                    allowed: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                };
+            }
             return NOT_AUTHORIZED_RESULT;
         }
 
@@ -343,10 +366,19 @@ export class PolicyController {
             return NOT_AUTHORIZED_RESULT;
         }
 
+        const recordKeyOwnerId = recordKeyResult?.success
+            ? recordKeyResult.ownerId
+            : null;
+        const authorizerId = recordKeyOwnerId ?? request.userId ?? null;
+
         return {
             allowed: true,
+            recordName,
+            recordKeyOwnerId: recordKeyOwnerId,
+            authorizerId: authorizerId,
             subject: {
                 ...userAuthorization,
+                userId: request.userId,
                 subjectPolicy: subjectPolicy,
             },
             instances: authorizedInstances,
@@ -421,22 +453,6 @@ export class PolicyController {
         }
 
         return markers;
-    }
-
-    private _isSupportedRecordKey(
-        recordKeyResult: ValidatePublicRecordKeyResult | null,
-        expectedRecordName: string
-    ): boolean {
-        if (recordKeyResult) {
-            if (recordKeyResult.success === false) {
-                return false;
-            } else {
-                if (recordKeyResult.recordName !== expectedRecordName) {
-                    return false;
-                }
-            }
-        }
-        return true;
     }
 
     private _every<T extends Array<any>>(
@@ -606,6 +622,25 @@ export class PolicyController {
     }
 }
 
+export function returnAuthorizationResult(a: AuthorizeDenied): {
+    success: false;
+    errorCode: Exclude<AuthorizeDenied['errorCode'], 'action_not_supported'>;
+    errorMessage: AuthorizeDenied['errorMessage'];
+} {
+    if (a.errorCode === 'action_not_supported') {
+        return {
+            success: false,
+            errorCode: 'server_error',
+            errorMessage: 'A server error occurred.',
+        };
+    }
+    return {
+        success: false,
+        errorCode: a.errorCode,
+        errorMessage: a.errorMessage,
+    };
+}
+
 interface MarkerPermission {
     marker: string;
     permissions: PossiblePermission[];
@@ -618,14 +653,10 @@ interface RolesContext<T extends AuthorizeRequestBase> {
     };
     markers: MarkerPermission[];
     recordKeyResult: ValidatePublicRecordKeyResult | null;
+    recordName: string;
     subjectPolicy: PublicRecordKeyPolicy;
     request: T;
 }
-
-type PolicyPermissionFilter<T extends PolicyPermission> = (
-    permission: T,
-    marker: string
-) => Promise<boolean>;
 
 type PermissionFilter = (permission: AvailablePermissions) => Promise<boolean>;
 
@@ -647,19 +678,14 @@ export type AuthorizeRequest =
 
 export interface AuthorizeRequestBase {
     /**
-     * The name of the record that the request is being authorized for.
+     * The record key that should be used or the name of the record that the request is being authorized for.
      */
-    recordName: string;
+    recordKeyOrRecordName: string;
 
     /**
      * The type of the action that is being authorized.
      */
     action: string;
-
-    /**
-     * The record key that was included in the request.
-     */
-    recordKey?: string | null;
 
     /**
      * The ID of the user that is currently logged in.
@@ -705,13 +731,24 @@ export type AuthorizeResult = AuthorizeAllowed | AuthorizeDenied;
 export interface AuthorizeAllowed {
     allowed: true;
 
-    // /**
-    //  * The role that was selected.
-    //  *
-    //  * If true, then that indicates that the "everyone" role was used.
-    //  * If a string, then that is the name of the role that was used.
-    //  */
-    // role: string | true;
+    /**
+     * The name of the record that the request should be for.
+     */
+    recordName: string;
+
+    /**
+     * The ID of the owner of the record key.
+     * Null if no record key was provided.
+     */
+    recordKeyOwnerId: string | null;
+
+    /**
+     * The ID of the user who (directly or indirectly) authorized the request.
+     * If a valid record key was provided, then this is the ID of the owner of the record key.
+     * If only a user ID was provided, then this is the ID of the user who is logged in.
+     * If no one was logged in, then this is null.
+     */
+    authorizerId: string | null;
 
     /**
      * The authorization information about the subject.
@@ -745,6 +782,12 @@ export interface GenericAuthorization {
  * Generally, this includes information about the user and if they have the correct permissions for the action.
  */
 export interface SubjectAuthorization extends GenericAuthorization {
+    /**
+     * The ID of the user that was authorized.
+     * Null if no user ID was provided.
+     */
+    userId: string | null;
+
     /**
      * the policy that should be used for storage of subject information.
      */
@@ -821,7 +864,9 @@ export interface AuthorizeDenied {
     allowed: false;
     errorCode:
         | ServerError
+        | ValidatePublicRecordKeyFailure['errorCode']
         | 'action_not_supported'
+        | 'not_logged_in'
         | 'not_authorized'
         | 'unacceptable_request';
     errorMessage: string;
