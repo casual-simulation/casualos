@@ -520,7 +520,7 @@ describe('DataRecordsController', () => {
         });
     });
 
-    describe.skip('getData()', () => {
+    describe('getData()', () => {
         it('should retrieve records from the data store', async () => {
             await store.setData(
                 'testRecord',
@@ -580,6 +580,56 @@ describe('DataRecordsController', () => {
             expect(result.success).toBe(false);
             expect(result.errorCode).toBe('data_not_found');
             expect(result.errorMessage).toBe('The data was not found.');
+        });
+
+        it('should default to the publicRead marker for data that doesnt have a marker', async () => {
+            await store.setData(
+                'testRecord',
+                'address',
+                'data',
+                'testUser',
+                'subjectId',
+                true,
+                true,
+                null as any
+            );
+
+            const result = (await manager.getData(
+                'testRecord',
+                'address'
+            )) as GetDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.data).toBe('data');
+            expect(result.publisherId).toBe('testUser');
+            expect(result.subjectId).toBe('subjectId');
+            expect(result.updatePolicy).toBe(true);
+            expect(result.deletePolicy).toBe(true);
+            expect(result.markers).toEqual([PUBLIC_READ_MARKER]);
+        });
+
+        it('should not be able to retrieve data if there is not a policy that allows it', async () => {
+            await store.setData(
+                'testRecord',
+                'address',
+                'data',
+                'testUser',
+                'subjectId',
+                true,
+                true,
+                ['secret']
+            );
+
+            const result = (await manager.getData(
+                'testRecord',
+                'address'
+            )) as GetDataFailure;
+
+            expect(result.success).toBe(false);
+            expect(result.errorCode).toBe('not_logged_in');
+            expect(result.errorMessage).toBe(
+                'The user must be logged in. Please provide a sessionKey or a recordKey.'
+            );
         });
     });
 

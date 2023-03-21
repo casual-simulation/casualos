@@ -15,6 +15,7 @@ import {
 } from './RecordsController';
 import {
     AuthorizeDataCreateRequest,
+    AuthorizeDenied,
     AuthorizeRequestBase,
     AuthorizeResult,
     AuthorizeUpdateDataRequest,
@@ -239,7 +240,11 @@ export class DataRecordsController {
         }
     }
 
-    async getData(recordName: string, address: string): Promise<GetDataResult> {
+    async getData(
+        recordName: string,
+        address: string,
+        userId?: string
+    ): Promise<GetDataResult> {
         const result = await this._store.getData(recordName, address);
         if (result.success === false) {
             return {
@@ -247,6 +252,19 @@ export class DataRecordsController {
                 errorCode: result.errorCode,
                 errorMessage: result.errorMessage,
             };
+        }
+
+        const markers = result.markers ?? [PUBLIC_READ_MARKER];
+        const authorization = await this._policies.authorizeRequest({
+            action: 'data.read',
+            address,
+            recordKeyOrRecordName: recordName,
+            userId: userId,
+            resourceMarkers: markers,
+        });
+
+        if (authorization.allowed === false) {
+            return returnAuthorizationResult(authorization);
         }
 
         return {
@@ -257,6 +275,7 @@ export class DataRecordsController {
             recordName,
             updatePolicy: result.updatePolicy ?? true,
             deletePolicy: result.deletePolicy ?? true,
+            markers: markers,
         };
     }
 
@@ -433,11 +452,20 @@ export interface GetDataSuccess {
      * The delete policy that the data uses.
      */
     deletePolicy: UserPolicy;
+
+    /**
+     * The list of markers that have been applied to the data.
+     */
+    markers: string[];
 }
 
 export interface GetDataFailure {
     success: false;
-    errorCode: ServerError | GetDataStoreResult['errorCode'] | 'not_supported';
+    errorCode:
+        | ServerError
+        | GetDataStoreResult['errorCode']
+        | AuthorizeDenied['errorCode']
+        | 'not_supported';
     errorMessage: string;
 }
 
