@@ -46,6 +46,7 @@ export class DataRecordsController {
      * @param subjectId The ID of the user that the data came from.
      * @param updatePolicy The update policy that the new data should use.
      * @param deletePolicy the delete policy that the new data should use.
+     * @param markers The list of markers that should be applied to the new record. If null, then the publicRead marker will be applied.
      */
     async recordData(
         recordKeyOrRecordName: string,
@@ -53,15 +54,18 @@ export class DataRecordsController {
         data: string,
         subjectId: string,
         updatePolicy: UserPolicy,
-        deletePolicy: UserPolicy
+        deletePolicy: UserPolicy,
+        markers: string[] = null
     ): Promise<RecordDataResult> {
         try {
+            const resourceMarkers = markers ? markers : [PUBLIC_READ_MARKER];
+
             const result = await this._policies.authorizeRequest({
                 action: 'data.create',
                 recordKeyOrRecordName,
                 address: address,
                 userId: subjectId,
-                resourceMarkers: [PUBLIC_READ_MARKER],
+                resourceMarkers,
             });
 
             if (result.allowed === false) {
@@ -165,7 +169,8 @@ export class DataRecordsController {
                 result.authorizerId,
                 subjectId,
                 updatePolicy,
-                deletePolicy
+                deletePolicy,
+                resourceMarkers
             );
 
             if (result2.success === false) {

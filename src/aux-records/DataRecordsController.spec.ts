@@ -22,10 +22,14 @@ import {
     createTestRecordKey,
     createTestUser,
 } from './TestUtils';
+import { PolicyStore } from './PolicyStore';
+import { MemoryPolicyStore } from './MemoryPolicyStore';
+import { PUBLIC_READ_MARKER } from './PolicyPermissions';
 
 describe('DataRecordsController', () => {
     let recordsStore: RecordsStore;
     let records: RecordsController;
+    let policiesStore: MemoryPolicyStore;
     let policies: PolicyController;
     let store: DataRecordsStore;
     let manager: DataRecordsController;
@@ -38,6 +42,7 @@ describe('DataRecordsController', () => {
     beforeEach(async () => {
         const services = createTestControllers();
 
+        policiesStore = services.policyStore;
         policies = services.policies;
         recordsStore = services.recordsStore;
         records = services.records;
@@ -89,6 +94,7 @@ describe('DataRecordsController', () => {
                 subjectId: 'subjectId',
                 updatePolicy: true,
                 deletePolicy: true,
+                markers: [PUBLIC_READ_MARKER],
             });
         });
 
@@ -114,7 +120,8 @@ describe('DataRecordsController', () => {
                 'testUser',
                 'subjectId',
                 ['different_subjectId'],
-                true
+                true,
+                [PUBLIC_READ_MARKER]
             );
 
             const result = (await manager.recordData(
@@ -238,6 +245,7 @@ describe('DataRecordsController', () => {
                 subjectId: null,
                 updatePolicy: true,
                 deletePolicy: true,
+                markers: [PUBLIC_READ_MARKER],
             });
         });
 
@@ -264,6 +272,7 @@ describe('DataRecordsController', () => {
                 subjectId: null,
                 updatePolicy: true,
                 deletePolicy: true,
+                markers: [PUBLIC_READ_MARKER],
             });
         });
 
@@ -290,10 +299,156 @@ describe('DataRecordsController', () => {
                 subjectId: 'subjectId',
                 updatePolicy: ['abc'],
                 deletePolicy: true,
+                markers: [PUBLIC_READ_MARKER],
             });
         });
 
-        // it('should ')
+        it('should be able to use a policy to create some data', async () => {
+            policiesStore.policies['testRecord'] = {
+                ['secret']: {
+                    permissions: [
+                        {
+                            type: 'data.create',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                },
+            };
+
+            policiesStore.roles['testRecord'] = {
+                [userId]: new Set(['developer']),
+            };
+
+            const result = (await manager.recordData(
+                'testRecord',
+                'address',
+                'data',
+                userId,
+                null,
+                null,
+                ['secret']
+            )) as RecordDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.recordName).toBe('testRecord');
+            expect(result.address).toBe('address');
+
+            await expect(
+                store.getData('testRecord', 'address')
+            ).resolves.toEqual({
+                success: true,
+                data: 'data',
+                publisherId: userId,
+                subjectId: userId,
+                updatePolicy: true,
+                deletePolicy: true,
+                markers: ['secret'],
+            });
+        });
+
+        it('should be able to use a policy to update some data', async () => {
+            policiesStore.policies['testRecord'] = {
+                ['secret']: {
+                    permissions: [
+                        {
+                            type: 'data.update',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                },
+            };
+
+            policiesStore.roles['testRecord'] = {
+                [userId]: new Set(['developer']),
+            };
+
+            await store.setData(
+                'testRecord',
+                'address',
+                123,
+                'testUser',
+                'testUser',
+                null,
+                null,
+                ['secret']
+            );
+
+            const result = (await manager.recordData(
+                'testRecord',
+                'address',
+                'data',
+                userId,
+                null,
+                null
+            )) as RecordDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.recordName).toBe('testRecord');
+            expect(result.address).toBe('address');
+
+            await expect(
+                store.getData('testRecord', 'address')
+            ).resolves.toEqual({
+                success: true,
+                data: 'data',
+                publisherId: userId,
+                subjectId: userId,
+                updatePolicy: true,
+                deletePolicy: true,
+                markers: ['secret'],
+            });
+        });
+
+        it('should reject the request if the user does not have permission to create the data', async () => {
+            policiesStore.policies['testRecord'] = {
+                ['secret']: {
+                    permissions: [
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                },
+            };
+
+            policiesStore.roles['testRecord'] = {
+                [userId]: new Set(['developer']),
+            };
+
+            const result = (await manager.recordData(
+                'testRecord',
+                'address',
+                'data',
+                userId,
+                null,
+                null,
+                ['secret']
+            )) as RecordDataFailure;
+
+            expect(result.success).toBe(false);
+            expect(result.errorCode).toBe('not_authorized');
+
+            await expect(
+                store.getData('testRecord', 'address')
+            ).resolves.toEqual({
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
     });
 
     describe.skip('getData()', () => {
@@ -305,7 +460,8 @@ describe('DataRecordsController', () => {
                 'testUser',
                 'subjectId',
                 true,
-                true
+                true,
+                [PUBLIC_READ_MARKER]
             );
 
             const result = (await manager.getData(
@@ -329,7 +485,8 @@ describe('DataRecordsController', () => {
                 'testUser',
                 'subjectId',
                 null,
-                null
+                null,
+                [PUBLIC_READ_MARKER]
             );
 
             const result = (await manager.getData(
@@ -367,7 +524,8 @@ describe('DataRecordsController', () => {
                     'testUser',
                     'subjectId',
                     true,
-                    true
+                    true,
+                    [PUBLIC_READ_MARKER]
                 );
             }
 
@@ -399,7 +557,8 @@ describe('DataRecordsController', () => {
                 'testUser',
                 'subjectId',
                 true,
-                true
+                true,
+                [PUBLIC_READ_MARKER]
             );
 
             const result = (await manager.eraseData(
@@ -426,7 +585,8 @@ describe('DataRecordsController', () => {
                 'testUser',
                 'subjectId',
                 true,
-                true
+                true,
+                [PUBLIC_READ_MARKER]
             );
 
             const result = (await manager.eraseData(
@@ -454,7 +614,8 @@ describe('DataRecordsController', () => {
                 'testUser',
                 'subjectId',
                 true,
-                true
+                true,
+                [PUBLIC_READ_MARKER]
             );
 
             const result = (await manager.eraseData(
@@ -480,7 +641,8 @@ describe('DataRecordsController', () => {
                 'testUser',
                 'subjectId',
                 true,
-                true
+                true,
+                [PUBLIC_READ_MARKER]
             );
 
             const result = (await manager.eraseData(
@@ -507,7 +669,8 @@ describe('DataRecordsController', () => {
                 'testUser',
                 'subjectId',
                 true,
-                true
+                true,
+                [PUBLIC_READ_MARKER]
             );
 
             const result = (await manager.eraseData(
@@ -528,7 +691,8 @@ describe('DataRecordsController', () => {
                 'testUser',
                 'subjectId',
                 true,
-                ['different_subjectId']
+                ['different_subjectId'],
+                [PUBLIC_READ_MARKER]
             );
 
             const result = (await manager.eraseData(
@@ -559,7 +723,8 @@ describe('DataRecordsController', () => {
                 'testUser',
                 'subjectId',
                 true,
-                ['userId']
+                ['userId'],
+                [PUBLIC_READ_MARKER]
             );
 
             const result = (await manager.eraseData(
@@ -590,7 +755,8 @@ describe('DataRecordsController', () => {
                 'testUser',
                 'subjectId',
                 true,
-                ['different_subjectId']
+                ['different_subjectId'],
+                [PUBLIC_READ_MARKER]
             );
 
             const result = (await manager.eraseData(

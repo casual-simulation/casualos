@@ -18,6 +18,7 @@ export class MemoryDataRecordsStore implements DataRecordsStore {
         subjectId: string,
         updatePolicy: UserPolicy,
         deletePolicy: UserPolicy,
+        markers: string[]
     ): Promise<SetDataResult> {
         let record = this._getRecord(recordName);
         record.set(address, {
@@ -25,7 +26,8 @@ export class MemoryDataRecordsStore implements DataRecordsStore {
             publisherId: publisherId,
             subjectId: subjectId,
             updatePolicy,
-            deletePolicy
+            deletePolicy,
+            markers,
         });
         return {
             success: true,
@@ -53,6 +55,7 @@ export class MemoryDataRecordsStore implements DataRecordsStore {
             subjectId: data.subjectId,
             updatePolicy: data.updatePolicy,
             deletePolicy: data.deletePolicy,
+            markers: data.markers,
         };
     }
 
@@ -113,4 +116,5 @@ interface RecordData {
     subjectId: string;
     updatePolicy: UserPolicy;
     deletePolicy: UserPolicy;
+    markers: string[];
 }
