@@ -361,11 +361,6 @@ describe('DataRecordsController', () => {
                             role: 'developer',
                             addresses: true,
                         },
-                        {
-                            type: 'policy.assign',
-                            role: 'developer',
-                            policies: true,
-                        },
                     ],
                 },
             };
@@ -408,6 +403,80 @@ describe('DataRecordsController', () => {
                 updatePolicy: true,
                 deletePolicy: true,
                 markers: ['secret'],
+            });
+        });
+
+        it('should be able to use a policy to add a resource marker to some data', async () => {
+            policiesStore.policies['testRecord'] = {
+                ['secret']: {
+                    permissions: [
+                        {
+                            type: 'data.update',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                },
+                [PUBLIC_READ_MARKER]: {
+                    permissions: [
+                        {
+                            type: 'data.update',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                },
+            };
+
+            policiesStore.roles['testRecord'] = {
+                [userId]: new Set(['developer']),
+            };
+
+            await store.setData(
+                'testRecord',
+                'address',
+                123,
+                'testUser',
+                'testUser',
+                null,
+                null,
+                [PUBLIC_READ_MARKER]
+            );
+
+            const result = (await manager.recordData(
+                'testRecord',
+                'address',
+                'data',
+                userId,
+                null,
+                null,
+                [PUBLIC_READ_MARKER, 'secret']
+            )) as RecordDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.recordName).toBe('testRecord');
+            expect(result.address).toBe('address');
+
+            await expect(
+                store.getData('testRecord', 'address')
+            ).resolves.toEqual({
+                success: true,
+                data: 'data',
+                publisherId: userId,
+                subjectId: userId,
+                updatePolicy: true,
+                deletePolicy: true,
+                markers: [PUBLIC_READ_MARKER, 'secret'],
             });
         });
 

@@ -4,7 +4,11 @@ import { AuthStore } from './AuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { MemoryAuthStore } from './MemoryAuthStore';
 import { MemoryRecordsStore } from './MemoryRecordsStore';
-import { PolicyController } from './PolicyController';
+import {
+    AuthorizeRequest,
+    AuthorizeResult,
+    PolicyController,
+} from './PolicyController';
 import {
     ADMIN_ROLE_NAME,
     DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
@@ -1097,6 +1101,675 @@ describe('PolicyController', () => {
                     userId,
                     instances: ['instance1', 'instance2', 'instance3'],
                     resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                });
+            });
+        });
+
+        describe('data.update', () => {
+            it('should allow requests that dont update markers if given a record key', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'data.update',
+                    address: 'myAddress',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow requests that remove markers if given a record key', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'data.update',
+                    address: 'myAddress',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    existingMarkers: [PUBLIC_READ_MARKER, 'secret'],
+                    removedMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                    },
+                                    {
+                                        action: 'policy.unassign',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'policy.unassign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user has the admin role assigned', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    userId,
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.update',
+                                        grantingPermission: {
+                                            type: 'data.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user has data.update access to the given resource marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.update',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    userId,
+                    existingMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.update',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'data.update',
+                                            role: 'developer',
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user does not have data.update access', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    userId,
+                    existingMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if the user does not have policy.assign access for new markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.update',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                };
+
+                const testPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.update',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                    ['test']: testPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    userId,
+                    existingMarkers: ['secret'],
+                    addedMarkers: ['test'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if the user does not have policy.unassign access for removed markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.update',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                };
+
+                const testPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.update',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        // {
+                        //     type: 'policy.unassign',
+                        //     role: 'developer',
+                        //     policies: true
+                        // },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                    ['test']: testPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    userId,
+                    existingMarkers: ['secret', 'test'],
+                    removedMarkers: ['test'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if given no userId or record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                });
+            });
+
+            it('should deny the request if the data.update permission does not allow the given address', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.update',
+                            role: 'developer',
+                            addresses: '^allowed_address$',
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.update',
+                    address: 'not_allowed_address',
+                    userId,
+                    existingMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if the user has no role assigned', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    userId,
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if given an invalid record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: wrongRecordKey,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'record_not_found',
+                    errorMessage: 'Record not found.',
+                });
+            });
+
+            it('should deny the request if there is no policy for the given marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    userId,
+                    existingMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should allow the request if the user is an admin even though there is no policy for the given marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    userId,
+                    existingMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the request is coming from an inst and no role has been provided to said inst', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    userId,
+                    instances: ['instance'],
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should skip inst role checks when a record key is used', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    userId,
+                    instances: ['instance'],
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance',
+                            authorizationType: 'not_required',
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if all the instances have roles for the data', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    userId,
+                    instances: ['instance1', 'instance2'],
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance1',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'data.update',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'data.update',
+                                                role: ADMIN_ROLE_NAME,
+                                                addresses: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            inst: 'instance2',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'data.update',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'data.update',
+                                                role: ADMIN_ROLE_NAME,
+                                                addresses: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+
+            it('should deny the request if more than 2 instances are provided', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance3']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    userId,
+                    instances: ['instance1', 'instance2', 'instance3'],
+                    existingMarkers: [PUBLIC_READ_MARKER],
                 });
 
                 expect(result).toEqual({

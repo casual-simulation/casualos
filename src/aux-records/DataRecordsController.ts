@@ -14,10 +14,15 @@ import {
     ValidatePublicRecordKeyFailure,
 } from './RecordsController';
 import {
+    AuthorizeDataCreateRequest,
+    AuthorizeRequestBase,
+    AuthorizeResult,
+    AuthorizeUpdateDataRequest,
     PolicyController,
     returnAuthorizationResult,
 } from './PolicyController';
 import { PUBLIC_READ_MARKER } from './PolicyPermissions';
+import { without } from 'lodash';
 
 /**
  * Defines a class that is able to manage data (key/value) records.
@@ -58,32 +63,28 @@ export class DataRecordsController {
         markers: string[] = null
     ): Promise<RecordDataResult> {
         try {
-            const resourceMarkers = markers ? markers : [PUBLIC_READ_MARKER];
-
-            const result = await this._policies.authorizeRequest({
-                action: 'data.create',
+            const baseRequest: Omit<AuthorizeRequestBase, 'action'> = {
                 recordKeyOrRecordName,
-                address: address,
                 userId: subjectId,
-                resourceMarkers,
-            });
+            };
 
-            if (result.allowed === false) {
-                return returnAuthorizationResult(result);
+            const result = await this._policies.constructAuthorizationContext(
+                baseRequest
+            );
+
+            // const result = await this._policies.authorizeRequest({
+            //     action: 'data.create',
+            //     recordKeyOrRecordName,
+            //     address: address,
+            //     userId: subjectId,
+            //     resourceMarkers,
+            // });
+
+            if (result.success === false) {
+                return result;
             }
 
-            const policy = result.subject.subjectPolicy;
-
-            // const result = await this._manager.validatePublicRecordKey(
-            //     recordKey
-            // );
-            // if (result.success === false) {
-            //     return {
-            //         success: false,
-            //         errorCode: result.errorCode,
-            //         errorMessage: result.errorMessage,
-            //     };
-            // }
+            const policy = result.context.subjectPolicy;
 
             if (!subjectId && policy !== 'subjectless') {
                 return {
@@ -143,7 +144,7 @@ export class DataRecordsController {
                 }
             }
 
-            const recordName = result.recordName;
+            const recordName = result.context.recordName;
             const existingRecord = await this._store.getData(
                 recordName,
                 address
@@ -162,11 +163,54 @@ export class DataRecordsController {
                 }
             }
 
+            let request:
+                | AuthorizeDataCreateRequest
+                | AuthorizeUpdateDataRequest;
+            let resourceMarkers: string[];
+            if (existingRecord.success) {
+                const existingMarkers = existingRecord.markers ?? [
+                    PUBLIC_READ_MARKER,
+                ];
+                const addedMarkers = markers
+                    ? without(markers, ...existingMarkers)
+                    : [];
+                const removedMarkers = markers
+                    ? without(existingMarkers, ...markers)
+                    : [];
+                resourceMarkers = markers ?? existingMarkers;
+                request = {
+                    action: 'data.update',
+                    ...baseRequest,
+                    address: address,
+                    existingMarkers,
+                    addedMarkers,
+                    removedMarkers,
+                };
+            } else {
+                resourceMarkers = markers ?? [PUBLIC_READ_MARKER];
+                request = {
+                    action: 'data.create',
+                    ...baseRequest,
+                    address: address,
+                    resourceMarkers: resourceMarkers,
+                };
+            }
+
+            const authorization =
+                await this._policies.authorizeRequestUsingContext(
+                    result.context,
+                    request
+                );
+
+            if (authorization.allowed === false) {
+                return returnAuthorizationResult(authorization);
+            }
+
             const result2 = await this._store.setData(
                 recordName,
                 address,
                 data,
-                result.authorizerId,
+                authorization.authorizerId,
                 subjectId,
                 updatePolicy,
                 deletePolicy,

@@ -14,6 +14,7 @@ export type AvailablePermissions =
     | RevokePermissionFromPolicyPermission
     | ListPoliciesPermission
     | AssignPolicyPermission
+    | UnassignPolicyPermission
     | GrantRolePermission
     | RevokeRolePermission
     | ListRolesPermission
@@ -28,6 +29,7 @@ export type AvailableDataPermissions =
 
 export type AvailablePolicyPermissions =
     | AssignPolicyPermission
+    | UnassignPolicyPermission
     | ListPoliciesPermission;
 
 /**
@@ -198,6 +200,13 @@ export interface AssignPolicyPermission extends PolicyPermission {
 }
 
 /**
+ * Defines an interface that describes a permission to remove a policy from a particular resource.
+ */
+export interface UnassignPolicyPermission extends PolicyPermission {
+    type: 'policy.unassign';
+}
+
+/**
  * Defines an interface that describes the common options for all permissions that affect roles.
  */
 export interface RolePermission extends Permission {
@@ -342,6 +351,11 @@ export const DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT: PolicyDocument = {
         },
         {
             type: 'policy.assign',
+            role: ADMIN_ROLE_NAME,
+            policies: true,
+        },
+        {
+            type: 'policy.unassign',
             role: ADMIN_ROLE_NAME,
             policies: true,
         },
