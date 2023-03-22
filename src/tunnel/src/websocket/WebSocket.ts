@@ -15,7 +15,7 @@ class Stream extends Duplex {
         super();
         this._ws = ws;
 
-        this._ws.on('message', m => {
+        this._ws.on('message', (m) => {
             if (typeof m === 'string') {
                 throw new Error('Unsupported data type.');
             } else {
@@ -26,14 +26,15 @@ class Stream extends Duplex {
         this._ws.on('close', () => {
             this.emit('close');
         });
-        this._ws.on('error', err => {
+        this._ws.on('error', (err) => {
             this.emit('error', err);
         });
     }
 
-    end() {
-        super.end();
+    end(...args: any[]): this {
+        super.end(...args);
         this._ws.close();
+        return this;
     }
 
     _read() {}

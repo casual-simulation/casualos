@@ -292,7 +292,7 @@ export class Interpreter {
             if (done) {
                 return value as T;
             } else if (this.debugging) {
-                if (!(EVAL_YIELD in value)) {
+                if (!(EVAL_YIELD in (value as any))) {
                     yield value as unknown as InterpreterStop;
                     continue;
                 }

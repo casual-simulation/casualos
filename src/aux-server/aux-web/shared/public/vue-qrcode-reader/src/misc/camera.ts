@@ -52,7 +52,7 @@ export default async function (constraints: any, videoEl: any) {
     } else if (videoEl.mozSrcObject !== undefined) {
         videoEl.mozSrcObject = stream;
     } else if (window.URL.createObjectURL) {
-        videoEl.src = window.URL.createObjectURL(stream);
+        videoEl.src = window.URL.createObjectURL(stream as any);
     } else if ((<any>window).webkitURL) {
         videoEl.src = (<any>window).webkitURL.createObjectURL(stream);
     } else {
