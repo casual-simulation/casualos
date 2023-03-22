@@ -14,17 +14,23 @@ import {
     Matrix3,
 } from '@casual-simulation/three';
 import { InputType, MouseButtonId, Input } from '../../shared/scene/Input';
-import { lerp } from '@casual-simulation/aux-common';
+import { clamp, lerp } from '@casual-simulation/aux-common';
 import { Viewport } from '../scene/Viewport';
 import { Game } from '../scene/Game';
 import {
     cameraForwardRay,
+    cameraUpwardRay,
     objectForwardRay,
     objectWorldDirectionRay,
     objectWorldForwardRay,
     WORLD_UP,
 } from '../scene/SceneUtils';
 import { Physics } from '../scene/Physics';
+import {
+    Rotation,
+    Vector3 as CVector3,
+    Quaternion as CQuaternion,
+} from '@casual-simulation/aux-common/math';
 
 export class CameraControls {
     // "target" sets the location of focus, where the object orbits around
@@ -85,6 +91,10 @@ export class CameraControls {
 
     // Whether special controls are enabled in immersive mode.
     public enableImmersive: boolean = true;
+
+    // The direction override that the camera should look at.
+    // Overrides the default behavior of looking at the target location.
+    public immersiveLookDirection: Vector3 = null;
 
     // The position override that the camera should look at.
     // Overrides the default behavior of looking at the target location.
@@ -764,19 +774,7 @@ export class CameraControls {
                     .subVectors(this.panEnd, this.panStart)
                     .multiplyScalar(-1);
                 const ray = Physics.screenPosToRay(this.panDelta, this._camera);
-                const position = ray.origin;
-                position.add(ray.direction);
-                position.sub(this._camera.position);
-                const spherical = new Spherical().setFromVector3(position);
-                // restrict phi to be between desired limits
-                spherical.phi = Math.max(
-                    0.1,
-                    Math.min(Math.PI - 0.1, spherical.phi)
-                );
-                position.setFromSpherical(spherical);
-                position.add(this._camera.position);
-
-                this.immersiveLookPosition = position;
+                this.immersiveLookDirection = ray.direction;
                 this.panStart.copy(this.panEnd);
             }
         }
@@ -1019,19 +1017,7 @@ export class CameraControls {
                 .subVectors(this.panEnd, this.panStart)
                 .multiplyScalar(-1);
             const ray = Physics.screenPosToRay(this.panDelta, this._camera);
-            const position = ray.origin;
-            position.add(ray.direction);
-            position.sub(this._camera.position);
-            const spherical = new Spherical().setFromVector3(position);
-            // restrict phi to be between desired limits
-            spherical.phi = Math.max(
-                0.1,
-                Math.min(Math.PI - 0.1, spherical.phi)
-            );
-            position.setFromSpherical(spherical);
-            position.add(this._camera.position);
-
-            this.immersiveLookPosition = position;
+            this.immersiveLookDirection = ray.direction;
             this.panStart.copy(this.panEnd);
         }
     }
@@ -1387,6 +1373,31 @@ export class CameraControls {
             if (this.immersiveLookPosition) {
                 this._camera.lookAt(this.immersiveLookPosition);
                 this.immersiveLookPosition = null;
+            } else if (this.immersiveLookDirection) {
+                const cameraPosition = this._camera.getWorldPosition(
+                    new Vector3()
+                );
+                const position = this.immersiveLookDirection.clone();
+
+                // The Spherical class uses Y-up
+                const spherical = new Spherical().setFromVector3(
+                    new Vector3(position.x, position.z, position.y)
+                );
+
+                // phi is around 0 when along the equator
+                // and near +/-Math.PI when at the poles.
+                // restrict phi to be between desired limits
+                spherical.phi = clamp(spherical.phi, 0.1, Math.PI - 0.1);
+                position.setFromSpherical(spherical);
+
+                // The Spherical class uses Y-up
+                // Here we convert back to Z-up
+                position.set(position.x, position.z, position.y);
+
+                position.add(cameraPosition);
+
+                this._camera.lookAt(position);
+                this.immersiveLookDirection = null;
             }
         } else {
             this._camera.lookAt(lookTarget);

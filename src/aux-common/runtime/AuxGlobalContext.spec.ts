@@ -115,7 +115,7 @@ describe('AuxGlobalContext', () => {
 
         describe('timers', () => {
             beforeEach(() => {
-                jest.useFakeTimers('modern');
+                jest.useFakeTimers({});
             });
             afterEach(() => {
                 jest.clearAllTimers();
@@ -749,7 +749,7 @@ describe('AuxGlobalContext', () => {
 
     describe('cancelAllBotTimers', () => {
         beforeEach(() => {
-            jest.useFakeTimers('modern');
+            jest.useFakeTimers({});
         });
         afterEach(() => {
             jest.clearAllTimers();
@@ -1100,6 +1100,7 @@ describe('AuxGlobalContext', () => {
         let realPerfNow: any;
 
         beforeEach(() => {
+            jest.useFakeTimers({});
             realPerfNow = performance.now;
             const perfNowMock = (performance.now = jest.fn());
             perfNowMock.mockReturnValue(NaN); // performance.now() should not be used because it is based on the time origin and not absolute time.

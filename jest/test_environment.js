@@ -3,7 +3,7 @@
 // See https://github.com/facebook/jest/issues/4422
 'use strict';
 
-const NodeEnvironment = require('jest-environment-node');
+const NodeEnvironment = require('jest-environment-node').TestEnvironment;
 
 class TestEnvironment extends NodeEnvironment {
     constructor(config) {

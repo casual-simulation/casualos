@@ -1,5 +1,17 @@
 # CasualOS Changelog
 
+## V3.1.28
+
+#### Date: 3/22/2023
+
+### :rocket: Improvements
+
+-   Improved the mapPortal to be able to correctly show large bots which are placed past the horizion but should still be visible because they peak above the horizion.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where moving the camera using the `cameraPositionOffset` tag while in point of view mode and while one of the mouse buttons is held down would result in the camera moving in a circle instead of where the `cameraPositionOffset` specified.
+
 ## V3.1.27
 
 #### Date: 3/16/2023

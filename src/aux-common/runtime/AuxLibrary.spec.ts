@@ -8652,7 +8652,7 @@ describe('AuxLibrary', () => {
                 });
 
                 beforeAll(() => {
-                    jest.useFakeTimers('modern');
+                    jest.useFakeTimers({});
                 });
 
                 beforeEach(() => {
@@ -9003,7 +9003,7 @@ describe('AuxLibrary', () => {
         describe('animateTag()', () => {
             let sub: SubscriptionLike;
             beforeEach(() => {
-                jest.useFakeTimers('modern');
+                jest.useFakeTimers({});
             });
 
             afterEach(() => {
@@ -9966,7 +9966,7 @@ describe('AuxLibrary', () => {
         describe('clearAnimations()', () => {
             let sub: SubscriptionLike;
             beforeEach(() => {
-                jest.useFakeTimers('modern');
+                jest.useFakeTimers({});
             });
 
             afterEach(() => {
@@ -14470,6 +14470,7 @@ describe('AuxLibrary', () => {
                 let oldNow: typeof performance.now;
 
                 beforeAll(() => {
+                    jest.useFakeTimers({});
                     oldNow = globalThis.performance.now;
                     globalThis.performance.now = now = jest.fn();
                 });
@@ -14890,7 +14891,7 @@ describe('AuxLibrary', () => {
         let bot2: RuntimeBot;
 
         beforeAll(() => {
-            jest.useFakeTimers('modern');
+            jest.useFakeTimers({});
         });
 
         beforeEach(() => {
@@ -15074,7 +15075,7 @@ describe('AuxLibrary', () => {
         let bot2: RuntimeBot;
 
         beforeAll(() => {
-            jest.useFakeTimers('modern');
+            jest.useFakeTimers({});
         });
 
         beforeEach(() => {
@@ -15627,7 +15628,7 @@ describe('AuxLibrary', () => {
         let bot3: RuntimeBot;
 
         beforeAll(() => {
-            jest.useFakeTimers('modern');
+            jest.useFakeTimers({});
         });
 
         beforeEach(() => {
