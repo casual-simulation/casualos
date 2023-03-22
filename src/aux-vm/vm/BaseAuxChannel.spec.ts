@@ -583,7 +583,7 @@ describe('BaseAuxChannel', () => {
 
         it('should update the instLatency and instTimeOffset values in the runtime when the sync controller updates', async () => {
             try {
-                jest.useFakeTimers('modern');
+                jest.useFakeTimers({});
                 config = {
                     config: {
                         version: 'v1.0.0',

@@ -1712,7 +1712,7 @@ describe('AuxRuntime', () => {
 
                 describe('timers', () => {
                     beforeAll(() => {
-                        jest.useFakeTimers('modern');
+                        jest.useFakeTimers({});
                     });
 
                     afterEach(() => {
@@ -6314,7 +6314,7 @@ describe('AuxRuntime', () => {
 
             describe('timers', () => {
                 beforeAll(() => {
-                    jest.useFakeTimers('modern');
+                    jest.useFakeTimers({});
                 });
 
                 afterEach(() => {
@@ -7115,7 +7115,7 @@ describe('AuxRuntime', () => {
 
                 describe('timers', () => {
                     beforeAll(() => {
-                        jest.useFakeTimers('modern');
+                        jest.useFakeTimers({});
                     });
 
                     afterEach(() => {
@@ -7464,7 +7464,7 @@ describe('AuxRuntime', () => {
 
                 describe('timers', () => {
                     beforeAll(() => {
-                        jest.useFakeTimers('modern');
+                        jest.useFakeTimers({});
                     });
 
                     afterEach(() => {
@@ -7982,7 +7982,7 @@ describe('AuxRuntime', () => {
 
                 describe('timers', () => {
                     beforeAll(() => {
-                        jest.useFakeTimers('modern');
+                        jest.useFakeTimers({});
                     });
 
                     afterEach(() => {
@@ -9527,7 +9527,7 @@ describe('AuxRuntime', () => {
 
         describe('unsubscribe()', () => {
             beforeAll(() => {
-                jest.useFakeTimers('modern');
+                jest.useFakeTimers({});
             });
 
             afterEach(() => {
