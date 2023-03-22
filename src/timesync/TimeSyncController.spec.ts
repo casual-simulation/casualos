@@ -7,15 +7,15 @@ describe('TimeSyncController', () => {
     let connection = {
         sampleServerTime: jest.fn(),
         closed: false,
-        unsubscribe: jest.fn()
-    };;
+        unsubscribe: jest.fn(),
+    };
 
     beforeEach(() => {
-        jest.useFakeTimers('modern');
+        jest.useFakeTimers({});
         connection = {
             sampleServerTime: jest.fn(),
             closed: false,
-            unsubscribe: jest.fn()
+            unsubscribe: jest.fn(),
         };
         controller = new TimeSyncController(connection);
 
@@ -23,10 +23,9 @@ describe('TimeSyncController', () => {
             clientRequestTime: 0,
             serverReceiveTime: 0,
             serverTransmitTime: 0,
-            currentTime: 0
+            currentTime: 0,
         });
     });
-
 
     afterEach(() => {
         jest.useRealTimers();
@@ -56,9 +55,9 @@ describe('TimeSyncController', () => {
     it('should slow the query rate to once every 30 seconds after 15 samples have been taken', async () => {
         controller.init();
 
-        for(let i = 0; i < 15; i++) {
+        for (let i = 0; i < 15; i++) {
             expect(connection.sampleServerTime).toHaveBeenCalledTimes(i);
-            
+
             jest.advanceTimersByTime(1000);
             jest.runAllTicks();
             await waitAsync();
@@ -97,7 +96,7 @@ describe('TimeSyncController', () => {
             clientRequestTime: 100,
             serverReceiveTime: 200,
             serverTransmitTime: 300,
-            currentTime: 400
+            currentTime: 400,
         });
         controller.init();
 
@@ -110,7 +109,7 @@ describe('TimeSyncController', () => {
             clientRequestTime: 500,
             serverReceiveTime: 600,
             serverTransmitTime: 700,
-            currentTime: 801
+            currentTime: 801,
         });
 
         jest.advanceTimersByTime(1000);
@@ -118,24 +117,25 @@ describe('TimeSyncController', () => {
 
         expect(connection.sampleServerTime).toHaveBeenCalledTimes(2);
 
-        expect(controller.sync.getSamples()).toEqual([ 
+        expect(controller.sync.getSamples()).toEqual([
             {
                 clientRequestTime: 100,
                 serverReceiveTime: 200,
                 serverTransmitTime: 300,
-                currentTime: 400
+                currentTime: 400,
             },
             {
                 clientRequestTime: 500,
                 serverReceiveTime: 600,
                 serverTransmitTime: 700,
-                currentTime: 801
-            }
+                currentTime: 801,
+            },
         ]);
     });
-
 });
 
 export async function waitAsync() {
-    return new Promise(resolve => jest.requireActual('timers').setImmediate(resolve));
+    return new Promise((resolve) =>
+        jest.requireActual('timers').setImmediate(resolve)
+    );
 }

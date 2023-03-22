@@ -23,9 +23,16 @@ module.exports = {
             '<rootDir>/__mocks__/esbuild.wasm.js',
         '^aux-jest-matchers$': '<rootDir>/jest/jest-matchers.ts',
     },
-    globals: {
-        'ts-jest': {
-            tsconfig: 'tsconfig.test.json',
-        },
+    transform: {
+        '^.+\\.tsx?$': [
+            'ts-jest',
+            {
+                tsconfig: 'tsconfig.test.json',
+            },
+        ],
+    },
+    snapshotFormat: {
+        escapeString: true,
+        printBasicPrototype: true,
     },
 };
