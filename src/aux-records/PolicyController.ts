@@ -185,6 +185,8 @@ export class PolicyController {
             return this._authorizeDataReadRequest(context, request);
         } else if (request.action === 'data.update') {
             return this._authorizeDataUpdateRequest(context, request);
+        } else if (request.action === 'data.delete') {
+            return this._authorizeDataDeleteRequest(context, request);
         }
 
         return {
@@ -478,6 +480,80 @@ export class PolicyController {
                     grantingPermission: policyPermission.permission,
                 });
             }
+
+            authorizations.push({
+                marker: marker.marker,
+                actions,
+            });
+        }
+
+        if (!role) {
+            return null;
+        }
+
+        return {
+            role,
+            markers: authorizations,
+        };
+    }
+
+    private _authorizeDataDeleteRequest(
+        context: AuthorizationContext,
+        request: AuthorizeDeleteDataRequest
+    ): Promise<AuthorizeResult> {
+        return this._authorizeRequest(
+            context,
+            request,
+            request.resourceMarkers,
+            (context, type, id) => {
+                return this._authorizeDataDelete(context, type, id);
+            }
+        );
+    }
+
+    private async _authorizeDataDelete(
+        context: RolesContext<AuthorizeDeleteDataRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericAuthorization> {
+        const authorizations: MarkerAuthorization[] = [];
+        let role: string | true | null = null;
+
+        for (let marker of context.markers) {
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byData('data.delete', context.request.address),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._byAdminRole(context.recordKeyResult),
+                              this._bySubjectRole(
+                                  context,
+                                  type,
+                                  context.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                return null;
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            const actions: ActionAuthorization[] = [
+                {
+                    action: context.request.action,
+                    grantingPolicy: actionPermission.policy,
+                    grantingPermission: actionPermission.permission,
+                },
+            ];
 
             authorizations.push({
                 marker: marker.marker,
@@ -899,7 +975,8 @@ interface PossiblePermission {
 export type AuthorizeRequest =
     | AuthorizeDataCreateRequest
     | AuthorizeReadDataRequest
-    | AuthorizeUpdateDataRequest;
+    | AuthorizeUpdateDataRequest
+    | AuthorizeDeleteDataRequest;
 
 export interface AuthorizeRequestBase {
     /**
@@ -975,6 +1052,20 @@ export interface AuthorizeUpdateDataRequest extends AuthorizeRequestBase {
      * If omitted, then no markers are being removed from the data.
      */
     removedMarkers?: string[];
+}
+
+export interface AuthorizeDeleteDataRequest extends AuthorizeRequestBase {
+    action: 'data.delete';
+
+    /**
+     * The address that the record is placed at.
+     */
+    address: string;
+
+    /**
+     * The list of resource markers that are applied to the data.
+     */
+    resourceMarkers: string[];
 }
 
 export type AuthorizeResult = AuthorizeAllowed | AuthorizeDenied;
