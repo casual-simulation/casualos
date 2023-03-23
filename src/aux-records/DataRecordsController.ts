@@ -15,6 +15,7 @@ import {
 } from './RecordsController';
 import {
     AuthorizeDataCreateRequest,
+    AuthorizeDeleteDataRequest,
     AuthorizeDenied,
     AuthorizeRequestBase,
     AuthorizeResult,
@@ -316,46 +317,92 @@ export class DataRecordsController {
      * @param subjectId THe ID of the user that this request came from.
      */
     async eraseData(
-        recordKey: string,
+        recordKeyOrName: string,
         address: string,
         subjectId: string
     ): Promise<EraseDataResult> {
         try {
-            const result = await this._manager.validatePublicRecordKey(
-                recordKey
+            // const result = await this._manager.validatePublicRecordKey(
+            //     recordKey
+            // );
+            // if (result.success === false) {
+            //     return {
+            //         success: false,
+            //         errorCode: result.errorCode,
+            //         errorMessage: result.errorMessage,
+            //     };
+            // }
+
+            // if (!subjectId && result.policy !== 'subjectless') {
+            //     return {
+            //         success: false,
+            //         errorCode: 'not_logged_in',
+            //         errorMessage:
+            //             'The user must be logged in in order to erase data using the provided record key.',
+            //     };
+            // }
+
+            // if (result.policy === 'subjectless') {
+            //     subjectId = null;
+            // }
+
+            const baseRequest: Omit<AuthorizeRequestBase, 'action'> = {
+                recordKeyOrRecordName: recordKeyOrName,
+                userId: subjectId,
+            };
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
             );
-            if (result.success === false) {
-                return {
-                    success: false,
-                    errorCode: result.errorCode,
-                    errorMessage: result.errorMessage,
-                };
+
+            if (context.success === false) {
+                return context;
             }
 
-            if (!subjectId && result.policy !== 'subjectless') {
+            const policy = context.context.subjectPolicy;
+
+            if (!subjectId && policy !== 'subjectless') {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
                     errorMessage:
-                        'The user must be logged in in order to erase data using the provided record key.',
+                        'The user must be logged in in order to record data.',
                 };
             }
 
-            if (result.policy === 'subjectless') {
+            if (policy === 'subjectless') {
                 subjectId = null;
             }
 
-            const recordName = result.recordName;
+            const recordName = context.context.recordName;
+
             const existingRecord = await this._store.getData(
                 recordName,
                 address
             );
 
+            const markers = (existingRecord.success
+                ? existingRecord.markers
+                : null) ?? [PUBLIC_READ_MARKER];
+            const authorization =
+                await this._policies.authorizeRequestUsingContext(
+                    context.context,
+                    {
+                        action: 'data.delete',
+                        ...baseRequest,
+                        address,
+                        resourceMarkers: markers,
+                    }
+                );
+
+            if (authorization.allowed === false) {
+                return returnAuthorizationResult(authorization);
+            }
+
             if (existingRecord.success) {
                 const existingDeletePolicy =
                     existingRecord.deletePolicy ?? true;
                 if (
-                    subjectId !== result.ownerId &&
+                    subjectId !== authorization.recordKeyOwnerId &&
                     !doesSubjectMatchPolicy(existingDeletePolicy, subjectId)
                 ) {
                     return {
@@ -484,7 +531,8 @@ export interface EraseDataFailure {
         | NotLoggedInError
         | NotAuthorizedError
         | EraseDataStoreResult['errorCode']
-        | ValidatePublicRecordKeyFailure['errorCode'];
+        | ValidatePublicRecordKeyFailure['errorCode']
+        | AuthorizeDenied['errorCode'];
     errorMessage: string;
 }
 

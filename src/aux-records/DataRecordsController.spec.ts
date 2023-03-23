@@ -24,7 +24,7 @@ import {
 } from './TestUtils';
 import { PolicyStore } from './PolicyStore';
 import { MemoryPolicyStore } from './MemoryPolicyStore';
-import { PUBLIC_READ_MARKER } from './PolicyPermissions';
+import { ADMIN_ROLE_NAME, PUBLIC_READ_MARKER } from './PolicyPermissions';
 
 describe('DataRecordsController', () => {
     let recordsStore: RecordsStore;
@@ -667,7 +667,7 @@ describe('DataRecordsController', () => {
         });
     });
 
-    describe.skip('eraseData()', () => {
+    describe('eraseData()', () => {
         it('should delete the record from the data store', async () => {
             await store.setData(
                 'testRecord',
@@ -715,7 +715,7 @@ describe('DataRecordsController', () => {
             )) as EraseDataFailure;
 
             expect(result.success).toBe(false);
-            expect(result.errorCode).toBe('invalid_record_key');
+            expect(result.errorCode).toBe('not_authorized');
 
             const storeResult = await store.getData('testRecord', 'address');
 
@@ -890,6 +890,105 @@ describe('DataRecordsController', () => {
 
             expect(storeResult.success).toBe(false);
             expect(storeResult.errorCode).toBe('data_not_found');
+        });
+
+        it('should be able to use the admin policy to delete data without a marker', async () => {
+            policiesStore.roles['testRecord'] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await store.setData(
+                'testRecord',
+                'address',
+                'data',
+                'testUser',
+                'subjectId',
+                true,
+                true,
+                null as any
+            );
+
+            const result = (await manager.eraseData(
+                'testRecord',
+                'address',
+                userId
+            )) as EraseDataSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                address: 'address',
+            });
+        });
+
+        it('should be able to use the marker policy to delete data', async () => {
+            policiesStore.roles['testRecord'] = {
+                [userId]: new Set(['developer']),
+            };
+
+            policiesStore.policies['testRecord'] = {
+                ['secret']: {
+                    permissions: [
+                        {
+                            type: 'data.delete',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                },
+            };
+
+            await store.setData(
+                'testRecord',
+                'address',
+                'data',
+                'testUser',
+                'subjectId',
+                true,
+                true,
+                ['secret']
+            );
+
+            const result = (await manager.eraseData(
+                'testRecord',
+                'address',
+                userId
+            )) as EraseDataSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                address: 'address',
+            });
+        });
+
+        it('should reject the request if no policy allows the deletion of the data', async () => {
+            policiesStore.roles['testRecord'] = {
+                [userId]: new Set(['developer']),
+            };
+
+            await store.setData(
+                'testRecord',
+                'address',
+                'data',
+                'testUser',
+                'subjectId',
+                true,
+                true,
+                ['secret']
+            );
+
+            const result = (await manager.eraseData(
+                'testRecord',
+                'address',
+                userId
+            )) as EraseDataSuccess;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: expect.any(String),
+            });
         });
     });
 });
