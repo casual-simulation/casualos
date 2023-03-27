@@ -93,6 +93,7 @@ export interface ListDataStoreResult {
     items?: {
         data: any;
         address: string;
+        markers?: string[];
     }[];
     errorCode?: ServerError;
     errorMessage?: string;

@@ -241,6 +241,12 @@ export class DataRecordsController {
         }
     }
 
+    /**
+     * Gets the data that is stored in the given record at the given address.
+     * @param recordName The name (or record key) of the record that the data is stored in.
+     * @param address The address that the data is stored in.
+     * @param userId The ID of the user who is retrieving the data. If null, then it is assumed that the user is not logged in.
+     */
     async getData(
         recordName: string,
         address: string,
@@ -258,9 +264,9 @@ export class DataRecordsController {
         const markers = result.markers ?? [PUBLIC_READ_MARKER];
         const authorization = await this._policies.authorizeRequest({
             action: 'data.read',
-            address,
             recordKeyOrRecordName: recordName,
             userId: userId,
+            address,
             resourceMarkers: markers,
         });
 
@@ -280,9 +286,16 @@ export class DataRecordsController {
         };
     }
 
+    /**
+     * Lists some data from the given record, starting after the given address.
+     * @param recordName The name (or record key) of the record.
+     * @param address The address that the listing should start at. If null, then the listing will start with the first item.
+     * @param userId The ID of the user who is retrieving the data. If null, then it is assumed that the user is not logged in.
+     */
     async listData(
         recordName: string,
-        address: string | null
+        address: string | null,
+        userId?: string
     ): Promise<ListDataResult> {
         try {
             const result2 = await this._store.listData(recordName, address);
@@ -295,12 +308,31 @@ export class DataRecordsController {
                 };
             }
 
+            const authorizeResult = await this._policies.authorizeRequest({
+                action: 'data.list',
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                dataItems: result2.items.map((i) => ({
+                    ...i,
+                    markers: i.markers ?? [PUBLIC_READ_MARKER],
+                })),
+            });
+
+            if (authorizeResult.allowed === false) {
+                return returnAuthorizationResult(authorizeResult);
+            }
+
+            if (!authorizeResult.allowedDataItems) {
+                throw new Error('allowedDataItems is null!');
+            }
+
             return {
                 success: true,
                 recordName,
-                items: result2.items,
+                items: authorizeResult.allowedDataItems as ListDataSuccess['items'],
             };
         } catch (err) {
+            console.error('[DataRecordsController] An error occurred:', err);
             return {
                 success: false,
                 errorCode: 'server_error',
@@ -544,11 +576,16 @@ export interface ListDataSuccess {
     items: {
         data: any;
         address: string;
+        markers: string[];
     }[];
 }
 
 export interface ListDataFailure {
     success: false;
-    errorCode: ServerError | ListDataStoreResult['errorCode'] | 'not_supported';
+    errorCode:
+        | ServerError
+        | ListDataStoreResult['errorCode']
+        | AuthorizeDenied['errorCode']
+        | 'not_supported';
     errorMessage: string;
 }

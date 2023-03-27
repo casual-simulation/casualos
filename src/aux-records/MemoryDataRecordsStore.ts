@@ -90,6 +90,7 @@ export class MemoryDataRecordsStore implements DataRecordsStore {
                 items.push({
                     address: key,
                     data: item.data,
+                    markers: item.markers,
                 });
             }
         }

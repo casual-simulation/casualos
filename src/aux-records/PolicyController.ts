@@ -21,7 +21,7 @@ import {
 import { PublicRecordKeyPolicy } from './RecordsStore';
 import { PolicyStore } from './PolicyStore';
 import { UserPacket } from 'livekit-server-sdk/dist/proto/livekit_models';
-import { union } from 'lodash';
+import { intersectionBy, union } from 'lodash';
 
 /**
  * The maximum number of instances that can be authorized at once.
@@ -187,6 +187,8 @@ export class PolicyController {
             return this._authorizeDataUpdateRequest(context, request);
         } else if (request.action === 'data.delete') {
             return this._authorizeDataDeleteRequest(context, request);
+        } else if (request.action === 'data.list') {
+            return this._authorizeDataListRequest(context, request);
         }
 
         return {
@@ -571,6 +573,120 @@ export class PolicyController {
         };
     }
 
+    private _authorizeDataListRequest(
+        context: AuthorizationContext,
+        request: AuthorizeListDataRequest
+    ): Promise<AuthorizeResult> {
+        const allMarkers = union(...request.dataItems.map((i) => i.markers));
+        const result = this._authorizeRequest(
+            context,
+            request,
+            allMarkers,
+            (context, type, id) => {
+                return this._authorizeDataList(context, type, id);
+            }
+        );
+
+        return result;
+    }
+
+    private async _authorizeDataList(
+        context: RolesContext<AuthorizeListDataRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericAuthorization> {
+        const authorizations: MarkerAuthorization[] = [];
+        let role: string | true | null = null;
+
+        const allowedDataItems = (context.allowedDataItems =
+            [] as ListedDataItem[]);
+
+        const markers = new Map<
+            string,
+            {
+                marker: MarkerPermission;
+                authorization: MarkerAuthorization;
+                usedPermissions: Set<any>;
+            }
+        >();
+        for (let marker of context.markers) {
+            const authorization: MarkerAuthorization = {
+                marker: marker.marker,
+                actions: [],
+            };
+            authorizations.push(authorization);
+            markers.set(marker.marker, {
+                marker,
+                authorization: authorization,
+                usedPermissions: new Set(),
+            });
+        }
+
+        for (let item of context.request.dataItems) {
+            let itemPermission: PossiblePermission;
+            for (let m of item.markers) {
+                const a = markers.get(m);
+                if (!a) {
+                    continue;
+                }
+                const { marker, authorization, usedPermissions } = a;
+
+                itemPermission = await this._findPermissionByFilter(
+                    marker.permissions,
+                    this._every(
+                        this._byData('data.list', item.address),
+                        role === null
+                            ? this._some(
+                                  this._byEveryoneRole(),
+                                  this._byAdminRole(context.recordKeyResult),
+                                  this._bySubjectRole(
+                                      context,
+                                      type,
+                                      context.recordName,
+                                      id
+                                  )
+                              )
+                            : this._byRole(role)
+                    )
+                );
+
+                if (!itemPermission) {
+                    continue;
+                }
+
+                if (role === null) {
+                    role = itemPermission.permission.role;
+                }
+
+                if (!usedPermissions.has(itemPermission.permission)) {
+                    usedPermissions.add(itemPermission.permission);
+                    authorization.actions.push({
+                        action: context.request.action,
+                        grantingPolicy: itemPermission.policy,
+                        grantingPermission: itemPermission.permission,
+                    });
+                }
+
+                if (itemPermission) {
+                    break;
+                }
+            }
+
+            if (itemPermission) {
+                allowedDataItems.push(item);
+            }
+        }
+
+        if (!role) {
+            role = true;
+        }
+
+        return {
+            role,
+            markers: authorizations,
+        };
+    }
+
     /**
      * Attempts to authorize the given request based on common request properties.
      *
@@ -638,7 +754,17 @@ export class PolicyController {
             request.instances,
             context.recordKeyResult,
             async (inst) => {
-                return await authorize(rolesContext, 'inst', inst);
+                let currentItems: ListedDataItem[] | null =
+                    rolesContext.allowedDataItems?.slice();
+                const result = await authorize(rolesContext, 'inst', inst);
+                if (currentItems) {
+                    rolesContext.allowedDataItems = intersectionBy(
+                        currentItems,
+                        rolesContext.allowedDataItems,
+                        (item) => item.address
+                    );
+                }
+                return result;
             }
         );
 
@@ -662,6 +788,7 @@ export class PolicyController {
                 subjectPolicy: context.subjectPolicy,
             },
             instances: authorizedInstances,
+            allowedDataItems: rolesContext.allowedDataItems,
         };
     }
 
@@ -956,6 +1083,8 @@ export interface RolesContext<T extends AuthorizeRequestBase>
     };
     markers: MarkerPermission[];
     request: T;
+
+    allowedDataItems?: ListedDataItem[];
 }
 
 type PermissionFilter = (permission: AvailablePermissions) => Promise<boolean>;
@@ -976,7 +1105,8 @@ export type AuthorizeRequest =
     | AuthorizeDataCreateRequest
     | AuthorizeReadDataRequest
     | AuthorizeUpdateDataRequest
-    | AuthorizeDeleteDataRequest;
+    | AuthorizeDeleteDataRequest
+    | AuthorizeListDataRequest;
 
 export interface AuthorizeRequestBase {
     /**
@@ -1068,6 +1198,27 @@ export interface AuthorizeDeleteDataRequest extends AuthorizeRequestBase {
     resourceMarkers: string[];
 }
 
+export interface AuthorizeListDataRequest extends AuthorizeRequestBase {
+    action: 'data.list';
+
+    /**
+     * The list of items that should be filtered.
+     */
+    dataItems: ListedDataItem[];
+}
+
+export interface ListedDataItem {
+    /**
+     * The address of the item.
+     */
+    address: string;
+
+    /**
+     * The list of markers for the item.
+     */
+    markers: string[];
+}
+
 export type AuthorizeResult = AuthorizeAllowed | AuthorizeDenied;
 
 export interface AuthorizeAllowed {
@@ -1101,6 +1252,11 @@ export interface AuthorizeAllowed {
      * The authorization information about the instances.
      */
     instances: InstEnvironmentAuthorization[];
+
+    /**
+     * The list of allowed data items.
+     */
+    allowedDataItems?: ListedDataItem[];
 }
 
 export interface GenericAuthorization {

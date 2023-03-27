@@ -631,9 +631,39 @@ describe('DataRecordsController', () => {
                 'The user must be logged in. Please provide a sessionKey or a recordKey.'
             );
         });
+
+        it('should be able to retrieve secret data if the user has the admin role', async () => {
+            policiesStore.roles['testRecord'] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await store.setData(
+                'testRecord',
+                'address',
+                'data',
+                'testUser',
+                'subjectId',
+                true,
+                true,
+                ['secret']
+            );
+
+            const result = (await manager.getData(
+                'testRecord',
+                'address',
+                userId
+            )) as GetDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.data).toBe('data');
+            expect(result.publisherId).toBe('testUser');
+            expect(result.subjectId).toBe('subjectId');
+            expect(result.updatePolicy).toBe(true);
+            expect(result.deletePolicy).toBe(true);
+        });
     });
 
-    describe.skip('listData()', () => {
+    describe('listData()', () => {
         it('should retrieve multiple records from the data store', async () => {
             for (let i = 0; i < 5; i++) {
                 await store.setData(
@@ -657,10 +687,87 @@ describe('DataRecordsController', () => {
                     {
                         address: 'address/3',
                         data: 'data3',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                     {
                         address: 'address/4',
                         data: 'data4',
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                ],
+            });
+        });
+
+        it('should be able to use the admin policy to retrieve secret markers', async () => {
+            for (let i = 0; i < 5; i++) {
+                await store.setData(
+                    'testRecord',
+                    'address/' + i,
+                    'data' + i,
+                    'testUser',
+                    'subjectId',
+                    true,
+                    true,
+                    ['secret']
+                );
+            }
+
+            policiesStore.roles['testRecord'] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await manager.listData(
+                'testRecord',
+                'address/2',
+                userId
+            );
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                items: [
+                    {
+                        address: 'address/3',
+                        data: 'data3',
+                        markers: ['secret'],
+                    },
+                    {
+                        address: 'address/4',
+                        data: 'data4',
+                        markers: ['secret'],
+                    },
+                ],
+            });
+        });
+
+        it('should only return data that the user is allowed to access', async () => {
+            for (let i = 0; i < 5; i++) {
+                await store.setData(
+                    'testRecord',
+                    'address/' + i,
+                    'data' + i,
+                    'testUser',
+                    'subjectId',
+                    true,
+                    true,
+                    i % 2 === 0 ? ['secret'] : [PUBLIC_READ_MARKER]
+                );
+            }
+
+            const result = await manager.listData(
+                'testRecord',
+                'address/2',
+                userId
+            );
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                items: [
+                    {
+                        address: 'address/3',
+                        data: 'data3',
+                        markers: [PUBLIC_READ_MARKER],
                     },
                 ],
             });
