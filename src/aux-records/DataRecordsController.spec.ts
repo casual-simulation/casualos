@@ -661,6 +661,32 @@ describe('DataRecordsController', () => {
             expect(result.updatePolicy).toBe(true);
             expect(result.deletePolicy).toBe(true);
         });
+
+        it('should be able to retrieve secret data with a record key', async () => {
+            await store.setData(
+                'testRecord',
+                'address',
+                'data',
+                'testUser',
+                'subjectId',
+                true,
+                true,
+                ['secret']
+            );
+
+            const result = (await manager.getData(
+                key,
+                'address',
+                userId
+            )) as GetDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.data).toBe('data');
+            expect(result.publisherId).toBe('testUser');
+            expect(result.subjectId).toBe('subjectId');
+            expect(result.updatePolicy).toBe(true);
+            expect(result.deletePolicy).toBe(true);
+        });
     });
 
     describe('listData()', () => {
@@ -721,6 +747,44 @@ describe('DataRecordsController', () => {
                 'address/2',
                 userId
             );
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                items: [
+                    {
+                        address: 'address/3',
+                        data: 'data3',
+                        markers: ['secret'],
+                    },
+                    {
+                        address: 'address/4',
+                        data: 'data4',
+                        markers: ['secret'],
+                    },
+                ],
+            });
+        });
+
+        it('should be able to use a record key to retrieve secret markers', async () => {
+            for (let i = 0; i < 5; i++) {
+                await store.setData(
+                    'testRecord',
+                    'address/' + i,
+                    'data' + i,
+                    'testUser',
+                    'subjectId',
+                    true,
+                    true,
+                    ['secret']
+                );
+            }
+
+            policiesStore.roles['testRecord'] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await manager.listData(key, 'address/2', userId);
 
             expect(result).toEqual({
                 success: true,

@@ -252,38 +252,68 @@ export class DataRecordsController {
         address: string,
         userId?: string
     ): Promise<GetDataResult> {
-        const result = await this._store.getData(recordName, address);
-        if (result.success === false) {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: recordName,
+                userId,
+            };
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
+            );
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const result = await this._store.getData(
+                context.context.recordName,
+                address
+            );
+            if (result.success === false) {
+                return {
+                    success: false,
+                    errorCode: result.errorCode,
+                    errorMessage: result.errorMessage,
+                };
+            }
+
+            const markers = result.markers ?? [PUBLIC_READ_MARKER];
+            const authorization =
+                await this._policies.authorizeRequestUsingContext(
+                    context.context,
+                    {
+                        action: 'data.read',
+                        ...baseRequest,
+                        address,
+                        resourceMarkers: markers,
+                    }
+                );
+
+            if (authorization.allowed === false) {
+                return returnAuthorizationResult(authorization);
+            }
+
+            return {
+                success: true,
+                data: result.data,
+                publisherId: result.publisherId,
+                subjectId: result.subjectId,
+                recordName,
+                updatePolicy: result.updatePolicy ?? true,
+                deletePolicy: result.deletePolicy ?? true,
+                markers: markers,
+            };
+        } catch (err) {
+            console.error(
+                '[DataRecordsController] An error occurred while getting data:',
+                err
+            );
             return {
                 success: false,
-                errorCode: result.errorCode,
-                errorMessage: result.errorMessage,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
             };
         }
-
-        const markers = result.markers ?? [PUBLIC_READ_MARKER];
-        const authorization = await this._policies.authorizeRequest({
-            action: 'data.read',
-            recordKeyOrRecordName: recordName,
-            userId: userId,
-            address,
-            resourceMarkers: markers,
-        });
-
-        if (authorization.allowed === false) {
-            return returnAuthorizationResult(authorization);
-        }
-
-        return {
-            success: true,
-            data: result.data,
-            publisherId: result.publisherId,
-            subjectId: result.subjectId,
-            recordName,
-            updatePolicy: result.updatePolicy ?? true,
-            deletePolicy: result.deletePolicy ?? true,
-            markers: markers,
-        };
     }
 
     /**
@@ -298,7 +328,22 @@ export class DataRecordsController {
         userId?: string
     ): Promise<ListDataResult> {
         try {
-            const result2 = await this._store.listData(recordName, address);
+            const baseRequest = {
+                recordKeyOrRecordName: recordName,
+                userId,
+            };
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
+            );
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const result2 = await this._store.listData(
+                context.context.recordName,
+                address
+            );
 
             if (result2.success === false) {
                 return {
@@ -308,15 +353,18 @@ export class DataRecordsController {
                 };
             }
 
-            const authorizeResult = await this._policies.authorizeRequest({
-                action: 'data.list',
-                recordKeyOrRecordName: recordName,
-                userId: userId,
-                dataItems: result2.items.map((i) => ({
-                    ...i,
-                    markers: i.markers ?? [PUBLIC_READ_MARKER],
-                })),
-            });
+            const authorizeResult =
+                await this._policies.authorizeRequestUsingContext(
+                    context.context,
+                    {
+                        action: 'data.list',
+                        ...baseRequest,
+                        dataItems: result2.items.map((i) => ({
+                            ...i,
+                            markers: i.markers ?? [PUBLIC_READ_MARKER],
+                        })),
+                    }
+                );
 
             if (authorizeResult.allowed === false) {
                 return returnAuthorizationResult(authorizeResult);
@@ -328,15 +376,18 @@ export class DataRecordsController {
 
             return {
                 success: true,
-                recordName,
+                recordName: context.context.recordName,
                 items: authorizeResult.allowedDataItems as ListDataSuccess['items'],
             };
         } catch (err) {
-            console.error('[DataRecordsController] An error occurred:', err);
+            console.error(
+                '[DataRecordsController] An error occurred while listing data:',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }
