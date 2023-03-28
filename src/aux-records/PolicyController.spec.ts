@@ -1396,6 +1396,110 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should deny the request if the user does not have policy.assign access for new markers from the same role as the data.update role', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer', 'other']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.update',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                };
+
+                const testPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.update',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'other',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                    ['test']: testPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    userId,
+                    existingMarkers: ['secret'],
+                    addedMarkers: ['test'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if the user does has policy.assign access for new markers but does not have data.update access for the existing marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                const testPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.update',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                    ['test']: testPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    userId,
+                    existingMarkers: ['secret'],
+                    addedMarkers: ['test'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
             it('should deny the request if the user does not have policy.unassign access for removed markers', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set(['developer']),
