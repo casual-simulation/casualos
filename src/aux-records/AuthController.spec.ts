@@ -420,6 +420,53 @@ describe('AuthController', () => {
                 expect(randomBytesMock).toHaveBeenCalled();
                 expect(uuidMock).toHaveBeenCalled();
             });
+
+            it('should fail if the user is banned', async () => {
+                await authStore.saveUser({
+                    id: 'myid',
+                    email: type === 'email' ? address : null,
+                    phoneNumber: type === 'phone' ? address : null,
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                    banTimeMs: 1,
+                    banReason: 'terms_of_service_violation',
+                });
+
+                const salt = new Uint8Array([1, 2, 3]);
+                const code = new Uint8Array([4, 5, 6, 7]);
+
+                nowMock.mockReturnValue(100);
+                randomBytesMock
+                    .mockReturnValueOnce(salt)
+                    .mockReturnValueOnce(code);
+                uuidMock.mockReturnValueOnce('uuid1');
+
+                const response = await controller.requestLogin({
+                    address: address,
+                    addressType: type,
+                    ipAddress: '127.0.0.1',
+                });
+
+                expect(response).toEqual({
+                    success: false,
+                    errorCode: 'user_is_banned',
+                    errorMessage: 'The user has been banned.',
+                    banReason: 'terms_of_service_violation',
+                });
+
+                expect(authStore.users).toEqual([
+                    {
+                        id: 'myid',
+                        email: type === 'email' ? address : null,
+                        phoneNumber: type === 'phone' ? address : null,
+                        banTimeMs: 1,
+                        banReason: 'terms_of_service_violation',
+                    },
+                ]);
+
+                expect(authStore.loginRequests).toEqual([]);
+                expect(messenger.messages).toEqual([]);
+            });
         });
 
         it('should fail if the given email is longer than 200 characters long', async () => {
@@ -1533,6 +1580,69 @@ describe('AuthController', () => {
                 success: true,
                 userId: 'myid',
                 sessionId: fromByteArray(sessionId),
+            });
+        });
+
+        it('should reject users who are banned', async () => {
+            const address = 'myAddress';
+            const addressType = 'email';
+            const requestId = fromByteArray(new Uint8Array([1, 2, 3]));
+            const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+
+            await authStore.saveUser({
+                id: 'myid',
+                email: address,
+                phoneNumber: address,
+                currentLoginRequestId: requestId,
+                allSessionRevokeTimeMs: undefined,
+            });
+
+            await authStore.saveLoginRequest({
+                userId: 'myid',
+                requestId: requestId,
+                secretHash: hashPasswordWithSalt(code, requestId),
+                expireTimeMs: 200,
+                requestTimeMs: 100,
+                completedTimeMs: null,
+                attemptCount: 0,
+                address,
+                addressType,
+                ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(150);
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret);
+
+            const response = (await controller.completeLogin({
+                userId: 'myid',
+                requestId: requestId,
+                code: code,
+                ipAddress: '127.0.0.1',
+            })) as CompleteLoginSuccess;
+
+            await authStore.saveUser({
+                id: 'myid',
+                email: address,
+                phoneNumber: address,
+                currentLoginRequestId: requestId,
+                allSessionRevokeTimeMs: undefined,
+                banTimeMs: 1,
+                banReason: 'terms_of_service_violation',
+            });
+
+            const validateResponse = await controller.validateSessionKey(
+                response.sessionKey
+            );
+
+            expect(validateResponse).toEqual({
+                success: false,
+                errorCode: 'user_is_banned',
+                errorMessage: 'The user has been banned.',
+                banReason: 'terms_of_service_violation',
             });
         });
 

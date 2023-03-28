@@ -207,6 +207,15 @@ export class AuthController {
                 }
             }
 
+            if (user.banTimeMs > 0) {
+                return {
+                    success: false,
+                    errorCode: 'user_is_banned',
+                    errorMessage: 'The user has been banned.',
+                    banReason: user.banReason,
+                };
+            }
+
             const requestTime = Date.now();
             const requestId = fromByteArray(
                 randomBytes(LOGIN_REQUEST_ID_BYTE_LENGTH)
@@ -582,6 +591,15 @@ export class AuthController {
                             errorMessage: INVALID_KEY_ERROR_MESSAGE,
                         };
                     }
+                }
+
+                if (userInfo.banTimeMs > 0) {
+                    return {
+                        success: false,
+                        errorCode: 'user_is_banned',
+                        errorMessage: 'The user has been banned.',
+                        banReason: userInfo.banReason,
+                    };
                 }
             }
 
@@ -1264,12 +1282,18 @@ export interface LoginRequestFailure {
         | 'unacceptable_address_type'
         | 'unacceptable_ip_address'
         | 'address_type_not_supported'
+        | 'user_is_banned'
         | ServerError;
 
     /**
      * The error message for the failure.
      */
     errorMessage: string;
+
+    /**
+     * The ban reason for the user.
+     */
+    banReason?: AuthUser['banReason'];
 }
 
 export interface CompleteLoginRequest {
@@ -1354,8 +1378,11 @@ export interface ValidateSessionKeyFailure {
         | 'unacceptable_session_key'
         | 'invalid_key'
         | 'session_expired'
+        | 'user_is_banned'
         | ServerError;
     errorMessage: string;
+
+    banReason?: AuthUser['banReason'];
 }
 
 export interface RevokeSessionRequest {
@@ -1391,6 +1418,7 @@ export interface RevokeSessionFailure {
         | 'session_expired'
         | 'session_not_found'
         | 'session_already_revoked'
+        | 'user_is_banned'
         | ServerError;
     errorMessage: string;
 }
@@ -1422,6 +1450,7 @@ export interface RevokeAllSessionsFailure {
         | 'unacceptable_session_key'
         | 'invalid_key'
         | 'session_expired'
+        | 'user_is_banned'
         | ServerError;
     errorMessage: string;
 }
@@ -1461,6 +1490,7 @@ export interface ListSessionsFailure {
         | 'unacceptable_expire_time'
         | 'unacceptable_session_key'
         | 'invalid_key'
+        | 'user_is_banned'
         | 'session_expired'
         | ServerError;
     errorMessage: string;

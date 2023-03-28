@@ -59,6 +59,8 @@ describe('DynamoDBAuthStore', () => {
                 name: 'name',
                 allSessionRevokeTimeMs: 123,
                 currentLoginRequestId: 'abc',
+                banTimeMs: 1,
+                banReason: 'terms_of_service_violation',
             });
 
             expect(dynamodb.transactWrite).toHaveBeenCalledWith({
@@ -75,6 +77,8 @@ describe('DynamoDBAuthStore', () => {
                                 phoneNumber: 'phone',
                                 allSessionRevokeTimeMs: 123,
                                 currentLoginRequestId: 'abc',
+                                banTimeMs: 1,
+                                banReason: 'terms_of_service_violation',
                             },
                         },
                     },
@@ -180,6 +184,8 @@ describe('DynamoDBAuthStore', () => {
                 stripeCustomerId: 'customerId',
                 subscriptionStatus: 'active',
                 openAiKey: 'api key',
+                banTimeMs: 1,
+                banReason: 'terms_of_service_violation',
             });
 
             expect(result).toEqual({
@@ -203,6 +209,8 @@ describe('DynamoDBAuthStore', () => {
                                 stripeCustomerId: 'customerId',
                                 subscriptionStatus: 'active',
                                 openAiKey: 'api key',
+                                banTimeMs: 1,
+                                banReason: 'terms_of_service_violation',
                             },
                             ConditionExpression: 'attribute_not_exists(id)',
                         },
@@ -408,6 +416,8 @@ describe('DynamoDBAuthStore', () => {
                         stripeCustomerId: 'customerId',
                         subscriptionStatus: 'active',
                         openAiKey: 'api key',
+                        banTimeMs: 1,
+                        banReason: 'terms_of_service_violation',
                     },
                 })
             );
@@ -426,6 +436,8 @@ describe('DynamoDBAuthStore', () => {
                 stripeCustomerId: 'customerId',
                 subscriptionStatus: 'active',
                 openAiKey: 'api key',
+                banTimeMs: 1,
+                banReason: 'terms_of_service_violation',
             });
             expect(dynamodb.get).toHaveBeenCalledWith({
                 TableName: 'users-table',
