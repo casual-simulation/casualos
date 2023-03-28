@@ -10,9 +10,11 @@ import {
     ADMIN_ROLE_NAME,
     AssignPolicyPermission,
     AvailableDataPermissions,
+    AvailableFilePermissions,
     AvailablePermissions,
     AvailablePolicyPermissions,
     CreateDataPermission,
+    CreateFilePermission,
     DataPermission,
     Permission,
     PolicyDocument,
@@ -189,6 +191,8 @@ export class PolicyController {
             return this._authorizeDataDeleteRequest(context, request);
         } else if (request.action === 'data.list') {
             return this._authorizeDataListRequest(context, request);
+        } else if (request.action === 'file.create') {
+            return this._authorizeFileCreateRequest(context, request);
         }
 
         return {
@@ -573,12 +577,12 @@ export class PolicyController {
         };
     }
 
-    private _authorizeDataListRequest(
+    private async _authorizeDataListRequest(
         context: AuthorizationContext,
         request: AuthorizeListDataRequest
     ): Promise<AuthorizeResult> {
         const allMarkers = union(...request.dataItems.map((i) => i.markers));
-        const result = this._authorizeRequest(
+        return await this._authorizeRequest(
             context,
             request,
             allMarkers,
@@ -586,8 +590,6 @@ export class PolicyController {
                 return this._authorizeDataList(context, type, id);
             }
         );
-
-        return result;
     }
 
     private async _authorizeDataList(
@@ -679,6 +681,102 @@ export class PolicyController {
 
         if (!role) {
             role = true;
+        }
+
+        return {
+            role,
+            markers: authorizations,
+        };
+    }
+
+    private async _authorizeFileCreateRequest(
+        context: AuthorizationContext,
+        request: AuthorizeCreateFileRequest
+    ): Promise<AuthorizeResult> {
+        return await this._authorizeRequest(
+            context,
+            request,
+            request.resourceMarkers,
+            (context, type, id) => {
+                return this._authorizeFileCreate(context, type, id);
+            }
+        );
+    }
+
+    private async _authorizeFileCreate(
+        context: RolesContext<AuthorizeCreateFileRequest>,
+        subjectType: 'user' | 'inst',
+        id: string
+    ): Promise<GenericAuthorization> {
+        const authorizations: MarkerAuthorization[] = [];
+        let role: string | true | null = null;
+
+        for (let marker of context.markers) {
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byFileCreate(
+                        'file.create',
+                        context.request.fileSizeInBytes,
+                        context.request.fileMimeType
+                    ),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._byAdminRole(context.recordKeyResult),
+                              this._bySubjectRole(
+                                  context,
+                                  subjectType,
+                                  context.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                return null;
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            const policyPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byPolicy('policy.assign', marker.marker),
+                    this._some(
+                        this._byEveryoneRole(),
+                        this._byRole(actionPermission.permission.role)
+                    )
+                )
+            );
+
+            if (!policyPermission) {
+                return null;
+            }
+
+            authorizations.push({
+                marker: marker.marker,
+                actions: [
+                    {
+                        action: context.request.action,
+                        grantingPolicy: actionPermission.policy,
+                        grantingPermission: actionPermission.permission,
+                    },
+                    {
+                        action: 'policy.assign',
+                        grantingPolicy: policyPermission.policy,
+                        grantingPermission: policyPermission.permission,
+                    },
+                ],
+            });
+        }
+
+        if (!role) {
+            return null;
         }
 
         return {
@@ -909,6 +1007,33 @@ export class PolicyController {
         };
     }
 
+    private _byFileCreate(
+        type: CreateFilePermission['type'],
+        fileSizeInBytes: number,
+        fileMimeType: string
+    ) {
+        return async (permission: AvailablePermissions) => {
+            if (permission.type !== type) {
+                return false;
+            }
+            if (
+                typeof permission.maxFileSizeInBytes === 'number' &&
+                fileSizeInBytes > permission.maxFileSizeInBytes
+            ) {
+                return false;
+            }
+            if (
+                typeof permission.allowedMimeTypes === 'object' &&
+                Array.isArray(permission.allowedMimeTypes)
+            ) {
+                if (!permission.allowedMimeTypes.includes(fileMimeType)) {
+                    return false;
+                }
+            }
+            return true;
+        };
+    }
+
     private _byEveryoneRole(): PermissionFilter {
         return this._byRole(true);
     }
@@ -1106,7 +1231,8 @@ export type AuthorizeRequest =
     | AuthorizeReadDataRequest
     | AuthorizeUpdateDataRequest
     | AuthorizeDeleteDataRequest
-    | AuthorizeListDataRequest;
+    | AuthorizeListDataRequest
+    | AuthorizeCreateFileRequest;
 
 export interface AuthorizeRequestBase {
     /**
@@ -1205,6 +1331,25 @@ export interface AuthorizeListDataRequest extends AuthorizeRequestBase {
      * The list of items that should be filtered.
      */
     dataItems: ListedDataItem[];
+}
+
+export interface AuthorizeCreateFileRequest extends AuthorizeRequestBase {
+    action: 'file.create';
+
+    /**
+     * The size of the file that is being created in bytes.
+     */
+    fileSizeInBytes: number;
+
+    /**
+     * The MIME Type of the file.
+     */
+    fileMimeType: string;
+
+    /**
+     * The list of resource markers that should be applied to the file.
+     */
+    resourceMarkers: string[];
 }
 
 export interface ListedDataItem {

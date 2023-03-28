@@ -27,6 +27,12 @@ export type AvailableDataPermissions =
     | DeleteDataPermission
     | ListDataPermission;
 
+export type AvailableFilePermissions =
+    | CreateFilePermission
+    | ReadFilePermission
+    | UpdateFilePermission
+    | DeleteFilePermission;
+
 export type AvailablePolicyPermissions =
     | AssignPolicyPermission
     | UnassignPolicyPermission
@@ -108,6 +114,19 @@ export interface FilePermission extends Permission {}
  */
 export interface CreateFilePermission extends FilePermission {
     type: 'file.create';
+
+    /**
+     * The maximum allowed file size in bytes.
+     * Defaults to Infinity.
+     */
+    maxFileSizeInBytes?: number;
+
+    /**
+     * The list of allowed file MIME types.
+     * If true, then all file types are allowed.
+     * If an array of strings, then only MIME types that are specified are allowed.
+     */
+    allowedMimeTypes?: true | string[];
 }
 
 /**
@@ -115,6 +134,14 @@ export interface CreateFilePermission extends FilePermission {
  */
 export interface ReadFilePermission extends FilePermission {
     type: 'file.read';
+}
+
+/**
+ * Defines an interface that describes a permission to be able to update a file for a record marker.
+ * Currently only used to update resource markers that are on a file.
+ */
+export interface UpdateFilePermission extends FilePermission {
+    type: 'file.update';
 }
 
 /**
