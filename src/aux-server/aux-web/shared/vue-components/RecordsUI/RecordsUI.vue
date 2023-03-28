@@ -111,6 +111,9 @@
                             <span v-if="showEnterAddressError" class="md-error">{{
                                 enterAddressErrorMessage
                             }}</span>
+                            <span v-if="showBannedUserError" class="md-error"
+                                >This user has been banned.</span
+                            >
                         </md-field>
                     </div>
                 </div>
