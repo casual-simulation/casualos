@@ -10,35 +10,66 @@ import {
     RecordsController,
     ValidatePublicRecordKeyFailure,
 } from './RecordsController';
-import { getExtension } from 'mime';
+import { getExtension, getType } from 'mime';
+import {
+    AuthorizeDenied,
+    PolicyController,
+    returnAuthorizationResult,
+} from './PolicyController';
+import { PUBLIC_READ_MARKER } from './PolicyPermissions';
 
 /**
  * Defines a class that can manage file records.
  */
 export class FileRecordsController {
-    private _controller: RecordsController;
+    private _policies: PolicyController;
     private _store: FileRecordsStore;
 
-    constructor(controller: RecordsController, store: FileRecordsStore) {
-        this._controller = controller;
+    constructor(policies: PolicyController, store: FileRecordsStore) {
+        this._policies = policies;
         this._store = store;
     }
 
+    /**
+     * Attempts to record a file.
+     * @param recordNameOrKey The name of the record or the record key of the record.
+     * @param userId The ID of the user that is logged in. Should be null if the user is not logged in.
+     * @param request The request.
+     * @returns
+     */
     async recordFile(
-        recordKey: string,
+        recordKeyOrRecordName: string,
         userId: string,
         request: RecordFileRequest
     ): Promise<RecordFileResult> {
         try {
-            const keyResult = await this._controller.validatePublicRecordKey(
-                recordKey
-            );
+            const markers = [PUBLIC_READ_MARKER];
 
-            if (keyResult.success === false) {
-                return keyResult;
+            const result = await this._policies.authorizeRequest({
+                action: 'file.create',
+                recordKeyOrRecordName: recordKeyOrRecordName,
+                userId,
+                resourceMarkers: markers,
+                fileSizeInBytes: request.fileByteLength,
+                fileMimeType: request.fileMimeType,
+            });
+
+            if (result.allowed === false) {
+                return returnAuthorizationResult(result);
             }
 
-            if (!userId && keyResult.policy !== 'subjectless') {
+            // const keyResult = await this._controller.validatePublicRecordKey(
+            //     recordNameOrKey
+            // );
+
+            // if (keyResult.success === false) {
+            //     return keyResult;
+            // }
+
+            const policy = result.subject.subjectPolicy;
+            userId = result.subject.userId;
+
+            if (!result.subject.userId && policy !== 'subjectless') {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
@@ -47,12 +78,12 @@ export class FileRecordsController {
                 };
             }
 
-            if (keyResult.policy === 'subjectless') {
+            if (policy === 'subjectless') {
                 userId = null;
             }
 
-            const publisherId = keyResult.ownerId;
-            const recordName = keyResult.recordName;
+            const publisherId = result.authorizerId;
+            const recordName = result.recordName;
             const subjectId = userId;
 
             const extension = getExtension(request.fileMimeType);
@@ -79,7 +110,8 @@ export class FileRecordsController {
                 publisherId,
                 subjectId,
                 request.fileByteLength,
-                request.fileDescription
+                request.fileDescription,
+                markers
             );
 
             if (addFileResult.success === false) {
@@ -107,6 +139,7 @@ export class FileRecordsController {
                             uploadUrl: presignResult.uploadUrl,
                             uploadHeaders: presignResult.uploadHeaders,
                             uploadMethod: presignResult.uploadMethod,
+                            markers,
                         };
                     } else {
                         return {
@@ -129,6 +162,7 @@ export class FileRecordsController {
                 uploadUrl: presignResult.uploadUrl,
                 uploadHeaders: presignResult.uploadHeaders,
                 uploadMethod: presignResult.uploadMethod,
+                markers,
             };
         } catch (err) {
             console.error(
@@ -150,20 +184,50 @@ export class FileRecordsController {
      * @param subjectId The ID of the user that is making this request.
      */
     async eraseFile(
-        recordKey: string,
+        recordKeyOrRecordName: string,
         fileName: string,
         subjectId: string
     ): Promise<EraseFileResult> {
         try {
-            const keyResult = await this._controller.validatePublicRecordKey(
-                recordKey
+            const baseRequest = {
+                recordKeyOrRecordName,
+                userId: subjectId,
+            };
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
             );
 
-            if (keyResult.success === false) {
-                return keyResult;
+            if (context.success === false) {
+                return context;
             }
 
-            if (!subjectId && keyResult.policy !== 'subjectless') {
+            const fileResult = await this._store.getFileRecord(
+                context.context.recordName,
+                fileName
+            );
+
+            if (fileResult.success === false) {
+                return fileResult;
+            }
+
+            const markers = fileResult.markers ?? [PUBLIC_READ_MARKER];
+
+            const result = await this._policies.authorizeRequest({
+                action: 'file.delete',
+                ...baseRequest,
+                fileSizeInBytes: fileResult.sizeInBytes,
+                fileMimeType: getType(fileResult.fileName),
+                resourceMarkers: markers,
+            });
+
+            if (result.allowed === false) {
+                return returnAuthorizationResult(result);
+            }
+
+            const policy = result.subject.subjectPolicy;
+            subjectId = result.subject.userId;
+
+            if (!subjectId && policy !== 'subjectless') {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
@@ -172,8 +236,8 @@ export class FileRecordsController {
                 };
             }
 
-            const publisherId = keyResult.ownerId;
-            const recordName = keyResult.recordName;
+            const publisherId = result.authorizerId;
+            const recordName = result.recordName;
 
             const eraseResult = await this._store.eraseFileRecord(
                 recordName,
@@ -317,6 +381,11 @@ export interface RecordFileSuccess {
      * The name of the file that was recorded.
      */
     fileName: string;
+
+    /**
+     * The markers that were applied to the file.
+     */
+    markers: string[];
 }
 
 export interface RecordFileFailure {
@@ -326,6 +395,7 @@ export interface RecordFileFailure {
         | NotLoggedInError
         | ValidatePublicRecordKeyFailure['errorCode']
         | AddFileFailure['errorCode']
+        | AuthorizeDenied['errorCode']
         | 'invalid_file_data'
         | 'not_supported';
     errorMessage: string;
@@ -349,6 +419,7 @@ export interface EraseFileFailure {
         | ServerError
         | EraseFileStoreResult['errorCode']
         | NotLoggedInError
+        | AuthorizeDenied['errorCode']
         | ValidatePublicRecordKeyFailure['errorCode'];
     errorMessage: string;
 }

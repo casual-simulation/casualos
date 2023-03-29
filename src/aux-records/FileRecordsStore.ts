@@ -31,6 +31,7 @@ export interface FileRecordsStore {
      * @param subjectId The ID of the subject that was logged in when the record was published.
      * @param sizeInBytes The size of the file in bytes.
      * @param description The description of the file.
+     * @param markers The resource markers for the file.
      */
     addFileRecord(
         recordName: string,
@@ -38,7 +39,8 @@ export interface FileRecordsStore {
         publisherId: string,
         subjectId: string,
         sizeInBytes: number,
-        description: string
+        description: string,
+        markers: string[]
     ): Promise<AddFileResult>;
 
     /**
@@ -117,6 +119,12 @@ export interface GetFileRecordSuccess {
      * Whether the record was uploaded to the server.
      */
     uploaded: boolean;
+
+    /**
+     * The resource markers for the file.
+     * Null if the file was created without markers.
+     */
+    markers: string[] | null;
 }
 
 export type MarkFileRecordAsUploadedResult =
