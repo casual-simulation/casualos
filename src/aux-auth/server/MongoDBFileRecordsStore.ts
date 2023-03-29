@@ -94,6 +94,7 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
             subjectId: record.subjectId,
             sizeInBytes: record.sizeInBytes,
             uploaded: record.uploaded,
+            markers: record.markers,
         };
     }
 
@@ -103,7 +104,8 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
         publisherId: string,
         subjectId: string,
         sizeInBytes: number,
-        description: string
+        description: string,
+        markers: string[]
     ): Promise<AddFileResult> {
         const record = await this._collection.findOne({
             recordName,
@@ -126,6 +128,7 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
             sizeInBytes,
             description,
             uploaded: false,
+            markers,
         });
 
         return {
@@ -198,4 +201,5 @@ export interface FileRecord {
     sizeInBytes: number;
     description: string;
     uploaded: boolean;
+    markers?: string[];
 }

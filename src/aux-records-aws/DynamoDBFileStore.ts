@@ -177,6 +177,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
                     sizeInBytes: file.sizeInBytes,
                     uploaded: file.uploadTime !== null,
                     url: url.href,
+                    markers: file.markers,
                 };
             } else {
                 return {
@@ -201,7 +202,8 @@ export class DynamoDBFileStore implements FileRecordsStore {
         publisherId: string,
         subjectId: string,
         sizeInBytes: number,
-        description: string
+        description: string,
+        markers: string[]
     ): Promise<AddFileResult> {
         try {
             const publishTime = Date.now();
@@ -214,6 +216,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
                 description,
                 publishTime,
                 uploadTime: null,
+                markers,
             };
 
             await this._dynamo
@@ -422,4 +425,9 @@ interface StoredFile {
      * The time that the file was uploaded. Null if the file has not been uploaded.
      */
     uploadTime: number;
+
+    /**
+     * The markers that have been applied to the file.
+     */
+    markers?: string[] | null;
 }
