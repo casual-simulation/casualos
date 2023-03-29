@@ -5039,6 +5039,645 @@ describe('PolicyController', () => {
             });
         });
 
+        describe('file.delete', () => {
+            it('should allow the request if given a record key', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'file.delete',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'file.delete',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.delete',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user has the admin role assigned', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.delete',
+                    userId,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'file.delete',
+                                        grantingPermission: {
+                                            type: 'file.delete',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user has file.delete access to the given resource marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.delete',
+                            role: 'developer',
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.delete',
+                    userId,
+                    resourceMarkers: ['secret'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.delete',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'file.delete',
+                                            role: 'developer',
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user does not have file.delete access', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.delete',
+                    userId,
+                    resourceMarkers: ['secret'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should allow the request if the file size equals the max file size', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.delete',
+                            role: 'developer',
+                            maxFileSizeInBytes: 100,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.delete',
+                    userId,
+                    resourceMarkers: ['secret'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.delete',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'file.delete',
+                                            role: 'developer',
+                                            maxFileSizeInBytes: 100,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is not allowed to delete files over a size', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.delete',
+                            role: 'developer',
+                            maxFileSizeInBytes: 100,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.delete',
+                    userId,
+                    resourceMarkers: ['secret'],
+                    fileSizeInBytes: 101,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if given no userId or record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.delete',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                });
+            });
+
+            it('should deny the request if the file.read permission does not allow the file because it has the wrong MIME Type', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.delete',
+                            role: 'developer',
+                            allowedMimeTypes: ['text/plain'],
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.delete',
+                    userId,
+                    resourceMarkers: ['secret'],
+                    fileSizeInBytes: 101,
+                    fileMimeType: 'video/mp4',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if the user has no role assigned', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.delete',
+                    userId,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should deny the request if given an invalid record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: wrongRecordKey,
+                    action: 'file.delete',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'record_not_found',
+                    errorMessage: 'Record not found.',
+                });
+            });
+
+            it('should deny the request if there is no policy for the given marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.delete',
+                    userId,
+                    resourceMarkers: ['secret'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should allow the request if the user is an admin even though there is no policy for the given marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.delete',
+                    userId,
+                    resourceMarkers: ['secret'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.delete',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.delete',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the request is coming from an inst and no role has been provided to said inst', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.delete',
+                    userId,
+                    instances: ['instance'],
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should skip inst role checks when a record key is used', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.delete',
+                    userId,
+                    instances: ['instance'],
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'file.delete',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.delete',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance',
+                            authorizationType: 'not_required',
+                        },
+                    ],
+                });
+            });
+
+            it('should deny the request if the inst is not allowed to read files over a size', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance']: new Set(['developer']),
+                };
+
+                store.policies[recordName] = {
+                    secret: {
+                        permissions: [
+                            {
+                                type: 'file.delete',
+                                role: 'developer',
+                                maxFileSizeInBytes: 100,
+                            },
+                        ],
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.delete',
+                    userId,
+                    instances: ['instance'],
+                    resourceMarkers: ['secret'],
+                    fileSizeInBytes: 101,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
+            it('should allow the request if all the instances have roles for the data', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.delete',
+                    userId,
+                    instances: ['instance1', 'instance2'],
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'file.delete',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.delete',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance1',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'file.delete',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'file.delete',
+                                                role: ADMIN_ROLE_NAME,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            inst: 'instance2',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'file.delete',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'file.delete',
+                                                role: ADMIN_ROLE_NAME,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+
+            it('should deny the request if more than 2 instances are provided', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance3']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.delete',
+                    userId,
+                    instances: ['instance1', 'instance2', 'instance3'],
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                });
+            });
+        });
+
         it('should deny the request if given an unrecognized action', async () => {
             const result = await controller.authorizeRequest({
                 action: 'missing',

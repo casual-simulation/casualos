@@ -195,6 +195,8 @@ export class PolicyController {
             return this._authorizeFileCreateRequest(context, request);
         } else if (request.action === 'file.read') {
             return this._authorizeFileReadRequest(context, request);
+        } else if (request.action === 'file.delete') {
+            return this._authorizeFileDeleteRequest(context, request);
         }
 
         return {
@@ -863,6 +865,82 @@ export class PolicyController {
         };
     }
 
+    private async _authorizeFileDeleteRequest(
+        context: AuthorizationContext,
+        request: AuthorizeDeleteFileRequest
+    ): Promise<AuthorizeResult> {
+        return await this._authorizeRequest(
+            context,
+            request,
+            request.resourceMarkers,
+            (context, type, id) => {
+                return this._authorizeFileDelete(context, type, id);
+            }
+        );
+    }
+
+    private async _authorizeFileDelete(
+        context: RolesContext<AuthorizeDeleteFileRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericAuthorization> {
+        const authorizations: MarkerAuthorization[] = [];
+        let role: string | true | null = null;
+
+        for (let marker of context.markers) {
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byFile(
+                        'file.delete',
+                        context.request.fileSizeInBytes,
+                        context.request.fileMimeType
+                    ),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._byAdminRole(context.recordKeyResult),
+                              this._bySubjectRole(
+                                  context,
+                                  type,
+                                  context.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                return null;
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            authorizations.push({
+                marker: marker.marker,
+                actions: [
+                    {
+                        action: context.request.action,
+                        grantingPolicy: actionPermission.policy,
+                        grantingPermission: actionPermission.permission,
+                    },
+                ],
+            });
+        }
+
+        if (!role) {
+            return null;
+        }
+
+        return {
+            role,
+            markers: authorizations,
+        };
+    }
+
     /**
      * Attempts to authorize the given request based on common request properties.
      *
@@ -1311,7 +1389,9 @@ export type AuthorizeRequest =
     | AuthorizeDeleteDataRequest
     | AuthorizeListDataRequest
     | AuthorizeCreateFileRequest
-    | AuthorizeReadFileRequest;
+    | AuthorizeReadFileRequest
+    | AuthorizeUpdateFileRequest
+    | AuthorizeDeleteFileRequest;
 
 export interface AuthorizeRequestBase {
     /**
