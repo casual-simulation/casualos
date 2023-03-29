@@ -193,6 +193,8 @@ export class PolicyController {
             return this._authorizeDataListRequest(context, request);
         } else if (request.action === 'file.create') {
             return this._authorizeFileCreateRequest(context, request);
+        } else if (request.action === 'file.read') {
+            return this._authorizeFileReadRequest(context, request);
         }
 
         return {
@@ -715,7 +717,7 @@ export class PolicyController {
             const actionPermission = await this._findPermissionByFilter(
                 marker.permissions,
                 this._every(
-                    this._byFileCreate(
+                    this._byFile(
                         'file.create',
                         context.request.fileSizeInBytes,
                         context.request.fileMimeType
@@ -770,6 +772,82 @@ export class PolicyController {
                         action: 'policy.assign',
                         grantingPolicy: policyPermission.policy,
                         grantingPermission: policyPermission.permission,
+                    },
+                ],
+            });
+        }
+
+        if (!role) {
+            return null;
+        }
+
+        return {
+            role,
+            markers: authorizations,
+        };
+    }
+
+    private async _authorizeFileReadRequest(
+        context: AuthorizationContext,
+        request: AuthorizeReadFileRequest
+    ): Promise<AuthorizeResult> {
+        return await this._authorizeRequest(
+            context,
+            request,
+            request.resourceMarkers,
+            (context, type, id) => {
+                return this._authorizeFileRead(context, type, id);
+            }
+        );
+    }
+
+    private async _authorizeFileRead(
+        context: RolesContext<AuthorizeReadFileRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericAuthorization> {
+        const authorizations: MarkerAuthorization[] = [];
+        let role: string | true | null = null;
+
+        for (let marker of context.markers) {
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byFile(
+                        'file.read',
+                        context.request.fileSizeInBytes,
+                        context.request.fileMimeType
+                    ),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._byAdminRole(context.recordKeyResult),
+                              this._bySubjectRole(
+                                  context,
+                                  type,
+                                  context.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                return null;
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            authorizations.push({
+                marker: marker.marker,
+                actions: [
+                    {
+                        action: context.request.action,
+                        grantingPolicy: actionPermission.policy,
+                        grantingPermission: actionPermission.permission,
                     },
                 ],
             });
@@ -1007,8 +1085,8 @@ export class PolicyController {
         };
     }
 
-    private _byFileCreate(
-        type: CreateFilePermission['type'],
+    private _byFile(
+        type: AvailableFilePermissions['type'],
         fileSizeInBytes: number,
         fileMimeType: string
     ) {
@@ -1232,7 +1310,8 @@ export type AuthorizeRequest =
     | AuthorizeUpdateDataRequest
     | AuthorizeDeleteDataRequest
     | AuthorizeListDataRequest
-    | AuthorizeCreateFileRequest;
+    | AuthorizeCreateFileRequest
+    | AuthorizeReadFileRequest;
 
 export interface AuthorizeRequestBase {
     /**
@@ -1333,9 +1412,7 @@ export interface AuthorizeListDataRequest extends AuthorizeRequestBase {
     dataItems: ListedDataItem[];
 }
 
-export interface AuthorizeCreateFileRequest extends AuthorizeRequestBase {
-    action: 'file.create';
-
+export interface AuthorizeFileRequest extends AuthorizeRequestBase {
     /**
      * The size of the file that is being created in bytes.
      */
@@ -1345,9 +1422,52 @@ export interface AuthorizeCreateFileRequest extends AuthorizeRequestBase {
      * The MIME Type of the file.
      */
     fileMimeType: string;
+}
+
+export interface AuthorizeCreateFileRequest extends AuthorizeFileRequest {
+    action: 'file.create';
 
     /**
      * The list of resource markers that should be applied to the file.
+     */
+    resourceMarkers: string[];
+}
+
+export interface AuthorizeReadFileRequest extends AuthorizeFileRequest {
+    action: 'file.read';
+
+    /**
+     * The list of resource markers that are applied to the file.
+     */
+    resourceMarkers: string[];
+}
+
+export interface AuthorizeUpdateFileRequest extends AuthorizeFileRequest {
+    action: 'file.update';
+
+    /**
+     * The list of resource markers that are applied to the data.
+     */
+    existingMarkers: string[];
+
+    /**
+     * The new resource markers that will be added to the data.
+     * If omitted, then no markers are being added to the data.
+     */
+    addedMarkers?: string[];
+
+    /**
+     * The markers that will be removed from the data.
+     * If omitted, then no markers are being removed from the data.
+     */
+    removedMarkers?: string[];
+}
+
+export interface AuthorizeDeleteFileRequest extends AuthorizeFileRequest {
+    action: 'file.delete';
+
+    /**
+     * The list of resource markers that are applied to the file.
      */
     resourceMarkers: string[];
 }

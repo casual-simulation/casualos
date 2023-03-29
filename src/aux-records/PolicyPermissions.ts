@@ -107,14 +107,7 @@ export interface ListDataPermission extends DataPermission {
 /**
  * Defines an interface that describes the common options for all permissions that affect file records.
  */
-export interface FilePermission extends Permission {}
-
-/**
- * Defines an interface that describes a permission to be able to create a file for a record marker.
- */
-export interface CreateFilePermission extends FilePermission {
-    type: 'file.create';
-
+export interface FilePermission extends Permission {
     /**
      * The maximum allowed file size in bytes.
      * Defaults to Infinity.
@@ -127,6 +120,13 @@ export interface CreateFilePermission extends FilePermission {
      * If an array of strings, then only MIME types that are specified are allowed.
      */
     allowedMimeTypes?: true | string[];
+}
+
+/**
+ * Defines an interface that describes a permission to be able to create a file for a record marker.
+ */
+export interface CreateFilePermission extends FilePermission {
+    type: 'file.create';
 }
 
 /**
