@@ -1,6 +1,8 @@
 import {
     FileRecordsStore,
     GetFileNameFromUrlResult,
+    PresignFileReadRequest,
+    PresignFileReadResult,
     signRequest,
 } from '@casual-simulation/aux-records';
 import {
@@ -11,8 +13,12 @@ import {
     MarkFileRecordAsUploadedResult,
     EraseFileStoreResult,
 } from '@casual-simulation/aux-records';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-records/PolicyPermissions';
 import AWS from 'aws-sdk';
 import dynamodb from 'aws-sdk/clients/dynamodb';
+
+export const EMPTY_STRING_SHA256_HASH_HEX =
+    'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 
 /**
  * Defines a class that can manage file records in DynamoDB and S3.
@@ -113,7 +119,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
             'content-type': request.fileMimeType,
             'content-length': request.fileByteLength.toString(),
             'cache-control': 'max-age=31536000',
-            'x-amz-acl': 'public-read',
+            'x-amz-acl': s3AclForMarkers(request.markers),
             'x-amz-storage-class': this._storageClass,
             host: fileUrl.host,
         };
@@ -146,6 +152,60 @@ export class DynamoDBFileStore implements FileRecordsStore {
             uploadUrl: fileUrl.href,
             uploadHeaders: result.headers,
             uploadMethod: result.method,
+        };
+    }
+
+    async presignFileRead(
+        request: PresignFileReadRequest
+    ): Promise<PresignFileReadResult> {
+        const credentials = await this._getCredentials();
+
+        const secretAccessKey = credentials
+            ? credentials.secretAccessKey
+            : null;
+        const accessKeyId = credentials ? credentials.accessKeyId : null;
+
+        const now = request.date ?? new Date();
+        const fileUrl = this._fileUrl(request.recordName, request.fileName);
+        const requiredHeaders = {
+            host: fileUrl.host,
+        };
+
+        if (credentials && credentials.sessionToken) {
+            (requiredHeaders as any)['x-amz-security-token'] =
+                credentials.sessionToken;
+        }
+
+        const result = signRequest(
+            {
+                method: 'GET',
+                payloadSha256Hex: EMPTY_STRING_SHA256_HASH_HEX,
+                headers: {
+                    ...request.headers,
+                    ...requiredHeaders,
+                },
+                queryString: {
+                    'response-cache-control': 'max-age=31536000',
+                },
+                path: fileUrl.pathname,
+            },
+            secretAccessKey,
+            accessKeyId,
+            now,
+            this._region,
+            's3'
+        );
+
+        const url = new URL(fileUrl.href);
+        for (let key in result.queryString) {
+            url.searchParams.set(key, result.queryString[key]);
+        }
+
+        return {
+            success: true,
+            requestUrl: url.href,
+            requestHeaders: result.headers,
+            requestMethod: result.method,
         };
     }
 
@@ -380,6 +440,18 @@ export class DynamoDBFileStore implements FileRecordsStore {
     private _fileKey(recordName: string, fileName: string): string {
         return `${recordName}/${fileName}`;
     }
+}
+
+/**
+ * Gets the Access Control List (ACL) that should be used for files uploaded with the given markers.
+ * @param markers The markers that are applied to the file.
+ */
+export function s3AclForMarkers(markers: readonly string[]): string {
+    if (markers.some((m) => m === PUBLIC_READ_MARKER)) {
+        return 'public-read';
+    }
+
+    return 'private';
 }
 
 /**

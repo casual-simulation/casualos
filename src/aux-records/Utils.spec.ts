@@ -1,3 +1,4 @@
+import { PUBLIC_READ_MARKER } from './PolicyPermissions';
 import {
     toBase64String,
     fromBase64String,
@@ -13,6 +14,7 @@ import {
     tryParseJson,
     isStringValid,
     isActiveSubscription,
+    getMarkersOrDefault,
 } from './Utils';
 
 const cases = [['abc', 'YWJj']];
@@ -605,5 +607,19 @@ describe('isActiveSubscription()', () => {
 
     it.each(statusTypes)('should map %s to %s', (status, expected) => {
         expect(isActiveSubscription(status)).toBe(expected);
+    });
+});
+
+describe('getMarkersOrDefault()', () => {
+    it('should return the given list of markers', () => {
+        expect(getMarkersOrDefault(['abc', 'def'])).toEqual(['abc', 'def']);
+    });
+
+    it('should return the default markers if the given list is empty', () => {
+        expect(getMarkersOrDefault([])).toEqual([PUBLIC_READ_MARKER]);
+    });
+
+    it('should return the default markers if the given list is null', () => {
+        expect(getMarkersOrDefault(null)).toEqual([PUBLIC_READ_MARKER]);
     });
 });

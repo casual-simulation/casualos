@@ -1,6 +1,7 @@
 import { fromByteArray, toByteArray } from 'base64-js';
 import _, { omitBy, padStart, sortBy, StringChain } from 'lodash';
 import { sha256, hmac } from 'hash.js';
+import { PUBLIC_READ_MARKER } from './PolicyPermissions';
 
 /**
  * Converts the given string into a base64 string.
@@ -480,4 +481,16 @@ export function tryDecodeUriComponent(component: string): string | null {
  */
 export function isActiveSubscription(status: string): boolean {
     return status === 'active' || status === 'trialing';
+}
+
+/**
+ * Gets the list of markers that should be used, or the default list if none are provided.
+ * @param markers
+ */
+export function getMarkersOrDefault(markers: string[] | null): string[] {
+    if (markers === null || markers.length <= 0) {
+        return [PUBLIC_READ_MARKER];
+    }
+
+    return markers;
 }

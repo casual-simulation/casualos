@@ -5,6 +5,7 @@ import {
     EraseFileFailure,
     EraseFileSuccess,
     FileRecordsController,
+    ReadFileSuccess,
     RecordFileFailure,
     RecordFileSuccess,
 } from './FileRecordsController';
@@ -26,6 +27,7 @@ describe('FileRecordsController', () => {
     let policies: PolicyController;
     let store: FileRecordsStore;
     let presignUrlMock: jest.Mock;
+    let presignReadMock: jest.Mock;
     let manager: FileRecordsController;
     let key: string;
     let subjectlessKey: string;
@@ -45,6 +47,7 @@ describe('FileRecordsController', () => {
         store = new MemoryFileRecordsStore();
         manager = new FileRecordsController(policies, store);
         presignUrlMock = store.presignFileUpload = jest.fn();
+        presignReadMock = store.presignFileRead = jest.fn();
 
         const user = await createTestUser(services, 'test@example.com');
         userId = user.userId;
@@ -103,6 +106,7 @@ describe('FileRecordsController', () => {
                 fileByteLength: 100,
                 fileMimeType: 'text/plain',
                 headers: {},
+                markers: [PUBLIC_READ_MARKER],
             });
 
             await expect(
@@ -160,6 +164,7 @@ describe('FileRecordsController', () => {
                 headers: {
                     abc: 'test',
                 },
+                markers: [PUBLIC_READ_MARKER],
             });
 
             await expect(
@@ -223,6 +228,7 @@ describe('FileRecordsController', () => {
                 fileByteLength: 100,
                 fileMimeType: 'text/plain',
                 headers: {},
+                markers: [PUBLIC_READ_MARKER],
             });
 
             await expect(
@@ -268,6 +274,7 @@ describe('FileRecordsController', () => {
                 fileMimeType: 'text/plain',
                 fileDescription: 'testDescription',
                 headers: {},
+                markers: [PUBLIC_READ_MARKER],
             })) as RecordFileSuccess;
 
             expect(result).toEqual({
@@ -369,6 +376,7 @@ describe('FileRecordsController', () => {
                 fileByteLength: 100,
                 fileMimeType: 'text/plain',
                 headers: {},
+                markers: [PUBLIC_READ_MARKER],
             });
 
             await expect(
@@ -426,6 +434,7 @@ describe('FileRecordsController', () => {
                 fileByteLength: 100,
                 fileMimeType: 'text/plain',
                 headers: {},
+                markers: [PUBLIC_READ_MARKER],
             });
 
             await expect(
@@ -483,6 +492,7 @@ describe('FileRecordsController', () => {
                 fileByteLength: 100,
                 fileMimeType: 'text/plain',
                 headers: {},
+                markers: [PUBLIC_READ_MARKER],
             });
 
             await expect(
@@ -496,6 +506,65 @@ describe('FileRecordsController', () => {
                 subjectId: userId,
                 sizeInBytes: 100,
                 markers: [PUBLIC_READ_MARKER],
+                uploaded: false,
+                url: expect.any(String),
+            });
+        });
+
+        it('should be able to record a file with a custom marker', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            policiesStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = (await manager.recordFile(recordName, userId, {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                fileDescription: 'testDescription',
+                headers: {},
+                markers: ['secret'],
+            })) as RecordFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+                fileName: 'testSha256.txt',
+                markers: ['secret'],
+            });
+            expect(presignUrlMock).toHaveBeenCalledWith({
+                recordName: recordName,
+                fileName: 'testSha256.txt',
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                headers: {},
+                markers: ['secret'],
+            });
+
+            await expect(
+                store.getFileRecord(recordName, 'testSha256.txt')
+            ).resolves.toEqual({
+                success: true,
+                fileName: 'testSha256.txt',
+                description: 'testDescription',
+                recordName: recordName,
+                publisherId: userId,
+                subjectId: userId,
+                sizeInBytes: 100,
+                markers: ['secret'],
                 uploaded: false,
                 url: expect.any(String),
             });
@@ -641,6 +710,128 @@ describe('FileRecordsController', () => {
                 errorCode: 'file_not_found',
                 errorMessage: 'The file was not found in the store.',
             });
+        });
+    });
+
+    describe('readFile()', () => {
+        it.only('should get a URL that the file can be read from', async () => {
+            presignReadMock.mockResolvedValueOnce({
+                success: true,
+                requestUrl: 'testUrl',
+                requestMethod: 'GET',
+                requestHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            await store.addFileRecord(
+                recordName,
+                'testFile.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+
+            const result = (await manager.readFile(
+                key,
+                'testFile.txt',
+                userId
+            )) as ReadFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                requestUrl: 'testUrl',
+                requestMethod: 'GET',
+                requestHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+            expect(presignReadMock).toHaveBeenCalledWith({
+                recordName: recordName,
+                fileName: 'testFile.txt',
+                headers: {},
+            });
+        });
+
+        it.only('should get a URL by record name if the user has the correct permissions', async () => {
+            presignReadMock.mockResolvedValueOnce({
+                success: true,
+                requestUrl: 'testUrl',
+                requestMethod: 'GET',
+                requestHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            await store.addFileRecord(
+                recordName,
+                'testFile.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description',
+                ['secret']
+            );
+
+            policiesStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = (await manager.readFile(
+                recordName,
+                'testFile.txt',
+                userId
+            )) as ReadFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                requestUrl: 'testUrl',
+                requestMethod: 'GET',
+                requestHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+            expect(presignReadMock).toHaveBeenCalledWith({
+                recordName: recordName,
+                fileName: 'testFile.txt',
+                headers: {},
+            });
+        });
+
+        it.only('should deny requests if the user doesnt have permissions', async () => {
+            presignReadMock.mockResolvedValueOnce({
+                success: true,
+                requestUrl: 'testUrl',
+                requestMethod: 'GET',
+                requestHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            await store.addFileRecord(
+                recordName,
+                'testFile.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description',
+                ['secret']
+            );
+
+            const result = (await manager.readFile(
+                recordName,
+                'testFile.txt',
+                userId
+            )) as ReadFileSuccess;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+            });
+            expect(presignReadMock).not.toHaveBeenCalled();
         });
     });
 

@@ -14,6 +14,15 @@ export interface FileRecordsStore {
     ): Promise<PresignFileUploadResult>;
 
     /**
+     * Presigns a request to read a file.
+     * Returns the URL that can be used to read the file.
+     * @param request The request to create a signed request for.
+     */
+    presignFileRead(
+        request: PresignFileReadRequest
+    ): Promise<PresignFileReadResult>;
+
+    /**
      * Gets the file record for the file with the given name.
      * @param recordName The name of the record that the file is stored in.
      * @param fileName The name of the file.
@@ -180,6 +189,38 @@ export interface PresignFileUploadRequest {
         [name: string]: string;
     };
 
+    /**
+     * The markers that should be associated with the file.
+     */
+    markers: string[];
+
+    /**
+     * The current date.
+     */
+    date?: Date;
+}
+
+export interface PresignFileReadRequest {
+    /**
+     * The name of the record that the file will be stored in.
+     */
+    recordName: string;
+
+    /**
+     * The name of the file.
+     */
+    fileName: string;
+
+    /**
+     * The headers that were included in the request.
+     */
+    headers: {
+        [name: string]: string;
+    };
+
+    /**
+     * The current date.
+     */
     date?: Date;
 }
 
@@ -209,6 +250,37 @@ export interface PresignFileUploadSuccess {
 }
 
 export interface PresignFileUploadFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export type PresignFileReadResult =
+    | PresignFileReadSuccess
+    | PresignFileReadFailure;
+
+export interface PresignFileReadSuccess {
+    success: true;
+
+    /**
+     * The URL that the request should be sent to.
+     */
+    requestUrl: string;
+
+    /**
+     * The HTTP method that should be used for the request.
+     */
+    requestMethod: string;
+
+    /**
+     * The headers that should be included in the request.
+     */
+    requestHeaders: {
+        [name: string]: string;
+    };
+}
+
+export interface PresignFileReadFailure {
     success: false;
     errorCode: ServerError;
     errorMessage: string;

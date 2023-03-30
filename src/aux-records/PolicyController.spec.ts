@@ -111,6 +111,23 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should deny the request if no markers are provided', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'data.create',
+                    address: 'myAddress',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    resourceMarkers: [],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
             it('should allow the request if the user has the admin role assigned', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -788,6 +805,23 @@ describe('PolicyController', () => {
                 expect(result.allowed).toBe(true);
             });
 
+            it('should deny the request if no markers are provided', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'data.read',
+                    address: 'myAddress',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    resourceMarkers: [],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
             it('should allow the request if it is readable by everyone', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
@@ -1150,6 +1184,23 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
+                });
+            });
+
+            it('should deny the request if no markers are provided', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'data.update',
+                    address: 'myAddress',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    existingMarkers: [],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
                 });
             });
 
@@ -1923,6 +1974,23 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
+                });
+            });
+
+            it('should deny the request if no markers are provided', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'data.delete',
+                    address: 'myAddress',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    resourceMarkers: [],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
                 });
             });
 
@@ -3527,6 +3595,24 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should deny the request if no markers are provided', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'file.create',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    resourceMarkers: [],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'application/json',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
             it('should allow the request if the user has the admin role assigned', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -4391,6 +4477,24 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should deny the request if no markers are provided', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'file.read',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    resourceMarkers: [],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'application/json',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                });
+            });
+
             it('should allow the request if the user has the admin role assigned', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -5077,6 +5181,24 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
+                });
+            });
+
+            it('should deny the request if no markers are provided', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'file.delete',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    resourceMarkers: [],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'application/json',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
                 });
             });
 

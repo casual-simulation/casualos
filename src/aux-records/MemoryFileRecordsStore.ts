@@ -5,6 +5,8 @@ import {
     GetFileNameFromUrlResult,
     GetFileRecordResult,
     MarkFileRecordAsUploadedResult,
+    PresignFileReadRequest,
+    PresignFileReadResult,
     PresignFileUploadRequest,
     PresignFileUploadResult,
 } from './FileRecordsStore';
@@ -25,6 +27,20 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
             },
             uploadMethod: 'POST',
             uploadUrl: `${this._fileUploadUrl}/${request.recordName}/${request.fileName}`,
+        };
+    }
+
+    async presignFileRead(
+        request: PresignFileReadRequest
+    ): Promise<PresignFileReadResult> {
+        return {
+            success: true,
+            requestHeaders: {
+                ...request.headers,
+                'record-name': request.recordName,
+            },
+            requestMethod: 'GET',
+            requestUrl: `${this._fileUploadUrl}/${request.recordName}/${request.fileName}`,
         };
     }
 
