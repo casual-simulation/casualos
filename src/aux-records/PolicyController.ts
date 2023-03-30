@@ -38,7 +38,7 @@ export const MAX_ALLOWED_MARKERS = 2;
 /**
  * A generic not_authorized result.
  */
-export const NOT_AUTHORIZED_RESULT: AuthorizeResult = {
+export const NOT_AUTHORIZED_RESULT: Omit<AuthorizeDenied, 'reason'> = {
     allowed: false,
     errorCode: 'not_authorized',
     errorMessage: 'You are not authorized to perform this action.',
@@ -51,6 +51,9 @@ export const NOT_AUTHORIZED_TO_MANY_INSTANCES_RESULT: AuthorizeResult = {
     allowed: false,
     errorCode: 'not_authorized',
     errorMessage: `This action is not authorized because more than ${MAX_ALLOWED_INSTANCES} instances are loaded.`,
+    reason: {
+        type: 'too_many_insts',
+    },
 };
 
 /**
@@ -232,7 +235,7 @@ export class PolicyController {
         context: RolesContext<AuthorizeDataCreateRequest>,
         subjectType: 'user' | 'inst',
         id: string
-    ): Promise<GenericAuthorization> {
+    ): Promise<GenericResult> {
         const authorizations: MarkerAuthorization[] = [];
         let role: string | true | null = null;
 
@@ -257,7 +260,17 @@ export class PolicyController {
             );
 
             if (!actionPermission) {
-                return null;
+                return {
+                    success: false,
+                    reason: {
+                        type: 'missing_permission',
+                        kind: subjectType,
+                        id,
+                        marker: marker.marker,
+                        permission: 'data.create',
+                        role,
+                    },
+                };
             }
 
             if (role === null) {
@@ -276,7 +289,17 @@ export class PolicyController {
             );
 
             if (!policyPermission) {
-                return null;
+                return {
+                    success: false,
+                    reason: {
+                        type: 'missing_permission',
+                        kind: subjectType,
+                        id,
+                        marker: marker.marker,
+                        permission: 'policy.assign',
+                        role,
+                    },
+                };
             }
 
             authorizations.push({
@@ -297,12 +320,20 @@ export class PolicyController {
         }
 
         if (!role) {
-            return null;
+            return {
+                success: false,
+                reason: {
+                    type: 'missing_role',
+                },
+            };
         }
 
         return {
-            role,
-            markers: authorizations,
+            success: true,
+            authorization: {
+                role,
+                markers: authorizations,
+            },
         };
     }
 
@@ -324,7 +355,7 @@ export class PolicyController {
         context: RolesContext<AuthorizeReadDataRequest>,
         type: 'user' | 'inst',
         id: string
-    ): Promise<GenericAuthorization> {
+    ): Promise<GenericResult> {
         const authorizations: MarkerAuthorization[] = [];
         let role: string | true | null = null;
 
@@ -349,7 +380,17 @@ export class PolicyController {
             );
 
             if (!actionPermission) {
-                return null;
+                return {
+                    success: false,
+                    reason: {
+                        type: 'missing_permission',
+                        kind: type,
+                        id,
+                        marker: marker.marker,
+                        permission: 'data.read',
+                        role,
+                    },
+                };
             }
 
             if (role === null) {
@@ -369,12 +410,20 @@ export class PolicyController {
         }
 
         if (!role) {
-            return null;
+            return {
+                success: false,
+                reason: {
+                    type: 'missing_role',
+                },
+            };
         }
 
         return {
-            role,
-            markers: authorizations,
+            success: true,
+            authorization: {
+                role,
+                markers: authorizations,
+            },
         };
     }
 
@@ -400,9 +449,25 @@ export class PolicyController {
         context: RolesContext<AuthorizeUpdateDataRequest>,
         type: 'user' | 'inst',
         id: string
-    ): Promise<GenericAuthorization> {
+    ): Promise<GenericResult> {
         const authorizations: MarkerAuthorization[] = [];
         let role: string | true | null = null;
+
+        if (
+            context.request.removedMarkers &&
+            context.request.existingMarkers.length ===
+                context.request.removedMarkers.length &&
+            context.request.existingMarkers.every((m) =>
+                context.request.removedMarkers.includes(m)
+            )
+        ) {
+            return {
+                success: false,
+                reason: {
+                    type: 'no_markers_remaining',
+                },
+            };
+        }
 
         for (let marker of context.markers) {
             const actionPermission = await this._findPermissionByFilter(
@@ -425,7 +490,17 @@ export class PolicyController {
             );
 
             if (!actionPermission) {
-                return null;
+                return {
+                    success: false,
+                    reason: {
+                        type: 'missing_permission',
+                        kind: type,
+                        id,
+                        marker: marker.marker,
+                        permission: 'data.update',
+                        role,
+                    },
+                };
             }
 
             if (role === null) {
@@ -460,7 +535,17 @@ export class PolicyController {
                 );
 
                 if (!policyPermission) {
-                    return null;
+                    return {
+                        success: false,
+                        reason: {
+                            type: 'missing_permission',
+                            kind: type,
+                            id,
+                            marker: marker.marker,
+                            permission: 'policy.assign',
+                            role,
+                        },
+                    };
                 }
 
                 actions.push({
@@ -481,7 +566,17 @@ export class PolicyController {
                 );
 
                 if (!policyPermission) {
-                    return null;
+                    return {
+                        success: false,
+                        reason: {
+                            type: 'missing_permission',
+                            kind: type,
+                            id,
+                            marker: marker.marker,
+                            permission: 'policy.unassign',
+                            role,
+                        },
+                    };
                 }
 
                 actions.push({
@@ -498,12 +593,20 @@ export class PolicyController {
         }
 
         if (!role) {
-            return null;
+            return {
+                success: false,
+                reason: {
+                    type: 'missing_role',
+                },
+            };
         }
 
         return {
-            role,
-            markers: authorizations,
+            success: true,
+            authorization: {
+                role,
+                markers: authorizations,
+            },
         };
     }
 
@@ -525,7 +628,7 @@ export class PolicyController {
         context: RolesContext<AuthorizeDeleteDataRequest>,
         type: 'user' | 'inst',
         id: string
-    ): Promise<GenericAuthorization> {
+    ): Promise<GenericResult> {
         const authorizations: MarkerAuthorization[] = [];
         let role: string | true | null = null;
 
@@ -550,7 +653,17 @@ export class PolicyController {
             );
 
             if (!actionPermission) {
-                return null;
+                return {
+                    success: false,
+                    reason: {
+                        type: 'missing_permission',
+                        kind: type,
+                        id,
+                        marker: marker.marker,
+                        permission: 'data.delete',
+                        role,
+                    },
+                };
             }
 
             if (role === null) {
@@ -572,12 +685,20 @@ export class PolicyController {
         }
 
         if (!role) {
-            return null;
+            return {
+                success: false,
+                reason: {
+                    type: 'missing_role',
+                },
+            };
         }
 
         return {
-            role,
-            markers: authorizations,
+            success: true,
+            authorization: {
+                role,
+                markers: authorizations,
+            },
         };
     }
 
@@ -600,7 +721,7 @@ export class PolicyController {
         context: RolesContext<AuthorizeListDataRequest>,
         type: 'user' | 'inst',
         id: string
-    ): Promise<GenericAuthorization> {
+    ): Promise<GenericResult> {
         const authorizations: MarkerAuthorization[] = [];
         let role: string | true | null = null;
 
@@ -688,8 +809,11 @@ export class PolicyController {
         }
 
         return {
-            role,
-            markers: authorizations,
+            success: true,
+            authorization: {
+                role,
+                markers: authorizations,
+            },
         };
     }
 
@@ -711,7 +835,7 @@ export class PolicyController {
         context: RolesContext<AuthorizeCreateFileRequest>,
         subjectType: 'user' | 'inst',
         id: string
-    ): Promise<GenericAuthorization> {
+    ): Promise<GenericResult> {
         const authorizations: MarkerAuthorization[] = [];
         let role: string | true | null = null;
 
@@ -740,7 +864,17 @@ export class PolicyController {
             );
 
             if (!actionPermission) {
-                return null;
+                return {
+                    success: false,
+                    reason: {
+                        type: 'missing_permission',
+                        kind: subjectType,
+                        id,
+                        marker: marker.marker,
+                        permission: 'file.create',
+                        role,
+                    },
+                };
             }
 
             if (role === null) {
@@ -759,7 +893,17 @@ export class PolicyController {
             );
 
             if (!policyPermission) {
-                return null;
+                return {
+                    success: false,
+                    reason: {
+                        type: 'missing_permission',
+                        kind: subjectType,
+                        id,
+                        marker: marker.marker,
+                        permission: 'policy.assign',
+                        role,
+                    },
+                };
             }
 
             authorizations.push({
@@ -780,12 +924,20 @@ export class PolicyController {
         }
 
         if (!role) {
-            return null;
+            return {
+                success: false,
+                reason: {
+                    type: 'missing_role',
+                },
+            };
         }
 
         return {
-            role,
-            markers: authorizations,
+            success: true,
+            authorization: {
+                role,
+                markers: authorizations,
+            },
         };
     }
 
@@ -807,7 +959,7 @@ export class PolicyController {
         context: RolesContext<AuthorizeReadFileRequest>,
         type: 'user' | 'inst',
         id: string
-    ): Promise<GenericAuthorization> {
+    ): Promise<GenericResult> {
         const authorizations: MarkerAuthorization[] = [];
         let role: string | true | null = null;
 
@@ -836,7 +988,17 @@ export class PolicyController {
             );
 
             if (!actionPermission) {
-                return null;
+                return {
+                    success: false,
+                    reason: {
+                        type: 'missing_permission',
+                        kind: type,
+                        id,
+                        marker: marker.marker,
+                        permission: 'file.read',
+                        role,
+                    },
+                };
             }
 
             if (role === null) {
@@ -856,12 +1018,20 @@ export class PolicyController {
         }
 
         if (!role) {
-            return null;
+            return {
+                success: false,
+                reason: {
+                    type: 'missing_role',
+                },
+            };
         }
 
         return {
-            role,
-            markers: authorizations,
+            success: true,
+            authorization: {
+                role,
+                markers: authorizations,
+            },
         };
     }
 
@@ -883,7 +1053,7 @@ export class PolicyController {
         context: RolesContext<AuthorizeDeleteFileRequest>,
         type: 'user' | 'inst',
         id: string
-    ): Promise<GenericAuthorization> {
+    ): Promise<GenericResult> {
         const authorizations: MarkerAuthorization[] = [];
         let role: string | true | null = null;
 
@@ -912,7 +1082,17 @@ export class PolicyController {
             );
 
             if (!actionPermission) {
-                return null;
+                return {
+                    success: false,
+                    reason: {
+                        type: 'missing_permission',
+                        kind: type,
+                        id,
+                        marker: marker.marker,
+                        permission: 'file.delete',
+                        role,
+                    },
+                };
             }
 
             if (role === null) {
@@ -932,12 +1112,20 @@ export class PolicyController {
         }
 
         if (!role) {
-            return null;
+            return {
+                success: false,
+                reason: {
+                    type: 'missing_role',
+                },
+            };
         }
 
         return {
-            role,
-            markers: authorizations,
+            success: true,
+            authorization: {
+                role,
+                markers: authorizations,
+            },
         };
     }
 
@@ -961,7 +1149,7 @@ export class PolicyController {
             context: RolesContext<T>,
             type: 'user' | 'inst',
             id: string
-        ) => Promise<GenericAuthorization>
+        ) => Promise<GenericResult>
     ): Promise<AuthorizeResult> {
         if (
             request.instances &&
@@ -972,6 +1160,15 @@ export class PolicyController {
             // we want integrators to understand that this is an authentication issue, and not a configuration issue.
             // If more than 2 instances are loaded, we always want those passed to the controller, even if having more than 2 fails authentication.
             return NOT_AUTHORIZED_TO_MANY_INSTANCES_RESULT;
+        }
+
+        if (resourceMarkers.length <= 0) {
+            return {
+                ...NOT_AUTHORIZED_RESULT,
+                reason: {
+                    type: 'no_markers',
+                },
+            };
         }
 
         const markers = await this._listPermissionsForMarkers(
@@ -992,7 +1189,7 @@ export class PolicyController {
             'user',
             request.userId
         );
-        if (!userAuthorization) {
+        if (userAuthorization.success === false) {
             if (!request.userId && !context.recordKeyProvided) {
                 return {
                     allowed: false,
@@ -1001,7 +1198,10 @@ export class PolicyController {
                         'The user must be logged in. Please provide a sessionKey or a recordKey.',
                 };
             }
-            return NOT_AUTHORIZED_RESULT;
+            return {
+                ...NOT_AUTHORIZED_RESULT,
+                reason: userAuthorization.reason,
+            };
         }
 
         const authorizedInstances = await this._authorizeInstances(
@@ -1022,8 +1222,11 @@ export class PolicyController {
             }
         );
 
-        if (!authorizedInstances) {
-            return NOT_AUTHORIZED_RESULT;
+        if (!Array.isArray(authorizedInstances)) {
+            return {
+                ...NOT_AUTHORIZED_RESULT,
+                reason: authorizedInstances.reason,
+            };
         }
 
         const recordKeyOwnerId = context.recordKeyResult?.success
@@ -1037,7 +1240,7 @@ export class PolicyController {
             recordKeyOwnerId: recordKeyOwnerId,
             authorizerId: authorizerId,
             subject: {
-                ...userAuthorization,
+                ...userAuthorization.authorization,
                 userId: request.userId,
                 subjectPolicy: context.subjectPolicy,
             },
@@ -1049,8 +1252,8 @@ export class PolicyController {
     private async _authorizeInstances(
         instances: string[],
         recordKeyResult: ValidatePublicRecordKeyResult,
-        authorize: (inst: string) => Promise<GenericAuthorization>
-    ): Promise<InstEnvironmentAuthorization[]> {
+        authorize: (inst: string) => Promise<GenericResult>
+    ): Promise<InstEnvironmentAuthorization[] | GenericDenied> {
         const authorizedInstances: InstEnvironmentAuthorization[] = [];
         if (instances) {
             for (let inst of instances) {
@@ -1063,14 +1266,14 @@ export class PolicyController {
                 }
 
                 const authorization = await authorize(inst);
-                if (!authorization) {
-                    return null;
+                if (authorization.success === false) {
+                    return authorization;
                 }
 
                 authorizedInstances.push({
                     inst,
                     authorizationType: 'allowed',
-                    ...authorization,
+                    ...authorization.authorization,
                 });
             }
         }
@@ -1370,13 +1573,6 @@ export interface RolesContext<T extends AuthorizeRequestBase>
 
 type PermissionFilter = (permission: AvailablePermissions) => Promise<boolean>;
 
-interface AuthorizedPermission<T extends Permission> {
-    role: string;
-    subjectPolicy: PublicRecordKeyPolicy;
-    permission: T;
-    policy: PolicyDocument;
-}
-
 interface PossiblePermission {
     policy: PolicyDocument;
     permission: AvailablePermissions;
@@ -1604,6 +1800,18 @@ export interface AuthorizeAllowed {
     allowedDataItems?: ListedDataItem[];
 }
 
+export type GenericResult = GenericAllowed | GenericDenied;
+
+export interface GenericAllowed {
+    success: true;
+    authorization: GenericAuthorization;
+}
+
+export interface GenericDenied {
+    success: false;
+    reason: DenialReason;
+}
+
 export interface GenericAuthorization {
     /**
      * The role that was selected for authorization.
@@ -1713,4 +1921,70 @@ export interface AuthorizeDenied {
         | 'not_authorized'
         | 'unacceptable_request';
     errorMessage: string;
+
+    /**
+     * The reason that the authorization was denied.
+     */
+    reason?: DenialReason;
+}
+
+export type DenialReason =
+    | NoMarkersDenialReason
+    | MissingPermissionDenialReason
+    | TooManyInstsDenialReason
+    | MissingRoleDenialReason
+    | NoMarkersRemainingDenialReason;
+
+/**
+ * Defines an interface that represents a denial reason that is returned when the resource has no markers.
+ */
+export interface NoMarkersDenialReason {
+    type: 'no_markers';
+}
+
+export interface MissingPermissionDenialReason {
+    type: 'missing_permission';
+
+    /**
+     * Whether the user or inst is missing the permission.
+     */
+    kind: 'user' | 'inst';
+
+    /**
+     * The ID of the user/inst that is missing the permission.
+     */
+    id: string;
+
+    /**
+     * The marker that was being evaluated.
+     */
+    marker: string;
+
+    /**
+     * The role that was selected for authorization.
+     *
+     * If not specified, then no role could be determined.
+     * This often happens when the user/inst hasn't been assigned a role, but it can also happen when no permissions match any of the roles that the user/inst has assigned.
+     *
+     * If true, then that indicates that the "everyone" role was used.
+     * If a string, then that is the name of the role that was used.
+     */
+    role?: string | true;
+
+    /**
+     * The permission that is missing.
+     */
+    permission: AvailablePermissions['type'];
+}
+
+export interface MissingRoleDenialReason {
+    type: 'missing_role';
+}
+
+export interface NoMarkersRemainingDenialReason {
+    type: 'no_markers_remaining';
+}
+
+export interface TooManyInstsDenialReason {
+    type: 'too_many_insts';
 }

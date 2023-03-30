@@ -125,6 +125,9 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'no_markers',
+                    },
                 });
             });
 
@@ -285,6 +288,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: 'developer',
+                        marker: 'secret',
+                        permission: 'policy.assign',
+                    },
                 });
             });
 
@@ -327,6 +338,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: 'developer',
+                        marker: 'secret',
+                        permission: 'policy.assign',
+                    },
                 });
             });
 
@@ -383,6 +402,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'data.create',
+                        role: null,
+                    },
                 });
             });
 
@@ -423,6 +450,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'data.create',
+                        role: null,
+                    },
                 });
             });
 
@@ -458,6 +493,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: 'developer',
+                        marker: 'secret',
+                        permission: 'policy.assign',
+                    },
                 });
             });
 
@@ -475,6 +518,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'data.create',
+                        role: null,
+                    },
                 });
             });
 
@@ -511,6 +562,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'data.create',
+                        role: null,
+                    },
                 });
             });
 
@@ -587,6 +646,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'instance',
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'data.create',
+                        role: null,
+                    },
                 });
             });
 
@@ -789,6 +856,9 @@ describe('PolicyController', () => {
                     allowed: false,
                     errorCode: 'not_authorized',
                     errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                    reason: {
+                        type: 'too_many_insts',
+                    },
                 });
             });
         });
@@ -819,6 +889,9 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'no_markers',
+                    },
                 });
             });
 
@@ -914,6 +987,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'data.read',
+                        role: null,
+                    },
                 });
             });
 
@@ -969,6 +1050,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'data.read',
+                        role: null,
+                    },
                 });
             });
 
@@ -1008,6 +1097,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'data.read',
+                        role: null,
+                    },
                 });
             });
 
@@ -1046,6 +1143,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'data.read',
+                        role: null,
+                    },
                 });
             });
 
@@ -1086,6 +1191,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'instance',
+                        marker: 'secret',
+                        permission: 'data.read',
+                        role: null,
+                    },
                 });
             });
 
@@ -1142,6 +1255,9 @@ describe('PolicyController', () => {
                     allowed: false,
                     errorCode: 'not_authorized',
                     errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                    reason: {
+                        type: 'too_many_insts',
+                    },
                 });
             });
         });
@@ -1201,6 +1317,9 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'no_markers',
+                    },
                 });
             });
 
@@ -1397,6 +1516,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'data.update',
+                        role: null,
+                    },
                 });
             });
 
@@ -1444,6 +1571,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'test',
+                        permission: 'policy.assign',
+                        role: 'developer',
+                    },
                 });
             });
 
@@ -1496,6 +1631,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'test',
+                        permission: 'policy.assign',
+                        role: 'developer',
+                    },
                 });
             });
 
@@ -1548,6 +1691,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'data.update',
+                        role: null,
+                    },
                 });
             });
 
@@ -1600,6 +1751,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'test',
+                        permission: 'policy.unassign',
+                        role: 'developer',
+                    },
                 });
             });
 
@@ -1651,6 +1810,58 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'data.update',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should deny the request if the update would remove all markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.update',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        {
+                            type: 'policy.unassign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.update',
+                    address: 'address',
+                    userId,
+                    existingMarkers: ['secret'],
+                    removedMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'no_markers_remaining',
+                    },
                 });
             });
 
@@ -1668,6 +1879,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'data.update',
+                        role: null,
+                    },
                 });
             });
 
@@ -1704,6 +1923,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'data.update',
+                        role: null,
+                    },
                 });
             });
 
@@ -1770,6 +1997,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'instance',
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'data.update',
+                        role: null,
+                    },
                 });
             });
 
@@ -1932,6 +2167,9 @@ describe('PolicyController', () => {
                     allowed: false,
                     errorCode: 'not_authorized',
                     errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                    reason: {
+                        type: 'too_many_insts',
+                    },
                 });
             });
         });
@@ -1991,6 +2229,9 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'no_markers',
+                    },
                 });
             });
 
@@ -2121,6 +2362,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'data.delete',
+                        role: null,
+                    },
                 });
             });
 
@@ -2172,6 +2421,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'data.delete',
+                        role: null,
+                    },
                 });
             });
 
@@ -2189,6 +2446,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'data.delete',
+                        role: null,
+                    },
                 });
             });
 
@@ -2225,6 +2490,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'data.delete',
+                        role: null,
+                    },
                 });
             });
 
@@ -2291,6 +2564,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'instance',
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'data.delete',
+                        role: null,
+                    },
                 });
             });
 
@@ -2453,6 +2734,9 @@ describe('PolicyController', () => {
                     allowed: false,
                     errorCode: 'not_authorized',
                     errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                    reason: {
+                        type: 'too_many_insts',
+                    },
                 });
             });
         });
@@ -3540,6 +3824,9 @@ describe('PolicyController', () => {
                     allowed: false,
                     errorCode: 'not_authorized',
                     errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                    reason: {
+                        type: 'too_many_insts',
+                    },
                 });
             });
         });
@@ -3610,6 +3897,9 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'no_markers',
+                    },
                 });
             });
 
@@ -3841,6 +4131,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'policy.assign',
+                        role: 'developer',
+                    },
                 });
             });
 
@@ -3883,6 +4181,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'policy.assign',
+                        role: 'developer',
+                    },
                 });
             });
 
@@ -3940,6 +4246,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'file.create',
+                        role: null,
+                    },
                 });
             });
 
@@ -3981,6 +4295,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'file.create',
+                        role: null,
+                    },
                 });
             });
 
@@ -4022,6 +4344,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'file.create',
+                        role: null,
+                    },
                 });
             });
 
@@ -4057,6 +4387,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'policy.assign',
+                        role: 'developer',
+                    },
                 });
             });
 
@@ -4075,6 +4413,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'file.create',
+                        role: null,
+                    },
                 });
             });
 
@@ -4113,6 +4459,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'file.create',
+                        role: null,
+                    },
                 });
             });
 
@@ -4190,6 +4544,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'instance',
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'file.create',
+                        role: null,
+                    },
                 });
             });
 
@@ -4231,6 +4593,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'instance',
+                        marker: 'secret',
+                        permission: 'file.create',
+                        role: null,
+                    },
                 });
             });
 
@@ -4432,6 +4802,9 @@ describe('PolicyController', () => {
                     allowed: false,
                     errorCode: 'not_authorized',
                     errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                    reason: {
+                        type: 'too_many_insts',
+                    },
                 });
             });
         });
@@ -4492,6 +4865,9 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'no_markers',
+                    },
                 });
             });
 
@@ -4702,6 +5078,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'file.read',
+                        role: null,
+                    },
                 });
             });
 
@@ -4738,6 +5122,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'file.read',
+                        role: null,
+                    },
                 });
             });
 
@@ -4774,6 +5166,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'file.read',
+                        role: null,
+                    },
                 });
             });
 
@@ -4792,6 +5192,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'file.read',
+                        role: null,
+                    },
                 });
             });
 
@@ -4830,6 +5238,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'file.read',
+                        role: null,
+                    },
                 });
             });
 
@@ -4937,6 +5353,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'instance',
+                        marker: 'secret',
+                        permission: 'file.read',
+                        role: null,
+                    },
                 });
             });
 
@@ -4978,6 +5402,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'instance',
+                        marker: 'secret',
+                        permission: 'file.read',
+                        role: null,
+                    },
                 });
             });
 
@@ -5139,6 +5571,9 @@ describe('PolicyController', () => {
                     allowed: false,
                     errorCode: 'not_authorized',
                     errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                    reason: {
+                        type: 'too_many_insts',
+                    },
                 });
             });
         });
@@ -5199,6 +5634,9 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'no_markers',
+                    },
                 });
             });
 
@@ -5329,6 +5767,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'file.delete',
+                        role: null,
+                    },
                 });
             });
 
@@ -5423,6 +5869,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'file.delete',
+                        role: null,
+                    },
                 });
             });
 
@@ -5476,6 +5930,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'file.delete',
+                        role: null,
+                    },
                 });
             });
 
@@ -5494,6 +5956,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'file.delete',
+                        role: null,
+                    },
                 });
             });
 
@@ -5532,6 +6002,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'file.delete',
+                        role: null,
+                    },
                 });
             });
 
@@ -5599,6 +6077,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'instance',
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'file.delete',
+                        role: null,
+                    },
                 });
             });
 
@@ -5681,6 +6167,14 @@ describe('PolicyController', () => {
                     errorCode: 'not_authorized',
                     errorMessage:
                         'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'instance',
+                        marker: 'secret',
+                        permission: 'file.delete',
+                        role: null,
+                    },
                 });
             });
 
@@ -5796,6 +6290,9 @@ describe('PolicyController', () => {
                     allowed: false,
                     errorCode: 'not_authorized',
                     errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                    reason: {
+                        type: 'too_many_insts',
+                    },
                 });
             });
         });
