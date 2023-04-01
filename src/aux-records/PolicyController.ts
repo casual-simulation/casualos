@@ -198,6 +198,8 @@ export class PolicyController {
             return this._authorizeFileCreateRequest(context, request);
         } else if (request.action === 'file.read') {
             return this._authorizeFileReadRequest(context, request);
+        } else if (request.action === 'file.update') {
+            return this._authorizeFileUpdateRequest(context, request);
         } else if (request.action === 'file.delete') {
             return this._authorizeFileDeleteRequest(context, request);
         }
@@ -427,10 +429,25 @@ export class PolicyController {
         };
     }
 
-    private _authorizeDataUpdateRequest(
+    private async _authorizeDataUpdateRequest(
         context: AuthorizationContext,
         request: AuthorizeUpdateDataRequest
     ): Promise<AuthorizeResult> {
+        if (
+            !willMarkersBeRemaining(
+                request.existingMarkers,
+                request.removedMarkers,
+                request.addedMarkers
+            )
+        ) {
+            return {
+                ...NOT_AUTHORIZED_RESULT,
+                reason: {
+                    type: 'no_markers_remaining',
+                },
+            };
+        }
+
         return this._authorizeRequest(
             context,
             request,
@@ -452,22 +469,6 @@ export class PolicyController {
     ): Promise<GenericResult> {
         const authorizations: MarkerAuthorization[] = [];
         let role: string | true | null = null;
-
-        if (
-            context.request.removedMarkers &&
-            context.request.existingMarkers.length ===
-                context.request.removedMarkers.length &&
-            context.request.existingMarkers.every((m) =>
-                context.request.removedMarkers.includes(m)
-            )
-        ) {
-            return {
-                success: false,
-                reason: {
-                    type: 'no_markers_remaining',
-                },
-            };
-        }
 
         for (let marker of context.markers) {
             const actionPermission = await this._findPermissionByFilter(
@@ -1035,6 +1036,207 @@ export class PolicyController {
         };
     }
 
+    private async _authorizeFileUpdateRequest(
+        context: AuthorizationContext,
+        request: AuthorizeUpdateFileRequest
+    ): Promise<AuthorizeResult> {
+        const allMarkers = union(
+            request.existingMarkers,
+            request.addedMarkers,
+            request.removedMarkers
+        );
+        return await this._authorizeRequest(
+            context,
+            request,
+            allMarkers,
+            (context, type, id) => {
+                return this._authorizeFileUpdate(context, type, id);
+            }
+        );
+    }
+
+    private async _authorizeFileUpdate(
+        context: RolesContext<AuthorizeUpdateFileRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        if (
+            (!context.request.addedMarkers ||
+                context.request.addedMarkers.length <= 0) &&
+            (!context.request.removedMarkers ||
+                context.request.removedMarkers.length <= 0)
+        ) {
+            return {
+                success: false,
+                reason: {
+                    type: 'no_markers',
+                },
+            };
+        }
+
+        if (
+            !willMarkersBeRemaining(
+                context.request.existingMarkers,
+                context.request.removedMarkers,
+                context.request.addedMarkers
+            )
+        ) {
+            return {
+                success: false,
+                reason: {
+                    type: 'no_markers_remaining',
+                },
+            };
+        }
+
+        const authorizations: MarkerAuthorization[] = [];
+        let role: string | true | null = null;
+
+        for (let marker of context.markers) {
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byFile(
+                        'file.update',
+                        context.request.fileSizeInBytes,
+                        context.request.fileMimeType
+                    ),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._byAdminRole(context.recordKeyResult),
+                              this._bySubjectRole(
+                                  context,
+                                  type,
+                                  context.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                return {
+                    success: false,
+                    reason: {
+                        type: 'missing_permission',
+                        kind: type,
+                        id,
+                        marker: marker.marker,
+                        permission: 'file.update',
+                        role,
+                    },
+                };
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            const isAddedMarker =
+                context.request.addedMarkers &&
+                context.request.addedMarkers.includes(marker.marker);
+            const isRemovedMarker =
+                context.request.removedMarkers &&
+                context.request.removedMarkers.includes(marker.marker);
+
+            const actions: ActionAuthorization[] = [
+                {
+                    action: context.request.action,
+                    grantingPolicy: actionPermission.policy,
+                    grantingPermission: actionPermission.permission,
+                },
+            ];
+
+            if (isAddedMarker) {
+                const policyPermission = await this._findPermissionByFilter(
+                    marker.permissions,
+                    this._every(
+                        this._byPolicy('policy.assign', marker.marker),
+                        this._some(
+                            this._byEveryoneRole(),
+                            this._byRole(actionPermission.permission.role)
+                        )
+                    )
+                );
+
+                if (!policyPermission) {
+                    return {
+                        success: false,
+                        reason: {
+                            type: 'missing_permission',
+                            kind: type,
+                            id,
+                            marker: marker.marker,
+                            permission: 'policy.assign',
+                            role,
+                        },
+                    };
+                }
+
+                actions.push({
+                    action: 'policy.assign',
+                    grantingPolicy: policyPermission.policy,
+                    grantingPermission: policyPermission.permission,
+                });
+            } else if (isRemovedMarker) {
+                const policyPermission = await this._findPermissionByFilter(
+                    marker.permissions,
+                    this._every(
+                        this._byPolicy('policy.unassign', marker.marker),
+                        this._some(
+                            this._byEveryoneRole(),
+                            this._byRole(actionPermission.permission.role)
+                        )
+                    )
+                );
+
+                if (!policyPermission) {
+                    return {
+                        success: false,
+                        reason: {
+                            type: 'missing_permission',
+                            kind: type,
+                            id,
+                            marker: marker.marker,
+                            permission: 'policy.unassign',
+                            role,
+                        },
+                    };
+                }
+
+                actions.push({
+                    action: 'policy.unassign',
+                    grantingPolicy: policyPermission.policy,
+                    grantingPermission: policyPermission.permission,
+                });
+            }
+
+            authorizations.push({
+                marker: marker.marker,
+                actions,
+            });
+        }
+
+        if (!role) {
+            return {
+                success: false,
+                reason: {
+                    type: 'missing_role',
+                },
+            };
+        }
+
+        return {
+            success: true,
+            authorization: {
+                role,
+                markers: authorizations,
+            },
+        };
+    }
+
     private async _authorizeFileDeleteRequest(
         context: AuthorizationContext,
         request: AuthorizeDeleteFileRequest
@@ -1511,6 +1713,36 @@ export class PolicyController {
         }
         return null;
     }
+}
+
+/**
+ * Determines if any markers will be remaining after the removal and addition of the specified markers.
+ * @param existingMarkers The markers that already exist.
+ * @param removedMarkers The markers that will be removed.
+ * @param addedMarkers The markers that will be added.
+ */
+export function willMarkersBeRemaining(
+    existingMarkers: string[],
+    removedMarkers: string[] | null,
+    addedMarkers: string[] | null
+): boolean {
+    if (!removedMarkers) {
+        return true;
+    }
+
+    if (addedMarkers && addedMarkers.length > 0) {
+        return true;
+    }
+
+    if (existingMarkers.length !== removedMarkers.length) {
+        return true;
+    }
+
+    if (!existingMarkers.every((m) => removedMarkers.includes(m))) {
+        return true;
+    }
+
+    return false;
 }
 
 export function returnAuthorizationResult(a: AuthorizeDenied): {

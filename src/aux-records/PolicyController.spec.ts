@@ -8,6 +8,7 @@ import {
     AuthorizeRequest,
     AuthorizeResult,
     PolicyController,
+    willMarkersBeRemaining,
 } from './PolicyController';
 import {
     ADMIN_ROLE_NAME,
@@ -1862,6 +1863,118 @@ describe('PolicyController', () => {
                     reason: {
                         type: 'no_markers_remaining',
                     },
+                });
+            });
+
+            it('should allow requests that replace all markers with new ones', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.update',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        {
+                            type: 'policy.unassign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                const otherPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.update',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                    ['other']: otherPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.update',
+                    address: 'address',
+                    userId,
+                    existingMarkers: ['secret'],
+                    removedMarkers: ['secret'],
+                    addedMarkers: ['other'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.update',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'data.update',
+                                            role: 'developer',
+                                            addresses: true,
+                                        },
+                                    },
+                                    {
+                                        action: 'policy.unassign',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'policy.unassign',
+                                            role: 'developer',
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: 'other',
+                                actions: [
+                                    {
+                                        action: 'data.update',
+                                        grantingPolicy: otherPolicy,
+                                        grantingPermission: {
+                                            type: 'data.update',
+                                            role: 'developer',
+                                            addresses: true,
+                                        },
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPolicy: otherPolicy,
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: 'developer',
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
                 });
             });
 
@@ -6297,6 +6410,861 @@ describe('PolicyController', () => {
             });
         });
 
+        describe('file.update', () => {
+            it('should deny requests that dont update markers', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'file.update',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'no_markers',
+                    },
+                });
+            });
+
+            it('should deny the request if no markers are provided', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'file.update',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    existingMarkers: [],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'no_markers',
+                    },
+                });
+            });
+
+            it('should allow requests that remove markers if given a record key', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'file.update',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    existingMarkers: [PUBLIC_READ_MARKER, 'secret'],
+                    removedMarkers: ['secret'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'file.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.update',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.update',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                    {
+                                        action: 'policy.unassign',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'policy.unassign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user does not have policy.assign access for new markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.update',
+                            role: 'developer',
+                        },
+                    ],
+                };
+
+                const testPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.update',
+                            role: 'developer',
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                    ['test']: testPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.update',
+                    userId,
+                    existingMarkers: ['secret'],
+                    addedMarkers: ['test'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'test',
+                        permission: 'policy.assign',
+                        role: 'developer',
+                    },
+                });
+            });
+
+            it('should deny the request if the user does not have policy.assign access for new markers from the same role as the file.update role', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer', 'other']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.update',
+                            role: 'developer',
+                        },
+                    ],
+                };
+
+                const testPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.update',
+                            role: 'developer',
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'other',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                    ['test']: testPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.update',
+                    userId,
+                    existingMarkers: ['secret'],
+                    addedMarkers: ['test'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'test',
+                        permission: 'policy.assign',
+                        role: 'developer',
+                    },
+                });
+            });
+
+            it('should deny the request if the user does has policy.assign access for new markers but does not have file.update access for the existing marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                const testPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.update',
+                            role: 'developer',
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                    ['test']: testPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.update',
+                    userId,
+                    existingMarkers: ['secret'],
+                    addedMarkers: ['test'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'file.update',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should deny the request if the user does not have policy.unassign access for removed markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.update',
+                            role: 'developer',
+                        },
+                    ],
+                };
+
+                const testPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.update',
+                            role: 'developer',
+                        },
+                        // {
+                        //     type: 'policy.unassign',
+                        //     role: 'developer',
+                        //     policies: true
+                        // },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                    ['test']: testPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.update',
+                    userId,
+                    existingMarkers: ['secret', 'test'],
+                    removedMarkers: ['test'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'test',
+                        permission: 'policy.unassign',
+                        role: 'developer',
+                    },
+                });
+            });
+
+            it('should deny the request if given no userId or record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.update',
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                });
+            });
+
+            it('should deny the request if the file.update permission does not allow files over the given size', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.update',
+                            role: 'developer',
+                            maxFileSizeInBytes: 100,
+                        },
+                    ],
+                };
+
+                const testPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.update',
+                            role: 'developer',
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                    ['test']: testPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.update',
+                    userId,
+                    existingMarkers: ['secret'],
+                    addedMarkers: ['test'],
+                    fileSizeInBytes: 101,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'file.update',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should deny the request if the user has no role assigned', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.update',
+                    userId,
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                    addedMarkers: ['secret'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'file.update',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should deny the request if given an invalid record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: wrongRecordKey,
+                    action: 'file.update',
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'record_not_found',
+                    errorMessage: 'Record not found.',
+                });
+            });
+
+            it('should deny the request if there is no policy for the given marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.update',
+                    userId,
+                    existingMarkers: ['secret'],
+                    addedMarkers: ['test'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'file.update',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should allow the request if the user is an admin even though there is no policy for the given marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.update',
+                    userId,
+                    existingMarkers: ['secret'],
+                    addedMarkers: ['test'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.update',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: 'test',
+                                actions: [
+                                    {
+                                        action: 'file.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.update',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the request is coming from an inst and no role has been provided to said inst', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.update',
+                    userId,
+                    instances: ['instance'],
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                    addedMarkers: ['secret'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'instance',
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'file.update',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should skip inst role checks when a record key is used', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.update',
+                    userId,
+                    instances: ['instance'],
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                    addedMarkers: ['secret'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'file.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.update',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.update',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance',
+                            authorizationType: 'not_required',
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if all the instances have roles for the data', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.update',
+                    userId,
+                    instances: ['instance1', 'instance2'],
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                    addedMarkers: ['secret'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'file.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.update',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.update',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance1',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'file.update',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'file.update',
+                                                role: ADMIN_ROLE_NAME,
+                                            },
+                                        },
+                                    ],
+                                },
+                                {
+                                    marker: 'secret',
+                                    actions: [
+                                        {
+                                            action: 'file.update',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'file.update',
+                                                role: ADMIN_ROLE_NAME,
+                                            },
+                                        },
+                                        {
+                                            action: 'policy.assign',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'policy.assign',
+                                                role: ADMIN_ROLE_NAME,
+                                                policies: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            inst: 'instance2',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'file.update',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'file.update',
+                                                role: ADMIN_ROLE_NAME,
+                                            },
+                                        },
+                                    ],
+                                },
+                                {
+                                    marker: 'secret',
+                                    actions: [
+                                        {
+                                            action: 'file.update',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'file.update',
+                                                role: ADMIN_ROLE_NAME,
+                                            },
+                                        },
+                                        {
+                                            action: 'policy.assign',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'policy.assign',
+                                                role: ADMIN_ROLE_NAME,
+                                                policies: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+
+            it('should deny the request if more than 2 instances are provided', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance3']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.update',
+                    userId,
+                    instances: ['instance1', 'instance2', 'instance3'],
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                    reason: {
+                        type: 'too_many_insts',
+                    },
+                });
+            });
+        });
+
         it('should deny the request if given an unrecognized action', async () => {
             const result = await controller.authorizeRequest({
                 action: 'missing',
@@ -6308,5 +7276,35 @@ describe('PolicyController', () => {
                 errorMessage: 'The given action is not supported.',
             });
         });
+    });
+});
+
+describe.only('willMarkersBeRemaining()', () => {
+    it('should return true if no markers are being removed', () => {
+        const existing = ['first', 'second'];
+        const removed = [] as string[];
+        const added = [] as string[];
+        expect(willMarkersBeRemaining(existing, removed, added)).toBe(true);
+    });
+
+    it('should return false if all markers are being removed', () => {
+        const existing = ['first', 'second'];
+        const removed = ['second', 'first'];
+        const added = [] as string[];
+        expect(willMarkersBeRemaining(existing, removed, added)).toBe(false);
+    });
+
+    it('should return true if all markers are being replaced', () => {
+        const existing = ['first', 'second'];
+        const removed = ['first', 'second'];
+        const added = ['third'];
+        expect(willMarkersBeRemaining(existing, removed, added)).toBe(true);
+    });
+
+    it('should return true if only adding markers', () => {
+        const existing = ['first', 'second'];
+        const removed = [] as string[];
+        const added = ['third'];
+        expect(willMarkersBeRemaining(existing, removed, added)).toBe(true);
     });
 });

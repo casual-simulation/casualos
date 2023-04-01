@@ -6,6 +6,7 @@ export type AvailablePermissions =
     | ListDataPermission
     | CreateFilePermission
     | ReadFilePermission
+    | UpdateFilePermission
     | DeleteFilePermission
     | IncrementEventPermission
     | CountEventPermission
@@ -354,6 +355,10 @@ export const DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT: PolicyDocument = {
         },
         {
             type: 'file.delete',
+            role: ADMIN_ROLE_NAME,
+        },
+        {
+            type: 'file.update',
             role: ADMIN_ROLE_NAME,
         },
         {
