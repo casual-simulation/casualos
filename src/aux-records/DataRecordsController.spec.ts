@@ -1161,6 +1161,14 @@ describe('DataRecordsController', () => {
                 success: false,
                 errorCode: 'not_authorized',
                 errorMessage: expect.any(String),
+                reason: {
+                    type: 'missing_permission',
+                    kind: 'user',
+                    id: userId,
+                    marker: 'secret',
+                    permission: 'data.delete',
+                    role: null,
+                },
             });
         });
     });

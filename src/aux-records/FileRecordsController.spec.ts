@@ -9,7 +9,7 @@ import {
     ReadFileSuccess,
     RecordFileFailure,
     RecordFileSuccess,
-    UpdateFileSuccess,
+    UpdateFileRecordSuccess,
 } from './FileRecordsController';
 import { FileRecordsStore, UpdateFileFailure } from './FileRecordsStore';
 import { MemoryFileRecordsStore } from './MemoryFileRecordsStore';
@@ -873,7 +873,7 @@ describe('FileRecordsController', () => {
                 'testFile.txt',
                 userId,
                 ['secret']
-            )) as UpdateFileSuccess;
+            )) as UpdateFileRecordSuccess;
 
             expect(result).toEqual({
                 success: true,
@@ -924,7 +924,7 @@ describe('FileRecordsController', () => {
                 'testFile.txt',
                 userId,
                 ['secret']
-            )) as UpdateFileSuccess;
+            )) as UpdateFileRecordSuccess;
 
             expect(result).toEqual({
                 success: true,
