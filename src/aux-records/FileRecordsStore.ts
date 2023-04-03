@@ -53,6 +53,18 @@ export interface FileRecordsStore {
     ): Promise<AddFileResult>;
 
     /**
+     * Attempts to update the given file record.
+     * @param recordName The name of the record that the file was recorded in.
+     * @param fileName The name of the file.
+     * @param markers The markers that should be set on the file.
+     */
+    updateFileRecord(
+        recordName: string,
+        fileName: string,
+        markers: string[]
+    ): Promise<UpdateFileResult>;
+
+    /**
      * Marks the given file record as having been uploaded.
      * @param recordName The reocrd that the file was uploaded to.
      * @param fileName The name of the file that was uploaded.
@@ -327,5 +339,17 @@ export interface GetFileNameFromUrlSuccess {
 export interface GetFileNameFromUrlFailure {
     success: false;
     errorCode: ServerError | 'unacceptable_url';
+    errorMessage: string;
+}
+
+export type UpdateFileResult = UpdateFileSuccess | UpdateFileFailure;
+
+export interface UpdateFileSuccess {
+    success: true;
+}
+
+export interface UpdateFileFailure {
+    success: false;
+    errorCode: ServerError | 'file_not_found';
     errorMessage: string;
 }

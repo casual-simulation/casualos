@@ -13,6 +13,7 @@ import {
     MarkFileRecordAsUploadedResult,
     EraseFileStoreResult,
 } from '@casual-simulation/aux-records';
+import { UpdateFileResult } from '@casual-simulation/aux-records/FileRecordsStore';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-records/PolicyPermissions';
 import AWS from 'aws-sdk';
 import dynamodb from 'aws-sdk/clients/dynamodb';
@@ -300,6 +301,52 @@ export class DynamoDBFileStore implements FileRecordsStore {
                     success: false,
                     errorCode: 'file_already_exists',
                     errorMessage: 'The file already exists.',
+                };
+            } else {
+                console.error(err);
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'An unexpected error occurred.',
+                };
+            }
+        }
+    }
+
+    async updateFileRecord(
+        recordName: string,
+        fileName: string,
+        markers: string[]
+    ): Promise<UpdateFileResult> {
+        try {
+            await this._dynamo
+                .update({
+                    TableName: this._tableName,
+                    Key: {
+                        recordName: recordName,
+                        fileName: fileName,
+                    },
+                    ConditionExpression:
+                        'attribute_exists(recordName) AND attribute_exists(fileName)',
+                    UpdateExpression: 'SET markers = :markers',
+                    ExpressionAttributeValues: {
+                        ':markers': markers,
+                    },
+                })
+                .promise();
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            if (
+                err instanceof Error &&
+                err.name === 'ConditionalCheckFailedException'
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'file_not_found',
+                    errorMessage: 'The file was not found.',
                 };
             } else {
                 console.error(err);

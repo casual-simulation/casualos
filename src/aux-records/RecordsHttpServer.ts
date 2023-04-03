@@ -1281,9 +1281,6 @@ export class RecordsHttpServer {
             }
         }
 
-        console.log('sub id', subscriptionId);
-        console.log('expected price', expectedPrice);
-
         const result = await this._subscriptions.createManageSubscriptionLink({
             sessionKey,
             userId,

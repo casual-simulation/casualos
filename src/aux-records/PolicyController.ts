@@ -1357,6 +1357,9 @@ export class PolicyController {
             request.instances &&
             request.instances.length > MAX_ALLOWED_INSTANCES
         ) {
+            console.log(
+                `[PolicyController] [action: ${request.action} recordName: ${context.recordName}, userId: ${request.userId}] Request denied because too many instances were provided.`
+            );
             // More than 2 instances should be auto-denied.
             // This is a "not_authorized" error instead of an "unacceptable_request" because
             // we want integrators to understand that this is an authentication issue, and not a configuration issue.
@@ -1365,6 +1368,9 @@ export class PolicyController {
         }
 
         if (resourceMarkers.length <= 0) {
+            console.log(
+                `[PolicyController] [action: ${request.action} recordName: ${context.recordName}, userId: ${request.userId}] Request denied because there are no markers.`
+            );
             return {
                 ...NOT_AUTHORIZED_RESULT,
                 reason: {
@@ -1393,6 +1399,9 @@ export class PolicyController {
         );
         if (userAuthorization.success === false) {
             if (!request.userId && !context.recordKeyProvided) {
+                console.log(
+                    `[PolicyController] [action: ${request.action} recordName: ${context.recordName}] Request denied because the user is not signed in.`
+                );
                 return {
                     allowed: false,
                     errorCode: 'not_logged_in',
@@ -1400,6 +1409,10 @@ export class PolicyController {
                         'The user must be logged in. Please provide a sessionKey or a recordKey.',
                 };
             }
+            console.log(
+                `[PolicyController] [action: ${request.action} recordName: ${context.recordName}, userId: ${request.userId}] Request denied. Reason:`,
+                userAuthorization.reason
+            );
             return {
                 ...NOT_AUTHORIZED_RESULT,
                 reason: userAuthorization.reason,
@@ -1425,6 +1438,10 @@ export class PolicyController {
         );
 
         if (!Array.isArray(authorizedInstances)) {
+            console.log(
+                `[PolicyController] [action: ${request.action} recordName: ${context.recordName}, userId: ${request.userId}] Request denied. Reason:`,
+                authorizedInstances.reason
+            );
             return {
                 ...NOT_AUTHORIZED_RESULT,
                 reason: authorizedInstances.reason,
@@ -1435,6 +1452,10 @@ export class PolicyController {
             ? context.recordKeyResult.ownerId
             : null;
         const authorizerId = recordKeyOwnerId ?? request.userId ?? null;
+
+        console.log(
+            `[PolicyController] [action: ${request.action} recordName: ${context.recordName}, userId: ${request.userId}] Request authorized.`
+        );
 
         return {
             allowed: true,
@@ -1749,7 +1770,7 @@ export function returnAuthorizationResult(a: AuthorizeDenied): {
     success: false;
     errorCode: Exclude<AuthorizeDenied['errorCode'], 'action_not_supported'>;
     errorMessage: AuthorizeDenied['errorMessage'];
-} {
+} & Omit<AuthorizeDenied, 'allowed'> {
     if (a.errorCode === 'action_not_supported') {
         return {
             success: false,
@@ -1757,10 +1778,11 @@ export function returnAuthorizationResult(a: AuthorizeDenied): {
             errorMessage: 'A server error occurred.',
         };
     }
+    const { allowed, ...rest } = a;
     return {
         success: false,
+        ...rest,
         errorCode: a.errorCode,
-        errorMessage: a.errorMessage,
     };
 }
 

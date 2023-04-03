@@ -7,6 +7,9 @@ import {
     MarkFileRecordAsUploadedResult,
     EraseFileStoreResult,
     GetFileNameFromUrlResult,
+    UpdateFileResult,
+    PresignFileReadRequest,
+    PresignFileReadResult,
 } from '@casual-simulation/aux-records';
 import { Collection } from 'mongodb';
 
@@ -64,6 +67,20 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
             },
             uploadMethod: 'POST',
             uploadUrl: `${this._fileUploadUrl}/${request.fileName}`,
+        };
+    }
+
+    async presignFileRead(
+        request: PresignFileReadRequest
+    ): Promise<PresignFileReadResult> {
+        return {
+            success: true,
+            requestHeaders: {
+                ...request.headers,
+                'record-name': request.recordName,
+            },
+            requestMethod: 'POST',
+            requestUrl: `${this._fileUploadUrl}/${request.fileName}`,
         };
     }
 
@@ -130,6 +147,36 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
             uploaded: false,
             markers,
         });
+
+        return {
+            success: true,
+        };
+    }
+
+    async updateFileRecord(
+        recordName: string,
+        fileName: string,
+        markers: string[]
+    ): Promise<UpdateFileResult> {
+        const result = await this._collection.updateOne(
+            {
+                recordName,
+                fileName,
+            },
+            {
+                $set: {
+                    markers,
+                },
+            }
+        );
+
+        if (result.modifiedCount <= 0) {
+            return {
+                success: false,
+                errorCode: 'file_not_found',
+                errorMessage: 'The file was not found in the store.',
+            };
+        }
 
         return {
             success: true,

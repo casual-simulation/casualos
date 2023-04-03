@@ -19,6 +19,7 @@ import {
     MarkFileRecordAsUploadedSuccess,
     PresignFileUploadSuccess,
     PresignFileReadSuccess,
+    UpdateFileResult,
 } from '@casual-simulation/aux-records';
 import '../../jest/jest-matchers';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-records/PolicyPermissions';
@@ -510,6 +511,51 @@ describe('DynamoDBFileStore', () => {
                 success: false,
                 errorCode: 'file_already_exists',
                 errorMessage: 'The file already exists.',
+            });
+        });
+    });
+
+    describe('updateFileRecord()', () => {
+        it('should update a file in the DynamoDB table', async () => {
+            dynamodb.update.mockReturnValue(awsResult({}));
+            const result = (await store.updateFileRecord(
+                'test-record',
+                'test file.xml',
+                [PUBLIC_READ_MARKER]
+            )) as UpdateFileResult;
+
+            expect(result).toEqual({
+                success: true,
+            });
+            expect(dynamodb.update).toBeCalledWith({
+                TableName: 'test-table',
+                Key: {
+                    recordName: 'test-record',
+                    fileName: 'test file.xml',
+                },
+                ExpressionAttributeValues: {
+                    ':markers': [PUBLIC_READ_MARKER],
+                },
+                UpdateExpression: 'SET markers = :markers',
+                ConditionExpression:
+                    'attribute_exists(recordName) AND attribute_exists(fileName)',
+            });
+        });
+
+        it('should return a file_not_found error if the condition expression fails', async () => {
+            dynamodb.update.mockReturnValue(
+                awsError(new ConditionalCheckFailedException())
+            );
+            const result = (await store.updateFileRecord(
+                'test-record',
+                'test file.xml',
+                [PUBLIC_READ_MARKER]
+            )) as UpdateFileResult;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'file_not_found',
+                errorMessage: 'The file was not found.',
             });
         });
     });

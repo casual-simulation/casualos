@@ -9,6 +9,7 @@ import {
     PresignFileReadResult,
     PresignFileUploadRequest,
     PresignFileUploadResult,
+    UpdateFileResult,
 } from './FileRecordsStore';
 
 export class MemoryFileRecordsStore implements FileRecordsStore {
@@ -140,6 +141,31 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
         };
 
         this._files.set(fileName, file);
+
+        return {
+            success: true,
+        };
+    }
+
+    async updateFileRecord(
+        recordName: string,
+        fileName: string,
+        markers: string[]
+    ): Promise<UpdateFileResult> {
+        if (!this._files.has(fileName)) {
+            return {
+                success: false,
+                errorCode: 'file_not_found',
+                errorMessage: 'The file was not found in the store.',
+            };
+        }
+
+        let file = this._files.get(fileName);
+
+        this._files.set(fileName, {
+            ...file,
+            markers: markers.slice(),
+        });
 
         return {
             success: true,

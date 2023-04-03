@@ -26,6 +26,8 @@ import { PolicyStore } from './PolicyStore';
 import { MemoryPolicyStore } from './MemoryPolicyStore';
 import { ADMIN_ROLE_NAME, PUBLIC_READ_MARKER } from './PolicyPermissions';
 
+console.log = jest.fn();
+
 describe('DataRecordsController', () => {
     let recordsStore: RecordsStore;
     let records: RecordsController;

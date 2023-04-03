@@ -488,7 +488,7 @@ export function isActiveSubscription(status: string): boolean {
  * @param markers
  */
 export function getMarkersOrDefault(markers: string[] | null): string[] {
-    if (markers === null || markers.length <= 0) {
+    if (markers === null || markers === undefined || markers.length <= 0) {
         return [PUBLIC_READ_MARKER];
     }
 

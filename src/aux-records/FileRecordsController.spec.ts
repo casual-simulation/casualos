@@ -5,11 +5,13 @@ import {
     EraseFileFailure,
     EraseFileSuccess,
     FileRecordsController,
+    ReadFileFailure,
     ReadFileSuccess,
     RecordFileFailure,
     RecordFileSuccess,
+    UpdateFileSuccess,
 } from './FileRecordsController';
-import { FileRecordsStore } from './FileRecordsStore';
+import { FileRecordsStore, UpdateFileFailure } from './FileRecordsStore';
 import { MemoryFileRecordsStore } from './MemoryFileRecordsStore';
 import { MemoryPolicyStore } from './MemoryPolicyStore';
 import { PolicyController } from './PolicyController';
@@ -19,6 +21,8 @@ import {
     createTestUser,
 } from './TestUtils';
 import { ADMIN_ROLE_NAME, PUBLIC_READ_MARKER } from './PolicyPermissions';
+
+console.log = jest.fn();
 
 describe('FileRecordsController', () => {
     let recordsStore: RecordsStore;
@@ -714,7 +718,7 @@ describe('FileRecordsController', () => {
     });
 
     describe('readFile()', () => {
-        it.only('should get a URL that the file can be read from', async () => {
+        it('should get a URL that the file can be read from', async () => {
             presignReadMock.mockResolvedValueOnce({
                 success: true,
                 requestUrl: 'testUrl',
@@ -755,7 +759,7 @@ describe('FileRecordsController', () => {
             });
         });
 
-        it.only('should get a URL by record name if the user has the correct permissions', async () => {
+        it('should get a URL by record name if the user has the correct permissions', async () => {
             presignReadMock.mockResolvedValueOnce({
                 success: true,
                 requestUrl: 'testUrl',
@@ -800,7 +804,7 @@ describe('FileRecordsController', () => {
             });
         });
 
-        it.only('should deny requests if the user doesnt have permissions', async () => {
+        it('should deny requests if the user doesnt have permissions', async () => {
             presignReadMock.mockResolvedValueOnce({
                 success: true,
                 requestUrl: 'testUrl',
@@ -824,14 +828,183 @@ describe('FileRecordsController', () => {
                 recordName,
                 'testFile.txt',
                 userId
-            )) as ReadFileSuccess;
+            )) as ReadFileFailure;
 
             expect(result).toEqual({
                 success: false,
                 errorCode: 'not_authorized',
                 errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'file.read',
+                    kind: 'user',
+                    id: userId,
+                    marker: 'secret',
+                    role: null,
+                },
             });
             expect(presignReadMock).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('updateFile()', () => {
+        it('should be able to update the markers on the file', async () => {
+            presignReadMock.mockResolvedValueOnce({
+                success: true,
+                requestUrl: 'testUrl',
+                requestMethod: 'GET',
+                requestHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            await store.addFileRecord(
+                recordName,
+                'testFile.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+
+            const result = (await manager.updateFile(
+                key,
+                'testFile.txt',
+                userId,
+                ['secret']
+            )) as UpdateFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            await expect(
+                store.getFileRecord(recordName, 'testFile.txt')
+            ).resolves.toEqual({
+                success: true,
+                recordName: recordName,
+                fileName: 'testFile.txt',
+                publisherId: 'publisherId',
+                subjectId: 'subjectId',
+                sizeInBytes: 100,
+                description: 'description',
+                markers: ['secret'],
+                uploaded: false,
+                url: expect.any(String),
+            });
+        });
+
+        it('should be able to update the markers if the user has the admin role', async () => {
+            presignReadMock.mockResolvedValueOnce({
+                success: true,
+                requestUrl: 'testUrl',
+                requestMethod: 'GET',
+                requestHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            await store.addFileRecord(
+                recordName,
+                'testFile.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+
+            policiesStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = (await manager.updateFile(
+                recordName,
+                'testFile.txt',
+                userId,
+                ['secret']
+            )) as UpdateFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            await expect(
+                store.getFileRecord(recordName, 'testFile.txt')
+            ).resolves.toEqual({
+                success: true,
+                recordName: recordName,
+                fileName: 'testFile.txt',
+                publisherId: 'publisherId',
+                subjectId: 'subjectId',
+                sizeInBytes: 100,
+                description: 'description',
+                markers: ['secret'],
+                uploaded: false,
+                url: expect.any(String),
+            });
+        });
+
+        it('should reject requests that are not authorized to change the markers', async () => {
+            presignReadMock.mockResolvedValueOnce({
+                success: true,
+                requestUrl: 'testUrl',
+                requestMethod: 'GET',
+                requestHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            await store.addFileRecord(
+                recordName,
+                'testFile.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+
+            // policiesStore.roles[recordName] = {
+            //     [userId]: new Set([ADMIN_ROLE_NAME])
+            // };
+
+            const result = (await manager.updateFile(
+                recordName,
+                'testFile.txt',
+                userId,
+                ['secret']
+            )) as UpdateFileFailure;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'file.update',
+                    kind: 'user',
+                    id: userId,
+                    marker: PUBLIC_READ_MARKER,
+                    role: null,
+                },
+            });
+
+            await expect(
+                store.getFileRecord(recordName, 'testFile.txt')
+            ).resolves.toEqual({
+                success: true,
+                recordName: recordName,
+                fileName: 'testFile.txt',
+                publisherId: 'publisherId',
+                subjectId: 'subjectId',
+                sizeInBytes: 100,
+                description: 'description',
+                markers: [PUBLIC_READ_MARKER],
+                uploaded: false,
+                url: expect.any(String),
+            });
         });
     });
 

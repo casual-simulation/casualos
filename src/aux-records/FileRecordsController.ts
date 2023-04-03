@@ -15,11 +15,13 @@ import {
 import { getExtension, getType } from 'mime';
 import {
     AuthorizeDenied,
+    AuthorizeUpdateFileRequest,
     PolicyController,
     returnAuthorizationResult,
 } from './PolicyController';
 import { PUBLIC_READ_MARKER } from './PolicyPermissions';
 import { getMarkersOrDefault } from './Utils';
+import { without } from 'lodash';
 
 /**
  * Defines a class that can manage file records.
@@ -368,6 +370,84 @@ export class FileRecordsController {
         }
     }
 
+    async updateFile(
+        recordKeyOrRecordName: string,
+        fileName: string,
+        subjectId: string,
+        markers: string[]
+    ): Promise<UpdateFileRecordResult> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName,
+                userId: subjectId,
+            };
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
+            );
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const fileResult = await this._store.getFileRecord(
+                context.context.recordName,
+                fileName
+            );
+
+            if (fileResult.success === false) {
+                return fileResult;
+            }
+
+            const existingMarkers = getMarkersOrDefault(fileResult.markers);
+            const addedMarkers = markers
+                ? without(markers, ...existingMarkers)
+                : [];
+            const removedMarkers = markers
+                ? without(existingMarkers, ...markers)
+                : [];
+
+            const resourceMarkers = markers ?? existingMarkers;
+
+            const result = await this._policies.authorizeRequest({
+                action: 'file.update',
+                ...baseRequest,
+                existingMarkers,
+                addedMarkers,
+                removedMarkers,
+                fileSizeInBytes: fileResult.sizeInBytes,
+                fileMimeType: getType(fileResult.fileName),
+            });
+
+            if (result.allowed === false) {
+                return returnAuthorizationResult(result);
+            }
+
+            const updateResult = await this._store.updateFileRecord(
+                result.recordName,
+                fileName,
+                resourceMarkers
+            );
+
+            if (updateResult.success === false) {
+                return updateResult;
+            }
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[FileRecordsController] An error occurred while reading a file:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     async markFileAsUploaded(
         recordName: string,
         fileName: string
@@ -562,6 +642,25 @@ export interface ReadFileSuccess {
 }
 
 export interface ReadFileFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | ValidatePublicRecordKeyFailure['errorCode']
+        | PresignFileReadFailure['errorCode']
+        | GetFileRecordFailure['errorCode']
+        | AuthorizeDenied['errorCode'];
+    errorMessage: string;
+}
+
+export type UpdateFileRecordResult =
+    | UpdateFileRecordSuccess
+    | UpdateFileRecordFailure;
+
+export interface UpdateFileRecordSuccess {
+    success: true;
+}
+
+export interface UpdateFileRecordFailure {
     success: false;
     errorCode:
         | ServerError
