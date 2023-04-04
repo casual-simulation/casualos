@@ -30,6 +30,8 @@ import {
     createTestUser,
 } from './TestUtils';
 
+console.log = jest.fn();
+
 describe('PolicyController', () => {
     let store: MemoryPolicyStore;
     let controller: PolicyController;
