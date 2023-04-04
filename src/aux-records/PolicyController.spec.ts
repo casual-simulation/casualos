@@ -1290,7 +1290,7 @@ describe('PolicyController', () => {
             it('should skip inst role checks when a record key is used', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordKey,
-                    action: 'data.create',
+                    action: 'data.read',
                     address: 'myAddress',
                     userId,
                     instances: ['instance'],
@@ -1329,7 +1329,7 @@ describe('PolicyController', () => {
 
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
-                    action: 'data.create',
+                    action: 'data.read',
                     address: 'myAddress',
                     userId,
                     instances: ['instance1', 'instance2', 'instance3'],
