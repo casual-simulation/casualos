@@ -8135,6 +8135,1087 @@ describe('PolicyController', () => {
             });
         });
 
+        describe('event.update', () => {
+            it('should allow requests that dont update markers if given a record key', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'event.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'event.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if no markers are provided', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    existingMarkers: [],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'no_markers',
+                    },
+                });
+            });
+
+            it('should allow requests that remove markers if given a record key', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    existingMarkers: [PUBLIC_READ_MARKER, 'secret'],
+                    removedMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'event.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'event.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'event.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                    },
+                                    {
+                                        action: 'policy.unassign',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'policy.unassign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user has the admin role assigned', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    userId,
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'event.update',
+                                        grantingPermission: {
+                                            type: 'event.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user has event.update access to the given resource marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.update',
+                            role: 'developer',
+                            events: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    userId,
+                    existingMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.update',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'event.update',
+                                            role: 'developer',
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user has event.update access to one of the given resources markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.update',
+                            role: 'developer',
+                            events: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    userId,
+                    existingMarkers: ['other', 'secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.update',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'event.update',
+                                            role: 'developer',
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user does not have event.update access', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    userId,
+                    existingMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'event.update',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should deny the request if the user does not have policy.assign access for new markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.update',
+                            role: 'developer',
+                            events: true,
+                        },
+                    ],
+                };
+
+                const testPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.update',
+                            role: 'developer',
+                            events: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                    ['test']: testPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    userId,
+                    existingMarkers: ['secret'],
+                    addedMarkers: ['test'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'test',
+                        permission: 'policy.assign',
+                        role: 'developer',
+                    },
+                });
+            });
+
+            it('should deny the request if the user does not have policy.assign access for new markers from the same role as the event.update role', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer', 'other']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.update',
+                            role: 'developer',
+                            events: true,
+                        },
+                    ],
+                };
+
+                const testPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.update',
+                            role: 'developer',
+                            events: true,
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'other',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                    ['test']: testPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    userId,
+                    existingMarkers: ['secret'],
+                    addedMarkers: ['test'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'test',
+                        permission: 'policy.assign',
+                        role: 'developer',
+                    },
+                });
+            });
+
+            it('should deny the request if the user does has policy.assign access for new markers but does not have event.update access for the existing marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                const testPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.update',
+                            role: 'developer',
+                            events: true,
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                    ['test']: testPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    userId,
+                    existingMarkers: ['secret'],
+                    addedMarkers: ['test'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'event.update',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should deny the request if the user does not have policy.unassign access for removed markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.update',
+                            role: 'developer',
+                            events: true,
+                        },
+                    ],
+                };
+
+                const testPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.update',
+                            role: 'developer',
+                            events: true,
+                        },
+                        // {
+                        //     type: 'policy.unassign',
+                        //     role: 'developer',
+                        //     policies: true
+                        // },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                    ['test']: testPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    userId,
+                    existingMarkers: ['secret', 'test'],
+                    removedMarkers: ['test'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'test',
+                        permission: 'policy.unassign',
+                        role: 'developer',
+                    },
+                });
+            });
+
+            it('should deny the request if given no userId or record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                });
+            });
+
+            it('should deny the request if the event.update permission does not allow the given address', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.update',
+                            role: 'developer',
+                            events: '^allowed_address$',
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.update',
+                    eventName: 'not_allowed_address',
+                    userId,
+                    existingMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'event.update',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should deny the request if the update would remove all markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.update',
+                            role: 'developer',
+                            events: true,
+                        },
+                        {
+                            type: 'policy.unassign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.update',
+                    eventName: 'address',
+                    userId,
+                    existingMarkers: ['secret'],
+                    removedMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'no_markers_remaining',
+                    },
+                });
+            });
+
+            it('should allow requests that replace all markers with new ones', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.update',
+                            role: 'developer',
+                            events: true,
+                        },
+                        {
+                            type: 'policy.unassign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                const otherPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.update',
+                            role: 'developer',
+                            events: true,
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                    ['other']: otherPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.update',
+                    eventName: 'address',
+                    userId,
+                    existingMarkers: ['secret'],
+                    removedMarkers: ['secret'],
+                    addedMarkers: ['other'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.update',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'event.update',
+                                            role: 'developer',
+                                            events: true,
+                                        },
+                                    },
+                                    {
+                                        action: 'policy.unassign',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'policy.unassign',
+                                            role: 'developer',
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: 'other',
+                                actions: [
+                                    {
+                                        action: 'event.update',
+                                        grantingPolicy: otherPolicy,
+                                        grantingPermission: {
+                                            type: 'event.update',
+                                            role: 'developer',
+                                            events: true,
+                                        },
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPolicy: otherPolicy,
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: 'developer',
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user has no role assigned', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    userId,
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'event.update',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should deny the request if given an invalid record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: wrongRecordKey,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'record_not_found',
+                    errorMessage: 'Record not found.',
+                });
+            });
+
+            it('should deny the request if there is no policy for the given marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    userId,
+                    existingMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'event.update',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should allow the request if the user is an admin even though there is no policy for the given marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    userId,
+                    existingMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'event.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the request is coming from an inst and no role has been provided to said inst', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    userId,
+                    instances: ['instance'],
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'instance',
+                        marker: PUBLIC_READ_MARKER,
+                        permission: 'event.update',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should skip inst role checks when a record key is used', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    userId,
+                    instances: ['instance'],
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'event.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'event.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance',
+                            authorizationType: 'not_required',
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if all the instances have roles for the data', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    userId,
+                    instances: ['instance1', 'instance2'],
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'event.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'event.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance1',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'event.update',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'event.update',
+                                                role: ADMIN_ROLE_NAME,
+                                                events: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            inst: 'instance2',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'event.update',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'event.update',
+                                                role: ADMIN_ROLE_NAME,
+                                                events: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+
+            it('should deny the request if more than 2 instances are provided', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance3']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    userId,
+                    instances: ['instance1', 'instance2', 'instance3'],
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                    reason: {
+                        type: 'too_many_insts',
+                    },
+                });
+            });
+        });
+
         it('should deny the request if given an unrecognized action', async () => {
             const result = await controller.authorizeRequest({
                 action: 'missing',

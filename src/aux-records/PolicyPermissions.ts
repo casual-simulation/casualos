@@ -10,6 +10,7 @@ export type AvailablePermissions =
     | DeleteFilePermission
     | IncrementEventPermission
     | CountEventPermission
+    | UpdateEventPermission
     | ReadPolicyPermission
     | GrantPermissionToPolicyPermission
     | RevokePermissionFromPolicyPermission
@@ -36,7 +37,8 @@ export type AvailableFilePermissions =
 
 export type AvailableEventPermissions =
     | IncrementEventPermission
-    | CountEventPermission;
+    | CountEventPermission
+    | UpdateEventPermission;
 
 export type AvailablePolicyPermissions =
     | AssignPolicyPermission
@@ -181,6 +183,14 @@ export interface IncrementEventPermission extends EventPermission {
  */
 export interface CountEventPermission extends EventPermission {
     type: 'event.count';
+}
+
+/**
+ * Defines an interface that describes a permission to be able to update an event record.
+ * Currently only used to update resource markers that are on an event.
+ */
+export interface UpdateEventPermission extends EventPermission {
+    type: 'event.update';
 }
 
 /**
@@ -372,6 +382,11 @@ export const DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT: PolicyDocument = {
         },
         {
             type: 'event.count',
+            role: ADMIN_ROLE_NAME,
+            events: true,
+        },
+        {
+            type: 'event.update',
             role: ADMIN_ROLE_NAME,
             events: true,
         },
