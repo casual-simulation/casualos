@@ -205,6 +205,8 @@ export class PolicyController {
             return this._authorizeFileDeleteRequest(context, request);
         } else if (request.action === 'event.count') {
             return this._authorizeEventCountRequest(context, request);
+        } else if (request.action === 'event.increment') {
+            return this._authorizeEventIncrementRequest(context, request);
         } else if (request.action === 'event.update') {
             return this._authorizeEventUpdateRequest(context, request);
         }
@@ -1407,6 +1409,93 @@ export class PolicyController {
                     id,
                     marker: marker.marker,
                     permission: 'event.count',
+                    role,
+                };
+                continue;
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            return {
+                success: true,
+                authorization: {
+                    role,
+                    markers: [
+                        {
+                            marker: marker.marker,
+                            actions: [
+                                {
+                                    action: context.request.action,
+                                    grantingPolicy: actionPermission.policy,
+                                    grantingPermission:
+                                        actionPermission.permission,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            };
+        }
+
+        return {
+            success: false,
+            reason: denialReason ?? {
+                type: 'missing_role',
+            },
+        };
+    }
+
+    private async _authorizeEventIncrementRequest(
+        context: AuthorizationContext,
+        request: AuthorizeIncrementEventRequest
+    ): Promise<AuthorizeResult> {
+        return await this._authorizeRequest(
+            context,
+            request,
+            request.resourceMarkers,
+            (context, type, id) => {
+                return this._authorizeEventIncrement(context, type, id);
+            }
+        );
+    }
+
+    private async _authorizeEventIncrement(
+        context: RolesContext<AuthorizeIncrementEventRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        let role: string | true | null = null;
+        let denialReason: DenialReason;
+
+        for (let marker of context.markers) {
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byEvent('event.increment', context.request.eventName),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._byAdminRole(context.recordKeyResult),
+                              this._bySubjectRole(
+                                  context,
+                                  type,
+                                  context.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                denialReason = {
+                    type: 'missing_permission',
+                    kind: type,
+                    id,
+                    marker: marker.marker,
+                    permission: 'event.increment',
                     role,
                 };
                 continue;
