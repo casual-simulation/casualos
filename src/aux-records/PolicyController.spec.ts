@@ -4417,6 +4417,54 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should deny the request if the user does not have file.create and policy.assign access to all the given markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.create',
+                            role: 'developer',
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.create',
+                    userId,
+                    resourceMarkers: ['secret', 'other'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'other',
+                        permission: 'file.create',
+                        role: 'developer',
+                    },
+                });
+            });
+
             it('should allow the request if the file size equals the max file size', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set(['developer']),
@@ -5361,6 +5409,62 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the user has file.read access one of the markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.read',
+                            role: 'developer',
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.read',
+                    userId,
+                    resourceMarkers: ['secret', 'other'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.read',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'file.read',
+                                            role: 'developer',
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
             it('should allow the request if the file size equals the max file size', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set(['developer']),
@@ -6097,6 +6201,62 @@ describe('PolicyController', () => {
                     action: 'file.delete',
                     userId,
                     resourceMarkers: ['secret'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.delete',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'file.delete',
+                                            role: 'developer',
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user has file.delete access to one of the given resource markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.delete',
+                            role: 'developer',
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.delete',
+                    userId,
+                    resourceMarkers: ['other', 'secret'],
                     fileSizeInBytes: 100,
                     fileMimeType: 'text/plain',
                 });

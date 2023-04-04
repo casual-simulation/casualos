@@ -989,8 +989,8 @@ export class PolicyController {
         type: 'user' | 'inst',
         id: string
     ): Promise<GenericResult> {
-        const authorizations: MarkerAuthorization[] = [];
         let role: string | true | null = null;
+        let denialReason: DenialReason;
 
         for (let marker of context.markers) {
             const actionPermission = await this._findPermissionByFilter(
@@ -1017,49 +1017,46 @@ export class PolicyController {
             );
 
             if (!actionPermission) {
-                return {
-                    success: false,
-                    reason: {
-                        type: 'missing_permission',
-                        kind: type,
-                        id,
-                        marker: marker.marker,
-                        permission: 'file.read',
-                        role,
-                    },
+                denialReason = {
+                    type: 'missing_permission',
+                    kind: type,
+                    id,
+                    marker: marker.marker,
+                    permission: 'file.read',
+                    role,
                 };
+                continue;
             }
 
             if (role === null) {
                 role = actionPermission.permission.role;
             }
 
-            authorizations.push({
-                marker: marker.marker,
-                actions: [
-                    {
-                        action: context.request.action,
-                        grantingPolicy: actionPermission.policy,
-                        grantingPermission: actionPermission.permission,
-                    },
-                ],
-            });
-        }
-
-        if (!role) {
             return {
-                success: false,
-                reason: {
-                    type: 'missing_role',
+                success: true,
+                authorization: {
+                    role,
+                    markers: [
+                        {
+                            marker: marker.marker,
+                            actions: [
+                                {
+                                    action: context.request.action,
+                                    grantingPolicy: actionPermission.policy,
+                                    grantingPermission:
+                                        actionPermission.permission,
+                                },
+                            ],
+                        },
+                    ],
                 },
             };
         }
 
         return {
-            success: true,
-            authorization: {
-                role,
-                markers: authorizations,
+            success: false,
+            reason: denialReason ?? {
+                type: 'missing_role',
             },
         };
     }
@@ -1284,8 +1281,8 @@ export class PolicyController {
         type: 'user' | 'inst',
         id: string
     ): Promise<GenericResult> {
-        const authorizations: MarkerAuthorization[] = [];
         let role: string | true | null = null;
+        let denialReason: DenialReason;
 
         for (let marker of context.markers) {
             const actionPermission = await this._findPermissionByFilter(
@@ -1312,49 +1309,46 @@ export class PolicyController {
             );
 
             if (!actionPermission) {
-                return {
-                    success: false,
-                    reason: {
-                        type: 'missing_permission',
-                        kind: type,
-                        id,
-                        marker: marker.marker,
-                        permission: 'file.delete',
-                        role,
-                    },
+                denialReason = {
+                    type: 'missing_permission',
+                    kind: type,
+                    id,
+                    marker: marker.marker,
+                    permission: 'file.delete',
+                    role,
                 };
+                continue;
             }
 
             if (role === null) {
                 role = actionPermission.permission.role;
             }
 
-            authorizations.push({
-                marker: marker.marker,
-                actions: [
-                    {
-                        action: context.request.action,
-                        grantingPolicy: actionPermission.policy,
-                        grantingPermission: actionPermission.permission,
-                    },
-                ],
-            });
-        }
-
-        if (!role) {
             return {
-                success: false,
-                reason: {
-                    type: 'missing_role',
+                success: true,
+                authorization: {
+                    role,
+                    markers: [
+                        {
+                            marker: marker.marker,
+                            actions: [
+                                {
+                                    action: context.request.action,
+                                    grantingPolicy: actionPermission.policy,
+                                    grantingPermission:
+                                        actionPermission.permission,
+                                },
+                            ],
+                        },
+                    ],
                 },
             };
         }
 
         return {
-            success: true,
-            authorization: {
-                role,
-                markers: authorizations,
+            success: false,
+            reason: denialReason ?? {
+                type: 'missing_role',
             },
         };
     }
