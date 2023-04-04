@@ -34,6 +34,10 @@ export type AvailableFilePermissions =
     | UpdateFilePermission
     | DeleteFilePermission;
 
+export type AvailableEventPermissions =
+    | IncrementEventPermission
+    | CountEventPermission;
+
 export type AvailablePolicyPermissions =
     | AssignPolicyPermission
     | UnassignPolicyPermission

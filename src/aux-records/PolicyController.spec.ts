@@ -7702,6 +7702,439 @@ describe('PolicyController', () => {
             });
         });
 
+        describe('event.count', () => {
+            it('should allow the request if given a record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result.allowed).toBe(true);
+            });
+
+            it('should deny the request if no markers are provided', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    resourceMarkers: [],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'no_markers',
+                    },
+                });
+            });
+
+            it('should allow the request if it is readable by everyone', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result.allowed).toBe(true);
+            });
+
+            it('should allow the request if the user has event.count permission for the marker', async () => {
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.count',
+                            role: 'developer',
+                            events: true,
+                        },
+                    ],
+                };
+
+                store.policies = {
+                    [recordName]: {
+                        ['secret']: secretPolicy,
+                    },
+                };
+
+                store.roles = {
+                    [recordName]: {
+                        [userId]: new Set(['developer']),
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result.allowed).toBe(true);
+            });
+
+            it('should allow the request if the user has event.count permission for one of the markers', async () => {
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.count',
+                            role: 'developer',
+                            events: true,
+                        },
+                    ],
+                };
+
+                store.policies = {
+                    [recordName]: {
+                        ['secret']: secretPolicy,
+                    },
+                };
+
+                store.roles = {
+                    [recordName]: {
+                        [userId]: new Set(['developer']),
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    userId,
+                    resourceMarkers: ['other', 'secret'],
+                });
+
+                expect(result.allowed).toBe(true);
+            });
+
+            it('should allow the request if no User ID is provided but the policy allows public reading', async () => {
+                const publicPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.count',
+                            role: true,
+                            events: true,
+                        },
+                    ],
+                };
+
+                store.policies = {
+                    [recordName]: {
+                        ['public']: publicPolicy,
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    resourceMarkers: ['public'],
+                });
+
+                expect(result.allowed).toBe(true);
+            });
+
+            it('should deny the request if the user does not have a event.count permission for the marker', async () => {
+                store.roles = {
+                    [recordName]: {
+                        [userId]: new Set(['developer']),
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'event.count',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should deny the request if no User ID is provided and the policy does not allow public reading', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                });
+            });
+
+            it('should deny the request if the user has event.count permission but it does not allow the given address', async () => {
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.count',
+                            role: 'developer',
+                            events: '^different$',
+                        },
+                    ],
+                };
+
+                store.policies = {
+                    [recordName]: {
+                        ['secret']: secretPolicy,
+                    },
+                };
+
+                store.roles = {
+                    [recordName]: {
+                        [userId]: new Set(['developer']),
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'event.count',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should deny the request if the user has no role assigned', async () => {
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.count',
+                            role: 'developer',
+                            events: true,
+                        },
+                    ],
+                };
+
+                store.policies = {
+                    [recordName]: {
+                        ['secret']: secretPolicy,
+                    },
+                };
+
+                store.roles = {
+                    [recordName]: {
+                        [userId]: new Set(),
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'event.count',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should deny the request if given a record key to a different record', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: wrongRecordKey,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'record_not_found',
+                    errorMessage: 'Record not found.',
+                });
+            });
+
+            it('should deny the request if there is no policy for the marker', async () => {
+                store.roles = {
+                    [recordName]: {
+                        [userId]: new Set(['developer']),
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'event.count',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should allow the request if the user has admin permissions even if there is no policy for the marker', async () => {
+                store.roles = {
+                    [recordName]: {
+                        [userId]: new Set([ADMIN_ROLE_NAME]),
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result.allowed).toBe(true);
+            });
+
+            it('should deny the request if the request is coming from an inst and no role has been provided to said inst', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    userId,
+                    instances: ['instance'],
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'instance',
+                        marker: 'secret',
+                        permission: 'event.count',
+                        role: null,
+                    },
+                });
+            });
+
+            it('should skip inst role checks when a record key is used', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    userId,
+                    instances: ['instance'],
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result.allowed).toBe(true);
+            });
+
+            it('should allow the request if all the instances have roles for the data', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    userId,
+                    instances: ['instance1', 'instance2'],
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result.allowed).toEqual(true);
+            });
+
+            it('should deny the request if more than 2 instances are provided', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance3']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    userId,
+                    instances: ['instance1', 'instance2', 'instance3'],
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                    reason: {
+                        type: 'too_many_insts',
+                    },
+                });
+            });
+        });
+
         it('should deny the request if given an unrecognized action', async () => {
             const result = await controller.authorizeRequest({
                 action: 'missing',

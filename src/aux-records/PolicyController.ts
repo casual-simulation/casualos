@@ -10,6 +10,7 @@ import {
     ADMIN_ROLE_NAME,
     AssignPolicyPermission,
     AvailableDataPermissions,
+    AvailableEventPermissions,
     AvailableFilePermissions,
     AvailablePermissions,
     AvailablePolicyPermissions,
@@ -202,6 +203,8 @@ export class PolicyController {
             return this._authorizeFileUpdateRequest(context, request);
         } else if (request.action === 'file.delete') {
             return this._authorizeFileDeleteRequest(context, request);
+        } else if (request.action === 'event.count') {
+            return this._authorizeEventCountRequest(context, request);
         }
 
         return {
@@ -1353,6 +1356,93 @@ export class PolicyController {
         };
     }
 
+    private async _authorizeEventCountRequest(
+        context: AuthorizationContext,
+        request: AuthorizeCountEventRequest
+    ): Promise<AuthorizeResult> {
+        return await this._authorizeRequest(
+            context,
+            request,
+            request.resourceMarkers,
+            (context, type, id) => {
+                return this._authorizeEventCount(context, type, id);
+            }
+        );
+    }
+
+    private async _authorizeEventCount(
+        context: RolesContext<AuthorizeCountEventRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        let role: string | true | null = null;
+        let denialReason: DenialReason;
+
+        for (let marker of context.markers) {
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byEvent('event.count', context.request.eventName),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._byAdminRole(context.recordKeyResult),
+                              this._bySubjectRole(
+                                  context,
+                                  type,
+                                  context.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                denialReason = {
+                    type: 'missing_permission',
+                    kind: type,
+                    id,
+                    marker: marker.marker,
+                    permission: 'event.count',
+                    role,
+                };
+                continue;
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            return {
+                success: true,
+                authorization: {
+                    role,
+                    markers: [
+                        {
+                            marker: marker.marker,
+                            actions: [
+                                {
+                                    action: context.request.action,
+                                    grantingPolicy: actionPermission.policy,
+                                    grantingPermission:
+                                        actionPermission.permission,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            };
+        }
+
+        return {
+            success: false,
+            reason: denialReason ?? {
+                type: 'missing_role',
+            },
+        };
+    }
+
     /**
      * Attempts to authorize the given request based on common request properties.
      *
@@ -1638,6 +1728,24 @@ export class PolicyController {
         };
     }
 
+    private _byEvent(
+        type: AvailableEventPermissions['type'],
+        eventName: string
+    ) {
+        return async (permission: AvailablePermissions) => {
+            if (permission.type !== type) {
+                return false;
+            }
+            if (permission.events === true) {
+                return true;
+            }
+            if (this._testRegex(permission.events, eventName)) {
+                return true;
+            }
+            return false;
+        };
+    }
+
     private _byEveryoneRole(): PermissionFilter {
         return this._byRole(true);
     }
@@ -1863,7 +1971,10 @@ export type AuthorizeRequest =
     | AuthorizeCreateFileRequest
     | AuthorizeReadFileRequest
     | AuthorizeUpdateFileRequest
-    | AuthorizeDeleteFileRequest;
+    | AuthorizeDeleteFileRequest
+    | AuthorizeCountEventRequest
+    | AuthorizeIncrementEventRequest
+    | AuthorizeUpdateEventRequest;
 
 export interface AuthorizeRequestBase {
     /**
@@ -1998,19 +2109,19 @@ export interface AuthorizeUpdateFileRequest extends AuthorizeFileRequest {
     action: 'file.update';
 
     /**
-     * The list of resource markers that are applied to the data.
+     * The list of resource markers that are applied to the file.
      */
     existingMarkers: string[];
 
     /**
-     * The new resource markers that will be added to the data.
-     * If omitted, then no markers are being added to the data.
+     * The new resource markers that will be added to the file.
+     * If omitted, then no markers are being added to the file.
      */
     addedMarkers?: string[];
 
     /**
-     * The markers that will be removed from the data.
-     * If omitted, then no markers are being removed from the data.
+     * The markers that will be removed from the file.
+     * If omitted, then no markers are being removed from the file.
      */
     removedMarkers?: string[];
 }
@@ -2022,6 +2133,52 @@ export interface AuthorizeDeleteFileRequest extends AuthorizeFileRequest {
      * The list of resource markers that are applied to the file.
      */
     resourceMarkers: string[];
+}
+
+export interface AuthorizeEventRequest extends AuthorizeRequestBase {
+    /**
+     * The name of the event.
+     */
+    eventName: string;
+}
+
+export interface AuthorizeCountEventRequest extends AuthorizeEventRequest {
+    action: 'event.count';
+
+    /**
+     * The list of resource markers that are applied to the event.
+     */
+    resourceMarkers: string[];
+}
+
+export interface AuthorizeIncrementEventRequest extends AuthorizeEventRequest {
+    action: 'event.increment';
+
+    /**
+     * The list of resource markers that are applied to the event.
+     */
+    resourceMarkers: string[];
+}
+
+export interface AuthorizeUpdateEventRequest extends AuthorizeEventRequest {
+    action: 'event.update';
+
+    /**
+     * The list of resource markers that are applied to the event.
+     */
+    existingMarkers: string[];
+
+    /**
+     * The new resource markers that will be added to the event.
+     * If omitted, then no markers are being added to the event.
+     */
+    addedMarkers?: string[];
+
+    /**
+     * The markers that will be removed from the event.
+     * If omitted, then no markers are being removed from the event.
+     */
+    removedMarkers?: string[];
 }
 
 export interface ListedDataItem {
