@@ -257,6 +257,54 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the user has data.create and policy.assign access to all of the resource markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const otherPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.create',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['other']: otherPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId,
+                    resourceMarkers: ['secret', 'other'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        marker: 'secret',
+                        permission: 'data.create',
+                        role: null,
+                    },
+                });
+            });
+
             it('should deny the request if the user has data.create but does not have policy.assign access', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set(['developer']),
@@ -941,6 +989,40 @@ describe('PolicyController', () => {
                 expect(result.allowed).toBe(true);
             });
 
+            it('should allow the request if the user has data.read permission for one of the markers', async () => {
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                };
+
+                store.policies = {
+                    [recordName]: {
+                        ['secret']: secretPolicy,
+                    },
+                };
+
+                store.roles = {
+                    [recordName]: {
+                        [userId]: new Set(['developer']),
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    userId,
+                    resourceMarkers: ['other', 'secret'],
+                });
+
+                expect(result.allowed).toBe(true);
+            });
+
             it('should allow the request if no User ID is provided but the policy allows public reading', async () => {
                 const publicPolicy: PolicyDocument = {
                     permissions: [
@@ -1459,6 +1541,63 @@ describe('PolicyController', () => {
                     address: 'myAddress',
                     userId,
                     existingMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.update',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'data.update',
+                                            role: 'developer',
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user has data.update access to one of the given resources markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.update',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    userId,
+                    existingMarkers: ['other', 'secret'],
                 });
 
                 expect(result).toEqual({
@@ -2449,6 +2588,63 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the user has data.delete access for one of the markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.delete',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.delete',
+                    address: 'myAddress',
+                    userId,
+                    resourceMarkers: ['other', 'secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.delete',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'data.delete',
+                                            role: 'developer',
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
             it('should deny the request if the user does not have data.delete access', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set(['developer']),
@@ -3045,6 +3241,85 @@ describe('PolicyController', () => {
                         {
                             address: 'testAddress2',
                             markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the user has data.list access to one of the resources markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.list',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: secretPolicy,
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.list',
+                    userId,
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['other', 'secret'],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret', 'other'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'other',
+                                actions: [],
+                            },
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: 'developer',
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['other', 'secret'],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret', 'other'],
                         },
                     ],
                 });
@@ -7279,7 +7554,7 @@ describe('PolicyController', () => {
     });
 });
 
-describe.only('willMarkersBeRemaining()', () => {
+describe('willMarkersBeRemaining()', () => {
     it('should return true if no markers are being removed', () => {
         const existing = ['first', 'second'];
         const removed = [] as string[];
