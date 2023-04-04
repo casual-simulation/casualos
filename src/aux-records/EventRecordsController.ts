@@ -1,65 +1,105 @@
+import {
+    AuthorizeDenied,
+    PolicyController,
+    returnAuthorizationResult,
+} from './PolicyController';
 import { NotLoggedInError, ServerError } from './Errors';
 import {
     EventRecordsStore,
     AddEventCountStoreResult,
     GetEventCountStoreResult,
+    AddEventCountStoreFailure,
+    GetEventCountStoreFailure,
 } from './EventRecordsStore';
 import {
     RecordsController,
     ValidatePublicRecordKeyFailure,
 } from './RecordsController';
+import { getMarkersOrDefault } from './Utils';
 
 /**
  * Defines a class that is able to manage event (count) records.
  */
 export class EventRecordsController {
-    private _manager: RecordsController;
+    private _policies: PolicyController;
+    // private _manager: RecordsController;
     private _store: EventRecordsStore;
 
     /**
      * Creates a DataRecordsController.
-     * @param manager The records manager that should be used to validate record keys.
+     * @param policies The controller that should be used to validate policies.
      * @param store The store that should be used to save data.
      */
-    constructor(manager: RecordsController, store: EventRecordsStore) {
-        this._manager = manager;
+    constructor(policies: PolicyController, store: EventRecordsStore) {
+        this._policies = policies;
         this._store = store;
     }
 
     /**
      * Adds the given count of events to the total count of events with the given name.
-     * @param recordKey The record key that should be used to add the events.
+     * @param recordKeyOrRecordName The record key or the name of the record that should be used to add the events.
      * @param eventName The name of the events to record.
      * @param count The number of events to add/subtract.
      * @param subjectId The ID of the user that is adding the count.
      */
     async addCount(
-        recordKey: string,
+        recordKeyOrRecordName: string,
         eventName: string,
         count: number,
-        subjectId: string,
+        subjectId: string
     ): Promise<AddCountResult> {
         try {
-            const result = await this._manager.validatePublicRecordKey(
-                recordKey
+            const baseRequest = {
+                recordKeyOrRecordName: recordKeyOrRecordName,
+                userId: subjectId,
+            };
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
             );
-            if (result.success === false) {
-                return {
-                    success: false,
-                    errorCode: result.errorCode,
-                    errorMessage: result.errorMessage,
-                };
+
+            if (context.success === false) {
+                return context;
             }
 
-            if (!subjectId && result.policy !== 'subjectless') {
+            const recordName = context.context.recordName;
+
+            const event = await this._store.getEventCount(
+                recordName,
+                eventName
+            );
+
+            if (event.success === false) {
+                return event;
+            }
+
+            const markers = getMarkersOrDefault(event.markers);
+
+            const authorizeResult =
+                await this._policies.authorizeRequestUsingContext(
+                    context.context,
+                    {
+                        action: 'event.increment',
+                        ...baseRequest,
+                        eventName: eventName,
+                        resourceMarkers: markers,
+                    }
+                );
+
+            if (authorizeResult.allowed === false) {
+                return returnAuthorizationResult(authorizeResult);
+            }
+
+            const policy = authorizeResult.subject.subjectPolicy;
+
+            if (!subjectId && policy !== 'subjectless') {
                 return {
                     success: false,
                     errorCode: 'not_logged_in',
-                    errorMessage: 'The user must be logged in in order to record events.',
+                    errorMessage:
+                        'The user must be logged in in order to record events.',
                 };
             }
 
-            const recordName = result.recordName;
             const result2 = await this._store.addEventCount(
                 recordName,
                 eventName,
@@ -91,33 +131,59 @@ export class EventRecordsController {
 
     /**
      * Gets the current count of events with the given name from the given record.
-     * @param recordName The name of the record.
+     * @param recordKeyOrRecordName The name of the record.
      * @param eventName The name of the events
+     * @param userId The ID of the user that is getting the count.
      */
     async getCount(
-        recordName: string,
-        eventName: string
+        recordKeyOrRecordName: string,
+        eventName: string,
+        userId: string
     ): Promise<GetCountResult> {
         try {
+            const baseRequest = {
+                recordKeyOrRecordName: recordKeyOrRecordName,
+                userId,
+            };
+
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
+            );
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const recordName = context.context.recordName;
             const result = await this._store.getEventCount(
                 recordName,
                 eventName
             );
 
-            if (result.success) {
-                return {
-                    success: true,
-                    count: result.count,
-                    eventName: eventName,
-                    recordName: recordName,
-                };
-            } else {
-                return {
-                    success: false,
-                    errorCode: result.errorCode,
-                    errorMessage: result.errorMessage,
-                };
+            if (result.success === false) {
+                return result;
             }
+
+            const markers = getMarkersOrDefault(result.markers);
+
+            const authorizeResult = await this._policies.authorizeRequest({
+                action: 'event.count',
+                ...baseRequest,
+                eventName,
+                resourceMarkers: markers,
+            });
+
+            if (authorizeResult.allowed === false) {
+                return returnAuthorizationResult(authorizeResult);
+            }
+
+            return {
+                success: true,
+                count: result.count,
+                eventName: eventName,
+                recordName: recordName,
+                markers: markers,
+            };
         } catch (err) {
             return {
                 success: false,
@@ -143,7 +209,8 @@ export interface AddCountFailure {
         | ServerError
         | NotLoggedInError
         | ValidatePublicRecordKeyFailure['errorCode']
-        | AddEventCountStoreResult['errorCode']
+        | AddEventCountStoreFailure['errorCode']
+        | AuthorizeDenied['errorCode']
         | 'not_supported';
     errorMessage: string;
 }
@@ -170,13 +237,19 @@ export interface GetCountSuccess {
      * The name of the event.
      */
     eventName: string;
+
+    /**
+     * The markers that are applied to this event.
+     */
+    markers: string[];
 }
 
 export interface GetCountFailure {
     success: false;
     errorCode:
         | ServerError
-        | GetEventCountStoreResult['errorCode']
+        | GetEventCountStoreFailure['errorCode']
+        | AuthorizeDenied['errorCode']
         | 'not_supported';
     errorMessage: string;
 }

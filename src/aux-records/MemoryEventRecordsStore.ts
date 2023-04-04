@@ -1,7 +1,9 @@
 import {
     AddEventCountStoreResult,
     EventRecordsStore,
+    EventRecordUpdate,
     GetEventCountStoreResult,
+    UpdateEventResult,
 } from './EventRecordsStore';
 
 export class MemoryEventRecordsStore implements EventRecordsStore {
@@ -34,11 +36,39 @@ export class MemoryEventRecordsStore implements EventRecordsStore {
     ): Promise<GetEventCountStoreResult> {
         const record = this._getRecord(recordName);
 
-        const count = record.has(eventName) ? record.get(eventName).count : 0;
+        const e = record.has(eventName)
+            ? record.get(eventName)
+            : {
+                  count: 0,
+              };
 
         return {
             success: true,
-            count: count,
+            count: e.count,
+            markers: e.markers,
+        };
+    }
+
+    async updateEvent(
+        recordName: string,
+        eventName: string,
+        updates: EventRecordUpdate
+    ): Promise<UpdateEventResult> {
+        const record = this._getRecord(recordName);
+
+        const e = record.has(eventName)
+            ? record.get(eventName)
+            : {
+                  count: 0,
+              };
+
+        record.set(eventName, {
+            ...e,
+            ...updates,
+        });
+
+        return {
+            success: true,
         };
     }
 
@@ -54,4 +84,5 @@ export class MemoryEventRecordsStore implements EventRecordsStore {
 
 interface RecordData {
     count: number;
+    markers?: string[];
 }
