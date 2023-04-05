@@ -15,7 +15,8 @@ import {
     RecordsController,
     ValidatePublicRecordKeyFailure,
 } from './RecordsController';
-import { getMarkersOrDefault } from './Utils';
+import { cleanupObject, getMarkersOrDefault } from './Utils';
+import { without } from 'lodash';
 
 /**
  * Defines a class that is able to manage event (count) records.
@@ -192,6 +193,86 @@ export class EventRecordsController {
             };
         }
     }
+
+    /**
+     * Attempts to update the event using the given request.
+     * @param request The request
+     */
+    async updateEvent(
+        request: UpdateEventRecordRequest
+    ): Promise<UpdateEventRecordResult> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: request.recordKeyOrRecordName,
+                userId: request.userId,
+            };
+
+            const eventName = request.eventName;
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
+            );
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const recordName = context.context.recordName;
+            const result = await this._store.getEventCount(
+                recordName,
+                eventName
+            );
+
+            if (result.success === false) {
+                return result;
+            }
+
+            const markers = request.markers;
+            const existingMarkers = getMarkersOrDefault(result.markers);
+
+            const addedMarkers = markers
+                ? without(markers, ...existingMarkers)
+                : [];
+            const removedMarkers = markers
+                ? without(existingMarkers, ...markers)
+                : [];
+
+            const authorizeResult = await this._policies.authorizeRequest({
+                action: 'event.update',
+                ...baseRequest,
+                eventName,
+                existingMarkers: existingMarkers,
+                addedMarkers: addedMarkers,
+                removedMarkers: removedMarkers,
+            });
+
+            if (authorizeResult.allowed === false) {
+                return returnAuthorizationResult(authorizeResult);
+            }
+
+            const update = await this._store.updateEvent(
+                recordName,
+                eventName,
+                cleanupObject({
+                    count: request.count,
+                    markers: markers,
+                })
+            );
+
+            if (update.success === false) {
+                return update;
+            }
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: err.toString(),
+            };
+        }
+    }
 }
 
 export type AddCountResult = AddCountSuccess | AddCountFailure;
@@ -251,5 +332,52 @@ export interface GetCountFailure {
         | GetEventCountStoreFailure['errorCode']
         | AuthorizeDenied['errorCode']
         | 'not_supported';
+    errorMessage: string;
+}
+
+export interface UpdateEventRecordRequest {
+    /**
+     * The record key or the name of the record that should be updated.
+     */
+    recordKeyOrRecordName: string;
+
+    /**
+     * The name of the event that should be updated.
+     */
+    eventName: string;
+
+    /**
+     * The ID of the user that sent the request.
+     * Null if the user is not logged in.
+     */
+    userId: string | null;
+
+    /**
+     * The count that the event should be set to.
+     * If null or undefined, then it will not be updated.
+     */
+    count?: number;
+
+    /**
+     * The markers that the event should have.
+     * If null or undefined, then it will not be updated.
+     */
+    markers?: string[];
+}
+
+export type UpdateEventRecordResult =
+    | UpdateEventRecordSuccess
+    | UpdateEventRecordFailure;
+
+export interface UpdateEventRecordSuccess {
+    success: true;
+}
+
+export interface UpdateEventRecordFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | AuthorizeDenied['errorCode']
+        | ValidatePublicRecordKeyFailure['errorCode'];
     errorMessage: string;
 }

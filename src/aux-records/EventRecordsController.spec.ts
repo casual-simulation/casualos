@@ -7,6 +7,7 @@ import {
     EventRecordsController,
     GetCountFailure,
     GetCountSuccess,
+    UpdateEventRecordSuccess,
 } from './EventRecordsController';
 import { MemoryEventRecordsStore } from './MemoryEventRecordsStore';
 import { EventRecordsStore } from './EventRecordsStore';
@@ -269,6 +270,147 @@ describe('EventRecordsController', () => {
                     marker: 'secret',
                     role: null,
                 },
+            });
+        });
+    });
+
+    describe('updateEvent()', () => {
+        it('should be able to update the count for an event', async () => {
+            policyStore.policies[recordName] = {
+                ['secret']: {
+                    permissions: [
+                        {
+                            type: 'event.update',
+                            role: 'developer',
+                            events: true,
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                },
+                [PUBLIC_READ_MARKER]: {
+                    permissions: [
+                        {
+                            type: 'event.update',
+                            role: 'developer',
+                            events: true,
+                        },
+                        {
+                            type: 'policy.unassign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                },
+            };
+
+            policyStore.roles[recordName] = {
+                [userId]: new Set(['developer']),
+            };
+
+            await store.addEventCount('testRecord', 'address', 10);
+
+            const result = (await manager.updateEvent({
+                recordKeyOrRecordName: recordName,
+                eventName: 'address',
+                userId,
+                count: 0,
+            })) as UpdateEventRecordSuccess;
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            await expect(
+                store.getEventCount(recordName, 'address')
+            ).resolves.toEqual({
+                success: true,
+                count: 0,
+            });
+        });
+
+        it('should be able to update the markers for an event', async () => {
+            policyStore.policies[recordName] = {
+                ['secret']: {
+                    permissions: [
+                        {
+                            type: 'event.update',
+                            role: 'developer',
+                            events: true,
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                },
+                [PUBLIC_READ_MARKER]: {
+                    permissions: [
+                        {
+                            type: 'event.update',
+                            role: 'developer',
+                            events: true,
+                        },
+                        {
+                            type: 'policy.unassign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                },
+            };
+
+            policyStore.roles[recordName] = {
+                [userId]: new Set(['developer']),
+            };
+
+            await store.addEventCount('testRecord', 'address', 10);
+
+            const result = (await manager.updateEvent({
+                recordKeyOrRecordName: recordName,
+                eventName: 'address',
+                userId,
+                markers: ['secret'],
+            })) as UpdateEventRecordSuccess;
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            await expect(
+                store.getEventCount(recordName, 'address')
+            ).resolves.toEqual({
+                success: true,
+                count: 10,
+                markers: ['secret'],
+            });
+        });
+
+        it('should be able to use a record key', async () => {
+            await store.addEventCount('testRecord', 'address', 10);
+
+            const result = (await manager.updateEvent({
+                recordKeyOrRecordName: key,
+                eventName: 'address',
+                userId,
+                count: 0,
+                markers: ['secret'],
+            })) as UpdateEventRecordSuccess;
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            await expect(
+                store.getEventCount(recordName, 'address')
+            ).resolves.toEqual({
+                success: true,
+                count: 0,
+                markers: ['secret'],
             });
         });
     });
