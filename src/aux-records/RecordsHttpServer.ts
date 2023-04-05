@@ -912,7 +912,21 @@ export class RecordsHttpServer {
             });
         }
 
-        const result = await this._events.getCount(recordName, eventName);
+        const validation = await this._validateSessionKey(request);
+
+        if (
+            validation.success === false &&
+            validation.errorCode !== 'no_session_key'
+        ) {
+            return returnResult(validation);
+        }
+
+        const userId = validation.userId;
+        const result = await this._events.getCount(
+            recordName,
+            eventName,
+            userId
+        );
         return returnResult(result);
     }
 

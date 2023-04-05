@@ -35,6 +35,9 @@ import { getHash } from '@casual-simulation/crypto';
 import { SubscriptionController } from './SubscriptionController';
 import { StripeInterface, StripeProduct } from './StripeInterface';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import { PolicyController } from './PolicyController';
+import { MemoryPolicyStore } from './MemoryPolicyStore';
+import { PUBLIC_READ_MARKER } from './PolicyPermissions';
 
 console.log = jest.fn();
 
@@ -55,6 +58,9 @@ describe('RecordsHttpServer', () => {
     let dataStore: DataRecordsStore;
     let manualDataController: DataRecordsController;
     let manualDataStore: DataRecordsStore;
+
+    let policyController: PolicyController;
+    let policyStore: MemoryPolicyStore;
 
     let filesStore: FileRecordsStore;
     let filesController: FileRecordsController;
@@ -138,27 +144,31 @@ describe('RecordsHttpServer', () => {
         recordsStore = new MemoryRecordsStore();
         recordsController = new RecordsController(recordsStore);
 
+        policyStore = new MemoryPolicyStore();
+        policyController = new PolicyController(
+            authController,
+            recordsController,
+            policyStore
+        );
+
         eventsStore = new MemoryEventRecordsStore();
         eventsController = new EventRecordsController(
-            recordsController,
+            policyController,
             eventsStore
         );
 
         dataStore = new MemoryDataRecordsStore();
-        dataController = new DataRecordsController(
-            recordsController,
-            dataStore
-        );
+        dataController = new DataRecordsController(policyController, dataStore);
 
         manualDataStore = new MemoryDataRecordsStore();
         manualDataController = new DataRecordsController(
-            recordsController,
+            policyController,
             manualDataStore
         );
 
         filesStore = new MemoryFileRecordsStore();
         filesController = new FileRecordsController(
-            recordsController,
+            policyController,
             filesStore
         );
 
@@ -1954,6 +1964,7 @@ describe('RecordsHttpServer', () => {
                     recordName,
                     eventName: 'testEvent',
                     count: 5,
+                    markers: [PUBLIC_READ_MARKER],
                 },
                 headers: apiCorsHeaders,
             });
@@ -1974,6 +1985,7 @@ describe('RecordsHttpServer', () => {
                     recordName,
                     eventName: 'missing',
                     count: 0,
+                    markers: [PUBLIC_READ_MARKER],
                 },
                 headers: apiCorsHeaders,
             });
@@ -2192,6 +2204,7 @@ describe('RecordsHttpServer', () => {
                     updatePolicy: true,
                     subjectId: userId,
                     publisherId: userId,
+                    markers: [PUBLIC_READ_MARKER],
                 },
                 headers: corsHeaders(defaultHeaders['origin']),
             });
@@ -2291,6 +2304,7 @@ describe('RecordsHttpServer', () => {
                 publisherId: userId,
                 updatePolicy: true,
                 deletePolicy: true,
+                markers: [PUBLIC_READ_MARKER],
             });
         });
 
@@ -2339,6 +2353,7 @@ describe('RecordsHttpServer', () => {
                 publisherId: userId,
                 updatePolicy: true,
                 deletePolicy: true,
+                markers: [PUBLIC_READ_MARKER],
             });
         });
 
@@ -2629,6 +2644,7 @@ describe('RecordsHttpServer', () => {
                         'content-type': 'application/json',
                         'record-name': recordName,
                     },
+                    markers: [PUBLIC_READ_MARKER],
                 },
                 headers: apiCorsHeaders,
             });
@@ -2647,6 +2663,7 @@ describe('RecordsHttpServer', () => {
                 description: 'description',
                 url: `${recordName}/${hash}.json`,
                 uploaded: false,
+                markers: [PUBLIC_READ_MARKER],
             });
         });
 
@@ -2687,6 +2704,7 @@ describe('RecordsHttpServer', () => {
                         'content-type': 'application/json',
                         'record-name': recordName,
                     },
+                    markers: [PUBLIC_READ_MARKER],
                 },
                 headers: apiCorsHeaders,
             });
@@ -2705,6 +2723,7 @@ describe('RecordsHttpServer', () => {
                 description: 'description',
                 url: `${recordName}/${hash}.json`,
                 uploaded: false,
+                markers: [PUBLIC_READ_MARKER],
             });
         });
 
@@ -3086,6 +3105,7 @@ describe('RecordsHttpServer', () => {
                     subjectId: userId,
                     updatePolicy: true,
                     deletePolicy: true,
+                    markers: [PUBLIC_READ_MARKER],
                 },
                 headers: corsHeaders(defaultHeaders['origin']),
             });
@@ -3195,14 +3215,17 @@ describe('RecordsHttpServer', () => {
                         {
                             address: 'address3',
                             data: 'crazy message!',
+                            markers: [PUBLIC_READ_MARKER],
                         },
                         {
                             address: 'address1',
                             data: 'hello, world!',
+                            markers: [PUBLIC_READ_MARKER],
                         },
                         {
                             address: 'address2',
                             data: 'other message!',
+                            markers: [PUBLIC_READ_MARKER],
                         },
                     ],
                 },
@@ -3227,10 +3250,12 @@ describe('RecordsHttpServer', () => {
                         {
                             address: 'address3',
                             data: 'crazy message!',
+                            markers: [PUBLIC_READ_MARKER],
                         },
                         {
                             address: 'address2',
                             data: 'other message!',
+                            markers: [PUBLIC_READ_MARKER],
                         },
                     ],
                 },
@@ -3291,6 +3316,7 @@ describe('RecordsHttpServer', () => {
                 publisherId: userId,
                 updatePolicy: true,
                 deletePolicy: true,
+                markers: [PUBLIC_READ_MARKER],
             });
         });
 
@@ -3336,6 +3362,7 @@ describe('RecordsHttpServer', () => {
                 publisherId: userId,
                 updatePolicy: true,
                 deletePolicy: true,
+                markers: [PUBLIC_READ_MARKER],
             });
         });
 

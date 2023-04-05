@@ -448,7 +448,7 @@ export class DataRecordsController {
                     success: false,
                     errorCode: 'not_logged_in',
                     errorMessage:
-                        'The user must be logged in in order to record data.',
+                        'The user must be logged in in order to erase data using the provided record key.',
                 };
             }
 
