@@ -1876,7 +1876,7 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'Expected string, received number',
+                            message: 'recordKey must be a string.',
                             path: ['recordKey'],
                             received: 'number',
                         },
@@ -1910,7 +1910,7 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'Expected string, received number',
+                            message: 'eventName must be a string.',
                             path: ['eventName'],
                             received: 'number',
                         },
@@ -1944,7 +1944,7 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'number',
-                            message: 'Expected number, received string',
+                            message: 'count must be a number.',
                             path: ['count'],
                             received: 'string',
                         },
@@ -2071,6 +2071,195 @@ describe('RecordsHttpServer', () => {
         );
     });
 
+    describe('POST /api/v2/records/events', () => {
+        beforeEach(async () => {
+            await eventsController.updateEvent({
+                recordKeyOrRecordName: recordKey,
+                eventName: 'testEvent',
+                userId,
+                count: 5,
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should update the event markers', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/events`,
+                    JSON.stringify({
+                        recordKey,
+                        eventName: 'testEvent',
+                        markers: ['secret'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(
+                await eventsStore.getEventCount(recordName, 'testEvent')
+            ).toEqual({
+                success: true,
+                count: 5,
+                markers: ['secret'],
+            });
+        });
+
+        it('should update the event count', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/events`,
+                    JSON.stringify({
+                        recordKey,
+                        eventName: 'testEvent',
+                        count: 15,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(
+                await eventsStore.getEventCount(recordName, 'testEvent')
+            ).toEqual({
+                success: true,
+                count: 15,
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should support subjectless record keys', async () => {
+            const keyResult = await recordsController.createPublicRecordKey(
+                recordName,
+                'subjectless',
+                userId
+            );
+
+            if (!keyResult.success) {
+                throw new Error('Unable to create subjectless key');
+            }
+
+            delete apiHeaders['authorization'];
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/events`,
+                    JSON.stringify({
+                        recordKey: keyResult.recordKey,
+                        eventName: 'testEvent',
+                        count: 10,
+                        markers: ['secret'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            expect(
+                await eventsStore.getEventCount(recordName, 'testEvent')
+            ).toEqual({
+                success: true,
+                count: 10,
+                markers: ['secret'],
+            });
+        });
+
+        it('should return an unacceptable_request result if recordKey is omitted', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/events`,
+                    JSON.stringify({
+                        eventName: 'testEvent',
+                        count: 15,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordKey is required.',
+                            path: ['recordKey'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result if eventName is omitted', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/events`,
+                    JSON.stringify({
+                        recordKey,
+                        count: 15,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'eventName is required.',
+                            path: ['eventName'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/records/events`, () =>
+            JSON.stringify({
+                recordKey,
+                eventName: 'testEvent',
+                markers: ['secret'],
+            })
+        );
+    });
+
     describe('DELETE /api/v2/records/manual/data', () => {
         beforeEach(async () => {
             await manualDataController.recordData(
@@ -2163,7 +2352,7 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'Expected string, received number',
+                            message: 'recordKey must be a string.',
                             path: ['recordKey'],
                             received: 'number',
                         },
@@ -2196,7 +2385,7 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'Expected string, received number',
+                            message: 'address must be a string.',
                             path: ['address'],
                             received: 'number',
                         },
@@ -2436,7 +2625,7 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'Expected string, received number',
+                            message: 'address must be a string.',
                             path: ['address'],
                             received: 'number',
                         },
@@ -2470,7 +2659,7 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'Expected string, received number',
+                            message: 'recordKey must be a string.',
                             path: ['recordKey'],
                             received: 'number',
                         },
@@ -2644,7 +2833,7 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'Expected string, received number',
+                            message: 'recordKey must be a string.',
                             path: ['recordKey'],
                             received: 'number',
                         },
@@ -2677,7 +2866,7 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'Expected string, received number',
+                            message: 'fileUrl must be a string.',
                             path: ['fileUrl'],
                             received: 'number',
                         },
@@ -2849,7 +3038,7 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'Expected string, received number',
+                            message: 'recordKey must be a string.',
                             path: ['recordKey'],
                             received: 'number',
                         },
@@ -2886,7 +3075,7 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'Expected string, received number',
+                            message: 'fileSha256Hex must be a string.',
                             path: ['fileSha256Hex'],
                             received: 'number',
                         },
@@ -2923,7 +3112,8 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'number',
-                            message: 'Expected number, received string',
+                            message:
+                                'fileByteLength must be a positive integer number.',
                             path: ['fileByteLength'],
                             received: 'string',
                         },
@@ -2960,7 +3150,7 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'Expected string, received number',
+                            message: 'fileMimeType must be a string.',
                             path: ['fileMimeType'],
                             received: 'number',
                         },
@@ -2997,7 +3187,7 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'Expected string, received number',
+                            message: 'fileDescription must be a string.',
                             path: ['fileDescription'],
                             received: 'number',
                         },
@@ -3169,7 +3359,7 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'Expected string, received number',
+                            message: 'recordKey must be a string.',
                             path: ['recordKey'],
                             received: 'number',
                         },
@@ -3202,7 +3392,7 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'Expected string, received number',
+                            message: 'address must be a string.',
                             path: ['address'],
                             received: 'number',
                         },
@@ -3552,7 +3742,7 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'Expected string, received number',
+                            message: 'address must be a string.',
                             path: ['address'],
                             received: 'number',
                         },
@@ -3586,7 +3776,7 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'Expected string, received number',
+                            message: 'recordKey must be a string.',
                             path: ['recordKey'],
                             received: 'number',
                         },
@@ -3742,7 +3932,7 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'Expected string, received number',
+                            message: 'recordName must be a string.',
                             path: ['recordName'],
                             received: 'number',
                         },

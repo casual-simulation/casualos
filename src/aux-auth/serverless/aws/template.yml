@@ -212,6 +212,11 @@ Resources:
                     Properties:
                         Path: /api/v2/records/events/count
                         Method: GET
+                UpdateEvent:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/events
+                        Method: POST
                 MarkFileUploaded:
                     Type: S3
                     Properties:

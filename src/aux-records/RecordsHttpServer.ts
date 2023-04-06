@@ -140,6 +140,54 @@ const UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON = {
 };
 
 /**
+ * The Zod validation for record keys.
+ */
+const RECORD_KEY_VALIDATION = z
+    .string({
+        invalid_type_error: 'recordKey must be a string.',
+        required_error: 'recordKey is required.',
+    })
+    .nonempty('recordKey must not be empty.');
+
+/**
+ * The Zod validation for addresses.
+ */
+const ADDRESS_VALIDATION = z
+    .string({
+        invalid_type_error: 'address must be a string.',
+        required_error: 'address is required.',
+    })
+    .nonempty('address must not be empty.');
+
+/**
+ * The Zod validation for event names.
+ */
+const EVENT_NAME_VALIDATION = z
+    .string({
+        invalid_type_error: 'eventName must be a string.',
+        required_error: 'eventName is required.',
+    })
+    .nonempty('eventName must not be empty.');
+
+/**
+ * The Zod validation for markers.
+ */
+const MARKERS_VALIDATION = z
+    .array(
+        z
+            .string({
+                invalid_type_error: 'individual markers must be strings.',
+                required_error: 'invidiaul markers must not be null or empty.',
+            })
+            .nonempty('invidiaul markers must not be null or empty.'),
+        {
+            invalid_type_error: 'markers must be an array of strings.',
+            required_error: 'markers is required.',
+        }
+    )
+    .nonempty('markers must not be empty.');
+
+/**
  * Defines a class that represents a generic HTTP server suitable for Records HTTP Requests.
  */
 export class RecordsHttpServer {
@@ -328,6 +376,15 @@ export class RecordsHttpServer {
                 this._allowedApiOrigins
             );
         } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/records/events'
+        ) {
+            return formatResponse(
+                request,
+                await this._postRecordsEvents(request),
+                this._allowedApiOrigins
+            );
+        } else if (
             request.method === 'DELETE' &&
             request.path === '/api/v2/records/manual/data'
         ) {
@@ -500,8 +557,14 @@ export class RecordsHttpServer {
         }
 
         const schema = z.object({
-            recordName: z.string(),
-            policy: z.string(),
+            recordName: z.string({
+                invalid_type_error: 'recordName must be a string.',
+                required_error: 'recordName is required.',
+            }),
+            policy: z.string({
+                invalid_type_error: 'policy must be a string.',
+                required_error: 'policy is required.',
+            }),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -610,11 +673,31 @@ export class RecordsHttpServer {
         }
 
         const schema = z.object({
-            recordKey: z.string(),
-            fileSha256Hex: z.string().nonempty(),
-            fileByteLength: z.number().positive().int(),
-            fileMimeType: z.string(),
-            fileDescription: z.string().optional(),
+            recordKey: RECORD_KEY_VALIDATION,
+            fileSha256Hex: z
+                .string({
+                    invalid_type_error: 'fileSha256Hex must be a string.',
+                    required_error: 'fileSha256Hex is required.',
+                })
+                .nonempty('fileSha256Hex must be non-empty.'),
+            fileByteLength: z
+                .number({
+                    invalid_type_error:
+                        'fileByteLength must be a positive integer number.',
+                    required_error: 'fileByteLength is required.',
+                })
+                .positive('fileByteLength must be a positive integer number.')
+                .int('fileByteLength must be a positive integer number.'),
+            fileMimeType: z.string({
+                invalid_type_error: 'fileMimeType must be a string.',
+                required_error: 'fileMimeType is required.',
+            }),
+            fileDescription: z
+                .string({
+                    invalid_type_error: 'fileDescription must be a string.',
+                    required_error: 'fileDescription is required.',
+                })
+                .optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -706,8 +789,11 @@ export class RecordsHttpServer {
         }
 
         const schema = z.object({
-            recordKey: z.string(),
-            fileUrl: z.string(),
+            recordKey: RECORD_KEY_VALIDATION,
+            fileUrl: z.string({
+                invalid_type_error: 'fileUrl must be a string.',
+                required_error: 'fileUrl is required.',
+            }),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -776,16 +862,22 @@ export class RecordsHttpServer {
         }
 
         const schema = z.object({
-            recordKey: z.string(),
-            address: z.string(),
+            recordKey: RECORD_KEY_VALIDATION,
+            address: ADDRESS_VALIDATION,
             data: z.any(),
             updatePolicy: z
-                .union([z.literal(true), z.array(z.string())])
+                .union([z.literal(true), z.array(z.string())], {
+                    invalid_type_error:
+                        'updatePolicy must be a boolean or an array of strings.',
+                })
                 .optional(),
             deletePolicy: z
-                .union([z.literal(true), z.array(z.string())])
+                .union([z.literal(true), z.array(z.string())], {
+                    invalid_type_error:
+                        'deletePolicy must be a boolean or an array of strings.',
+                })
                 .optional(),
-            markers: z.array(z.string()).optional(),
+            markers: MARKERS_VALIDATION.optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -914,8 +1006,8 @@ export class RecordsHttpServer {
         }
 
         const schema = z.object({
-            recordKey: z.string(),
-            address: z.string(),
+            recordKey: RECORD_KEY_VALIDATION,
+            address: ADDRESS_VALIDATION,
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -1026,9 +1118,12 @@ export class RecordsHttpServer {
         }
 
         const schema = z.object({
-            recordKey: z.string(),
-            eventName: z.string(),
-            count: z.number(),
+            recordKey: RECORD_KEY_VALIDATION,
+            eventName: EVENT_NAME_VALIDATION,
+            count: z.number({
+                invalid_type_error: 'count must be a number.',
+                required_error: 'count is required.',
+            }),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -1078,6 +1173,86 @@ export class RecordsHttpServer {
             count,
             userId
         );
+
+        return returnResult(result);
+    }
+
+    private async _postRecordsEvents(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            recordKey: RECORD_KEY_VALIDATION,
+            eventName: EVENT_NAME_VALIDATION,
+            count: z.number().optional(),
+            markers: MARKERS_VALIDATION.optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordKey, eventName, count, markers } = parseResult.data;
+
+        if (!recordKey || typeof recordKey !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'recordKey is required and must be a string.',
+            });
+        }
+        if (!eventName || typeof eventName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'eventName is required and must be a string.',
+            });
+        }
+        if (
+            count !== null &&
+            typeof count !== 'undefined' &&
+            typeof count !== 'number'
+        ) {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'count must be a number.',
+            });
+        }
+
+        const validation = await this._validateSessionKey(request);
+
+        if (
+            validation.success === false &&
+            validation.errorCode !== 'no_session_key'
+        ) {
+            return returnResult(validation);
+        }
+
+        const userId = validation.userId;
+
+        const result = await this._events.updateEvent({
+            recordKeyOrRecordName: recordKey,
+            userId,
+            eventName,
+            count,
+            markers,
+        });
 
         return returnResult(result);
     }
