@@ -3,6 +3,9 @@ import {
     AuthController,
     INVALID_KEY_ERROR_MESSAGE,
     INVALID_REQUEST_ERROR_MESSAGE,
+    MAX_EMAIL_ADDRESS_LENGTH,
+    MAX_OPEN_AI_API_KEY_LENGTH,
+    MAX_SMS_ADDRESS_LENGTH,
     ValidateSessionKeyResult,
 } from './AuthController';
 import { parseSessionKey } from './AuthUtils';
@@ -15,6 +18,8 @@ import {
     CreateManageSubscriptionRequest,
     SubscriptionController,
 } from './SubscriptionController';
+import { z } from 'zod';
+import { PublicRecordKeyPolicy } from './RecordsStore';
 
 /**
  * Defines an interface for a generic HTTP request.
@@ -494,7 +499,18 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
-        const { recordName, policy } = jsonResult.value;
+        const schema = z.object({
+            recordName: z.string(),
+            policy: z.string(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, policy } = parseResult.data;
 
         if (!recordName || typeof recordName !== 'string') {
             return returnResult({
@@ -514,7 +530,7 @@ export class RecordsHttpServer {
 
         const result = await this._records.createPublicRecordKey(
             recordName,
-            policy,
+            policy as PublicRecordKeyPolicy,
             validation.userId
         );
 
@@ -593,13 +609,27 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
+        const schema = z.object({
+            recordKey: z.string(),
+            fileSha256Hex: z.string().nonempty(),
+            fileByteLength: z.number().positive().int(),
+            fileMimeType: z.string(),
+            fileDescription: z.string().optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
         const {
             recordKey,
             fileSha256Hex,
             fileByteLength,
             fileMimeType,
             fileDescription,
-        } = jsonResult.value;
+        } = parseResult.data;
 
         if (!recordKey || typeof recordKey !== 'string') {
             return returnResult({
@@ -675,7 +705,18 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
-        const { recordKey, fileUrl } = jsonResult.value;
+        const schema = z.object({
+            recordKey: z.string(),
+            fileUrl: z.string(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordKey, fileUrl } = parseResult.data;
 
         if (!recordKey || typeof recordKey !== 'string') {
             return returnResult({
@@ -734,8 +775,33 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
-        const { recordKey, address, data, updatePolicy, deletePolicy } =
-            jsonResult.value;
+        const schema = z.object({
+            recordKey: z.string(),
+            address: z.string(),
+            data: z.any(),
+            updatePolicy: z
+                .union([z.literal(true), z.array(z.string())])
+                .optional(),
+            deletePolicy: z
+                .union([z.literal(true), z.array(z.string())])
+                .optional(),
+            markers: z.array(z.string()).optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const {
+            recordKey,
+            address,
+            data,
+            updatePolicy,
+            deletePolicy,
+            markers,
+        } = parseResult.data;
 
         if (!recordKey || typeof recordKey !== 'string') {
             return returnResult({
@@ -774,7 +840,8 @@ export class RecordsHttpServer {
             data,
             userId,
             updatePolicy,
-            deletePolicy
+            deletePolicy,
+            markers
         );
         return returnResult(result);
     }
@@ -846,7 +913,18 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
-        const { recordKey, address } = jsonResult.value;
+        const schema = z.object({
+            recordKey: z.string(),
+            address: z.string(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordKey, address } = parseResult.data;
 
         if (!recordKey || typeof recordKey !== 'string') {
             return returnResult({
@@ -947,7 +1025,19 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
-        const { recordKey, eventName, count } = jsonResult.value;
+        const schema = z.object({
+            recordKey: z.string(),
+            eventName: z.string(),
+            count: z.number(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordKey, eventName, count } = parseResult.data;
 
         if (!recordKey || typeof recordKey !== 'string') {
             return returnResult({
@@ -1009,7 +1099,18 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
-        const { roomName, userName } = jsonResult.value;
+        const schema = z.object({
+            roomName: z.string(),
+            userName: z.string(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { roomName, userName } = parseResult.data;
         const result = await this._livekit.issueToken(roomName, userName);
 
         return returnResult(result);
@@ -1060,7 +1161,19 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
-        const { userId, requestId, code } = jsonResult.value;
+        const schema = z.object({
+            userId: z.string(),
+            requestId: z.string(),
+            code: z.string(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { userId, requestId, code } = parseResult.data;
 
         const result = await this._auth.completeLogin({
             userId,
@@ -1089,11 +1202,23 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
+        const schema = z.object({
+            userId: z.string().optional(),
+            sessionId: z.string().optional(),
+            sessionKey: z.string().optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
         let {
             userId,
             sessionId,
             sessionKey: sessionKeyToRevoke,
-        } = jsonResult.value;
+        } = parseResult.data;
 
         // Parse the User ID and Session ID from the sessionKey that is provided in
         // session key that should be revoked
@@ -1135,7 +1260,17 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
-        const { userId } = jsonResult.value;
+        const schema = z.object({
+            userId: z.string(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { userId } = parseResult.data;
 
         const authorization = getSessionKey(request);
 
@@ -1286,11 +1421,30 @@ export class RecordsHttpServer {
         if (typeof request.body === 'string' && request.body) {
             let body = tryParseJson(request.body);
             if (body.success) {
-                if (typeof body.value.subscriptionId === 'string') {
-                    subscriptionId = body.value.subscriptionId;
+                const schema = z.object({
+                    subscriptionId: z.string(),
+                    expectedPrice: z
+                        .object({
+                            currency: z.string(),
+                            cost: z.number(),
+                            interval: z.enum(['month', 'year', 'week', 'day']),
+                            intervalLength: z.number(),
+                        })
+                        .required(),
+                });
+
+                const parseResult = schema.safeParse(body.value);
+
+                if (parseResult.success === false) {
+                    return returnZodError(parseResult.error);
                 }
-                if (typeof body.value.expectedPrice === 'object') {
-                    expectedPrice = body.value.expectedPrice;
+
+                if (typeof parseResult.data.subscriptionId === 'string') {
+                    subscriptionId = parseResult.data.subscriptionId;
+                }
+                if (typeof parseResult.data.expectedPrice === 'object') {
+                    expectedPrice = parseResult.data
+                        .expectedPrice as CreateManageSubscriptionRequest['expectedPrice'];
                 }
             }
         }
@@ -1398,10 +1552,26 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_USER_ID);
         }
 
+        const schema = z.object({
+            name: z.string().min(1).optional(),
+            email: z.string().email().max(MAX_EMAIL_ADDRESS_LENGTH).optional(),
+            phoneNumber: z.string().max(MAX_SMS_ADDRESS_LENGTH).optional(),
+            avatarUrl: z.string().url().optional(),
+            avatarPortraitUrl: z.string().url().optional(),
+            openAiKey: z.string().max(MAX_OPEN_AI_API_KEY_LENGTH).optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const update = parseResult.data;
         const result = await this._auth.updateUserInfo({
             sessionKey: sessionKey,
             userId: userId,
-            update: jsonResult.value,
+            update,
         });
 
         if (!result.success) {
@@ -1528,4 +1698,18 @@ export interface NoSessionKeyResult {
     userId: null;
     errorCode: 'no_session_key';
     errorMessage: string;
+}
+
+/**
+ * Returns the given ZodError as a GenericHttpResponse.
+ * @param error The error.
+ */
+export function returnZodError(error: z.ZodError<any>): GenericHttpResponse {
+    return returnResult({
+        success: false,
+        errorCode: 'unacceptable_request',
+        errorMessage:
+            'The request was invalid. One or more fields were invalid.',
+        issues: error.issues,
+    });
 }

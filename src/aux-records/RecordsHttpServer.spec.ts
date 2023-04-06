@@ -526,6 +526,9 @@ describe('RecordsHttpServer', () => {
                     `/api/{userId:${userId}}/metadata`,
                     JSON.stringify({
                         name: 'Kal',
+                        avatarUrl: 'https://example.com/avatar.png',
+                        avatarPortraitUrl:
+                            'https://example.com/avatar-portrait.png',
                     }),
                     authenticatedHeaders
                 )
@@ -544,6 +547,8 @@ describe('RecordsHttpServer', () => {
             expect(user).toMatchObject({
                 id: userId,
                 name: 'Kal',
+                avatarUrl: 'https://example.com/avatar.png',
+                avatarPortraitUrl: 'https://example.com/avatar-portrait.png',
             });
         });
 
@@ -1865,7 +1870,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'recordKey is required and must be a string.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'Expected string, received number',
+                            path: ['recordKey'],
+                            received: 'number',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -1889,7 +1904,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'eventName is required and must be a string.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'Expected string, received number',
+                            path: ['eventName'],
+                            received: 'number',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -1913,7 +1938,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'count is required and must be a number.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'number',
+                            message: 'Expected number, received string',
+                            path: ['count'],
+                            received: 'string',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -2122,7 +2157,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'recordKey is required and must be a string.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'Expected string, received number',
+                            path: ['recordKey'],
+                            received: 'number',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -2145,7 +2190,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'address is required and must be a string.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'Expected string, received number',
+                            path: ['address'],
+                            received: 'number',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -2375,7 +2430,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'address is required and must be a string.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'Expected string, received number',
+                            path: ['address'],
+                            received: 'number',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -2399,7 +2464,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'recordKey is required and must be a string.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'Expected string, received number',
+                            path: ['recordKey'],
+                            received: 'number',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -2563,7 +2638,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'recordKey is required and must be a string.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'Expected string, received number',
+                            path: ['recordKey'],
+                            received: 'number',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -2586,7 +2671,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'fileUrl is required and must be a string.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'Expected string, received number',
+                            path: ['fileUrl'],
+                            received: 'number',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -2748,7 +2843,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'recordKey is required and must be a string.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'Expected string, received number',
+                            path: ['recordKey'],
+                            received: 'number',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -2776,7 +2881,16 @@ describe('RecordsHttpServer', () => {
                     success: false,
                     errorCode: 'unacceptable_request',
                     errorMessage:
-                        'fileSha256Hex is required and must be a string.',
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'Expected string, received number',
+                            path: ['fileSha256Hex'],
+                            received: 'number',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -2804,7 +2918,16 @@ describe('RecordsHttpServer', () => {
                     success: false,
                     errorCode: 'unacceptable_request',
                     errorMessage:
-                        'fileByteLength is required and must be a number.',
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'number',
+                            message: 'Expected number, received string',
+                            path: ['fileByteLength'],
+                            received: 'string',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -2832,7 +2955,16 @@ describe('RecordsHttpServer', () => {
                     success: false,
                     errorCode: 'unacceptable_request',
                     errorMessage:
-                        'fileMimeType is required and must be a string.',
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'Expected string, received number',
+                            path: ['fileMimeType'],
+                            received: 'number',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -2859,7 +2991,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'fileDescription must be a string.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'Expected string, received number',
+                            path: ['fileDescription'],
+                            received: 'number',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -3021,7 +3163,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'recordKey is required and must be a string.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'Expected string, received number',
+                            path: ['recordKey'],
+                            received: 'number',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -3044,7 +3196,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'address is required and must be a string.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'Expected string, received number',
+                            path: ['address'],
+                            received: 'number',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -3384,7 +3546,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'address is required and must be a string.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'Expected string, received number',
+                            path: ['address'],
+                            received: 'number',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -3408,7 +3580,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'recordKey is required and must be a string.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'Expected string, received number',
+                            path: ['recordKey'],
+                            received: 'number',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -3555,7 +3737,16 @@ describe('RecordsHttpServer', () => {
                     success: false,
                     errorCode: 'unacceptable_request',
                     errorMessage:
-                        'recordName is required and must be a string.',
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'Expected string, received number',
+                            path: ['recordName'],
+                            received: 'number',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });

@@ -83,6 +83,11 @@ export const MAX_EMAIL_ADDRESS_LENGTH = 200;
 export const MAX_SMS_ADDRESS_LENGTH = 30;
 
 /**
+ * The maximum allowed length for an OpenAI API key.
+ */
+export const MAX_OPEN_AI_API_KEY_LENGTH = 100;
+
+/**
  * Defines a class that is able to authenticate users.
  */
 export class AuthController {
