@@ -7,6 +7,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `os.getMediaPermission` would leave tracks in a MediaStream running. Some browsers/devices release these automatically, while others would leave the tracks running and cause issues with other systems that utilize audio and video hardware like augmented reality.
+-   Fixed an issue where `data:` URLs would not work in the `formAddress` tag without a workaround.
 
 ## V3.1.28
 
