@@ -220,6 +220,8 @@ export class PolicyController {
                 context,
                 request
             );
+        } else if (request.action === 'policy.read') {
+            return this._authorizePolicyReadRequest(context, request);
         }
 
         return {
@@ -1943,6 +1945,93 @@ export class PolicyController {
         };
     }
 
+    private async _authorizePolicyReadRequest(
+        context: AuthorizationContext,
+        request: AuthorizeReadPolicyRequest
+    ): Promise<AuthorizeResult> {
+        return await this._authorizeRequest(
+            context,
+            request,
+            [ACCOUNT_MARKER],
+            (context, type, id) => {
+                return this._authorizePolicyRead(context, type, id);
+            },
+            false
+        );
+    }
+
+    private async _authorizePolicyRead(
+        context: RolesContext<AuthorizeReadPolicyRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        let role: string | true | null = null;
+        let denialReason: DenialReason;
+
+        for (let marker of context.markers) {
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byPolicy('policy.read', context.request.policy),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._bySubjectRole(
+                                  context,
+                                  type,
+                                  context.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                denialReason = {
+                    type: 'missing_permission',
+                    kind: type,
+                    id,
+                    marker: marker.marker,
+                    permission: 'policy.read',
+                    role,
+                };
+                continue;
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            return {
+                success: true,
+                authorization: {
+                    role,
+                    markers: [
+                        {
+                            marker: marker.marker,
+                            actions: [
+                                {
+                                    action: context.request.action,
+                                    grantingPolicy: actionPermission.policy,
+                                    grantingPermission:
+                                        actionPermission.permission,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            };
+        }
+
+        return {
+            success: false,
+            reason: denialReason ?? {
+                type: 'missing_role',
+            },
+        };
+    }
+
     /**
      * Attempts to authorize the given request based on common request properties.
      *
@@ -2483,7 +2572,8 @@ export type AuthorizeRequest =
     | AuthorizeIncrementEventRequest
     | AuthorizeUpdateEventRequest
     | AuthorizeGrantPermissionToPolicyRequest
-    | AuthorizeRevokePermissionToPolicyRequest;
+    | AuthorizeRevokePermissionToPolicyRequest
+    | AuthorizeReadPolicyRequest;
 
 export interface AuthorizeRequestBase {
     /**
@@ -2705,6 +2795,10 @@ export interface AuthorizeGrantPermissionToPolicyRequest
 export interface AuthorizeRevokePermissionToPolicyRequest
     extends AuthorizePolicyRequest {
     action: 'policy.revokePermission';
+}
+
+export interface AuthorizeReadPolicyRequest extends AuthorizePolicyRequest {
+    action: 'policy.read';
 }
 
 export interface ListedDataItem {
