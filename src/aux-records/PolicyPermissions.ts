@@ -43,7 +43,10 @@ export type AvailableEventPermissions =
 export type AvailablePolicyPermissions =
     | AssignPolicyPermission
     | UnassignPolicyPermission
-    | ListPoliciesPermission;
+    | ListPoliciesPermission
+    | GrantPermissionToPolicyPermission
+    | RevokePermissionFromPolicyPermission
+    | ReadPolicyPermission;
 
 /**
  * Defines an interface that describes common options for all permissions.
@@ -325,8 +328,15 @@ export const RECORD_OWNER_ROLE_NAME = 'recordOwner';
 
 /**
  * The name of the "publicRead" resource marker.
+ * Used by default for data, file, and event records.
  */
 export const PUBLIC_READ_MARKER = 'publicRead';
+
+/**
+ * The name of the "account" resource marker.
+ * Used by default for policy and role records.
+ */
+export const ACCOUNT_MARKER = 'account';
 
 /**
  * Defines a default policy document for any resource.

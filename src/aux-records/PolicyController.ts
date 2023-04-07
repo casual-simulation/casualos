@@ -20,6 +20,7 @@ import {
     Permission,
     PolicyDocument,
     PolicyPermission,
+    ACCOUNT_MARKER,
 } from './PolicyPermissions';
 import { PublicRecordKeyPolicy } from './RecordsStore';
 import { PolicyStore } from './PolicyStore';
@@ -209,6 +210,11 @@ export class PolicyController {
             return this._authorizeEventIncrementRequest(context, request);
         } else if (request.action === 'event.update') {
             return this._authorizeEventUpdateRequest(context, request);
+        } else if (request.action === 'policy.grantPermission') {
+            return this._authorizePolicyGrantPermissionRequest(
+                context,
+                request
+            );
         }
 
         return {
@@ -1752,6 +1758,96 @@ export class PolicyController {
         };
     }
 
+    private async _authorizePolicyGrantPermissionRequest(
+        context: AuthorizationContext,
+        request: AuthorizeGrantPermissionToPolicyRequest
+    ): Promise<AuthorizeResult> {
+        return await this._authorizeRequest(
+            context,
+            request,
+            [ACCOUNT_MARKER],
+            (context, type, id) => {
+                return this._authorizePolicyGrantPermission(context, type, id);
+            },
+            false
+        );
+    }
+
+    private async _authorizePolicyGrantPermission(
+        context: RolesContext<AuthorizeGrantPermissionToPolicyRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        let role: string | true | null = null;
+        let denialReason: DenialReason;
+
+        for (let marker of context.markers) {
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byPolicy(
+                        'policy.grantPermission',
+                        context.request.policy
+                    ),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._bySubjectRole(
+                                  context,
+                                  type,
+                                  context.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                denialReason = {
+                    type: 'missing_permission',
+                    kind: type,
+                    id,
+                    marker: marker.marker,
+                    permission: 'policy.grantPermission',
+                    role,
+                };
+                continue;
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            return {
+                success: true,
+                authorization: {
+                    role,
+                    markers: [
+                        {
+                            marker: marker.marker,
+                            actions: [
+                                {
+                                    action: context.request.action,
+                                    grantingPolicy: actionPermission.policy,
+                                    grantingPermission:
+                                        actionPermission.permission,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            };
+        }
+
+        return {
+            success: false,
+            reason: denialReason ?? {
+                type: 'missing_role',
+            },
+        };
+    }
+
     /**
      * Attempts to authorize the given request based on common request properties.
      *
@@ -1763,6 +1859,7 @@ export class PolicyController {
      * @param request The request that should be authorized.
      * @param resourceMarkers The list of markers that need to be validated.
      * @param authorize The function that should be used to authorize each subject in the request.
+     * @param skipInstanceChecksWhenValidRecordKeyIsProvided Whether or not to skip instance checks when a valid record key is provided.
      */
     private async _authorizeRequest<T extends AuthorizeRequestBase>(
         context: AuthorizationContext,
@@ -1772,7 +1869,8 @@ export class PolicyController {
             context: RolesContext<T>,
             type: 'user' | 'inst',
             id: string
-        ) => Promise<GenericResult>
+        ) => Promise<GenericResult>,
+        skipInstanceChecksWhenValidRecordKeyIsProvided: boolean = true
     ): Promise<AuthorizeResult> {
         if (
             request.instances &&
@@ -1855,7 +1953,8 @@ export class PolicyController {
                     );
                 }
                 return result;
-            }
+            },
+            skipInstanceChecksWhenValidRecordKeyIsProvided
         );
 
         if (!Array.isArray(authorizedInstances)) {
@@ -1896,12 +1995,16 @@ export class PolicyController {
     private async _authorizeInstances(
         instances: string[],
         recordKeyResult: ValidatePublicRecordKeyResult,
-        authorize: (inst: string) => Promise<GenericResult>
+        authorize: (inst: string) => Promise<GenericResult>,
+        skipInstanceChecksWhenValidRecordKeyIsProvided: boolean
     ): Promise<InstEnvironmentAuthorization[] | GenericDenied> {
         const authorizedInstances: InstEnvironmentAuthorization[] = [];
         if (instances) {
             for (let inst of instances) {
-                if (recordKeyResult?.success) {
+                if (
+                    skipInstanceChecksWhenValidRecordKeyIsProvided &&
+                    recordKeyResult?.success
+                ) {
                     authorizedInstances.push({
                         authorizationType: 'not_required',
                         inst,
@@ -2283,7 +2386,8 @@ export type AuthorizeRequest =
     | AuthorizeDeleteFileRequest
     | AuthorizeCountEventRequest
     | AuthorizeIncrementEventRequest
-    | AuthorizeUpdateEventRequest;
+    | AuthorizeUpdateEventRequest
+    | AuthorizeGrantPermissionToPolicyRequest;
 
 export interface AuthorizeRequestBase {
     /**
@@ -2488,6 +2592,18 @@ export interface AuthorizeUpdateEventRequest extends AuthorizeEventRequest {
      * If omitted, then no markers are being removed from the event.
      */
     removedMarkers?: string[];
+}
+
+export interface AuthorizePolicyRequest extends AuthorizeRequestBase {
+    /**
+     * The name of the policy.
+     */
+    policy: string;
+}
+
+export interface AuthorizeGrantPermissionToPolicyRequest
+    extends AuthorizePolicyRequest {
+    action: 'policy.grantPermission';
 }
 
 export interface ListedDataItem {
