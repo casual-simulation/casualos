@@ -269,6 +269,40 @@ describe('SceneUtils', () => {
             // so that the original URL is preserved.
             expect(result).toBe('https://example.com/file.png');
         });
+
+        it('should ignore data URLs', () => {
+            let result = addCorsQueryParam('data:image/png;base64,abcdef');
+            expect(result).toBe('data:image/png;base64,abcdef');
+        });
+
+        it('should ignore blob URLs', () => {
+            let result = addCorsQueryParam(
+                'blob:https://javascript.info/1e67e00e-860d-40a5-89ae-6ab0cbee6273'
+            );
+            expect(result).toBe(
+                'blob:https://javascript.info/1e67e00e-860d-40a5-89ae-6ab0cbee6273'
+            );
+        });
+
+        it('should ignore file URLs', () => {
+            let result = addCorsQueryParam('file://path/to/file');
+            expect(result).toBe('file://path/to/file');
+        });
+
+        it('should ignore chrome URLs', () => {
+            let result = addCorsQueryParam('chrome://version');
+            expect(result).toBe('chrome://version');
+        });
+
+        it('should ignore edge URLs', () => {
+            let result = addCorsQueryParam('edge://version');
+            expect(result).toBe('edge://version');
+        });
+
+        it('should ignore FTP URLs', () => {
+            let result = addCorsQueryParam('ftp://ip_address/');
+            expect(result).toBe('ftp://ip_address/');
+        });
     });
 
     describe('calculateHitFace()', () => {
