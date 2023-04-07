@@ -215,6 +215,11 @@ export class PolicyController {
                 context,
                 request
             );
+        } else if (request.action === 'policy.revokePermission') {
+            return this._authorizePolicyRevokePermissionRequest(
+                context,
+                request
+            );
         }
 
         return {
@@ -1848,6 +1853,96 @@ export class PolicyController {
         };
     }
 
+    private async _authorizePolicyRevokePermissionRequest(
+        context: AuthorizationContext,
+        request: AuthorizeRevokePermissionToPolicyRequest
+    ): Promise<AuthorizeResult> {
+        return await this._authorizeRequest(
+            context,
+            request,
+            [ACCOUNT_MARKER],
+            (context, type, id) => {
+                return this._authorizePolicyRevokePermission(context, type, id);
+            },
+            false
+        );
+    }
+
+    private async _authorizePolicyRevokePermission(
+        context: RolesContext<AuthorizeRevokePermissionToPolicyRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        let role: string | true | null = null;
+        let denialReason: DenialReason;
+
+        for (let marker of context.markers) {
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byPolicy(
+                        'policy.revokePermission',
+                        context.request.policy
+                    ),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._bySubjectRole(
+                                  context,
+                                  type,
+                                  context.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                denialReason = {
+                    type: 'missing_permission',
+                    kind: type,
+                    id,
+                    marker: marker.marker,
+                    permission: 'policy.revokePermission',
+                    role,
+                };
+                continue;
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            return {
+                success: true,
+                authorization: {
+                    role,
+                    markers: [
+                        {
+                            marker: marker.marker,
+                            actions: [
+                                {
+                                    action: context.request.action,
+                                    grantingPolicy: actionPermission.policy,
+                                    grantingPermission:
+                                        actionPermission.permission,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            };
+        }
+
+        return {
+            success: false,
+            reason: denialReason ?? {
+                type: 'missing_role',
+            },
+        };
+    }
+
     /**
      * Attempts to authorize the given request based on common request properties.
      *
@@ -2387,7 +2482,8 @@ export type AuthorizeRequest =
     | AuthorizeCountEventRequest
     | AuthorizeIncrementEventRequest
     | AuthorizeUpdateEventRequest
-    | AuthorizeGrantPermissionToPolicyRequest;
+    | AuthorizeGrantPermissionToPolicyRequest
+    | AuthorizeRevokePermissionToPolicyRequest;
 
 export interface AuthorizeRequestBase {
     /**
@@ -2604,6 +2700,11 @@ export interface AuthorizePolicyRequest extends AuthorizeRequestBase {
 export interface AuthorizeGrantPermissionToPolicyRequest
     extends AuthorizePolicyRequest {
     action: 'policy.grantPermission';
+}
+
+export interface AuthorizeRevokePermissionToPolicyRequest
+    extends AuthorizePolicyRequest {
+    action: 'policy.revokePermission';
 }
 
 export interface ListedDataItem {
