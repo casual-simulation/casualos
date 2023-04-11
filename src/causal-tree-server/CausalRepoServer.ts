@@ -405,10 +405,27 @@ export class CausalRepoServer {
                             : false;
 
                         try {
-                            await (isTemp
+                            const result = await (isTemp
                                 ? this._temporaryUpdatesStore
                                 : this._updatesStore
                             ).addUpdates(event.branch, event.updates);
+
+                            if (result.success === false) {
+                                console.log(
+                                    `[CausalRepoServer] [${event.branch}] [${id}] Failed to add updates: ${result.errorCode}`
+                                );
+
+                                if ('updateId' in event) {
+                                    const { success, inst, ...rest } = result;
+                                    sendToDevices([device], UPDATES_RECEIVED, {
+                                        branch: event.branch,
+                                        updateId: event.updateId,
+                                        ...rest,
+                                    });
+                                }
+
+                                return;
+                            }
 
                             const hasUpdates = event.updates.length > 0;
                             if (hasUpdates) {

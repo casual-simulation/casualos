@@ -3096,6 +3096,84 @@ describe('CausalRepoServer', () => {
             ]);
         });
 
+        it('should add the given atoms to the given branch', async () => {
+            updateStore.maxAllowedInstSize = 5;
+
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const addUpdates = new Subject<AddUpdatesEvent>();
+            device.events.set(ADD_UPDATES, addUpdates);
+
+            const device2 = new MemoryConnection(device2Info);
+            const joinBranch = new Subject<WatchBranchEvent>();
+            device2.events.set(WATCH_BRANCH, joinBranch);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+
+            await waitAsync();
+
+            joinBranch.next({
+                branch: 'testBranch',
+                protocol: 'updates',
+            });
+
+            await waitAsync();
+
+            expect(device2.messages).toEqual([
+                {
+                    name: ADD_UPDATES,
+                    data: {
+                        branch: 'testBranch',
+                        updates: [],
+                        initial: true,
+                    },
+                },
+            ]);
+
+            addUpdates.next({
+                branch: 'testBranch',
+                updates: ['111', '222'],
+                updateId: 1,
+            });
+
+            await waitAsync();
+
+            const updates = await updateStore.getUpdates('testBranch');
+
+            expect(updates).toEqual({
+                updates: [],
+                timestamps: [],
+            });
+
+            expect(device.messages).toEqual([
+                // Server should send a updates received event
+                // back indicating which updates it processed
+                {
+                    name: UPDATES_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        updateId: 1,
+                        errorCode: 'max_inst_size_reached',
+                        maxInstSizeInBytes: 5,
+                        neededInstSizeInBytes: 6,
+                    },
+                },
+            ]);
+
+            expect(device2.messages).toEqual([
+                {
+                    name: ADD_UPDATES,
+                    data: {
+                        branch: 'testBranch',
+                        updates: [],
+                        initial: true,
+                    },
+                },
+            ]);
+        });
+
         describe('temp', () => {
             it('should not store the given atoms with the current branch', async () => {
                 server.init();
