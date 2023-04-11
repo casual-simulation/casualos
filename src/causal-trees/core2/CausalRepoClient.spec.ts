@@ -1,6 +1,8 @@
 import {
     CausalRepoClient,
+    ClientError,
     isClientAtoms,
+    isClientError,
     isClientEvent,
     isClientResetAtoms,
     isClientUpdates,
@@ -80,6 +82,7 @@ import {
 import { DeviceInfo } from '../core/DeviceInfo';
 import { CausalRepoCommit, index, commit } from '.';
 import { TimeSample } from '@casual-simulation/timesync';
+import { updateRenderer } from 'esri/smartMapping/renderers/relationship';
 
 describe('CausalRepoClient', () => {
     let client: CausalRepoClient;
@@ -849,11 +852,6 @@ describe('CausalRepoClient', () => {
 
             client.addUpdates('abc', ['111', '222']);
 
-            // updatesReceived.next({
-            //     branch: 'abc',
-            //     updateId: 1
-            // });
-
             connection.disconnect();
             await waitAsync();
 
@@ -1027,6 +1025,61 @@ describe('CausalRepoClient', () => {
                     data: {
                         branch: 'abc',
                         temporary: true,
+                        protocol: 'updates',
+                    },
+                },
+                {
+                    name: ADD_UPDATES,
+                    data: {
+                        branch: 'abc',
+                        updateId: 1,
+                        updates: ['111', '222'],
+                    },
+                },
+            ]);
+        });
+
+        it('should communicate when updates are rejected because of the max instance size', async () => {
+            const updatesReceived = new Subject<UpdatesReceivedEvent>();
+            connection.events.set(UPDATES_RECEIVED, updatesReceived);
+            connection.connect();
+
+            let errors: ClientError[] = [];
+            client
+                .watchBranchUpdates('abc')
+                .pipe(filter(isClientError))
+                .subscribe((e) => errors.push(e));
+
+            await waitAsync();
+
+            client.addUpdates('abc', ['111', '222']);
+
+            await waitAsync();
+
+            updatesReceived.next({
+                branch: 'abc',
+                updateId: 1,
+                errorCode: 'max_inst_size_reached',
+                maxInstSizeInBytes: 5,
+                neededInstSizeInBytes: 6,
+            });
+
+            await waitAsync();
+
+            expect(errors).toEqual([
+                {
+                    type: 'error',
+                    errorCode: 'max_inst_size_reached',
+                    maxInstSizeInBytes: 5,
+                    neededInstSizeInBytes: 6,
+                },
+            ]);
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: {
+                        branch: 'abc',
                         protocol: 'updates',
                     },
                 },

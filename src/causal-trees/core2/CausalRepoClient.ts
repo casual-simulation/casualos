@@ -425,15 +425,31 @@ export class CausalRepoClient {
                                 if (branchEvent.temporary) {
                                     return;
                                 }
+
+                                // TODO: Decide whether to mark off the updates
+                                // as saved or not when an error occurs.
+                                // Right now, if the the updates are not stored on the server
+                                // because too much space is used, then they will never be sent back to the server again.
                                 let list = this._getSentUpdates(event.branch);
                                 list.delete(event.updateId);
                             }),
-                            map(
-                                (event) =>
-                                    ({
-                                        type: 'updates_received',
-                                    } as ClientUpdatesReceived)
-                            )
+                            map((event) => {
+                                if (
+                                    event.errorCode === 'max_inst_size_reached'
+                                ) {
+                                    return {
+                                        type: 'error',
+                                        errorCode: event.errorCode,
+                                        maxInstSizeInBytes:
+                                            event.maxInstSizeInBytes,
+                                        neededInstSizeInBytes:
+                                            event.neededInstSizeInBytes,
+                                    } as MaxInstSizeReachedClientError;
+                                }
+                                return {
+                                    type: 'updates_received',
+                                } as ClientUpdatesReceived;
+                            })
                         ),
                     this._client
                         .event<ReceiveDeviceActionEvent>(RECEIVE_EVENT)
@@ -1060,6 +1076,18 @@ export interface ClientEvent {
     action: DeviceAction | DeviceActionResult | DeviceActionError;
 }
 
+export interface BaseClientError {
+    type: 'error';
+    errorCode: string;
+}
+
+export type ClientError = MaxInstSizeReachedClientError;
+export interface MaxInstSizeReachedClientError extends BaseClientError {
+    errorCode: 'max_inst_size_reached';
+    maxInstSizeInBytes: number;
+    neededInstSizeInBytes: number;
+}
+
 export type ClientWatchBranchEvents =
     | ClientAtoms
     | ClientAtomsReceived
@@ -1069,10 +1097,11 @@ export type ClientWatchBranchEvents =
 export type ClientWatchBranchUpdatesEvents =
     | ClientUpdates
     | ClientUpdatesReceived
-    | ClientEvent;
+    | ClientEvent
+    | ClientError;
 
 export type ClientAtomsOrEvent = ClientAtoms | ClientEvent | ClientResetAtoms;
-export type ClientUpdatesOrEvent = ClientUpdates | ClientEvent;
+export type ClientUpdatesOrEvent = ClientUpdates | ClientEvent | ClientError;
 
 export function isClientAtoms(
     event: ClientWatchBranchEvents
@@ -1111,7 +1140,17 @@ export function isClientUpdates(
 export function isClientUpdatesOrEvents(
     event: ClientWatchBranchUpdatesEvents
 ): event is ClientUpdatesOrEvent {
-    return event.type === 'updates' || event.type === 'event';
+    return (
+        event.type === 'updates' ||
+        event.type === 'event' ||
+        event.type === 'error'
+    );
+}
+
+export function isClientError(
+    event: ClientWatchBranchUpdatesEvents
+): event is ClientError {
+    return event.type === 'error';
 }
 
 function whenConnected(

@@ -336,6 +336,24 @@ export interface UpdatesReceivedEvent {
      * The ID that was included in the original "add update" event.
      */
     updateId: number;
+
+    /**
+     * The error code that occurred.
+     * If omitted, then no error occurred.
+     */
+    errorCode?: 'max_inst_size_reached';
+
+    /**
+     * The maximum allowed size for the inst.
+     * Only included when the errorCode is set to "max_inst_size_reached".
+     */
+    maxInstSizeInBytes?: number;
+
+    /**
+     * The size that the inst would be at if the updates were added.
+     * Only included when the errorCode is set to "max_inst_size_reached".
+     */
+    neededInstSizeInBytes?: number;
 }
 
 /**
