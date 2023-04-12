@@ -36,24 +36,24 @@ export interface AddUpdatesSuccess {
     success: true;
 }
 
-export type AddUpdatesFailure = MaxInstSizeReachedFailure;
+export type AddUpdatesFailure = MaxSizeReachedFailure;
 
-export interface MaxInstSizeReachedFailure {
+export interface MaxSizeReachedFailure {
     success: false;
-    errorCode: 'max_inst_size_reached';
+    errorCode: 'max_size_reached';
 
     /**
-     * The inst that the updates were being added to.
+     * The branch that the updates were being added to.
      */
-    inst: string;
+    branch: string;
 
     /**
-     * The maximum allowed size for the inst.
+     * The maximum allowed size for the branch.
      */
-    maxInstSizeInBytes: number;
+    maxBranchSizeInBytes: number;
 
     /**
-     * The size that the inst would be at if the updates were added.
+     * The size that the branch would be at if the updates were added.
      */
-    neededInstSizeInBytes: number;
+    neededBranchSizeInBytes: number;
 }

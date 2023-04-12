@@ -341,19 +341,19 @@ export interface UpdatesReceivedEvent {
      * The error code that occurred.
      * If omitted, then no error occurred.
      */
-    errorCode?: 'max_inst_size_reached';
+    errorCode?: 'max_size_reached';
 
     /**
      * The maximum allowed size for the inst.
-     * Only included when the errorCode is set to "max_inst_size_reached".
+     * Only included when the errorCode is set to "max_size_reached".
      */
-    maxInstSizeInBytes?: number;
+    maxBranchSizeInBytes?: number;
 
     /**
      * The size that the inst would be at if the updates were added.
-     * Only included when the errorCode is set to "max_inst_size_reached".
+     * Only included when the errorCode is set to "max_size_reached".
      */
-    neededInstSizeInBytes?: number;
+    neededBranchSizeInBytes?: number;
 }
 
 /**

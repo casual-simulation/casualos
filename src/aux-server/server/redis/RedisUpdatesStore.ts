@@ -1,8 +1,13 @@
 import { RedisClient } from 'redis';
 import { promisify } from 'util';
-import { AddUpdatesResult, StoredUpdates, UpdatesStore } from './UpdatesStore';
-import { spanify } from './Utils';
+// import { AddUpdatesResult, StoredUpdates, UpdatesStore } from './UpdatesStore';
+// import { spanify } from './Utils';
 import { sumBy } from 'lodash';
+import {
+    AddUpdatesResult,
+    StoredUpdates,
+    UpdatesStore,
+} from '@casual-simulation/causal-trees';
 
 export class RedisUpdatesStore implements UpdatesStore {
     private _globalNamespace: string;
@@ -24,32 +29,25 @@ export class RedisUpdatesStore implements UpdatesStore {
 
     private _scriptSha1: string;
 
+    get maxBranchSizeInBytes(): number {
+        return this._maxSizeInBytes;
+    }
+
+    set maxBranchSizeInBytes(value: number) {
+        this._maxSizeInBytes = value;
+    }
+
     constructor(globalNamespace: string, client: RedisClient) {
         this._globalNamespace = globalNamespace;
         this._redis = client;
 
         this._redis.rpush('key', 'abc');
 
-        this.del = spanify(
-            'Redis DEL',
-            promisify(this._redis.del).bind(this._redis)
-        );
-        this.rpush = spanify(
-            'Redis RPUSH',
-            promisify(this._redis.rpush).bind(this._redis)
-        );
-        this.lrange = spanify(
-            'Redis LRANGE',
-            promisify(this._redis.lrange).bind(this._redis)
-        );
-        this.incr = spanify(
-            'Redis INCR',
-            promisify(this._redis.incr).bind(this._redis)
-        );
-        this.incrBy = spanify(
-            'Redis INCRBY',
-            promisify(this._redis.incrby).bind(this._redis)
-        );
+        this.del = promisify(this._redis.del).bind(this._redis);
+        this.rpush = promisify(this._redis.rpush).bind(this._redis);
+        this.lrange = promisify(this._redis.lrange).bind(this._redis);
+        this.incr = promisify(this._redis.incr).bind(this._redis);
+        this.incrBy = promisify(this._redis.incrby).bind(this._redis);
         this.script = promisify(this._redis.script.bind(this._redis));
         this.evalsha = promisify(this._redis.evalsha.bind(this._redis));
     }
@@ -71,6 +69,7 @@ export class RedisUpdatesStore implements UpdatesStore {
                 timestamps.push(-1);
             }
         }
+        console.log('[redis] ', typeof u, Array.isArray(u), typeof u[0]);
         return {
             updates: u,
             timestamps: timestamps.length > 0 ? timestamps : null,
@@ -92,6 +91,9 @@ export class RedisUpdatesStore implements UpdatesStore {
                 local maxSize = tonumber(ARGV[1])
                 local updatesSize = tonumber(ARGV[2])
                 local currentSize = redis.call('GET', KEYS[3])
+                if not currentSize then
+                    currentSize = 0
+                end
                 local requiredSize = currentSize + updatesSize
                 if maxSize > 0 and requiredSize > maxSize then
                     return { 1, requiredSize }
@@ -105,6 +107,7 @@ export class RedisUpdatesStore implements UpdatesStore {
                 while i < numUpdates do
                     local update = ARGV[4 + i]
                     redis.call('RPUSH', KEYS[1], update)
+                    i = i + 1
                 end
 
                 return 0
@@ -164,15 +167,15 @@ export class RedisUpdatesStore implements UpdatesStore {
             }
         }
 
-        return {
-            success: true,
-        };
-
         // await Promise.all([
         //     this.rpush([key, ...finalUpdates]),
         //     this.incr([count]),
         //     this.incrBy([size, updatesSize]),
         // ]);
+
+        return {
+            success: true,
+        };
     }
 
     async clearUpdates(branch: string): Promise<void> {

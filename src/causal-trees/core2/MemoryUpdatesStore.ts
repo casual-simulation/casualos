@@ -47,10 +47,10 @@ export class MemoryUpdatesStore implements UpdatesStore {
             if (newSize > this.maxAllowedInstSize) {
                 return {
                     success: false,
-                    errorCode: 'max_inst_size_reached',
-                    inst: branch,
-                    maxInstSizeInBytes: this.maxAllowedInstSize,
-                    neededInstSizeInBytes: newSize,
+                    errorCode: 'max_size_reached',
+                    branch,
+                    maxBranchSizeInBytes: this.maxAllowedInstSize,
+                    neededBranchSizeInBytes: newSize,
                 };
             }
         }

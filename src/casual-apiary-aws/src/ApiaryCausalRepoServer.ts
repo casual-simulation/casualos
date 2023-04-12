@@ -370,7 +370,7 @@ export class ApiaryCausalRepoServer {
                     `[CausalRepoServer] [${namespace}] [${connectionId}] Failed to add updates: ${result.errorCode}`
                 );
                 if ('updateId' in event) {
-                    let { success, inst, ...rest } = result;
+                    let { success, branch, ...rest } = result;
 
                     await this._messenger.sendMessage([connectionId], {
                         name: UPDATES_RECEIVED,

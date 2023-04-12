@@ -416,7 +416,7 @@ export class CausalRepoServer {
                                 );
 
                                 if ('updateId' in event) {
-                                    const { success, inst, ...rest } = result;
+                                    const { success, branch, ...rest } = result;
                                     sendToDevices([device], UPDATES_RECEIVED, {
                                         branch: event.branch,
                                         updateId: event.updateId,

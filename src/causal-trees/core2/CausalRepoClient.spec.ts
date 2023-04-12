@@ -1059,9 +1059,9 @@ describe('CausalRepoClient', () => {
             updatesReceived.next({
                 branch: 'abc',
                 updateId: 1,
-                errorCode: 'max_inst_size_reached',
-                maxInstSizeInBytes: 5,
-                neededInstSizeInBytes: 6,
+                errorCode: 'max_size_reached',
+                maxBranchSizeInBytes: 5,
+                neededBranchSizeInBytes: 6,
             });
 
             await waitAsync();
@@ -1069,9 +1069,9 @@ describe('CausalRepoClient', () => {
             expect(errors).toEqual([
                 {
                     type: 'error',
-                    errorCode: 'max_inst_size_reached',
-                    maxInstSizeInBytes: 5,
-                    neededInstSizeInBytes: 6,
+                    errorCode: 'max_size_reached',
+                    maxBranchSizeInBytes: 5,
+                    neededBranchSizeInBytes: 6,
                 },
             ]);
 

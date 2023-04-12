@@ -434,16 +434,14 @@ export class CausalRepoClient {
                                 list.delete(event.updateId);
                             }),
                             map((event) => {
-                                if (
-                                    event.errorCode === 'max_inst_size_reached'
-                                ) {
+                                if (event.errorCode === 'max_size_reached') {
                                     return {
                                         type: 'error',
                                         errorCode: event.errorCode,
-                                        maxInstSizeInBytes:
-                                            event.maxInstSizeInBytes,
-                                        neededInstSizeInBytes:
-                                            event.neededInstSizeInBytes,
+                                        maxBranchSizeInBytes:
+                                            event.maxBranchSizeInBytes,
+                                        neededBranchSizeInBytes:
+                                            event.neededBranchSizeInBytes,
                                     } as MaxInstSizeReachedClientError;
                                 }
                                 return {
@@ -1083,9 +1081,9 @@ export interface BaseClientError {
 
 export type ClientError = MaxInstSizeReachedClientError;
 export interface MaxInstSizeReachedClientError extends BaseClientError {
-    errorCode: 'max_inst_size_reached';
-    maxInstSizeInBytes: number;
-    neededInstSizeInBytes: number;
+    errorCode: 'max_size_reached';
+    maxBranchSizeInBytes: number;
+    neededBranchSizeInBytes: number;
 }
 
 export type ClientWatchBranchEvents =
