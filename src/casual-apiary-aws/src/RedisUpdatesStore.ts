@@ -24,6 +24,14 @@ export class RedisUpdatesStore implements UpdatesStore {
 
     private _scriptSha1: string;
 
+    get maxBranchSizeInBytes(): number {
+        return this._maxSizeInBytes;
+    }
+
+    set maxBranchSizeInBytes(value: number) {
+        this._maxSizeInBytes = value;
+    }
+
     constructor(globalNamespace: string, client: RedisClient) {
         this._globalNamespace = globalNamespace;
         this._redis = client;
