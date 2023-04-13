@@ -2,8 +2,6 @@ export * from './src/ApiaryAtomStore';
 export * from './src/MemoryApiaryAtomStore';
 export * from './src/ApiaryConnectionStore';
 export * from './src/MemoryApiaryConnectionStore';
-export * from './src/UpdatesStore';
-export * from './src/MemoryUpdatesStore';
 export * from './src/ApiaryMessenger';
 export * from './src/ApiaryCausalRepoServer';
 export * from './src/Events';

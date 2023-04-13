@@ -32,6 +32,7 @@ import {
     SESSION_ID_CLAIM,
     USERNAME_CLAIM,
     WatchBranchEvent,
+    UpdatesStore,
 } from '@casual-simulation/causal-trees';
 import { ApiaryAtomStore } from './ApiaryAtomStore';
 // import { ApiaryAtomStore } from './ApiaryAtomStore';
@@ -50,7 +51,6 @@ import {
     UPDATES_RECEIVED,
     WatchBranch,
 } from './ExtraEvents';
-import { UpdatesStore } from './UpdatesStore';
 import { toByteArray } from 'base64-js';
 import { applyUpdate } from 'yjs';
 

@@ -4,7 +4,7 @@ import {
     AddUpdatesResult,
     StoredUpdates,
     UpdatesStore,
-} from '@casual-simulation/casual-apiary';
+} from '@casual-simulation/causal-trees/core2';
 import { sumBy } from 'lodash';
 
 export class RedisUpdatesStore implements UpdatesStore {

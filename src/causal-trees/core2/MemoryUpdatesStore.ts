@@ -69,4 +69,9 @@ export class MemoryUpdatesStore implements UpdatesStore {
     async clearUpdates(branch: string): Promise<void> {
         this._branches.delete(branch);
     }
+
+    reset() {
+        this._branches = new Map();
+        this.maxAllowedInstSize = Infinity;
+    }
 }

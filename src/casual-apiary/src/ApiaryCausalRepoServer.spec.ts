@@ -19,6 +19,7 @@ import {
     UNWATCH_BRANCH_DEVICES,
     WATCH_BRANCH,
     WATCH_BRANCH_DEVICES,
+    MemoryUpdatesStore,
 } from '@casual-simulation/causal-trees/core2';
 import { MemoryApiaryConnectionStore } from './MemoryApiaryConnectionStore';
 import { MemoryApiaryAtomStore } from './MemoryApiaryAtomStore';
@@ -55,7 +56,6 @@ import {
     YjsPartitionImpl,
 } from '@casual-simulation/aux-common/partitions/YjsPartition';
 import { DEVICE_COUNT } from './ApiaryMessenger';
-import { MemoryUpdatesStore } from './MemoryUpdatesStore';
 import { ADD_UPDATES, UPDATES_RECEIVED, SYNC_TIME } from './ExtraEvents';
 import { encodeStateAsUpdate } from 'yjs';
 import { fromByteArray } from 'base64-js';
