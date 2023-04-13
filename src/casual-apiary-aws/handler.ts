@@ -46,9 +46,11 @@ import {
     SYNC_TIME,
 } from '@casual-simulation/casual-apiary';
 import { RedisClient, createClient as createRedisClient } from 'redis';
-import { RedisAtomStore } from './src/RedisAtomStore';
-import { RedisConnectionStore } from './src/RedisConnectionStore';
-import { RedisUpdatesStore } from './src/RedisUpdatesStore';
+import {
+    RedisAtomStore,
+    RedisConnectionStore,
+    RedisUpdatesStore,
+} from '@casual-simulation/casual-apiary-redis';
 
 const REDIS_HOST: string = process.env.REDIS_HOST as string;
 const REDIS_PORT: number = parseInt(process.env.REDIS_PORT as string);

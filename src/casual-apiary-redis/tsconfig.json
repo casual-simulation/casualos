@@ -1,0 +1,17 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "outDir": ".",
+        "declaration": true,
+        "declarationMap": true,
+        "composite": true,
+        "incremental": true
+    },
+    "include": ["./index.ts", "./src/**/*"],
+    "exclude": ["node_modules", "lib", "**/*.spec.ts"],
+    "references": [
+        { "path": "../causal-trees" },
+        { "path": "../casual-apiary" }
+    ]
+}

@@ -14,6 +14,7 @@
         { "path": "../aux-common" },
         { "path": "../aux-records" },
         { "path": "../aux-records-aws" },
-        { "path": "../casual-apiary" }
+        { "path": "../casual-apiary" },
+        { "path": "../casual-apiary-redis" }
     ]
 }

@@ -71,6 +71,9 @@
         "src/casual-apiary-aws/**/*.d.ts": {
             "when": "$(basename).ts"
         },
+        "src/casual-apiary-redis/**/*.d.ts": {
+            "when": "$(basename).ts"
+        },
         // "src/js-interpreter/**/*.d.ts": {
         //     "when": "$(basename).ts"
         // },
