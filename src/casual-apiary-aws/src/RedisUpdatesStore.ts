@@ -1,7 +1,6 @@
 import { RedisClient } from 'redis';
 import { promisify } from 'util';
 import { AddUpdatesResult, StoredUpdates, UpdatesStore } from './UpdatesStore';
-import { spanify } from './Utils';
 import { sumBy } from 'lodash';
 
 export class RedisUpdatesStore implements UpdatesStore {
@@ -38,26 +37,11 @@ export class RedisUpdatesStore implements UpdatesStore {
 
         this._redis.rpush('key', 'abc');
 
-        this.del = spanify(
-            'Redis DEL',
-            promisify(this._redis.del).bind(this._redis)
-        );
-        this.rpush = spanify(
-            'Redis RPUSH',
-            promisify(this._redis.rpush).bind(this._redis)
-        );
-        this.lrange = spanify(
-            'Redis LRANGE',
-            promisify(this._redis.lrange).bind(this._redis)
-        );
-        this.incr = spanify(
-            'Redis INCR',
-            promisify(this._redis.incr).bind(this._redis)
-        );
-        this.incrBy = spanify(
-            'Redis INCRBY',
-            promisify(this._redis.incrby).bind(this._redis)
-        );
+        this.del = promisify(this._redis.del).bind(this._redis);
+        this.rpush = promisify(this._redis.rpush).bind(this._redis);
+        this.lrange = promisify(this._redis.lrange).bind(this._redis);
+        this.incr = promisify(this._redis.incr).bind(this._redis);
+        this.incrBy = promisify(this._redis.incrby).bind(this._redis);
         this.script = promisify(this._redis.script.bind(this._redis));
         this.evalsha = promisify(this._redis.evalsha.bind(this._redis));
     }
@@ -100,6 +84,9 @@ export class RedisUpdatesStore implements UpdatesStore {
                 local maxSize = tonumber(ARGV[1])
                 local updatesSize = tonumber(ARGV[2])
                 local currentSize = redis.call('GET', KEYS[3])
+                if not currentSize then
+                    currentSize = 0
+                end
                 local requiredSize = currentSize + updatesSize
                 if maxSize > 0 and requiredSize > maxSize then
                     return { 1, requiredSize }
@@ -113,6 +100,7 @@ export class RedisUpdatesStore implements UpdatesStore {
                 while i < numUpdates do
                     local update = ARGV[4 + i]
                     redis.call('RPUSH', KEYS[1], update)
+                    i = i + 1
                 end
 
                 return 0
