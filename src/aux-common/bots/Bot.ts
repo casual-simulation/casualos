@@ -2435,6 +2435,7 @@ export const KNOWN_TAGS: string[] = [
     ON_ANY_FORM_ANIMATION_STOPPED,
     ON_FORM_ANIMATION_LOOPED,
     ON_ANY_FORM_ANIMATION_LOOPED,
+    ON_SPACE_MAX_SIZE_REACHED,
 ];
 
 export function onClickArg(
