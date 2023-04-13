@@ -1,6 +1,10 @@
 import { RedisClient } from 'redis';
 import { promisify } from 'util';
-import { AddUpdatesResult, StoredUpdates, UpdatesStore } from './UpdatesStore';
+import {
+    AddUpdatesResult,
+    StoredUpdates,
+    UpdatesStore,
+} from '@casual-simulation/casual-apiary';
 import { sumBy } from 'lodash';
 
 export class RedisUpdatesStore implements UpdatesStore {

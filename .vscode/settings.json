@@ -65,6 +65,12 @@
         "src/vue-shortkey/**/*.d.ts": {
             "when": "$(basename).ts"
         },
+        "src/casual-apiary/**/*.d.ts": {
+            "when": "$(basename).ts"
+        },
+        "src/casual-apiary-aws/**/*.d.ts": {
+            "when": "$(basename).ts"
+        },
         // "src/js-interpreter/**/*.d.ts": {
         //     "when": "$(basename).ts"
         // },

@@ -4,7 +4,7 @@ import {
     ApiaryConnectionStore,
     DeviceConnection,
     DeviceNamespaceConnection,
-} from './ApiaryConnectionStore';
+} from '@casual-simulation/casual-apiary';
 import { spanify } from './Utils';
 
 /**

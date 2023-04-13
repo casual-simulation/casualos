@@ -1,5 +1,5 @@
 import { Atom, atomIdToString } from '@casual-simulation/causal-trees';
-import { ApiaryAtomStore } from './ApiaryAtomStore';
+import { ApiaryAtomStore } from '@casual-simulation/casual-apiary';
 import { sortBy } from 'lodash';
 import { RedisClient } from 'redis';
 import { promisify } from 'util';
