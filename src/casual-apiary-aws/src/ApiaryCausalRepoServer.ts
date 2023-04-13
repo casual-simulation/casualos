@@ -360,7 +360,29 @@ export class ApiaryCausalRepoServer {
         );
 
         if (event.updates) {
-            await this._updatesStore.addUpdates(namespace, event.updates);
+            const result = await this._updatesStore.addUpdates(
+                namespace,
+                event.updates
+            );
+
+            if (result.success === false) {
+                console.log(
+                    `[CausalRepoServer] [${namespace}] [${connectionId}] Failed to add updates: ${result.errorCode}`
+                );
+                if ('updateId' in event) {
+                    let { success, branch, ...rest } = result;
+
+                    await this._messenger.sendMessage([connectionId], {
+                        name: UPDATES_RECEIVED,
+                        data: {
+                            branch: event.branch,
+                            updateId: event.updateId,
+                            ...rest,
+                        },
+                    });
+                }
+                return;
+            }
         }
 
         const hasUpdates = event.updates && event.updates.length > 0;

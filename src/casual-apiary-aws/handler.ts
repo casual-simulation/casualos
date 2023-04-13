@@ -56,6 +56,13 @@ const REDIS_TLS: boolean = process.env.REDIS_TLS
     : true;
 const REDIS_NAMESPACE: string = process.env.REDIS_NAMESPACE as string;
 
+const MAX_BRANCH_SIZE: number =
+    process.env.MAX_BRANCH_SIZE === 'Infinity'
+        ? Infinity
+        : process.env.MAX_BRANCH_SIZE
+        ? parseInt(process.env.MAX_BRANCH_SIZE)
+        : Infinity;
+
 console.log('[handler] Using Redis.');
 
 export async function connect(
@@ -368,12 +375,20 @@ function createCausalRepoServer(event: APIGatewayProxyEvent) {
         redisClient
     );
 
+    const atomStore = new RedisAtomStore(REDIS_NAMESPACE, redisClient);
+    const messenger = new ApiGatewayMessenger(
+        callbackUrl(event),
+        connectionStore
+    );
+    const updatesStore = new RedisUpdatesStore(REDIS_NAMESPACE, redisClient);
+    updatesStore.maxBranchSizeInBytes = MAX_BRANCH_SIZE;
+
     const result = [
         new ApiaryCausalRepoServer(
             connectionStore,
-            new RedisAtomStore(REDIS_NAMESPACE, redisClient),
-            new ApiGatewayMessenger(callbackUrl(event), connectionStore),
-            new RedisUpdatesStore(REDIS_NAMESPACE, redisClient)
+            atomStore,
+            messenger,
+            updatesStore
         ),
         () => {
             cleanup();

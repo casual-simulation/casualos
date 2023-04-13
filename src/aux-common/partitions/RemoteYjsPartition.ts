@@ -68,6 +68,7 @@ import {
     CreateInitializationUpdateAction,
     InstUpdate,
     ApplyUpdatesToInstAction,
+    ON_SPACE_MAX_SIZE_REACHED,
 } from '../bots';
 import {
     PartitionConfig,
@@ -132,6 +133,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     protected _hasRegisteredSubs = false;
     private _sub = new Subscription();
 
+    private _emittedMaxSizeReached: boolean = false;
     private _localId: number;
     private _remoteId: number;
     private _doc: Doc = new Doc();
@@ -637,6 +639,30 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                                 }
                             } else {
                                 this._onEvents.next([event.action]);
+                            }
+                        } else if (event.type === 'error') {
+                            if (event.errorCode === 'max_size_reached') {
+                                if (!this._emittedMaxSizeReached) {
+                                    console.log(
+                                        '[RemoteYjsPartition] Max size reached!',
+                                        this.space
+                                    );
+                                    this._emittedMaxSizeReached = true;
+                                    this._onEvents.next([
+                                        action(
+                                            ON_SPACE_MAX_SIZE_REACHED,
+                                            null,
+                                            null,
+                                            {
+                                                space: this.space,
+                                                maxSizeInBytes:
+                                                    event.maxBranchSizeInBytes,
+                                                neededSizeInBytes:
+                                                    event.neededBranchSizeInBytes,
+                                            }
+                                        ),
+                                    ]);
+                                }
                             }
                         }
                     },

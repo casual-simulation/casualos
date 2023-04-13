@@ -1,7 +1,13 @@
 import { RedisClient } from 'redis';
 import { promisify } from 'util';
-import { AddUpdatesResult, StoredUpdates, UpdatesStore } from './UpdatesStore';
+// import { AddUpdatesResult, StoredUpdates, UpdatesStore } from './UpdatesStore';
+// import { spanify } from './Utils';
 import { sumBy } from 'lodash';
+import {
+    AddUpdatesResult,
+    StoredUpdates,
+    UpdatesStore,
+} from '@casual-simulation/causal-trees';
 
 export class RedisUpdatesStore implements UpdatesStore {
     private _globalNamespace: string;
@@ -63,6 +69,7 @@ export class RedisUpdatesStore implements UpdatesStore {
                 timestamps.push(-1);
             }
         }
+        console.log('[redis] ', typeof u, Array.isArray(u), typeof u[0]);
         return {
             updates: u,
             timestamps: timestamps.length > 0 ? timestamps : null,
@@ -160,15 +167,15 @@ export class RedisUpdatesStore implements UpdatesStore {
             }
         }
 
-        return {
-            success: true,
-        };
-
         // await Promise.all([
         //     this.rpush([key, ...finalUpdates]),
         //     this.incr([count]),
         //     this.incrBy([size, updatesSize]),
         // ]);
+
+        return {
+            success: true,
+        };
     }
 
     async clearUpdates(branch: string): Promise<void> {

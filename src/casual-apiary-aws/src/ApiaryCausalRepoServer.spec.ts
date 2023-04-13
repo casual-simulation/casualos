@@ -2134,6 +2134,41 @@ describe('ApiaryCausalRepoServer', () => {
                 timestamps: [expect.any(Number)],
             });
         });
+
+        it('should notify the sender if the updates were rejected because of a max inst size', async () => {
+            updateStore.maxAllowedInstSize = 5;
+
+            await server.connect(device1Info);
+
+            await server.addUpdates(device1Info.connectionId, {
+                branch: 'testBranch',
+                updates: ['111', '222'],
+                updateId: 0,
+            });
+
+            const updates = await updateStore.getUpdates(
+                branchNamespace('testBranch')
+            );
+
+            expect(updates).toEqual({
+                updates: [],
+                timestamps: [],
+            });
+
+            const messages = messenger.getMessages(device1Info.connectionId);
+            expect(messages).toEqual([
+                {
+                    name: UPDATES_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        updateId: 0,
+                        errorCode: 'max_size_reached',
+                        maxBranchSizeInBytes: 5,
+                        neededBranchSizeInBytes: 6,
+                    },
+                },
+            ]);
+        });
     });
 
     describe(SEND_EVENT, () => {

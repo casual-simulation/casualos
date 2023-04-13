@@ -32,6 +32,10 @@ Parameters:
         Type: String
         Description: The size, in bytes, of the maximum request that should be made with redis. Lambda Store has a max request size of 400k but we have a 2k buffer to be safe. Will be ignored if set to 0.
         Default: '0'
+    MaxBranchSizeParameter:
+        Type: String
+        Description: The size, in bytes, of the maximum size a branch should be allowed to be. If set to Infinity, then there is no maximum size.
+        Default: 'Infinity'
     WebsocketURLParameter:
         Type: String
         Description: The URL of the API Gateway endpoint that server messages should be sent through.
@@ -279,6 +283,7 @@ Resources:
                     REDIS_TLS: !Ref RedisUseTLSParameter
                     REDIS_NAMESPACE: !Ref RedisNamespaceParameter
                     MAX_REDIS_BATCH_SIZE: !Ref MaxRedisBatchSizeParameter
+                    MAX_BRANCH_SIZE: !Ref MaxBranchSizeParameter
                     WEBSOCKET_URL: !Ref WebsocketURLParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
     HandleMessagePermission:

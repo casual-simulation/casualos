@@ -95,6 +95,7 @@ import { SerialModule } from './modules/SerialModule';
 import { MongoDBStageStore } from './mongodb/MongoDBStageStore';
 import { WebConfig } from 'shared/WebConfig';
 import compression from 'compression';
+import { RedisUpdatesStore } from './redis/RedisUpdatesStore';
 
 const connect = pify(MongoClient.connect);
 
@@ -1154,7 +1155,16 @@ export class Server {
         }
 
         let updatesStore: UpdatesStore;
-        if (this._config.repos.mongodb) {
+        if (this._config.repos.redis) {
+            let store = (updatesStore = new RedisUpdatesStore(
+                this._config.repos.redis.namespace,
+                createRedisClient({
+                    ...this._config.redis.options,
+                })
+            ));
+            store.maxBranchSizeInBytes =
+                this._config.repos.redis.maxBranchSizeInBytes;
+        } else if (this._config.repos.mongodb) {
             const updates = db.collection('updates');
             let store = (updatesStore = new MongoDBUpdatesStore(updates));
             await store.init();

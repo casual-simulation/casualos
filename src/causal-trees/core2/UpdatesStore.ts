@@ -16,7 +16,7 @@ export interface UpdatesStore {
      * @param branch The branch that the updates should be added to.
      * @param updates The updates that should be added.
      */
-    addUpdates(branch: string, updates: string[]): Promise<void>;
+    addUpdates(branch: string, updates: string[]): Promise<AddUpdatesResult>;
 
     /**
      * Deletes all the updates for the given branch.
@@ -28,4 +28,32 @@ export interface UpdatesStore {
 export interface StoredUpdates {
     updates: string[];
     timestamps: number[];
+}
+
+export type AddUpdatesResult = AddUpdatesSuccess | AddUpdatesFailure;
+
+export interface AddUpdatesSuccess {
+    success: true;
+}
+
+export type AddUpdatesFailure = MaxSizeReachedFailure;
+
+export interface MaxSizeReachedFailure {
+    success: false;
+    errorCode: 'max_size_reached';
+
+    /**
+     * The branch that the updates were being added to.
+     */
+    branch: string;
+
+    /**
+     * The maximum allowed size for the branch.
+     */
+    maxBranchSizeInBytes: number;
+
+    /**
+     * The size that the branch would be at if the updates were added.
+     */
+    neededBranchSizeInBytes: number;
 }
