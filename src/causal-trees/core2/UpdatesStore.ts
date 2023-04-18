@@ -23,6 +23,19 @@ export interface UpdatesStore {
      * @param branch The branch.
      */
     clearUpdates(branch: string): Promise<void>;
+
+    /**
+     * Replaces the given set of updates with a new set of updates.
+     * Useful for when updates have been merged and the old ones should be replaced by the new one(s).
+     * @param branch The branch.
+     * @param updatesToRemove The updates that should be moved. Only valid if the result from getUpdates() is used.
+     * @param updatesToAdd The updates that should be added.
+     */
+    replaceUpdates(
+        branch: string,
+        updatesToRemove: StoredUpdates,
+        updatesToAdd: string[]
+    ): Promise<ReplaceUpdatesResult>;
 }
 
 export interface StoredUpdates {
@@ -34,6 +47,11 @@ export type AddUpdatesResult = AddUpdatesSuccess | AddUpdatesFailure;
 
 export interface AddUpdatesSuccess {
     success: true;
+
+    /**
+     * The current size of the branch.
+     */
+    branchSizeInBytes?: number;
 }
 
 export type AddUpdatesFailure = MaxSizeReachedFailure;
@@ -57,3 +75,13 @@ export interface MaxSizeReachedFailure {
      */
     neededBranchSizeInBytes: number;
 }
+
+export type ReplaceUpdatesResult =
+    | ReplaceUpdatesSuccess
+    | ReplaceUpdatesFailure;
+
+export interface ReplaceUpdatesSuccess {
+    success: true;
+}
+
+export type ReplaceUpdatesFailure = MaxSizeReachedFailure;

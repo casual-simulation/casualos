@@ -3,6 +3,7 @@ import {
     BotAction,
     botAdded,
     createBot,
+    hasValue,
     isBot,
     ON_WEBHOOK_ACTION_NAME,
     StoredAux,
@@ -51,8 +52,8 @@ import {
     UPDATES_RECEIVED,
     WatchBranch,
 } from './ExtraEvents';
-import { toByteArray } from 'base64-js';
-import { applyUpdate } from 'yjs';
+import { fromByteArray, toByteArray } from 'base64-js';
+import { applyUpdate, mergeUpdates } from 'yjs';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -68,6 +69,7 @@ export class ApiaryCausalRepoServer {
      * for events that are sent without a selector.
      */
     defaultDeviceSelector: DeviceSelector;
+    mergeUpdatesOnMaxSizeExceeded: boolean = false;
 
     get messenger() {
         return this._messenger;
@@ -369,17 +371,45 @@ export class ApiaryCausalRepoServer {
                 console.log(
                     `[CausalRepoServer] [${namespace}] [${connectionId}] Failed to add updates: ${result.errorCode}`
                 );
-                if ('updateId' in event) {
-                    let { success, branch, ...rest } = result;
+                if (result.errorCode === 'max_size_reached') {
+                    if (this.mergeUpdatesOnMaxSizeExceeded) {
+                        try {
+                            console.log(
+                                `[CausalRepoServer] [${namespace}] [${connectionId}] Merging branch updates.`
+                            );
 
-                    await this._messenger.sendMessage([connectionId], {
-                        name: UPDATES_RECEIVED,
-                        data: {
-                            branch: event.branch,
-                            updateId: event.updateId,
-                            ...rest,
-                        },
-                    });
+                            const updates = await this._updatesStore.getUpdates(
+                                namespace
+                            );
+                            const mergedUpdates = mergeUpdates(
+                                updates.updates.map((u) => toByteArray(u))
+                            );
+                            const result =
+                                await this._updatesStore.replaceUpdates(
+                                    namespace,
+                                    updates,
+                                    [fromByteArray(mergedUpdates)]
+                                );
+                        } catch (err) {
+                            console.error(
+                                '[CausalRepoServer] Unable to merge branch updates!',
+                                err
+                            );
+                        }
+                    }
+
+                    if ('updateId' in event) {
+                        let { success, branch, ...rest } = result;
+
+                        await this._messenger.sendMessage([connectionId], {
+                            name: UPDATES_RECEIVED,
+                            data: {
+                                branch: event.branch,
+                                updateId: event.updateId,
+                                ...rest,
+                            },
+                        });
+                    }
                 }
                 return;
             }

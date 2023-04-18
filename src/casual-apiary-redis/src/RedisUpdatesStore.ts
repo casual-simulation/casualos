@@ -2,6 +2,7 @@ import { RedisClient } from 'redis';
 import { promisify } from 'util';
 import {
     AddUpdatesResult,
+    ReplaceUpdatesResult,
     StoredUpdates,
     UpdatesStore,
 } from '@casual-simulation/causal-trees/core2';
@@ -11,6 +12,9 @@ export class RedisUpdatesStore implements UpdatesStore {
     private _globalNamespace: string;
     private _redis: RedisClient;
 
+    /**
+     * The maximum size of the branch in bytes.
+     */
     private _maxSizeInBytes: number = Infinity;
 
     private rpush: (args: [string, ...string[]]) => Promise<number>;
@@ -24,8 +28,10 @@ export class RedisUpdatesStore implements UpdatesStore {
     private del: (key: string) => Promise<void>;
     private script: (command: string, script: string) => Promise<string>;
     private evalsha: (script: string, ...args: any[]) => Promise<any>;
+    // private ltrim: (key: string, start: number, end: number) => Promise<void>;
 
-    private _scriptSha1: string;
+    private _addUpdatesScriptSha1: string;
+    private _replaceUpdatesScriptSha1: string;
 
     get maxBranchSizeInBytes(): number {
         return this._maxSizeInBytes;
@@ -81,10 +87,16 @@ export class RedisUpdatesStore implements UpdatesStore {
         const count = countKey(this._globalNamespace, branch);
         const size = sizeKey(this._globalNamespace, branch);
 
-        const loadScript = async () => {
-            this._scriptSha1 = await this.script(
-                'load',
-                `
+        const finalUpdates = updates.map((u) => `${u}:${Date.now()}`);
+
+        // Updates are assumed to be ASCII (usually Base64-encoded strings),
+        // so the size in bytes is just the sum of the length of each string.
+        const updatesSize = sumBy(updates, (u) => u.length);
+
+        const statusCode = await this._executeScript<number | number[]>(
+            '_addUpdatesScriptSha1',
+            {
+                script: `
                 local maxSize = tonumber(ARGV[1])
                 local updatesSize = tonumber(ARGV[2])
                 local currentSize = redis.call('GET', KEYS[3])
@@ -107,52 +119,28 @@ export class RedisUpdatesStore implements UpdatesStore {
                     i = i + 1
                 end
 
-                return 0
-                `
-                    .replace(/^\s+/gm, '')
-                    .trim()
-            );
-        };
-
-        const finalUpdates = updates.map((u) => `${u}:${Date.now()}`);
-
-        // Updates are assumed to be ASCII (usually Base64-encoded strings),
-        // so the size in bytes is just the sum of the length of each string.
-        const updatesSize = sumBy(updates, (u) => u.length);
-
-        const executeScript: () => Promise<number | number[]> = async () => {
-            try {
-                return await this.evalsha(
-                    this._scriptSha1,
-                    '3',
-                    key,
-                    count,
-                    size,
+                return { 0, requiredSize }
+            `,
+                keys: [key, count, size],
+                args: [
                     isFinite(this._maxSizeInBytes)
                         ? this._maxSizeInBytes.toString()
                         : '-1',
                     updatesSize,
                     finalUpdates.length.toString(),
-                    ...finalUpdates
-                );
-            } catch (e) {
-                const errString = e.toString();
-                if (errString.includes('NOSCRIPT')) {
-                    await loadScript();
-                    return await executeScript();
-                }
-                throw e;
+                    ...finalUpdates,
+                ],
             }
-        };
-
-        if (!this._scriptSha1) {
-            await loadScript();
-        }
-
-        const statusCode = await executeScript();
+        );
 
         if (typeof statusCode === 'object' && Array.isArray(statusCode)) {
-            if (statusCode[0] === 1) {
+            if (statusCode[0] === 0) {
+                // Max size reached
+                return {
+                    success: true,
+                    branchSizeInBytes: statusCode[1] as number,
+                };
+            } else if (statusCode[0] === 1) {
                 // Max size reached
                 return {
                     success: false,
@@ -178,6 +166,205 @@ export class RedisUpdatesStore implements UpdatesStore {
     async clearUpdates(branch: string): Promise<void> {
         const key = branchKey(this._globalNamespace, branch);
         await this.del(key);
+    }
+
+    async replaceUpdates(
+        branch: string,
+        updatesToRemove: StoredUpdates,
+        updatesToAdd: string[]
+    ): Promise<ReplaceUpdatesResult> {
+        const key = branchKey(this._globalNamespace, branch);
+        const count = countKey(this._globalNamespace, branch);
+        const size = sizeKey(this._globalNamespace, branch);
+
+        // const numberToReplace = updatesToRemove.updates.length;
+
+        // Updates are assumed to be ASCII (usually Base64-encoded strings),
+        // so the size in bytes is just the sum of the length of each string.
+        const removedSize = sumBy(updatesToRemove.updates, (u) => u.length);
+        const addedSize = sumBy(updatesToAdd, (u) => u.length);
+        const updatesCountDelta =
+            updatesToAdd.length - updatesToRemove.updates.length;
+
+        const formatUpdate = (u: string, t: number) => `${u}:${t}`;
+        const firstUpdateToRemove =
+            updatesToRemove.updates.length > 0
+                ? formatUpdate(
+                      updatesToRemove.updates[0],
+                      updatesToRemove.timestamps[0]
+                  )
+                : null;
+        const lastUpdateIndex = updatesToRemove.updates.length - 1;
+        const lastUpdateToRemove =
+            updatesToRemove.updates.length > 0
+                ? formatUpdate(
+                      updatesToRemove.updates[lastUpdateIndex],
+                      updatesToRemove.timestamps[lastUpdateIndex]
+                  )
+                : null;
+
+        const statusCode = await this._executeScript<number | number[]>(
+            '_addUpdatesScriptSha1',
+            {
+                script: `
+                local maxSize = tonumber(ARGV[1])
+                local addedSize = tonumber(ARGV[2])
+                local removedSize = tonumber(ARGV[3])
+                local sizeDelta = addedSize - removedSize
+                local currentSize = redis.call('GET', KEYS[3])
+                if not currentSize then
+                    currentSize = 0
+                end
+                local requiredSize = currentSize + sizeDelta
+                if maxSize > 0 and requiredSize > maxSize then
+                    return { 1, requiredSize }
+                end
+
+                local firstUpdateToRemove = ARGV[4]
+                local lastUpdateToRemove = ARGV[5]
+                local lastUpdateIndex = tonumber(ARGV[6])
+                local trim = 1
+
+                if (firstUpdateToRemove ~= '0') then
+                    local firstUpdate = redis.call('LINDEX', KEYS[1], 0)
+                    if (firstUpdate ~= firstUpdateToRemove) then
+                        trim = 0
+                    end
+                end
+
+                if (lastUpdateToRemove ~= '0') then
+                    local lastUpdate = redis.call('LINDEX', KEYS[1], lastUpdateIndex)
+                    if (lastUpdate ~= lastUpdateToRemove) then
+                        trim  = 0
+                    end
+                end
+
+                if lastUpdateIndex < 0 then
+                    trim = 0
+                end
+
+                if trim == 1 then
+                    redis.call('LTRIM', KEYS[1], lastUpdateIndex, -1)
+                end
+
+                redis.call('INCR', KEYS[2])
+
+                if trim == 1 then
+                    redis.call('INCRBY', KEYS[3], sizeDelta)
+                end
+                if trim == 0 then
+                    redis.call('INCRBY', KEYS[3], addedSize)
+                end
+                
+                local numUpdates = tonumber(ARGV[7])
+                local i = 0
+                while i < numUpdates do
+                    local update = ARGV[8 + i]
+                    redis.call('RPUSH', KEYS[1], update)
+                    i = i + 1
+                end
+
+                return 0
+            `,
+                keys: [key, count, size],
+                args: [
+                    isFinite(this._maxSizeInBytes)
+                        ? this._maxSizeInBytes.toString()
+                        : '-1',
+                    addedSize,
+                    removedSize,
+                    firstUpdateToRemove ? firstUpdateToRemove : '0',
+                    lastUpdateToRemove ? lastUpdateToRemove : '0',
+                    lastUpdateIndex,
+                    updatesToAdd.length.toString(),
+                    ...updatesToAdd,
+                ],
+            }
+        );
+
+        if (typeof statusCode === 'object' && Array.isArray(statusCode)) {
+            if (statusCode[0] === 1) {
+                // Max size reached
+                return {
+                    success: false,
+                    errorCode: 'max_size_reached',
+                    branch: branch,
+                    maxBranchSizeInBytes: this._maxSizeInBytes,
+                    neededBranchSizeInBytes: statusCode[1] as number,
+                };
+            } else if (statusCode[0] === 2) {
+                return {
+                    success: false,
+                    errorCode: 'unable_to_find_updates',
+                    branch: branch,
+                };
+            }
+        }
+
+        return {
+            success: true,
+        };
+    }
+
+    private async _executeScript<T>(
+        scriptName: '_addUpdatesScriptSha1' | '_replaceUpdatesScriptSha1',
+        options: {
+            script: string;
+            keys: string[];
+            args: any[];
+        }
+    ): Promise<T> {
+        const loadScript = async () => {
+            this[scriptName] = await this.script(
+                'load',
+                options.script.replace(/^\s+/gm, '').trim()
+            );
+        };
+
+        if (!this[scriptName]) {
+            await loadScript();
+        }
+
+        const executeScript: () => Promise<T> = async () => {
+            try {
+                return await this.evalsha(
+                    this[scriptName],
+                    options.keys.length.toString(),
+                    ...options.keys,
+                    ...options.args
+                    // '3',
+                    // key,
+                    // count,
+                    // size,
+                    // isFinite(this._maxSizeInBytes)
+                    //     ? this._maxSizeInBytes.toString()
+                    //     : '-1',
+                    // updatesSize,
+                    // finalUpdates.length.toString(),
+                    // ...finalUpdates
+                );
+            } catch (e) {
+                const errString = e.toString();
+                if (errString.includes('NOSCRIPT')) {
+                    await loadScript();
+                    return await executeScript();
+                }
+                throw e;
+            }
+        };
+
+        return await executeScript();
+
+        // return new Promise((resolve, reject) => {
+        //     const callback = (err: Error, result: any) => {
+        //         if (err) {
+        //             reject(err);
+        //         } else {
+        //             resolve(result);
+        //         }
+        //     };
+        //     this._redis[scriptName](script, ...args, callback);
+        // });
     }
 }
 
