@@ -254,13 +254,13 @@ export class RedisUpdatesStore implements UpdatesStore {
             `,
                 keys: [key, count, size, mergeTime],
                 args: [
-                    firstMergedUpdateTimestamp,
+                    firstMergedUpdateTimestamp.toString(),
                     isFinite(this._maxSizeInBytes)
                         ? this._maxSizeInBytes.toString()
                         : '-1',
-                    addedSize,
-                    removedSize,
-                    lastUpdateIndex,
+                    addedSize.toString(),
+                    removedSize.toString(),
+                    lastUpdateIndex.toString(),
                     finalUpdates.length.toString(),
                     ...finalUpdates,
                 ],
