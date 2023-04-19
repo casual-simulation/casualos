@@ -56,5 +56,5 @@ jobs:
                   WEBSOCKET_URL: ${{ secrets.WEBSOCKET_URL }}
                   LAMBDA_S3_BUCKET: ${{ secrets.LAMBDA_S3_BUCKET }}
                   REDIS_MAX_BATCH_SIZE: '0'
-                  REDIS_MAX_BRANCH_SIZE: '5000000' # 5 MB
+                  REDIS_MAX_BRANCH_SIZE: '1000000' # 1 MB
                   STACK_NAME: boormanlabs-apiary
