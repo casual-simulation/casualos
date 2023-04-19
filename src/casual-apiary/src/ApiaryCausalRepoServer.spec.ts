@@ -2173,12 +2173,18 @@ describe('ApiaryCausalRepoServer', () => {
         });
 
         it.only('should merge updates when the max size was exceeded if configured', async () => {
-            updateStore.maxAllowedInstSize = 168;
+            updateStore.maxAllowedInstSize = 180;
             server.mergeUpdatesOnMaxSizeExceeded = true;
 
+            let createdUpdates = [] as string[];
             let p = new YjsPartitionImpl({
                 type: 'yjs',
             });
+
+            p.doc.on('update', (update: Uint8Array) => {
+                createdUpdates.push(fromByteArray(update));
+            });
+
             await p.applyEvents([
                 botAdded(
                     createBot('test', {
@@ -2196,7 +2202,7 @@ describe('ApiaryCausalRepoServer', () => {
                     })
                 ),
             ]);
-            const update = fromByteArray(encodeStateAsUpdate(p.doc));
+            const update = createdUpdates[0];
 
             console.warn(update.length);
 
@@ -2209,7 +2215,41 @@ describe('ApiaryCausalRepoServer', () => {
             });
 
             await p.applyEvents([botRemoved('test3')]);
-            const update2 = fromByteArray(encodeStateAsUpdate(p.doc));
+            const update2 = createdUpdates[1];
+
+            expect(p.state).toEqual({
+                test: createBot('test', {
+                    abc: 'def',
+                }),
+                test2: createBot('test2', {
+                    abc: 'def',
+                }),
+            });
+
+            const state2 = getStateFromUpdates({
+                type: 'get_inst_state_from_updates',
+                updates: [
+                    {
+                        id: 0,
+                        timestamp: 0,
+                        update: update,
+                    },
+                    {
+                        id: 0,
+                        timestamp: 0,
+                        update: update2,
+                    },
+                ],
+            });
+
+            expect(state2).toEqual({
+                test: createBot('test', {
+                    abc: 'def',
+                }),
+                test2: createBot('test2', {
+                    abc: 'def',
+                }),
+            });
 
             await server.addUpdates(device1Info.connectionId, {
                 branch: 'testBranch',
@@ -2231,8 +2271,9 @@ describe('ApiaryCausalRepoServer', () => {
                 updates: [
                     {
                         id: 0,
-                        timestamp: updates.timestamps[0],
-                        update: updates.updates[0],
+                        timestamp:
+                            updates.timestamps[updates.timestamps.length - 1],
+                        update: updates.updates[updates.updates.length - 1],
                     },
                 ],
             });

@@ -176,40 +176,33 @@ export class RedisUpdatesStore implements UpdatesStore {
         const key = branchKey(this._globalNamespace, branch);
         const count = countKey(this._globalNamespace, branch);
         const size = sizeKey(this._globalNamespace, branch);
-
-        // const numberToReplace = updatesToRemove.updates.length;
+        const mergeTime = mergeTimeKey(this._globalNamespace, branch);
 
         // Updates are assumed to be ASCII (usually Base64-encoded strings),
         // so the size in bytes is just the sum of the length of each string.
         const removedSize = sumBy(updatesToRemove.updates, (u) => u.length);
         const addedSize = sumBy(updatesToAdd, (u) => u.length);
-        const updatesCountDelta =
-            updatesToAdd.length - updatesToRemove.updates.length;
 
-        const formatUpdate = (u: string, t: number) => `${u}:${t}`;
-        const firstUpdateToRemove =
-            updatesToRemove.updates.length > 0
-                ? formatUpdate(
-                      updatesToRemove.updates[0],
-                      updatesToRemove.timestamps[0]
-                  )
-                : null;
+        const firstMergedUpdateTimestamp =
+            updatesToRemove.timestamps.length > 0
+                ? updatesToRemove.timestamps[0]
+                : Date.now();
         const lastUpdateIndex = updatesToRemove.updates.length - 1;
-        const lastUpdateToRemove =
-            updatesToRemove.updates.length > 0
-                ? formatUpdate(
-                      updatesToRemove.updates[lastUpdateIndex],
-                      updatesToRemove.timestamps[lastUpdateIndex]
-                  )
-                : null;
+        const finalUpdates = updatesToAdd.map((u) => `${u}:${Date.now()}`);
 
         const statusCode = await this._executeScript<number | number[]>(
             '_addUpdatesScriptSha1',
             {
                 script: `
-                local maxSize = tonumber(ARGV[1])
-                local addedSize = tonumber(ARGV[2])
-                local removedSize = tonumber(ARGV[3])
+                local mergeTimestamp = redis.call('GET', KEYS[4])
+                if not mergeTimestamp then
+                    mergeTimestamp = 0
+                end
+                local timestamp = tonumber(ARGV[1])
+
+                local maxSize = tonumber(ARGV[2])
+                local addedSize = tonumber(ARGV[3])
+                local removedSize = tonumber(ARGV[4])
                 local sizeDelta = addedSize - removedSize
                 local currentSize = redis.call('GET', KEYS[3])
                 if not currentSize then
@@ -220,64 +213,56 @@ export class RedisUpdatesStore implements UpdatesStore {
                     return { 1, requiredSize }
                 end
 
-                local firstUpdateToRemove = ARGV[4]
-                local lastUpdateToRemove = ARGV[5]
-                local lastUpdateIndex = tonumber(ARGV[6])
                 local trim = 1
 
-                if (firstUpdateToRemove ~= '0') then
-                    local firstUpdate = redis.call('LINDEX', KEYS[1], 0)
-                    if (firstUpdate ~= firstUpdateToRemove) then
-                        trim = 0
-                    end
+                if mergeTimestamp >= timestamp then
+                    trim = 0
+                else
+                    redis.call('SET', KEYS[4], timestamp)
                 end
 
-                if (lastUpdateToRemove ~= '0') then
-                    local lastUpdate = redis.call('LINDEX', KEYS[1], lastUpdateIndex)
-                    if (lastUpdate ~= lastUpdateToRemove) then
-                        trim  = 0
-                    end
-                end
-
+                local lastUpdateIndex = tonumber(ARGV[5])
                 if lastUpdateIndex < 0 then
                     trim = 0
                 end
 
                 if trim == 1 then
                     redis.call('LTRIM', KEYS[1], lastUpdateIndex, -1)
+                else
+                    if currentSize + addedSize > maxSize then
+                        return { 1, currentSize + addedSize }
+                    end
                 end
 
                 redis.call('INCR', KEYS[2])
 
                 if trim == 1 then
                     redis.call('INCRBY', KEYS[3], sizeDelta)
-                end
-                if trim == 0 then
+                else
                     redis.call('INCRBY', KEYS[3], addedSize)
                 end
                 
-                local numUpdates = tonumber(ARGV[7])
+                local numUpdates = tonumber(ARGV[6])
                 local i = 0
                 while i < numUpdates do
-                    local update = ARGV[8 + i]
+                    local update = ARGV[7 + i]
                     redis.call('RPUSH', KEYS[1], update)
                     i = i + 1
                 end
 
                 return 0
             `,
-                keys: [key, count, size],
+                keys: [key, count, size, mergeTime],
                 args: [
+                    firstMergedUpdateTimestamp,
                     isFinite(this._maxSizeInBytes)
                         ? this._maxSizeInBytes.toString()
                         : '-1',
                     addedSize,
                     removedSize,
-                    firstUpdateToRemove ? firstUpdateToRemove : '0',
-                    lastUpdateToRemove ? lastUpdateToRemove : '0',
                     lastUpdateIndex,
-                    updatesToAdd.length.toString(),
-                    ...updatesToAdd,
+                    finalUpdates.length.toString(),
+                    ...finalUpdates,
                 ],
             }
         );
@@ -291,12 +276,6 @@ export class RedisUpdatesStore implements UpdatesStore {
                     branch: branch,
                     maxBranchSizeInBytes: this._maxSizeInBytes,
                     neededBranchSizeInBytes: statusCode[1] as number,
-                };
-            } else if (statusCode[0] === 2) {
-                return {
-                    success: false,
-                    errorCode: 'unable_to_find_updates',
-                    branch: branch,
                 };
             }
         }
@@ -378,4 +357,8 @@ function countKey(globalNamespace: string, branch: string) {
 
 function sizeKey(globalNamespace: string, branch: string) {
     return `/${globalNamespace}/updateSize/${branch}`;
+}
+
+function mergeTimeKey(globalNamespace: string, branch: string) {
+    return `/${globalNamespace}/mergeTime/${branch}`;
 }

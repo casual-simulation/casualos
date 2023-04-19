@@ -362,7 +362,7 @@ export class ApiaryCausalRepoServer {
         );
 
         if (event.updates) {
-            const result = await this._updatesStore.addUpdates(
+            let result = await this._updatesStore.addUpdates(
                 namespace,
                 event.updates
             );
@@ -381,15 +381,15 @@ export class ApiaryCausalRepoServer {
                             const updates = await this._updatesStore.getUpdates(
                                 namespace
                             );
-                            const mergedUpdates = mergeUpdates(
-                                updates.updates.map((u) => toByteArray(u))
+                            const mergedUpdates = mergeUpdates([
+                                ...updates.updates.map((u) => toByteArray(u)),
+                                ...event.updates.map((u) => toByteArray(u)),
+                            ]);
+                            result = await this._updatesStore.replaceUpdates(
+                                namespace,
+                                updates,
+                                [fromByteArray(mergedUpdates)]
                             );
-                            const result =
-                                await this._updatesStore.replaceUpdates(
-                                    namespace,
-                                    updates,
-                                    [fromByteArray(mergedUpdates)]
-                                );
                         } catch (err) {
                             console.error(
                                 '[CausalRepoServer] Unable to merge branch updates!',
@@ -398,20 +398,22 @@ export class ApiaryCausalRepoServer {
                         }
                     }
 
-                    if ('updateId' in event) {
-                        let { success, branch, ...rest } = result;
+                    if (result.success === false) {
+                        if ('updateId' in event) {
+                            let { success, branch, ...rest } = result;
 
-                        await this._messenger.sendMessage([connectionId], {
-                            name: UPDATES_RECEIVED,
-                            data: {
-                                branch: event.branch,
-                                updateId: event.updateId,
-                                ...rest,
-                            },
-                        });
+                            await this._messenger.sendMessage([connectionId], {
+                                name: UPDATES_RECEIVED,
+                                data: {
+                                    branch: event.branch,
+                                    updateId: event.updateId,
+                                    ...rest,
+                                },
+                            });
+                        }
+                        return;
                     }
                 }
-                return;
             }
         }
 

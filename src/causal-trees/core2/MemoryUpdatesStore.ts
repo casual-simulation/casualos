@@ -89,11 +89,7 @@ export class MemoryUpdatesStore implements UpdatesStore {
         for (let u of updatesToRemove.updates) {
             let i = storedUpdates.updates.indexOf(u);
             if (i === -1) {
-                return {
-                    success: false,
-                    errorCode: 'unable_to_find_updates',
-                    branch,
-                };
+                continue;
             }
             storedUpdates.updates.splice(i, 1);
             storedUpdates.timestamps.splice(i, 1);
