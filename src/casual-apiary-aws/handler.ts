@@ -60,6 +60,11 @@ const REDIS_TLS: boolean = process.env.REDIS_TLS
     : true;
 const REDIS_NAMESPACE: string = process.env.REDIS_NAMESPACE as string;
 
+const MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED: boolean = process.env
+    .MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED
+    ? process.env.MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED === 'true'
+    : false;
+
 const MAX_BRANCH_SIZE: number =
     process.env.MAX_BRANCH_SIZE === 'Infinity'
         ? Infinity
@@ -386,14 +391,15 @@ function createCausalRepoServer(event: APIGatewayProxyEvent) {
     );
     const updatesStore = new RedisUpdatesStore(REDIS_NAMESPACE, redisClient);
     updatesStore.maxBranchSizeInBytes = MAX_BRANCH_SIZE;
-
+    const server = new ApiaryCausalRepoServer(
+        connectionStore,
+        atomStore,
+        messenger,
+        updatesStore
+    );
+    server.mergeUpdatesOnMaxSizeExceeded = MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED;
     const result = [
-        new ApiaryCausalRepoServer(
-            connectionStore,
-            atomStore,
-            messenger,
-            updatesStore
-        ),
+        server,
         () => {
             cleanup();
         },
