@@ -191,7 +191,7 @@ export class RedisUpdatesStore implements UpdatesStore {
         const finalUpdates = updatesToAdd.map((u) => `${u}:${Date.now()}`);
 
         const statusCode = await this._executeScript<number | number[]>(
-            '_addUpdatesScriptSha1',
+            '_replaceUpdatesScriptSha1',
             {
                 script: `
                 local mergeTimestamp = redis.call('GET', KEYS[4])
