@@ -369,7 +369,8 @@ export class ApiaryCausalRepoServer {
 
             if (result.success === false) {
                 console.log(
-                    `[CausalRepoServer] [${namespace}] [${connectionId}] Failed to add updates: ${result.errorCode}`
+                    `[CausalRepoServer] [${namespace}] [${connectionId}] Failed to add updates`,
+                    result
                 );
                 if (result.errorCode === 'max_size_reached') {
                     if (this.mergeUpdatesOnMaxSizeExceeded) {
@@ -390,6 +391,13 @@ export class ApiaryCausalRepoServer {
                                 updates,
                                 [fromByteArray(mergedUpdates)]
                             );
+
+                            if (result.success === false) {
+                                console.log(
+                                    `[CausalRepoServer] [${namespace}] [${connectionId}] Failed to merge branch updates`,
+                                    result
+                                );
+                            }
                         } catch (err) {
                             console.error(
                                 '[CausalRepoServer] Unable to merge branch updates!',
