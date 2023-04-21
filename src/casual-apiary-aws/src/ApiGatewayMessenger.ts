@@ -1,12 +1,15 @@
 import { ApiGatewayManagementApi } from 'aws-sdk';
-import { ApiaryConnectionStore } from './ApiaryConnectionStore';
-import { ApiaryMessenger, Message } from './ApiaryMessenger';
+import {
+    Packet,
+    ApiaryConnectionStore,
+    ApiaryMessenger,
+    Message,
+} from '@casual-simulation/casual-apiary';
 import {
     AwsDownloadRequest,
     AwsMessageData,
     AwsMessageTypes,
 } from './AwsMessages';
-import { Packet } from './Events';
 import { getS3Client, uploadMessage } from './Utils';
 
 export const MAX_MESSAGE_SIZE = 32_000;

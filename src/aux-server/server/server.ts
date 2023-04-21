@@ -95,7 +95,7 @@ import { SerialModule } from './modules/SerialModule';
 import { MongoDBStageStore } from './mongodb/MongoDBStageStore';
 import { WebConfig } from 'shared/WebConfig';
 import compression from 'compression';
-import { RedisUpdatesStore } from './redis/RedisUpdatesStore';
+import { RedisUpdatesStore } from '@casual-simulation/casual-apiary-redis';
 
 const connect = pify(MongoClient.connect);
 

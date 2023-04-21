@@ -17,12 +17,6 @@ import {
     WATCH_BRANCH_DEVICES,
 } from '@casual-simulation/causal-trees';
 import {
-    LoginPacket,
-    LoginResultPacket,
-    MessagePacket,
-    Packet,
-} from './src/Events';
-import {
     downloadObject,
     getDocumentClient,
     getMessageUploadUrl,
@@ -37,16 +31,26 @@ import {
     AwsUploadRequest,
     AwsUploadResponse,
 } from './src/AwsMessages';
-import { ApiaryCausalRepoServer } from './src/ApiaryCausalRepoServer';
 import { ApiGatewayMessenger } from './src/ApiGatewayMessenger';
-import { DEVICE_COUNT, Message } from './src/ApiaryMessenger';
-import { ApiaryConnectionStore } from './src/ApiaryConnectionStore';
-import { ApiaryAtomStore } from './src/ApiaryAtomStore';
+import {
+    LoginPacket,
+    LoginResultPacket,
+    MessagePacket,
+    Packet,
+    ApiaryCausalRepoServer,
+    DEVICE_COUNT,
+    Message,
+    ApiaryConnectionStore,
+    ApiaryAtomStore,
+    ADD_UPDATES,
+    SYNC_TIME,
+} from '@casual-simulation/casual-apiary';
 import { RedisClient, createClient as createRedisClient } from 'redis';
-import { RedisAtomStore } from './src/RedisAtomStore';
-import { RedisConnectionStore } from './src/RedisConnectionStore';
-import { RedisUpdatesStore } from './src/RedisUpdatesStore';
-import { ADD_UPDATES, SYNC_TIME } from './src/ExtraEvents';
+import {
+    RedisAtomStore,
+    RedisConnectionStore,
+    RedisUpdatesStore,
+} from '@casual-simulation/casual-apiary-redis';
 
 const REDIS_HOST: string = process.env.REDIS_HOST as string;
 const REDIS_PORT: number = parseInt(process.env.REDIS_PORT as string);
@@ -55,6 +59,11 @@ const REDIS_TLS: boolean = process.env.REDIS_TLS
     ? process.env.REDIS_TLS === 'true'
     : true;
 const REDIS_NAMESPACE: string = process.env.REDIS_NAMESPACE as string;
+
+const MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED: boolean = process.env
+    .MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED
+    ? process.env.MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED === 'true'
+    : false;
 
 const MAX_BRANCH_SIZE: number =
     process.env.MAX_BRANCH_SIZE === 'Infinity'
@@ -382,14 +391,15 @@ function createCausalRepoServer(event: APIGatewayProxyEvent) {
     );
     const updatesStore = new RedisUpdatesStore(REDIS_NAMESPACE, redisClient);
     updatesStore.maxBranchSizeInBytes = MAX_BRANCH_SIZE;
-
+    const server = new ApiaryCausalRepoServer(
+        connectionStore,
+        atomStore,
+        messenger,
+        updatesStore
+    );
+    server.mergeUpdatesOnMaxSizeExceeded = MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED;
     const result = [
-        new ApiaryCausalRepoServer(
-            connectionStore,
-            atomStore,
-            messenger,
-            updatesStore
-        ),
+        server,
         () => {
             cleanup();
         },

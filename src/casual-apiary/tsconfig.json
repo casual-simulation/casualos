@@ -2,19 +2,19 @@
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "baseUrl": ".",
-        "outDir": "../../temp/casual-apiary-aws/",
+        "outDir": ".",
+        "declaration": true,
+        "declarationMap": true,
         "composite": true,
         "incremental": true
     },
-    "include": ["./handler.ts", "./src/**/*"],
-    "exclude": ["**/node_modules/**", "./web/vite.config.ts"],
+    "include": ["./index.ts", "./src/**/*"],
+    "exclude": ["node_modules", "lib", "**/*.spec.ts"],
     "references": [
         { "path": "../aux-vm-browser" },
         { "path": "../aux-components" },
         { "path": "../aux-common" },
         { "path": "../aux-records" },
-        { "path": "../aux-records-aws" },
-        { "path": "../casual-apiary" },
-        { "path": "../casual-apiary-redis" }
+        { "path": "../aux-records-aws" }
     ]
 }
