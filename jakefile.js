@@ -42,7 +42,7 @@ let folders = [
     `${__dirname}/src/timesync`,
     `${__dirname}/src/js-interpreter`,
     `${__dirname}/src/vue-shortkey`,
-    `${__dirname}/src/redis-rate-limit`,
+    `${__dirname}/src/rate-limit-redis`,
 ];
 
 let patterns = [
