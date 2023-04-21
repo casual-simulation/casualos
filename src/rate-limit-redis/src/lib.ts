@@ -4,7 +4,7 @@ import {
     Options as RateLimitConfiguration,
 } from 'express-rate-limit';
 
-import { Options, SendCommandFn } from './types.js';
+import { Options, RedisReply, SendCommandFn } from './types.js';
 
 /**
  * A `Store` for the `express-rate-limit` package that stores hit counts in
@@ -156,7 +156,7 @@ class RedisStore implements Store {
         await this.sendCommand('DEL', this.prefixKey(key));
     }
 
-    private _runScript(key: string) {
+    private async _runScript(key: string): Promise<RedisReply | RedisReply[]> {
         try {
             return await this.sendCommand(
                 'EVALSHA',
