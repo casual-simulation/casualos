@@ -111,14 +111,7 @@ class RedisStore implements Store {
      * @returns {IncrementResponse} - The number of hits and reset time for that client
      */
     async increment(key: string): Promise<IncrementResponse> {
-        const results = await this.sendCommand(
-            'EVALSHA',
-            await this.loadedScriptSha1,
-            '1',
-            this.prefixKey(key),
-            this.resetExpiryOnChange ? '1' : '0',
-            this.windowMs.toString()
-        );
+        const results = this._runScript(this.prefixKey(key));
 
         if (!Array.isArray(results)) {
             throw new TypeError('Expected result to be array of values');
@@ -161,6 +154,26 @@ class RedisStore implements Store {
      */
     async resetKey(key: string): Promise<void> {
         await this.sendCommand('DEL', this.prefixKey(key));
+    }
+
+    private _runScript(key: string) {
+        try {
+            return await this.sendCommand(
+                'EVALSHA',
+                await this.loadedScriptSha1,
+                '1',
+                key,
+                this.resetExpiryOnChange ? '1' : '0',
+                this.windowMs.toString()
+            );
+        } catch (e) {
+            const errString = e.toString();
+            if (errString.includes('NOSCRIPT')) {
+                this.loadedScriptSha1 = this.loadScript();
+                return await this._runScript(key);
+            }
+            throw e;
+        }
     }
 }
 
