@@ -12,3 +12,10 @@ coverage/
 
 yarn.lock
 pnpm-lock.yaml
+
+*.js
+*.js.map
+*.d.ts
+!typings/**/*
+docs
+package-lock.json

@@ -3,14 +3,16 @@
     "include": ["src/"],
     "exclude": ["node_modules/"],
     "compilerOptions": {
-        "target": "esnext",
-        "module": "esnext",
+        "baseUrl": ".",
+        "outDir": ".",
         "declaration": true,
-        "strict": true,
+        "declarationMap": true,
         "noUnusedLocals": true,
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "moduleResolution": "node",
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "composite": true,
+        "incremental": true
     }
 }
