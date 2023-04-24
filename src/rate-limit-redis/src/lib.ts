@@ -111,7 +111,7 @@ class RedisStore implements Store {
      * @returns {IncrementResponse} - The number of hits and reset time for that client
      */
     async increment(key: string): Promise<IncrementResponse> {
-        const results = this._runScript(this.prefixKey(key));
+        const results = await this._runScript(this.prefixKey(key));
 
         if (!Array.isArray(results)) {
             throw new TypeError('Expected result to be array of values');

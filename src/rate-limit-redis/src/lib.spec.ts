@@ -1,10 +1,10 @@
-import { createHash } from 'node:crypto';
+import { createHash } from 'crypto';
 
 // import { jest as Jest } from '@jest/globals';
 import { Options } from 'express-rate-limit';
 import MockRedisClient, { Redis } from 'ioredis-mock';
 
-import RedisStore, { RedisReply } from '../src/index.js';
+import RedisStore, { RedisReply } from './index';
 
 // The SHA of the script to evaluate
 let scriptSha: string | undefined;
