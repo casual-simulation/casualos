@@ -8,7 +8,7 @@ import {
  * Defines a rate limiter that stores everything in-memory.
  */
 export class MemoryRateLimiter implements RateLimiter {
-    private _states: Map<string, MemoryState>;
+    private _states: Map<string, MemoryState> = new Map();
 
     windowMs: number = 1000;
 
@@ -47,7 +47,7 @@ export class MemoryRateLimiter implements RateLimiter {
             };
             this._states.set(key, state);
         }
-        if (state.resetTimeMs > Date.now()) {
+        if (state.resetTimeMs < Date.now()) {
             state.count = 0;
             state.resetTimeMs = Date.now() + this.windowMs;
         }

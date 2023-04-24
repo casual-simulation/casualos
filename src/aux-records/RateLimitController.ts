@@ -1,5 +1,5 @@
 import { RateLimiter } from '@casual-simulation/rate-limit-redis';
-import { ServerError } from 'Errors';
+import { ServerError } from './Errors';
 
 /**
  * Defines a controller that is able to handle rate limiting.

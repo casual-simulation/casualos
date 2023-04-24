@@ -8,7 +8,9 @@ describe('RateLimitController', () => {
     let subject: RateLimitController;
 
     beforeEach(() => {
-        jest.useFakeTimers();
+        jest.useFakeTimers({
+            now: 0,
+        });
 
         rateLimiter = new MemoryRateLimiter();
         subject = new RateLimitController(rateLimiter, {
@@ -42,6 +44,18 @@ describe('RateLimitController', () => {
                 success: false,
                 errorCode: 'rate_limit_exceeded',
                 errorMessage: 'Rate limit exceeded.',
+            });
+        });
+
+        it('should return an successful result if the extra request is outside the rate limit window', async () => {
+            await rateLimiter.increment('123.456.789', 10);
+            jest.advanceTimersByTime(101);
+            const result = await subject.checkRateLimit({
+                ipAddress: '123.456.789',
+            });
+
+            expect(result).toEqual({
+                success: true,
             });
         });
     });

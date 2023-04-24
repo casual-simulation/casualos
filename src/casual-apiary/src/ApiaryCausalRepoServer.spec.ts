@@ -2181,6 +2181,7 @@ describe('ApiaryCausalRepoServer', () => {
                 type: 'yjs',
             });
 
+            p.doc.clientID = 9999;
             p.doc.on('update', (update: Uint8Array) => {
                 createdUpdates.push(fromByteArray(update));
             });

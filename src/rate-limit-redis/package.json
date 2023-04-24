@@ -1,19 +1,18 @@
 {
     "name": "@casual-simulation/rate-limit-redis",
-    "version": "3.0.1",
+    "version": "3.1.23",
     "description": "A Redis store for the `express-rate-limit` middleware",
-    "author": {
-        "name": "Wyatt Johnson",
-        "url": "https://github.com/wyattjoh"
-    },
+    "homepage": "https://github.com/casual-simulation/casualos",
     "license": "MIT",
-    "homepage": "https://github.com/wyattjoh/rate-limit-redis",
-    "repository": "https://github.com/wyattjoh/rate-limit-redis",
-    "type": "module",
-    "main": "./src/index.js",
-    "types": "./src/index.d.ts",
-    "module": "./src/index",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "module": "index",
+    "directories": {
+        "lib": "."
+    },
     "files": [
+        "/README.md",
+        "/LICENSE.txt",
         "**/*.js",
         "**/*.js.map",
         "**/*.d.ts",
@@ -23,11 +22,26 @@
         "license.md",
         "changelog.md"
     ],
-    "engines": {
-        "node": ">= 14.5.0"
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/casualos.git"
     },
     "scripts": {
-        "test": "jest"
+        "watch": "tsc --watch",
+        "watch:player": "npm run watch",
+        "build": "echo \"Nothing to do.\"",
+        "test": "jest",
+        "test:watch": "jest --watchAll"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/casualos/issues"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "author": {
+        "name": "Wyatt Johnson",
+        "url": "https://github.com/wyattjoh"
     },
     "dependencies": {
         "express-rate-limit": "^6"
