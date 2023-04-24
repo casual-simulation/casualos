@@ -188,7 +188,7 @@ export async function webhook(
     const [server, cleanup, rateLimiter] = getCausalRepoServer(event);
     let errored = false;
     try {
-        const rateLimitResult = rateLimit(rateLimiter, event);
+        const rateLimitResult = await rateLimit(rateLimiter, event);
         if (!rateLimitResult.success) {
             // TODO: Send a response
             return;
@@ -247,7 +247,7 @@ export async function instData(
 
     const [server, cleanup, rateLimiter] = getCausalRepoServer(event);
     try {
-        const rateLimitResult = rateLimit(rateLimiter, event);
+        const rateLimitResult = await rateLimit(rateLimiter, event);
         if (!rateLimitResult.success) {
             // TODO: Send a response
             return {
@@ -301,10 +301,10 @@ async function processUpload(
         message[1],
         uploadUrl,
     ];
-    const [server, cleanup] = getCausalRepoServer(event);
+    const [server, cleanup, rateLimiter] = getCausalRepoServer(event);
 
     try {
-        const rateLimitResult = rateLimit(rateLimiter, event);
+        const rateLimitResult = await rateLimit(rateLimiter, event);
         if (!rateLimitResult.success) {
             // TODO: Send a response
             return;
@@ -342,7 +342,7 @@ async function login(event: APIGatewayProxyEvent, packet: LoginPacket) {
 
     const [server, cleanup, rateLimiter] = getCausalRepoServer(event);
     try {
-        const rateLimitResult = rateLimit(rateLimiter, event);
+        const rateLimitResult = await rateLimit(rateLimiter, event);
         if (!rateLimitResult.success) {
             // TODO: Send a response
             return;
@@ -376,9 +376,9 @@ async function messagePacket(
     event: APIGatewayProxyEvent,
     packet: MessagePacket
 ) {
-    const [server, cleanup] = getCausalRepoServer(event);
+    const [server, cleanup, rateLimiter] = getCausalRepoServer(event);
     try {
-        const rateLimitResult = rateLimit(rateLimiter, event);
+        const rateLimitResult = await rateLimit(rateLimiter, event);
         if (!rateLimitResult.success) {
             // TODO: Send a response
             return;
@@ -482,7 +482,17 @@ function createRedis() {
             `[handler] Enabling rate limiting! (Window: ${RATE_LIMIT_WINDOW_MS} Max: ${RATE_LIMIT_MAX})`
         );
         rateLimit = new RedisRateLimitStore({
-            sendCommand: (...args: string[]) => client.sendCommand(args),
+            sendCommand: (command: string, ...args: (string | number)[]) => {
+                return new Promise((resolve, reject) => {
+                    client.sendCommand(command, args, (err, result) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(result);
+                        }
+                    });
+                });
+            },
         });
         rateLimit.prefix = REDIS_RATE_LIMIT_PREFIX;
         rateLimit.init({
@@ -511,13 +521,13 @@ function callbackUrl(event: APIGatewayProxyEvent): string {
     return process.env.WEBSOCKET_URL || 'https://websocket.casualos.com';
 }
 
-function rateLimit(
+async function rateLimit(
     rateLimiter: RedisRateLimitStore,
     event: APIGatewayProxyEvent
 ) {
     if (rateLimiter) {
         const ip = event.requestContext.identity.sourceIp;
-        const result = rateLimiter.increment(ip);
+        const result = await rateLimiter.increment(ip);
         if (result.totalHits > RATE_LIMIT_MAX) {
             console.log(
                 `[handler] [${ip}] [${result.totalHits}] Rate limit exceeded!`
