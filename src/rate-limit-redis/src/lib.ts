@@ -4,13 +4,15 @@ import {
     Options as RateLimitConfiguration,
 } from 'express-rate-limit';
 
-import { Options, RedisReply, SendCommandFn } from './types.js';
+import { Options, RedisReply, SendCommandFn } from './types';
+
+import { RateLimiter } from './RateLimiter';
 
 /**
  * A `Store` for the `express-rate-limit` package that stores hit counts in
  * Redis.
  */
-class RedisStore implements Store {
+class RedisStore implements Store, RateLimiter {
     /**
      * The function used to send raw commands to Redis.
      */
@@ -60,7 +62,8 @@ class RedisStore implements Store {
             'SCRIPT',
             'LOAD',
             `
-        local totalHits = redis.call("INCR", KEYS[1])
+        local count = tonumber(ARGV[3])
+        local totalHits = redis.call("INCRBY", KEYS[1], count)
         local timeToExpire = redis.call("PTTL", KEYS[1])
         if timeToExpire <= 0 or ARGV[1] == "1"
         then
@@ -110,8 +113,11 @@ class RedisStore implements Store {
      *
      * @returns {IncrementResponse} - The number of hits and reset time for that client
      */
-    async increment(key: string): Promise<IncrementResponse> {
-        const results = await this._runScript(this.prefixKey(key));
+    async increment(
+        key: string,
+        amount: number = 1
+    ): Promise<IncrementResponse> {
+        const results = await this._runScript(this.prefixKey(key), amount);
 
         if (!Array.isArray(results)) {
             throw new TypeError('Expected result to be array of values');
@@ -143,8 +149,8 @@ class RedisStore implements Store {
      *
      * @param key {string} - The identifier for a client
      */
-    async decrement(key: string): Promise<void> {
-        await this.sendCommand('DECR', this.prefixKey(key));
+    async decrement(key: string, amount: number = 1): Promise<void> {
+        await this.sendCommand('DECRBY', this.prefixKey(key), amount);
     }
 
     /**
@@ -156,7 +162,10 @@ class RedisStore implements Store {
         await this.sendCommand('DEL', this.prefixKey(key));
     }
 
-    private async _runScript(key: string): Promise<RedisReply | RedisReply[]> {
+    private async _runScript(
+        key: string,
+        amount: number
+    ): Promise<RedisReply | RedisReply[]> {
         try {
             return await this.sendCommand(
                 'EVALSHA',
@@ -164,13 +173,14 @@ class RedisStore implements Store {
                 '1',
                 key,
                 this.resetExpiryOnChange ? '1' : '0',
-                this.windowMs.toString()
+                this.windowMs.toString(),
+                amount
             );
         } catch (e) {
             const errString = e.toString();
             if (errString.includes('NOSCRIPT')) {
                 this.loadedScriptSha1 = this.loadScript();
-                return await this._runScript(key);
+                return await this._runScript(key, amount);
             }
             throw e;
         }

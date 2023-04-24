@@ -30,7 +30,7 @@ const sendCommand = async (
         const shasum = createHash('sha1');
         shasum.update(args[2]);
         scriptSha = shasum.digest('hex');
-        await client.eval(args[2], 1, '__test', '0', '100');
+        await client.eval(args[2], 1, '__test', '0', '100', '1');
 
         // Return the SHA to the store.
         return scriptSha;
@@ -42,6 +42,8 @@ const sendCommand = async (
         return client.evalsha(scriptSha!, ...args.slice(2)) as number[];
     // `DECR` decrements the count for a client.
     if (args[0] === 'DECR') return client.decr(args[1]);
+    // `DECRBY` decrements the count for a client by an amount.
+    if (args[0] === 'DECRBY') return client.decrby(args[1], args[2] as any);
     // `DEL` resets the count for a client by deleting the key.
     if (args[0] === 'DEL') return client.del(args[1]);
 
