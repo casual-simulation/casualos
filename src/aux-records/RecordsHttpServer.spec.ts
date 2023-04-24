@@ -3749,6 +3749,28 @@ describe('RecordsHttpServer', () => {
         });
     }
 
+    function testRateLimit(getRequest: (body: string) => GenericHttpRequest) {
+        it('should return a 429 status code when the rate limit is exceeded', async () => {
+            const request = getRequest('{');
+            const result = await server.handleRequest(request);
+
+            expect(result).toEqual({
+                statusCode: 400,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request body was not properly formatted. It should be valid JSON.',
+                }),
+                headers: {
+                    'Access-Control-Allow-Origin': request.headers.origin,
+                    'Access-Control-Allow-Headers':
+                        'Content-Type, Authorization',
+                },
+            });
+        });
+    }
+
     function httpGet(
         url: string,
         headers: GenericHttpHeaders = defaultHeaders,
