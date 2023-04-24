@@ -2172,7 +2172,7 @@ describe('ApiaryCausalRepoServer', () => {
             ]);
         });
 
-        it.only('should merge updates when the max size was exceeded if configured', async () => {
+        it('should merge updates when the max size was exceeded if configured', async () => {
             updateStore.maxAllowedInstSize = 180;
             server.mergeUpdatesOnMaxSizeExceeded = true;
 
