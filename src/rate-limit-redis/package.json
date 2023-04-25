@@ -1,9 +1,7 @@
 {
-    "name": "@casual-simulation/aux-records",
-    "version": "3.1.26",
-    "description": "Helpers and managers used by the CasualOS records system.",
-    "keywords": [],
-    "author": "Casual Simulation, Inc.",
+    "name": "@casual-simulation/rate-limit-redis",
+    "version": "3.1.23",
+    "description": "A Redis store for the `express-rate-limit` middleware",
     "homepage": "https://github.com/casual-simulation/casualos",
     "license": "MIT",
     "main": "index.js",
@@ -17,7 +15,12 @@
         "/LICENSE.txt",
         "**/*.js",
         "**/*.js.map",
-        "**/*.d.ts"
+        "**/*.d.ts",
+        "tsconfig.json",
+        "package.json",
+        "readme.md",
+        "license.md",
+        "changelog.md"
     ],
     "repository": {
         "type": "git",
@@ -36,11 +39,17 @@
     "publishConfig": {
         "access": "public"
     },
+    "author": {
+        "name": "Wyatt Johnson",
+        "url": "https://github.com/wyattjoh"
+    },
     "dependencies": {
-        "@casual-simulation/crypto": "^3.1.23",
-        "@casual-simulation/rate-limit-redis": "^3.0.1",
-        "livekit-server-sdk": "1.0.2",
-        "tweetnacl": "1.0.3",
-        "zod": "3.21.4"
+        "express-rate-limit": "^6"
+    },
+    "devDependencies": {
+        "@types/ioredis-mock": "^5.6.0",
+        "@types/ioredis": "4.28.10",
+        "ioredis": "^4.28.3",
+        "ioredis-mock": "^5.8.1"
     }
 }

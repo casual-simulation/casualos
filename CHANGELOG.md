@@ -14,11 +14,18 @@
         -   `neededSizeInBytes` - The number of bytes that would be needed to store the data that was placed in the space.
     -   Note that this only applies to persistent storage. That is, if you create a bot in the `shared` space and receive this shout, then it is possible that the bot was not persistently stored and shared, but it is still available by scripts until the browser tab is refreshed or the PC is restarted.
     -   Generally, if you receive this shout, then it is a good idea to backup your inst.
+-   Added configurable support for IP-based rate limiting.
+    -   Applies to websockets as well as the API.
+    -   Requires a Redis connection and is configurable by the following environment variables:
+        -   `RATE_LIMIT_MAX` - The maximum number of requests that can be recieved from an IP address over the window.
+        -   `RATE_LIMIT_WINDOW_MS` - The size of the window for requests represented in miliseconds.
+    -   If any of the above environment variables are not specified, then rate limiting will be disabled.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `os.getMediaPermission` would leave tracks in a MediaStream running. Some browsers/devices release these automatically, while others would leave the tracks running and cause issues with other systems that utilize audio and video hardware like augmented reality.
 -   Fixed an issue where `data:` URLs would not work in the `formAddress` tag without a workaround.
+-   Fixed an issue where it was impossible to create record keys on deployments that did not have a subscription configuration.
 
 ## V3.1.28
 

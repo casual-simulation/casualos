@@ -2578,6 +2578,34 @@ describe('AuthController', () => {
             });
         });
 
+        it('should work if there is no subscription config', async () => {
+            subscriptionConfig = null as any;
+            controller = new AuthController(
+                authStore,
+                messenger,
+                subscriptionConfig,
+                false
+            );
+
+            const result = await controller.getUserInfo({
+                userId,
+                sessionKey,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId: userId,
+                email: 'email',
+                phoneNumber: 'phonenumber',
+                name: 'Test',
+                avatarUrl: 'avatar url',
+                avatarPortraitUrl: 'avatar portrait url',
+                hasActiveSubscription: false,
+                subscriptionTier: null,
+                openAiKey: null,
+            });
+        });
+
         it('should include the openAiKey if the user has an active subscription', async () => {
             await authStore.saveUser({
                 id: userId,
