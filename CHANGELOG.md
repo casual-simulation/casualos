@@ -4,6 +4,17 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added the `@onSpaceMaxSizeReached` shout.
+    -   This is a shout that is sent when a space has reached its maximum persistent storage size.
+    -   `that` is an object with the following properties:
+        -   `space` - The space that reached is maximum storage size. Generally, this is `shared`.
+        -   `maxSizeInBytes` - The maximum allowed size for the space in bytes.
+        -   `neededSizeInBytes` - The number of bytes that would be needed to store the data that was placed in the space.
+    -   Note that this only applies to persistent storage. That is, if you create a bot in the `shared` space and receive this shout, then it is possible that the bot was not persistently stored and shared, but it is still available by scripts until the browser tab is refreshed or the PC is restarted.
+    -   Generally, if you receive this shout, then it is a good idea to backup your inst.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where `os.getMediaPermission` would leave tracks in a MediaStream running. Some browsers/devices release these automatically, while others would leave the tracks running and cause issues with other systems that utilize audio and video hardware like augmented reality.

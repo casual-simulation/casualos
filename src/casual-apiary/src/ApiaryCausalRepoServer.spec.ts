@@ -19,6 +19,7 @@ import {
     UNWATCH_BRANCH_DEVICES,
     WATCH_BRANCH,
     WATCH_BRANCH_DEVICES,
+    MemoryUpdatesStore,
 } from '@casual-simulation/causal-trees/core2';
 import { MemoryApiaryConnectionStore } from './MemoryApiaryConnectionStore';
 import { MemoryApiaryAtomStore } from './MemoryApiaryAtomStore';
@@ -41,6 +42,7 @@ import {
     botAdded,
     setupServer,
     ON_WEBHOOK_ACTION_NAME,
+    botRemoved,
 } from '@casual-simulation/aux-common/bots';
 import { createBot } from '@casual-simulation/aux-common/bots/BotCalculations';
 import { v4 as uuid } from 'uuid';
@@ -55,10 +57,10 @@ import {
     YjsPartitionImpl,
 } from '@casual-simulation/aux-common/partitions/YjsPartition';
 import { DEVICE_COUNT } from './ApiaryMessenger';
-import { MemoryUpdatesStore } from './MemoryUpdatesStore';
 import { ADD_UPDATES, UPDATES_RECEIVED, SYNC_TIME } from './ExtraEvents';
 import { encodeStateAsUpdate } from 'yjs';
 import { fromByteArray } from 'base64-js';
+import { getStateFromUpdates } from '@casual-simulation/aux-common/partitions/PartitionUtils';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -2133,6 +2135,175 @@ describe('ApiaryCausalRepoServer', () => {
                 updates: ['111'],
                 timestamps: [expect.any(Number)],
             });
+        });
+
+        it('should notify the sender if the updates were rejected because of a max inst size', async () => {
+            updateStore.maxAllowedInstSize = 5;
+
+            await server.connect(device1Info);
+
+            await server.addUpdates(device1Info.connectionId, {
+                branch: 'testBranch',
+                updates: ['111', '222'],
+                updateId: 0,
+            });
+
+            const updates = await updateStore.getUpdates(
+                branchNamespace('testBranch')
+            );
+
+            expect(updates).toEqual({
+                updates: [],
+                timestamps: [],
+            });
+
+            const messages = messenger.getMessages(device1Info.connectionId);
+            expect(messages).toEqual([
+                {
+                    name: UPDATES_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        updateId: 0,
+                        errorCode: 'max_size_reached',
+                        maxBranchSizeInBytes: 5,
+                        neededBranchSizeInBytes: 6,
+                    },
+                },
+            ]);
+        });
+
+        it.only('should merge updates when the max size was exceeded if configured', async () => {
+            updateStore.maxAllowedInstSize = 180;
+            server.mergeUpdatesOnMaxSizeExceeded = true;
+
+            let createdUpdates = [] as string[];
+            let p = new YjsPartitionImpl({
+                type: 'yjs',
+            });
+
+            p.doc.on('update', (update: Uint8Array) => {
+                createdUpdates.push(fromByteArray(update));
+            });
+
+            await p.applyEvents([
+                botAdded(
+                    createBot('test', {
+                        abc: 'def',
+                    })
+                ),
+                botAdded(
+                    createBot('test2', {
+                        abc: 'def',
+                    })
+                ),
+                botAdded(
+                    createBot('test3', {
+                        abc: 'def',
+                    })
+                ),
+            ]);
+            const update = createdUpdates[0];
+
+            console.warn(update.length);
+
+            await server.connect(device1Info);
+
+            await server.addUpdates(device1Info.connectionId, {
+                branch: 'testBranch',
+                updates: [update],
+                updateId: 0,
+            });
+
+            await p.applyEvents([botRemoved('test3')]);
+            const update2 = createdUpdates[1];
+
+            expect(p.state).toEqual({
+                test: createBot('test', {
+                    abc: 'def',
+                }),
+                test2: createBot('test2', {
+                    abc: 'def',
+                }),
+            });
+
+            const state2 = getStateFromUpdates({
+                type: 'get_inst_state_from_updates',
+                updates: [
+                    {
+                        id: 0,
+                        timestamp: 0,
+                        update: update,
+                    },
+                    {
+                        id: 0,
+                        timestamp: 0,
+                        update: update2,
+                    },
+                ],
+            });
+
+            expect(state2).toEqual({
+                test: createBot('test', {
+                    abc: 'def',
+                }),
+                test2: createBot('test2', {
+                    abc: 'def',
+                }),
+            });
+
+            await server.addUpdates(device1Info.connectionId, {
+                branch: 'testBranch',
+                updates: [update2],
+                updateId: 1,
+            });
+
+            const updates = await updateStore.getUpdates(
+                branchNamespace('testBranch')
+            );
+
+            expect(updates).toEqual({
+                updates: [expect.any(String)],
+                timestamps: [expect.any(Number)],
+            });
+
+            const state = getStateFromUpdates({
+                type: 'get_inst_state_from_updates',
+                updates: [
+                    {
+                        id: 0,
+                        timestamp:
+                            updates.timestamps[updates.timestamps.length - 1],
+                        update: updates.updates[updates.updates.length - 1],
+                    },
+                ],
+            });
+
+            expect(state).toEqual({
+                test: createBot('test', {
+                    abc: 'def',
+                }),
+                test2: createBot('test2', {
+                    abc: 'def',
+                }),
+            });
+
+            const messages = messenger.getMessages(device1Info.connectionId);
+            expect(messages).toEqual([
+                {
+                    name: UPDATES_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        updateId: 0,
+                    },
+                },
+                {
+                    name: UPDATES_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        updateId: 1,
+                    },
+                },
+            ]);
         });
     });
 

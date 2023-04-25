@@ -606,7 +606,6 @@ export default [
     'precious',
     'precise',
     'preferred',
-    'pregnant',
     'preliminary',
     'premier',
     'prepared',

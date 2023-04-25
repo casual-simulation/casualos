@@ -30,6 +30,7 @@
         { "path": "./src/aux-vm-deno" },
         { "path": "./src/aux-records" },
         { "path": "./src/aux-records-aws" },
+        { "path": "./src/casual-apiary" },
         { "path": "./src/casual-apiary-aws" },
         { "path": "./src/causal-trees" },
         { "path": "./src/causal-tree-client-apiary" },
