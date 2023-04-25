@@ -25,6 +25,8 @@ import {
     StatusUpdate,
     VersionVector,
     WATCH_BRANCH,
+    UpdatesReceivedEvent,
+    UPDATES_RECEIVED,
 } from '@casual-simulation/causal-trees';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { applyUpdate, Doc, Map as YMap, Text as YText } from 'yjs';
@@ -51,6 +53,7 @@ import {
     listInstUpdates,
     ON_REMOTE_DATA_ACTION_NAME,
     ON_REMOTE_WHISPER_ACTION_NAME,
+    ON_SPACE_MAX_SIZE_REACHED,
     stateUpdatedEvent,
     StateUpdatedEvent,
     unlockSpace,
@@ -62,6 +65,8 @@ import { del, edit, insert, preserve } from '../aux-format-2';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
 import { flatMap } from 'lodash';
 import { YjsPartitionImpl } from './YjsPartition';
+
+console.log = jest.fn();
 
 describe('RemoteYjsPartition', () => {
     testPartitionImplementation(
@@ -118,6 +123,7 @@ describe('RemoteYjsPartition', () => {
         let partition: RemoteYjsPartitionImpl;
         let receiveEvent: Subject<ReceiveDeviceActionEvent>;
         let addAtoms: Subject<AddUpdatesEvent>;
+        let updatesReceived: Subject<UpdatesReceivedEvent>;
         let added: Bot[];
         let removed: string[];
         let updated: UpdatedBot[];
@@ -130,8 +136,10 @@ describe('RemoteYjsPartition', () => {
             connection = new MemoryConnectionClient();
             receiveEvent = new Subject<ReceiveDeviceActionEvent>();
             addAtoms = new Subject<AddUpdatesEvent>();
+            updatesReceived = new Subject<UpdatesReceivedEvent>();
             connection.events.set(RECEIVE_EVENT, receiveEvent);
             connection.events.set(ADD_UPDATES, addAtoms);
+            connection.events.set(UPDATES_RECEIVED, updatesReceived);
             client = new CausalRepoClient(connection);
             connection.connect();
             sub = new Subscription();
@@ -1356,6 +1364,70 @@ describe('RemoteYjsPartition', () => {
 
                 expect(states[1].state.bot1.tags.tag1.version).toEqual({
                     [version.currentSite]: 0,
+                });
+            });
+        });
+
+        describe('errors', () => {
+            describe('max_size_reached', () => {
+                it('should emit a onSpaceMaxSizeReached shout', async () => {
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe((e) => events.push(...e));
+                    partition.space = 'shared';
+
+                    partition.connect();
+
+                    updatesReceived.next({
+                        branch: 'testBranch',
+                        updateId: 1,
+                        errorCode: 'max_size_reached',
+                        maxBranchSizeInBytes: 10,
+                        neededBranchSizeInBytes: 11,
+                    });
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        action(ON_SPACE_MAX_SIZE_REACHED, null, null, {
+                            space: 'shared',
+                            maxSizeInBytes: 10,
+                            neededSizeInBytes: 11,
+                        }),
+                    ]);
+                });
+
+                it('should only emit the onSpaceMaxSizeReached shout once', async () => {
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe((e) => events.push(...e));
+                    partition.space = 'shared';
+
+                    partition.connect();
+
+                    updatesReceived.next({
+                        branch: 'testBranch',
+                        updateId: 1,
+                        errorCode: 'max_size_reached',
+                        maxBranchSizeInBytes: 10,
+                        neededBranchSizeInBytes: 11,
+                    });
+                    await waitAsync();
+
+                    updatesReceived.next({
+                        branch: 'testBranch',
+                        updateId: 2,
+                        errorCode: 'max_size_reached',
+                        maxBranchSizeInBytes: 25,
+                        neededBranchSizeInBytes: 99,
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        action(ON_SPACE_MAX_SIZE_REACHED, null, null, {
+                            space: 'shared',
+                            maxSizeInBytes: 10,
+                            neededSizeInBytes: 11,
+                        }),
+                    ]);
                 });
             });
         });

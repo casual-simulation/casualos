@@ -1192,7 +1192,13 @@ export function addCorsQueryParam(url: string): string {
         uri.searchParams.get('casualos-no-cors-cache') === 'true'
     ) {
         uri.searchParams.delete('casualos-no-cors-cache');
-    } else if (!uri.searchParams.has('cors-cache')) {
+    } else if (
+        !uri.searchParams.has('cors-cache') &&
+        (uri.protocol === 'http:' ||
+            uri.protocol === 'https:' ||
+            uri.protocol === 'ws:' ||
+            uri.protocol === 'wss:')
+    ) {
         uri.searchParams.set('cors-cache', '');
     }
 

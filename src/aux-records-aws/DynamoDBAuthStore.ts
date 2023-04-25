@@ -82,6 +82,8 @@ export class DynamoDBAuthStore implements AuthStore {
                         subscriptionStatus: user.subscriptionStatus,
                         subscriptionId: user.subscriptionId,
                         openAiKey: user.openAiKey,
+                        banTimeMs: user.banTimeMs,
+                        banReason: user.banReason,
                     }),
                 },
             },
@@ -146,6 +148,8 @@ export class DynamoDBAuthStore implements AuthStore {
                         subscriptionStatus: user.subscriptionStatus,
                         subscriptionId: user.subscriptionId,
                         openAiKey: user.openAiKey,
+                        banTimeMs: user.banTimeMs,
+                        banReason: user.banReason,
                     }),
                     ConditionExpression: 'attribute_not_exists(id)',
                 },
@@ -259,6 +263,8 @@ export class DynamoDBAuthStore implements AuthStore {
                 subscriptionStatus: user.subscriptionStatus,
                 subscriptionId: user.subscriptionId,
                 openAiKey: user.openAiKey,
+                banTimeMs: user.banTimeMs,
+                banReason: user.banReason,
             };
         } else {
             return null;

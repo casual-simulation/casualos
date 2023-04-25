@@ -17,12 +17,6 @@ import {
     WATCH_BRANCH_DEVICES,
 } from '@casual-simulation/causal-trees';
 import {
-    LoginPacket,
-    LoginResultPacket,
-    MessagePacket,
-    Packet,
-} from './src/Events';
-import {
     downloadObject,
     getDocumentClient,
     getMessageUploadUrl,
@@ -37,16 +31,27 @@ import {
     AwsUploadRequest,
     AwsUploadResponse,
 } from './src/AwsMessages';
-import { ApiaryCausalRepoServer } from './src/ApiaryCausalRepoServer';
 import { ApiGatewayMessenger } from './src/ApiGatewayMessenger';
-import { DEVICE_COUNT, Message } from './src/ApiaryMessenger';
-import { ApiaryConnectionStore } from './src/ApiaryConnectionStore';
-import { ApiaryAtomStore } from './src/ApiaryAtomStore';
+import {
+    LoginPacket,
+    LoginResultPacket,
+    MessagePacket,
+    Packet,
+    ApiaryCausalRepoServer,
+    DEVICE_COUNT,
+    Message,
+    ApiaryConnectionStore,
+    ApiaryAtomStore,
+    ADD_UPDATES,
+    SYNC_TIME,
+} from '@casual-simulation/casual-apiary';
 import { RedisClient, createClient as createRedisClient } from 'redis';
-import { RedisAtomStore } from './src/RedisAtomStore';
-import { RedisConnectionStore } from './src/RedisConnectionStore';
-import { RedisUpdatesStore } from './src/RedisUpdatesStore';
-import { ADD_UPDATES, SYNC_TIME } from './src/ExtraEvents';
+import {
+    RedisAtomStore,
+    RedisConnectionStore,
+    RedisUpdatesStore,
+} from '@casual-simulation/casual-apiary-redis';
+import RedisRateLimitStore from '@casual-simulation/rate-limit-redis';
 
 const REDIS_HOST: string = process.env.REDIS_HOST as string;
 const REDIS_PORT: number = parseInt(process.env.REDIS_PORT as string);
@@ -55,6 +60,29 @@ const REDIS_TLS: boolean = process.env.REDIS_TLS
     ? process.env.REDIS_TLS === 'true'
     : true;
 const REDIS_NAMESPACE: string = process.env.REDIS_NAMESPACE as string;
+
+const MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED: boolean = process.env
+    .MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED
+    ? process.env.MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED === 'true'
+    : false;
+
+const MAX_BRANCH_SIZE: number =
+    process.env.MAX_BRANCH_SIZE === 'Infinity'
+        ? Infinity
+        : process.env.MAX_BRANCH_SIZE
+        ? parseInt(process.env.MAX_BRANCH_SIZE)
+        : Infinity;
+
+const RATE_LIMIT_WINDOW_MS: number = process.env.RATE_LIMIT_WINDOW_MS
+    ? parseInt(process.env.RATE_LIMIT_WINDOW_MS)
+    : null;
+
+const RATE_LIMIT_MAX: number = process.env.RATE_LIMIT_MAX
+    ? parseInt(process.env.RATE_LIMIT_MAX)
+    : null;
+
+const REDIS_RATE_LIMIT_PREFIX: string =
+    process.env.REDIS_RATE_LIMIT_PREFIX || 'rl:';
 
 console.log('[handler] Using Redis.');
 
@@ -157,9 +185,15 @@ export async function webhook(
         };
     }
 
-    const [server, cleanup] = getCausalRepoServer(event);
+    const [server, cleanup, rateLimiter] = getCausalRepoServer(event);
     let errored = false;
     try {
+        const rateLimitResult = await rateLimit(rateLimiter, event);
+        if (!rateLimitResult.success) {
+            // TODO: Send a response
+            return;
+        }
+
         const domain = event.requestContext.domainName;
         const url = `https://${domain}${event.path}`;
         const data = JSON.parse(event.body);
@@ -211,8 +245,19 @@ export async function instData(
         };
     }
 
-    const [server, cleanup] = getCausalRepoServer(event);
+    const [server, cleanup, rateLimiter] = getCausalRepoServer(event);
     try {
+        const rateLimitResult = await rateLimit(rateLimiter, event);
+        if (!rateLimitResult.success) {
+            // TODO: Send a response
+            return {
+                statusCode: 429,
+                headers: {
+                    'Retry-After': rateLimitResult.retryAfterSeconds,
+                },
+            };
+        }
+
         const data = await server.getBranchData(branch);
 
         return {
@@ -256,9 +301,15 @@ async function processUpload(
         message[1],
         uploadUrl,
     ];
-    const [server, cleanup] = getCausalRepoServer(event);
+    const [server, cleanup, rateLimiter] = getCausalRepoServer(event);
 
     try {
+        const rateLimitResult = await rateLimit(rateLimiter, event);
+        if (!rateLimitResult.success) {
+            // TODO: Send a response
+            return;
+        }
+
         if (!server.messenger.sendRaw) {
             throw new Error(
                 'The messenger must implement sendRaw() to support AWS lambda!'
@@ -289,8 +340,14 @@ async function login(event: APIGatewayProxyEvent, packet: LoginPacket) {
 
     console.log('[handler] Logging in...');
 
-    const [server, cleanup] = getCausalRepoServer(event);
+    const [server, cleanup, rateLimiter] = getCausalRepoServer(event);
     try {
+        const rateLimitResult = await rateLimit(rateLimiter, event);
+        if (!rateLimitResult.success) {
+            // TODO: Send a response
+            return;
+        }
+
         await server.connect({
             connectionId: event.requestContext.connectionId,
             sessionId: packet.sessionId,
@@ -319,8 +376,14 @@ async function messagePacket(
     event: APIGatewayProxyEvent,
     packet: MessagePacket
 ) {
-    const [server, cleanup] = getCausalRepoServer(event);
+    const [server, cleanup, rateLimiter] = getCausalRepoServer(event);
     try {
+        const rateLimitResult = await rateLimit(rateLimiter, event);
+        if (!rateLimitResult.success) {
+            // TODO: Send a response
+            return;
+        }
+
         const message: Message = {
             name: <any>packet.channel,
             data: packet.data,
@@ -362,22 +425,32 @@ function getCausalRepoServer(event: APIGatewayProxyEvent) {
 
 function createCausalRepoServer(event: APIGatewayProxyEvent) {
     console.log('[handler] Creating redis server!');
-    const [redisClient, cleanup] = createRedis();
+    const [redisClient, cleanup, rateLimiter] = createRedis();
     const connectionStore = new RedisConnectionStore(
         REDIS_NAMESPACE,
         redisClient
     );
 
+    const atomStore = new RedisAtomStore(REDIS_NAMESPACE, redisClient);
+    const messenger = new ApiGatewayMessenger(
+        callbackUrl(event),
+        connectionStore
+    );
+    const updatesStore = new RedisUpdatesStore(REDIS_NAMESPACE, redisClient);
+    updatesStore.maxBranchSizeInBytes = MAX_BRANCH_SIZE;
+    const server = new ApiaryCausalRepoServer(
+        connectionStore,
+        atomStore,
+        messenger,
+        updatesStore
+    );
+    server.mergeUpdatesOnMaxSizeExceeded = MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED;
     const result = [
-        new ApiaryCausalRepoServer(
-            connectionStore,
-            new RedisAtomStore(REDIS_NAMESPACE, redisClient),
-            new ApiGatewayMessenger(callbackUrl(event), connectionStore),
-            new RedisUpdatesStore(REDIS_NAMESPACE, redisClient)
-        ),
+        server,
         () => {
             cleanup();
         },
+        rateLimiter,
     ] as const;
 
     console.log('[handler] Server created!');
@@ -402,6 +475,31 @@ function createRedis() {
             return Math.min(options.attempt * 100, 3000);
         },
     });
+
+    let rateLimit: RedisRateLimitStore | null = null;
+    if (RATE_LIMIT_MAX !== null && RATE_LIMIT_WINDOW_MS !== null) {
+        console.log(
+            `[handler] Enabling rate limiting! (Window: ${RATE_LIMIT_WINDOW_MS} Max: ${RATE_LIMIT_MAX})`
+        );
+        rateLimit = new RedisRateLimitStore({
+            sendCommand: (command: string, ...args: (string | number)[]) => {
+                return new Promise((resolve, reject) => {
+                    client.sendCommand(command, args, (err, result) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(result);
+                        }
+                    });
+                });
+            },
+        });
+        rateLimit.prefix = REDIS_RATE_LIMIT_PREFIX;
+        rateLimit.init({
+            windowMs: RATE_LIMIT_WINDOW_MS,
+        } as any);
+    }
+
     return [
         client,
         () => {
@@ -411,6 +509,7 @@ function createRedis() {
                 console.error(err);
             }
         },
+        rateLimit,
     ] as const;
 }
 
@@ -420,4 +519,27 @@ function callbackUrl(event: APIGatewayProxyEvent): string {
     }
 
     return process.env.WEBSOCKET_URL || 'https://websocket.casualos.com';
+}
+
+async function rateLimit(
+    rateLimiter: RedisRateLimitStore,
+    event: APIGatewayProxyEvent
+) {
+    if (rateLimiter) {
+        const ip = event.requestContext.identity.sourceIp;
+        const result = await rateLimiter.increment(ip);
+        if (result.totalHits > RATE_LIMIT_MAX) {
+            console.log(
+                `[handler] [${ip}] [${result.totalHits}] Rate limit exceeded!`
+            );
+            return {
+                success: false,
+                retryAfterSeconds: Math.ceil(RATE_LIMIT_WINDOW_MS / 1000),
+            };
+        }
+    }
+
+    return {
+        success: true,
+    };
 }
