@@ -279,7 +279,7 @@ export class FileRecordsController {
     /**
      * Attempts to retrieve a URL that allows the client to read the given file.
      * @param recordKeyOrRecordName The name of the record or the record key of the record.
-     * @param fileName THe name of the file.
+     * @param fileName The name of the file.
      * @param subjectId The ID of the user that is making this request. Null if the user is not logged in.
      */
     async readFile(
@@ -311,13 +311,16 @@ export class FileRecordsController {
 
             const markers = getMarkersOrDefault(fileResult.markers);
 
-            const result = await this._policies.authorizeRequest({
-                action: 'file.read',
-                ...baseRequest,
-                fileSizeInBytes: fileResult.sizeInBytes,
-                fileMimeType: getType(fileResult.fileName),
-                resourceMarkers: markers,
-            });
+            const result = await this._policies.authorizeRequestUsingContext(
+                context.context,
+                {
+                    action: 'file.read',
+                    ...baseRequest,
+                    fileSizeInBytes: fileResult.sizeInBytes,
+                    fileMimeType: getType(fileResult.fileName),
+                    resourceMarkers: markers,
+                }
+            );
 
             if (result.allowed === false) {
                 return returnAuthorizationResult(result);
@@ -331,7 +334,7 @@ export class FileRecordsController {
                     success: false,
                     errorCode: 'not_logged_in',
                     errorMessage:
-                        'The user must be logged in in order to erase files.',
+                        'The user must be logged in in order to read files.',
                 };
             }
 

@@ -446,6 +446,15 @@ export class RecordsHttpServer {
                 this._allowedApiOrigins
             );
         } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/file'
+        ) {
+            return formatResponse(
+                request,
+                await this._readFile(request),
+                this._allowedApiOrigins
+            );
+        } else if (
             request.method === 'DELETE' &&
             request.path === '/api/v2/records/file'
         ) {
@@ -802,6 +811,76 @@ export class RecordsHttpServer {
             headers: {},
         });
 
+        return returnResult(result);
+    }
+
+    private async _readFile(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        let { fileUrl, recordName, fileName } = request.query || {};
+
+        if (!!fileUrl && typeof fileUrl !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'fileUrl must be a string.',
+            });
+        }
+        if (!!recordName && typeof recordName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'recordName must be a string.',
+            });
+        }
+        if (!!fileName && typeof fileName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'fileName must be a string.',
+            });
+        }
+
+        if (!fileUrl && (!recordName || !fileName)) {
+            let message: string;
+            if (!!fileName) {
+                message = 'recordName is required when fileName is provided.';
+            } else if (!!recordName) {
+                message = 'fileName is required when recordName is provided.';
+            } else {
+                message =
+                    'fileUrl or both recordName and fileName are required.';
+            }
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: message,
+            });
+        }
+
+        const validation = await this._validateSessionKey(request);
+        if (
+            validation.success === false &&
+            validation.errorCode !== 'no_session_key'
+        ) {
+            return returnResult(validation);
+        }
+        const userId = validation.userId;
+
+        if (!!fileUrl) {
+            const fileNameResult = await this._files.getFileNameFromUrl(
+                fileUrl
+            );
+
+            if (!fileNameResult.success) {
+                return returnResult(fileNameResult);
+            }
+
+            recordName = fileNameResult.recordName;
+            fileName = fileNameResult.fileName;
+        }
+
+        const result = await this._files.readFile(recordName, fileName, userId);
         return returnResult(result);
     }
 

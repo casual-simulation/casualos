@@ -24,7 +24,6 @@ import {
 } from './PolicyPermissions';
 import { PublicRecordKeyPolicy } from './RecordsStore';
 import { PolicyStore } from './PolicyStore';
-import { UserPacket } from 'livekit-server-sdk/dist/proto/livekit_models';
 import { intersectionBy, union } from 'lodash';
 
 /**

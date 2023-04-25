@@ -3335,6 +3335,206 @@ describe('RecordsHttpServer', () => {
         );
     });
 
+    describe('GET /api/v2/records/file', () => {
+        let fileName: string;
+        let fileUrl: string;
+
+        beforeEach(async () => {
+            const fileResult = await filesController.recordFile(
+                recordKey,
+                userId,
+                {
+                    fileSha256Hex: getHash('hello'),
+                    fileByteLength: 10,
+                    fileDescription: 'desc',
+                    fileMimeType: 'application/json',
+                    headers: {},
+                    markers: ['secret'],
+                }
+            );
+            if (!fileResult.success) {
+                throw new Error('Unable to record file!');
+            }
+            fileName = fileResult.fileName;
+            fileUrl = fileResult.uploadUrl;
+        });
+
+        it('should get a link to the file with the given name', async () => {
+            policyStore.policies[recordName] = {
+                ['secret']: {
+                    permissions: [
+                        {
+                            type: 'file.read',
+                            role: 'developer',
+                        },
+                    ],
+                },
+            };
+
+            policyStore.roles[recordName] = {
+                [userId]: new Set(['developer']),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file?recordName=${recordName}&fileName=${fileName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    requestUrl: `http://localhost:9191/${recordName}/${fileName}`,
+                    requestMethod: 'GET',
+                    requestHeaders: {
+                        'record-name': recordName,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should get a link to the file at the given URL', async () => {
+            policyStore.policies[recordName] = {
+                ['secret']: {
+                    permissions: [
+                        {
+                            type: 'file.read',
+                            role: 'developer',
+                        },
+                    ],
+                },
+            };
+
+            policyStore.roles[recordName] = {
+                [userId]: new Set(['developer']),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file?fileUrl=${encodeURIComponent(
+                        fileUrl
+                    )}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    requestUrl: `http://localhost:9191/${recordName}/${fileName}`,
+                    requestMethod: 'GET',
+                    requestHeaders: {
+                        'record-name': recordName,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should support subjectless record keys', async () => {
+            const keyResult = await recordsController.createPublicRecordKey(
+                recordName,
+                'subjectless',
+                userId
+            );
+
+            if (!keyResult.success) {
+                throw new Error('Unable to create subjectless record key!');
+            }
+
+            delete apiHeaders['Authorization'];
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file?recordName=${keyResult.recordKey}&fileName=${fileName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    requestUrl: `http://localhost:9191/${recordName}/${fileName}`,
+                    requestMethod: 'GET',
+                    requestHeaders: {
+                        'record-name': recordName,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request if given a fileName but no recordName', async () => {
+            const result = await server.handleRequest(
+                httpGet(`/api/v2/records/file?fileName=${fileName}`, apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'recordName is required when fileName is provided.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request if given given a recordName but no fileName', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'fileName is required when recordName is provided.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request if given neither a recordName or a fileName', async () => {
+            const result = await server.handleRequest(
+                httpGet(`/api/v2/records/file`, apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'fileUrl or both recordName and fileName are required.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testAuthorization(
+            () =>
+                httpGet(
+                    `/api/v2/records/file?recordName=${recordName}&fileName=${fileName}`,
+                    apiHeaders
+                ),
+            'The user must be logged in. Please provide a sessionKey or a recordKey.'
+        );
+
+        testRateLimit('GET', `/api/v2/records/file`);
+    });
+
     describe('OPTIONS /api/v2/records/file/*', () => {
         it('should return Access-Control-Allow-Headers with the headers that the file store returns', async () => {
             const result = await server.handleRequest(
