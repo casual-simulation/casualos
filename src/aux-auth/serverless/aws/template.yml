@@ -217,6 +217,16 @@ Resources:
                     Properties:
                         Path: /api/v2/records/file
                         Method: DELETE
+                ReadFile:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/file
+                        Method: GET
+                UpdateFile:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/file
+                        Method: PUT
                 AddEventCount:
                     Type: Api
                     Properties:
