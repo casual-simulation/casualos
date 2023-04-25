@@ -3535,6 +3535,280 @@ describe('RecordsHttpServer', () => {
         testRateLimit('GET', `/api/v2/records/file`);
     });
 
+    describe('PUT /api/v2/records/file', () => {
+        let fileName: string;
+        let fileUrl: string;
+
+        beforeEach(async () => {
+            const fileResult = await filesController.recordFile(
+                recordKey,
+                userId,
+                {
+                    fileSha256Hex: getHash('hello'),
+                    fileByteLength: 10,
+                    fileDescription: 'desc',
+                    fileMimeType: 'application/json',
+                    headers: {},
+                    markers: ['secret'],
+                }
+            );
+            if (!fileResult.success) {
+                throw new Error('Unable to record file!');
+            }
+            fileName = fileResult.fileName;
+            fileUrl = fileResult.uploadUrl;
+
+            policyStore.policies[recordName] = {
+                ['secret']: {
+                    permissions: [
+                        {
+                            type: 'file.update',
+                            role: 'developer',
+                        },
+                        {
+                            type: 'policy.unassign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                },
+                ['other']: {
+                    permissions: [
+                        {
+                            type: 'file.update',
+                            role: 'developer',
+                        },
+                        {
+                            type: 'policy.assign',
+                            role: 'developer',
+                            policies: true,
+                        },
+                    ],
+                },
+            };
+
+            policyStore.roles[recordName] = {
+                [userId]: new Set(['developer']),
+            };
+        });
+
+        it('should update the markers on the file with the given URL', async () => {
+            const result = await server.handleRequest(
+                httpPut(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey,
+                        fileUrl,
+                        markers: ['other'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await filesStore.getFileRecord(recordName, fileName);
+            expect(data).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                fileName: fileName,
+                publisherId: userId,
+                subjectId: userId,
+                sizeInBytes: 10,
+                description: 'desc',
+                url: `${recordName}/${fileName}`,
+                uploaded: false,
+                markers: ['other'],
+            });
+        });
+
+        it('should support subjectless record keys', async () => {
+            const keyResult = await recordsController.createPublicRecordKey(
+                recordName,
+                'subjectless',
+                userId
+            );
+
+            if (!keyResult.success) {
+                throw new Error('Unable to create subjectless record key!');
+            }
+
+            const result = await server.handleRequest(
+                httpPut(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey: keyResult.recordKey,
+                        fileUrl,
+                        markers: ['other'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await filesStore.getFileRecord(recordName, fileName);
+            expect(data).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                fileName: fileName,
+                publisherId: userId,
+                subjectId: userId,
+                sizeInBytes: 10,
+                description: 'desc',
+                url: `${recordName}/${fileName}`,
+                uploaded: false,
+                markers: ['other'],
+            });
+        });
+
+        it('should return an unacceptable_request if given a non-string recordKey', async () => {
+            const result = await server.handleRequest(
+                httpPut(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey: 123,
+                        fileUrl,
+                        markers: ['other'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordKey must be a string.',
+                            path: ['recordKey'],
+                            received: 'number',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request if given a non-string fileUrl', async () => {
+            const result = await server.handleRequest(
+                httpPut(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey,
+                        fileUrl: 123,
+                        markers: ['other'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'fileUrl must be a string.',
+                            path: ['fileUrl'],
+                            received: 'number',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request if given a non-array markers', async () => {
+            const result = await server.handleRequest(
+                httpPut(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey,
+                        fileUrl,
+                        markers: 123,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'array',
+                            message: 'markers must be an array of strings.',
+                            path: ['markers'],
+                            received: 'number',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('PUT', '/api/v2/records/file', () =>
+            JSON.stringify({
+                recordKey,
+                fileUrl,
+                markers: ['test'],
+            })
+        );
+        testAuthorization(
+            () =>
+                httpPut(
+                    '/api/v2/records/file',
+                    JSON.stringify({
+                        recordKey,
+                        fileUrl,
+                        markers: ['test'],
+                    }),
+                    apiHeaders
+                ),
+            'The user must be logged in in order to update files.'
+        );
+
+        testBodyIsJson((body) =>
+            httpPut('/api/v2/records/file', body, apiHeaders)
+        );
+        testRateLimit('PUT', `/api/v2/records/file`, () =>
+            JSON.stringify({
+                recordKey,
+                fileUrl,
+                markers: ['test'],
+            })
+        );
+    });
+
     describe('OPTIONS /api/v2/records/file/*', () => {
         it('should return Access-Control-Allow-Headers with the headers that the file store returns', async () => {
             const result = await server.handleRequest(

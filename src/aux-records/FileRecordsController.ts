@@ -218,13 +218,16 @@ export class FileRecordsController {
 
             const markers = getMarkersOrDefault(fileResult.markers);
 
-            const result = await this._policies.authorizeRequest({
-                action: 'file.delete',
-                ...baseRequest,
-                fileSizeInBytes: fileResult.sizeInBytes,
-                fileMimeType: getType(fileResult.fileName),
-                resourceMarkers: markers,
-            });
+            const result = await this._policies.authorizeRequestUsingContext(
+                context.context,
+                {
+                    action: 'file.delete',
+                    ...baseRequest,
+                    fileSizeInBytes: fileResult.sizeInBytes,
+                    fileMimeType: getType(fileResult.fileName),
+                    resourceMarkers: markers,
+                }
+            );
 
             if (result.allowed === false) {
                 return returnAuthorizationResult(result);
@@ -411,18 +414,33 @@ export class FileRecordsController {
 
             const resourceMarkers = markers ?? existingMarkers;
 
-            const result = await this._policies.authorizeRequest({
-                action: 'file.update',
-                ...baseRequest,
-                existingMarkers,
-                addedMarkers,
-                removedMarkers,
-                fileSizeInBytes: fileResult.sizeInBytes,
-                fileMimeType: getType(fileResult.fileName),
-            });
+            const result = await this._policies.authorizeRequestUsingContext(
+                context.context,
+                {
+                    action: 'file.update',
+                    ...baseRequest,
+                    existingMarkers,
+                    addedMarkers,
+                    removedMarkers,
+                    fileSizeInBytes: fileResult.sizeInBytes,
+                    fileMimeType: getType(fileResult.fileName),
+                }
+            );
 
             if (result.allowed === false) {
                 return returnAuthorizationResult(result);
+            }
+
+            const policy = result.subject.subjectPolicy;
+            subjectId = result.subject.userId;
+
+            if (!subjectId && policy !== 'subjectless') {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in in order to update files.',
+                };
             }
 
             const updateResult = await this._store.updateFileRecord(

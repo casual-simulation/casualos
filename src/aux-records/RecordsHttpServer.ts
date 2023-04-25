@@ -473,6 +473,15 @@ export class RecordsHttpServer {
                 this._allowedApiOrigins
             );
         } else if (
+            request.method === 'PUT' &&
+            request.path === '/api/v2/records/file'
+        ) {
+            return formatResponse(
+                request,
+                await this._updateFile(request),
+                this._allowedApiOrigins
+            );
+        } else if (
             request.method === 'OPTIONS' &&
             request.path.startsWith('/api/v2/records/file/')
         ) {
@@ -811,6 +820,71 @@ export class RecordsHttpServer {
             headers: {},
         });
 
+        return returnResult(result);
+    }
+
+    private async _updateFile(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            recordKey: RECORD_KEY_VALIDATION,
+            fileUrl: z
+                .string({
+                    invalid_type_error: 'fileUrl must be a string.',
+                    required_error: 'fileUrl is required.',
+                })
+                .nonempty('fileUrl must be non-empty.'),
+            markers: z
+                .array(z.string(), {
+                    invalid_type_error: 'markers must be an array of strings.',
+                    required_error: 'markers is required.',
+                })
+                .nonempty('markers must be non-empty.'),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const validation = await this._validateSessionKey(request);
+        if (
+            validation.success === false &&
+            validation.errorCode !== 'no_session_key'
+        ) {
+            return returnResult(validation);
+        }
+        const userId = validation.userId;
+
+        const fileNameResult = await this._files.getFileNameFromUrl(
+            parseResult.data.fileUrl
+        );
+
+        if (!fileNameResult.success) {
+            return returnResult(fileNameResult);
+        }
+
+        const result = await this._files.updateFile(
+            parseResult.data.recordKey,
+            fileNameResult.fileName,
+            userId,
+            parseResult.data.markers
+        );
         return returnResult(result);
     }
 

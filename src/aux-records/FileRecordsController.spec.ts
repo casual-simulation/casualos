@@ -1006,6 +1006,66 @@ describe('FileRecordsController', () => {
                 url: expect.any(String),
             });
         });
+
+        it('should reject the request if trying to update files without a subjectId', async () => {
+            presignReadMock.mockResolvedValueOnce({
+                success: true,
+                requestUrl: 'testUrl',
+                requestMethod: 'GET',
+                requestHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            await store.addFileRecord(
+                recordName,
+                'testFile.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+
+            await store.addFileRecord(
+                recordName,
+                'testFile.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+
+            const result = (await manager.updateFile(
+                key,
+                'testFile.txt',
+                null,
+                ['secret']
+            )) as UpdateFileFailure;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_logged_in',
+                errorMessage:
+                    'The user must be logged in in order to update files.',
+            });
+
+            await expect(
+                store.getFileRecord(recordName, 'testFile.txt')
+            ).resolves.toEqual({
+                success: true,
+                description: 'description',
+                fileName: 'testFile.txt',
+                publisherId: 'publisherId',
+                recordName: recordName,
+                sizeInBytes: 100,
+                subjectId: 'subjectId',
+                markers: [PUBLIC_READ_MARKER],
+                uploaded: false,
+                url: 'testRecord/testFile.txt',
+            });
+        });
     });
 
     describe('getFileNameFromUrl()', () => {
