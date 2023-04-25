@@ -23,3 +23,4 @@ export * from './SubscriptionController';
 export * from './StripeInterface';
 
 export * from './MemoryRateLimiter';
+export * from './RateLimitController';

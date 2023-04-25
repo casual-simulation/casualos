@@ -15,6 +15,7 @@ import {
     CreateManageSubscriptionRequest,
     SubscriptionController,
 } from './SubscriptionController';
+import { RateLimitController } from './RateLimitController';
 
 /**
  * Defines an interface for a generic HTTP request.
@@ -156,6 +157,7 @@ export class RecordsHttpServer {
      * The set of origins that are allowed for account management requests.
      */
     private _allowedAccountOrigins: Set<string>;
+    private _rateLimit: RateLimitController;
 
     constructor(
         allowedAccountOrigins: Set<string>,
@@ -167,7 +169,8 @@ export class RecordsHttpServer {
         dataController: DataRecordsController,
         manualDataController: DataRecordsController,
         filesController: FileRecordsController,
-        subscriptionController: SubscriptionController
+        subscriptionController: SubscriptionController,
+        rateLimitController: RateLimitController
     ) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -179,6 +182,7 @@ export class RecordsHttpServer {
         this._manualData = manualDataController;
         this._files = filesController;
         this._subscriptions = subscriptionController;
+        this._rateLimit = rateLimitController;
     }
 
     /**
@@ -188,6 +192,31 @@ export class RecordsHttpServer {
     async handleRequest(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
+        let skipRateLimitCheck = false;
+        if (request.method == 'POST' && request.path === '/api/stripeWebhook') {
+            skipRateLimitCheck = true;
+        }
+
+        if (!skipRateLimitCheck) {
+            const response = await this._rateLimit.checkRateLimit({
+                ipAddress: request.ipAddress,
+            });
+
+            if (response.success === false) {
+                if (response.errorCode === 'rate_limit_exceeded') {
+                    return formatResponse(
+                        request,
+                        returnResult(response),
+                        true
+                    );
+                } else {
+                    console.log(
+                        '[RecordsHttpServer] Rate limit check failed. Allowing request to continue.'
+                    );
+                }
+            }
+        }
+
         if (
             request.method === 'GET' &&
             request.path.startsWith('/api/') &&

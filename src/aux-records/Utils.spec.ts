@@ -473,6 +473,7 @@ describe('getStatusCode()', () => {
         ['other', 400] as const,
         ['price_does_not_match', 412] as const,
         ['user_is_banned', 403] as const,
+        ['rate_limit_exceeded', 429] as const,
     ];
 
     it.each(cases)('should map error code %s to %s', (code, expectedStatus) => {
