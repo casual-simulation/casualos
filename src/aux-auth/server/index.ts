@@ -200,13 +200,17 @@ async function start() {
     const eventManager = new EventRecordsController(recordsManager, eventStore);
 
     const rateLimiter = new MongoDBRateLimiter(rateLimits);
-    const rateManager =
-        RATE_LIMIT_MAX && RATE_LIMIT_WINDOW_MS
-            ? new RateLimitController(rateLimiter, {
-                  maxHits: RATE_LIMIT_MAX,
-                  windowMs: RATE_LIMIT_WINDOW_MS,
-              })
-            : null;
+    let rateManager: RateLimitController = null;
+
+    if (RATE_LIMIT_MAX && RATE_LIMIT_WINDOW_MS) {
+        console.log('[AuxAuth] Enabling rate limiting.');
+        rateManager = new RateLimitController(rateLimiter, {
+            maxHits: RATE_LIMIT_MAX,
+            windowMs: RATE_LIMIT_WINDOW_MS,
+        });
+    } else {
+        console.log('[AuxAuth] Disabling rate limiting.');
+    }
 
     const manualDataStore = new MongoDBDataRecordsStore(
         manualRecordsDataCollection
