@@ -64,11 +64,6 @@ const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
 const LIVEKIT_SECRET_KEY = process.env.LIVEKIT_SECRET_KEY;
 const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT;
 
-// const USERS_TABLE = process.env.USERS_TABLE;
-
-// const EMAIL_TABLE = process.env.EMAIL_TABLE;
-// const SMS_TABLE = process.env.SMS_TABLE;
-
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? null;
 const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY ?? null;
 const SUBSCRIPTION_CONFIG = process.env.SUBSCRIPTION_CONFIG ?? null;
@@ -224,7 +219,8 @@ const httpServer = new RecordsHttpServer(
     dataController,
     manualDataController,
     filesController,
-    subscriptionController
+    subscriptionController,
+    null // Don't use a rate limiter
 );
 
 async function handleEventBridgeEvent(event: EventBridgeEvent<any, any>) {

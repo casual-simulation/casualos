@@ -3951,6 +3951,33 @@ describe('RecordsHttpServer', () => {
                 },
             });
         });
+
+        it('should skip rate limit checks if the server has no rate limiter', async () => {
+            jest.useFakeTimers({
+                now: 0,
+            });
+
+            server = new RecordsHttpServer(
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                null as any
+            );
+
+            await rateLimiter.increment(ip, 100);
+
+            const request = createRequest();
+            const result = await server.handleRequest(request);
+
+            expect(result.statusCode).not.toEqual(429);
+        });
     }
 
     function httpGet(

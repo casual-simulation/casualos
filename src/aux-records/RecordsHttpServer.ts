@@ -193,7 +193,12 @@ export class RecordsHttpServer {
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
         let skipRateLimitCheck = false;
-        if (request.method == 'POST' && request.path === '/api/stripeWebhook') {
+        if (!this._rateLimit) {
+            skipRateLimitCheck = true;
+        } else if (
+            request.method == 'POST' &&
+            request.path === '/api/stripeWebhook'
+        ) {
             skipRateLimitCheck = true;
         }
 
