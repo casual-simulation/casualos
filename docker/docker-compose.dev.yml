@@ -38,7 +38,7 @@ services:
     livekit:
         image: livekit/livekit-server:latest
         command: --config /etc/livekit.yaml
-        restart: unless-stopped
+        restart: always
         depends_on:
             - redis
         ports:

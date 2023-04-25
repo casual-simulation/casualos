@@ -40,6 +40,14 @@ Parameters:
         Type: String
         Description: Whether instance updates should be merged when the space size limit is exceeded.
         Default: 'false'
+    RateLimitMaxParameter:
+        Type: String
+        Description: The maximum number of requests that can be made from an IP address over the window. If set to an empty string, then there is no rate limiting.
+        Default: ''
+    RateLimitWindowMSParameter:
+        Type: String
+        Description: The window, in milliseconds, that requests are allowed to be made over for rate limiting. i.e. if set to 1000, then RateLimitMaxParameter number of requests can be made over 1 second. If set to an empty string, then there is no rate limiting.
+        Default: ''
     WebsocketURLParameter:
         Type: String
         Description: The URL of the API Gateway endpoint that server messages should be sent through.
@@ -291,6 +299,8 @@ Resources:
                     MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED: !Ref MergeUpdatesOnMaxSizeExceededParameter
                     WEBSOCKET_URL: !Ref WebsocketURLParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
+                    RATE_LIMIT_MAX: !Ref RateLimitMaxParameter
+                    RATE_LIMIT_WINDOW_MS: !Ref RateLimitWindowMSParameter
     HandleMessagePermission:
         Type: AWS::Lambda::Permission
         DependsOn:

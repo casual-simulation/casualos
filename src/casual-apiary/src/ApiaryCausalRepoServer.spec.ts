@@ -2173,7 +2173,7 @@ describe('ApiaryCausalRepoServer', () => {
         });
 
         it.only('should merge updates when the max size was exceeded if configured', async () => {
-            updateStore.maxAllowedInstSize = 180;
+            updateStore.maxAllowedInstSize = 150;
             server.mergeUpdatesOnMaxSizeExceeded = true;
 
             let createdUpdates = [] as string[];
@@ -2181,6 +2181,7 @@ describe('ApiaryCausalRepoServer', () => {
                 type: 'yjs',
             });
 
+            p.doc.clientID = 9999;
             p.doc.on('update', (update: Uint8Array) => {
                 createdUpdates.push(fromByteArray(update));
             });

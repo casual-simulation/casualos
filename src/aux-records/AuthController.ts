@@ -1019,12 +1019,12 @@ export class AuthController {
 
             let sub: SubscriptionConfiguration['subscriptions'][0];
             if (result.subscriptionId) {
-                sub = this._subscriptionConfig.subscriptions.find(
+                sub = this._subscriptionConfig?.subscriptions.find(
                     (s) => s.id === result.subscriptionId
                 );
             }
             if (!sub) {
-                sub = this._subscriptionConfig.subscriptions.find(
+                sub = this._subscriptionConfig?.subscriptions.find(
                     (s) => s.defaultSubscription
                 );
                 if (sub) {
@@ -1035,7 +1035,7 @@ export class AuthController {
             }
 
             if (!sub) {
-                sub = this._subscriptionConfig.subscriptions[0];
+                sub = this._subscriptionConfig?.subscriptions[0];
                 if (sub) {
                     console.log(
                         '[AuthController] [getUserInfo] Using first subscription for user.'

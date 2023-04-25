@@ -374,6 +374,8 @@ export function getStatusCode(
             return 412;
         } else if (response.errorCode === 'user_is_banned') {
             return 403;
+        } else if (response.errorCode === 'rate_limit_exceeded') {
+            return 429;
         } else {
             return 400;
         }
