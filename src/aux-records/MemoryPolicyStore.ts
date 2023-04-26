@@ -4,7 +4,12 @@ import {
     PolicyDocument,
     PUBLIC_READ_MARKER,
 } from './PolicyPermissions';
-import { PolicyStore } from './PolicyStore';
+import {
+    GetUserPolicyResult,
+    PolicyStore,
+    UpdateUserPolicyResult,
+    UserPolicy,
+} from './PolicyStore';
 
 /**
  * Defines a class that represents an in-memory implementation of a PolicyStore.
@@ -12,7 +17,10 @@ import { PolicyStore } from './PolicyStore';
 export class MemoryPolicyStore implements PolicyStore {
     policies: {
         [recordName: string]: {
-            [marker: string]: PolicyDocument;
+            [marker: string]: {
+                document: PolicyDocument;
+                markers: string[];
+            };
         };
     };
 
@@ -27,6 +35,46 @@ export class MemoryPolicyStore implements PolicyStore {
         this.roles = {};
     }
 
+    async getUserPolicy(
+        recordName: string,
+        marker: string
+    ): Promise<GetUserPolicyResult> {
+        const policy = this.policies[recordName]?.[marker];
+
+        if (!policy) {
+            return {
+                success: false,
+                errorCode: 'policy_not_found',
+                errorMessage: 'The policy was not found.',
+            };
+        }
+
+        return {
+            success: true,
+            document: policy.document,
+            markers: policy.markers,
+        };
+    }
+
+    async updateUserPolicy(
+        recordName: string,
+        marker: string,
+        policy: UserPolicy
+    ): Promise<UpdateUserPolicyResult> {
+        if (!this.policies[recordName]) {
+            this.policies[recordName] = {};
+        }
+
+        this.policies[recordName][marker] = {
+            document: policy.document,
+            markers: policy.markers,
+        };
+
+        return {
+            success: true,
+        };
+    }
+
     async listPoliciesForMarker(
         recordName: string,
         marker: string
@@ -37,7 +85,7 @@ export class MemoryPolicyStore implements PolicyStore {
         }
         const policy = this.policies[recordName]?.[marker];
         if (policy) {
-            policies.push(policy);
+            policies.push(policy.document);
         }
         return policies;
     }

@@ -23,8 +23,12 @@ import {
     ACCOUNT_MARKER,
 } from './PolicyPermissions';
 import { PublicRecordKeyPolicy } from './RecordsStore';
-import { PolicyStore } from './PolicyStore';
-import { intersectionBy, union } from 'lodash';
+import {
+    PolicyStore,
+    UpdateUserPolicyFailure,
+    UserPolicy,
+} from './PolicyStore';
+import { intersectionBy, isEqual, union } from 'lodash';
 
 /**
  * The maximum number of instances that can be authorized at once.
@@ -169,6 +173,112 @@ export class PolicyController {
             console.error('[PolicyController] A server error occurred.', err);
             return {
                 allowed: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async grantMarkerPermission(
+        request: GrantMarkerPermissionRequest
+    ): Promise<GrantMarkerPermissionResponse> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: request.recordKeyOrRecordName,
+                userId: request.userId,
+            };
+            const context = await this.constructAuthorizationContext(
+                baseRequest
+            );
+            if (context.success === false) {
+                return {
+                    success: false,
+                    errorCode: context.errorCode,
+                    errorMessage: context.errorMessage,
+                };
+            }
+
+            const authorization = await this.authorizeRequestUsingContext(
+                context.context,
+                {
+                    action: 'policy.grantPermission',
+                    ...baseRequest,
+                    policy: request.marker,
+                }
+            );
+
+            if (authorization.allowed === false) {
+                return returnAuthorizationResult(authorization);
+            }
+
+            const policyResult = await this._policies.getUserPolicy(
+                context.context.recordName,
+                request.marker
+            );
+
+            if (
+                policyResult.success === false &&
+                policyResult.errorCode !== 'policy_not_found'
+            ) {
+                console.log(
+                    `[PolicyController] Failure while retrieving policy for ${context.context.recordName} and ${request.marker}.`,
+                    policyResult
+                );
+                return {
+                    success: false,
+                    errorCode: policyResult.errorCode,
+                    errorMessage: policyResult.errorMessage,
+                };
+            }
+
+            const policy: UserPolicy = policyResult.success
+                ? policyResult
+                : {
+                      document: {
+                          permissions: [],
+                      },
+                      markers: [ACCOUNT_MARKER],
+                  };
+
+            let alreadyExists = false;
+            for (let permission of policy.document.permissions) {
+                if (isEqual(permission, request.permission)) {
+                    alreadyExists = true;
+                    break;
+                }
+            }
+
+            if (!alreadyExists) {
+                console.log(
+                    `[PolicyController] Adding permission to policy for ${context.context.recordName} and ${request.marker}.`,
+                    request.permission
+                );
+                policy.document.permissions.push(request.permission);
+                const updateResult = await this._policies.updateUserPolicy(
+                    context.context.recordName,
+                    request.marker,
+                    {
+                        document: policy.document,
+                        markers: policy.markers,
+                    }
+                );
+
+                if (updateResult.success === false) {
+                    console.log(
+                        `[PolicyController] Policy update failed:`,
+                        updateResult
+                    );
+                    return updateResult;
+                }
+            }
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error('[PolicyController] A server error occurred.', err);
+            return {
+                success: false,
                 errorCode: 'server_error',
                 errorMessage: 'A server error occurred.',
             };
@@ -3146,4 +3256,28 @@ export interface NoMarkersRemainingDenialReason {
 
 export interface TooManyInstsDenialReason {
     type: 'too_many_insts';
+}
+
+export interface GrantMarkerPermissionRequest {
+    recordKeyOrRecordName: string;
+    userId: string;
+    marker: string;
+    permission: AvailablePermissions;
+}
+
+export type GrantMarkerPermissionResponse =
+    | GrantMarkerPermissionSuccess
+    | GrantMarkerPermissionFailure;
+
+export interface GrantMarkerPermissionSuccess {
+    success: true;
+}
+
+export interface GrantMarkerPermissionFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | AuthorizeDenied['errorCode']
+        | UpdateUserPolicyFailure['errorCode'];
+    errorMessage: string;
 }

@@ -210,7 +210,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -281,7 +284,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['other']: otherPolicy,
+                    ['other']: {
+                        document: otherPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -324,7 +330,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -374,7 +383,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -438,7 +450,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -486,7 +501,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -529,7 +547,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -971,7 +992,10 @@ describe('PolicyController', () => {
 
                 store.policies = {
                     [recordName]: {
-                        ['secret']: secretPolicy,
+                        ['secret']: {
+                            document: secretPolicy,
+                            markers: [ACCOUNT_MARKER],
+                        },
                     },
                 };
 
@@ -1005,7 +1029,10 @@ describe('PolicyController', () => {
 
                 store.policies = {
                     [recordName]: {
-                        ['secret']: secretPolicy,
+                        ['secret']: {
+                            document: secretPolicy,
+                            markers: [ACCOUNT_MARKER],
+                        },
                     },
                 };
 
@@ -1039,7 +1066,10 @@ describe('PolicyController', () => {
 
                 store.policies = {
                     [recordName]: {
-                        ['public']: publicPolicy,
+                        ['public']: {
+                            document: publicPolicy,
+                            markers: [ACCOUNT_MARKER],
+                        },
                     },
                 };
 
@@ -1113,7 +1143,10 @@ describe('PolicyController', () => {
 
                 store.policies = {
                     [recordName]: {
-                        ['secret']: secretPolicy,
+                        ['secret']: {
+                            document: secretPolicy,
+                            markers: [ACCOUNT_MARKER],
+                        },
                     },
                 };
 
@@ -1160,7 +1193,10 @@ describe('PolicyController', () => {
 
                 store.policies = {
                     [recordName]: {
-                        ['secret']: secretPolicy,
+                        ['secret']: {
+                            document: secretPolicy,
+                            markers: [ACCOUNT_MARKER],
+                        },
                     },
                 };
 
@@ -1535,7 +1571,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -1592,7 +1631,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -1643,7 +1685,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -1696,8 +1741,14 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
-                    ['test']: testPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    ['test']: {
+                        document: testPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -1756,8 +1807,14 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
-                    ['test']: testPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    ['test']: {
+                        document: testPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -1816,8 +1873,14 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
-                    ['test']: testPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    ['test']: {
+                        document: testPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -1876,8 +1939,14 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
-                    ['test']: testPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    ['test']: {
+                        document: testPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -1937,7 +2006,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -1985,7 +2057,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -2044,8 +2119,14 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
-                    ['other']: otherPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    ['other']: {
+                        document: otherPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -2550,7 +2631,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -2607,7 +2691,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -2658,7 +2745,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -2717,7 +2807,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -3190,7 +3283,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -3265,7 +3361,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -3338,7 +3437,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -3454,7 +3556,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -4368,7 +4473,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -4438,7 +4546,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -4487,7 +4598,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -4553,7 +4667,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -4603,7 +4720,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -4668,7 +4788,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -4717,7 +4840,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -4766,7 +4892,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -4809,7 +4938,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -5002,18 +5134,21 @@ describe('PolicyController', () => {
 
                 store.policies[recordName] = {
                     secret: {
-                        permissions: [
-                            {
-                                type: 'file.create',
-                                role: 'developer',
-                                maxFileSizeInBytes: 100,
-                            },
-                            {
-                                type: 'policy.assign',
-                                role: 'developer',
-                                policies: true,
-                            },
-                        ],
+                        document: {
+                            permissions: [
+                                {
+                                    type: 'file.create',
+                                    role: 'developer',
+                                    maxFileSizeInBytes: 100,
+                                },
+                                {
+                                    type: 'policy.assign',
+                                    role: 'developer',
+                                    policies: true,
+                                },
+                            ],
+                        },
+                        markers: [ACCOUNT_MARKER],
                     },
                 };
 
@@ -5369,7 +5504,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -5425,7 +5563,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -5482,7 +5623,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -5556,7 +5700,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -5600,7 +5747,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -5644,7 +5794,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -5867,18 +6020,21 @@ describe('PolicyController', () => {
 
                 store.policies[recordName] = {
                     secret: {
-                        permissions: [
-                            {
-                                type: 'file.read',
-                                role: 'developer',
-                                maxFileSizeInBytes: 100,
-                            },
-                            {
-                                type: 'policy.assign',
-                                role: 'developer',
-                                policies: true,
-                            },
-                        ],
+                        document: {
+                            permissions: [
+                                {
+                                    type: 'file.read',
+                                    role: 'developer',
+                                    maxFileSizeInBytes: 100,
+                                },
+                                {
+                                    type: 'policy.assign',
+                                    role: 'developer',
+                                    policies: true,
+                                },
+                            ],
+                        },
+                        markers: [ACCOUNT_MARKER],
                     },
                 };
 
@@ -6194,7 +6350,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -6250,7 +6409,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -6301,7 +6463,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -6345,7 +6510,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -6403,7 +6571,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -6464,7 +6635,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -6693,13 +6867,16 @@ describe('PolicyController', () => {
 
                 store.policies[recordName] = {
                     secret: {
-                        permissions: [
-                            {
-                                type: 'file.delete',
-                                role: 'developer',
-                                maxFileSizeInBytes: 100,
-                            },
-                        ],
+                        document: {
+                            permissions: [
+                                {
+                                    type: 'file.delete',
+                                    role: 'developer',
+                                    maxFileSizeInBytes: 100,
+                                },
+                            ],
+                        },
+                        markers: ['secret'],
                     },
                 };
 
@@ -6980,8 +7157,14 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
-                    ['test']: testPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    ['test']: {
+                        document: testPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -7039,8 +7222,14 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
-                    ['test']: testPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    ['test']: {
+                        document: testPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -7099,8 +7288,14 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
-                    ['test']: testPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    ['test']: {
+                        document: testPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -7158,8 +7353,14 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
-                    ['test']: testPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    ['test']: {
+                        document: testPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -7235,8 +7436,14 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
-                    ['test']: testPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    ['test']: {
+                        document: testPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -7759,7 +7966,10 @@ describe('PolicyController', () => {
 
                 store.policies = {
                     [recordName]: {
-                        ['secret']: secretPolicy,
+                        ['secret']: {
+                            document: secretPolicy,
+                            markers: [ACCOUNT_MARKER],
+                        },
                     },
                 };
 
@@ -7793,7 +8003,10 @@ describe('PolicyController', () => {
 
                 store.policies = {
                     [recordName]: {
-                        ['secret']: secretPolicy,
+                        ['secret']: {
+                            document: secretPolicy,
+                            markers: [ACCOUNT_MARKER],
+                        },
                     },
                 };
 
@@ -7827,7 +8040,10 @@ describe('PolicyController', () => {
 
                 store.policies = {
                     [recordName]: {
-                        ['public']: publicPolicy,
+                        ['public']: {
+                            document: publicPolicy,
+                            markers: [ACCOUNT_MARKER],
+                        },
                     },
                 };
 
@@ -7901,7 +8117,10 @@ describe('PolicyController', () => {
 
                 store.policies = {
                     [recordName]: {
-                        ['secret']: secretPolicy,
+                        ['secret']: {
+                            document: secretPolicy,
+                            markers: [ACCOUNT_MARKER],
+                        },
                     },
                 };
 
@@ -7948,7 +8167,10 @@ describe('PolicyController', () => {
 
                 store.policies = {
                     [recordName]: {
-                        ['secret']: secretPolicy,
+                        ['secret']: {
+                            document: secretPolicy,
+                            markers: [ACCOUNT_MARKER],
+                        },
                     },
                 };
 
@@ -8323,7 +8545,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -8380,7 +8605,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -8431,7 +8659,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -8484,8 +8715,14 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
-                    ['test']: testPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    ['test']: {
+                        document: testPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -8544,8 +8781,14 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
-                    ['test']: testPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    ['test']: {
+                        document: testPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -8604,8 +8847,14 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
-                    ['test']: testPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    ['test']: {
+                        document: testPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -8664,8 +8913,14 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
-                    ['test']: testPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    ['test']: {
+                        document: testPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -8725,7 +8980,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -8773,7 +9031,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -8832,8 +9093,14 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
-                    ['other']: otherPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    ['other']: {
+                        document: otherPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -9338,7 +9605,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -9395,7 +9665,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -9446,7 +9719,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -9505,7 +9781,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    ['secret']: secretPolicy,
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -9925,7 +10204,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    [ACCOUNT_MARKER]: accountPolicy,
+                    [ACCOUNT_MARKER]: {
+                        document: accountPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -10029,7 +10311,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    [ACCOUNT_MARKER]: secretPolicy,
+                    [ACCOUNT_MARKER]: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -10396,7 +10681,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    [ACCOUNT_MARKER]: accountPolicy,
+                    [ACCOUNT_MARKER]: {
+                        document: accountPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -10500,7 +10788,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    [ACCOUNT_MARKER]: secretPolicy,
+                    [ACCOUNT_MARKER]: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -10867,7 +11158,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    [ACCOUNT_MARKER]: accountPolicy,
+                    [ACCOUNT_MARKER]: {
+                        document: accountPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -10971,7 +11265,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    [ACCOUNT_MARKER]: secretPolicy,
+                    [ACCOUNT_MARKER]: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -11336,7 +11633,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    [ACCOUNT_MARKER]: accountPolicy,
+                    [ACCOUNT_MARKER]: {
+                        document: accountPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -11437,7 +11737,10 @@ describe('PolicyController', () => {
                 };
 
                 store.policies[recordName] = {
-                    [ACCOUNT_MARKER]: secretPolicy,
+                    [ACCOUNT_MARKER]: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
                 };
 
                 const result = await controller.authorizeRequest({
@@ -11721,6 +12024,187 @@ describe('PolicyController', () => {
                 allowed: false,
                 errorCode: 'action_not_supported',
                 errorMessage: 'The given action is not supported.',
+            });
+        });
+    });
+
+    describe.only('grantPermission()', () => {
+        beforeEach(() => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should grant a permission to a role', async () => {
+            const result = await controller.grantMarkerPermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                marker: 'test',
+                permission: {
+                    type: 'data.read',
+                    role: 'developer',
+                    addresses: true,
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const policy = await store.getUserPolicy(recordName, 'test');
+
+            expect(policy).toEqual({
+                success: true,
+                document: {
+                    permissions: [
+                        {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                },
+                markers: [ACCOUNT_MARKER],
+            });
+        });
+
+        it('should do nothing if the role already has the permission', async () => {
+            store.policies[recordName] = {
+                ['test']: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'data.read',
+                                role: 'developer',
+                                addresses: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+
+            const result = await controller.grantMarkerPermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                marker: 'test',
+                permission: {
+                    type: 'data.read',
+                    role: 'developer',
+                    addresses: true,
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const policy = await store.getUserPolicy(recordName, 'test');
+
+            expect(policy).toEqual({
+                success: true,
+                document: {
+                    permissions: [
+                        {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                },
+                markers: [ACCOUNT_MARKER],
+            });
+        });
+
+        it('should add the given permission if it has different options from the existing one', async () => {
+            store.policies[recordName] = {
+                ['test']: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'data.read',
+                                role: 'developer',
+                                addresses: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+
+            const result = await controller.grantMarkerPermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                marker: 'test',
+                permission: {
+                    type: 'data.read',
+                    role: 'developer',
+                    addresses: 'abc',
+                },
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const policy = await store.getUserPolicy(recordName, 'test');
+
+            expect(policy).toEqual({
+                success: true,
+                document: {
+                    permissions: [
+                        {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: 'abc',
+                        },
+                    ],
+                },
+                markers: [ACCOUNT_MARKER],
+            });
+        });
+
+        it('should do nothing if the user is not authorized', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([]),
+            };
+
+            const result = await controller.grantMarkerPermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                marker: 'test',
+                permission: {
+                    type: 'data.read',
+                    role: 'developer',
+                    addresses: true,
+                },
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    id: userId,
+                    kind: 'user',
+                    marker: 'account',
+                    permission: 'policy.grantPermission',
+                    role: null,
+                    type: 'missing_permission',
+                },
+            });
+
+            const policy = await store.getUserPolicy(recordName, 'test');
+
+            expect(policy).toEqual({
+                success: false,
+                errorCode: 'policy_not_found',
+                errorMessage: expect.any(String),
             });
         });
     });
