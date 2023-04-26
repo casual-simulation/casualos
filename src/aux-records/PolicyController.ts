@@ -393,6 +393,72 @@ export class PolicyController {
     }
 
     /**
+     * Attempts to read the policy for a marker.
+     * @param recordKeyOrRecordName The record key or record name.
+     * @param userId The ID of the user that is currently logged in.
+     * @param marker The marker.
+     */
+    async readUserPolicy(
+        recordKeyOrRecordName: string,
+        userId: string,
+        marker: string
+    ): Promise<ReadUserPolicyResult> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: recordKeyOrRecordName,
+                userId: userId,
+            };
+            const context = await this.constructAuthorizationContext(
+                baseRequest
+            );
+            if (context.success === false) {
+                return {
+                    success: false,
+                    errorCode: context.errorCode,
+                    errorMessage: context.errorMessage,
+                };
+            }
+
+            // Fetch the policy before authorizing because we will need to know which
+            // markers are applied to the policy
+            const result = await this._policies.getUserPolicy(
+                context.context.recordName,
+                marker
+            );
+
+            if (result.success === false) {
+                return result;
+            }
+
+            const authorization = await this.authorizeRequestUsingContext(
+                context.context,
+                {
+                    action: 'policy.read',
+                    ...baseRequest,
+                    policy: marker,
+                }
+            );
+
+            if (authorization.allowed === false) {
+                return returnAuthorizationResult(authorization);
+            }
+
+            return {
+                success: true,
+                document: result.document,
+                markers: result.markers,
+            };
+        } catch (err) {
+            console.error('[PolicyController] A server error occurred.', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
      * Attempts to authorize the given request.
      * Returns a promise that resolves with information about the security properties of the request.
      * @param context The authorization context for the request.
@@ -3411,5 +3477,24 @@ export interface RevokeMarkerPermissionFailure {
         | AuthorizeDenied['errorCode']
         | GetUserPolicyFailure['errorCode']
         | UpdateUserPolicyFailure['errorCode'];
+    errorMessage: string;
+}
+
+export type ReadUserPolicyResult =
+    | ReadUserPolicySuccess
+    | ReadUserPolicyFailure;
+
+export interface ReadUserPolicySuccess {
+    success: true;
+    document: PolicyDocument;
+    markers: string[];
+}
+
+export interface ReadUserPolicyFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | AuthorizeDenied['errorCode']
+        | GetUserPolicyFailure['errorCode'];
     errorMessage: string;
 }

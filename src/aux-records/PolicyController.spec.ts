@@ -12209,7 +12209,7 @@ describe('PolicyController', () => {
         });
     });
 
-    describe.only('revokeMarkerPermission()', () => {
+    describe('revokeMarkerPermission()', () => {
         beforeEach(() => {
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -12414,6 +12414,65 @@ describe('PolicyController', () => {
                     ],
                 },
                 markers: [ACCOUNT_MARKER],
+            });
+        });
+    });
+
+    describe('readUserPolicy()', () => {
+        beforeEach(() => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            store.policies[recordName] = {
+                ['test']: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'data.read',
+                                role: 'developer',
+                                addresses: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+        });
+
+        it('should return the policy', async () => {
+            const result = await controller.readUserPolicy(
+                recordName,
+                userId,
+                'test'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                document: {
+                    permissions: [
+                        {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                },
+                markers: [ACCOUNT_MARKER],
+            });
+        });
+
+        it('should return an unsuccessful result if the policy doesnt exist', async () => {
+            const result = await controller.readUserPolicy(
+                recordName,
+                userId,
+                'does not exist'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'policy_not_found',
+                errorMessage: 'The policy was not found.',
             });
         });
     });
