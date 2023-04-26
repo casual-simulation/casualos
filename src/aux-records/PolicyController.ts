@@ -24,6 +24,7 @@ import {
 } from './PolicyPermissions';
 import { PublicRecordKeyPolicy } from './RecordsStore';
 import {
+    GetUserPolicyFailure,
     PolicyStore,
     UpdateUserPolicyFailure,
     UserPolicy,
@@ -179,6 +180,10 @@ export class PolicyController {
         }
     }
 
+    /**
+     * Attempts to grant a permission to a marker.
+     * @param request The request for the operation.
+     */
     async grantMarkerPermission(
         request: GrantMarkerPermissionRequest
     ): Promise<GrantMarkerPermissionResponse> {
@@ -240,13 +245,9 @@ export class PolicyController {
                       markers: [ACCOUNT_MARKER],
                   };
 
-            let alreadyExists = false;
-            for (let permission of policy.document.permissions) {
-                if (isEqual(permission, request.permission)) {
-                    alreadyExists = true;
-                    break;
-                }
-            }
+            const alreadyExists = policy.document.permissions.some((p) =>
+                isEqual(p, request.permission)
+            );
 
             if (!alreadyExists) {
                 console.log(
@@ -254,6 +255,112 @@ export class PolicyController {
                     request.permission
                 );
                 policy.document.permissions.push(request.permission);
+                const updateResult = await this._policies.updateUserPolicy(
+                    context.context.recordName,
+                    request.marker,
+                    {
+                        document: policy.document,
+                        markers: policy.markers,
+                    }
+                );
+
+                if (updateResult.success === false) {
+                    console.log(
+                        `[PolicyController] Policy update failed:`,
+                        updateResult
+                    );
+                    return updateResult;
+                }
+            }
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error('[PolicyController] A server error occurred.', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to revoke a permission from a marker.
+     * @param request The request for the operation.
+     */
+    async revokeMarkerPermission(
+        request: RevokeMarkerPermissionRequest
+    ): Promise<RevokeMarkerPermissionResult> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: request.recordKeyOrRecordName,
+                userId: request.userId,
+            };
+            const context = await this.constructAuthorizationContext(
+                baseRequest
+            );
+            if (context.success === false) {
+                return {
+                    success: false,
+                    errorCode: context.errorCode,
+                    errorMessage: context.errorMessage,
+                };
+            }
+
+            const authorization = await this.authorizeRequestUsingContext(
+                context.context,
+                {
+                    action: 'policy.revokePermission',
+                    ...baseRequest,
+                    policy: request.marker,
+                }
+            );
+
+            if (authorization.allowed === false) {
+                return returnAuthorizationResult(authorization);
+            }
+
+            const policyResult = await this._policies.getUserPolicy(
+                context.context.recordName,
+                request.marker
+            );
+
+            if (policyResult.success === false) {
+                if (policyResult.errorCode === 'policy_not_found') {
+                    return {
+                        success: true,
+                    };
+                }
+                console.log(
+                    `[PolicyController] Failure while retrieving policy for ${context.context.recordName} and ${request.marker}.`,
+                    policyResult
+                );
+                return {
+                    success: false,
+                    errorCode: policyResult.errorCode,
+                    errorMessage: policyResult.errorMessage,
+                };
+            }
+
+            const policy: UserPolicy = policyResult;
+
+            let hasUpdate = false;
+            for (let i = 0; i < policy.document.permissions.length; i++) {
+                const p = policy.document.permissions[i];
+                if (isEqual(p, request.permission)) {
+                    hasUpdate = true;
+                    policy.document.permissions.splice(i, 1);
+                    i--;
+                }
+            }
+
+            if (hasUpdate) {
+                console.log(
+                    `[PolicyController] Removing permission from policy for ${context.context.recordName} and ${request.marker}.`,
+                    request.permission
+                );
                 const updateResult = await this._policies.updateUserPolicy(
                     context.context.recordName,
                     request.marker,
@@ -3278,6 +3385,31 @@ export interface GrantMarkerPermissionFailure {
     errorCode:
         | ServerError
         | AuthorizeDenied['errorCode']
+        | UpdateUserPolicyFailure['errorCode'];
+    errorMessage: string;
+}
+
+export interface RevokeMarkerPermissionRequest {
+    recordKeyOrRecordName: string;
+    userId: string;
+    marker: string;
+    permission: AvailablePermissions;
+}
+
+export type RevokeMarkerPermissionResult =
+    | RevokeMarkerPermissionSuccess
+    | RevokeMarkerPermissionFailure;
+
+export interface RevokeMarkerPermissionSuccess {
+    success: true;
+}
+
+export interface RevokeMarkerPermissionFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | AuthorizeDenied['errorCode']
+        | GetUserPolicyFailure['errorCode']
         | UpdateUserPolicyFailure['errorCode'];
     errorMessage: string;
 }
