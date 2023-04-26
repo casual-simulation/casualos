@@ -12028,7 +12028,7 @@ describe('PolicyController', () => {
         });
     });
 
-    describe.only('grantPermission()', () => {
+    describe('grantPermission()', () => {
         beforeEach(() => {
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
