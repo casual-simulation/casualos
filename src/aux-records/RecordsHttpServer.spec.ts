@@ -37,7 +37,11 @@ import { StripeInterface, StripeProduct } from './StripeInterface';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { PolicyController } from './PolicyController';
 import { MemoryPolicyStore } from './MemoryPolicyStore';
-import { ACCOUNT_MARKER, PUBLIC_READ_MARKER } from './PolicyPermissions';
+import {
+    ACCOUNT_MARKER,
+    ADMIN_ROLE_NAME,
+    PUBLIC_READ_MARKER,
+} from './PolicyPermissions';
 import { RateLimitController } from './RateLimitController';
 import { MemoryRateLimiter } from './MemoryRateLimiter';
 import { RateLimiter } from '@casual-simulation/rate-limit-redis';
@@ -233,7 +237,8 @@ describe('RecordsHttpServer', () => {
             manualDataController,
             filesController,
             subscriptionController,
-            rateLimitController
+            rateLimitController,
+            policyController
         );
         defaultHeaders = {
             origin: 'test.com',
@@ -3570,12 +3575,12 @@ describe('RecordsHttpServer', () => {
                         permissions: [
                             {
                                 type: 'file.update',
-                            role: 'developer',
-                        },
-                        {
-                            type: 'policy.unassign',
-                            role: 'developer',
-                            policies: true,
+                                role: 'developer',
+                            },
+                            {
+                                type: 'policy.unassign',
+                                role: 'developer',
+                                policies: true,
                             },
                         ],
                     },
@@ -3586,12 +3591,12 @@ describe('RecordsHttpServer', () => {
                         permissions: [
                             {
                                 type: 'file.update',
-                            role: 'developer',
-                        },
-                        {
-                            type: 'policy.assign',
-                            role: 'developer',
-                            policies: true,
+                                role: 'developer',
+                            },
+                            {
+                                type: 'policy.assign',
+                                role: 'developer',
+                                policies: true,
                             },
                         ],
                     },
@@ -4622,6 +4627,227 @@ describe('RecordsHttpServer', () => {
         });
     });
 
+    describe.only('POST /api/v2/records/policy/grantPermission', () => {
+        beforeEach(() => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it.only('should grant the given permission to the policy', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/policy/grantPermission`,
+                    JSON.stringify({
+                        recordName,
+                        marker: 'test',
+                        permission: {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await policyStore.getUserPolicy(recordName, 'test');
+            expect(data).toEqual({
+                success: true,
+                document: {
+                    permissions: [
+                        {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                },
+                markers: [ACCOUNT_MARKER],
+            });
+        });
+
+        it('should support subjectless records', async () => {
+            const keyResult = await recordsController.createPublicRecordKey(
+                recordName,
+                'subjectless',
+                userId
+            );
+
+            if (!keyResult.success) {
+                throw new Error('Unable to create subjectless key');
+            }
+
+            delete apiHeaders['authorization'];
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/data`,
+                    JSON.stringify({
+                        recordKey: keyResult.recordKey,
+                        address: 'testAddress',
+                        data: 'hello, world',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    address: 'testAddress',
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await dataStore.getData(recordName, 'testAddress');
+            expect(data).toEqual({
+                success: true,
+                data: 'hello, world',
+                subjectId: null,
+                publisherId: userId,
+                updatePolicy: true,
+                deletePolicy: true,
+                markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should return an unacceptable_request result when given a non-string address', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/5`,
+                    JSON.stringify({
+                        recordKey,
+                        address: 123,
+                        data: 'hello, world',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'address must be a string.',
+                            path: ['address'],
+                            received: 'number',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when given a non-string recordKey', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/data`,
+                    JSON.stringify({
+                        recordKey: 123,
+                        address: 'testAddress',
+                        data: 'hello, world',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordKey must be a string.',
+                            path: ['recordKey'],
+                            received: 'number',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when given undefined data', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/data`,
+                    JSON.stringify({
+                        recordKey,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage: 'data is required.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/records/data`, () =>
+            JSON.stringify({
+                recordKey,
+                address: 'testAddress',
+                data: 'hello, world',
+            })
+        );
+        testAuthorization(
+            () =>
+                httpPost(
+                    '/api/v2/records/data',
+                    JSON.stringify({
+                        recordKey,
+                        address: 'testAddress',
+                        data: 'hello, world',
+                    }),
+                    apiHeaders
+                ),
+            'The user must be logged in in order to record data.'
+        );
+        testBodyIsJson((body) =>
+            httpPost(`/api/v2/records/data`, body, apiHeaders)
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/records/data`,
+                JSON.stringify({
+                    recordKey,
+                    address: 'testAddress',
+                    data: 'hello, world',
+                }),
+                defaultHeaders
+            )
+        );
+    });
+
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
         const result = await server.handleRequest(
             httpRequest('GET', `/api/missing`, null)
@@ -4862,7 +5088,8 @@ describe('RecordsHttpServer', () => {
                 manualDataController,
                 filesController,
                 subscriptionController,
-                null as any
+                null as any,
+                policyController
             );
 
             await rateLimiter.increment(ip, 100);

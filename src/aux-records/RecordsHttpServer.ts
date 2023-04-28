@@ -21,6 +21,8 @@ import {
 import { z } from 'zod';
 import { PublicRecordKeyPolicy } from './RecordsStore';
 import { RateLimitController } from './RateLimitController';
+import { AVAILABLE_PERMISSIONS_VALIDATION } from './PolicyPermissions';
+import { PolicyController } from './PolicyController';
 
 /**
  * Defines an interface for a generic HTTP request.
@@ -211,6 +213,7 @@ export class RecordsHttpServer {
      */
     private _allowedAccountOrigins: Set<string>;
     private _rateLimit: RateLimitController;
+    private _policyController: PolicyController;
 
     constructor(
         allowedAccountOrigins: Set<string>,
@@ -223,7 +226,8 @@ export class RecordsHttpServer {
         manualDataController: DataRecordsController,
         filesController: FileRecordsController,
         subscriptionController: SubscriptionController,
-        rateLimitController: RateLimitController
+        rateLimitController: RateLimitController,
+        policyController: PolicyController
     ) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -236,6 +240,7 @@ export class RecordsHttpServer {
         this._files = filesController;
         this._subscriptions = subscriptionController;
         this._rateLimit = rateLimitController;
+        this._policyController = policyController;
     }
 
     /**
@@ -527,6 +532,15 @@ export class RecordsHttpServer {
                 await this._createRecordKey(request),
                 this._allowedApiOrigins
             );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/records/policy/grantPermission'
+        ) {
+            return formatResponse(
+                request,
+                await this._policyGrantPermission(request),
+                this._allowedApiOrigins
+            );
         } else if (request.method === 'OPTIONS') {
             return formatResponse(
                 request,
@@ -648,6 +662,81 @@ export class RecordsHttpServer {
             policy as PublicRecordKeyPolicy,
             validation.userId
         );
+
+        return returnResult(result);
+    }
+
+    private async _policyGrantPermission(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must not be empty'),
+            marker: z
+                .string({
+                    invalid_type_error: 'marker must be a string.',
+                    required_error: 'marker is required.',
+                })
+                .nonempty('marker must not be empty'),
+            permission: AVAILABLE_PERMISSIONS_VALIDATION,
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, marker, permission } = parseResult.data;
+
+        // const validation = ZOD_PERMISSION_MAP[permission.type as (keyof typeof ZOD_PERMISSION_MAP)];
+
+        // if (!validation) {
+        //     const validPermissionTypes = Object.keys(ZOD_PERMISSION_MAP).sort();
+        //     return returnResult({
+        //         success: false,
+        //         errorCode: 'unacceptable_request',
+        //         errorMessage: `Permission type not found. type must be one of: ${validPermissionTypes.join(', ')}`,
+        //     });
+        // }
+
+        // const validationParseResult = validation.safeParse(permission);
+        // if (validationParseResult.success === false) {
+        //     return returnZodError(validationParseResult.error);
+        // }
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._policyController.grantMarkerPermission({
+            recordKeyOrRecordName: recordName,
+            marker: marker,
+            userId: sessionKeyValidation.userId,
+            permission: permission as any,
+        });
 
         return returnResult(result);
     }
