@@ -37,7 +37,7 @@ import { StripeInterface, StripeProduct } from './StripeInterface';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { PolicyController } from './PolicyController';
 import { MemoryPolicyStore } from './MemoryPolicyStore';
-import { PUBLIC_READ_MARKER } from './PolicyPermissions';
+import { ACCOUNT_MARKER, PUBLIC_READ_MARKER } from './PolicyPermissions';
 import { RateLimitController } from './RateLimitController';
 import { MemoryRateLimiter } from './MemoryRateLimiter';
 import { RateLimiter } from '@casual-simulation/rate-limit-redis';
@@ -3362,12 +3362,15 @@ describe('RecordsHttpServer', () => {
         it('should get a link to the file with the given name', async () => {
             policyStore.policies[recordName] = {
                 ['secret']: {
-                    permissions: [
-                        {
-                            type: 'file.read',
-                            role: 'developer',
-                        },
-                    ],
+                    document: {
+                        permissions: [
+                            {
+                                type: 'file.read',
+                                role: 'developer',
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
                 },
             };
 
@@ -3399,12 +3402,15 @@ describe('RecordsHttpServer', () => {
         it('should get a link to the file at the given URL', async () => {
             policyStore.policies[recordName] = {
                 ['secret']: {
-                    permissions: [
-                        {
-                            type: 'file.read',
-                            role: 'developer',
-                        },
-                    ],
+                    document: {
+                        permissions: [
+                            {
+                                type: 'file.read',
+                                role: 'developer',
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
                 },
             };
 
@@ -3560,30 +3566,36 @@ describe('RecordsHttpServer', () => {
 
             policyStore.policies[recordName] = {
                 ['secret']: {
-                    permissions: [
-                        {
-                            type: 'file.update',
+                    document: {
+                        permissions: [
+                            {
+                                type: 'file.update',
                             role: 'developer',
                         },
                         {
                             type: 'policy.unassign',
                             role: 'developer',
                             policies: true,
-                        },
-                    ],
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
                 },
                 ['other']: {
-                    permissions: [
-                        {
-                            type: 'file.update',
+                    document: {
+                        permissions: [
+                            {
+                                type: 'file.update',
                             role: 'developer',
                         },
                         {
                             type: 'policy.assign',
                             role: 'developer',
                             policies: true,
-                        },
-                    ],
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
                 },
             };
 
