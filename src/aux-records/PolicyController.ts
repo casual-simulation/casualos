@@ -459,6 +459,64 @@ export class PolicyController {
     }
 
     /**
+     * Attempts to list the policies for a record.
+     * @param recordKeyOrRecordName The record key or the name of the record.
+     * @param userId The ID of the user that is currently logged in.
+     * @param startingMarker The marker that policies should be returned after.
+     */
+    async listUserPolicies(
+        recordKeyOrRecordName: string,
+        userId: string,
+        startingMarker: string | null
+    ): Promise<ListUserPoliciesResult> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: recordKeyOrRecordName,
+                userId: userId,
+            };
+            const context = await this.constructAuthorizationContext(
+                baseRequest
+            );
+            if (context.success === false) {
+                return {
+                    success: false,
+                    errorCode: context.errorCode,
+                    errorMessage: context.errorMessage,
+                };
+            }
+
+            const authorization = await this.authorizeRequestUsingContext(
+                context.context,
+                {
+                    action: 'policy.list',
+                    ...baseRequest,
+                }
+            );
+
+            if (authorization.allowed === false) {
+                return returnAuthorizationResult(authorization);
+            }
+
+            const result = await this._policies.listUserPolicies(
+                context.context.recordName,
+                startingMarker
+            );
+
+            return {
+                success: true,
+                policies: result,
+            };
+        } catch (err) {
+            console.error('[PolicyController] A server error occurred.', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
      * Attempts to authorize the given request.
      * Returns a promise that resolves with information about the security properties of the request.
      * @param context The authorization context for the request.
@@ -3496,5 +3554,35 @@ export interface ReadUserPolicyFailure {
         | ServerError
         | AuthorizeDenied['errorCode']
         | GetUserPolicyFailure['errorCode'];
+    errorMessage: string;
+}
+
+export type ListUserPoliciesResult =
+    | ListUserPoliciesSuccess
+    | ListUserPoliciesFailure;
+
+export interface ListUserPoliciesSuccess {
+    success: true;
+    policies: {
+        /**
+         * The marker that the policy is for.
+         */
+        marker: string;
+
+        /**
+         * The document that describes the policy.
+         */
+        document: PolicyDocument;
+
+        /**
+         * The markers that are applied to the policy.
+         */
+        markers: string[];
+    }[];
+}
+
+export interface ListUserPoliciesFailure {
+    success: false;
+    errorCode: ServerError | AuthorizeDenied['errorCode'];
     errorMessage: string;
 }

@@ -16,6 +16,16 @@ export interface PolicyStore {
     ): Promise<PolicyDocument[]>;
 
     /**
+     * Lists the user-created policices for the given record.
+     * @param recordName The name of the record.
+     * @param startingMarker The marker that policies should be listed after. If null, then the list starts with the first policy.
+     */
+    listUserPolicies(
+        recordName: string,
+        startingMarker: string | null
+    ): Promise<ListedUserPolicy[]>;
+
+    /**
      * Lists the roles that are assigned to the user.
      * @param recordName The name of the record that the role assignments belong to.
      * @param userId The ID of the user.
@@ -65,6 +75,13 @@ export interface UserPolicy {
      * The list of markers that are applied to the policy.
      */
     markers: string[];
+}
+
+export interface ListedUserPolicy extends UserPolicy {
+    /**
+     * The marker that this policy is for.
+     */
+    marker: string;
 }
 
 export type GetUserPolicyResult = GetUserPolicySuccess | GetUserPolicyFailure;

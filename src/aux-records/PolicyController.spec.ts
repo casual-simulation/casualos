@@ -12476,6 +12476,133 @@ describe('PolicyController', () => {
             });
         });
     });
+
+    describe('listUserPolicies()', () => {
+        beforeEach(() => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            store.policies[recordName] = {
+                ['abc']: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'data.list',
+                                role: 'developer',
+                                addresses: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+                ['test']: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'data.read',
+                                role: 'developer',
+                                addresses: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+                ['test2']: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'data.create',
+                                role: 'developer',
+                                addresses: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+        });
+
+        it('should return the policies', async () => {
+            const result = await controller.listUserPolicies(
+                recordName,
+                userId,
+                null
+            );
+
+            expect(result).toEqual({
+                success: true,
+                policies: [
+                    {
+                        marker: 'abc',
+                        document: {
+                            permissions: [
+                                {
+                                    type: 'data.list',
+                                    role: 'developer',
+                                    addresses: true,
+                                },
+                            ],
+                        },
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    {
+                        marker: 'test',
+                        document: {
+                            permissions: [
+                                {
+                                    type: 'data.read',
+                                    role: 'developer',
+                                    addresses: true,
+                                },
+                            ],
+                        },
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    {
+                        marker: 'test2',
+                        document: {
+                            permissions: [
+                                {
+                                    type: 'data.create',
+                                    role: 'developer',
+                                    addresses: true,
+                                },
+                            ],
+                        },
+                        markers: [ACCOUNT_MARKER],
+                    },
+                ],
+            });
+        });
+
+        it('should return the policies that are after the given marker', async () => {
+            const result = await controller.listUserPolicies(
+                recordName,
+                userId,
+                'test'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                policies: [
+                    {
+                        marker: 'test2',
+                        document: {
+                            permissions: [
+                                {
+                                    type: 'data.create',
+                                    role: 'developer',
+                                    addresses: true,
+                                },
+                            ],
+                        },
+                        markers: [ACCOUNT_MARKER],
+                    },
+                ],
+            });
+        });
+    });
 });
 
 describe('willMarkersBeRemaining()', () => {

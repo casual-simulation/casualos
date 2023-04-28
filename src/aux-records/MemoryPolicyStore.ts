@@ -1,3 +1,4 @@
+import { sortBy } from 'lodash';
 import {
     DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
     DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
@@ -6,6 +7,7 @@ import {
 } from './PolicyPermissions';
 import {
     GetUserPolicyResult,
+    ListedUserPolicy,
     PolicyStore,
     UpdateUserPolicyResult,
     UserPolicy,
@@ -33,6 +35,31 @@ export class MemoryPolicyStore implements PolicyStore {
     constructor() {
         this.policies = {};
         this.roles = {};
+    }
+
+    async listUserPolicies(
+        recordName: string,
+        startingMarker: string
+    ): Promise<ListedUserPolicy[]> {
+        const recordPolicies = this.policies[recordName] ?? {};
+
+        const keys = sortBy(Object.keys(recordPolicies));
+
+        let results: ListedUserPolicy[] = [];
+        let start = !startingMarker;
+        for (let key of keys) {
+            if (start) {
+                results.push({
+                    marker: key,
+                    document: recordPolicies[key].document,
+                    markers: recordPolicies[key].markers,
+                });
+            } else if (key === startingMarker || key > startingMarker) {
+                start = true;
+            }
+        }
+
+        return results;
     }
 
     async getUserPolicy(
