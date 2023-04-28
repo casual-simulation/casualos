@@ -12207,6 +12207,78 @@ describe('PolicyController', () => {
                 errorMessage: expect.any(String),
             });
         });
+
+        it('should do nothing if the inst is not authorized', async () => {
+            const result = await controller.grantMarkerPermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                marker: 'test',
+                permission: {
+                    type: 'data.read',
+                    role: 'developer',
+                    addresses: true,
+                },
+                instances: ['inst'],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    id: 'inst',
+                    kind: 'inst',
+                    marker: 'account',
+                    permission: 'policy.grantPermission',
+                    role: null,
+                    type: 'missing_permission',
+                },
+            });
+
+            const policy = await store.getUserPolicy(recordName, 'test');
+
+            expect(policy).toEqual({
+                success: false,
+                errorCode: 'policy_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
+
+        it('should work if both the user and the instance have the admin role', async () => {
+            store.roles[recordName]['inst'] = new Set([ADMIN_ROLE_NAME]);
+
+            const result = await controller.grantMarkerPermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                marker: 'test',
+                permission: {
+                    type: 'data.read',
+                    role: 'developer',
+                    addresses: true,
+                },
+                instances: ['inst'],
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const policy = await store.getUserPolicy(recordName, 'test');
+
+            expect(policy).toEqual({
+                success: true,
+                document: {
+                    permissions: [
+                        {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                },
+                markers: [ACCOUNT_MARKER],
+            });
+        });
     });
 
     describe('revokeMarkerPermission()', () => {
@@ -12416,6 +12488,80 @@ describe('PolicyController', () => {
                 markers: [ACCOUNT_MARKER],
             });
         });
+
+        it('should do nothing if the inst is not authorized', async () => {
+            const result = await controller.revokeMarkerPermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                marker: 'test',
+                permission: {
+                    type: 'data.read',
+                    role: 'developer',
+                    addresses: true,
+                },
+                instances: ['inst'],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    id: 'inst',
+                    kind: 'inst',
+                    marker: 'account',
+                    permission: 'policy.revokePermission',
+                    role: null,
+                    type: 'missing_permission',
+                },
+            });
+
+            const policy = await store.getUserPolicy(recordName, 'test');
+
+            expect(policy).toEqual({
+                success: true,
+                document: {
+                    permissions: [
+                        {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                },
+                markers: [ACCOUNT_MARKER],
+            });
+        });
+
+        it('should work if both the user and the inst have admin permissions', async () => {
+            store.roles[recordName]['inst'] = new Set([ADMIN_ROLE_NAME]);
+
+            const result = await controller.revokeMarkerPermission({
+                recordKeyOrRecordName: recordName,
+                userId: userId,
+                marker: 'test',
+                permission: {
+                    type: 'data.read',
+                    role: 'developer',
+                    addresses: true,
+                },
+                instances: ['inst'],
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const policy = await store.getUserPolicy(recordName, 'test');
+
+            expect(policy).toEqual({
+                success: true,
+                document: {
+                    permissions: [],
+                },
+                markers: [ACCOUNT_MARKER],
+            });
+        });
     });
 
     describe('readUserPolicy()', () => {
@@ -12462,6 +12608,53 @@ describe('PolicyController', () => {
             });
         });
 
+        it('should deny the request if the user is not authorized', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await controller.readUserPolicy(
+                recordName,
+                userId,
+                'test'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'policy.read',
+                    id: userId,
+                    kind: 'user',
+                    marker: 'account',
+                    role: null,
+                },
+            });
+        });
+
+        it('should deny the request if the inst is not authorized', async () => {
+            const result = await controller.readUserPolicy(
+                recordName,
+                userId,
+                'test',
+                ['inst']
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'policy.read',
+                    kind: 'inst',
+                    id: 'inst',
+                    marker: 'account',
+                    role: null,
+                },
+            });
+        });
+
         it('should return an unsuccessful result if the policy doesnt exist', async () => {
             const result = await controller.readUserPolicy(
                 recordName,
@@ -12473,6 +12666,31 @@ describe('PolicyController', () => {
                 success: false,
                 errorCode: 'policy_not_found',
                 errorMessage: 'The policy was not found.',
+            });
+        });
+
+        it('should return the policy if both the user and the inst have admin permissions', async () => {
+            store.roles[recordName]['inst'] = new Set([ADMIN_ROLE_NAME]);
+
+            const result = await controller.readUserPolicy(
+                recordName,
+                userId,
+                'test',
+                ['inst']
+            );
+
+            expect(result).toEqual({
+                success: true,
+                document: {
+                    permissions: [
+                        {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                },
+                markers: [ACCOUNT_MARKER],
             });
         });
     });
@@ -12600,6 +12818,108 @@ describe('PolicyController', () => {
                         markers: [ACCOUNT_MARKER],
                     },
                 ],
+            });
+        });
+
+        it('should return the policies if both the user and the inst have the admin role', async () => {
+            store.roles[recordName]['inst'] = new Set([ADMIN_ROLE_NAME]);
+
+            const result = await controller.listUserPolicies(
+                recordName,
+                userId,
+                null,
+                ['inst']
+            );
+
+            expect(result).toEqual({
+                success: true,
+                policies: [
+                    {
+                        marker: 'abc',
+                        document: {
+                            permissions: [
+                                {
+                                    type: 'data.list',
+                                    role: 'developer',
+                                    addresses: true,
+                                },
+                            ],
+                        },
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    {
+                        marker: 'test',
+                        document: {
+                            permissions: [
+                                {
+                                    type: 'data.read',
+                                    role: 'developer',
+                                    addresses: true,
+                                },
+                            ],
+                        },
+                        markers: [ACCOUNT_MARKER],
+                    },
+                    {
+                        marker: 'test2',
+                        document: {
+                            permissions: [
+                                {
+                                    type: 'data.create',
+                                    role: 'developer',
+                                    addresses: true,
+                                },
+                            ],
+                        },
+                        markers: [ACCOUNT_MARKER],
+                    },
+                ],
+            });
+        });
+
+        it('should deny the request if the user is not authorized', async () => {
+            delete store.roles[recordName][userId];
+            const result = await controller.listUserPolicies(
+                recordName,
+                userId,
+                null
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'policy.list',
+                    kind: 'user',
+                    id: userId,
+                    marker: ACCOUNT_MARKER,
+                    role: null,
+                },
+            });
+        });
+
+        it('should deny the request if the inst is not authorized', async () => {
+            const result = await controller.listUserPolicies(
+                recordName,
+                userId,
+                null,
+                ['inst']
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'policy.list',
+                    kind: 'inst',
+                    id: 'inst',
+                    marker: ACCOUNT_MARKER,
+                    role: null,
+                },
             });
         });
     });

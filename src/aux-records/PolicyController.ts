@@ -209,6 +209,7 @@ export class PolicyController {
                     action: 'policy.grantPermission',
                     ...baseRequest,
                     policy: request.marker,
+                    instances: request.instances,
                 }
             );
 
@@ -315,6 +316,7 @@ export class PolicyController {
                     action: 'policy.revokePermission',
                     ...baseRequest,
                     policy: request.marker,
+                    instances: request.instances,
                 }
             );
 
@@ -397,11 +399,13 @@ export class PolicyController {
      * @param recordKeyOrRecordName The record key or record name.
      * @param userId The ID of the user that is currently logged in.
      * @param marker The marker.
+     * @param instances The instances that the request is being made from.
      */
     async readUserPolicy(
         recordKeyOrRecordName: string,
         userId: string,
-        marker: string
+        marker: string,
+        instances?: string[] | null
     ): Promise<ReadUserPolicyResult> {
         try {
             const baseRequest = {
@@ -436,6 +440,7 @@ export class PolicyController {
                     action: 'policy.read',
                     ...baseRequest,
                     policy: marker,
+                    instances,
                 }
             );
 
@@ -463,11 +468,13 @@ export class PolicyController {
      * @param recordKeyOrRecordName The record key or the name of the record.
      * @param userId The ID of the user that is currently logged in.
      * @param startingMarker The marker that policies should be returned after.
+     * @param instances The instances that the request is being made from.
      */
     async listUserPolicies(
         recordKeyOrRecordName: string,
         userId: string,
-        startingMarker: string | null
+        startingMarker: string | null,
+        instances?: string[]
     ): Promise<ListUserPoliciesResult> {
         try {
             const baseRequest = {
@@ -490,6 +497,7 @@ export class PolicyController {
                 {
                     action: 'policy.list',
                     ...baseRequest,
+                    instances,
                 }
             );
 
@@ -3494,6 +3502,7 @@ export interface GrantMarkerPermissionRequest {
     userId: string;
     marker: string;
     permission: AvailablePermissions;
+    instances?: string[] | null;
 }
 
 export type GrantMarkerPermissionResponse =
@@ -3518,6 +3527,7 @@ export interface RevokeMarkerPermissionRequest {
     userId: string;
     marker: string;
     permission: AvailablePermissions;
+    instances?: string[] | null;
 }
 
 export type RevokeMarkerPermissionResult =
