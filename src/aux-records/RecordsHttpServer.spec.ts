@@ -4627,14 +4627,14 @@ describe('RecordsHttpServer', () => {
         });
     });
 
-    describe.only('POST /api/v2/records/policy/grantPermission', () => {
+    describe('POST /api/v2/records/policy/grantPermission', () => {
         beforeEach(() => {
             policyStore.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
         });
 
-        it.only('should grant the given permission to the policy', async () => {
+        it('should grant the given permission to the policy', async () => {
             const result = await server.handleRequest(
                 httpPost(
                     `/api/v2/records/policy/grantPermission`,
@@ -4675,60 +4675,18 @@ describe('RecordsHttpServer', () => {
             });
         });
 
-        it('should support subjectless records', async () => {
-            const keyResult = await recordsController.createPublicRecordKey(
-                recordName,
-                'subjectless',
-                userId
-            );
-
-            if (!keyResult.success) {
-                throw new Error('Unable to create subjectless key');
-            }
-
-            delete apiHeaders['authorization'];
+        it('should return an unacceptable_request result when given a non-string marker', async () => {
             const result = await server.handleRequest(
                 httpPost(
-                    `/api/v2/records/data`,
+                    `/api/v2/records/policy/grantPermission`,
                     JSON.stringify({
-                        recordKey: keyResult.recordKey,
-                        address: 'testAddress',
-                        data: 'hello, world',
-                    }),
-                    apiHeaders
-                )
-            );
-
-            expectResponseBodyToEqual(result, {
-                statusCode: 200,
-                body: {
-                    success: true,
-                    recordName,
-                    address: 'testAddress',
-                },
-                headers: apiCorsHeaders,
-            });
-
-            const data = await dataStore.getData(recordName, 'testAddress');
-            expect(data).toEqual({
-                success: true,
-                data: 'hello, world',
-                subjectId: null,
-                publisherId: userId,
-                updatePolicy: true,
-                deletePolicy: true,
-                markers: [PUBLIC_READ_MARKER],
-            });
-        });
-
-        it('should return an unacceptable_request result when given a non-string address', async () => {
-            const result = await server.handleRequest(
-                httpPost(
-                    `/api/v2/records/5`,
-                    JSON.stringify({
-                        recordKey,
-                        address: 123,
-                        data: 'hello, world',
+                        recordName,
+                        marker: 123,
+                        permission: {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
                     }),
                     apiHeaders
                 )
@@ -4745,8 +4703,8 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'address must be a string.',
-                            path: ['address'],
+                            message: 'marker must be a string.',
+                            path: ['marker'],
                             received: 'number',
                         },
                     ],
@@ -4755,14 +4713,18 @@ describe('RecordsHttpServer', () => {
             });
         });
 
-        it('should return an unacceptable_request result when given a non-string recordKey', async () => {
+        it('should return an unacceptable_request result when given a non-string recordName', async () => {
             const result = await server.handleRequest(
                 httpPost(
-                    `/api/v2/records/data`,
+                    `/api/v2/records/policy/grantPermission`,
                     JSON.stringify({
-                        recordKey: 123,
-                        address: 'testAddress',
-                        data: 'hello, world',
+                        recordName: 123,
+                        marker: 'test',
+                        permission: {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
                     }),
                     apiHeaders
                 )
@@ -4779,8 +4741,8 @@ describe('RecordsHttpServer', () => {
                         {
                             code: 'invalid_type',
                             expected: 'string',
-                            message: 'recordKey must be a string.',
-                            path: ['recordKey'],
+                            message: 'recordName must be a string.',
+                            path: ['recordName'],
                             received: 'number',
                         },
                     ],
@@ -4792,10 +4754,11 @@ describe('RecordsHttpServer', () => {
         it('should return an unacceptable_request result when given undefined data', async () => {
             const result = await server.handleRequest(
                 httpPost(
-                    `/api/v2/records/data`,
+                    `/api/v2/records/policy/grantPermission`,
                     JSON.stringify({
-                        recordKey,
-                        address: 'testAddress',
+                        recordName,
+                        marker: 'test',
+                        permission: null,
                     }),
                     apiHeaders
                 )
@@ -4806,42 +4769,64 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'data is required.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'object',
+                            message: 'Expected object, received null',
+                            path: ['permission'],
+                            received: 'null',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
         });
 
-        testOrigin('POST', `/api/v2/records/data`, () =>
+        testOrigin('POST', `/api/v2/records/policy/grantPermission`, () =>
             JSON.stringify({
-                recordKey,
-                address: 'testAddress',
-                data: 'hello, world',
+                recordName,
+                marker: 'test',
+                permission: {
+                    type: 'data.read',
+                    role: 'developer',
+                    addresses: true,
+                },
             })
         );
         testAuthorization(
             () =>
                 httpPost(
-                    '/api/v2/records/data',
+                    '/api/v2/records/policy/grantPermission',
                     JSON.stringify({
-                        recordKey,
-                        address: 'testAddress',
-                        data: 'hello, world',
+                        recordName,
+                        marker: 'test',
+                        permission: {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
                     }),
                     apiHeaders
                 ),
-            'The user must be logged in in order to record data.'
+            'The user is not logged in. A session key must be provided for this operation.'
         );
         testBodyIsJson((body) =>
-            httpPost(`/api/v2/records/data`, body, apiHeaders)
+            httpPost(`/api/v2/records/policy/grantPermission`, body, apiHeaders)
         );
         testRateLimit(() =>
             httpPost(
-                `/api/v2/records/data`,
+                `/api/v2/records/policy/grantPermission`,
                 JSON.stringify({
-                    recordKey,
-                    address: 'testAddress',
-                    data: 'hello, world',
+                    recordName,
+                    marker: 'test',
+                    permission: {
+                        type: 'data.read',
+                        role: 'developer',
+                        addresses: true,
+                    },
                 }),
                 defaultHeaders
             )
