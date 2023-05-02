@@ -247,6 +247,26 @@ Resources:
                     Properties:
                         Bucket: !Ref FilesBucket
                         Events: s3:ObjectCreated:Put
+                ReadPolicy:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/policy
+                        Method: GET
+                ListPolicies:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/policy/list
+                        Method: GET
+                GrantPermission:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/policy/grantPermission
+                        Method: POST
+                RevokePermission:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/policy/revokePermission
+                        Method: POST
                 GetMeetToken:
                     Type: Api
                     Properties:
