@@ -4833,6 +4833,224 @@ describe('RecordsHttpServer', () => {
         );
     });
 
+    describe.only('POST /api/v2/records/policy/revokePermission', () => {
+        beforeEach(() => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+            policyStore.policies[recordName] = {
+                test: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'data.read',
+                                role: 'developer',
+                                addresses: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+        });
+
+        it('should grant the given permission to the policy', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/policy/revokePermission`,
+                    JSON.stringify({
+                        recordName,
+                        marker: 'test',
+                        permission: {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await policyStore.getUserPolicy(recordName, 'test');
+            expect(data).toEqual({
+                success: true,
+                document: {
+                    permissions: [],
+                },
+                markers: [ACCOUNT_MARKER],
+            });
+        });
+
+        it('should return an unacceptable_request result when given a non-string marker', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/policy/revokePermission`,
+                    JSON.stringify({
+                        recordName,
+                        marker: 123,
+                        permission: {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'marker must be a string.',
+                            path: ['marker'],
+                            received: 'number',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when given a non-string recordName', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/policy/revokePermission`,
+                    JSON.stringify({
+                        recordName: 123,
+                        marker: 'test',
+                        permission: {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName must be a string.',
+                            path: ['recordName'],
+                            received: 'number',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when given undefined data', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/policy/revokePermission`,
+                    JSON.stringify({
+                        recordName,
+                        marker: 'test',
+                        permission: null,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'object',
+                            message: 'Expected object, received null',
+                            path: ['permission'],
+                            received: 'null',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/records/policy/revokePermission`, () =>
+            JSON.stringify({
+                recordName,
+                marker: 'test',
+                permission: {
+                    type: 'data.read',
+                    role: 'developer',
+                    addresses: true,
+                },
+            })
+        );
+        testAuthorization(
+            () =>
+                httpPost(
+                    '/api/v2/records/policy/revokePermission',
+                    JSON.stringify({
+                        recordName,
+                        marker: 'test',
+                        permission: {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    }),
+                    apiHeaders
+                ),
+            'The user is not logged in. A session key must be provided for this operation.'
+        );
+        testBodyIsJson((body) =>
+            httpPost(
+                `/api/v2/records/policy/revokePermission`,
+                body,
+                apiHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/records/policy/revokePermission`,
+                JSON.stringify({
+                    recordName,
+                    marker: 'test',
+                    permission: {
+                        type: 'data.read',
+                        role: 'developer',
+                        addresses: true,
+                    },
+                }),
+                defaultHeaders
+            )
+        );
+    });
+
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
         const result = await server.handleRequest(
             httpRequest('GET', `/api/missing`, null)

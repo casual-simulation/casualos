@@ -541,6 +541,15 @@ export class RecordsHttpServer {
                 await this._policyGrantPermission(request),
                 this._allowedApiOrigins
             );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/records/policy/revokePermission'
+        ) {
+            return formatResponse(
+                request,
+                await this._policyRevokePermission(request),
+                this._allowedApiOrigins
+            );
         } else if (request.method === 'OPTIONS') {
             return formatResponse(
                 request,
@@ -732,6 +741,65 @@ export class RecordsHttpServer {
         }
 
         const result = await this._policyController.grantMarkerPermission({
+            recordKeyOrRecordName: recordName,
+            marker: marker,
+            userId: sessionKeyValidation.userId,
+            permission: permission as any,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _policyRevokePermission(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must not be empty'),
+            marker: z
+                .string({
+                    invalid_type_error: 'marker must be a string.',
+                    required_error: 'marker is required.',
+                })
+                .nonempty('marker must not be empty'),
+            permission: AVAILABLE_PERMISSIONS_VALIDATION,
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, marker, permission } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._policyController.revokeMarkerPermission({
             recordKeyOrRecordName: recordName,
             marker: marker,
             userId: sessionKeyValidation.userId,
