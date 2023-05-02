@@ -5072,7 +5072,7 @@ describe('RecordsHttpServer', () => {
             };
         });
 
-        it('should get the given permission from the policy', async () => {
+        it('should get the policy for the given marker', async () => {
             const result = await server.handleRequest(
                 httpGet(
                     `/api/v2/records/policy?recordName=${recordName}&marker=test`,
@@ -5169,6 +5169,198 @@ describe('RecordsHttpServer', () => {
         testRateLimit(() =>
             httpGet(
                 `/api/v2/records/policy?recordName=${recordName}&marker=test`,
+                defaultHeaders
+            )
+        );
+    });
+
+    describe('GET /api/v2/records/policy/list', () => {
+        beforeEach(() => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+            policyStore.policies[recordName] = {
+                test: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'data.read',
+                                role: 'developer',
+                                addresses: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+                test2: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'data.create',
+                                role: 'developer',
+                                addresses: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+                abc: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'file.create',
+                                role: 'developer',
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+        });
+
+        it('should list the policies by marker', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/policy/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    policies: [
+                        {
+                            marker: 'abc',
+                            document: {
+                                permissions: [
+                                    {
+                                        type: 'file.create',
+                                        role: 'developer',
+                                    },
+                                ],
+                            },
+                            markers: [ACCOUNT_MARKER],
+                        },
+                        {
+                            marker: 'test',
+                            document: {
+                                permissions: [
+                                    {
+                                        type: 'data.read',
+                                        role: 'developer',
+                                        addresses: true,
+                                    },
+                                ],
+                            },
+                            markers: [ACCOUNT_MARKER],
+                        },
+                        {
+                            marker: 'test2',
+                            document: {
+                                permissions: [
+                                    {
+                                        type: 'data.create',
+                                        role: 'developer',
+                                        addresses: true,
+                                    },
+                                ],
+                            },
+                            markers: [ACCOUNT_MARKER],
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should start the list after the given startingMarker', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/policy/list?recordName=${recordName}&startingMarker=abc`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    policies: [
+                        {
+                            marker: 'test',
+                            document: {
+                                permissions: [
+                                    {
+                                        type: 'data.read',
+                                        role: 'developer',
+                                        addresses: true,
+                                    },
+                                ],
+                            },
+                            markers: [ACCOUNT_MARKER],
+                        },
+                        {
+                            marker: 'test2',
+                            document: {
+                                permissions: [
+                                    {
+                                        type: 'data.create',
+                                        role: 'developer',
+                                        addresses: true,
+                                    },
+                                ],
+                            },
+                            markers: [ACCOUNT_MARKER],
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a recordName', async () => {
+            const result = await server.handleRequest(
+                httpGet(`/api/v2/records/policy/list?marker=test`, apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName is required.',
+                            path: ['recordName'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/policy/list?recordName=${recordName}`
+        );
+        testAuthorization(
+            () =>
+                httpGet(
+                    '/api/v2/records/policy/list?recordName=${recordName}',
+                    apiHeaders
+                ),
+            'The user is not logged in. A session key must be provided for this operation.'
+        );
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/policy/list?recordName=${recordName}`,
                 defaultHeaders
             )
         );
