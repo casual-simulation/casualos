@@ -4833,7 +4833,7 @@ describe('RecordsHttpServer', () => {
         );
     });
 
-    describe.only('POST /api/v2/records/policy/revokePermission', () => {
+    describe('POST /api/v2/records/policy/revokePermission', () => {
         beforeEach(() => {
             policyStore.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -4854,7 +4854,7 @@ describe('RecordsHttpServer', () => {
             };
         });
 
-        it('should grant the given permission to the policy', async () => {
+        it('should revoke the given permission to the policy', async () => {
             const result = await server.handleRequest(
                 httpPost(
                     `/api/v2/records/policy/revokePermission`,
@@ -5046,6 +5046,129 @@ describe('RecordsHttpServer', () => {
                         addresses: true,
                     },
                 }),
+                defaultHeaders
+            )
+        );
+    });
+
+    describe('GET /api/v2/records/policy', () => {
+        beforeEach(() => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+            policyStore.policies[recordName] = {
+                test: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'data.read',
+                                role: 'developer',
+                                addresses: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+        });
+
+        it('should get the given permission from the policy', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/policy?recordName=${recordName}&marker=test`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    document: {
+                        permissions: [
+                            {
+                                type: 'data.read',
+                                role: 'developer',
+                                addresses: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a marker', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/policy?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'marker is required.',
+                            path: ['marker'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a recordName', async () => {
+            const result = await server.handleRequest(
+                httpGet(`/api/v2/records/policy?marker=test`, apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName is required.',
+                            path: ['recordName'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/policy?recordName=${recordName}&marker=test`
+        );
+        testAuthorization(
+            () =>
+                httpGet(
+                    '/api/v2/records/policy?recordName=${recordName}&marker=test',
+                    apiHeaders
+                ),
+            'The user is not logged in. A session key must be provided for this operation.'
+        );
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/policy?recordName=${recordName}&marker=test`,
                 defaultHeaders
             )
         );
