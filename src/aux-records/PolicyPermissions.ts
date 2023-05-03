@@ -52,6 +52,13 @@ export type AvailablePolicyPermissions =
     | RevokePermissionFromPolicyPermission
     | ReadPolicyPermission;
 
+export type AvailableRolePermissions =
+    | GrantRolePermission
+    | RevokeRolePermission
+    | ListRolesPermission
+    | ReadRolePermission
+    | UpdateRolePermission;
+
 /**
  * Defines an interface that describes common options for all permissions.
  */
