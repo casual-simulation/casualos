@@ -21,7 +21,9 @@ export type AvailablePermissions =
     | UnassignPolicyPermission
     | GrantRolePermission
     | RevokeRolePermission
+    | ReadRolePermission
     | ListRolesPermission
+    | UpdateRolePermission
     | CreateRecordKeyPermission;
 
 export type AvailableDataPermissions =
@@ -484,6 +486,26 @@ type ZodRolePermissionAssertion = HasType<ZodRolePermission, RolePermission>;
  */
 export interface GrantRolePermission extends RolePermission {
     type: 'role.grant';
+
+    /**
+     * What user IDs can the role be granted to?
+     * If true, then the role can be granted to anyone.
+     * If an array of strings, then the role can only be granted to the users with the given IDs.
+     */
+    userIds: string[] | true;
+
+    /**
+     * What instances can the role be granted to?
+     * If true, then the role can be granted to any instance.
+     * If a string, then it should be a Regular Expression that matches only instances that are allowed to be granted to.
+     */
+    instances: string | true;
+
+    /**
+     * The maximum lifetime that the role can be granted for in miliseconds.
+     * If not specified, then the role can be granted for an infinite amount of time.
+     */
+    maxDurationMs?: number;
 }
 
 export const GRANT_ROLE_VALIDATION = ROLE_PERMISSION_VALIDATION.extend({
@@ -500,6 +522,20 @@ type ZodGrantRolePermissionAssertion = HasType<
  */
 export interface RevokeRolePermission extends RolePermission {
     type: 'role.revoke';
+
+    /**
+     * What user IDs can the role be revoked from?
+     * If true, then the role can be revoked from anyone.
+     * If an array of strings, then the role can only be revoked from the users with the given IDs.
+     */
+    userIds: string[] | true;
+
+    /**
+     * What instances can the role be revoked from?
+     * If true, then the role can be revoked from any instance.
+     * If a string, then it should be a Regular Expression that matches only instances that are allowed to be revoked from.
+     */
+    instances: string | true;
 }
 
 export const REVOKE_ROLE_VALIDATION = ROLE_PERMISSION_VALIDATION.extend({
@@ -509,6 +545,38 @@ type ZodRevokeRolePermission = z.infer<typeof REVOKE_ROLE_VALIDATION>;
 type ZodRevokeRolePermissionAssertion = HasType<
     ZodRevokeRolePermission,
     RevokeRolePermission
+>;
+
+/**
+ * Defines an interface that describes a permission to read a role.
+ */
+export interface ReadRolePermission extends RolePermission {
+    type: 'role.read';
+}
+
+export const READ_ROLE_VALIDATION = ROLE_PERMISSION_VALIDATION.extend({
+    type: z.literal('role.read'),
+});
+type ZodReadRolePermission = z.infer<typeof READ_ROLE_VALIDATION>;
+type ZodReadRolePermissionAssertion = HasType<
+    ZodReadRolePermission,
+    ReadRolePermission
+>;
+
+/**
+ * Defines an interface that describes a permission to update a role.
+ */
+export interface UpdateRolePermission extends RolePermission {
+    type: 'role.update';
+}
+
+export const UPDATE_ROLE_VALIDATION = ROLE_PERMISSION_VALIDATION.extend({
+    type: z.literal('role.update'),
+});
+type ZodUpdateRolePermission = z.infer<typeof UPDATE_ROLE_VALIDATION>;
+type ZodUpdateRolePermissionAssertion = HasType<
+    ZodUpdateRolePermission,
+    UpdateRolePermission
 >;
 
 /**
@@ -727,14 +795,28 @@ export const DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT: PolicyDocument = {
             type: 'role.grant',
             role: ADMIN_ROLE_NAME,
             roles: true,
+            userIds: true,
+            instances: true,
         },
         {
             type: 'role.revoke',
             role: ADMIN_ROLE_NAME,
             roles: true,
+            userIds: true,
+            instances: true,
+        },
+        {
+            type: 'role.read',
+            role: ADMIN_ROLE_NAME,
+            roles: true,
         },
         {
             type: 'role.list',
+            role: ADMIN_ROLE_NAME,
+            roles: true,
+        },
+        {
+            type: 'role.update',
             role: ADMIN_ROLE_NAME,
             roles: true,
         },

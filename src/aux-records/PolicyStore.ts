@@ -60,6 +60,30 @@ export interface PolicyStore {
         marker: string,
         policy: UserPolicy
     ): Promise<UpdateUserPolicyResult>;
+
+    /**
+     * Updates the list of roles that are assigned to the user.
+     * @param recordName The name of the record that the roles exist in.
+     * @param userId The ID of the user.
+     * @param update The update.
+     */
+    updateUserRoles(
+        recordName: string,
+        userId: string,
+        update: UpdateRolesUpdate
+    ): Promise<UpdateUserRolesResult>;
+
+    /**
+     * Updates the list of roles that are assigned to the inst.
+     * @param recordName The name of the record that the roles exist in.
+     * @param inst The name of the inst.
+     * @param update The update.
+     */
+    updateInstRoles(
+        recordName: string,
+        inst: string,
+        update: UpdateRolesUpdate
+    ): Promise<UpdateUserRolesResult>;
 }
 
 /**
@@ -109,5 +133,39 @@ export interface UpdateUserPolicySuccess {
 export interface UpdateUserPolicyFailure {
     success: false;
     errorCode: ServerError | 'policy_too_large';
+    errorMessage: string;
+}
+
+export interface UpdateRolesUpdate {
+    /**
+     * The roles that should be assigned.
+     */
+    roles: AssignedRole[];
+}
+
+export interface AssignedRole {
+    /**
+     * The name of the role.
+     */
+    role: string;
+
+    /**
+     * The Unix time in miliseconds that the role assignment expires.
+     * Infinity means that the role never expires.
+     */
+    expireTimeMs: number;
+}
+
+export type UpdateUserRolesResult =
+    | UpdateUserRolesSuccess
+    | UpdateUserRolesFailure;
+
+export interface UpdateUserRolesSuccess {
+    success: true;
+}
+
+export interface UpdateUserRolesFailure {
+    success: false;
+    errorCode: ServerError | 'roles_too_large';
     errorMessage: string;
 }

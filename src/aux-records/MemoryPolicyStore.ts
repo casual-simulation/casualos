@@ -9,7 +9,9 @@ import {
     GetUserPolicyResult,
     ListedUserPolicy,
     PolicyStore,
+    UpdateRolesUpdate,
     UpdateUserPolicyResult,
+    UpdateUserRolesResult,
     UserPolicy,
 } from './PolicyStore';
 
@@ -32,9 +34,19 @@ export class MemoryPolicyStore implements PolicyStore {
         };
     };
 
+    roleAssignments: {
+        [recordName: string]: {
+            [userId: string]: {
+                role: string;
+                expireTimeMs: number;
+            }[];
+        };
+    };
+
     constructor() {
         this.policies = {};
         this.roles = {};
+        this.roleAssignments = {};
     }
 
     async listUserPolicies(
@@ -121,15 +133,55 @@ export class MemoryPolicyStore implements PolicyStore {
         recordName: string,
         userId: string
     ): Promise<Set<string>> {
-        const roles = this.roles[recordName]?.[userId];
-        return roles ?? new Set();
+        return this._getRolesForEntity(recordName, userId);
     }
 
     async listRolesForInst(
         recordName: string,
         inst: string
     ): Promise<Set<string>> {
-        const roles = this.roles[recordName]?.[inst];
-        return roles ?? new Set();
+        return this._getRolesForEntity(recordName, inst);
+    }
+
+    async updateUserRoles(
+        recordName: string,
+        userId: string,
+        update: UpdateRolesUpdate
+    ): Promise<UpdateUserRolesResult> {
+        const assignments = update.roles.filter(
+            (r) => r.expireTimeMs > Date.now()
+        );
+        this.roleAssignments[recordName][userId] = assignments;
+
+        return {
+            success: true,
+        };
+    }
+
+    async updateInstRoles(
+        recordName: string,
+        inst: string,
+        update: UpdateRolesUpdate
+    ): Promise<UpdateUserRolesResult> {
+        const assignments = update.roles.filter(
+            (r) => r.expireTimeMs > Date.now()
+        );
+        this.roleAssignments[recordName][inst] = assignments;
+
+        return {
+            success: true,
+        };
+    }
+
+    private _getRolesForEntity(recordName: string, id: string) {
+        const roles = this.roles[recordName]?.[id] ?? new Set<string>();
+        const assignments = this.roleAssignments[recordName]?.[id] ?? [];
+
+        return new Set([
+            ...roles,
+            ...assignments
+                .filter((a) => a.expireTimeMs > Date.now())
+                .map((a) => a.role),
+        ]);
     }
 }
