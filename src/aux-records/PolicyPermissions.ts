@@ -497,16 +497,18 @@ export interface GrantRolePermission extends RolePermission {
     /**
      * What user IDs can the role be granted to?
      * If true, then the role can be granted to anyone.
+     * If false, then the role cannot be granted to a user.
      * If an array of strings, then the role can only be granted to the users with the given IDs.
      */
-    userIds: string[] | true;
+    userIds: string[] | boolean;
 
     /**
      * What instances can the role be granted to?
      * If true, then the role can be granted to any instance.
+     * If false, then the role cannot be granted to an instance.
      * If a string, then it should be a Regular Expression that matches only instances that are allowed to be granted to.
      */
-    instances: string | true;
+    instances: string | boolean;
 
     /**
      * The maximum lifetime that the role can be granted for in miliseconds.
@@ -533,16 +535,18 @@ export interface RevokeRolePermission extends RolePermission {
     /**
      * What user IDs can the role be revoked from?
      * If true, then the role can be revoked from anyone.
+     * If false, then the role cannot be revoked from a user.
      * If an array of strings, then the role can only be revoked from the users with the given IDs.
      */
-    userIds: string[] | true;
+    userIds: string[] | boolean;
 
     /**
      * What instances can the role be revoked from?
      * If true, then the role can be revoked from any instance.
+     * If false, then the role cannot be revoked from an instance.
      * If a string, then it should be a Regular Expression that matches only instances that are allowed to be revoked from.
      */
-    instances: string | true;
+    instances: string | false;
 }
 
 export const REVOKE_ROLE_VALIDATION = ROLE_PERMISSION_VALIDATION.extend({
