@@ -579,6 +579,8 @@ export class PolicyController {
             return this._authorizeRoleReadRequest(context, request);
         } else if (request.action === 'role.grant') {
             return this._authorizeRoleGrantRequest(context, request);
+        } else if (request.action === 'role.revoke') {
+            return this._authorizeRoleRevokeRequest(context, request);
         }
 
         return {
@@ -2746,6 +2748,98 @@ export class PolicyController {
         };
     }
 
+    private async _authorizeRoleRevokeRequest(
+        context: AuthorizationContext,
+        request: AuthorizeRevokeRoleRequest
+    ): Promise<AuthorizeResult> {
+        return await this._authorizeRequest(
+            context,
+            request,
+            [ACCOUNT_MARKER],
+            (context, type, id) => {
+                return this._authorizeRoleRevoke(context, type, id);
+            },
+            false
+        );
+    }
+
+    private async _authorizeRoleRevoke(
+        context: RolesContext<AuthorizeRevokeRoleRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        let role: string | true | null = null;
+        let denialReason: DenialReason;
+
+        for (let marker of context.markers) {
+            const actionPermission = await this._findPermissionByFilter(
+                marker.permissions,
+                this._every(
+                    this._byRoleRevoke(
+                        'role.revoke',
+                        context.request.role,
+                        context.request.targetUserId,
+                        context.request.targetInstance
+                    ),
+                    role === null
+                        ? this._some(
+                              this._byEveryoneRole(),
+                              this._bySubjectRole(
+                                  context,
+                                  type,
+                                  context.recordName,
+                                  id
+                              )
+                          )
+                        : this._byRole(role)
+                )
+            );
+
+            if (!actionPermission) {
+                denialReason = {
+                    type: 'missing_permission',
+                    kind: type,
+                    id,
+                    marker: marker.marker,
+                    permission: 'role.revoke',
+                    role,
+                };
+                continue;
+            }
+
+            if (role === null) {
+                role = actionPermission.permission.role;
+            }
+
+            return {
+                success: true,
+                authorization: {
+                    role,
+                    markers: [
+                        {
+                            marker: marker.marker,
+                            actions: [
+                                {
+                                    action: context.request.action,
+                                    grantingPolicy: actionPermission.policy,
+                                    grantingPermission:
+                                        actionPermission.permission,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            };
+        }
+
+        return {
+            success: false,
+            reason: denialReason ?? {
+                type: 'missing_role',
+            },
+        };
+    }
+
     /**
      * Attempts to authorize the given request based on common request properties.
      *
@@ -3236,6 +3330,59 @@ export class PolicyController {
         };
     }
 
+    private _byRoleRevoke(
+        type: 'role.revoke',
+        role: string,
+        targetUserId: string,
+        targetInstance: string
+    ): PermissionFilter {
+        return async (permission) => {
+            if (permission.type !== type) {
+                return false;
+            }
+
+            if (!!targetUserId && !!targetInstance) {
+                return false;
+            } else if (!!targetUserId) {
+                if (permission.userIds === false) {
+                    return false;
+                }
+
+                if (
+                    typeof permission.userIds === 'object' &&
+                    Array.isArray(permission.userIds)
+                ) {
+                    if (permission.userIds.every((id) => id !== targetUserId)) {
+                        return false;
+                    }
+                }
+            } else if (!!targetInstance) {
+                if (permission.instances === false) {
+                    return false;
+                }
+
+                if (
+                    typeof permission.instances === 'string' &&
+                    !this._testRegex(permission.instances, targetInstance)
+                ) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+
+            if (permission.roles === true) {
+                return true;
+            }
+
+            if (this._testRegex(permission.roles, role)) {
+                return true;
+            }
+
+            return false;
+        };
+    }
+
     private _byPolicyList(type: 'policy.list'): PermissionFilter {
         return async (permission) => {
             if (permission.type !== type) {
@@ -3396,7 +3543,8 @@ export type AuthorizeRequest =
     | AuthorizeListPoliciesRequest
     | AuthorizeListRolesRequest
     | AuthorizeReadRoleRequest
-    | AuthorizeGrantRoleRequest;
+    | AuthorizeGrantRoleRequest
+    | AuthorizeRevokeRoleRequest;
 
 export interface AuthorizeRequestBase {
     /**
@@ -3663,6 +3811,20 @@ export interface AuthorizeGrantRoleRequest extends AuthorizeRoleRequest {
      * If omitted, then the grant will never expire.
      */
     expireTimeMs?: number;
+}
+
+export interface AuthorizeRevokeRoleRequest extends AuthorizeRoleRequest {
+    action: 'role.revoke';
+
+    /**
+     * The ID of the user that the role should be granted to.
+     */
+    targetUserId?: string;
+
+    /**
+     * The inst that the role should be granted to.
+     */
+    targetInstance?: string;
 }
 
 export interface ListedDataItem {

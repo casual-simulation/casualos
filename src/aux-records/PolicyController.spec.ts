@@ -13229,6 +13229,56 @@ describe('PolicyController', () => {
                     });
                 });
 
+                it('should deny the request if the expiration time is longer than the allowed duration', async () => {
+                    store.roles[recordName] = {
+                        [userId]: new Set(['developer']),
+                    };
+
+                    const secretPolicy: PolicyDocument = {
+                        permissions: [
+                            {
+                                type: 'role.grant',
+                                role: 'developer',
+                                roles: true,
+                                userIds: true,
+                                instances: true,
+                                maxDurationMs: 1000,
+                            },
+                        ],
+                    };
+
+                    store.policies[recordName] = {
+                        [ACCOUNT_MARKER]: {
+                            document: secretPolicy,
+                            markers: [ACCOUNT_MARKER],
+                        },
+                    };
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordName,
+                        action: 'role.grant',
+                        role: 'not_allowed_address',
+                        userId,
+                        ...target,
+                        expireTimeMs: Infinity,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: userId,
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.grant',
+                            role: null,
+                        },
+                    });
+                });
+
                 it('should deny the request if the user has no role assigned', async () => {
                     const result = await controller.authorizeRequest({
                         recordKeyOrRecordName: recordName,
@@ -13555,6 +13605,620 @@ describe('PolicyController', () => {
                         role: null,
                         marker: ACCOUNT_MARKER,
                         permission: 'role.grant',
+                    },
+                });
+            });
+        });
+
+        describe('role.revoke', () => {
+            const typeCases = [
+                ['user', { targetUserId: 'targetUserId' }] as const,
+                ['inst', { targetInstance: 'targetInstance' }] as const,
+            ];
+
+            describe.each(typeCases)('%s', (desc, target) => {
+                it('should deny the request if given a record key', async () => {
+                    const result = await controller.authorizeRequest({
+                        action: 'role.revoke',
+                        role: 'myRole',
+                        recordKeyOrRecordName: recordKey,
+                        userId,
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: userId,
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.revoke',
+                            role: null,
+                        },
+                    });
+                });
+
+                it('should allow the request if the user has the admin role assigned', async () => {
+                    store.roles[recordName] = {
+                        [userId]: new Set([ADMIN_ROLE_NAME]),
+                    };
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordName,
+                        action: 'role.revoke',
+                        role: 'myRole',
+                        userId,
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: true,
+                        recordName,
+                        recordKeyOwnerId: null,
+                        authorizerId: userId,
+                        subject: {
+                            userId,
+                            role: ADMIN_ROLE_NAME,
+                            subjectPolicy: 'subjectfull',
+                            markers: [
+                                {
+                                    marker: ACCOUNT_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'role.revoke',
+                                            grantingPermission: {
+                                                type: 'role.revoke',
+                                                role: ADMIN_ROLE_NAME,
+                                                roles: true,
+                                                userIds: true,
+                                                instances: true,
+                                            },
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        instances: [],
+                    });
+                });
+
+                it('should allow the request if the user has role.revoke access to the account resource marker', async () => {
+                    store.roles[recordName] = {
+                        [userId]: new Set(['developer']),
+                    };
+
+                    const accountPolicy: PolicyDocument = {
+                        permissions: [
+                            {
+                                type: 'role.revoke',
+                                role: 'developer',
+                                roles: true,
+                                userIds: true,
+                                instances: true,
+                            },
+                        ],
+                    };
+
+                    store.policies[recordName] = {
+                        [ACCOUNT_MARKER]: {
+                            document: accountPolicy,
+                            markers: [ACCOUNT_MARKER],
+                        },
+                    };
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordName,
+                        action: 'role.revoke',
+                        role: 'myRole',
+                        userId,
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: true,
+                        recordName,
+                        recordKeyOwnerId: null,
+                        authorizerId: userId,
+                        subject: {
+                            userId,
+                            role: 'developer',
+                            subjectPolicy: 'subjectfull',
+                            markers: [
+                                {
+                                    marker: ACCOUNT_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'role.revoke',
+                                            grantingPolicy: accountPolicy,
+                                            grantingPermission: {
+                                                type: 'role.revoke',
+                                                role: 'developer',
+                                                roles: true,
+                                                userIds: true,
+                                                instances: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        instances: [],
+                    });
+                });
+
+                it('should deny the request if the user does not have role.revoke access to the account resource marker', async () => {
+                    store.roles[recordName] = {
+                        [userId]: new Set(['developer']),
+                    };
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordName,
+                        action: 'role.revoke',
+                        role: 'myRole',
+                        userId,
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: userId,
+                            role: null,
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.revoke',
+                        },
+                    });
+                });
+
+                it('should deny the request if given no userId or record key', async () => {
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordName,
+                        action: 'role.revoke',
+                        role: 'myRole',
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage:
+                            'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                    });
+                });
+
+                it('should deny the request if the role.revoke permission does not allow the given role', async () => {
+                    store.roles[recordName] = {
+                        [userId]: new Set(['developer']),
+                    };
+
+                    const secretPolicy: PolicyDocument = {
+                        permissions: [
+                            {
+                                type: 'role.revoke',
+                                role: 'developer',
+                                roles: '^allowed_address$',
+                                userIds: true,
+                                instances: true,
+                            },
+                        ],
+                    };
+
+                    store.policies[recordName] = {
+                        [ACCOUNT_MARKER]: {
+                            document: secretPolicy,
+                            markers: [ACCOUNT_MARKER],
+                        },
+                    };
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordName,
+                        action: 'role.revoke',
+                        role: 'not_allowed_address',
+                        userId,
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: userId,
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.revoke',
+                            role: null,
+                        },
+                    });
+                });
+
+                it('should deny the request if the role.revoke permission does not allow the given target', async () => {
+                    store.roles[recordName] = {
+                        [userId]: new Set(['developer']),
+                    };
+
+                    const secretPolicy: PolicyDocument = {
+                        permissions: [
+                            {
+                                type: 'role.revoke',
+                                role: 'developer',
+                                roles: true,
+                                userIds: ['notTargetId'],
+                                instances: '^notTargetInst$',
+                            },
+                        ],
+                    };
+
+                    store.policies[recordName] = {
+                        [ACCOUNT_MARKER]: {
+                            document: secretPolicy,
+                            markers: [ACCOUNT_MARKER],
+                        },
+                    };
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordName,
+                        action: 'role.revoke',
+                        role: 'allowed_address',
+                        userId,
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: userId,
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.revoke',
+                            role: null,
+                        },
+                    });
+                });
+
+                it('should deny the request if the user has no role assigned', async () => {
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordName,
+                        action: 'role.revoke',
+                        role: 'myAddress',
+                        userId,
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: userId,
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.revoke',
+                            role: null,
+                        },
+                    });
+                });
+
+                it('should deny the request if given an invalid record key', async () => {
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: wrongRecordKey,
+                        action: 'role.revoke',
+                        role: 'myRole',
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'record_not_found',
+                        errorMessage: 'Record not found.',
+                    });
+                });
+
+                it('should allow the request if the user is an admin even though there is no policy for the account marker', async () => {
+                    store.roles[recordName] = {
+                        [userId]: new Set([ADMIN_ROLE_NAME]),
+                    };
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordName,
+                        action: 'role.revoke',
+                        role: 'myAddress',
+                        userId,
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: true,
+                        recordName,
+                        recordKeyOwnerId: null,
+                        authorizerId: userId,
+                        subject: {
+                            userId,
+                            role: ADMIN_ROLE_NAME,
+                            subjectPolicy: 'subjectfull',
+                            markers: [
+                                {
+                                    marker: ACCOUNT_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'role.revoke',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'role.revoke',
+                                                role: ADMIN_ROLE_NAME,
+                                                roles: true,
+                                                userIds: true,
+                                                instances: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        instances: [],
+                    });
+                });
+
+                it('should deny the request if the request is coming from an inst and no role has been provided to said inst', async () => {
+                    store.roles[recordName] = {
+                        [userId]: new Set([ADMIN_ROLE_NAME]),
+                    };
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordName,
+                        action: 'role.revoke',
+                        role: 'myAddress',
+                        userId,
+                        instances: ['instance'],
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'inst',
+                            id: 'instance',
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.revoke',
+                            role: null,
+                        },
+                    });
+                });
+
+                it('should not skip inst role checks when a record key is used', async () => {
+                    store.roles[recordName] = {
+                        [userId]: new Set([ADMIN_ROLE_NAME]),
+                    };
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordKey,
+                        action: 'role.revoke',
+                        role: 'myAddress',
+                        userId,
+                        instances: ['instance'],
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'inst',
+                            id: 'instance',
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.revoke',
+                            role: null,
+                        },
+                    });
+                });
+
+                it('should allow the request if all the instances have roles for the data', async () => {
+                    store.roles[recordName] = {
+                        [userId]: new Set([ADMIN_ROLE_NAME]),
+                        ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                        ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                    };
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordName,
+                        action: 'role.revoke',
+                        role: 'myAddress',
+                        userId,
+                        instances: ['instance1', 'instance2'],
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: true,
+                        recordName,
+                        recordKeyOwnerId: null,
+                        authorizerId: userId,
+                        subject: {
+                            userId,
+                            role: ADMIN_ROLE_NAME,
+                            subjectPolicy: 'subjectfull',
+                            markers: [
+                                {
+                                    marker: ACCOUNT_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'role.revoke',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'role.revoke',
+                                                role: ADMIN_ROLE_NAME,
+                                                roles: true,
+                                                userIds: true,
+                                                instances: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        instances: [
+                            {
+                                inst: 'instance1',
+                                authorizationType: 'allowed',
+                                role: ADMIN_ROLE_NAME,
+                                markers: [
+                                    {
+                                        marker: ACCOUNT_MARKER,
+                                        actions: [
+                                            {
+                                                action: 'role.revoke',
+                                                grantingPolicy:
+                                                    DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                                grantingPermission: {
+                                                    type: 'role.revoke',
+                                                    role: ADMIN_ROLE_NAME,
+                                                    roles: true,
+                                                    userIds: true,
+                                                    instances: true,
+                                                },
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            {
+                                inst: 'instance2',
+                                authorizationType: 'allowed',
+                                role: ADMIN_ROLE_NAME,
+                                markers: [
+                                    {
+                                        marker: ACCOUNT_MARKER,
+                                        actions: [
+                                            {
+                                                action: 'role.revoke',
+                                                grantingPolicy:
+                                                    DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                                grantingPermission: {
+                                                    type: 'role.revoke',
+                                                    role: ADMIN_ROLE_NAME,
+                                                    roles: true,
+                                                    userIds: true,
+                                                    instances: true,
+                                                },
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    });
+                });
+
+                it('should deny the request if more than 2 instances are provided', async () => {
+                    store.roles[recordName] = {
+                        [userId]: new Set([ADMIN_ROLE_NAME]),
+                        ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                        ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                        ['instance3']: new Set([ADMIN_ROLE_NAME]),
+                    };
+
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: recordName,
+                        action: 'role.revoke',
+                        role: 'myAddress',
+                        userId,
+                        instances: ['instance1', 'instance2', 'instance3'],
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                        reason: {
+                            type: 'too_many_insts',
+                        },
+                    });
+                });
+            });
+
+            it('should deny the request if no target is given', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'role.revoke',
+                    role: 'myRole',
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'role.revoke',
+                    },
+                });
+            });
+
+            it('should deny the request if both a target user and inst is given', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'role.revoke',
+                    role: 'myRole',
+                    userId,
+                    targetUserId: 'targetUserId',
+                    targetInstance: 'targetInstance',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'role.revoke',
                     },
                 });
             });
