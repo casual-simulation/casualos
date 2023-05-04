@@ -546,7 +546,7 @@ export interface RevokeRolePermission extends RolePermission {
      * If false, then the role cannot be revoked from an instance.
      * If a string, then it should be a Regular Expression that matches only instances that are allowed to be revoked from.
      */
-    instances: string | false;
+    instances: string | boolean;
 }
 
 export const REVOKE_ROLE_VALIDATION = ROLE_PERMISSION_VALIDATION.extend({
