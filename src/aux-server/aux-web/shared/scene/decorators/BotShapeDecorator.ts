@@ -494,7 +494,7 @@ export class BotShapeDecorator
             this.container.remove(this._iframe.object3d);
             disposeObject3D(this._iframe.object3d);
         }
-        disposeGroup(this.scene);
+        disposeGroup(this.scene, true, true, true);
 
         if (this._keyboard) {
             for (let key of (this._keyboard as any).keys) {
@@ -538,7 +538,16 @@ export class BotShapeDecorator
     }
 
     private _setColor(color: any) {
-        setColor(this.mesh, color);
+        if (this.scene) {
+            // Color all meshes inside the gltf scene.
+            this.scene.traverse((obj) => {
+                if (obj instanceof Mesh) {
+                    setColor(obj, color);
+                }
+            });
+        } else {
+            setColor(this.mesh, color);
+        }
 
         if (this._keyboard) {
             let expectedColor = color
@@ -819,13 +828,18 @@ export class BotShapeDecorator
             );
         }
 
-        const material: any = this.mesh.material;
-        if (material) {
-            registerMaterial(material);
-        }
-        if (material && material.color) {
-            material[DEFAULT_COLOR] = material.color;
-        }
+        this.scene.traverse((obj) => {
+            if (obj instanceof Mesh) {
+                const material = obj.material;
+                if (material) {
+                    registerMaterial(material);
+
+                    if (material.color) {
+                        material[DEFAULT_COLOR] = material.color;
+                    }
+                }
+            }
+        });
 
         this._updateColor(null);
         this._updateRenderOrder(null);

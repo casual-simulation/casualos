@@ -501,28 +501,11 @@ export function disposeMesh(
 export function disposeObject3D(
     object3d: Object3D,
     disposeGeometry: boolean = true,
-    disposeMaterial: boolean = true
+    disposeMat: boolean = true,
+    disposeTextures: boolean = false
 ) {
-    if (!object3d) return;
-
-    if (disposeGeometry) {
-        let geometry = (<any>object3d).geometry;
-        if (geometry) {
-            geometry.dispose();
-        }
-    }
-
-    if (disposeMaterial) {
-        let material = (<any>object3d).material;
-        if (material) {
-            if (Array.isArray(material)) {
-                for (let i = 0; i < material.length; i++) {
-                    material[i].dispose();
-                }
-            } else {
-                material.dispose();
-            }
-        }
+    if (object3d instanceof Mesh) {
+        disposeMesh(object3d, disposeGeometry, disposeMat, disposeTextures);
     }
 }
 
@@ -530,11 +513,18 @@ export function disposeObject3D(
  * Disposes of the entire group.
  * @param group The group to dispose.
  */
-export function disposeGroup(group: Group) {
+export function disposeGroup(
+    group: Group,
+    disposeGeometry: boolean = true,
+    disposeMat: boolean = true,
+    disposeTextures: boolean = false
+) {
     if (!group) {
         return;
     }
-    group.traverse((obj) => disposeObject3D(obj));
+    group.traverse((obj) =>
+        disposeObject3D(obj, disposeGeometry, disposeMat, disposeTextures)
+    );
 }
 
 /**
