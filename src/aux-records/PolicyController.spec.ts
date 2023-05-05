@@ -15133,7 +15133,7 @@ describe('PolicyController', () => {
         });
     });
 
-    describe('listAssignedUserRoles()', () => {
+    describe('listUserRoles()', () => {
         beforeEach(() => {
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -15142,7 +15142,7 @@ describe('PolicyController', () => {
         });
 
         it('should list the roles for the given user', async () => {
-            const result = await controller.listAssignedUserRoles(
+            const result = await controller.listUserRoles(
                 recordName,
                 userId,
                 'testId'
@@ -15170,7 +15170,7 @@ describe('PolicyController', () => {
         it('should deny the request if the user is not authorized', async () => {
             delete store.roles[recordName][userId];
 
-            const result = await controller.listAssignedUserRoles(
+            const result = await controller.listUserRoles(
                 recordName,
                 userId,
                 'testId'
@@ -15192,7 +15192,7 @@ describe('PolicyController', () => {
         });
 
         it('should deny the request if the inst is not authorized', async () => {
-            const result = await controller.listAssignedUserRoles(
+            const result = await controller.listUserRoles(
                 recordName,
                 userId,
                 'testId',
@@ -15215,7 +15215,7 @@ describe('PolicyController', () => {
         });
     });
 
-    describe('listAssignedInstRoles()', () => {
+    describe('listInstRoles()', () => {
         beforeEach(() => {
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -15224,7 +15224,7 @@ describe('PolicyController', () => {
         });
 
         it('should list the roles for the given inst', async () => {
-            const result = await controller.listAssignedInstRoles(
+            const result = await controller.listInstRoles(
                 recordName,
                 userId,
                 'testId'
@@ -15252,7 +15252,7 @@ describe('PolicyController', () => {
         it('should deny the request if the user is not authorized', async () => {
             delete store.roles[recordName][userId];
 
-            const result = await controller.listAssignedInstRoles(
+            const result = await controller.listInstRoles(
                 recordName,
                 userId,
                 'testId'
@@ -15274,7 +15274,7 @@ describe('PolicyController', () => {
         });
 
         it('should deny the request if the inst is not authorized', async () => {
-            const result = await controller.listAssignedInstRoles(
+            const result = await controller.listInstRoles(
                 recordName,
                 userId,
                 'testId',

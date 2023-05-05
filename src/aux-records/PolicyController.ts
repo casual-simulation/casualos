@@ -534,7 +534,7 @@ export class PolicyController {
      * @param subjectId The ID of the user whose roles should be listed.
      * @param instances The instances that the request is being made from.
      */
-    async listAssignedUserRoles(
+    async listUserRoles(
         recordKeyOrRecordName: string,
         userId: string,
         subjectId: string,
@@ -595,7 +595,7 @@ export class PolicyController {
      * @param subjectId The ID of the inst whose roles should be listed.
      * @param instances The instances that the request is being made from.
      */
-    async listAssignedInstRoles(
+    async listInstRoles(
         recordKeyOrRecordName: string,
         userId: string,
         subjectId: string,
