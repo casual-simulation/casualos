@@ -15297,7 +15297,7 @@ describe('PolicyController', () => {
         });
     });
 
-    describe.only('listRoleAssignments()', () => {
+    describe('listRoleAssignments()', () => {
         beforeEach(() => {
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
