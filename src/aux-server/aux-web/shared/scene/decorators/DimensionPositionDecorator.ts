@@ -88,6 +88,7 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
     private _rotationObj: Object3D;
     private _game: Game;
     private _tween: any;
+    private _transformerWorldPos: Vector3;
 
     constructor(
         bot3D: AuxBot3D,
@@ -379,6 +380,37 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
                     euler.x = 0;
                     euler.y = 0;
                     this._rotationObj.setRotationFromEuler(euler);
+                }
+            }
+
+            // Update bounding objects if trasnformer bot moves.
+            const transformer = getBotTransformer(calc, this.bot3D.bot);
+
+            if (transformer) {
+                const bots =
+                    this.bot3D.dimensionGroup.simulation3D.findBotsById(
+                        transformer
+                    );
+                const parentBot = bots.length ? bots[0] : null;
+
+                if (parentBot instanceof AuxBot3D) {
+                    if (!this._transformerWorldPos) {
+                        this._transformerWorldPos = new Vector3();
+                        parentBot.getWorldPosition(this._transformerWorldPos);
+                        this.bot3D.forceComputeBoundingObjects();
+                    } else {
+                        const lastTransformerPos =
+                            this._transformerWorldPos.clone();
+                        parentBot.getWorldPosition(this._transformerWorldPos);
+
+                        if (
+                            !this._transformerWorldPos.equals(
+                                lastTransformerPos
+                            )
+                        ) {
+                            this.bot3D.forceComputeBoundingObjects();
+                        }
+                    }
                 }
             }
 

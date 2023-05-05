@@ -26,6 +26,8 @@
 -   Fixed an issue where `os.getMediaPermission` would leave tracks in a MediaStream running. Some browsers/devices release these automatically, while others would leave the tracks running and cause issues with other systems that utilize audio and video hardware like augmented reality.
 -   Fixed an issue where `data:` URLs would not work in the `formAddress` tag without a workaround.
 -   Fixed an issue where it was impossible to create record keys on deployments that did not have a subscription configuration.
+-   Fixed an issue where the bounding objects of a transformed bot did not update if its `transformer` moved.
+    -   This fixes a reported bug with `lineTo` to updating correctly while using the `transformer` tag. [PR #276](https://github.com/casual-simulation/casualos/issues/276)
 
 ## V3.1.28
 
