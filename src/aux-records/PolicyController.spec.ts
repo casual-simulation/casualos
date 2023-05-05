@@ -15132,6 +15132,267 @@ describe('PolicyController', () => {
             });
         });
     });
+
+    describe('listAssignedUserRoles()', () => {
+        beforeEach(() => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+                ['testId']: new Set(['role1', 'role2', 'abc']),
+            };
+        });
+
+        it('should list the roles for the given user', async () => {
+            const result = await controller.listAssignedUserRoles(
+                recordName,
+                userId,
+                'testId'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                roles: [
+                    {
+                        role: 'abc',
+                        expireTimeMs: Infinity,
+                    },
+                    {
+                        role: 'role1',
+                        expireTimeMs: Infinity,
+                    },
+                    {
+                        role: 'role2',
+                        expireTimeMs: Infinity,
+                    },
+                ],
+            });
+        });
+
+        it('should deny the request if the user is not authorized', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await controller.listAssignedUserRoles(
+                recordName,
+                userId,
+                'testId'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'role.list',
+                    kind: 'user',
+                    id: userId,
+                    marker: ACCOUNT_MARKER,
+                    role: null,
+                },
+            });
+        });
+
+        it('should deny the request if the inst is not authorized', async () => {
+            const result = await controller.listAssignedUserRoles(
+                recordName,
+                userId,
+                'testId',
+                ['inst']
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'role.list',
+                    kind: 'inst',
+                    id: 'inst',
+                    marker: ACCOUNT_MARKER,
+                    role: null,
+                },
+            });
+        });
+    });
+
+    describe('listAssignedInstRoles()', () => {
+        beforeEach(() => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+                ['testId']: new Set(['role1', 'role2', 'abc']),
+            };
+        });
+
+        it('should list the roles for the given inst', async () => {
+            const result = await controller.listAssignedInstRoles(
+                recordName,
+                userId,
+                'testId'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                roles: [
+                    {
+                        role: 'abc',
+                        expireTimeMs: Infinity,
+                    },
+                    {
+                        role: 'role1',
+                        expireTimeMs: Infinity,
+                    },
+                    {
+                        role: 'role2',
+                        expireTimeMs: Infinity,
+                    },
+                ],
+            });
+        });
+
+        it('should deny the request if the user is not authorized', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await controller.listAssignedInstRoles(
+                recordName,
+                userId,
+                'testId'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'role.list',
+                    kind: 'user',
+                    id: userId,
+                    marker: ACCOUNT_MARKER,
+                    role: null,
+                },
+            });
+        });
+
+        it('should deny the request if the inst is not authorized', async () => {
+            const result = await controller.listAssignedInstRoles(
+                recordName,
+                userId,
+                'testId',
+                ['inst']
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'role.list',
+                    kind: 'inst',
+                    id: 'inst',
+                    marker: ACCOUNT_MARKER,
+                    role: null,
+                },
+            });
+        });
+    });
+
+    describe.only('listRoleAssignments()', () => {
+        beforeEach(() => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+                ['testId']: new Set(['role1', 'role2', 'abc']),
+                ['testId2']: new Set(['role1', 'role2', 'abc']),
+                ['testId4']: new Set(['role2']),
+                ['testId3']: new Set(['role1']),
+            };
+        });
+
+        it('should list the users that are assigned the given role', async () => {
+            const result = await controller.listRoleAssignments(
+                recordName,
+                userId,
+                'role1'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                assignments: [
+                    {
+                        type: 'user',
+                        userId: 'testId',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: Infinity,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId2',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: Infinity,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId3',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: Infinity,
+                        },
+                    },
+                ],
+            });
+        });
+
+        it('should deny the request if the user is not authorized', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await controller.listRoleAssignments(
+                recordName,
+                userId,
+                'role1'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'role.list',
+                    kind: 'user',
+                    id: userId,
+                    marker: ACCOUNT_MARKER,
+                    role: null,
+                },
+            });
+        });
+
+        it('should deny the request if the inst is not authorized', async () => {
+            const result = await controller.listRoleAssignments(
+                recordName,
+                userId,
+                'role1',
+                ['inst']
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'role.list',
+                    kind: 'inst',
+                    id: 'inst',
+                    marker: ACCOUNT_MARKER,
+                    role: null,
+                },
+            });
+        });
+    });
 });
 
 describe('willMarkersBeRemaining()', () => {

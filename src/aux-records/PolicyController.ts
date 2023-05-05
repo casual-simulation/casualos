@@ -25,12 +25,14 @@ import {
 } from './PolicyPermissions';
 import { PublicRecordKeyPolicy } from './RecordsStore';
 import {
+    AssignedRole,
     GetUserPolicyFailure,
     PolicyStore,
+    RoleAssignment,
     UpdateUserPolicyFailure,
     UserPolicy,
 } from './PolicyStore';
-import { intersectionBy, isEqual, union } from 'lodash';
+import { intersectionBy, isEqual, sortBy, union } from 'lodash';
 
 /**
  * The maximum number of instances that can be authorized at once.
@@ -514,6 +516,189 @@ export class PolicyController {
             return {
                 success: true,
                 policies: result,
+            };
+        } catch (err) {
+            console.error('[PolicyController] A server error occurred.', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to list the roles that are assigned to a user.
+     * @param recordKeyOrRecordName The record key or the name of the record.
+     * @param userId The ID of the user that is currently logged in.
+     * @param subjectId The ID of the user whose roles should be listed.
+     * @param instances The instances that the request is being made from.
+     */
+    async listAssignedUserRoles(
+        recordKeyOrRecordName: string,
+        userId: string,
+        subjectId: string,
+        instances?: string[]
+    ): Promise<ListAssignedUserRolesResult> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: recordKeyOrRecordName,
+                userId: userId,
+            };
+            const context = await this.constructAuthorizationContext(
+                baseRequest
+            );
+            if (context.success === false) {
+                return {
+                    success: false,
+                    errorCode: context.errorCode,
+                    errorMessage: context.errorMessage,
+                };
+            }
+
+            const authorization = await this.authorizeRequestUsingContext(
+                context.context,
+                {
+                    action: 'role.list',
+                    ...baseRequest,
+                    instances,
+                }
+            );
+
+            if (authorization.allowed === false) {
+                return returnAuthorizationResult(authorization);
+            }
+
+            const result = await this._policies.listRolesForUser(
+                context.context.recordName,
+                subjectId
+            );
+
+            return {
+                success: true,
+                roles: sortBy(result, (r) => r.role),
+            };
+        } catch (err) {
+            console.error('[PolicyController] A server error occurred.', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to list the roles that are assigned to an inst.
+     * @param recordKeyOrRecordName The record key or the name of the record.
+     * @param userId The ID of the user that is currently logged in.
+     * @param subjectId The ID of the inst whose roles should be listed.
+     * @param instances The instances that the request is being made from.
+     */
+    async listAssignedInstRoles(
+        recordKeyOrRecordName: string,
+        userId: string,
+        subjectId: string,
+        instances?: string[]
+    ): Promise<ListAssignedInstRolesResult> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: recordKeyOrRecordName,
+                userId: userId,
+            };
+            const context = await this.constructAuthorizationContext(
+                baseRequest
+            );
+            if (context.success === false) {
+                return {
+                    success: false,
+                    errorCode: context.errorCode,
+                    errorMessage: context.errorMessage,
+                };
+            }
+
+            const authorization = await this.authorizeRequestUsingContext(
+                context.context,
+                {
+                    action: 'role.list',
+                    ...baseRequest,
+                    instances,
+                }
+            );
+
+            if (authorization.allowed === false) {
+                return returnAuthorizationResult(authorization);
+            }
+
+            const result = await this._policies.listRolesForInst(
+                context.context.recordName,
+                subjectId
+            );
+
+            return {
+                success: true,
+                roles: sortBy(result, (r) => r.role),
+            };
+        } catch (err) {
+            console.error('[PolicyController] A server error occurred.', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to list the entities that are assigned the given role.
+     * @param recordKeyOrRecordName The record key or the name of the record.
+     * @param userId The ID of the user that is currently logged in.
+     * @param role The name of the role whose assigments should be listed.
+     * @param instances The instances that the request is being made from.
+     */
+    async listRoleAssignments(
+        recordKeyOrRecordName: string,
+        userId: string,
+        role: string,
+        instances?: string[]
+    ): Promise<ListRoleAssignmentsResult> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: recordKeyOrRecordName,
+                userId: userId,
+            };
+            const context = await this.constructAuthorizationContext(
+                baseRequest
+            );
+            if (context.success === false) {
+                return {
+                    success: false,
+                    errorCode: context.errorCode,
+                    errorMessage: context.errorMessage,
+                };
+            }
+
+            const authorization = await this.authorizeRequestUsingContext(
+                context.context,
+                {
+                    action: 'role.list',
+                    ...baseRequest,
+                    instances,
+                }
+            );
+
+            if (authorization.allowed === false) {
+                return returnAuthorizationResult(authorization);
+            }
+
+            const result = await this._policies.listAssignmentsForRole(
+                context.context.recordName,
+                role
+            );
+
+            return {
+                success: true,
+                assignments: result.assignments,
             };
         } catch (err) {
             console.error('[PolicyController] A server error occurred.', err);
@@ -3187,10 +3372,11 @@ export class PolicyController {
     ): PermissionFilter {
         return async (permission) => {
             if (!context.userRoles) {
-                context.userRoles = await this._policies.listRolesForUser(
+                const roles = await this._policies.listRolesForUser(
                     recordName,
                     userId
                 );
+                context.userRoles = new Set(roles.map((r) => r.role));
             }
 
             return (
@@ -3207,10 +3393,11 @@ export class PolicyController {
     ): PermissionFilter {
         return async (permission) => {
             if (!context.instRoles[inst]) {
-                context.instRoles[inst] = await this._policies.listRolesForInst(
+                const roles = await this._policies.listRolesForInst(
                     recordName,
                     inst
                 );
+                context.instRoles[inst] = new Set(roles.map((r) => r.role));
             }
 
             return (
@@ -4163,6 +4350,63 @@ export interface ListUserPoliciesSuccess {
 }
 
 export interface ListUserPoliciesFailure {
+    success: false;
+    errorCode: ServerError | AuthorizeDenied['errorCode'];
+    errorMessage: string;
+}
+
+export type ListAssignedUserRolesResult =
+    | ListAssignedUserRolesSuccess
+    | ListAssignedUserRolesFailure;
+
+export interface ListAssignedUserRolesSuccess {
+    success: true;
+
+    /**
+     * The list of roles that are assigned to the user.
+     */
+    roles: AssignedRole[];
+}
+
+export interface ListAssignedUserRolesFailure {
+    success: false;
+    errorCode: ServerError | AuthorizeDenied['errorCode'];
+    errorMessage: string;
+}
+
+export type ListAssignedInstRolesResult =
+    | ListAssignedInstRolesSuccess
+    | ListAssignedInstRolesFailure;
+
+export interface ListAssignedInstRolesSuccess {
+    success: true;
+
+    /**
+     * The list of roles that are assigned to the inst.
+     */
+    roles: AssignedRole[];
+}
+
+export interface ListAssignedInstRolesFailure {
+    success: false;
+    errorCode: ServerError | AuthorizeDenied['errorCode'];
+    errorMessage: string;
+}
+
+export type ListRoleAssignmentsResult =
+    | ListRoleAssignmentsSuccess
+    | ListRoleAssignmentsFailure;
+
+export interface ListRoleAssignmentsSuccess {
+    success: true;
+
+    /**
+     * The list of assignments for the role.
+     */
+    assignments: RoleAssignment[];
+}
+
+export interface ListRoleAssignmentsFailure {
     success: false;
     errorCode: ServerError | AuthorizeDenied['errorCode'];
     errorMessage: string;

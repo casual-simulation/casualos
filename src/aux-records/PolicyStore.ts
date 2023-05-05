@@ -30,14 +30,27 @@ export interface PolicyStore {
      * @param recordName The name of the record that the role assignments belong to.
      * @param userId The ID of the user.
      */
-    listRolesForUser(recordName: string, userId: string): Promise<Set<string>>;
+    listRolesForUser(
+        recordName: string,
+        userId: string
+    ): Promise<AssignedRole[]>;
 
     /**
      * Lists the roles that are assigned to the given inst.
      * @param recordName The name of the record.
      * @param inst The name of the inst.
      */
-    listRolesForInst(recordName: string, inst: string): Promise<Set<string>>;
+    listRolesForInst(recordName: string, inst: string): Promise<AssignedRole[]>;
+
+    /**
+     * Lists the assignments for the given role.
+     * @param recordName The name of the record.
+     * @param role The name of the role.
+     */
+    listAssignmentsForRole(
+        recordName: string,
+        role: string
+    ): Promise<ListedRoleAssignments>;
 
     /**
      * Gets the user-created policy for the given marker.
@@ -168,4 +181,22 @@ export interface UpdateUserRolesFailure {
     success: false;
     errorCode: ServerError | 'roles_too_large';
     errorMessage: string;
+}
+
+export interface ListedRoleAssignments {
+    assignments: RoleAssignment[];
+}
+
+export type RoleAssignment = UserRoleAssignment | InstRoleAssignment;
+
+export interface UserRoleAssignment {
+    type: 'user';
+    userId: string;
+    role: AssignedRole;
+}
+
+export interface InstRoleAssignment {
+    type: 'inst';
+    inst: string;
+    role: AssignedRole;
 }
