@@ -494,7 +494,16 @@ export class BotShapeDecorator
             this.container.remove(this._iframe.object3d);
             disposeObject3D(this._iframe.object3d);
         }
-        disposeGroup(this.scene, true, true, true);
+
+        if (this.scene) {
+            this.scene.traverse((obj) => {
+                if (obj instanceof Mesh) {
+                    disposeMesh(obj, true, true, true);
+                } else {
+                    disposeObject3D(obj);
+                }
+            });
+        }
 
         if (this._keyboard) {
             for (let key of (this._keyboard as any).keys) {
