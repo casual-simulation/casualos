@@ -5997,6 +5997,175 @@ describe('RecordsHttpServer', () => {
         );
     });
 
+    describe('POST /api/v2/records/role/revoke', () => {
+        beforeEach(() => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            policyStore.roleAssignments[recordName] = {
+                ['testId']: [
+                    {
+                        role: 'role1',
+                        expireTimeMs: null,
+                    },
+                ],
+            };
+        });
+
+        it('should revoke the role from the given user', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/role/revoke`,
+                    JSON.stringify({
+                        recordName,
+                        userId: 'testId',
+                        role: 'role1',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const roles = await policyStore.listRolesForUser(
+                recordName,
+                'testId'
+            );
+
+            expect(roles).toEqual([]);
+        });
+
+        it('should revoke the role from the given inst', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/role/revoke`,
+                    JSON.stringify({
+                        recordName,
+                        inst: 'testId',
+                        role: 'role1',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const roles = await policyStore.listRolesForInst(
+                recordName,
+                'testId'
+            );
+
+            expect(roles).toEqual([]);
+        });
+
+        it('should return an unacceptable_request result when not given a recordName', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/role/revoke`,
+                    JSON.stringify({
+                        userId: 'testId',
+                        role: 'role1',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName is required.',
+                            path: ['recordName'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a role', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/role/revoke`,
+                    JSON.stringify({
+                        recordName,
+                        userId: 'testId',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'role is required.',
+                            path: ['role'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/records/role/revoke`, () =>
+            JSON.stringify({ recordName, userId: 'testId', role: 'role1' })
+        );
+        testAuthorization(
+            () =>
+                httpPost(
+                    `/api/v2/records/role/revoke`,
+                    JSON.stringify({
+                        recordName,
+                        userId: 'testId',
+                        role: 'role1',
+                    }),
+                    apiHeaders
+                ),
+            'The user is not logged in. A session key must be provided for this operation.'
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/records/role/revoke`,
+                JSON.stringify({
+                    recordName,
+                    userId: 'testId',
+                    role: 'role1',
+                }),
+                defaultHeaders
+            )
+        );
+    });
+
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
         const result = await server.handleRequest(
             httpRequest('GET', `/api/missing`, null)
