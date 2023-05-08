@@ -15393,6 +15393,133 @@ describe('PolicyController', () => {
             });
         });
     });
+
+    describe('grantRole()', () => {
+        beforeEach(() => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should grant the role to the given user', async () => {
+            const result = await controller.grantRole(recordName, userId, {
+                userId: 'testId',
+                role: 'role1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const roles = await store.listRolesForUser(recordName, 'testId');
+
+            expect(roles).toEqual([
+                {
+                    role: 'role1',
+                    expireTimeMs: Infinity,
+                },
+            ]);
+        });
+
+        it('should be able to set an expiration time', async () => {
+            const expireTime = Date.now() + 100000;
+            const result = await controller.grantRole(recordName, userId, {
+                userId: 'testId',
+                role: 'role1',
+                expireTimeMs: expireTime,
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const roles = await store.listRolesForUser(recordName, 'testId');
+
+            expect(roles).toEqual([
+                {
+                    role: 'role1',
+                    expireTimeMs: expireTime,
+                },
+            ]);
+        });
+
+        it('should grant the role to the given instance', async () => {
+            const result = await controller.grantRole(recordName, userId, {
+                instance: 'inst',
+                role: 'role1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const roles = await store.listRolesForInst(recordName, 'inst');
+
+            expect(roles).toEqual([
+                {
+                    role: 'role1',
+                    expireTimeMs: Infinity,
+                },
+            ]);
+        });
+
+        it('should deny the request if the current user is not authorized', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await controller.grantRole(recordName, userId, {
+                userId: 'testId',
+                role: 'role1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'role.grant',
+                    kind: 'user',
+                    id: userId,
+                    marker: ACCOUNT_MARKER,
+                    role: null,
+                },
+            });
+
+            const roles = await store.listRolesForUser(recordName, 'testId');
+
+            expect(roles).toEqual([]);
+        });
+
+        it('should deny the request if one of the given instances is not authorized', async () => {
+            const result = await controller.grantRole(
+                recordName,
+                userId,
+                {
+                    userId: 'testId',
+                    role: 'role1',
+                },
+                ['inst']
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'role.grant',
+                    kind: 'inst',
+                    id: 'inst',
+                    marker: ACCOUNT_MARKER,
+                    role: null,
+                },
+            });
+
+            const roles = await store.listRolesForUser(recordName, 'testId');
+
+            expect(roles).toEqual([]);
+        });
+    });
 });
 
 describe('willMarkersBeRemaining()', () => {

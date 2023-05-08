@@ -30,6 +30,7 @@ import {
     PolicyStore,
     RoleAssignment,
     UpdateUserPolicyFailure,
+    UpdateUserRolesFailure,
     UserPolicy,
 } from './PolicyStore';
 import { intersectionBy, isEqual, sortBy, union } from 'lodash';
@@ -699,6 +700,136 @@ export class PolicyController {
             return {
                 success: true,
                 assignments: result.assignments,
+            };
+        } catch (err) {
+            console.error('[PolicyController] A server error occurred.', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to grant a role to a user.
+     * @param recordKeyOrRecordName The record key or the name of the record.
+     * @param userId The ID of the user that is currently logged in.
+     * @param request The request to grant the role.
+     * @param instances The instances that the request is being made from.
+     */
+    async grantRole(
+        recordKeyOrRecordName: string,
+        userId: string,
+        request: GrantRoleRequest,
+        instances?: string[]
+    ): Promise<GrantRoleResult> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: recordKeyOrRecordName,
+                userId: userId,
+            };
+            const context = await this.constructAuthorizationContext(
+                baseRequest
+            );
+            if (context.success === false) {
+                return {
+                    success: false,
+                    errorCode: context.errorCode,
+                    errorMessage: context.errorMessage,
+                };
+            }
+
+            const recordName = context.context.recordName;
+            const targetUserId = request.userId;
+            const targetInstance = request.instance;
+            const expireTimeMs = request.expireTimeMs ?? Infinity;
+            const authorization = await this.authorizeRequestUsingContext(
+                context.context,
+                {
+                    action: 'role.grant',
+                    ...baseRequest,
+                    instances,
+                    role: request.role,
+                    targetUserId,
+                    targetInstance,
+                    expireTimeMs,
+                }
+            );
+
+            if (authorization.allowed === false) {
+                return returnAuthorizationResult(authorization);
+            }
+
+            const makeNewRoles = (
+                roles: AssignedRole[],
+                role: AssignedRole
+            ) => {
+                // Remove all the same roles that expire before the new one.
+                const filtered = roles.filter(
+                    (r) =>
+                        r.role !== request.role ||
+                        r.expireTimeMs <= expireTimeMs
+                );
+                return [...filtered, role];
+            };
+
+            if (targetUserId) {
+                const roles = await this._policies.listRolesForUser(
+                    recordName,
+                    targetUserId
+                );
+                const newRoles = makeNewRoles(roles, {
+                    role: request.role,
+                    expireTimeMs,
+                });
+
+                const result = await this._policies.updateUserRoles(
+                    recordName,
+                    targetUserId,
+                    {
+                        roles: newRoles,
+                    }
+                );
+
+                if (result.success === false) {
+                    return result;
+                }
+
+                return {
+                    success: true,
+                };
+            } else if (targetInstance) {
+                const roles = await this._policies.listRolesForInst(
+                    recordName,
+                    targetInstance
+                );
+                const newRoles = makeNewRoles(roles, {
+                    role: request.role,
+                    expireTimeMs,
+                });
+                const result = await this._policies.updateInstRoles(
+                    recordName,
+                    targetInstance,
+                    {
+                        roles: newRoles,
+                    }
+                );
+
+                if (result.success === false) {
+                    return result;
+                }
+
+                return {
+                    success: true,
+                };
+            }
+
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'Either a user ID or an instance must be specified.',
             };
         } catch (err) {
             console.error('[PolicyController] A server error occurred.', err);
@@ -4409,5 +4540,27 @@ export interface ListRoleAssignmentsSuccess {
 export interface ListRoleAssignmentsFailure {
     success: false;
     errorCode: ServerError | AuthorizeDenied['errorCode'];
+    errorMessage: string;
+}
+
+export interface GrantRoleRequest {
+    userId?: string;
+    instance?: string;
+    role: string;
+    expireTimeMs?: number;
+}
+
+export type GrantRoleResult = GrantRoleSuccess | GrantRoleFailure;
+
+export interface GrantRoleSuccess {
+    success: true;
+}
+
+export interface GrantRoleFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | AuthorizeDenied['errorCode']
+        | UpdateUserRolesFailure['errorCode'];
     errorMessage: string;
 }
