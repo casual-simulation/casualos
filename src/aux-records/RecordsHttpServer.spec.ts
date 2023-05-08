@@ -5490,6 +5490,130 @@ describe('RecordsHttpServer', () => {
         );
     });
 
+    describe('GET /api/v2/records/role/inst/list', () => {
+        beforeEach(() => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+            policyStore.roleAssignments[recordName] = {
+                ['testId']: [
+                    {
+                        role: 'role1',
+                        expireTimeMs: null,
+                    },
+                    {
+                        role: 'abc',
+                        expireTimeMs: null,
+                    },
+                ],
+            };
+        });
+
+        it('should list the roles for the given inst', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/role/inst/list?recordName=${recordName}&inst=${'testId'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    roles: [
+                        {
+                            role: 'abc',
+                            expireTimeMs: null,
+                        },
+                        {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a recordName', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/role/inst/list?inst=${'testId'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName is required.',
+                            path: ['recordName'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a userId', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/role/inst/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'inst is required.',
+                            path: ['inst'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin(
+            'GET',
+            `/api/v2/records/role/inst/list?recordName=${recordName}&inst=${'testId'}`
+        );
+        testAuthorization(
+            () =>
+                httpGet(
+                    `/api/v2/records/role/inst/list?recordName=${recordName}&inst=${'testId'}`,
+                    apiHeaders
+                ),
+            'The user is not logged in. A session key must be provided for this operation.'
+        );
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/role/inst/list?recordName=${recordName}&inst=${'testId'}`,
+                defaultHeaders
+            )
+        );
+    });
+
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
         const result = await server.handleRequest(
             httpRequest('GET', `/api/missing`, null)
