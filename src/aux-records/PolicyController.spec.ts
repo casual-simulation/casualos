@@ -13261,7 +13261,7 @@ describe('PolicyController', () => {
                         role: 'not_allowed_address',
                         userId,
                         ...target,
-                        expireTimeMs: Infinity,
+                        expireTimeMs: null,
                     });
 
                     expect(result).toEqual({
@@ -15154,15 +15154,15 @@ describe('PolicyController', () => {
                 roles: [
                     {
                         role: 'abc',
-                        expireTimeMs: Infinity,
+                        expireTimeMs: null,
                     },
                     {
                         role: 'role1',
-                        expireTimeMs: Infinity,
+                        expireTimeMs: null,
                     },
                     {
                         role: 'role2',
-                        expireTimeMs: Infinity,
+                        expireTimeMs: null,
                     },
                 ],
             });
@@ -15180,15 +15180,15 @@ describe('PolicyController', () => {
                 roles: [
                     {
                         role: 'abc',
-                        expireTimeMs: Infinity,
+                        expireTimeMs: null,
                     },
                     {
                         role: 'role1',
-                        expireTimeMs: Infinity,
+                        expireTimeMs: null,
                     },
                     {
                         role: 'role2',
-                        expireTimeMs: Infinity,
+                        expireTimeMs: null,
                     },
                 ],
             });
@@ -15285,15 +15285,15 @@ describe('PolicyController', () => {
                 roles: [
                     {
                         role: 'abc',
-                        expireTimeMs: Infinity,
+                        expireTimeMs: null,
                     },
                     {
                         role: 'role1',
-                        expireTimeMs: Infinity,
+                        expireTimeMs: null,
                     },
                     {
                         role: 'role2',
-                        expireTimeMs: Infinity,
+                        expireTimeMs: null,
                     },
                 ],
             });
@@ -15373,7 +15373,7 @@ describe('PolicyController', () => {
                         userId: 'testId',
                         role: {
                             role: 'role1',
-                            expireTimeMs: Infinity,
+                            expireTimeMs: null,
                         },
                     },
                     {
@@ -15381,7 +15381,7 @@ describe('PolicyController', () => {
                         userId: 'testId2',
                         role: {
                             role: 'role1',
-                            expireTimeMs: Infinity,
+                            expireTimeMs: null,
                         },
                     },
                     {
@@ -15389,7 +15389,7 @@ describe('PolicyController', () => {
                         userId: 'testId3',
                         role: {
                             role: 'role1',
-                            expireTimeMs: Infinity,
+                            expireTimeMs: null,
                         },
                     },
                 ],
@@ -15466,7 +15466,7 @@ describe('PolicyController', () => {
             expect(roles).toEqual([
                 {
                     role: 'role1',
-                    expireTimeMs: Infinity,
+                    expireTimeMs: null,
                 },
             ]);
         });
@@ -15508,7 +15508,7 @@ describe('PolicyController', () => {
             expect(roles).toEqual([
                 {
                     role: 'role1',
-                    expireTimeMs: Infinity,
+                    expireTimeMs: null,
                 },
             ]);
         });
@@ -15581,11 +15581,11 @@ describe('PolicyController', () => {
                 ['testId']: [
                     {
                         role: 'role1',
-                        expireTimeMs: Infinity,
+                        expireTimeMs: null,
                     },
                     {
                         role: 'role2',
-                        expireTimeMs: Infinity,
+                        expireTimeMs: null,
                     },
                 ],
             };
@@ -15606,7 +15606,7 @@ describe('PolicyController', () => {
             expect(roles).toEqual([
                 {
                     role: 'role2',
-                    expireTimeMs: Infinity,
+                    expireTimeMs: null,
                 },
             ]);
         });
@@ -15626,7 +15626,7 @@ describe('PolicyController', () => {
             expect(roles).toEqual([
                 {
                     role: 'role2',
-                    expireTimeMs: Infinity,
+                    expireTimeMs: null,
                 },
             ]);
         });
@@ -15658,11 +15658,11 @@ describe('PolicyController', () => {
             expect(roles).toEqual([
                 {
                     role: 'role1',
-                    expireTimeMs: Infinity,
+                    expireTimeMs: null,
                 },
                 {
                     role: 'role2',
-                    expireTimeMs: Infinity,
+                    expireTimeMs: null,
                 },
             ]);
         });
@@ -15697,11 +15697,11 @@ describe('PolicyController', () => {
             expect(roles).toEqual([
                 {
                     role: 'role1',
-                    expireTimeMs: Infinity,
+                    expireTimeMs: null,
                 },
                 {
                     role: 'role2',
-                    expireTimeMs: Infinity,
+                    expireTimeMs: null,
                 },
             ]);
         });

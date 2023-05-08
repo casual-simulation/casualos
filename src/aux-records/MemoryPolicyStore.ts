@@ -7,6 +7,7 @@ import {
 } from './PolicyPermissions';
 import {
     AssignedRole,
+    getExpireTime,
     GetUserPolicyResult,
     ListedRoleAssignments,
     ListedUserPolicy,
@@ -41,7 +42,7 @@ export class MemoryPolicyStore implements PolicyStore {
         [recordName: string]: {
             [userId: string]: {
                 role: string;
-                expireTimeMs: number;
+                expireTimeMs: number | null;
             }[];
         };
     };
@@ -162,7 +163,7 @@ export class MemoryPolicyStore implements PolicyStore {
                     userId: id,
                     role: {
                         role,
-                        expireTimeMs: Infinity,
+                        expireTimeMs: null,
                     },
                 });
             }
@@ -194,9 +195,13 @@ export class MemoryPolicyStore implements PolicyStore {
             this.roleAssignments[recordName] = {};
         }
 
-        const assignments = update.roles.filter(
-            (r) => r.expireTimeMs > Date.now()
-        );
+        const assignments = update.roles
+            .filter((r) => getExpireTime(r.expireTimeMs) > Date.now())
+            .map((r) => ({
+                ...r,
+                expireTimeMs:
+                    r.expireTimeMs === Infinity ? null : r.expireTimeMs,
+            }));
         this.roleAssignments[recordName][userId] = assignments;
 
         return {
@@ -212,9 +217,13 @@ export class MemoryPolicyStore implements PolicyStore {
         if (!this.roleAssignments[recordName]) {
             this.roleAssignments[recordName] = {};
         }
-        const assignments = update.roles.filter(
-            (r) => r.expireTimeMs > Date.now()
-        );
+        const assignments = update.roles
+            .filter((r) => getExpireTime(r.expireTimeMs) > Date.now())
+            .map((r) => ({
+                ...r,
+                expireTimeMs:
+                    r.expireTimeMs === Infinity ? null : r.expireTimeMs,
+            }));
         this.roleAssignments[recordName][inst] = assignments;
 
         return {
@@ -231,10 +240,12 @@ export class MemoryPolicyStore implements PolicyStore {
                 (r) =>
                     ({
                         role: r,
-                        expireTimeMs: Infinity,
+                        expireTimeMs: null,
                     } as AssignedRole)
             ),
-            ...assignments.filter((a) => a.expireTimeMs > Date.now()),
+            ...assignments.filter(
+                (a) => getExpireTime(a.expireTimeMs) > Date.now()
+            ),
         ];
     }
 }

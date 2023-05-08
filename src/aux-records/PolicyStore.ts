@@ -164,9 +164,9 @@ export interface AssignedRole {
 
     /**
      * The Unix time in miliseconds that the role assignment expires.
-     * Infinity means that the role never expires.
+     * If null, then the role assignment never expires.
      */
-    expireTimeMs: number;
+    expireTimeMs: number | null;
 }
 
 export type UpdateUserRolesResult =
@@ -199,4 +199,14 @@ export interface InstRoleAssignment {
     type: 'inst';
     inst: string;
     role: AssignedRole;
+}
+
+/**
+ * Gets the expiration time that can be used for comparision.
+ * If given null, then this function returns Infinity.
+ * Otherwise, it returns the given time.
+ * @param expireTimeMs The time that the role expires in milliseconds.
+ */
+export function getExpireTime(expireTimeMs: number | null): number {
+    return expireTimeMs ?? Infinity;
 }

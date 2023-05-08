@@ -26,6 +26,7 @@ import {
 import { PublicRecordKeyPolicy } from './RecordsStore';
 import {
     AssignedRole,
+    getExpireTime,
     GetUserPolicyFailure,
     PolicyStore,
     RoleAssignment,
@@ -745,7 +746,7 @@ export class PolicyController {
             const recordName = context.context.recordName;
             const targetUserId = request.userId;
             const targetInstance = request.instance;
-            const expireTimeMs = request.expireTimeMs ?? Infinity;
+            const expireTimeMs = getExpireTime(request.expireTimeMs);
             const authorization = await this.authorizeRequestUsingContext(
                 context.context,
                 {
@@ -771,7 +772,7 @@ export class PolicyController {
                 const filtered = roles.filter(
                     (r) =>
                         r.role !== request.role ||
-                        r.expireTimeMs <= expireTimeMs
+                        getExpireTime(r.expireTimeMs) <= expireTimeMs
                 );
                 return [...filtered, role];
             };
@@ -3102,7 +3103,7 @@ export class PolicyController {
         let denialReason: DenialReason;
 
         const durationMs =
-            (context.request.expireTimeMs ?? Infinity) - Date.now();
+            getExpireTime(context.request.expireTimeMs) - Date.now();
 
         for (let marker of context.markers) {
             const actionPermission = await this._findPermissionByFilter(
@@ -4238,7 +4239,7 @@ export interface AuthorizeGrantRoleRequest extends AuthorizeRoleRequest {
      * The time that the grant will expire.
      * If omitted, then the grant will never expire.
      */
-    expireTimeMs?: number;
+    expireTimeMs?: number | null;
 }
 
 export interface AuthorizeRevokeRoleRequest extends AuthorizeRoleRequest {
@@ -4657,7 +4658,7 @@ export interface GrantRoleRequest {
     userId?: string;
     instance?: string;
     role: string;
-    expireTimeMs?: number;
+    expireTimeMs?: number | null;
 }
 
 export type GrantRoleResult = GrantRoleSuccess | GrantRoleFailure;
