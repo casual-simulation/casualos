@@ -557,17 +557,19 @@ export class PolicyController {
                 };
             }
 
-            const authorization = await this.authorizeRequestUsingContext(
-                context.context,
-                {
-                    action: 'role.list',
-                    ...baseRequest,
-                    instances,
-                }
-            );
+            if (userId !== subjectId || (!!instances && instances.length > 0)) {
+                const authorization = await this.authorizeRequestUsingContext(
+                    context.context,
+                    {
+                        action: 'role.list',
+                        ...baseRequest,
+                        instances,
+                    }
+                );
 
-            if (authorization.allowed === false) {
-                return returnAuthorizationResult(authorization);
+                if (authorization.allowed === false) {
+                    return returnAuthorizationResult(authorization);
+                }
             }
 
             const result = await this._policies.listRolesForUser(

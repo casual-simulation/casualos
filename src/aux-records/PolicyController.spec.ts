@@ -15168,6 +15168,55 @@ describe('PolicyController', () => {
             });
         });
 
+        it('should list the roles if the current user is the same as the target user', async () => {
+            const result = await controller.listUserRoles(
+                recordName,
+                'testId',
+                'testId'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                roles: [
+                    {
+                        role: 'abc',
+                        expireTimeMs: Infinity,
+                    },
+                    {
+                        role: 'role1',
+                        expireTimeMs: Infinity,
+                    },
+                    {
+                        role: 'role2',
+                        expireTimeMs: Infinity,
+                    },
+                ],
+            });
+        });
+
+        it('should not allow listing the roles for the own user account if an instance is involved', async () => {
+            const result = await controller.listUserRoles(
+                recordName,
+                'testId',
+                'testId',
+                ['inst']
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'role.list',
+                    kind: 'user',
+                    id: 'testId',
+                    marker: ACCOUNT_MARKER,
+                    role: null,
+                },
+            });
+        });
+
         it('should deny the request if the user is not authorized', async () => {
             delete store.roles[recordName][userId];
 
@@ -15522,7 +15571,7 @@ describe('PolicyController', () => {
         });
     });
 
-    describe.only('revokeRole()', () => {
+    describe('revokeRole()', () => {
         beforeEach(() => {
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
