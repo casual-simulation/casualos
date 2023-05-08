@@ -568,6 +568,15 @@ export class RecordsHttpServer {
                 await this._policyList(request),
                 this._allowedApiOrigins
             );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/role/user/list'
+        ) {
+            return formatResponse(
+                request,
+                await this._roleUserList(request),
+                this._allowedApiOrigins
+            );
         } else if (request.method === 'OPTIONS') {
             return formatResponse(
                 request,
@@ -917,6 +926,53 @@ export class RecordsHttpServer {
             recordName,
             sessionKeyValidation.userId,
             startingMarker
+        );
+
+        return returnResult(result);
+    }
+
+    private async _roleUserList(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must not be empty'),
+            userId: z
+                .string({
+                    invalid_type_error: 'userId must be a string.',
+                    required_error: 'userId is required.',
+                })
+                .nonempty('userId must not be empty'),
+        });
+
+        const parseResult = schema.safeParse(request.query);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, userId } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._policyController.listUserRoles(
+            recordName,
+            sessionKeyValidation.userId,
+            userId
         );
 
         return returnResult(result);
