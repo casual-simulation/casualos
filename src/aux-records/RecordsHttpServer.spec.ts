@@ -5614,7 +5614,7 @@ describe('RecordsHttpServer', () => {
         );
     });
 
-    describe.only('GET /api/v2/records/role/assignments/list', () => {
+    describe('GET /api/v2/records/role/assignments/list', () => {
         beforeEach(() => {
             policyStore.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -5751,6 +5751,247 @@ describe('RecordsHttpServer', () => {
         testRateLimit(() =>
             httpGet(
                 `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                defaultHeaders
+            )
+        );
+    });
+
+    describe('POST /api/v2/records/role/grant', () => {
+        beforeEach(() => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should grant the role to the given user', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/role/grant`,
+                    JSON.stringify({
+                        recordName,
+                        userId: 'testId',
+                        role: 'role1',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const roles = await policyStore.listRolesForUser(
+                recordName,
+                'testId'
+            );
+
+            expect(roles).toEqual([
+                {
+                    role: 'role1',
+                    expireTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should grant the role to the given inst', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/role/grant`,
+                    JSON.stringify({
+                        recordName,
+                        inst: 'testId',
+                        role: 'role1',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const roles = await policyStore.listRolesForInst(
+                recordName,
+                'testId'
+            );
+
+            expect(roles).toEqual([
+                {
+                    role: 'role1',
+                    expireTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should support setting an expiration time on role grants', async () => {
+            const expireTime = Date.now() + 100000;
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/role/grant`,
+                    JSON.stringify({
+                        recordName,
+                        userId: 'testId',
+                        role: 'role1',
+                        expireTimeMs: expireTime,
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const roles = await policyStore.listRolesForUser(
+                recordName,
+                'testId'
+            );
+
+            expect(roles).toEqual([
+                {
+                    role: 'role1',
+                    expireTimeMs: expireTime,
+                },
+            ]);
+        });
+
+        it('should return an unacceptable_request result when not given a recordName', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/role/grant`,
+                    JSON.stringify({
+                        userId: 'testId',
+                        role: 'role1',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName is required.',
+                            path: ['recordName'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a role', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/role/grant`,
+                    JSON.stringify({
+                        recordName,
+                        userId: 'testId',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'role is required.',
+                            path: ['role'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when given a non-number expire time', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/role/grant`,
+                    JSON.stringify({
+                        recordName,
+                        userId: 'testId',
+                        role: 'role1',
+                        expireTimeMs: 'abc',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'number',
+                            message: 'expireTimeMs must be a number.',
+                            path: ['expireTimeMs'],
+                            received: 'string',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/records/role/grant`, () =>
+            JSON.stringify({ recordName, userId: 'testId', role: 'role1' })
+        );
+        testAuthorization(
+            () =>
+                httpPost(
+                    `/api/v2/records/role/grant`,
+                    JSON.stringify({
+                        recordName,
+                        userId: 'testId',
+                        role: 'role1',
+                    }),
+                    apiHeaders
+                ),
+            'The user is not logged in. A session key must be provided for this operation.'
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/records/role/grant`,
+                JSON.stringify({
+                    recordName,
+                    userId: 'testId',
+                    role: 'role1',
+                }),
                 defaultHeaders
             )
         );

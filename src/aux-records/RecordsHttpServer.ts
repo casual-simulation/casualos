@@ -595,6 +595,15 @@ export class RecordsHttpServer {
                 await this._roleAssignmentsList(request),
                 this._allowedApiOrigins
             );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/records/role/grant'
+        ) {
+            return formatResponse(
+                request,
+                await this._roleGrant(request),
+                this._allowedApiOrigins
+            );
         } else if (request.method === 'OPTIONS') {
             return formatResponse(
                 request,
@@ -1085,6 +1094,90 @@ export class RecordsHttpServer {
             recordName,
             sessionKeyValidation.userId,
             role
+        );
+
+        return returnResult(result);
+    }
+
+    private async _roleGrant(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must not be empty'),
+            userId: z
+                .string({
+                    invalid_type_error: 'userId must be a string.',
+                    required_error: 'userId is required.',
+                })
+                .nonempty('userId must not be empty')
+                .optional(),
+            inst: z
+                .string({
+                    invalid_type_error: 'inst must be a string.',
+                    required_error: 'inst is required.',
+                })
+                .nonempty('inst must not be empty')
+                .optional(),
+            role: z
+                .string({
+                    invalid_type_error: 'role must be a string.',
+                    required_error: 'role is required.',
+                })
+                .nonempty('role must not be empty'),
+            expireTimeMs: z
+                .number({
+                    invalid_type_error: 'expireTimeMs must be a number.',
+                    required_error: 'expireTimeMs is required.',
+                })
+                .positive('expireTimeMs must be positive')
+                .optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, userId, inst, expireTimeMs, role } =
+            parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._policyController.grantRole(
+            recordName,
+            sessionKeyValidation.userId,
+            {
+                instance: inst,
+                userId: userId,
+                role,
+                expireTimeMs,
+            }
         );
 
         return returnResult(result);
