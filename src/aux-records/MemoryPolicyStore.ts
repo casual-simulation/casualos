@@ -190,6 +190,10 @@ export class MemoryPolicyStore implements PolicyStore {
         userId: string,
         update: UpdateRolesUpdate
     ): Promise<UpdateUserRolesResult> {
+        if (!this.roleAssignments[recordName]) {
+            this.roleAssignments[recordName] = {};
+        }
+
         const assignments = update.roles.filter(
             (r) => r.expireTimeMs > Date.now()
         );
@@ -205,6 +209,9 @@ export class MemoryPolicyStore implements PolicyStore {
         inst: string,
         update: UpdateRolesUpdate
     ): Promise<UpdateUserRolesResult> {
+        if (!this.roleAssignments[recordName]) {
+            this.roleAssignments[recordName] = {};
+        }
         const assignments = update.roles.filter(
             (r) => r.expireTimeMs > Date.now()
         );
