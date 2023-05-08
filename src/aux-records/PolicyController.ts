@@ -842,6 +842,114 @@ export class PolicyController {
     }
 
     /**
+     * Attempts to revoke a role from a user.
+     * @param recordKeyOrRecordName The record key or name of the record.
+     * @param userId The ID of the user that is currently logged in.
+     * @param request The request to revoke the role.
+     * @param instances The instances that the request is being made from.
+     */
+    async revokeRole(
+        recordKeyOrRecordName: string,
+        userId: string,
+        request: RevokeRoleRequest,
+        instances?: string[]
+    ): Promise<RevokeRoleResult> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: recordKeyOrRecordName,
+                userId: userId,
+            };
+            const context = await this.constructAuthorizationContext(
+                baseRequest
+            );
+            if (context.success === false) {
+                return {
+                    success: false,
+                    errorCode: context.errorCode,
+                    errorMessage: context.errorMessage,
+                };
+            }
+
+            const recordName = context.context.recordName;
+            const targetUserId = request.userId;
+            const targetInstance = request.instance;
+            const authorization = await this.authorizeRequestUsingContext(
+                context.context,
+                {
+                    action: 'role.revoke',
+                    ...baseRequest,
+                    instances,
+                    role: request.role,
+                    targetUserId,
+                    targetInstance,
+                }
+            );
+
+            if (authorization.allowed === false) {
+                return returnAuthorizationResult(authorization);
+            }
+
+            if (targetUserId) {
+                const roles = await this._policies.listRolesForUser(
+                    recordName,
+                    targetUserId
+                );
+                const newRoles = roles.filter((r) => r.role !== request.role);
+                const result = await this._policies.updateUserRoles(
+                    recordName,
+                    targetUserId,
+                    {
+                        roles: newRoles,
+                    }
+                );
+
+                if (result.success === false) {
+                    return result;
+                }
+
+                return {
+                    success: true,
+                };
+            } else if (targetInstance) {
+                const roles = await this._policies.listRolesForInst(
+                    recordName,
+                    targetInstance
+                );
+                const newRoles = roles.filter((r) => r.role !== request.role);
+                const result = await this._policies.updateInstRoles(
+                    recordName,
+                    targetInstance,
+                    {
+                        roles: newRoles,
+                    }
+                );
+
+                if (result.success === false) {
+                    return result;
+                }
+
+                return {
+                    success: true,
+                };
+            }
+
+            return {
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage:
+                    'Either a user ID or an instance must be specified.',
+            };
+        } catch (err) {
+            console.error('[PolicyController] A server error occurred.', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
      * Attempts to authorize the given request.
      * Returns a promise that resolves with information about the security properties of the request.
      * @param context The authorization context for the request.
@@ -4557,6 +4665,27 @@ export interface GrantRoleSuccess {
 }
 
 export interface GrantRoleFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | AuthorizeDenied['errorCode']
+        | UpdateUserRolesFailure['errorCode'];
+    errorMessage: string;
+}
+
+export interface RevokeRoleRequest {
+    userId?: string;
+    instance?: string;
+    role: string;
+}
+
+export type RevokeRoleResult = RevokeRoleSuccess | RevokeRoleFailure;
+
+export interface RevokeRoleSuccess {
+    success: true;
+}
+
+export interface RevokeRoleFailure {
     success: false;
     errorCode:
         | ServerError

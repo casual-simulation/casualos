@@ -30,6 +30,7 @@ import {
     createTestRecordKey,
     createTestUser,
 } from './TestUtils';
+import { InvalidZone } from 'luxon';
 
 console.log = jest.fn();
 
@@ -15518,6 +15519,142 @@ describe('PolicyController', () => {
             const roles = await store.listRolesForUser(recordName, 'testId');
 
             expect(roles).toEqual([]);
+        });
+    });
+
+    describe.only('revokeRole()', () => {
+        beforeEach(() => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            store.roleAssignments[recordName] = {
+                ['testId']: [
+                    {
+                        role: 'role1',
+                        expireTimeMs: Infinity,
+                    },
+                    {
+                        role: 'role2',
+                        expireTimeMs: Infinity,
+                    },
+                ],
+            };
+        });
+
+        it('should revoke the role from the given user', async () => {
+            const result = await controller.revokeRole(recordName, userId, {
+                userId: 'testId',
+                role: 'role1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const roles = await store.listRolesForUser(recordName, 'testId');
+
+            expect(roles).toEqual([
+                {
+                    role: 'role2',
+                    expireTimeMs: Infinity,
+                },
+            ]);
+        });
+
+        it('should revoke the role from the given inst', async () => {
+            const result = await controller.revokeRole(recordName, userId, {
+                instance: 'testId',
+                role: 'role1',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const roles = await store.listRolesForInst(recordName, 'testId');
+
+            expect(roles).toEqual([
+                {
+                    role: 'role2',
+                    expireTimeMs: Infinity,
+                },
+            ]);
+        });
+
+        it('should deny the request if the current user is not authorized', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await controller.revokeRole(recordName, userId, {
+                userId: 'testId',
+                role: 'role1',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'role.revoke',
+                    kind: 'user',
+                    id: userId,
+                    marker: ACCOUNT_MARKER,
+                    role: null,
+                },
+            });
+
+            const roles = await store.listRolesForUser(recordName, 'testId');
+
+            expect(roles).toEqual([
+                {
+                    role: 'role1',
+                    expireTimeMs: Infinity,
+                },
+                {
+                    role: 'role2',
+                    expireTimeMs: Infinity,
+                },
+            ]);
+        });
+
+        it('should deny the request if one of the instances are not authorized', async () => {
+            const result = await controller.revokeRole(
+                recordName,
+                userId,
+                {
+                    userId: 'testId',
+                    role: 'role1',
+                },
+                ['inst']
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'role.revoke',
+                    kind: 'inst',
+                    id: 'inst',
+                    marker: ACCOUNT_MARKER,
+                    role: null,
+                },
+            });
+
+            const roles = await store.listRolesForUser(recordName, 'testId');
+
+            expect(roles).toEqual([
+                {
+                    role: 'role1',
+                    expireTimeMs: Infinity,
+                },
+                {
+                    role: 'role2',
+                    expireTimeMs: Infinity,
+                },
+            ]);
         });
     });
 });
