@@ -713,6 +713,34 @@ describe('RecordsController', () => {
             });
         });
     });
+
+    describe('validateRecordName()', () => {
+        it('should return info about the given record', async () => {
+            await store.addRecord({
+                name: 'name',
+                ownerId: 'userId',
+                secretHashes: [],
+                secretSalt: '',
+            });
+            const result = await manager.validateRecordName('name');
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'name',
+                ownerId: 'userId',
+            });
+        });
+
+        it('should handle the case where the record does not exist', async () => {
+            const result = await manager.validateRecordName('name');
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'record_not_found',
+                errorMessage: 'Record not found.',
+            });
+        });
+    });
 });
 
 describe('formatV1RecordKey()', () => {

@@ -10,6 +10,7 @@ import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import { NotLoggedInError, ServerError } from './Errors';
 import type { ValidateSessionKeyFailure } from './AuthController';
+import { type } from 'os';
 
 /**
  * Defines a class that manages records and their keys.
@@ -234,6 +235,37 @@ export class RecordsController {
             };
         }
     }
+
+    /**
+     * Validates the given record name. Returns information about the record if it exists.
+     * @param name The name of the record.
+     */
+    async validateRecordName(name: string): Promise<ValidateRecordNameResult> {
+        try {
+            const record = await this._store.getRecordByName(name);
+
+            if (!record) {
+                return {
+                    success: false,
+                    errorCode: 'record_not_found',
+                    errorMessage: 'Record not found.',
+                };
+            }
+
+            return {
+                success: true,
+                recordName: name,
+                ownerId: record.ownerId,
+            };
+        } catch (err) {
+            console.error(err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: err.toString(),
+            };
+        }
+    }
 }
 
 export type ValidatePublicRecordKeyResult =
@@ -344,6 +376,22 @@ export interface CreatePublicRecordKeyFailure {
         | 'invalid_policy'
         | 'not_supported'
         | ServerError;
+}
+
+export type ValidateRecordNameResult =
+    | ValidateRecordNameSuccess
+    | ValidateRecordNameFailure;
+
+export interface ValidateRecordNameSuccess {
+    success: true;
+    recordName: string;
+    ownerId: string;
+}
+
+export interface ValidateRecordNameFailure {
+    success: false;
+    errorCode: ValidatePublicRecordKeyFailure['errorCode'];
+    errorMessage: string;
 }
 
 /**

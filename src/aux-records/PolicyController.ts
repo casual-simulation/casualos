@@ -95,6 +95,7 @@ export class PolicyController {
     ): Promise<ConstructAuthorizationContextResult> {
         let recordKeyResult: ValidatePublicRecordKeyResult | null = null;
         let recordName: string;
+        let ownerId: string;
         const recordKeyProvided = isRecordKey(request.recordKeyOrRecordName);
         if (recordKeyProvided) {
             recordKeyResult = await this._records.validatePublicRecordKey(
@@ -102,6 +103,7 @@ export class PolicyController {
             );
             if (recordKeyResult.success === true) {
                 recordName = recordKeyResult.recordName;
+                ownerId = recordKeyResult.ownerId;
             } else {
                 return {
                     success: false,
@@ -110,7 +112,20 @@ export class PolicyController {
                 };
             }
         } else {
-            recordName = request.recordKeyOrRecordName;
+            const result = await this._records.validateRecordName(
+                request.recordKeyOrRecordName
+            );
+
+            if (result.success === false) {
+                return {
+                    success: false,
+                    errorCode: result.errorCode,
+                    errorMessage: result.errorMessage,
+                };
+            }
+
+            recordName = result.recordName;
+            ownerId = result.ownerId;
         }
 
         const subjectPolicy =
@@ -123,6 +138,7 @@ export class PolicyController {
             recordKeyResult,
             subjectPolicy,
             recordKeyProvided,
+            recordOwnerId: ownerId,
         };
 
         return {
@@ -1055,7 +1071,7 @@ export class PolicyController {
                     role === null
                         ? this._some(
                               this._byEveryoneRole(),
-                              this._byAdminRole(context.recordKeyResult),
+                              this._byAdminRole(context, subjectType, id),
                               this._bySubjectRole(
                                   context,
                                   subjectType,
@@ -1175,7 +1191,7 @@ export class PolicyController {
                     role === null
                         ? this._some(
                               this._byEveryoneRole(),
-                              this._byAdminRole(context.recordKeyResult),
+                              this._byAdminRole(context, type, id),
                               this._bySubjectRole(
                                   context,
                                   type,
@@ -1295,7 +1311,7 @@ export class PolicyController {
                     role === null
                         ? this._some(
                               this._byEveryoneRole(),
-                              this._byAdminRole(context.recordKeyResult),
+                              this._byAdminRole(context, type, id),
                               this._bySubjectRole(
                                   context,
                                   type,
@@ -1480,7 +1496,7 @@ export class PolicyController {
                     role === null
                         ? this._some(
                               this._byEveryoneRole(),
-                              this._byAdminRole(context.recordKeyResult),
+                              this._byAdminRole(context, type, id),
                               this._bySubjectRole(
                                   context,
                                   type,
@@ -1600,7 +1616,7 @@ export class PolicyController {
                         role === null
                             ? this._some(
                                   this._byEveryoneRole(),
-                                  this._byAdminRole(context.recordKeyResult),
+                                  this._byAdminRole(context, type, id),
                                   this._bySubjectRole(
                                       context,
                                       type,
@@ -1686,7 +1702,7 @@ export class PolicyController {
                     role === null
                         ? this._some(
                               this._byEveryoneRole(),
-                              this._byAdminRole(context.recordKeyResult),
+                              this._byAdminRole(context, subjectType, id),
                               this._bySubjectRole(
                                   context,
                                   subjectType,
@@ -1810,7 +1826,7 @@ export class PolicyController {
                     role === null
                         ? this._some(
                               this._byEveryoneRole(),
-                              this._byAdminRole(context.recordKeyResult),
+                              this._byAdminRole(context, type, id),
                               this._bySubjectRole(
                                   context,
                                   type,
@@ -1935,7 +1951,7 @@ export class PolicyController {
                     role === null
                         ? this._some(
                               this._byEveryoneRole(),
-                              this._byAdminRole(context.recordKeyResult),
+                              this._byAdminRole(context, type, id),
                               this._bySubjectRole(
                                   context,
                                   type,
@@ -2102,7 +2118,7 @@ export class PolicyController {
                     role === null
                         ? this._some(
                               this._byEveryoneRole(),
-                              this._byAdminRole(context.recordKeyResult),
+                              this._byAdminRole(context, type, id),
                               this._bySubjectRole(
                                   context,
                                   type,
@@ -2189,7 +2205,7 @@ export class PolicyController {
                     role === null
                         ? this._some(
                               this._byEveryoneRole(),
-                              this._byAdminRole(context.recordKeyResult),
+                              this._byAdminRole(context, type, id),
                               this._bySubjectRole(
                                   context,
                                   type,
@@ -2276,7 +2292,7 @@ export class PolicyController {
                     role === null
                         ? this._some(
                               this._byEveryoneRole(),
-                              this._byAdminRole(context.recordKeyResult),
+                              this._byAdminRole(context, type, id),
                               this._bySubjectRole(
                                   context,
                                   type,
@@ -2396,7 +2412,7 @@ export class PolicyController {
                     role === null
                         ? this._some(
                               this._byEveryoneRole(),
-                              this._byAdminRole(context.recordKeyResult),
+                              this._byAdminRole(context, type, id),
                               this._bySubjectRole(
                                   context,
                                   type,
@@ -2590,7 +2606,8 @@ export class PolicyController {
                                   type,
                                   context.recordName,
                                   id
-                              )
+                              ),
+                              this._byRecordOwner(context, type, id)
                           )
                         : this._byRole(role)
                 )
@@ -2680,7 +2697,8 @@ export class PolicyController {
                                   type,
                                   context.recordName,
                                   id
-                              )
+                              ),
+                              this._byRecordOwner(context, type, id)
                           )
                         : this._byRole(role)
                 )
@@ -2767,7 +2785,8 @@ export class PolicyController {
                                   type,
                                   context.recordName,
                                   id
-                              )
+                              ),
+                              this._byRecordOwner(context, type, id)
                           )
                         : this._byRole(role)
                 )
@@ -2854,7 +2873,8 @@ export class PolicyController {
                                   type,
                                   context.recordName,
                                   id
-                              )
+                              ),
+                              this._byRecordOwner(context, type, id)
                           )
                         : this._byRole(role)
                 )
@@ -2941,7 +2961,8 @@ export class PolicyController {
                                   type,
                                   context.recordName,
                                   id
-                              )
+                              ),
+                              this._byRecordOwner(context, type, id)
                           )
                         : this._byRole(role)
                 )
@@ -3028,7 +3049,8 @@ export class PolicyController {
                                   type,
                                   context.recordName,
                                   id
-                              )
+                              ),
+                              this._byRecordOwner(context, type, id)
                           )
                         : this._byRole(role)
                 )
@@ -3124,7 +3146,8 @@ export class PolicyController {
                                   type,
                                   context.recordName,
                                   id
-                              )
+                              ),
+                              this._byRecordOwner(context, type, id)
                           )
                         : this._byRole(role)
                 )
@@ -3216,7 +3239,8 @@ export class PolicyController {
                                   type,
                                   context.recordName,
                                   id
-                              )
+                              ),
+                              this._byRecordOwner(context, type, id)
                           )
                         : this._byRole(role)
                 )
@@ -3577,17 +3601,35 @@ export class PolicyController {
         };
     }
 
+    private _byRecordOwner(
+        context: AuthorizationContext,
+        subjectType: 'user' | 'inst',
+        id: string
+    ) {
+        if (subjectType === 'inst') {
+            return async () => false;
+        }
+
+        if (context.recordOwnerId === id) {
+            return async () => true;
+        }
+
+        return async () => false;
+    }
+
     private _byEveryoneRole(): PermissionFilter {
         return this._byRole(true);
     }
 
     private _byAdminRole(
-        recordKeyResult: ValidatePublicRecordKeyResult
+        context: AuthorizationContext,
+        subjectType: 'user' | 'inst',
+        id: string
     ): PermissionFilter {
-        if (!!recordKeyResult && recordKeyResult.success) {
+        if (!!context.recordKeyResult && context.recordKeyResult.success) {
             return this._byRole(ADMIN_ROLE_NAME);
         } else {
-            return async () => false;
+            return this._byRecordOwner(context, subjectType, id);
         }
     }
 
@@ -3931,6 +3973,7 @@ export interface AuthorizationContext {
     recordKeyResult: ValidatePublicRecordKeyResult | null;
     recordKeyProvided: boolean;
     recordName: string;
+    recordOwnerId: string;
     subjectPolicy: PublicRecordKeyPolicy;
 }
 

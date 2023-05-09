@@ -52,9 +52,7 @@ export async function createTestUser(
         throw new Error('Unable to request login!');
     }
 
-    const code = authMessenger.messages.find(
-        (m) => m.address === 'test@example.com'
-    );
+    const code = authMessenger.messages.find((m) => m.address === emailAddress);
 
     if (!code) {
         throw new Error('Message not found!');
