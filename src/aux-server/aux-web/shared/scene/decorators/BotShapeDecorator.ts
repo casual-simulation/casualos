@@ -1021,7 +1021,6 @@ export class BotShapeDecorator
         }
 
         this._keyboard = keyboard;
-        (window as any).keyboard = this._keyboard;
         this.container.add(keyboard);
         this.stroke = null;
         this.mesh = null;
