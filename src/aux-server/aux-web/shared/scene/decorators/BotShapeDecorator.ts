@@ -43,7 +43,10 @@ import {
     baseAuxMeshMaterial,
     createCircle,
     DEFAULT_COLOR,
+    DEFAULT_OPACITY,
+    DEFAULT_TRANSPARENT,
     registerMaterial,
+    setFade,
 } from '../SceneUtils';
 import { createCubeStroke } from '../MeshUtils';
 import { LineSegments } from '../LineSegments';
@@ -208,6 +211,7 @@ export class BotShapeDecorator
         }
 
         this._updateColor(calc);
+        this._updateFade(calc);
         this._updateStroke(calc);
         this._updateAddress(calc, address);
         this._updateRenderOrder(calc);
@@ -546,6 +550,16 @@ export class BotShapeDecorator
         this._setColor(color);
     }
 
+    private _updateFade(calc: BotCalculationContext) {
+        const fade = calculateNumericalTagValue(
+            calc,
+            this.bot3D.bot,
+            'fade',
+            0
+        );
+        this._setFade(fade);
+    }
+
     private _setColor(color: any) {
         if (this.scene) {
             // Color all meshes inside the gltf scene.
@@ -584,6 +598,45 @@ export class BotShapeDecorator
                         },
                     });
                 }
+            }
+        }
+    }
+
+    private _setFade(fade: number) {
+        if (this.scene) {
+            // Set fade on all meshes inside the gltf scene.
+            this.scene.traverse((obj) => {
+                if (obj instanceof Mesh) {
+                    setFade(obj, fade);
+                }
+            });
+        } else {
+            setFade(this.mesh, fade);
+        }
+
+        if (this._keyboard) {
+            const defaultOpacity = 1;
+            const opacity = defaultOpacity * (1 - fade);
+
+            // let firstPanel = (this._keyboard as any).panels[0];
+            for (let panel of (this._keyboard as any).panels) {
+                panel.set({
+                    backgroundOpacity: opacity,
+                });
+            }
+
+            for (let key of (this._keyboard as any).keys) {
+                // Update each key state with new backgroundOpacity.
+                const states = key.states;
+                for (let stateId in states) {
+                    const attributes = states[stateId].attributes;
+                    attributes.backgroundOpacity = opacity;
+
+                    key.setupState({ stateId, attributes });
+                }
+
+                // Set the current backgroundOpacity for the key.
+                key.set({ backgroundOpacity: opacity });
             }
         }
     }
@@ -846,11 +899,23 @@ export class BotShapeDecorator
                     if (material.color) {
                         material[DEFAULT_COLOR] = material.color;
                     }
+
+                    if (
+                        typeof material.opacity === 'number' &&
+                        !Number.isNaN(material.opacity)
+                    ) {
+                        material[DEFAULT_OPACITY] = material.opacity;
+                    }
+
+                    if (typeof material.transparent === 'boolean') {
+                        material[DEFAULT_TRANSPARENT] = material.transparent;
+                    }
                 }
             }
         });
 
         this._updateColor(null);
+        this._updateFade(null);
         this._updateRenderOrder(null);
         this.bot3D.updateMatrixWorld(true);
     }
@@ -956,12 +1021,14 @@ export class BotShapeDecorator
         }
 
         this._keyboard = keyboard;
+        (window as any).keyboard = this._keyboard;
         this.container.add(keyboard);
         this.stroke = null;
         this.mesh = null;
         this.collider = null;
         this._canHaveStroke = false;
         this._updateColor(null);
+        this._updateFade(null);
         this._updateRenderOrder(null);
 
         // Force the mesh UI to update
@@ -1005,6 +1072,7 @@ export class BotShapeDecorator
             let material = baseAuxMeshMaterial();
             this.mesh.material = material;
             this._updateColor(null);
+            this._updateFade(null);
             this._updateRenderOrder(null);
         }
     }
@@ -1017,6 +1085,7 @@ export class BotShapeDecorator
         if (await this._loadGLTF(EggUrl, false, token)) {
             this.mesh = this.scene.children[0] as Mesh;
             this._updateColor(null);
+            this._updateFade(null);
             this._updateRenderOrder(null);
         }
     }

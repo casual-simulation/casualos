@@ -688,6 +688,8 @@ export function buildSRGBColor(...args: (string | number)[]): Color {
 }
 
 export const DEFAULT_COLOR = Symbol('default_color');
+export const DEFAULT_OPACITY = Symbol('default_opacity');
+export const DEFAULT_TRANSPARENT = Symbol('default_transparent');
 
 /**
  * Changes the mesh's material to the given color.
@@ -712,6 +714,42 @@ export function setColor(
     } else {
         shapeMat.visible = true;
         shapeMat.color = (<any>shapeMat)[DEFAULT_COLOR] ?? new Color(0xffffff);
+    }
+}
+
+/**
+ * Changes the mesh's fade level.
+ * @param mesh The mesh.
+ * @param fade The fade value (0.0 -> 1.0)
+ */
+export function setFade(mesh: Mesh | Sprite | ThreeLineSegments, fade: number) {
+    if (!mesh) {
+        return;
+    }
+
+    const shapeMat = <
+        MeshStandardMaterial | MeshToonMaterial | LineBasicMaterial
+    >mesh.material;
+    const prevTransparent = shapeMat.transparent;
+
+    fade = clamp(fade, 0, 1);
+
+    if (fade > 0) {
+        // Use fade as a scalar on the material's default opacity.
+        const defaultOpacity = (<any>shapeMat)[DEFAULT_OPACITY] ?? 1;
+        const opacity = defaultOpacity * (1 - fade);
+
+        shapeMat.transparent = true;
+        shapeMat.opacity = opacity;
+    } else {
+        // Restore material to default values for opacity and transparency.
+        shapeMat.transparent = (<any>shapeMat)[DEFAULT_TRANSPARENT] ?? false;
+        shapeMat.opacity = (<any>shapeMat)[DEFAULT_OPACITY] ?? 1;
+    }
+
+    if (shapeMat.transparent !== prevTransparent) {
+        // Changing transparenct flag of material requires recompilation of material.
+        shapeMat.needsUpdate = true;
     }
 }
 
