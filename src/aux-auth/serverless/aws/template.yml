@@ -267,6 +267,31 @@ Resources:
                     Properties:
                         Path: /api/v2/records/policy/revokePermission
                         Method: POST
+                ListUserRoles:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/role/user/list
+                        Method: GET
+                ListInstRoles:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/role/inst/list
+                        Method: GET
+                ListRolesAssignments:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/role/assignments/list
+                        Method: GET
+                GrantRole:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/role/grant
+                        Method: POST
+                RevokeRole:
+                    Type: APi
+                    Properties:
+                        Path: /api/v2/records/role/revoke
+                        Method: POST
                 GetMeetToken:
                     Type: Api
                     Properties:
