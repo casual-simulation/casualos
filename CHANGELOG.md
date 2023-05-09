@@ -20,6 +20,9 @@
         -   `RATE_LIMIT_MAX` - The maximum number of requests that can be recieved from an IP address over the window.
         -   `RATE_LIMIT_WINDOW_MS` - The size of the window for requests represented in miliseconds.
     -   If any of the above environment variables are not specified, then rate limiting will be disabled.
+-   Added `fade` tag, which allows bots to be semi-transparent.
+    -   A `fade` value of `0` means that the bot's mesh materials are effectively in their default opacity and transparency state.
+    -   A `fade` value `> 0` means that the bot's mesh materials become transparent and that the `fade` value is used to scale each material's default opacity level. A `fade` value of `1` would effectively make the bot invisible.
 
 ### :bug: Bug Fixes
 
