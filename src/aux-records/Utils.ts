@@ -310,6 +310,20 @@ function getAmzDateString(date: Date): string {
 }
 
 /**
+ * Parses the given string of instance names into an array of instance names.
+ * @param instances The names of the instances.
+ */
+export function parseInstancesList(instances: string): string[] {
+    if (!instances) {
+        return undefined;
+    }
+    return instances
+        .split(',')
+        .map((instance) => instance.trim())
+        .filter((i) => !!i);
+}
+
+/**
  * Gets the status code that should be used for the given response.
  * @param response The response.
  */
@@ -377,6 +391,8 @@ export function getStatusCode(
             return 403;
         } else if (response.errorCode === 'rate_limit_exceeded') {
             return 429;
+        } else if (response.errorCode === 'not_authorized') {
+            return 403;
         } else {
             return 400;
         }

@@ -1,4 +1,9 @@
-import { getStatusCode, tryDecodeUriComponent, tryParseJson } from './Utils';
+import {
+    getStatusCode,
+    parseInstancesList,
+    tryDecodeUriComponent,
+    tryParseJson,
+} from './Utils';
 import {
     AuthController,
     INVALID_KEY_ERROR_MESSAGE,
@@ -987,6 +992,14 @@ export class RecordsHttpServer {
                     required_error: 'userId is required.',
                 })
                 .nonempty('userId must not be empty'),
+            instances: z
+                .string({
+                    invalid_type_error: 'instances must be a string.',
+                    required_error: 'instances is required.',
+                })
+                .nonempty('instances must not be empty')
+                .optional()
+                .transform((value) => parseInstancesList(value)),
         });
 
         const parseResult = schema.safeParse(request.query);
@@ -995,7 +1008,7 @@ export class RecordsHttpServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordName, userId } = parseResult.data;
+        const { recordName, userId, instances } = parseResult.data;
 
         const sessionKeyValidation = await this._validateSessionKey(request);
         if (sessionKeyValidation.success === false) {
@@ -1008,7 +1021,8 @@ export class RecordsHttpServer {
         const result = await this._policyController.listUserRoles(
             recordName,
             sessionKeyValidation.userId,
-            userId
+            userId,
+            instances
         );
 
         return returnResult(result);
@@ -1034,6 +1048,14 @@ export class RecordsHttpServer {
                     required_error: 'inst is required.',
                 })
                 .nonempty('inst must not be empty'),
+            instances: z
+                .string({
+                    invalid_type_error: 'instances must be a string.',
+                    required_error: 'instances is required.',
+                })
+                .nonempty('instances must not be empty')
+                .optional()
+                .transform((value) => parseInstancesList(value)),
         });
 
         const parseResult = schema.safeParse(request.query);
@@ -1042,7 +1064,7 @@ export class RecordsHttpServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordName, inst } = parseResult.data;
+        const { recordName, inst, instances } = parseResult.data;
 
         const sessionKeyValidation = await this._validateSessionKey(request);
         if (sessionKeyValidation.success === false) {
@@ -1055,7 +1077,8 @@ export class RecordsHttpServer {
         const result = await this._policyController.listInstRoles(
             recordName,
             sessionKeyValidation.userId,
-            inst
+            inst,
+            instances
         );
 
         return returnResult(result);
@@ -1081,6 +1104,14 @@ export class RecordsHttpServer {
                     required_error: 'role is required.',
                 })
                 .nonempty('role must not be empty'),
+            instances: z
+                .string({
+                    invalid_type_error: 'instances must be a string.',
+                    required_error: 'instances is required.',
+                })
+                .nonempty('instances must not be empty')
+                .optional()
+                .transform((value) => parseInstancesList(value)),
         });
 
         const parseResult = schema.safeParse(request.query);
@@ -1089,7 +1120,7 @@ export class RecordsHttpServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordName, role } = parseResult.data;
+        const { recordName, role, instances } = parseResult.data;
 
         const sessionKeyValidation = await this._validateSessionKey(request);
         if (sessionKeyValidation.success === false) {
@@ -1102,7 +1133,8 @@ export class RecordsHttpServer {
         const result = await this._policyController.listRoleAssignments(
             recordName,
             sessionKeyValidation.userId,
-            role
+            role,
+            instances
         );
 
         return returnResult(result);
@@ -1159,6 +1191,7 @@ export class RecordsHttpServer {
                 })
                 .positive('expireTimeMs must be positive')
                 .optional(),
+            instances: z.array(z.string()).nonempty().optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -1167,7 +1200,7 @@ export class RecordsHttpServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordName, userId, inst, expireTimeMs, role } =
+        const { recordName, userId, inst, expireTimeMs, role, instances } =
             parseResult.data;
 
         const sessionKeyValidation = await this._validateSessionKey(request);
@@ -1186,7 +1219,8 @@ export class RecordsHttpServer {
                 userId: userId,
                 role,
                 expireTimeMs,
-            }
+            },
+            instances
         );
 
         return returnResult(result);
@@ -1236,6 +1270,7 @@ export class RecordsHttpServer {
                     required_error: 'role is required.',
                 })
                 .nonempty('role must not be empty'),
+            instances: z.array(z.string()).nonempty().optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -1244,7 +1279,7 @@ export class RecordsHttpServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordName, userId, inst, role } = parseResult.data;
+        const { recordName, userId, inst, role, instances } = parseResult.data;
 
         const sessionKeyValidation = await this._validateSessionKey(request);
         if (sessionKeyValidation.success === false) {
@@ -1261,7 +1296,8 @@ export class RecordsHttpServer {
                 instance: inst,
                 userId: userId,
                 role,
-            }
+            },
+            instances
         );
 
         return returnResult(result);

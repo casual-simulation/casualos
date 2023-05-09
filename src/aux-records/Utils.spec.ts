@@ -15,6 +15,7 @@ import {
     isStringValid,
     isActiveSubscription,
     getMarkersOrDefault,
+    parseInstancesList,
 } from './Utils';
 
 const cases = [['abc', 'YWJj']];
@@ -437,6 +438,23 @@ describe('encodeHexUtf8()', () => {
     );
 });
 
+describe('parseInstancesList()', () => {
+    it('should return undefined if given an empty string', () => {
+        expect(parseInstancesList('')).toEqual(undefined);
+    });
+    it('should return the instance name', () => {
+        expect(parseInstancesList('inst')).toEqual(['inst']);
+    });
+
+    it('should split by comma', () => {
+        expect(parseInstancesList('inst1,inst2')).toEqual(['inst1', 'inst2']);
+    });
+
+    it('should ignore empty instance names', () => {
+        expect(parseInstancesList('inst1,,inst2')).toEqual(['inst1', 'inst2']);
+    });
+});
+
 describe('getStatusCode()', () => {
     it('should return 200 when given a success result', () => {
         expect(getStatusCode({ success: true })).toBe(200);
@@ -476,6 +494,7 @@ describe('getStatusCode()', () => {
         ['price_does_not_match', 412] as const,
         ['user_is_banned', 403] as const,
         ['rate_limit_exceeded', 429] as const,
+        ['not_authorized', 403] as const,
     ];
 
     it.each(cases)('should map error code %s to %s', (code, expectedStatus) => {

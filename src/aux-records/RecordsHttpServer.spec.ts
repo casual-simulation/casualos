@@ -5412,6 +5412,64 @@ describe('RecordsHttpServer', () => {
             });
         });
 
+        it('should deny the request if the user is not authorized', async () => {
+            delete policyStore.roles[recordName][userId];
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/role/user/list?recordName=${recordName}&userId=${'testId'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        id: userId,
+                        kind: 'user',
+                        marker: 'account',
+                        permission: 'role.list',
+                        role: null,
+                        type: 'missing_permission',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should deny the request if the inst is not authorized', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/role/user/list?recordName=${recordName}&userId=${'testId'}&instances=${'inst'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        id: 'inst',
+                        kind: 'inst',
+                        marker: 'account',
+                        permission: 'role.list',
+                        role: null,
+                        type: 'missing_permission',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
         it('should return an unacceptable_request result when not given a recordName', async () => {
             const result = await server.handleRequest(
                 httpGet(
@@ -5531,6 +5589,64 @@ describe('RecordsHttpServer', () => {
                             expireTimeMs: null,
                         },
                     ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should deny the request if the user is not authorized', async () => {
+            delete policyStore.roles[recordName][userId];
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/role/inst/list?recordName=${recordName}&inst=${'testId'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        id: userId,
+                        kind: 'user',
+                        marker: 'account',
+                        permission: 'role.list',
+                        role: null,
+                        type: 'missing_permission',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should deny the request if the instance is not authorized', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/role/inst/list?recordName=${recordName}&inst=${'testId'}&instances=${'inst'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        id: 'inst',
+                        kind: 'inst',
+                        marker: 'account',
+                        permission: 'role.list',
+                        role: null,
+                        type: 'missing_permission',
+                    },
                 },
                 headers: apiCorsHeaders,
             });
@@ -5673,6 +5789,64 @@ describe('RecordsHttpServer', () => {
                             },
                         },
                     ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should deny the request if the user is not authorized', async () => {
+            delete policyStore.roles[recordName][userId];
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        id: userId,
+                        kind: 'user',
+                        marker: 'account',
+                        permission: 'role.list',
+                        role: null,
+                        type: 'missing_permission',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should deny the request if the inst is not authorized', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}&instances=${'inst'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        id: 'inst',
+                        kind: 'inst',
+                        marker: 'account',
+                        permission: 'role.list',
+                        role: null,
+                        type: 'missing_permission',
+                    },
                 },
                 headers: apiCorsHeaders,
             });
@@ -5829,6 +6003,89 @@ describe('RecordsHttpServer', () => {
                     expireTimeMs: null,
                 },
             ]);
+        });
+
+        it('should deny the request if the user is not authorized', async () => {
+            delete policyStore.roles[recordName][userId];
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/role/grant`,
+                    JSON.stringify({
+                        recordName,
+                        userId: 'testId',
+                        role: 'role1',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        id: userId,
+                        kind: 'user',
+                        marker: 'account',
+                        permission: 'role.grant',
+                        role: null,
+                        type: 'missing_permission',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const roles = await policyStore.listRolesForUser(
+                recordName,
+                'testId'
+            );
+
+            expect(roles).toEqual([]);
+        });
+
+        it('should deny the request if the inst is not authorized', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/role/grant`,
+                    JSON.stringify({
+                        recordName,
+                        userId: 'testId',
+                        role: 'role1',
+                        instances: ['inst'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        id: 'inst',
+                        kind: 'inst',
+                        marker: 'account',
+                        permission: 'role.grant',
+                        role: null,
+                        type: 'missing_permission',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const roles = await policyStore.listRolesForUser(
+                recordName,
+                'testId'
+            );
+
+            expect(roles).toEqual([]);
         });
 
         it('should support setting an expiration time on role grants', async () => {
@@ -6040,6 +6297,99 @@ describe('RecordsHttpServer', () => {
             );
 
             expect(roles).toEqual([]);
+        });
+
+        it('should reject the request if the user is not authorized', async () => {
+            delete policyStore.roles[recordName][userId];
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/role/revoke`,
+                    JSON.stringify({
+                        recordName,
+                        inst: 'testId',
+                        role: 'role1',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        id: userId,
+                        kind: 'user',
+                        marker: 'account',
+                        permission: 'role.revoke',
+                        role: null,
+                        type: 'missing_permission',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const roles = await policyStore.listRolesForInst(
+                recordName,
+                'testId'
+            );
+
+            expect(roles).toEqual([
+                {
+                    role: 'role1',
+                    expireTimeMs: null,
+                },
+            ]);
+        });
+
+        it('should reject the request if the inst is not authorized', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/role/revoke`,
+                    JSON.stringify({
+                        recordName,
+                        inst: 'testId',
+                        role: 'role1',
+                        instances: ['inst'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        id: 'inst',
+                        kind: 'inst',
+                        marker: 'account',
+                        permission: 'role.revoke',
+                        role: null,
+                        type: 'missing_permission',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const roles = await policyStore.listRolesForInst(
+                recordName,
+                'testId'
+            );
+
+            expect(roles).toEqual([
+                {
+                    role: 'role1',
+                    expireTimeMs: null,
+                },
+            ]);
         });
 
         it('should revoke the role from the given inst', async () => {
