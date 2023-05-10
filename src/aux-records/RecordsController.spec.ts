@@ -228,6 +228,7 @@ describe('RecordsController', () => {
                         success: true,
                         recordName: 'name',
                         ownerId: 'userId',
+                        keyCreatorId: 'userId',
                         policy: 'subjectfull',
                     });
                 });
@@ -270,6 +271,50 @@ describe('RecordsController', () => {
                         success: true,
                         recordName: 'name',
                         ownerId: 'userId',
+                        keyCreatorId: 'userId',
+                        policy: 'subjectfull',
+                    });
+                });
+
+                it('should return the ID of the user who created the key', async () => {
+                    const salt = fromByteArray(randomBytes(16));
+                    const hash1 = hashPasswordWithSalt('password1', salt);
+                    const hash2 = hashPasswordWithSalt('password2', salt);
+                    const hash3 = hashPasswordWithSalt('password3', salt);
+                    store.addRecord({
+                        name: 'name',
+                        ownerId: 'userId',
+                        secretHashes: [],
+                        secretSalt: salt,
+                    });
+                    store.addRecordKey({
+                        recordName: 'name',
+                        secretHash: hash1,
+                        policy: 'subjectfull',
+                        creatorId: 'creatorId',
+                    });
+                    store.addRecordKey({
+                        recordName: 'name',
+                        secretHash: hash2,
+                        policy: 'subjectfull',
+                        creatorId: 'userId',
+                    });
+                    store.addRecordKey({
+                        recordName: 'name',
+                        secretHash: hash3,
+                        policy: 'subjectfull',
+                        creatorId: 'userId',
+                    });
+
+                    const result = (await manager.validatePublicRecordKey(
+                        formatV1RecordKey('name', 'password1')
+                    )) as ValidatePublicRecordKeySuccess;
+
+                    expect(result).toEqual({
+                        success: true,
+                        recordName: 'name',
+                        ownerId: 'userId',
+                        keyCreatorId: 'creatorId',
                         policy: 'subjectfull',
                     });
                 });
@@ -304,6 +349,7 @@ describe('RecordsController', () => {
                         success: true,
                         recordName: 'name',
                         ownerId: 'userId',
+                        keyCreatorId: 'userId',
                         policy: 'subjectfull',
                     });
                 });
@@ -355,6 +401,59 @@ describe('RecordsController', () => {
                         success: true,
                         recordName: 'name',
                         ownerId: 'userId',
+                        keyCreatorId: 'userId',
+                        policy: 'subjectfull',
+                    });
+                });
+
+                it('should return the ID of the user who created the key', async () => {
+                    const salt = fromByteArray(randomBytes(16));
+                    const hash1 = hashHighEntropyPasswordWithSalt(
+                        'password1',
+                        salt
+                    );
+                    const hash2 = hashHighEntropyPasswordWithSalt(
+                        'password2',
+                        salt
+                    );
+                    const hash3 = hashHighEntropyPasswordWithSalt(
+                        'password3',
+                        salt
+                    );
+                    store.addRecord({
+                        name: 'name',
+                        ownerId: 'userId',
+                        secretHashes: [],
+                        secretSalt: salt,
+                    });
+                    store.addRecordKey({
+                        recordName: 'name',
+                        secretHash: hash1,
+                        policy: 'subjectfull',
+                        creatorId: 'creatorId',
+                    });
+                    store.addRecordKey({
+                        recordName: 'name',
+                        secretHash: hash2,
+                        policy: 'subjectfull',
+                        creatorId: 'userId',
+                    });
+                    store.addRecordKey({
+                        recordName: 'name',
+                        secretHash: hash3,
+                        policy: 'subjectfull',
+                        creatorId: 'userId',
+                    });
+
+                    const result = (await manager.validatePublicRecordKey(
+                        formatV1RecordKey('name', 'password1')
+                    )) as ValidatePublicRecordKeySuccess;
+
+                    expect(result).toEqual({
+                        success: true,
+                        recordName: 'name',
+                        ownerId: 'userId',
+                        keyCreatorId: 'creatorId',
                         policy: 'subjectfull',
                     });
                 });
@@ -409,6 +508,7 @@ describe('RecordsController', () => {
                         success: true,
                         recordName: 'name',
                         ownerId: 'userId',
+                        keyCreatorId: 'userId',
                         policy: 'subjectfull',
                     });
                 });
@@ -473,6 +573,7 @@ describe('RecordsController', () => {
                         success: true,
                         recordName: 'name',
                         ownerId: 'userId',
+                        keyCreatorId: 'userId',
                         policy: 'subjectless',
                     });
                 });
@@ -548,6 +649,7 @@ describe('RecordsController', () => {
                         success: true,
                         recordName: 'name',
                         ownerId: 'userId',
+                        keyCreatorId: 'userId',
                         policy: 'subjectfull',
                     });
                 });
@@ -630,6 +732,7 @@ describe('RecordsController', () => {
                         success: true,
                         recordName: 'name',
                         ownerId: 'userId',
+                        keyCreatorId: 'userId',
                         policy: 'subjectless',
                     });
                 });

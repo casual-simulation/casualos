@@ -171,8 +171,10 @@ export class RecordsController {
 
             let valid = false;
             let resultPolicy: PublicRecordKeyPolicy = DEFAULT_RECORD_KEY_POLICY;
+            let creatorId: string = null;
             if (record.secretHashes.some((h) => h === hashV2)) {
                 valid = true;
+                creatorId = record.ownerId;
             } else {
                 const key = await this._store.getRecordKeyByRecordAndHash(
                     name,
@@ -180,6 +182,7 @@ export class RecordsController {
                 );
                 if (!!key) {
                     resultPolicy = key.policy;
+                    creatorId = key.creatorId;
                     valid = true;
                 } else {
                     // Check v1 hashes
@@ -198,6 +201,7 @@ export class RecordsController {
                             );
                         if (!!key) {
                             resultPolicy = key.policy;
+                            creatorId = key.creatorId;
                             valid = true;
                         }
                     }
@@ -218,6 +222,7 @@ export class RecordsController {
                     recordName: name,
                     policy: policy,
                     ownerId: record.ownerId,
+                    keyCreatorId: creatorId ?? record.ownerId,
                 };
             } else {
                 return {
@@ -287,6 +292,11 @@ export interface ValidatePublicRecordKeySuccess {
      * The ID of the user that owns the record.
      */
     ownerId: string;
+
+    /**
+     * The ID of the user that created the key.
+     */
+    keyCreatorId: string;
 
     /**
      * The policy for the record key.
