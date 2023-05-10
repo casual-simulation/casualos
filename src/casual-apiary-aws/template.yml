@@ -408,6 +408,14 @@ Resources:
                       AllowedHeaders:
                           - '*'
                       MaxAge: '3600'
+            PublicAccessBlockConfiguration:
+                BlockPublicAcls: false
+                BlockPublicPolicy: false
+                IgnorePublicAcls: false
+                RestrictPublicBuckets: false
+            OwnershipControls:
+                Rules:
+                    - ObjectOwnership: BucketOwnerPreferred
     MessagesBucketPolicy:
         Type: AWS::S3::BucketPolicy
         Properties:
