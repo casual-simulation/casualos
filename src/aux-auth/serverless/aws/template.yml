@@ -461,6 +461,14 @@ Resources:
                           - '*'
                       ExposedHeaders: []
                       MaxAge: 3000
+            PublicAccessBlockConfiguration:
+                BlockPublicAcls: false
+                BlockPublicPolicy: false
+                IgnorePublicAcls: false
+                RestrictPublicBuckets: false
+            OwnershipControls:
+                Rules:
+                    - ObjectOwnership: BucketOwnerPreferred
 
     PublicRecordsTable:
         Type: AWS::DynamoDB::Table
