@@ -393,6 +393,9 @@ Resources:
                 BlockPublicPolicy: false
                 IgnorePublicAcls: false
                 RestrictPublicBuckets: false
+            OwnershipControls:
+                Rules:
+                    - ObjectOwnership: BucketOwnerPreferred
     MessagesBucketPolicy:
         Type: AWS::S3::BucketPolicy
         Properties:
