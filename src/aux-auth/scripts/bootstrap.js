@@ -31,7 +31,6 @@ const SESSIONS_TABLE = 'Sessions';
 const RECORDS_TABLE = 'Records';
 const EMAIL_TABLE = 'EmailRules';
 const SMS_TABLE = 'SmsRules';
-const RECORDS_BUCKET = 'records-bucket';
 const PUBLIC_RECORDS_TABLE = 'PublicRecords';
 const PUBLIC_RECORDS_KEYS_TABLE = 'PublicRecordsKeys';
 const DATA_TABLE = 'Data';
@@ -191,24 +190,6 @@ start().then(
 async function createS3Buckets(reset) {
     try {
         const buckets = await s3.listBuckets().promise();
-        const hasRecordsBucket = buckets.Buckets.some(
-            (b) => b.Name === RECORDS_BUCKET
-        );
-        if (!hasRecordsBucket || reset) {
-            if (hasRecordsBucket) {
-                deleteBucket(RECORDS_BUCKET);
-            }
-
-            console.log('Creating Records Bucket');
-            await s3
-                .createBucket({
-                    Bucket: RECORDS_BUCKET,
-                })
-                .promise();
-        } else {
-            console.log('Records Bucket already exists');
-        }
-
         const hasFilesBucket = buckets.Buckets.some(
             (b) => b.Name === FILES_BUCKET
         );

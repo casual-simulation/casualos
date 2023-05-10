@@ -438,12 +438,6 @@ Resources:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
 
-    RecordsBucket:
-        Type: AWS::S3::Bucket
-        DeletionPolicy: Retain
-        Properties:
-            AccessControl: PublicRead
-
     FilesBucket:
         Type: AWS::S3::Bucket
         DeletionPolicy: Retain
