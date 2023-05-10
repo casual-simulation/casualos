@@ -22,7 +22,8 @@
     -   If any of the above environment variables are not specified, then rate limiting will be disabled.
 -   Added `formOpacity` tag, which allows bots to be semi-transparent.
     -   A `formOpacity` value of `1` means that the bot's mesh materials are effectively in their default opacity and transparency state.
-    -   A `formOpacity` value `< 1` means that the bot's mesh materials become transparent and that the `formOpacity` value is used to modify each material's default opacity level. A `formOpacity` value of `0` would effectively make the bot invisible.
+    -   A `formOpacity` value `< 1` means that the bot's mesh materials become transparent and that the `formOpacity` value is used to modify each material's default opacity level.
+    -   A `formOpacity` value of `0` would effectively make the bot invisible.
 
 ### :bug: Bug Fixes
 
