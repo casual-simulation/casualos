@@ -46,7 +46,7 @@ import {
     DEFAULT_OPACITY,
     DEFAULT_TRANSPARENT,
     registerMaterial,
-    setFade,
+    setOpacity,
 } from '../SceneUtils';
 import { createCubeStroke } from '../MeshUtils';
 import { LineSegments } from '../LineSegments';
@@ -211,7 +211,7 @@ export class BotShapeDecorator
         }
 
         this._updateColor(calc);
-        this._updateFade(calc);
+        this._updateOpacity(calc);
         this._updateStroke(calc);
         this._updateAddress(calc, address);
         this._updateRenderOrder(calc);
@@ -550,14 +550,14 @@ export class BotShapeDecorator
         this._setColor(color);
     }
 
-    private _updateFade(calc: BotCalculationContext) {
-        const fade = calculateNumericalTagValue(
+    private _updateOpacity(calc: BotCalculationContext) {
+        const opacity = calculateNumericalTagValue(
             calc,
             this.bot3D.bot,
-            'fade',
-            0
+            'formOpacity',
+            1
         );
-        this._setFade(fade);
+        this._setOpacity(opacity);
     }
 
     private _setColor(color: any) {
@@ -602,26 +602,25 @@ export class BotShapeDecorator
         }
     }
 
-    private _setFade(fade: number) {
+    private _setOpacity(opacity: number) {
         if (this.scene) {
-            // Set fade on all meshes inside the gltf scene.
+            // Set opacity on all meshes inside the gltf scene.
             this.scene.traverse((obj) => {
                 if (obj instanceof Mesh) {
-                    setFade(obj, fade);
+                    setOpacity(obj, opacity);
                 }
             });
         } else {
-            setFade(this.mesh, fade);
+            setOpacity(this.mesh, opacity);
         }
 
         if (this._keyboard) {
             const defaultOpacity = 1;
-            const opacity = defaultOpacity * (1 - fade);
+            const newOpacity = defaultOpacity * opacity;
 
-            // let firstPanel = (this._keyboard as any).panels[0];
             for (let panel of (this._keyboard as any).panels) {
                 panel.set({
-                    backgroundOpacity: opacity,
+                    backgroundOpacity: newOpacity,
                 });
             }
 
@@ -630,13 +629,13 @@ export class BotShapeDecorator
                 const states = key.states;
                 for (let stateId in states) {
                     const attributes = states[stateId].attributes;
-                    attributes.backgroundOpacity = opacity;
+                    attributes.backgroundOpacity = newOpacity;
 
                     key.setupState({ stateId, attributes });
                 }
 
                 // Set the current backgroundOpacity for the key.
-                key.set({ backgroundOpacity: opacity });
+                key.set({ backgroundOpacity: newOpacity });
             }
         }
     }
@@ -915,7 +914,7 @@ export class BotShapeDecorator
         });
 
         this._updateColor(null);
-        this._updateFade(null);
+        this._updateOpacity(null);
         this._updateRenderOrder(null);
         this.bot3D.updateMatrixWorld(true);
     }
@@ -1027,7 +1026,7 @@ export class BotShapeDecorator
         this.collider = null;
         this._canHaveStroke = false;
         this._updateColor(null);
-        this._updateFade(null);
+        this._updateOpacity(null);
         this._updateRenderOrder(null);
 
         // Force the mesh UI to update
@@ -1071,7 +1070,7 @@ export class BotShapeDecorator
             let material = baseAuxMeshMaterial();
             this.mesh.material = material;
             this._updateColor(null);
-            this._updateFade(null);
+            this._updateOpacity(null);
             this._updateRenderOrder(null);
         }
     }
@@ -1084,7 +1083,7 @@ export class BotShapeDecorator
         if (await this._loadGLTF(EggUrl, false, token)) {
             this.mesh = this.scene.children[0] as Mesh;
             this._updateColor(null);
-            this._updateFade(null);
+            this._updateOpacity(null);
             this._updateRenderOrder(null);
         }
     }

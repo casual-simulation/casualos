@@ -398,7 +398,6 @@ export interface BotTagMasks {
 export interface BotTags {
     // Normal bot tags
     ['color']?: unknown;
-    ['fade']?: unknown;
     ['draggable']?: unknown;
     ['draggableMode']?: unknown;
     ['destroyable']?: unknown;
@@ -425,6 +424,7 @@ export interface BotTags {
     ['form']?: BotShape;
     ['formAnimation']?: string;
     ['formAddress']?: string;
+    ['formOpacity']?: unknown;
     ['orientationMode']?: string;
     ['anchorPoint']?: string;
     ['creator']?: string;
@@ -2234,7 +2234,6 @@ export const KNOWN_TAGS: string[] = [
     'draggable',
     'destroyable',
     'editable',
-    'fade',
     'strokeColor',
     'strokeWidth',
     'lineTo',
@@ -2266,6 +2265,7 @@ export const KNOWN_TAGS: string[] = [
     'form',
     'formAnimation',
     'formAnimationAddress',
+    'formOpacity',
     'formRenderOrder',
     'orientationMode',
     'anchorPoint',

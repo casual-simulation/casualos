@@ -718,11 +718,14 @@ export function setColor(
 }
 
 /**
- * Changes the mesh's fade level.
+ * Changes the mesh's opacity level.
  * @param mesh The mesh.
- * @param fade The fade value (0.0 -> 1.0)
+ * @param opacity The opacity value (0.0 -> 1.0)
  */
-export function setFade(mesh: Mesh | Sprite | ThreeLineSegments, fade: number) {
+export function setOpacity(
+    mesh: Mesh | Sprite | ThreeLineSegments,
+    opacity: number
+) {
     if (!mesh) {
         return;
     }
@@ -732,15 +735,15 @@ export function setFade(mesh: Mesh | Sprite | ThreeLineSegments, fade: number) {
     >mesh.material;
     const prevTransparent = shapeMat.transparent;
 
-    fade = clamp(fade, 0, 1);
+    opacity = clamp(opacity, 0, 1);
 
-    if (fade > 0) {
-        // Use fade as a scalar on the material's default opacity.
+    if (opacity < 1) {
+        // Use given opacity as a modifier on the material's default opacity.
         const defaultOpacity = (<any>shapeMat)[DEFAULT_OPACITY] ?? 1;
-        const opacity = defaultOpacity * (1 - fade);
+        const newOpacity = defaultOpacity * opacity;
 
         shapeMat.transparent = true;
-        shapeMat.opacity = opacity;
+        shapeMat.opacity = newOpacity;
     } else {
         // Restore material to default values for opacity and transparency.
         shapeMat.transparent = (<any>shapeMat)[DEFAULT_TRANSPARENT] ?? false;
@@ -748,7 +751,7 @@ export function setFade(mesh: Mesh | Sprite | ThreeLineSegments, fade: number) {
     }
 
     if (shapeMat.transparent !== prevTransparent) {
-        // Changing transparenct flag of material requires recompilation of material.
+        // Changing transparent flag of material requires re-compilation of material.
         shapeMat.needsUpdate = true;
     }
 }
