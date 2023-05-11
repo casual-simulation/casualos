@@ -30,7 +30,7 @@ jobs:
                   npm run bootstrap
             - name: Test
               run: |
-                  npx jest src/casual-apiary-aws --detectOpenHandles --forceExit --no-cache
+                  npx jest src/casual-apiary --detectOpenHandles --forceExit --no-cache
             - name: Build
               run: |
                   npm run build:apiary:aws
@@ -43,7 +43,7 @@ jobs:
                     --profile casualos
                   sam deploy --template-file template-out.yaml --stack-name $STACK_NAME \
                     --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset \
-                    --parameter-overrides "RedisPortParameter='$REDIS_PORT' RedisHostParameter='$REDIS_HOST' RedisUseTLSParameter='$REDIS_USE_TLS' RedisNamespaceParameter='$REDIS_NAMESPACE' RedisPasswordParameter='$REDIS_PASSWORD' WebsocketURLParameter='$WEBSOCKET_URL' MaxRedisBatchSizeParameter='$REDIS_MAX_BATCH_SIZE'" \
+                    --parameter-overrides "RedisPortParameter='$REDIS_PORT' RedisHostParameter='$REDIS_HOST' RedisUseTLSParameter='$REDIS_USE_TLS' RedisNamespaceParameter='$REDIS_NAMESPACE' RedisPasswordParameter='$REDIS_PASSWORD' WebsocketURLParameter='$WEBSOCKET_URL' MaxRedisBatchSizeParameter='$REDIS_MAX_BATCH_SIZE' MaxBranchSizeParameter='$REDIS_MAX_BRANCH_SIZE' MergeUpdatesOnMaxSizeExceededParameter='$MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED' RateLimitMaxParameter='$RATE_LIMIT_MAX' RateLimitWindowMSParameter='$RATE_LIMIT_WINDOW_MS'" \
                     --tags Customer=casualos \
                     --profile casualos
               env:
@@ -56,4 +56,8 @@ jobs:
                   WEBSOCKET_URL: ${{ secrets.WEBSOCKET_URL }}
                   LAMBDA_S3_BUCKET: ${{ secrets.LAMBDA_S3_BUCKET }}
                   REDIS_MAX_BATCH_SIZE: '0'
+                  REDIS_MAX_BRANCH_SIZE: '25000000' # 25 MB
+                  MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED: 'true'
+                  RATE_LIMIT_MAX: '100' # 100 requests/minute = 144k requests/day
+                  RATE_LIMIT_WINDOW_MS: '60000' # 60 seconds
                   STACK_NAME: auxbackend-apiary

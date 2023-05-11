@@ -19,6 +19,7 @@ import {
     StripeInterface,
     SubscriptionController,
     tryParseSubscriptionConfig,
+    RateLimitController,
 } from '@casual-simulation/aux-records';
 import { AuthController } from '@casual-simulation/aux-records/AuthController';
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
@@ -43,6 +44,8 @@ import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import { StripeIntegration } from '../../../../shared/StripeIntegration';
 import Stripe from 'stripe';
 import { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
+import RedisRateLimitStore from '@casual-simulation/rate-limit-redis';
+import { createClient as createRedisClient } from 'redis';
 
 declare var S3_ENDPOINT: string;
 declare var DYNAMODB_ENDPOINT: string;
@@ -64,14 +67,27 @@ const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
 const LIVEKIT_SECRET_KEY = process.env.LIVEKIT_SECRET_KEY;
 const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT;
 
-// const USERS_TABLE = process.env.USERS_TABLE;
-
-// const EMAIL_TABLE = process.env.EMAIL_TABLE;
-// const SMS_TABLE = process.env.SMS_TABLE;
-
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? null;
 const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY ?? null;
 const SUBSCRIPTION_CONFIG = process.env.SUBSCRIPTION_CONFIG ?? null;
+
+const REDIS_HOST: string = process.env.REDIS_HOST as string;
+const REDIS_PORT: number = parseInt(process.env.REDIS_PORT as string);
+const REDIS_PASS: string = process.env.REDIS_PASS as string;
+const REDIS_TLS: boolean = process.env.REDIS_TLS
+    ? process.env.REDIS_TLS === 'true'
+    : true;
+const REDIS_NAMESPACE: string = process.env.REDIS_NAMESPACE as string;
+
+const RATE_LIMIT_WINDOW_MS: number = process.env.RATE_LIMIT_WINDOW_MS
+    ? parseInt(process.env.RATE_LIMIT_WINDOW_MS)
+    : null;
+
+const RATE_LIMIT_MAX: number = process.env.RATE_LIMIT_MAX
+    ? parseInt(process.env.RATE_LIMIT_MAX)
+    : null;
+
+const RATE_LIMIT_PREFIX = `${REDIS_NAMESPACE}:rate-limit/`;
 
 // Create a DocumentClient that represents the query to add an item
 const dynamodb = require('aws-sdk/clients/dynamodb');
@@ -197,6 +213,49 @@ const subscriptionController = new SubscriptionController(
     subscriptionConfig
 );
 
+let rateLimit: RateLimitController = null;
+if (REDIS_HOST && REDIS_PORT && RATE_LIMIT_WINDOW_MS && RATE_LIMIT_MAX) {
+    console.log('[Records] Using Redis Rate Limiter.');
+    const client = createRedisClient({
+        host: REDIS_HOST,
+        port: REDIS_PORT,
+        password: REDIS_PASS,
+        tls: REDIS_TLS,
+
+        retry_strategy: function (options) {
+            if (options.error && options.error.code === 'ECONNREFUSED') {
+                // End reconnecting on a specific error and flush all commands with
+                // a individual error
+                return new Error('The server refused the connection');
+            }
+            // reconnect after min(100ms per attempt, 3 seconds)
+            return Math.min(options.attempt * 100, 3000);
+        },
+    });
+
+    const store = new RedisRateLimitStore({
+        sendCommand: (command: string, ...args: (string | number)[]) => {
+            return new Promise((resolve, reject) => {
+                client.sendCommand(command, args, (err, result) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(result);
+                    }
+                });
+            });
+        },
+    });
+    store.prefix = RATE_LIMIT_PREFIX;
+
+    rateLimit = new RateLimitController(store, {
+        maxHits: RATE_LIMIT_MAX,
+        windowMs: RATE_LIMIT_WINDOW_MS,
+    });
+} else {
+    console.log('[Records] Not using rate limiting.');
+}
+
 const allowedApiOrigins = new Set([
     'http://localhost:3000',
     'http://localhost:3002',
@@ -224,7 +283,8 @@ const httpServer = new RecordsHttpServer(
     dataController,
     manualDataController,
     filesController,
-    subscriptionController
+    subscriptionController,
+    rateLimit
 );
 
 async function handleEventBridgeEvent(event: EventBridgeEvent<any, any>) {

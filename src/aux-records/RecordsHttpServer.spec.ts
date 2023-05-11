@@ -35,6 +35,9 @@ import { getHash } from '@casual-simulation/crypto';
 import { SubscriptionController } from './SubscriptionController';
 import { StripeInterface, StripeProduct } from './StripeInterface';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import { RateLimitController } from './RateLimitController';
+import { MemoryRateLimiter } from './MemoryRateLimiter';
+import { RateLimiter } from '@casual-simulation/rate-limit-redis';
 
 console.log = jest.fn();
 
@@ -55,6 +58,9 @@ describe('RecordsHttpServer', () => {
     let dataStore: DataRecordsStore;
     let manualDataController: DataRecordsController;
     let manualDataStore: DataRecordsStore;
+
+    let rateLimiter: RateLimiter;
+    let rateLimitController: RateLimitController;
 
     let filesStore: FileRecordsStore;
     let filesController: FileRecordsController;
@@ -162,6 +168,12 @@ describe('RecordsHttpServer', () => {
             filesStore
         );
 
+        rateLimiter = new MemoryRateLimiter();
+        rateLimitController = new RateLimitController(rateLimiter, {
+            maxHits: 5,
+            windowMs: 1000,
+        });
+
         stripe = stripeMock = {
             publishableKey: 'publishable_key',
             getProductAndPriceInfo: jest.fn(),
@@ -210,7 +222,8 @@ describe('RecordsHttpServer', () => {
             dataController,
             manualDataController,
             filesController,
-            subscriptionController
+            subscriptionController,
+            rateLimitController
         );
         defaultHeaders = {
             origin: 'test.com',
@@ -275,6 +288,10 @@ describe('RecordsHttpServer', () => {
         }
 
         recordKey = recordKeyResult.recordKey;
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
     });
 
     describe('GET /api/{userId}/metadata', () => {
@@ -507,6 +524,8 @@ describe('RecordsHttpServer', () => {
                 headers: accountCorsHeaders,
             });
         });
+
+        testRateLimit('GET', `/api/{userId:${userId}}/metadata`);
     });
 
     describe('PUT /api/{userId}/metadata', () => {
@@ -680,6 +699,11 @@ describe('RecordsHttpServer', () => {
                 body,
                 authenticatedHeaders
             )
+        );
+        testRateLimit('PUT', `/api/{userId:${userId}}/metadata`, () =>
+            JSON.stringify({
+                name: 'Kal',
+            })
         );
     });
 
@@ -919,6 +943,8 @@ describe('RecordsHttpServer', () => {
                 headers: accountCorsHeaders,
             });
         });
+
+        testRateLimit('GET', `/api/{userId:${userId}}/subscription`);
     });
 
     describe('POST /api/{userId}/subscription/manage', () => {
@@ -1193,6 +1219,12 @@ describe('RecordsHttpServer', () => {
                 headers: accountCorsHeaders,
             });
         });
+
+        testRateLimit(
+            'POST',
+            `/api/{userId:${userId}}/subscription/manage`,
+            () => ''
+        );
     });
 
     describe('POST /api/stripeWebhook', () => {
@@ -1314,7 +1346,7 @@ describe('RecordsHttpServer', () => {
     });
 
     describe('GET /api/smsRules', () => {
-        it('should get the list of sms rules', async () => {
+        it('should return a 404', async () => {
             authStore.smsRules.push(
                 {
                     type: 'allow',
@@ -1400,6 +1432,7 @@ describe('RecordsHttpServer', () => {
         testAuthorization(() =>
             httpGet('/api/v2/sessions', authenticatedHeaders)
         );
+        testRateLimit('GET', `/api/v2/sessions`);
     });
 
     describe('POST /api/v2/replaceSession', () => {
@@ -1446,6 +1479,7 @@ describe('RecordsHttpServer', () => {
         testAuthorization(() =>
             httpPost('/api/v2/replaceSession', '', authenticatedHeaders)
         );
+        testRateLimit('POST', `/api/v2/replaceSession`, () => '');
     });
 
     describe('POST /api/v2/revokeAllSessions', () => {
@@ -1473,6 +1507,11 @@ describe('RecordsHttpServer', () => {
         });
 
         testUrl('POST', '/api/v2/revokeAllSessions', () =>
+            JSON.stringify({
+                userId,
+            })
+        );
+        testRateLimit('POST', `/api/v2/revokeAllSessions`, () =>
             JSON.stringify({
                 userId,
             })
@@ -1540,6 +1579,12 @@ describe('RecordsHttpServer', () => {
         });
 
         testUrl('POST', '/api/v2/revokeSession', () =>
+            JSON.stringify({
+                userId,
+                sessionId,
+            })
+        );
+        testRateLimit('POST', `/api/v2/revokeSession`, () =>
             JSON.stringify({
                 userId,
                 sessionId,
@@ -1669,6 +1714,13 @@ describe('RecordsHttpServer', () => {
         testBodyIsJson((body) =>
             httpPost('/api/v2/completeLogin', body, authenticatedHeaders)
         );
+        testRateLimit('POST', `/api/v2/completeLogin`, () =>
+            JSON.stringify({
+                userId,
+                requestId,
+                code,
+            })
+        );
     });
 
     describe('POST /api/v2/login', () => {
@@ -1730,6 +1782,12 @@ describe('RecordsHttpServer', () => {
         testBodyIsJson((body) =>
             httpPost('/api/v2/login', body, authenticatedHeaders)
         );
+        testRateLimit('POST', `/api/v2/login`, () =>
+            JSON.stringify({
+                address: 'test@example.com',
+                addressType: 'email',
+            })
+        );
     });
 
     describe('POST /api/v2/meet/token', () => {
@@ -1771,6 +1829,12 @@ describe('RecordsHttpServer', () => {
         testBodyIsJson((body) =>
             httpPost('/api/v2/meet/token', body, {
                 origin: apiOrigin,
+            })
+        );
+        testRateLimit('POST', `/api/v2/meet/token`, () =>
+            JSON.stringify({
+                roomName,
+                userName,
             })
         );
     });
@@ -1930,6 +1994,13 @@ describe('RecordsHttpServer', () => {
         testBodyIsJson((body) =>
             httpPost('/api/v2/records/events/count', body, apiHeaders)
         );
+        testRateLimit('POST', `/api/v2/records/events/count`, () =>
+            JSON.stringify({
+                recordKey,
+                eventName: 'testEvent',
+                count: 2,
+            })
+        );
     });
 
     describe('GET /api/v2/records/events/count', () => {
@@ -2022,6 +2093,7 @@ describe('RecordsHttpServer', () => {
             'GET',
             `/api/v2/records/events/count?recordName=recordName&eventName=testEvent`
         );
+        testRateLimit('GET', `/api/v2/records/events/count`);
     });
 
     describe('DELETE /api/v2/records/manual/data', () => {
@@ -2160,6 +2232,12 @@ describe('RecordsHttpServer', () => {
         testBodyIsJson((body) =>
             httpDelete('/api/v2/records/manual/data', body, apiHeaders)
         );
+        testRateLimit('DELETE', `/api/v2/records/manual/data`, () =>
+            JSON.stringify({
+                recordKey,
+                address: 'testAddress',
+            })
+        );
     });
 
     describe('GET /api/v2/records/manual/data', () => {
@@ -2254,6 +2332,12 @@ describe('RecordsHttpServer', () => {
                 headers: corsHeaders(defaultHeaders['origin']),
             });
         });
+
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/manual/data?recordName=${recordName}&address=testAddress`
+            )
+        );
     });
 
     describe('POST /api/v2/records/manual/data', () => {
@@ -2436,6 +2520,13 @@ describe('RecordsHttpServer', () => {
         testBodyIsJson((body) =>
             httpPost(`/api/v2/records/manual/data`, body, apiHeaders)
         );
+        testRateLimit('POST', `/api/v2/records/manual/data`, () =>
+            JSON.stringify({
+                recordKey,
+                address: 'testAddress',
+                data: 'hello, world',
+            })
+        );
     });
 
     describe('DELETE /api/v2/records/file', () => {
@@ -2598,6 +2689,12 @@ describe('RecordsHttpServer', () => {
 
         testBodyIsJson((body) =>
             httpDelete('/api/v2/records/file', body, apiHeaders)
+        );
+        testRateLimit('DELETE', `/api/v2/records/file`, () =>
+            JSON.stringify({
+                recordKey,
+                fileUrl,
+            })
         );
     });
 
@@ -2875,6 +2972,16 @@ describe('RecordsHttpServer', () => {
         testBodyIsJson((body) =>
             httpPost('/api/v2/records/file', body, apiHeaders)
         );
+
+        testRateLimit('POST', `/api/v2/records/file`, () =>
+            JSON.stringify({
+                recordKey,
+                fileSha256Hex: 'hash',
+                fileByteLength: 10,
+                fileMimeType: 'application/json',
+                fileDescription: 'description',
+            })
+        );
     });
 
     describe('OPTIONS /api/v2/records/file/*', () => {
@@ -3054,6 +3161,13 @@ describe('RecordsHttpServer', () => {
         testBodyIsJson((body) =>
             httpDelete('/api/v2/records/data', body, apiHeaders)
         );
+
+        testRateLimit('DELETE', `/api/v2/records/data`, () =>
+            JSON.stringify({
+                recordKey,
+                address: 'testAddress',
+            })
+        );
     });
 
     describe('GET /api/v2/records/data', () => {
@@ -3148,6 +3262,13 @@ describe('RecordsHttpServer', () => {
                 headers: corsHeaders(defaultHeaders['origin']),
             });
         });
+
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/data?recordName=${recordName}&address=testAddress`,
+                defaultHeaders
+            )
+        );
     });
 
     describe('GET /api/v2/records/data/list', () => {
@@ -3257,6 +3378,13 @@ describe('RecordsHttpServer', () => {
                 headers: corsHeaders(defaultHeaders['origin']),
             });
         });
+
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/data/list?recordName=${recordName}`,
+                defaultHeaders
+            )
+        );
     });
 
     describe('POST /api/v2/records/data', () => {
@@ -3433,6 +3561,17 @@ describe('RecordsHttpServer', () => {
         testBodyIsJson((body) =>
             httpPost(`/api/v2/records/data`, body, apiHeaders)
         );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/records/data`,
+                JSON.stringify({
+                    recordKey,
+                    address: 'testAddress',
+                    data: 'hello, world',
+                }),
+                defaultHeaders
+            )
+        );
     });
 
     describe('POST /api/v2/records/key', () => {
@@ -3555,6 +3694,17 @@ describe('RecordsHttpServer', () => {
         testBodyIsJson((body) =>
             httpPost('/api/v2/records/key', body, apiHeaders)
         );
+
+        testRateLimit(() =>
+            httpPost(
+                '/api/v2/records/key',
+                JSON.stringify({
+                    recordName: 'test',
+                    policy: 'subjectfull',
+                }),
+                defaultHeaders
+            )
+        );
     });
 
     describe('OPTIONS /api/v2/records', () => {
@@ -3624,6 +3774,7 @@ describe('RecordsHttpServer', () => {
         testBodyIsJson((body) =>
             httpRequest(method, url, body, authenticatedHeaders)
         );
+        testRateLimit(method, url, createBody);
     }
 
     function testOrigin(
@@ -3746,6 +3897,86 @@ describe('RecordsHttpServer', () => {
                         'Content-Type, Authorization',
                 },
             });
+        });
+    }
+
+    function testRateLimit(createRequest: () => GenericHttpRequest): void;
+    function testRateLimit(
+        method: GenericHttpRequest['method'],
+        url: string,
+        createBody?: () => string | null
+    ): void;
+    function testRateLimit(
+        createRequestOrMethod:
+            | (() => GenericHttpRequest)
+            | GenericHttpRequest['method'],
+        url?: string,
+        createBody?: () => string | null
+    ): void {
+        const createRequestBody = createBody ?? (() => null);
+        const ip = '123.456.789';
+        const createRequest: () => GenericHttpRequest =
+            typeof createRequestOrMethod === 'function'
+                ? createRequestOrMethod
+                : () =>
+                      httpRequest(
+                          createRequestOrMethod,
+                          url as string,
+                          createRequestBody(),
+                          defaultHeaders,
+                          ip
+                      );
+
+        it('should return a 429 status code when the rate limit is exceeded', async () => {
+            jest.useFakeTimers({
+                now: 0,
+            });
+
+            await rateLimiter.increment(ip, 100);
+
+            const request = createRequest();
+            const result = await server.handleRequest(request);
+
+            expect(result).toEqual({
+                statusCode: 429,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'rate_limit_exceeded',
+                    errorMessage: 'Rate limit exceeded.',
+                }),
+                headers: {
+                    'Access-Control-Allow-Origin': request.headers.origin,
+                    'Access-Control-Allow-Headers':
+                        'Content-Type, Authorization',
+                },
+            });
+        });
+
+        it('should skip rate limit checks if the server has no rate limiter', async () => {
+            jest.useFakeTimers({
+                now: 0,
+            });
+
+            server = new RecordsHttpServer(
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                null as any
+            );
+
+            await rateLimiter.increment(ip, 100);
+
+            const request = createRequest();
+            const result = await server.handleRequest(request);
+
+            expect(result.statusCode).not.toEqual(429);
         });
     }
 

@@ -133,6 +133,8 @@ export interface CausalTreeServerConfig {
 }
 
 export interface CausalReposServerConfig {
+    redis: RedisCausalReposConfig | null;
+
     /**
      * The config that should be used for MongoDB support of Causal Repos.
      * A config must be specified for MongoDB.
@@ -153,6 +155,11 @@ export interface MongoDBCaualReposConfig {
      * Whether to store the atom stage in MongoDB.
      */
     stage: boolean;
+}
+
+export interface RedisCausalReposConfig {
+    namespace: string;
+    maxBranchSizeInBytes: number;
 }
 
 /**

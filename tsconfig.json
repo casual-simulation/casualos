@@ -30,6 +30,7 @@
         { "path": "./src/aux-vm-deno" },
         { "path": "./src/aux-records" },
         { "path": "./src/aux-records-aws" },
+        { "path": "./src/casual-apiary" },
         { "path": "./src/casual-apiary-aws" },
         { "path": "./src/causal-trees" },
         { "path": "./src/causal-tree-client-apiary" },
@@ -48,6 +49,7 @@
         { "path": "./src/websocket" },
         { "path": "./src/js-interpreter" },
         { "path": "./src/multi-streams-mixer" },
-        { "path": "./src/vue-shortkey" }
+        { "path": "./src/vue-shortkey" },
+        { "path": "./src/rate-limit-redis" }
     ]
 }

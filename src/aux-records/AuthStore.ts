@@ -172,6 +172,18 @@ export interface AuthUser {
      * This is used to help mitigate distributed brute force attacks. (i.e. attacks that try generating a lot of login requests and guessing the codes)
      */
     currentLoginRequestId: string | null | undefined;
+
+    /**
+     * The Unix time in miliseconds that the user was banned.
+     * If set to any positive number, then the user should be considered banned and unable to perform any operations.
+     * Null/undefined if the user is not banned and allowed access into the system.
+     */
+    banTimeMs?: number | null | undefined;
+
+    /**
+     * The reason for the ban.
+     */
+    banReason?: 'terms_of_service_violation' | null | undefined;
 }
 
 /**

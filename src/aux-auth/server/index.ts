@@ -29,6 +29,7 @@ import {
     JsonParseResult,
     StripeInterface,
     tryParseSubscriptionConfig,
+    RateLimitController,
 } from '@casual-simulation/aux-records';
 import { MongoDBRecordsStore } from './MongoDBRecordsStore';
 import { MongoDBDataRecordsStore, DataRecord } from './MongoDBDataRecordsStore';
@@ -47,6 +48,10 @@ import {
 } from './MongoDBAuthStore';
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
 import { StripeIntegration } from '../shared/StripeIntegration';
+import {
+    MongoDBRateLimiter,
+    MongoDBRateLimitRecord,
+} from './MongoDBRateLimiter';
 import * as dotenv from 'dotenv';
 import Stripe from 'stripe';
 
@@ -88,6 +93,13 @@ const MONGO_USE_NEW_URL_PARSER =
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? null;
 const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY ?? null;
 const SUBSCRIPTION_CONFIG = process.env.SUBSCRIPTION_CONFIG ?? null;
+
+const RATE_LIMIT_MAX: number = process.env.RATE_LIMIT_MAX
+    ? parseInt(process.env.RATE_LIMIT_MAX)
+    : null;
+const RATE_LIMIT_WINDOW_MS: number = process.env.RATE_LIMIT_WINDOW_MS
+    ? parseInt(process.env.RATE_LIMIT_WINDOW_MS)
+    : null;
 
 function getAuthMessenger(): AuthMessenger {
     const API_KEY = process.env.TEXT_IT_API_KEY;
@@ -167,6 +179,7 @@ async function start() {
     const recordsEventsCollection = db.collection<any>('recordsEvents');
     const emailRules = db.collection<any>('emailRules');
     const smsRules = db.collection<any>('smsRules');
+    const rateLimits = db.collection<any>('rateLimits');
     const tempRecords = [] as AppRecord[];
 
     const authStore = new MongoDBAuthStore(
@@ -185,6 +198,19 @@ async function start() {
     const dataManager = new DataRecordsController(recordsManager, dataStore);
     const eventStore = new MongoDBEventRecordsStore(recordsEventsCollection);
     const eventManager = new EventRecordsController(recordsManager, eventStore);
+
+    const rateLimiter = new MongoDBRateLimiter(rateLimits);
+    let rateManager: RateLimitController = null;
+
+    if (RATE_LIMIT_MAX && RATE_LIMIT_WINDOW_MS) {
+        console.log('[AuxAuth] Enabling rate limiting.');
+        rateManager = new RateLimitController(rateLimiter, {
+            maxHits: RATE_LIMIT_MAX,
+            windowMs: RATE_LIMIT_WINDOW_MS,
+        });
+    } else {
+        console.log('[AuxAuth] Disabling rate limiting.');
+    }
 
     const manualDataStore = new MongoDBDataRecordsStore(
         manualRecordsDataCollection
@@ -272,7 +298,8 @@ async function start() {
         dataManager,
         manualDataManager,
         fileController,
-        subscriptionController
+        subscriptionController,
+        rateManager
     );
 
     async function handleRequest(req: Request, res: Response) {

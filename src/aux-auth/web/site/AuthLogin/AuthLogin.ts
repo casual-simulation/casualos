@@ -22,6 +22,7 @@ export default class AuthLogin extends Vue {
     showSmsError: boolean = false;
     showInvalidAddressError: boolean = false;
     showEnterAddressError: boolean = false;
+    showBannedUserError: boolean = false;
     supportsSms: boolean = false;
 
     @Prop({ default: null }) after: string;
@@ -110,6 +111,7 @@ export default class AuthLogin extends Vue {
             }
             this.showTermsOfServiceError = false;
             this.showEnterAddressError = false;
+            this.showBannedUserError = false;
             this.showEmailError = false;
             this.showEmailError = false;
 
@@ -187,6 +189,8 @@ export default class AuthLogin extends Vue {
                     this.showSmsError = true;
                 } else if (result.errorCode === 'address_type_not_supported') {
                     this.showEnterAddressError = true;
+                } else if (result.errorCode === 'user_is_banned') {
+                    this.showBannedUserError = true;
                 }
                 return;
             }

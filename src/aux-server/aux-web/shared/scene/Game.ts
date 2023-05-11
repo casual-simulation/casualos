@@ -1269,7 +1269,8 @@ export abstract class Game {
 
         navigator.mediaDevices
             .getUserMedia({ audio, video })
-            .then(() => {
+            .then((stream) => {
+                stream.getTracks().forEach((t) => t.stop());
                 sim.helper.transaction(asyncResult(e.taskId, null));
             })
             .catch((reason) => {

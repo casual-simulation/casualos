@@ -67,6 +67,14 @@ Parameters:
     AllowedApiOriginsParameter:
         Type: String
         Description: The allowed origin domains that are able to make requests for the records APIs. This value should be a space-separated string that includes the origins that are allowed to request/publish records to this site.
+    RateLimitMaxParameter:
+        Type: String
+        Description: The maximum number of requests that can be made from an IP address over the window. If set to an empty string, then there is no rate limiting.
+        Default: ''
+    RateLimitWindowMSParameter:
+        Type: String
+        Description: The window, in milliseconds, that requests are allowed to be made over for rate limiting. i.e. if set to 1000, then RateLimitMaxParameter number of requests can be made over 1 second. If set to an empty string, then there is no rate limiting.
+        Default: ''
 
 Globals:
     Api:
@@ -151,6 +159,13 @@ Resources:
                     SESSIONS_TABLE: !Ref SessionsTable
                     EMAIL_TABLE: !Ref EmailRulesTable
                     SMS_TABLE: !Ref SmsRulesTable
+                    REDIS_HOST: !Ref RedisHostParameter
+                    REDIS_PORT: !Ref RedisPortParameter
+                    REDIS_PASS: !Ref RedisPasswordParameter
+                    REDIS_TLS: !Ref RedisUseTLSParameter
+                    REDIS_NAMESPACE: !Ref RedisRecordsNamespaceParameter
+                    RATE_LIMIT_MAX: !Ref RateLimitMaxParameter
+                    RATE_LIMIT_WINDOW_MS: !Ref RateLimitWindowMSParameter
             Events:
                 CreateRecordKey:
                     Type: Api
@@ -423,12 +438,6 @@ Resources:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
 
-    RecordsBucket:
-        Type: AWS::S3::Bucket
-        DeletionPolicy: Retain
-        Properties:
-            AccessControl: PublicRead
-
     FilesBucket:
         Type: AWS::S3::Bucket
         DeletionPolicy: Retain
@@ -446,6 +455,14 @@ Resources:
                           - '*'
                       ExposedHeaders: []
                       MaxAge: 3000
+            PublicAccessBlockConfiguration:
+                BlockPublicAcls: false
+                BlockPublicPolicy: false
+                IgnorePublicAcls: false
+                RestrictPublicBuckets: false
+            OwnershipControls:
+                Rules:
+                    - ObjectOwnership: BucketOwnerPreferred
 
     PublicRecordsTable:
         Type: AWS::DynamoDB::Table

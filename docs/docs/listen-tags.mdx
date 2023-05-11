@@ -2077,7 +2077,40 @@ let that: {
 
 A shout that is sent to all bots when the [Document](https://developer.mozilla.org/en-US/docs/Web/API/Document) object is made available to scripts.
 
-### Arguments:
+#### Arguments:
 ```typescript
 let that: null;
+```
+
+### `@onSpaceMaxSizeReached`
+
+A shout that is sent to all bots when a space rejects persistent storage of one or more bot changes due to exceeding the storage limits of the space.
+
+There are a several consequences to this:
+
+-   Some bot/tag changes were not persistently stored in the space.
+-   Those same bot/tag changes will still be available on the machine that the change was created on, as long as the browser tab has not been reloaded.
+-   Future changes to that space may or may not be persisted, depending on whether the individual changes would cause the space to exceed its storage limit. As a result, large changes are more likely to be rejected than small changes.
+
+As such, if this shout occurs in an inst that you are working in, it is highly recommended to make a manual backup so that you don't loose any data.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The space that rejected some changes due to storage limits.
+     * Generally, this is the "shared" space.
+     */
+    space: string;
+
+    /**
+     * The storage limit for the space. Represented in bytes.
+     */
+    maxSizeInBytes: number;
+
+    /**
+     * The number of bytes that the storage limit would need to be in order to accept the changes.
+     */
+    neededSizeInBytes: number;
+};
 ```

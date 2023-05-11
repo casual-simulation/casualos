@@ -61,6 +61,7 @@ export default class RecordsUI extends Vue {
     showInvalidAddressError: boolean = false;
     showTermsOfServiceError: boolean = false;
     showInvalidCodeError: boolean = false;
+    showBannedUserError: boolean = false;
     processing: boolean = false;
 
     private _requestRecordTaskId: number | string;
@@ -73,7 +74,8 @@ export default class RecordsUI extends Vue {
         return this.showEmailError ||
             this.showSmsError ||
             this.showEnterAddressError ||
-            this.showInvalidAddressError
+            this.showInvalidAddressError ||
+            this.showBannedUserError
             ? 'md-invalid'
             : '';
     }
@@ -287,6 +289,7 @@ export default class RecordsUI extends Vue {
                         e.showInvalidSmsError || e.showEnterSmsError;
                     this.showTermsOfServiceError =
                         e.showAcceptTermsOfServiceError;
+                    this.showBannedUserError = e.showBannedUserError;
                     this.supportsSms = e.supportsSms;
                     this.processing = false;
                     this.$emit('visible');

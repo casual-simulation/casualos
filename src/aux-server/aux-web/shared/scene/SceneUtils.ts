@@ -688,6 +688,8 @@ export function buildSRGBColor(...args: (string | number)[]): Color {
 }
 
 export const DEFAULT_COLOR = Symbol('default_color');
+export const DEFAULT_OPACITY = Symbol('default_opacity');
+export const DEFAULT_TRANSPARENT = Symbol('default_transparent');
 
 /**
  * Changes the mesh's material to the given color.
@@ -712,6 +714,45 @@ export function setColor(
     } else {
         shapeMat.visible = true;
         shapeMat.color = (<any>shapeMat)[DEFAULT_COLOR] ?? new Color(0xffffff);
+    }
+}
+
+/**
+ * Changes the mesh's opacity level.
+ * @param mesh The mesh.
+ * @param opacity The opacity value (0.0 -> 1.0)
+ */
+export function setOpacity(
+    mesh: Mesh | Sprite | ThreeLineSegments,
+    opacity: number
+) {
+    if (!mesh) {
+        return;
+    }
+
+    const shapeMat = <
+        MeshStandardMaterial | MeshToonMaterial | LineBasicMaterial
+    >mesh.material;
+    const prevTransparent = shapeMat.transparent;
+
+    opacity = clamp(opacity, 0, 1);
+
+    if (opacity < 1) {
+        // Use given opacity as a modifier on the material's default opacity.
+        const defaultOpacity = (<any>shapeMat)[DEFAULT_OPACITY] ?? 1;
+        const newOpacity = defaultOpacity * opacity;
+
+        shapeMat.transparent = true;
+        shapeMat.opacity = newOpacity;
+    } else {
+        // Restore material to default values for opacity and transparency.
+        shapeMat.transparent = (<any>shapeMat)[DEFAULT_TRANSPARENT] ?? false;
+        shapeMat.opacity = (<any>shapeMat)[DEFAULT_OPACITY] ?? 1;
+    }
+
+    if (shapeMat.transparent !== prevTransparent) {
+        // Changing transparent flag of material requires re-compilation of material.
+        shapeMat.needsUpdate = true;
     }
 }
 
@@ -1192,7 +1233,13 @@ export function addCorsQueryParam(url: string): string {
         uri.searchParams.get('casualos-no-cors-cache') === 'true'
     ) {
         uri.searchParams.delete('casualos-no-cors-cache');
-    } else if (!uri.searchParams.has('cors-cache')) {
+    } else if (
+        !uri.searchParams.has('cors-cache') &&
+        (uri.protocol === 'http:' ||
+            uri.protocol === 'https:' ||
+            uri.protocol === 'ws:' ||
+            uri.protocol === 'wss:')
+    ) {
         uri.searchParams.set('cors-cache', '');
     }
 

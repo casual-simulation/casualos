@@ -100,6 +100,11 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
     private _partitions: Map<string, AuxPartition>;
 
     /**
+     * The map of branch names to promises that resolve when the partition is ready.
+     */
+    private _partitionPromises: Map<string, Promise<AuxPartition>>;
+
+    /**
      * The map of session IDs to connected devices.
      */
     private _devices: Map<string, ConnectedDevice>;
@@ -210,6 +215,7 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
             config.childPartitionType ?? 'causal_repo_client';
         this._state = {};
         this._partitions = new Map();
+        this._partitionPromises = new Map();
         this._partitionSubs = new Map();
         this._devices = new Map();
         this._synced = false;
@@ -357,96 +363,108 @@ export class OtherPlayersPartitionImpl implements OtherPlayersPartition {
      */
     private async _tryLoadBranchForDevice(device: DeviceInfo) {
         const branch = this._branchNameForDevice(device);
-        if (!this._partitions.has(branch)) {
-            console.log(
-                `[OtherPlayersPartitionImpl] Loading partition for ${device.claims[SESSION_ID_CLAIM]}`
-            );
-            const sub = new Subscription();
-            const promise =
-                this._childParitionType === 'yjs_client'
-                    ? createRemoteClientYjsPartition(
-                          {
-                              type: 'yjs_client',
-                              branch: branch,
-                              client: this._client,
-                              temporary: true,
-                              readOnly: true,
-                          },
-                          this._user
-                      )
-                    : createCausalRepoClientPartition(
-                          {
-                              type: 'causal_repo_client',
-                              branch: branch,
-                              client: this._client,
-                              temporary: true,
-                              readOnly: true,
-                          },
-                          this._user
-                      );
-            const partition = await promise;
-            this._partitions.set(branch, partition);
-            this._partitionSubs.set(branch, sub);
-            sub.add(partition);
-
-            sub.add(
-                partition.onBotsAdded.subscribe(
-                    (added) => {
-                        this._onBotsAdded.next(added);
-                    },
-                    (err) => this._onBotsAdded.error(err)
-                )
-            );
-            sub.add(
-                partition.onBotsRemoved.subscribe(
-                    (removed) => {
-                        this._onBotsRemoved.next(removed);
-                    },
-                    (err) => this._onBotsRemoved.error(err)
-                )
-            );
-            sub.add(
-                partition.onBotsUpdated.subscribe(
-                    (updated) => {
-                        this._onBotsUpdated.next(updated);
-                    },
-                    (err) => this._onBotsUpdated.error(err)
-                )
-            );
-            sub.add(partition.onError.subscribe(this._onError));
-            sub.add(
-                partition.onStateUpdated.pipe(skip(1)).subscribe(
-                    (update) => {
-                        this._state = applyUpdates(
-                            this._state as PrecalculatedBotsState,
-                            update
-                        );
-                        this._onStateUpdated.next({
-                            ...update,
-                            version: null,
-                        });
-                    },
-                    (err) => this._onStateUpdated.error(err)
-                )
-            );
-
-            partition.space = this.space;
-            partition.connect();
+        if (!this._partitionPromises.has(branch)) {
+            const promise = this._loadPartition(branch, device);
+            this._partitionPromises.set(branch, promise);
+            await promise;
         }
+    }
+
+    private async _loadPartition(
+        branch: string,
+        device: DeviceInfo
+    ): Promise<AuxPartition> {
+        console.log(
+            `[OtherPlayersPartitionImpl] Loading partition for ${device.claims[SESSION_ID_CLAIM]}`
+        );
+        const sub = new Subscription();
+        const promise =
+            this._childParitionType === 'yjs_client'
+                ? createRemoteClientYjsPartition(
+                      {
+                          type: 'yjs_client',
+                          branch: branch,
+                          client: this._client,
+                          temporary: true,
+                          readOnly: true,
+                      },
+                      this._user
+                  )
+                : createCausalRepoClientPartition(
+                      {
+                          type: 'causal_repo_client',
+                          branch: branch,
+                          client: this._client,
+                          temporary: true,
+                          readOnly: true,
+                      },
+                      this._user
+                  );
+        const partition = await promise;
+        this._partitions.set(branch, partition);
+        this._partitionSubs.set(branch, sub);
+        sub.add(partition);
+
+        sub.add(
+            partition.onBotsAdded.subscribe(
+                (added) => {
+                    this._onBotsAdded.next(added);
+                },
+                (err) => this._onBotsAdded.error(err)
+            )
+        );
+        sub.add(
+            partition.onBotsRemoved.subscribe(
+                (removed) => {
+                    this._onBotsRemoved.next(removed);
+                },
+                (err) => this._onBotsRemoved.error(err)
+            )
+        );
+        sub.add(
+            partition.onBotsUpdated.subscribe(
+                (updated) => {
+                    this._onBotsUpdated.next(updated);
+                },
+                (err) => this._onBotsUpdated.error(err)
+            )
+        );
+        sub.add(partition.onError.subscribe(this._onError));
+        sub.add(
+            partition.onStateUpdated.pipe(skip(1)).subscribe(
+                (update) => {
+                    this._state = applyUpdates(
+                        this._state as PrecalculatedBotsState,
+                        update
+                    );
+                    this._onStateUpdated.next({
+                        ...update,
+                        version: null,
+                    });
+                },
+                (err) => this._onStateUpdated.error(err)
+            )
+        );
+
+        partition.space = this.space;
+        partition.connect();
+
+        return partition;
     }
 
     /**
      * Attempts to unload the player branch for the given device.
      * @param device The device.
      */
-    private _tryUnloadBranchForDevice(device: DeviceInfo) {
+    private async _tryUnloadBranchForDevice(device: DeviceInfo) {
         const branch = this._branchNameForDevice(device);
-        if (this._partitions.has(branch)) {
+        if (this._partitionPromises.has(branch)) {
             console.log(
                 `[OtherPlayersPartitionImpl] Unloading partition for ${device.claims[SESSION_ID_CLAIM]}`
             );
-            const partition = this._partitions.get(branch);
+            const partition = await this._partitionPromises.get(branch);
             this._partitions.delete(branch);
+            this._partitionPromises.delete(branch);
             const sub = this._partitionSubs.get(branch);
             this._partitionSubs.delete(branch);
             if (sub) {

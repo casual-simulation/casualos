@@ -1,4 +1,6 @@
 import {
+    AddUpdatesResult,
+    ReplaceUpdatesResult,
     StoredUpdates,
     UpdatesStore,
 } from '@casual-simulation/causal-trees/core2';
@@ -33,7 +35,10 @@ export class MongoDBUpdatesStore implements UpdatesStore {
         };
     }
 
-    async addUpdates(branch: string, updates: string[]): Promise<void> {
+    async addUpdates(
+        branch: string,
+        updates: string[]
+    ): Promise<AddUpdatesResult> {
         const doc: MongoDBUpdate = {
             branch,
             updates,
@@ -41,12 +46,24 @@ export class MongoDBUpdatesStore implements UpdatesStore {
         };
 
         await this._updates.insertOne(doc);
+
+        return {
+            success: true,
+        };
     }
 
     async clearUpdates(branch: string): Promise<void> {
         await this._updates.deleteMany({
             branch,
         });
+    }
+
+    replaceUpdates(
+        branch: string,
+        updatesToRemove: StoredUpdates,
+        updatesToAdd: string[]
+    ): Promise<ReplaceUpdatesResult> {
+        return this.addUpdates(branch, updatesToAdd);
     }
 }
 
