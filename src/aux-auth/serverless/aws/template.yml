@@ -157,6 +157,10 @@ Resources:
                     USER_ADDRESSES_TABLE: !Ref UserAddressesTable
                     LOGIN_REQUESTS_TABLE: !Ref LoginRequestsTable
                     SESSIONS_TABLE: !Ref SessionsTable
+                    POLICIES_TABLE: !Ref PoliciesTable
+                    ROLES_TABLE: !Ref RolesTable
+                    SUBJECT_ROLES_TABLE: !Ref SubjectRolesTable
+                    ROLE_SUBJECTS_TABLE: !Ref RoleSubjectsTable
                     EMAIL_TABLE: !Ref EmailRulesTable
                     SMS_TABLE: !Ref SmsRulesTable
                     REDIS_HOST: !Ref RedisHostParameter
@@ -453,6 +457,61 @@ Resources:
                         KeyType: RANGE
                   Projection:
                       ProjectionType: ALL
+
+    PoliciesTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: recordName
+                  KeyType: HASH
+                - AttributeName: marker
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: recordName
+                  AttributeType: S
+                - AttributeName: marker
+                  AttributeType: S
+    RolesTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: recordName
+                  KeyType: HASH
+                - AttributeName: role
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: recordName
+                  AttributeType: S
+                - AttributeName: role
+                  AttributeType: S
+
+    SubjectRolesTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: subjectId
+                  KeyType: HASH
+                - AttributeName: recordName
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: subjectId
+                  AttributeType: S
+                - AttributeName: recordName
+                  AttributeType: S
+
+    RoleSubjectsTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: roleId
+                  KeyType: HASH
+                - AttributeName: subjectId
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: roleId
+                  AttributeType: S
+                - AttributeName: subjectId
+                  AttributeType: S
 
     # DynamoDB table to store records
     RecordsTable:
