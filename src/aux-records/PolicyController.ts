@@ -32,7 +32,7 @@ import {
     RoleAssignment,
     UpdateUserPolicyFailure,
     UpdateUserRolesFailure,
-    UserPolicy,
+    UserPolicyRecord,
 } from './PolicyStore';
 import { intersectionBy, isEqual, sortBy, union } from 'lodash';
 
@@ -258,7 +258,7 @@ export class PolicyController {
                 };
             }
 
-            const policy: UserPolicy = policyResult.success
+            const policy: UserPolicyRecord = policyResult.success
                 ? policyResult
                 : {
                       document: {
@@ -367,7 +367,7 @@ export class PolicyController {
                 };
             }
 
-            const policy: UserPolicy = policyResult;
+            const policy: UserPolicyRecord = policyResult;
 
             let hasUpdate = false;
             for (let i = 0; i < policy.document.permissions.length; i++) {

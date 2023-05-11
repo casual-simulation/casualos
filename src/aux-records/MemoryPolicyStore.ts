@@ -16,7 +16,7 @@ import {
     UpdateRolesUpdate,
     UpdateUserPolicyResult,
     UpdateUserRolesResult,
-    UserPolicy,
+    UserPolicyRecord,
 } from './PolicyStore';
 
 /**
@@ -102,7 +102,7 @@ export class MemoryPolicyStore implements PolicyStore {
     async updateUserPolicy(
         recordName: string,
         marker: string,
-        policy: UserPolicy
+        policy: UserPolicyRecord
     ): Promise<UpdateUserPolicyResult> {
         if (!this.policies[recordName]) {
             this.policies[recordName] = {};

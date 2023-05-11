@@ -71,7 +71,7 @@ export interface PolicyStore {
     updateUserPolicy(
         recordName: string,
         marker: string,
-        policy: UserPolicy
+        policy: UserPolicyRecord
     ): Promise<UpdateUserPolicyResult>;
 
     /**
@@ -102,7 +102,7 @@ export interface PolicyStore {
 /**
  * Defines an interface that represents a user-created policy.
  */
-export interface UserPolicy {
+export interface UserPolicyRecord {
     /**
      * The policy document.
      */
@@ -114,7 +114,7 @@ export interface UserPolicy {
     markers: string[];
 }
 
-export interface ListedUserPolicy extends UserPolicy {
+export interface ListedUserPolicy extends UserPolicyRecord {
     /**
      * The marker that this policy is for.
      */
