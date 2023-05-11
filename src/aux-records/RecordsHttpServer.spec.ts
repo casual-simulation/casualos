@@ -45,6 +45,7 @@ import {
 import { RateLimitController } from './RateLimitController';
 import { MemoryRateLimiter } from './MemoryRateLimiter';
 import { RateLimiter } from '@casual-simulation/rate-limit-redis';
+import { createTestUser } from './TestUtils';
 
 console.log = jest.fn();
 
@@ -94,6 +95,7 @@ describe('RecordsHttpServer', () => {
     let sessionKey: string;
     let userId: string;
     let sessionId: string;
+    let ownerId: string;
     let expireTimeMs: number;
     let sessionSecret: string;
     let recordKey: string;
@@ -151,7 +153,7 @@ describe('RecordsHttpServer', () => {
             livekitEndpoint
         );
 
-        recordsStore = new MemoryRecordsStore();
+        const memRecordsStore = (recordsStore = new MemoryRecordsStore());
         recordsController = new RecordsController(recordsStore);
 
         policyStore = new MemoryPolicyStore();
@@ -284,6 +286,19 @@ describe('RecordsHttpServer', () => {
         sessionKey = loginResult.sessionKey;
         userId = loginResult.userId;
 
+        const services = {
+            authStore: authStore,
+            auth: authController,
+            authMessenger: authMessenger,
+            policies: policyController,
+            policyStore: policyStore,
+            records: recordsController,
+            recordsStore: memRecordsStore,
+        };
+        const owner = await createTestUser(services, 'owner@example.com');
+
+        ownerId = owner.userId;
+
         let [uid, sid, secret, expire] = parseSessionKey(sessionKey);
         sessionId = sid;
         sessionSecret = secret;
@@ -303,6 +318,14 @@ describe('RecordsHttpServer', () => {
         }
 
         recordKey = recordKeyResult.recordKey;
+
+        const record = await services.recordsStore.getRecordByName(recordName);
+        await services.recordsStore.updateRecord({
+            name: recordName,
+            ownerId: ownerId,
+            secretHashes: record.secretHashes,
+            secretSalt: record.secretSalt,
+        });
     });
 
     afterEach(() => {
@@ -1889,7 +1912,7 @@ describe('RecordsHttpServer', () => {
             const keyResult = await recordsController.createPublicRecordKey(
                 recordName,
                 'subjectless',
-                userId
+                ownerId
             );
 
             if (!keyResult.success) {
@@ -2223,7 +2246,7 @@ describe('RecordsHttpServer', () => {
             const keyResult = await recordsController.createPublicRecordKey(
                 recordName,
                 'subjectless',
-                userId
+                ownerId
             );
 
             if (!keyResult.success) {
@@ -2376,7 +2399,7 @@ describe('RecordsHttpServer', () => {
             const keyResult = await recordsController.createPublicRecordKey(
                 recordName,
                 'subjectless',
-                userId
+                ownerId
             );
 
             if (!keyResult.success) {
@@ -2530,7 +2553,7 @@ describe('RecordsHttpServer', () => {
                     deletePolicy: true,
                     updatePolicy: true,
                     subjectId: userId,
-                    publisherId: userId,
+                    publisherId: ownerId,
                     markers: [PUBLIC_READ_MARKER],
                 },
                 headers: corsHeaders(defaultHeaders['origin']),
@@ -2634,7 +2657,7 @@ describe('RecordsHttpServer', () => {
                 success: true,
                 data: 'hello, world',
                 subjectId: userId,
-                publisherId: userId,
+                publisherId: ownerId,
                 updatePolicy: true,
                 deletePolicy: true,
                 markers: [PUBLIC_READ_MARKER],
@@ -2645,7 +2668,7 @@ describe('RecordsHttpServer', () => {
             const keyResult = await recordsController.createPublicRecordKey(
                 recordName,
                 'subjectless',
-                userId
+                ownerId
             );
 
             if (!keyResult.success) {
@@ -2683,7 +2706,7 @@ describe('RecordsHttpServer', () => {
                 success: true,
                 data: 'hello, world',
                 subjectId: null,
-                publisherId: userId,
+                publisherId: ownerId,
                 updatePolicy: true,
                 deletePolicy: true,
                 markers: [PUBLIC_READ_MARKER],
@@ -2870,7 +2893,7 @@ describe('RecordsHttpServer', () => {
             const keyResult = await recordsController.createPublicRecordKey(
                 recordName,
                 'subjectless',
-                userId
+                ownerId
             );
 
             if (!keyResult.success) {
@@ -3043,7 +3066,7 @@ describe('RecordsHttpServer', () => {
                 success: true,
                 recordName: 'testRecord',
                 fileName: `${hash}.json`,
-                publisherId: userId,
+                publisherId: ownerId,
                 subjectId: userId,
                 sizeInBytes: 10,
                 description: 'description',
@@ -3057,7 +3080,7 @@ describe('RecordsHttpServer', () => {
             const keyResult = await recordsController.createPublicRecordKey(
                 recordName,
                 'subjectless',
-                userId
+                ownerId
             );
 
             if (!keyResult.success) {
@@ -3103,7 +3126,7 @@ describe('RecordsHttpServer', () => {
                 success: true,
                 recordName: 'testRecord',
                 fileName: `${hash}.json`,
-                publisherId: userId,
+                publisherId: ownerId,
                 subjectId: null,
                 sizeInBytes: 10,
                 description: 'description',
@@ -3450,7 +3473,7 @@ describe('RecordsHttpServer', () => {
             const keyResult = await recordsController.createPublicRecordKey(
                 recordName,
                 'subjectless',
-                userId
+                ownerId
             );
 
             if (!keyResult.success) {
@@ -3635,7 +3658,7 @@ describe('RecordsHttpServer', () => {
                 success: true,
                 recordName: 'testRecord',
                 fileName: fileName,
-                publisherId: userId,
+                publisherId: ownerId,
                 subjectId: userId,
                 sizeInBytes: 10,
                 description: 'desc',
@@ -3649,7 +3672,7 @@ describe('RecordsHttpServer', () => {
             const keyResult = await recordsController.createPublicRecordKey(
                 recordName,
                 'subjectless',
-                userId
+                ownerId
             );
 
             if (!keyResult.success) {
@@ -3681,7 +3704,7 @@ describe('RecordsHttpServer', () => {
                 success: true,
                 recordName: 'testRecord',
                 fileName: fileName,
-                publisherId: userId,
+                publisherId: ownerId,
                 subjectId: userId,
                 sizeInBytes: 10,
                 description: 'desc',
@@ -3897,7 +3920,7 @@ describe('RecordsHttpServer', () => {
             const keyResult = await recordsController.createPublicRecordKey(
                 recordName,
                 'subjectless',
-                userId
+                ownerId
             );
 
             if (!keyResult.success) {
@@ -4058,7 +4081,7 @@ describe('RecordsHttpServer', () => {
                     success: true,
                     recordName,
                     data: 'hello, world!',
-                    publisherId: userId,
+                    publisherId: ownerId,
                     subjectId: userId,
                     updatePolicy: true,
                     deletePolicy: true,
@@ -4256,7 +4279,7 @@ describe('RecordsHttpServer', () => {
     });
 
     describe('POST /api/v2/records/data', () => {
-        it('should save the given manual data record', async () => {
+        it('should save the given data record', async () => {
             const result = await server.handleRequest(
                 httpPost(
                     `/api/v2/records/data`,
@@ -4284,7 +4307,7 @@ describe('RecordsHttpServer', () => {
                 success: true,
                 data: 'hello, world',
                 subjectId: userId,
-                publisherId: userId,
+                publisherId: ownerId,
                 updatePolicy: true,
                 deletePolicy: true,
                 markers: [PUBLIC_READ_MARKER],
@@ -4295,7 +4318,7 @@ describe('RecordsHttpServer', () => {
             const keyResult = await recordsController.createPublicRecordKey(
                 recordName,
                 'subjectless',
-                userId
+                ownerId
             );
 
             if (!keyResult.success) {
@@ -4330,7 +4353,7 @@ describe('RecordsHttpServer', () => {
                 success: true,
                 data: 'hello, world',
                 subjectId: null,
-                publisherId: userId,
+                publisherId: ownerId,
                 updatePolicy: true,
                 deletePolicy: true,
                 markers: [PUBLIC_READ_MARKER],
@@ -4498,6 +4521,7 @@ describe('RecordsHttpServer', () => {
                 success: true,
                 recordName: 'test',
                 ownerId: userId,
+                keyCreatorId: userId,
                 policy: 'subjectfull',
             });
         });
@@ -4535,6 +4559,7 @@ describe('RecordsHttpServer', () => {
                 success: true,
                 recordName: 'test',
                 ownerId: userId,
+                keyCreatorId: userId,
                 policy: 'subjectless',
             });
         });
