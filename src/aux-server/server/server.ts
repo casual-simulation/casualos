@@ -1049,7 +1049,6 @@ export class Server {
         return {
             connections: [
                 bridge.serverConnection,
-                backup.connection,
                 setupChannel.connection,
                 webhooks.connection,
             ],
@@ -1163,7 +1162,6 @@ export class Server {
 const SERVER_USER_IDS = [
     'server',
     'server-checkout',
-    'server-backup',
     'server-setup-channel',
     'server-webhooks',
 ];
@@ -1174,15 +1172,6 @@ function getServerUser(): AuxUser {
         name: 'Server',
         username: 'Server',
         token: 'server-tokenbc',
-    };
-}
-
-function getBackupUser(): AuxUser {
-    return {
-        id: 'server-backup',
-        name: 'Server',
-        username: 'Server',
-        token: 'server-backup-token',
     };
 }
 
