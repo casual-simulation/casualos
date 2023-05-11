@@ -11,11 +11,15 @@ import {
 } from './EventRecordsController';
 import { MemoryEventRecordsStore } from './MemoryEventRecordsStore';
 import { EventRecordsStore } from './EventRecordsStore';
-import { createTestControllers, createTestRecordKey } from './TestUtils';
+import {
+    createTestControllers,
+    createTestRecordKey,
+    createTestUser,
+} from './TestUtils';
 import { PolicyController } from './PolicyController';
 import { PolicyStore } from './PolicyStore';
 import { MemoryPolicyStore } from './MemoryPolicyStore';
-import { PUBLIC_READ_MARKER } from './PolicyPermissions';
+import { ACCOUNT_MARKER, PUBLIC_READ_MARKER } from './PolicyPermissions';
 
 console.log = jest.fn();
 
@@ -40,6 +44,8 @@ describe('EventRecordsController', () => {
         store = new MemoryEventRecordsStore();
         manager = new EventRecordsController(policies, store);
 
+        const owner = await createTestUser(controllers, 'owner@example.com');
+
         const recordKeyResult = await createTestRecordKey(
             controllers,
             userId,
@@ -49,6 +55,16 @@ describe('EventRecordsController', () => {
 
         key = recordKeyResult.recordKey;
         recordName = recordKeyResult.recordName;
+
+        const record = await controllers.recordsStore.getRecordByName(
+            recordName
+        );
+        await controllers.recordsStore.updateRecord({
+            name: recordName,
+            ownerId: owner.userId,
+            secretHashes: record.secretHashes,
+            secretSalt: record.secretSalt,
+        });
     });
 
     describe('addCount()', () => {
@@ -97,13 +113,16 @@ describe('EventRecordsController', () => {
         it('should be able to add the given count if the user has the correct permissions', async () => {
             policyStore.policies[recordName] = {
                 ['secret']: {
-                    permissions: [
-                        {
-                            type: 'event.increment',
-                            role: 'developer',
-                            events: true,
-                        },
-                    ],
+                    document: {
+                        permissions: [
+                            {
+                                type: 'event.increment',
+                                role: 'developer',
+                                events: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
                 },
             };
 
@@ -210,13 +229,16 @@ describe('EventRecordsController', () => {
         it('should be able to get the event count if the user has permission', async () => {
             policyStore.policies[recordName] = {
                 ['secret']: {
-                    permissions: [
-                        {
-                            type: 'event.count',
-                            role: 'developer',
-                            events: true,
-                        },
-                    ],
+                    document: {
+                        permissions: [
+                            {
+                                type: 'event.count',
+                                role: 'developer',
+                                events: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
                 },
             };
 
@@ -278,32 +300,38 @@ describe('EventRecordsController', () => {
         it('should be able to update the count for an event', async () => {
             policyStore.policies[recordName] = {
                 ['secret']: {
-                    permissions: [
-                        {
-                            type: 'event.update',
-                            role: 'developer',
-                            events: true,
-                        },
-                        {
-                            type: 'policy.assign',
-                            role: 'developer',
-                            policies: true,
-                        },
-                    ],
+                    document: {
+                        permissions: [
+                            {
+                                type: 'event.update',
+                                role: 'developer',
+                                events: true,
+                            },
+                            {
+                                type: 'policy.assign',
+                                role: 'developer',
+                                policies: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
                 },
                 [PUBLIC_READ_MARKER]: {
-                    permissions: [
-                        {
-                            type: 'event.update',
-                            role: 'developer',
-                            events: true,
-                        },
-                        {
-                            type: 'policy.unassign',
-                            role: 'developer',
-                            policies: true,
-                        },
-                    ],
+                    document: {
+                        permissions: [
+                            {
+                                type: 'event.update',
+                                role: 'developer',
+                                events: true,
+                            },
+                            {
+                                type: 'policy.unassign',
+                                role: 'developer',
+                                policies: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
                 },
             };
 
@@ -335,32 +363,38 @@ describe('EventRecordsController', () => {
         it('should be able to update the markers for an event', async () => {
             policyStore.policies[recordName] = {
                 ['secret']: {
-                    permissions: [
-                        {
-                            type: 'event.update',
-                            role: 'developer',
-                            events: true,
-                        },
-                        {
-                            type: 'policy.assign',
-                            role: 'developer',
-                            policies: true,
-                        },
-                    ],
+                    document: {
+                        permissions: [
+                            {
+                                type: 'event.update',
+                                role: 'developer',
+                                events: true,
+                            },
+                            {
+                                type: 'policy.assign',
+                                role: 'developer',
+                                policies: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
                 },
                 [PUBLIC_READ_MARKER]: {
-                    permissions: [
-                        {
-                            type: 'event.update',
-                            role: 'developer',
-                            events: true,
-                        },
-                        {
-                            type: 'policy.unassign',
-                            role: 'developer',
-                            policies: true,
-                        },
-                    ],
+                    document: {
+                        permissions: [
+                            {
+                                type: 'event.update',
+                                role: 'developer',
+                                events: true,
+                            },
+                            {
+                                type: 'policy.unassign',
+                                role: 'developer',
+                                policies: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
                 },
             };
 

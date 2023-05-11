@@ -24,7 +24,11 @@ import {
 } from './TestUtils';
 import { PolicyStore } from './PolicyStore';
 import { MemoryPolicyStore } from './MemoryPolicyStore';
-import { ADMIN_ROLE_NAME, PUBLIC_READ_MARKER } from './PolicyPermissions';
+import {
+    ACCOUNT_MARKER,
+    ADMIN_ROLE_NAME,
+    PUBLIC_READ_MARKER,
+} from './PolicyPermissions';
 
 console.log = jest.fn();
 
@@ -111,7 +115,7 @@ describe('DataRecordsController', () => {
             )) as RecordDataFailure;
 
             expect(result.success).toBe(false);
-            expect(result.errorCode).toBe('not_authorized');
+            expect(result.errorCode).toBe('record_not_found');
         });
 
         it('should reject the request if it violates the existing update policy', async () => {
@@ -308,18 +312,21 @@ describe('DataRecordsController', () => {
         it('should be able to use a policy to create some data', async () => {
             policiesStore.policies['testRecord'] = {
                 ['secret']: {
-                    permissions: [
-                        {
-                            type: 'data.create',
-                            role: 'developer',
-                            addresses: true,
-                        },
-                        {
-                            type: 'policy.assign',
-                            role: 'developer',
-                            policies: true,
-                        },
-                    ],
+                    document: {
+                        permissions: [
+                            {
+                                type: 'data.create',
+                                role: 'developer',
+                                addresses: true,
+                            },
+                            {
+                                type: 'policy.assign',
+                                role: 'developer',
+                                policies: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
                 },
             };
 
@@ -357,13 +364,16 @@ describe('DataRecordsController', () => {
         it('should be able to use a policy to update some data', async () => {
             policiesStore.policies['testRecord'] = {
                 ['secret']: {
-                    permissions: [
-                        {
-                            type: 'data.update',
-                            role: 'developer',
-                            addresses: true,
-                        },
-                    ],
+                    document: {
+                        permissions: [
+                            {
+                                type: 'data.update',
+                                role: 'developer',
+                                addresses: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
                 },
             };
 
@@ -411,32 +421,38 @@ describe('DataRecordsController', () => {
         it('should be able to use a policy to add a resource marker to some data', async () => {
             policiesStore.policies['testRecord'] = {
                 ['secret']: {
-                    permissions: [
-                        {
-                            type: 'data.update',
-                            role: 'developer',
-                            addresses: true,
-                        },
-                        {
-                            type: 'policy.assign',
-                            role: 'developer',
-                            policies: true,
-                        },
-                    ],
+                    document: {
+                        permissions: [
+                            {
+                                type: 'data.update',
+                                role: 'developer',
+                                addresses: true,
+                            },
+                            {
+                                type: 'policy.assign',
+                                role: 'developer',
+                                policies: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
                 },
                 [PUBLIC_READ_MARKER]: {
-                    permissions: [
-                        {
-                            type: 'data.update',
-                            role: 'developer',
-                            addresses: true,
-                        },
-                        {
-                            type: 'policy.assign',
-                            role: 'developer',
-                            policies: true,
-                        },
-                    ],
+                    document: {
+                        permissions: [
+                            {
+                                type: 'data.update',
+                                role: 'developer',
+                                addresses: true,
+                            },
+                            {
+                                type: 'policy.assign',
+                                role: 'developer',
+                                policies: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
                 },
             };
 
@@ -485,13 +501,16 @@ describe('DataRecordsController', () => {
         it('should reject the request if the user does not have permission to create the data', async () => {
             policiesStore.policies['testRecord'] = {
                 ['secret']: {
-                    permissions: [
-                        {
-                            type: 'policy.assign',
-                            role: 'developer',
-                            policies: true,
-                        },
-                    ],
+                    document: {
+                        permissions: [
+                            {
+                                type: 'policy.assign',
+                                role: 'developer',
+                                policies: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
                 },
             };
 
@@ -888,7 +907,7 @@ describe('DataRecordsController', () => {
             )) as EraseDataFailure;
 
             expect(result.success).toBe(false);
-            expect(result.errorCode).toBe('not_authorized');
+            expect(result.errorCode).toBe('record_not_found');
 
             const storeResult = await store.getData('testRecord', 'address');
 
@@ -1101,13 +1120,16 @@ describe('DataRecordsController', () => {
 
             policiesStore.policies['testRecord'] = {
                 ['secret']: {
-                    permissions: [
-                        {
-                            type: 'data.delete',
-                            role: 'developer',
-                            addresses: true,
-                        },
-                    ],
+                    document: {
+                        permissions: [
+                            {
+                                type: 'data.delete',
+                                role: 'developer',
+                                addresses: true,
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
                 },
             };
 

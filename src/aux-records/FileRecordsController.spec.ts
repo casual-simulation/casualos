@@ -311,9 +311,8 @@ describe('FileRecordsController', () => {
 
             expect(result).toEqual({
                 success: false,
-                errorCode: 'not_logged_in',
-                errorMessage:
-                    'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                errorCode: 'record_not_found',
+                errorMessage: 'Record not found.',
             });
             expect(presignUrlMock).not.toHaveBeenCalled();
         });
