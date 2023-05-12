@@ -20,6 +20,8 @@
         -   `RATE_LIMIT_MAX` - The maximum number of requests that can be recieved from an IP address over the window.
         -   `RATE_LIMIT_WINDOW_MS` - The size of the window for requests represented in miliseconds.
     -   If any of the above environment variables are not specified, then rate limiting will be disabled.
+-   Added API support for policies and roles.
+    -   In the future, additional functions will be added to CasualOS to make accessing these new capabilities easier.
 
 ### :bug: Bug Fixes
 
