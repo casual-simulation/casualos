@@ -130,12 +130,14 @@
 
 .md-switch.md-theme-default.user-mode-toggle .md-ripple,
 .md-toolbar.md-theme-default .md-title,
+.md-tabs.md-theme-default .md-tabs-navigation,
 .md-toolbar.md-theme-default .md-icon {
     color: var(--md-theme-default-text-primary-on-background-variant, #777);
 }
 
 .md-switch.md-theme-dark.user-mode-toggle .md-ripple,
 .md-toolbar.md-theme-dark .md-title,
+.md-tabs.md-theme-dark .md-tabs-navigation,
 .md-toolbar.md-theme-dark .md-icon {
     color: var(--md-theme-dark-text-primary-on-background-variant, #777);
 }

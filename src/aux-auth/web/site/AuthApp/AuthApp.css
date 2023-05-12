@@ -9,3 +9,8 @@
     text-decoration: none !important;
     color: inherit !important;
 }
+
+.md-app-toolbar .md-tabs.md-theme-default .md-tabs-navigation {
+    color: var(--md-theme-default-text-primary-on-background-variant, #777);
+    background-color: var(--md-theme-default-toolbarvariant, #f5f5f5);
+}

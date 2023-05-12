@@ -73,6 +73,7 @@ import { skip } from 'rxjs/operators';
 import AuthTerms from './AuthTerms/AuthTerms';
 import AuthPrivacyPolicy from './AuthPrivacyPolicy/AuthPrivacyPolicy';
 import AuthAcceptableUsePolicy from './AuthAcceptableUsePolicy/AuthAcceptableUsePolicy';
+import AuthRecords from './AuthRecords/AuthRecords';
 
 import 'virtual:svg-icons-register';
 
@@ -151,6 +152,11 @@ const routes: RouteConfig[] = [
         path: '/',
         name: 'home',
         component: AuthHome,
+    },
+    {
+        path: '/records',
+        name: 'records',
+        component: AuthRecords,
     },
 ];
 
