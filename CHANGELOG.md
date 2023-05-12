@@ -34,6 +34,7 @@
     -   This fixes a reported bug with `lineTo` to updating correctly while using the `transformer` tag. [Issue #276](https://github.com/casual-simulation/casualos/issues/276)
 -   Fixed an issue where the `color` tag would not apply to all materials in a gltf model.
 -   Fixed an issue where gltf models with multiple materials and textures would not be properly disposed.
+-   Fixed some potential issues with the `tempShared` and `remoteTempShared` spaces.
 
 ## V3.1.28
 
