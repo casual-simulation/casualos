@@ -62,7 +62,7 @@ import {
     nodeSimulationForBranch,
 } from '@casual-simulation/aux-vm-node';
 import { DenoSimulationImpl, DenoVM } from '@casual-simulation/aux-vm-deno';
-import { WebhooksModule2, FilesModule2, BackupModule2 } from './modules';
+import { WebhooksModule2, FilesModule2 } from './modules';
 import { DirectoryService } from './directory/DirectoryService';
 import { MongoDBDirectoryStore } from './directory/MongoDBDirectoryStore';
 import { DirectoryStore } from './directory/DirectoryStore';
@@ -1009,7 +1009,6 @@ export class Server {
     private _createRepoManager(serverDevice: DeviceInfo, serverUser: AuxUser) {
         const bridge = new ConnectionBridge(serverDevice);
         const client = new CausalRepoClient(bridge.clientConnection);
-        const backup = this._createBackupModule();
         const setupChannel = this._createSetupChannelModule();
         const webhooks = this._createWebhooksClient();
         const gpioModules = this._config.gpio
@@ -1023,7 +1022,6 @@ export class Server {
                 new FilesModule2(this._config.drives),
                 new WebhooksModule2(),
                 ...gpioModules,
-                backup.module,
                 setupChannel.module,
             ],
             this._config.sandbox === 'deno'
@@ -1051,24 +1049,11 @@ export class Server {
         return {
             connections: [
                 bridge.serverConnection,
-                backup.connection,
                 setupChannel.connection,
                 webhooks.connection,
             ],
             manager,
             webhooksClient: webhooks.client,
-        };
-    }
-
-    private _createBackupModule() {
-        const backupUser = getBackupUser();
-        const backupDevice = deviceInfoFromUser(backupUser);
-        const bridge = new ConnectionBridge(backupDevice);
-        const client = new CausalRepoClient(bridge.clientConnection);
-        const module = new BackupModule2(backupUser, client);
-        return {
-            connection: bridge.serverConnection,
-            module,
         };
     }
 
@@ -1177,7 +1162,6 @@ export class Server {
 const SERVER_USER_IDS = [
     'server',
     'server-checkout',
-    'server-backup',
     'server-setup-channel',
     'server-webhooks',
 ];
@@ -1188,15 +1172,6 @@ function getServerUser(): AuxUser {
         name: 'Server',
         username: 'Server',
         token: 'server-tokenbc',
-    };
-}
-
-function getBackupUser(): AuxUser {
-    return {
-        id: 'server-backup',
-        name: 'Server',
-        username: 'Server',
-        token: 'server-backup-token',
     };
 }
 

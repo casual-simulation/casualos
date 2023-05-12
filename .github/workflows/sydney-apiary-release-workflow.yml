@@ -1,13 +1,13 @@
-name: Deploy boormanlabs-apiary
+name: Deploy sydney-apiary
 
 on:
     push:
-        tags: 'boormanlabs-apiary/*'
+        tags: 'sydney-apiary/*'
 
 jobs:
     deploy:
         name: Test and Deploy
-        environment: boormanlabs-apiary
+        environment: sydney-apiary
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v1
@@ -16,9 +16,9 @@ jobs:
                   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
                   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
               run: |
-                  aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID --profile casualos
-                  aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY --profile casualos
-                  aws configure set region us-east-1 --profile casualos
+                  aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID --profile sydney
+                  aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY --profile sydney
+                  aws configure set region ap-southeast-2 --profile sydney
             - name: Use Node.js 16.x
               uses: actions/setup-node@v2
               with:
@@ -30,7 +30,7 @@ jobs:
                   npm run bootstrap
             - name: Test
               run: |
-                  npx jest src/casual-apiary --detectOpenHandles --forceExit --no-cache
+                  npx jest src/casual-apiary-aws --detectOpenHandles --forceExit --no-cache
             - name: Build
               run: |
                   npm run build:apiary:aws
@@ -40,12 +40,12 @@ jobs:
                   sam package --template-file template.yml \
                     --s3-bucket $LAMBDA_S3_BUCKET \
                     --output-template-file template-out.yaml \
-                    --profile casualos
+                    --profile sydney
                   sam deploy --template-file template-out.yaml --stack-name $STACK_NAME \
                     --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset \
                     --parameter-overrides "RedisPortParameter='$REDIS_PORT' RedisHostParameter='$REDIS_HOST' RedisUseTLSParameter='$REDIS_USE_TLS' RedisNamespaceParameter='$REDIS_NAMESPACE' RedisPasswordParameter='$REDIS_PASSWORD' WebsocketURLParameter='$WEBSOCKET_URL' MaxRedisBatchSizeParameter='$REDIS_MAX_BATCH_SIZE' MaxBranchSizeParameter='$REDIS_MAX_BRANCH_SIZE' MergeUpdatesOnMaxSizeExceededParameter='$MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED' RateLimitMaxParameter='$RATE_LIMIT_MAX' RateLimitWindowMSParameter='$RATE_LIMIT_WINDOW_MS'" \
                     --tags Customer=casualos \
-                    --profile casualos
+                    --profile sydney
               env:
                   USE_REDIS: true
                   REDIS_HOST: ${{ secrets.REDIS_HOST }}
@@ -56,8 +56,8 @@ jobs:
                   WEBSOCKET_URL: ${{ secrets.WEBSOCKET_URL }}
                   LAMBDA_S3_BUCKET: ${{ secrets.LAMBDA_S3_BUCKET }}
                   REDIS_MAX_BATCH_SIZE: '0'
-                  REDIS_MAX_BRANCH_SIZE: '1000000' # 1 MB
+                  REDIS_MAX_BRANCH_SIZE: '25000000' # 25 MB
                   MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED: 'true'
-                  RATE_LIMIT_MAX: '100' # 100 requests/minute = 7200 requests/day
+                  RATE_LIMIT_MAX: '100' # 100 requests/minute = 144k requests/day
                   RATE_LIMIT_WINDOW_MS: '60000' # 60 seconds
-                  STACK_NAME: boormanlabs-apiary
+                  STACK_NAME: sydney-apiary

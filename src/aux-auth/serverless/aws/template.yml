@@ -557,12 +557,6 @@ Resources:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
 
-    RecordsBucket:
-        Type: AWS::S3::Bucket
-        DeletionPolicy: Retain
-        Properties:
-            AccessControl: PublicRead
-
     FilesBucket:
         Type: AWS::S3::Bucket
         DeletionPolicy: Retain
@@ -580,6 +574,14 @@ Resources:
                           - '*'
                       ExposedHeaders: []
                       MaxAge: 3000
+            PublicAccessBlockConfiguration:
+                BlockPublicAcls: false
+                BlockPublicPolicy: false
+                IgnorePublicAcls: false
+                RestrictPublicBuckets: false
+            OwnershipControls:
+                Rules:
+                    - ObjectOwnership: BucketOwnerPreferred
 
     PublicRecordsTable:
         Type: AWS::DynamoDB::Table

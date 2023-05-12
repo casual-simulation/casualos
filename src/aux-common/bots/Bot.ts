@@ -424,6 +424,7 @@ export interface BotTags {
     ['form']?: BotShape;
     ['formAnimation']?: string;
     ['formAddress']?: string;
+    ['formOpacity']?: unknown;
     ['orientationMode']?: string;
     ['anchorPoint']?: string;
     ['creator']?: string;
@@ -2264,6 +2265,7 @@ export const KNOWN_TAGS: string[] = [
     'form',
     'formAnimation',
     'formAnimationAddress',
+    'formOpacity',
     'formRenderOrder',
     'orientationMode',
     'anchorPoint',

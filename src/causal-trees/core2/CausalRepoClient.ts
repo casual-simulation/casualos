@@ -465,7 +465,10 @@ export class CausalRepoClient {
             ),
             finalize(() => {
                 this._watchedBranches.delete(name);
-                this._client.send(UNWATCH_BRANCH, name);
+
+                if (this._client.isConnected) {
+                    this._client.send(UNWATCH_BRANCH, name);
+                }
             })
         );
     }
@@ -622,7 +625,8 @@ export class CausalRepoClient {
                             filter(
                                 (e) =>
                                     e.broadcast === false &&
-                                    e.branch.branch === branch
+                                    e.branch.branch === branch &&
+                                    !this._isDeviceConnected(branch, e.device)
                             ),
                             tap((e) => {
                                 const devices =
@@ -647,7 +651,9 @@ export class CausalRepoClient {
                         .pipe(
                             filter(
                                 (e) =>
-                                    e.broadcast === false && e.branch === branch
+                                    e.broadcast === false &&
+                                    e.branch === branch &&
+                                    this._isDeviceConnected(branch, e.device)
                             ),
                             tap((e) => {
                                 const devices =
@@ -667,7 +673,9 @@ export class CausalRepoClient {
                 )
             ),
             finalize(() => {
-                this._client.send(UNWATCH_BRANCH_DEVICES, branch);
+                if (this._client.isConnected) {
+                    this._client.send(UNWATCH_BRANCH_DEVICES, branch);
+                }
             })
         );
     }
@@ -1042,6 +1050,11 @@ export class CausalRepoClient {
             this._connectedDevices.set(branch, map);
         }
         return map;
+    }
+
+    private _isDeviceConnected(branch: string, device: DeviceInfo): boolean {
+        const map = this._getConnectedDevices(branch);
+        return map.has(device.claims[SESSION_ID_CLAIM]);
     }
 }
 
