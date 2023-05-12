@@ -24,7 +24,8 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
         publisherId: string,
         subjectId: string,
         updatePolicy: UserPolicy,
-        deletePolicy: UserPolicy
+        deletePolicy: UserPolicy,
+        markers: string[]
     ): Promise<SetDataResult> {
         await this._collection.updateOne(
             {
@@ -40,6 +41,7 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
                     subjectId: subjectId,
                     updatePolicy: updatePolicy,
                     deletePolicy: deletePolicy,
+                    markers: markers,
                 },
             },
             {
@@ -69,6 +71,7 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
                 subjectId: record.subjectId,
                 updatePolicy: record.updatePolicy,
                 deletePolicy: record.deletePolicy,
+                markers: record.markers,
             };
         }
 
@@ -94,6 +97,7 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
             .map((r) => ({
                 address: r.address,
                 data: r.data,
+                markers: r.markers,
             }))
             .toArray();
 
@@ -133,4 +137,5 @@ export interface DataRecord {
     subjectId: string;
     updatePolicy: UserPolicy;
     deletePolicy: UserPolicy;
+    markers: string[];
 }

@@ -42,7 +42,8 @@ describe('DynamoDBDataStore', () => {
                 'publisherId',
                 'subjectId',
                 true,
-                true
+                true,
+                null
             );
 
             expect(result).toEqual({
@@ -62,6 +63,7 @@ describe('DynamoDBDataStore', () => {
                     publishTime: expect.any(Number),
                     updatePolicy: true,
                     deletePolicy: true,
+                    markers: null,
                 },
             });
 
@@ -87,7 +89,8 @@ describe('DynamoDBDataStore', () => {
                 'publisherId',
                 'subjectId',
                 true,
-                true
+                true,
+                null
             );
 
             expect(result).toEqual({
@@ -95,6 +98,49 @@ describe('DynamoDBDataStore', () => {
                 errorCode: 'data_too_large',
                 errorMessage: 'Data is too large to store in the database.',
             });
+        });
+
+        it('should be able to add markers', async () => {
+            dynamodb.put.mockReturnValueOnce(awsResult({}));
+
+            const result = await store.setData(
+                'test-record',
+                'test-address',
+                {
+                    myData: 'abc',
+                },
+                'publisherId',
+                'subjectId',
+                true,
+                true,
+                ['secret']
+            );
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            expect(dynamodb.put).toHaveBeenCalledWith({
+                TableName: 'test-table',
+                Item: {
+                    recordName: 'test-record',
+                    address: 'test-address',
+                    data: {
+                        myData: 'abc',
+                    },
+                    publisherId: 'publisherId',
+                    subjectId: 'subjectId',
+                    publishTime: expect.any(Number),
+                    updatePolicy: true,
+                    deletePolicy: true,
+                    markers: ['secret'],
+                },
+            });
+
+            // Make sure the publish time is within the last 10 seconds
+            expect(
+                Date.now() - dynamodb.put.mock.calls[0][0].Item.publishTime
+            ).toBeLessThan(10000);
         });
     });
 
@@ -113,6 +159,7 @@ describe('DynamoDBDataStore', () => {
                         publishTime: 123456789,
                         updatePolicy: ['abc'],
                         deletePolicy: ['def'],
+                        markers: ['secret'],
                     },
                 })
             );
@@ -128,6 +175,7 @@ describe('DynamoDBDataStore', () => {
                 subjectId: 'subjectId',
                 updatePolicy: ['abc'],
                 deletePolicy: ['def'],
+                markers: ['secret'],
             });
         });
 
@@ -162,6 +210,7 @@ describe('DynamoDBDataStore', () => {
                             publisherId: 'publisherId',
                             subjectId: 'subjectId',
                             publishTime: 123456789,
+                            markers: ['marker'],
                         },
                     ],
                 })
@@ -177,6 +226,7 @@ describe('DynamoDBDataStore', () => {
                         data: {
                             myData: 'abc',
                         },
+                        markers: ['marker'],
                     },
                 ],
             });

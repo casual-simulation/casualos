@@ -30,6 +30,7 @@ import {
     StripeInterface,
     tryParseSubscriptionConfig,
     RateLimitController,
+    PolicyController,
 } from '@casual-simulation/aux-records';
 import { MongoDBRecordsStore } from './MongoDBRecordsStore';
 import { MongoDBDataRecordsStore, DataRecord } from './MongoDBDataRecordsStore';
@@ -54,6 +55,7 @@ import {
 } from './MongoDBRateLimiter';
 import * as dotenv from 'dotenv';
 import Stripe from 'stripe';
+import { MongoDBPolicyStore } from './MongoDBPolicyStore';
 
 // Load env file
 const secretsFile = path.resolve(__dirname, '..', 'secrets.env.json');
@@ -180,6 +182,10 @@ async function start() {
     const emailRules = db.collection<any>('emailRules');
     const smsRules = db.collection<any>('smsRules');
     const rateLimits = db.collection<any>('rateLimits');
+
+    const policies = db.collection<any>('policies');
+    const roles = db.collection<any>('roles');
+
     const tempRecords = [] as AppRecord[];
 
     const authStore = new MongoDBAuthStore(
@@ -189,49 +195,6 @@ async function start() {
         emailRules,
         smsRules
     );
-    const recordsStore = new MongoDBRecordsStore(
-        recordsCollection,
-        recordsKeysCollection
-    );
-    const recordsManager = new RecordsController(recordsStore);
-    const dataStore = new MongoDBDataRecordsStore(recordsDataCollection);
-    const dataManager = new DataRecordsController(recordsManager, dataStore);
-    const eventStore = new MongoDBEventRecordsStore(recordsEventsCollection);
-    const eventManager = new EventRecordsController(recordsManager, eventStore);
-
-    const rateLimiter = new MongoDBRateLimiter(rateLimits);
-    let rateManager: RateLimitController = null;
-
-    if (RATE_LIMIT_MAX && RATE_LIMIT_WINDOW_MS) {
-        console.log('[AuxAuth] Enabling rate limiting.');
-        rateManager = new RateLimitController(rateLimiter, {
-            maxHits: RATE_LIMIT_MAX,
-            windowMs: RATE_LIMIT_WINDOW_MS,
-        });
-    } else {
-        console.log('[AuxAuth] Disabling rate limiting.');
-    }
-
-    const manualDataStore = new MongoDBDataRecordsStore(
-        manualRecordsDataCollection
-    );
-    const manualDataManager = new DataRecordsController(
-        recordsManager,
-        manualDataStore
-    );
-
-    const fileStore = new MongoDBFileRecordsStore(
-        recordsFilesCollection,
-        'http://localhost:2998/api/v2/records/file'
-    );
-    const fileController = new FileRecordsController(recordsManager, fileStore);
-
-    const livekitController = new LivekitController(
-        LIVEKIT_API_KEY,
-        LIVEKIT_SECRET_KEY,
-        LIVEKIT_ENDPOINT
-    );
-
     const messenger = getAuthMessenger();
 
     let forceAllowSubscriptionFeatures = false;
@@ -260,6 +223,63 @@ async function start() {
         messenger,
         subscriptionConfig,
         forceAllowSubscriptionFeatures
+    );
+
+    const recordsStore = new MongoDBRecordsStore(
+        recordsCollection,
+        recordsKeysCollection
+    );
+    const recordsManager = new RecordsController(recordsStore);
+
+    const policyStore = new MongoDBPolicyStore(policies, roles);
+    const policyController = new PolicyController(
+        authController,
+        recordsManager,
+        policyStore
+    );
+
+    const dataStore = new MongoDBDataRecordsStore(recordsDataCollection);
+    const dataManager = new DataRecordsController(policyController, dataStore);
+    const eventStore = new MongoDBEventRecordsStore(recordsEventsCollection);
+    const eventManager = new EventRecordsController(
+        policyController,
+        eventStore
+    );
+
+    const rateLimiter = new MongoDBRateLimiter(rateLimits);
+    let rateManager: RateLimitController = null;
+
+    if (RATE_LIMIT_MAX && RATE_LIMIT_WINDOW_MS) {
+        console.log('[AuxAuth] Enabling rate limiting.');
+        rateManager = new RateLimitController(rateLimiter, {
+            maxHits: RATE_LIMIT_MAX,
+            windowMs: RATE_LIMIT_WINDOW_MS,
+        });
+    } else {
+        console.log('[AuxAuth] Disabling rate limiting.');
+    }
+
+    const manualDataStore = new MongoDBDataRecordsStore(
+        manualRecordsDataCollection
+    );
+    const manualDataManager = new DataRecordsController(
+        policyController,
+        manualDataStore
+    );
+
+    const fileStore = new MongoDBFileRecordsStore(
+        recordsFilesCollection,
+        'http://localhost:2998/api/v2/records/file'
+    );
+    const fileController = new FileRecordsController(
+        policyController,
+        fileStore
+    );
+
+    const livekitController = new LivekitController(
+        LIVEKIT_API_KEY,
+        LIVEKIT_SECRET_KEY,
+        LIVEKIT_ENDPOINT
     );
 
     const subscriptionController = new SubscriptionController(
@@ -299,7 +319,8 @@ async function start() {
         manualDataManager,
         fileController,
         subscriptionController,
-        rateManager
+        rateManager,
+        policyController
     );
 
     async function handleRequest(req: Request, res: Response) {

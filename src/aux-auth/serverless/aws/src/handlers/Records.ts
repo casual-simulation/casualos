@@ -20,6 +20,7 @@ import {
     SubscriptionController,
     tryParseSubscriptionConfig,
     RateLimitController,
+    PolicyController,
 } from '@casual-simulation/aux-records';
 import { AuthController } from '@casual-simulation/aux-records/AuthController';
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
@@ -31,6 +32,7 @@ import {
     cleanupObject,
     DynamoDBAuthStore,
     TextItAuthMessenger,
+    DynamoDBPolicyStore,
 } from '@casual-simulation/aux-records-aws';
 import type {
     APIGatewayProxyEvent,
@@ -101,57 +103,16 @@ const s3Options: AWS.S3.ClientConfiguration = {
 };
 const s3Client = new S3(s3Options);
 
-const recordsStore = new DynamoDBRecordsStore(
-    docClient,
-    PUBLIC_RECORDS_TABLE,
-    PUBLIC_RECORDS_KEYS_TABLE
-);
-const recordsController = new RecordsController(recordsStore);
-
-const dataStore = new DynamoDBDataStore(docClient, DATA_TABLE);
-const dataController = new DataRecordsController(recordsController, dataStore);
-
-const eventsStore = new DynamoDBEventStore(docClient, EVENTS_TABLE);
-const eventsController = new EventRecordsController(
-    recordsController,
-    eventsStore
-);
-
-const manualDataStore = new DynamoDBDataStore(docClient, MANUAL_DATA_TABLE);
-const manualDataController = new DataRecordsController(
-    recordsController,
-    manualDataStore
-);
-
-const fileStore = new DynamoDBFileStore(
-    REGION,
-    FILES_BUCKET,
-    docClient,
-    FILES_TABLE,
-    FILES_STORAGE_CLASS,
-    undefined,
-
-    // We reference the Vite server in development.
-    // since any preflight request with an Origin header is rejected by localstack (see https://github.com/localstack/localstack/issues/4056)
-    // This parameter is mostly only used so that the file URLs point to the correct S3 instance. As such,
-    // this value is mostly used by browsers trying to upload files.
-    DEVELOPMENT ? `http://localhost:3002/s3` : undefined,
-    s3Options
-);
-const filesController = new FileRecordsController(recordsController, fileStore);
-
-const livekitController = new LivekitController(
-    LIVEKIT_API_KEY,
-    LIVEKIT_SECRET_KEY,
-    LIVEKIT_ENDPOINT
-);
-
 const USERS_TABLE = process.env.USERS_TABLE;
 const USER_ADDRESSES_TABLE = process.env.USER_ADDRESSES_TABLE;
 const LOGIN_REQUESTS_TABLE = process.env.LOGIN_REQUESTS_TABLE;
 const SESSIONS_TABLE = process.env.SESSIONS_TABLE;
 const EMAIL_TABLE = process.env.EMAIL_TABLE;
 const SMS_TABLE = process.env.SMS_TABLE;
+const POLICIES_TABLE = process.env.POLICIES_TABLE;
+const ROLES_TABLE = process.env.ROLES_TABLE;
+const SUBJECT_ROLES_TABLE = process.env.SUBJECT_ROLES_TABLE;
+const ROLE_SUBJECTS_TABLE = process.env.ROLE_SUBJECTS_TABLE;
 const STRIPE_CUSTOMER_ID_INDEX_NAME = 'StripeCustomerIdsIndex';
 
 const authStore = new DynamoDBAuthStore(
@@ -204,6 +165,64 @@ const authController = new AuthController(
     messenger,
     subscriptionConfig,
     forceAllowSubscriptionFeatures
+);
+
+const recordsStore = new DynamoDBRecordsStore(
+    docClient,
+    PUBLIC_RECORDS_TABLE,
+    PUBLIC_RECORDS_KEYS_TABLE
+);
+const recordsController = new RecordsController(recordsStore);
+
+const policyStore = new DynamoDBPolicyStore(
+    docClient,
+    POLICIES_TABLE,
+    SUBJECT_ROLES_TABLE,
+    ROLE_SUBJECTS_TABLE,
+    ROLES_TABLE
+);
+const policyController = new PolicyController(
+    authController,
+    recordsController,
+    policyStore
+);
+
+const dataStore = new DynamoDBDataStore(docClient, DATA_TABLE);
+const dataController = new DataRecordsController(policyController, dataStore);
+
+const eventsStore = new DynamoDBEventStore(docClient, EVENTS_TABLE);
+const eventsController = new EventRecordsController(
+    policyController,
+    eventsStore
+);
+
+const manualDataStore = new DynamoDBDataStore(docClient, MANUAL_DATA_TABLE);
+const manualDataController = new DataRecordsController(
+    policyController,
+    manualDataStore
+);
+
+const fileStore = new DynamoDBFileStore(
+    REGION,
+    FILES_BUCKET,
+    docClient,
+    FILES_TABLE,
+    FILES_STORAGE_CLASS,
+    undefined,
+
+    // We reference the Vite server in development.
+    // since any preflight request with an Origin header is rejected by localstack (see https://github.com/localstack/localstack/issues/4056)
+    // This parameter is mostly only used so that the file URLs point to the correct S3 instance. As such,
+    // this value is mostly used by browsers trying to upload files.
+    DEVELOPMENT ? `http://localhost:3002/s3` : undefined,
+    s3Options
+);
+const filesController = new FileRecordsController(policyController, fileStore);
+
+const livekitController = new LivekitController(
+    LIVEKIT_API_KEY,
+    LIVEKIT_SECRET_KEY,
+    LIVEKIT_ENDPOINT
 );
 
 const subscriptionController = new SubscriptionController(
@@ -284,7 +303,8 @@ const httpServer = new RecordsHttpServer(
     manualDataController,
     filesController,
     subscriptionController,
-    rateLimit
+    rateLimit,
+    policyController
 );
 
 async function handleEventBridgeEvent(event: EventBridgeEvent<any, any>) {
