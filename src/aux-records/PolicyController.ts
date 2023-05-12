@@ -3412,7 +3412,7 @@ export class PolicyController {
         }
 
         const recordKeyOwnerId = context.recordKeyResult?.success
-            ? context.recordKeyResult.ownerId
+            ? context.recordKeyResult.keyCreatorId
             : null;
         const authorizerId = recordKeyOwnerId ?? request.userId ?? null;
 

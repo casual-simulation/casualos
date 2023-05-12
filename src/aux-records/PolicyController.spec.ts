@@ -15046,6 +15046,7 @@ describe('PolicyController', () => {
         it('should deny the request if given an unrecognized action', async () => {
             const result = await controller.authorizeRequest({
                 action: 'missing',
+                recordKeyOrRecordName: recordName,
             } as any);
 
             expect(result).toEqual({
