@@ -71,6 +71,9 @@ export class RecordsController {
                         errorReason: 'record_owned_by_different_user',
                     };
                 }
+                console.log(
+                    `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}] Creating record key.`
+                );
 
                 const passwordBytes = randomBytes(16);
                 const password = fromByteArray(passwordBytes); // convert to human-readable string
@@ -93,6 +96,10 @@ export class RecordsController {
                     recordName: name,
                 };
             } else {
+                console.log(
+                    `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}] Creating record.`
+                );
+
                 const passwordBytes = randomBytes(16);
                 const password = fromByteArray(passwordBytes); // convert to human-readable string
                 const salt = fromByteArray(randomBytes(16));
