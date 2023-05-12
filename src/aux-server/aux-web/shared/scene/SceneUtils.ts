@@ -121,6 +121,7 @@ export function createSprite(uvAspectRatio: number = 1): Mesh {
     const geometry = new PlaneBufferGeometry(1, 1, 16, 16);
     adjustUVs(geometry, uvAspectRatio);
     let sprite = new Mesh(geometry, material.clone());
+    (sprite.material as any)[DEFAULT_TRANSPARENT] = true;
     return sprite;
 }
 
@@ -185,10 +186,11 @@ export function createCircle(size: number, uvAspectRatio: number = 1): Mesh {
         side: DoubleSide,
     });
 
-    const cube = new Mesh(geometry, material);
-    cube.castShadow = true;
-    cube.receiveShadow = false;
-    return cube;
+    const circle = new Mesh(geometry, material);
+    circle.castShadow = true;
+    circle.receiveShadow = false;
+    (circle.material as any)[DEFAULT_TRANSPARENT] = true;
+    return circle;
 }
 
 function adjustUVs(geometry: BufferGeometry, aspectRatio: number) {
