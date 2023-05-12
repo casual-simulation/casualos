@@ -20,6 +20,8 @@
         -   `RATE_LIMIT_MAX` - The maximum number of requests that can be recieved from an IP address over the window.
         -   `RATE_LIMIT_WINDOW_MS` - The size of the window for requests represented in miliseconds.
     -   If any of the above environment variables are not specified, then rate limiting will be disabled.
+-   Added API support for policies and roles.
+    -   In the future, additional functions will be added to CasualOS to make accessing these new capabilities easier.
 -   Added `formOpacity` tag, which allows bots to be semi-transparent.
     -   A `formOpacity` value of `1` means that the bot's mesh materials are effectively in their default opacity and transparency state.
     -   A `formOpacity` value `< 1` means that the bot's mesh materials become transparent and that the `formOpacity` value is used to modify each material's default opacity level.

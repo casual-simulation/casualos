@@ -18,6 +18,7 @@ export interface EventRecordsStore {
 
     /**
      * Gets the count stored on the given event and record.
+     * Returns a count of 0 if none is stored.
      * @param recordName The name of the record.
      * @param eventName The name of the event.
      */
@@ -25,18 +26,63 @@ export interface EventRecordsStore {
         recordName: string,
         eventName: string
     ): Promise<GetEventCountStoreResult>;
+
+    /**
+     * Updates the given event with the given information.
+     * @param recordName The name of the record that the event is in.
+     * @param eventName The name of the event that should be updated.
+     * @param updates The updates to apply to the event.
+     */
+    updateEvent(
+        recordName: string,
+        eventName: string,
+        updates: EventRecordUpdate
+    ): Promise<UpdateEventResult>;
 }
 
-export interface AddEventCountStoreResult {
-    success: boolean;
-    errorCode?: ServerError;
-    errorMessage?: string;
+export type AddEventCountStoreResult =
+    | AddEventCountStoreSuccess
+    | AddEventCountStoreFailure;
+
+export interface AddEventCountStoreSuccess {
+    success: true;
 }
 
-export interface GetEventCountStoreResult {
-    success: boolean;
+export interface AddEventCountStoreFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export type GetEventCountStoreResult =
+    | GetEventCountStoreSuccess
+    | GetEventCountStoreFailure;
+
+export interface GetEventCountStoreSuccess {
+    success: true;
+    count: number;
+    markers?: string[];
+}
+
+export interface GetEventCountStoreFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export type UpdateEventResult = UpdateEventSuccess | UpdateEventFailure;
+
+export interface UpdateEventSuccess {
+    success: true;
+}
+
+export interface UpdateEventFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export interface EventRecordUpdate {
     count?: number;
-
-    errorCode?: ServerError;
-    errorMessage?: string;
+    markers?: string[];
 }

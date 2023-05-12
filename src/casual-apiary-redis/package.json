@@ -29,5 +29,8 @@
         "redis": "3.1.2"
     },
     "author": "Kallyn Gowdy <kal@casualsimulation.org>",
-    "license": "MIT"
+    "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    }
 }
