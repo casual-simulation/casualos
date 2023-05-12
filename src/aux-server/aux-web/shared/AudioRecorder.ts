@@ -143,28 +143,23 @@ export class MediaAudioRecorder implements AudioRecorder {
                 try {
                     console.log('[MediaAudioRecorder] Stop Recording.');
                     recorder.stop();
+                    const finalBlob = await finalBlobPromise;
                     dataAvailable.complete();
-                    return await finalBlobPromise;
+                    return finalBlob;
                 } finally {
                     for (let track of media.getTracks()) {
                         track.stop();
                     }
                 }
             },
-            dataAvailable: dataAvailable.pipe(
-                bufferTime(options.bufferRateMiliseconds ?? 500),
-                map(
-                    (chunks) =>
-                        new Blob(chunks, {
-                            type: recorder.mimeType,
-                        })
-                ),
-                share()
-            ),
+            dataAvailable,
         };
 
+        let timeslice = stream
+            ? options.bufferRateMiliseconds ?? DEFAULT_BUFFER_RATE
+            : undefined;
         console.log('[MediaAudioRecorder] Start Recording.');
-        recorder.start();
+        recorder.start(timeslice);
 
         return recording;
     }
