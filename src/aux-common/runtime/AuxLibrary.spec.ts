@@ -218,6 +218,10 @@ import {
     grantRecordMarkerPermission,
     revokeRecordMarkerPermission,
     grantInstAdminPermission,
+    grantUserRole,
+    revokeUserRole,
+    grantInstRole,
+    revokeInstRole,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -5153,6 +5157,84 @@ describe('AuxLibrary', () => {
                     library.api.os.grantInstAdminPermission('recordName');
                 const expected = grantInstAdminPermission(
                     'recordName',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.grantUserRole()', () => {
+            it('should emit a GrantRoleAction', async () => {
+                const action: any = library.api.os.grantUserRole(
+                    'record',
+                    'role',
+                    'userId'
+                );
+                const expected = grantUserRole(
+                    'record',
+                    'role',
+                    'userId',
+                    null,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.revokeUserRole()', () => {
+            it('should emit a RevokeRoleAction', async () => {
+                const action: any = library.api.os.revokeUserRole(
+                    'record',
+                    'role',
+                    'userId'
+                );
+                const expected = revokeUserRole(
+                    'record',
+                    'role',
+                    'userId',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.grantInstRole()', () => {
+            it('should emit a GrantRoleAction', async () => {
+                const action: any = library.api.os.grantInstRole(
+                    'record',
+                    'role',
+                    'inst'
+                );
+                const expected = grantInstRole(
+                    'record',
+                    'role',
+                    'inst',
+                    null,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.revokeInstRole()', () => {
+            it('should emit a RevokeRoleAction', async () => {
+                const action: any = library.api.os.revokeInstRole(
+                    'record',
+                    'role',
+                    'inst'
+                );
+                const expected = revokeInstRole(
+                    'record',
+                    'role',
+                    'inst',
                     {},
                     context.tasks.size
                 );

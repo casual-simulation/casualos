@@ -219,6 +219,8 @@ export type AsyncActions =
     | GrantRecordMarkerPermissionAction
     | RevokeRecordMarkerPermissionAction
     | GrantInstAdminPermissionAction
+    | GrantRoleAction
+    | RevokeRoleAction
     | RecordDataAction
     | GetRecordDataAction
     | ListRecordDataAction
@@ -3898,6 +3900,65 @@ export interface GrantInstAdminPermissionAction extends RecordsAction {
     [APPROVED_SYMBOL]?: boolean;
 }
 
+/**
+ * Defines an action that grants a role to a user or inst.
+ */
+export interface GrantRoleAction extends RecordsAction {
+    type: 'grant_role';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The role that should be granted.
+     */
+    role: string;
+
+    /**
+     * The ID of the user that should be granted the role.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the inst that should be granted the role.
+     */
+    inst?: string;
+
+    /**
+     * The Unix time (in miliseconds) that the role grant expires.
+     */
+    expireTimeMs: number | null;
+}
+
+/**
+ * Defines an action that revokes a role from a user or inst.
+ */
+export interface RevokeRoleAction extends RecordsAction {
+    type: 'revoke_role';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The role that should be revoked.
+     */
+    role: string;
+
+    /**
+     * The ID of the user that should be revoked the role.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the inst that should be revoked the role.
+     */
+    inst?: string;
+}
+
 export interface MediaPermssionOptions {
     /**
      * Should include audio permission.
@@ -7468,6 +7529,112 @@ export function revokeRecordMarkerPermission(
         recordName,
         marker,
         permission,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GrantRoleAction for a user.
+ * @param recordName The name of the record.
+ * @param role The role that should be granted.
+ * @param userId The ID of the user.
+ * @param expireTimeMs The Unix time (in miliseconds) that the role grant expires.
+ * @param options The options for the action.
+ * @param taskId The ID of the task.
+ */
+export function grantUserRole(
+    recordName: string,
+    role: string,
+    userId: string,
+    expireTimeMs: number | null,
+    options: RecordActionOptions,
+    taskId: number | string
+): GrantRoleAction {
+    return {
+        type: 'grant_role',
+        recordName,
+        role,
+        userId,
+        expireTimeMs,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GrantRoleAction for an inst.
+ * @param recordName The name of the record.
+ * @param role The role that should be granted.
+ * @param inst The ID of the inst.
+ * @param expireTimeMs The Unix time (in miliseconds) that the role grant expires.
+ * @param options The options for the action.
+ * @param taskId The ID of the task.
+ */
+export function grantInstRole(
+    recordName: string,
+    role: string,
+    inst: string,
+    expireTimeMs: number | null,
+    options: RecordActionOptions,
+    taskId: number | string
+): GrantRoleAction {
+    return {
+        type: 'grant_role',
+        recordName,
+        role,
+        inst,
+        expireTimeMs,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GrantRoleAction for a user.
+ * @param recordName The name of the record.
+ * @param role The role that should be granted.
+ * @param userId The ID of the user.
+ * @param options The options for the action.
+ * @param taskId The ID of the task.
+ */
+export function revokeUserRole(
+    recordName: string,
+    role: string,
+    userId: string,
+    options: RecordActionOptions,
+    taskId: number | string
+): RevokeRoleAction {
+    return {
+        type: 'revoke_role',
+        recordName,
+        role,
+        userId,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a revokeRoleAction for an inst.
+ * @param recordName The name of the record.
+ * @param role The role that should be revokeed.
+ * @param inst The ID of the inst.
+ * @param options The options for the action.
+ * @param taskId The ID of the task.
+ */
+export function revokeInstRole(
+    recordName: string,
+    role: string,
+    inst: string,
+    options: RecordActionOptions,
+    taskId: number | string
+): RevokeRoleAction {
+    return {
+        type: 'revoke_role',
+        recordName,
+        role,
+        inst,
         options,
         taskId,
     };

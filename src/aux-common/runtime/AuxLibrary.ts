@@ -322,6 +322,10 @@ import {
     grantRecordMarkerPermission as calcGrantRecordMarkerPermission,
     revokeRecordMarkerPermission as calcRevokeRecordMarkerPermission,
     grantInstAdminPermission as calcGrantInstAdminPermission,
+    grantUserRole as calcGrantUserRole,
+    revokeUserRole as calcRevokeUserRole,
+    grantInstRole as calcGrantInstRole,
+    revokeInstRole as calcRevokeInstRole,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -397,6 +401,7 @@ import {
     GrantMarkerPermissionResponse,
     RevokeMarkerPermissionResult,
     GrantRoleResult,
+    RevokeRoleResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -1810,6 +1815,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 grantRecordMarkerPermission,
                 revokeRecordMarkerPermission,
                 grantInstAdminPermission,
+                grantUserRole,
+                revokeUserRole,
+                grantInstRole,
+                revokeInstRole,
                 isRecordKey,
                 recordData,
                 recordManualApprovalData,
@@ -4375,7 +4384,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Grants the current inst admin permissions in the given record for the rest of the day.
+     * Attempts to grant the current inst admin permissions in the given record for the rest of the day.
+     *
+     * When called, the user will be prompted to accept/deny the request.
+     *
      * @param recordName The name of the record.
      * @param options The options.
      */
@@ -4386,6 +4398,108 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const event = calcGrantInstAdminPermission(
             recordName,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Grants the given user the given role in the given record for the specified time.
+     * @param recordName The name of the record.
+     * @param role The role that should be granted.
+     * @param userId The ID of the user that should be granted the role.
+     * @param expireTimeMs The time that the role grant expires. If null, then the role will not expire.
+     * @param options The options.
+     */
+    function grantUserRole(
+        recordName: string,
+        role: string,
+        userId: string,
+        expireTimeMs: number = null,
+        options: RecordActionOptions = {}
+    ): Promise<GrantRoleResult> {
+        const task = context.createTask();
+        const event = calcGrantUserRole(
+            recordName,
+            role,
+            userId,
+            expireTimeMs,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Revokes the given role from the given user in the given record.
+     * @param recordName The name of the record.
+     * @param role The role that should be revoked.
+     * @param userId The ID of the user.
+     * @param options The options.
+     */
+    function revokeUserRole(
+        recordName: string,
+        role: string,
+        userId: string,
+        options: RecordActionOptions = {}
+    ): Promise<RevokeRoleResult> {
+        const task = context.createTask();
+        const event = calcRevokeUserRole(
+            recordName,
+            role,
+            userId,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Grants the given user the given role in the given record for the specified time.
+     * @param recordName The name of the record.
+     * @param role The role that should be granted.
+     * @param inst The inst that should be granted the role.
+     * @param expireTimeMs The time that the role grant expires. If null, then the role will not expire.
+     * @param options The options.
+     */
+    function grantInstRole(
+        recordName: string,
+        role: string,
+        inst: string,
+        expireTimeMs: number = null,
+        options: RecordActionOptions = {}
+    ): Promise<GrantRoleResult> {
+        const task = context.createTask();
+        const event = calcGrantInstRole(
+            recordName,
+            role,
+            inst,
+            expireTimeMs,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Revokes the given role from the given user in the given record.
+     * @param recordName The name of the record.
+     * @param role The role that should be revoked.
+     * @param inst The inst.
+     * @param options The options.
+     */
+    function revokeInstRole(
+        recordName: string,
+        role: string,
+        inst: string,
+        options: RecordActionOptions = {}
+    ): Promise<RevokeRoleResult> {
+        const task = context.createTask();
+        const event = calcRevokeInstRole(
+            recordName,
+            role,
+            inst,
             options,
             task.taskId
         );

@@ -25,6 +25,10 @@ import {
     grantRecordMarkerPermission,
     revokeRecordMarkerPermission,
     grantInstAdminPermission,
+    grantUserRole,
+    grantInstRole,
+    revokeUserRole,
+    revokeInstRole,
 } from '@casual-simulation/aux-common';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -42,6 +46,7 @@ import { BotHelper } from './BotHelper';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import 'aux-jest-matchers';
 import { DateTime } from 'luxon';
+import { formatV2RecordKey } from '@casual-simulation/aux-records';
 
 jest.mock('axios');
 
@@ -530,10 +535,15 @@ describe('RecordsManager', () => {
                 authMock.isAuthenticated.mockResolvedValueOnce(false);
                 authMock.authenticate.mockResolvedValueOnce({});
                 authMock.getAuthToken.mockResolvedValueOnce(null);
+                const recordKey = formatV2RecordKey(
+                    'recordName',
+                    'secret',
+                    'subjectfull'
+                );
 
                 records.handleEvents([
                     recordData(
-                        'myToken',
+                        recordKey,
                         'myAddress',
                         {
                             myRecord: true,
@@ -607,10 +617,15 @@ describe('RecordsManager', () => {
                     'subjectless'
                 );
                 authMock.getAuthToken.mockResolvedValueOnce(null);
+                const recordKey = formatV2RecordKey(
+                    'recordName',
+                    'secret',
+                    'subjectless'
+                );
 
                 records.handleEvents([
                     recordData(
-                        'myToken',
+                        recordKey,
                         'myAddress',
                         {
                             myRecord: true,
@@ -633,7 +648,7 @@ describe('RecordsManager', () => {
                 expect(getLastPost()).toEqual([
                     'http://localhost:3002/api/v2/records/data',
                     {
-                        recordKey: 'myToken',
+                        recordKey: recordKey,
                         address: 'myAddress',
                         data: {
                             myRecord: true,
@@ -661,11 +676,16 @@ describe('RecordsManager', () => {
                     'subjectless'
                 );
                 authMock.getAuthToken.mockResolvedValueOnce(null);
+                const recordKey = formatV2RecordKey(
+                    'recordName',
+                    'secret',
+                    'subjectless'
+                );
 
                 records.handleEvents([
                     approveAction(
                         recordData(
-                            'myToken',
+                            recordKey,
                             'myAddress',
                             {
                                 myRecord: true,
@@ -689,7 +709,7 @@ describe('RecordsManager', () => {
                 expect(getLastPost()).toEqual([
                     'http://localhost:3002/api/v2/records/manual/data',
                     {
-                        recordKey: 'myToken',
+                        recordKey: recordKey,
                         address: 'myAddress',
                         data: {
                             myRecord: true,
@@ -1395,9 +1415,14 @@ describe('RecordsManager', () => {
                 authMock.isAuthenticated.mockResolvedValueOnce(false);
                 authMock.authenticate.mockResolvedValueOnce({});
                 authMock.getAuthToken.mockResolvedValueOnce(null);
+                const recordKey = formatV2RecordKey(
+                    'recordName',
+                    'secret',
+                    'subjectfull'
+                );
 
                 records.handleEvents([
-                    eraseRecordData('myToken', 'myAddress', false, {}, 1),
+                    eraseRecordData(recordKey, 'myAddress', false, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -1429,9 +1454,14 @@ describe('RecordsManager', () => {
                 authMock.getRecordKeyPolicy.mockResolvedValueOnce(
                     'subjectless'
                 );
+                const recordKey = formatV2RecordKey(
+                    'recordName',
+                    'secret',
+                    'subjectless'
+                );
 
                 records.handleEvents([
-                    eraseRecordData('myToken', 'myAddress', false, {}, 1),
+                    eraseRecordData(recordKey, 'myAddress', false, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -1440,7 +1470,7 @@ describe('RecordsManager', () => {
                     [
                         'DELETE',
                         'http://localhost:3002/api/v2/records/data',
-                        { recordKey: 'myToken', address: 'myAddress' },
+                        { recordKey: recordKey, address: 'myAddress' },
                         {
                             validateStatus: expect.any(Function),
                             headers: {},
@@ -1473,10 +1503,15 @@ describe('RecordsManager', () => {
                 authMock.getRecordKeyPolicy.mockResolvedValueOnce(
                     'subjectless'
                 );
+                const recordKey = formatV2RecordKey(
+                    'recordName',
+                    'secret',
+                    'subjectless'
+                );
 
                 records.handleEvents([
                     approveAction(
-                        eraseRecordData('myToken', 'myAddress', true, {}, 1)
+                        eraseRecordData(recordKey, 'myAddress', true, {}, 1)
                     ),
                 ]);
 
@@ -1486,7 +1521,7 @@ describe('RecordsManager', () => {
                     [
                         'DELETE',
                         'http://localhost:3002/api/v2/records/manual/data',
-                        { recordKey: 'myToken', address: 'myAddress' },
+                        { recordKey: recordKey, address: 'myAddress' },
                         {
                             validateStatus: expect.any(Function),
                             headers: {},
@@ -2821,9 +2856,14 @@ describe('RecordsManager', () => {
                 authMock.isAuthenticated.mockResolvedValueOnce(false);
                 authMock.authenticate.mockResolvedValueOnce({});
                 authMock.getAuthToken.mockResolvedValueOnce(null);
+                const recordKey = formatV2RecordKey(
+                    'recordName',
+                    'secret',
+                    'subjectfull'
+                );
 
                 records.handleEvents([
-                    recordFile('myToken', true, 'test.html', undefined, {}, 1),
+                    recordFile(recordKey, true, 'test.html', undefined, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -2864,9 +2904,14 @@ describe('RecordsManager', () => {
                 authMock.getRecordKeyPolicy.mockResolvedValueOnce(
                     'subjectless'
                 );
+                const recordKey = formatV2RecordKey(
+                    'recordName',
+                    'secret',
+                    'subjectless'
+                );
 
                 records.handleEvents([
-                    recordFile('myToken', true, 'test.html', undefined, {}, 1),
+                    recordFile(recordKey, true, 'test.html', undefined, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -2876,7 +2921,7 @@ describe('RecordsManager', () => {
                         'post',
                         'http://localhost:3002/api/v2/records/file',
                         {
-                            recordKey: 'myToken',
+                            recordKey: recordKey,
                             fileSha256Hex:
                                 'b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b',
                             fileByteLength: 4,
@@ -3077,9 +3122,14 @@ describe('RecordsManager', () => {
                 authMock.isAuthenticated.mockResolvedValueOnce(false);
                 authMock.authenticate.mockResolvedValueOnce({});
                 authMock.getAuthToken.mockResolvedValueOnce(null);
+                const recordKey = formatV2RecordKey(
+                    'recordName',
+                    'secret',
+                    'subjectfull'
+                );
 
                 records.handleEvents([
-                    eraseFile('myToken', 'myFileUrl', {}, 1),
+                    eraseFile(recordKey, 'myFileUrl', {}, 1),
                 ]);
 
                 await waitAsync();
@@ -3115,9 +3165,14 @@ describe('RecordsManager', () => {
                 authMock.isAuthenticated.mockResolvedValueOnce(false);
                 authMock.authenticate.mockResolvedValueOnce({});
                 authMock.getAuthToken.mockResolvedValueOnce(null);
+                const recordKey = formatV2RecordKey(
+                    'recordName',
+                    'secret',
+                    'subjectless'
+                );
 
                 records.handleEvents([
-                    eraseFile('myToken', 'myFileUrl', {}, 1),
+                    eraseFile(recordKey, 'myFileUrl', {}, 1),
                 ]);
 
                 await waitAsync();
@@ -3126,7 +3181,7 @@ describe('RecordsManager', () => {
                     [
                         'DELETE',
                         'http://localhost:3002/api/v2/records/file',
-                        { recordKey: 'myToken', fileUrl: 'myFileUrl' },
+                        { recordKey: recordKey, fileUrl: 'myFileUrl' },
                         {
                             validateStatus: expect.any(Function),
                             headers: {},
@@ -3315,9 +3370,14 @@ describe('RecordsManager', () => {
                 authMock.isAuthenticated.mockResolvedValueOnce(false);
                 authMock.authenticate.mockResolvedValueOnce({});
                 authMock.getAuthToken.mockResolvedValueOnce(null);
+                const recordKey = formatV2RecordKey(
+                    'recordName',
+                    'secret',
+                    'subjectfull'
+                );
 
                 records.handleEvents([
-                    recordEvent('recordKey', 'eventName', 10, {}, 1),
+                    recordEvent(recordKey, 'eventName', 10, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -3353,9 +3413,14 @@ describe('RecordsManager', () => {
                 authMock.getRecordKeyPolicy.mockResolvedValueOnce(
                     'subjectless'
                 );
+                const recordKey = formatV2RecordKey(
+                    'recordName',
+                    'secret',
+                    'subjectless'
+                );
 
                 records.handleEvents([
-                    recordEvent('recordKey', 'eventName', 10, {}, 1),
+                    recordEvent(recordKey, 'eventName', 10, {}, 1),
                 ]);
 
                 await waitAsync();
@@ -3363,7 +3428,7 @@ describe('RecordsManager', () => {
                 expect(getLastPost()).toEqual([
                     'http://localhost:3002/api/v2/records/events/count',
                     {
-                        recordKey: 'recordKey',
+                        recordKey: recordKey,
                         eventName: 'eventName',
                         count: 10,
                     },
@@ -4103,7 +4168,7 @@ describe('RecordsManager', () => {
             });
         });
 
-        describe.only('grant_inst_admin_permission', () => {
+        describe('grant_inst_admin_permission', () => {
             beforeEach(() => {
                 require('axios').__reset();
                 vm.id = 'instId';
@@ -4169,6 +4234,212 @@ describe('RecordsManager', () => {
                         inst: 'instId',
                         role: 'admin',
                         expireTimeMs: startOfNextDay.toMillis(),
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+        });
+
+        describe('grant_role', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+                vm.id = 'instId';
+            });
+
+            it('should make a POST request to /api/v2/records/role/grant', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    grantUserRole(
+                        'recordName',
+                        'developer',
+                        'userId',
+                        null,
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/records/role/grant',
+                    {
+                        recordName: 'recordName',
+                        userId: 'userId',
+                        role: 'developer',
+                        expireTimeMs: null,
+                        instances: ['instId'],
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should support instances', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    grantInstRole(
+                        'recordName',
+                        'developer',
+                        'inst',
+                        null,
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/records/role/grant',
+                    {
+                        recordName: 'recordName',
+                        inst: 'inst',
+                        role: 'developer',
+                        expireTimeMs: null,
+                        instances: ['instId'],
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+        });
+
+        describe('revoke_role', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+                vm.id = 'instId';
+            });
+
+            it('should make a POST request to /api/v2/records/role/revoke', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    revokeUserRole('recordName', 'developer', 'userId', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/records/role/revoke',
+                    {
+                        recordName: 'recordName',
+                        userId: 'userId',
+                        role: 'developer',
+                        instances: ['instId'],
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should support instances', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    revokeInstRole('recordName', 'developer', 'inst', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/records/role/revoke',
+                    {
+                        recordName: 'recordName',
+                        inst: 'inst',
+                        role: 'developer',
+                        instances: ['instId'],
                     },
                     {
                         validateStatus: expect.any(Function),

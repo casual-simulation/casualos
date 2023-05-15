@@ -3370,6 +3370,22 @@ export interface GrantRoleFailure {
     errorMessage: string;
 }
 
+
+export type RevokeRoleResult = RevokeRoleSuccess | RevokeRoleFailure;
+
+export interface RevokeRoleSuccess {
+    success: true;
+}
+
+export interface RevokeRoleFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | AuthorizeDeniedError
+        | 'roles_too_large';
+    errorMessage: string;
+}
+
 /**
  * The options for data record actions.
  */
@@ -10663,6 +10679,67 @@ interface Os {
         recordName: string,
         options?: RecordActionOptions
     ): Promise<GrantRoleResult>;
+
+
+    /**
+     * Grants the given user the given role in the given record for the specified time.
+     * @param recordName The name of the record.
+     * @param role The role that should be granted.
+     * @param userId The ID of the user that should be granted the role.
+     * @param expireTimeMs The time that the role grant expires. If null, then the role will not expire.
+     * @param options The options.
+     */
+    grantUserRole(
+        recordName: string,
+        role: string,
+        userId: string,
+        expireTimeMs?: number | null,
+        options?: RecordActionOptions
+    ): Promise<GrantRoleResult>;
+
+    /**
+     * Revokes the given role from the given user in the given record.
+     * @param recordName The name of the record.
+     * @param role The role that should be revoked.
+     * @param userId The ID of the user.
+     * @param options The options.
+     */
+    revokeUserRole(
+        recordName: string,
+        role: string,
+        userId: string,
+        options?: RecordActionOptions
+    ): Promise<RevokeRoleResult>;
+
+    /**
+     * Grants the given user the given role in the given record for the specified time.
+     * @param recordName The name of the record.
+     * @param role The role that should be granted.
+     * @param inst The inst that should be granted the role.
+     * @param expireTimeMs The time that the role grant expires. If null, then the role will not expire.
+     * @param options The options.
+     */
+    grantInstRole(
+        recordName: string,
+        role: string,
+        inst: string,
+        expireTimeMs?: number | null,
+        options?: RecordActionOptions
+    ): Promise<GrantRoleResult>;
+
+    /**
+     * Revokes the given role from the given user in the given record.
+     * @param recordName The name of the record.
+     * @param role The role that should be revoked.
+     * @param inst The inst.
+     * @param options The options.
+     */
+    revokeInstRole(
+        recordName: string,
+        role: string,
+        inst: string,
+        options?: RecordActionOptions
+    ): Promise<RevokeRoleResult>;
 
     /**
      * Determines if the given value is a record key.

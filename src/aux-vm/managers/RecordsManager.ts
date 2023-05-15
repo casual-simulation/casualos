@@ -23,6 +23,8 @@ import {
     GrantRecordMarkerPermissionAction,
     RevokeRecordMarkerPermissionAction,
     GrantInstAdminPermissionAction,
+    GrantRoleAction,
+    RevokeRoleAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -40,6 +42,7 @@ import {
     GrantMarkerPermissionResponse,
     RevokeMarkerPermissionResult,
     GrantRoleResult,
+    RevokeRoleResult,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
@@ -163,6 +166,10 @@ export class RecordsManager {
                 this._revokeRecordMarkerPermission(event);
             } else if (event.type === 'grant_inst_admin_permission') {
                 this._grantInstAdminPermission(event);
+            } else if (event.type === 'grant_role') {
+                this._grantRole(event);
+            } else if (event.type === 'revoke_role') {
+                this._revokeRole(event);
             }
         }
     }
@@ -1047,6 +1054,98 @@ export class RecordsManager {
         }
     }
 
+    private async _grantRole(event: GrantRoleAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            console.log('[RecordsManager] Granting role...', event);
+            let requestData: any = {
+                recordName: event.recordName,
+                userId: event.userId,
+                inst: event.inst,
+                role: event.role,
+                expireTimeMs: event.expireTimeMs,
+                instances: [this._helper.id],
+            };
+
+            const result: AxiosResponse<GrantRoleResult> = await axios.post(
+                await this._publishUrl(info.auth, '/api/v2/records/role/grant'),
+                requestData,
+                {
+                    ...this._axiosOptions,
+                    headers: info.headers,
+                }
+            );
+
+            if (result.data.success) {
+                console.log('[RecordsManager] Role granted!');
+            }
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error granting role:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _revokeRole(event: RevokeRoleAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            console.log('[RecordsManager] Revoking role...', event);
+            let requestData: any = {
+                recordName: event.recordName,
+                userId: event.userId,
+                inst: event.inst,
+                role: event.role,
+                instances: [this._helper.id],
+            };
+
+            const result: AxiosResponse<RevokeRoleResult> = await axios.post(
+                await this._publishUrl(
+                    info.auth,
+                    '/api/v2/records/role/revoke'
+                ),
+                requestData,
+                {
+                    ...this._axiosOptions,
+                    headers: info.headers,
+                }
+            );
+
+            if (result.data.success) {
+                console.log('[RecordsManager] Role revoked!');
+            }
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error revoking role:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
     private async _resolveInfoForEvent(
         event:
             | RecordFileAction
@@ -1057,6 +1156,8 @@ export class RecordsManager {
             | GrantRecordMarkerPermissionAction
             | RevokeRecordMarkerPermissionAction
             | GrantInstAdminPermissionAction
+            | GrantRoleAction
+            | RevokeRoleAction
     ): Promise<{
         error: boolean;
         auth: AuthHelperInterface;
@@ -1109,7 +1210,9 @@ export class RecordsManager {
             }
         } else {
             token = await this._getAuthToken(auth);
-            headers['Authorization'] = `Bearer ${token}`;
+            if (hasValue(token)) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
         }
 
         return {
