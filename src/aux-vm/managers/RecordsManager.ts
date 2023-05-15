@@ -22,6 +22,7 @@ import {
     RoomJoinOptions,
     GrantRecordMarkerPermissionAction,
     RevokeRecordMarkerPermissionAction,
+    GrantInstAdminPermissionAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -38,11 +39,13 @@ import {
     isRecordKey,
     GrantMarkerPermissionResponse,
     RevokeMarkerPermissionResult,
+    GrantRoleResult,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import '@casual-simulation/aux-common/runtime/BlobPolyfill';
 import { Observable, Subject } from 'rxjs';
+import { DateTime } from 'luxon';
 
 /**
  * The list of headers that JavaScript applications are not allowed to set by themselves.
@@ -158,6 +161,8 @@ export class RecordsManager {
                 this._grantRecordMarkerPermission(event);
             } else if (event.type === 'revoke_record_marker_permission') {
                 this._revokeRecordMarkerPermission(event);
+            } else if (event.type === 'grant_inst_admin_permission') {
+                this._grantInstAdminPermission(event);
             }
         }
     }
@@ -938,7 +943,7 @@ export class RecordsManager {
             }
 
             console.log(
-                '[RecordsManager] Granting policy permission...',
+                '[RecordsManager] Revoking policy permission...',
                 event
             );
             let requestData: any = {
@@ -962,7 +967,7 @@ export class RecordsManager {
                 );
 
             if (result.data.success) {
-                console.log('[RecordsManager] Permission granted!');
+                console.log('[RecordsManager] Permission revoked!');
             }
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
@@ -971,7 +976,67 @@ export class RecordsManager {
             }
         } catch (e) {
             console.error(
-                '[RecordsManager] Error granting policy permission:',
+                '[RecordsManager] Error revoking policy permission:',
+                e
+            );
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _grantInstAdminPermission(
+        event: GrantInstAdminPermissionAction
+    ) {
+        if (!event[APPROVED_SYMBOL]) {
+            return;
+        }
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            const now = DateTime.now();
+            const plusOneDay = now.plus({ day: 1 });
+            const startOfNextDay = plusOneDay.set({
+                hour: 0,
+                minute: 0,
+                second: 0,
+                millisecond: 0,
+            });
+
+            console.log('[RecordsManager] Granting inst admin role...', event);
+            let requestData: any = {
+                recordName: event.recordName,
+                inst: this._helper.id,
+                role: 'admin',
+                expireTimeMs: startOfNextDay.toMillis(),
+            };
+
+            const result: AxiosResponse<GrantRoleResult> = await axios.post(
+                await this._publishUrl(info.auth, '/api/v2/records/role/grant'),
+                requestData,
+                {
+                    ...this._axiosOptions,
+                    headers: info.headers,
+                }
+            );
+
+            if (result.data.success) {
+                console.log('[RecordsManager] Role granted!');
+            }
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error(
+                '[RecordsManager] Error granting inst admin role:',
                 e
             );
             if (hasValue(event.taskId)) {
@@ -991,6 +1056,7 @@ export class RecordsManager {
             | RecordEventAction
             | GrantRecordMarkerPermissionAction
             | RevokeRecordMarkerPermissionAction
+            | GrantInstAdminPermissionAction
     ): Promise<{
         error: boolean;
         auth: AuthHelperInterface;

@@ -3289,6 +3289,18 @@ export type NotLoggedInError = 'not_logged_in';
 
 export type RecordNotFoundError = 'record_not_found';
 
+
+export type AuthorizeDeniedError = ServerError
+| CreatePublicRecordKeyFailure['errorCode']
+| 'action_not_supported'
+| 'not_logged_in'
+| 'not_authorized'
+| 'unacceptable_request';
+
+export type UpdateUserPolicyError = 'policy_too_large';
+
+export type GetPolicyError = 'policy_not_found';
+
 /**
  * Defines a type that represents a policy that indicates which users are allowed to affect a record.
  * 
@@ -3296,6 +3308,67 @@ export type RecordNotFoundError = 'record_not_found';
  * An array of strings indicates the list of users that are allowed to edit the record.
  */
 export type RecordUserPolicyType = true | string[];
+
+/**
+ * Defines an interface that represents the base for options for a records action.
+ */
+export interface RecordActionOptions {
+    /**
+     * The HTTP endpoint that the request should interface with.
+     */
+    endpoint?: string;
+}
+
+export type GrantMarkerPermissionResponse =
+    | GrantMarkerPermissionSuccess
+    | GrantMarkerPermissionFailure;
+
+export interface GrantMarkerPermissionSuccess {
+    success: true;
+}
+
+export interface GrantMarkerPermissionFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | AuthorizeDeniedError
+        | 'policy_too_large';
+    errorMessage: string;
+}
+
+
+export type RevokeMarkerPermissionResult =
+    | RevokeMarkerPermissionSuccess
+    | RevokeMarkerPermissionFailure;
+
+export interface RevokeMarkerPermissionSuccess {
+    success: true;
+}
+
+export interface RevokeMarkerPermissionFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | AuthorizeDeniedError
+        | GetPolicyError
+        | UpdateUserPolicyError;
+    errorMessage: string;
+}
+
+export type GrantRoleResult = GrantRoleSuccess | GrantRoleFailure;
+
+export interface GrantRoleSuccess {
+    success: true;
+}
+
+export interface GrantRoleFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | AuthorizeDeniedError
+        | 'roles_too_large';
+    errorMessage: string;
+}
 
 /**
  * The options for data record actions.
@@ -10552,6 +10625,44 @@ interface Os {
     getSubjectlessPublicRecordKey(
         recordName: string
     ): Promise<CreatePublicRecordKeyResult>;
+    
+    /**
+     * Grants the given marker the given permission in the given record.
+     * @param recordName The name of the record.
+     * @param marker The marker.
+     * @param permission The permission to grant.
+     * @param options The options.
+     */
+    grantRecordMarkerPermission(
+        recordName: string,
+        marker: string,
+        permission: object,
+        options?: RecordActionOptions
+    ): Promise<GrantMarkerPermissionResponse>;
+
+    /**
+     * Revokes the given permission from the given marker in the given record.
+     * @param recordName The name of the record.
+     * @param marker The name of the marker.
+     * @param permission The permission that should be revoked.
+     * @param options The options.
+     */
+    revokeRecordMarkerPermission(
+        recordName: string,
+        marker: string,
+        permission: object,
+        options?: RecordActionOptions
+    ): Promise<RevokeMarkerPermissionResult>;
+
+    /**
+     * Grants the current inst admin permissions in the given record for the rest of the day.
+     * @param recordName The name of the record.
+     * @param options The options.
+     */
+    grantInstAdminPermission(
+        recordName: string,
+        options?: RecordActionOptions
+    ): Promise<GrantRoleResult>;
 
     /**
      * Determines if the given value is a record key.

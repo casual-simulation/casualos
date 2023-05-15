@@ -321,6 +321,7 @@ import {
     StoredAuxVersion1,
     grantRecordMarkerPermission as calcGrantRecordMarkerPermission,
     revokeRecordMarkerPermission as calcRevokeRecordMarkerPermission,
+    grantInstAdminPermission as calcGrantInstAdminPermission,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -395,6 +396,7 @@ import {
     GetCountResult,
     GrantMarkerPermissionResponse,
     RevokeMarkerPermissionResult,
+    GrantRoleResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -1807,6 +1809,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getSubjectlessPublicRecordKey,
                 grantRecordMarkerPermission,
                 revokeRecordMarkerPermission,
+                grantInstAdminPermission,
                 isRecordKey,
                 recordData,
                 recordManualApprovalData,
@@ -4323,6 +4326,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, event);
     }
 
+    /**
+     * Grants the given marker the given permission in the given record.
+     * @param recordName The name of the record.
+     * @param marker The marker.
+     * @param permission The permission to grant.
+     * @param options The options.
+     */
     function grantRecordMarkerPermission(
         recordName: string,
         marker: string,
@@ -4340,6 +4350,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return addAsyncAction(task, event);
     }
 
+    /**
+     * Revokes the given permission from the given marker in the given record.
+     * @param recordName The name of the record.
+     * @param marker The name of the marker.
+     * @param permission The permission that should be revoked.
+     * @param options The options.
+     */
     function revokeRecordMarkerPermission(
         recordName: string,
         marker: string,
@@ -4351,6 +4368,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             recordName,
             marker,
             permission,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Grants the current inst admin permissions in the given record for the rest of the day.
+     * @param recordName The name of the record.
+     * @param options The options.
+     */
+    function grantInstAdminPermission(
+        recordName: string,
+        options: RecordActionOptions = {}
+    ): Promise<GrantRoleResult> {
+        const task = context.createTask();
+        const event = calcGrantInstAdminPermission(
+            recordName,
             options,
             task.taskId
         );

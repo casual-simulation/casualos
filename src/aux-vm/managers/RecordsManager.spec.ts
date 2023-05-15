@@ -14,7 +14,7 @@ import {
     recordData,
     recordFile,
     eraseFile,
-    approveDataRecord,
+    approveAction,
     listDataRecord,
     recordEvent,
     getEventCount,
@@ -24,6 +24,7 @@ import {
     getRoomOptions,
     grantRecordMarkerPermission,
     revokeRecordMarkerPermission,
+    grantInstAdminPermission,
 } from '@casual-simulation/aux-common';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -40,6 +41,7 @@ import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { BotHelper } from './BotHelper';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import 'aux-jest-matchers';
+import { DateTime } from 'luxon';
 
 jest.mock('axios');
 
@@ -377,7 +379,7 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    approveDataRecord(
+                    approveAction(
                         recordData(
                             'myToken',
                             'myAddress',
@@ -437,7 +439,7 @@ describe('RecordsManager', () => {
                 customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    approveDataRecord(
+                    approveAction(
                         recordData(
                             'myToken',
                             'myAddress',
@@ -661,7 +663,7 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce(null);
 
                 records.handleEvents([
-                    approveDataRecord(
+                    approveAction(
                         recordData(
                             'myToken',
                             'myAddress',
@@ -808,7 +810,7 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    approveDataRecord(
+                    approveAction(
                         getRecordData('testRecord', 'myAddress', true, {}, 1)
                     ),
                 ]);
@@ -849,7 +851,7 @@ describe('RecordsManager', () => {
                 customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    approveDataRecord(
+                    approveAction(
                         getRecordData(
                             'testRecord',
                             'myAddress',
@@ -1191,7 +1193,7 @@ describe('RecordsManager', () => {
                 authMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    approveDataRecord(
+                    approveAction(
                         eraseRecordData('myToken', 'myAddress', true, {}, 1)
                     ),
                 ]);
@@ -1239,7 +1241,7 @@ describe('RecordsManager', () => {
                 customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
 
                 records.handleEvents([
-                    approveDataRecord(
+                    approveAction(
                         eraseRecordData(
                             'myToken',
                             'myAddress',
@@ -1473,7 +1475,7 @@ describe('RecordsManager', () => {
                 );
 
                 records.handleEvents([
-                    approveDataRecord(
+                    approveAction(
                         eraseRecordData('myToken', 'myAddress', true, {}, 1)
                     ),
                 ]);
@@ -4079,6 +4081,94 @@ describe('RecordsManager', () => {
                             addresses: true,
                         },
                         instances: ['instId'],
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+        });
+
+        describe.only('grant_inst_admin_permission', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+                vm.id = 'instId';
+            });
+
+            it('should do nothing if the request is not approved', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    grantInstAdminPermission('recordName', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toBeUndefined();
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([]);
+                expect(authMock.isAuthenticated).not.toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).not.toBeCalled();
+            });
+
+            it('should make a POST request to /api/v2/records/role/grant', async () => {
+                const now = DateTime.now();
+                const plusOneDay = now.plus({ day: 1 });
+                const startOfNextDay = plusOneDay.set({
+                    hour: 0,
+                    minute: 0,
+                    second: 0,
+                    millisecond: 0,
+                });
+
+                setResponse({
+                    data: {
+                        success: true,
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    approveAction(
+                        grantInstAdminPermission('recordName', {}, 1)
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/records/role/grant',
+                    {
+                        recordName: 'recordName',
+                        inst: 'instId',
+                        role: 'admin',
+                        expireTimeMs: startOfNextDay.toMillis(),
                     },
                     {
                         validateStatus: expect.any(Function),

@@ -218,6 +218,7 @@ export type AsyncActions =
     | GetPublicRecordKeyAction
     | GrantRecordMarkerPermissionAction
     | RevokeRecordMarkerPermissionAction
+    | GrantInstAdminPermissionAction
     | RecordDataAction
     | GetRecordDataAction
     | ListRecordDataAction
@@ -3855,6 +3856,9 @@ export interface GrantRecordMarkerPermissionAction extends RecordsAction {
     permission: object;
 }
 
+/**
+ * Defines an interface that represents an action that revokes a permission from a record marker.
+ */
 export interface RevokeRecordMarkerPermissionAction extends RecordsAction {
     type: 'revoke_record_marker_permission';
 
@@ -3872,6 +3876,26 @@ export interface RevokeRecordMarkerPermissionAction extends RecordsAction {
      * The permission that should be revoked.
      */
     permission: object;
+}
+
+/**
+ * Defines an action that represents an action that grants admin permissions to the inst for the day.
+ */
+export interface GrantInstAdminPermissionAction extends RecordsAction {
+    type: 'grant_inst_admin_permission';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * Whether this action has been manually approved.
+     *
+     * Uses a symbol to ensure that it cannot be copied across security boundaries.
+     * As a result, it should be impossible to generate actions that are pre-approved.
+     */
+    [APPROVED_SYMBOL]?: boolean;
 }
 
 export interface MediaPermssionOptions {
@@ -7450,6 +7474,25 @@ export function revokeRecordMarkerPermission(
 }
 
 /**
+ * Creates a GrantInstAdminPermissionAction.
+ * @param recordName The name of the record.
+ * @param options The options for the action.
+ * @param taskId The ID of the task.
+ */
+export function grantInstAdminPermission(
+    recordName: string,
+    options: RecordActionOptions,
+    taskId: number | string
+): GrantInstAdminPermissionAction {
+    return {
+        type: 'grant_inst_admin_permission',
+        recordName,
+        options,
+        taskId,
+    };
+}
+
+/**
  * Creates a RecordDataAction.
  * @param recordKey The key that should be used to access the record.
  * @param address The address that the data should be stored at in the record.
@@ -7550,11 +7593,21 @@ export function eraseRecordData(
     };
 }
 
+export interface ApprovableAction {
+    /**
+     * Whether this action has been manually approved.
+     *
+     * Uses a symbol to ensure that it cannot be copied across security boundaries.
+     * As a result, it should be impossible to generate actions that are pre-approved.
+     */
+    [APPROVED_SYMBOL]?: boolean;
+}
+
 /**
  * Approves the given data record action and returns a new action that has been approved.
  * @param action The action to approve.
  */
-export function approveDataRecord<T extends DataRecordAction>(action: T): T {
+export function approveAction<T extends ApprovableAction>(action: T): T {
     return {
         ...action,
         [APPROVED_SYMBOL]: true,

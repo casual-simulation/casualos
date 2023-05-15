@@ -217,6 +217,7 @@ import {
     StoredAuxVersion2,
     grantRecordMarkerPermission,
     revokeRecordMarkerPermission,
+    grantInstAdminPermission,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -5111,6 +5112,7 @@ describe('AuxLibrary', () => {
                         role: 'developer',
                         addresses: true,
                     },
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5137,6 +5139,21 @@ describe('AuxLibrary', () => {
                         role: 'developer',
                         addresses: true,
                     },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.grantInstAdminPermission()', () => {
+            it('should emit a GrantInstAdminPermissionAction', async () => {
+                const action: any =
+                    library.api.os.grantInstAdminPermission('recordName');
+                const expected = grantInstAdminPermission(
+                    'recordName',
+                    {},
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
