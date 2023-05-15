@@ -20,19 +20,24 @@ import {
     SetRoomOptionsAction,
     GetRoomOptionsAction,
     RoomJoinOptions,
+    GrantRecordMarkerPermissionAction,
+    RevokeRecordMarkerPermissionAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
 import type { AxiosResponse, AxiosRequestConfig } from 'axios';
 import { AuthHelperInterface } from './AuthHelperInterface';
 import { BotHelper } from './BotHelper';
-import type {
+import {
     EraseFileResult,
     GetDataResult,
     ListDataResult,
     RecordDataResult,
     RecordFileResult,
     IssueMeetTokenResult,
+    isRecordKey,
+    GrantMarkerPermissionResponse,
+    RevokeMarkerPermissionResult,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
@@ -149,6 +154,10 @@ export class RecordsManager {
                 this._setRoomOptions(event);
             } else if (event.type === 'get_room_options') {
                 this._getRoomOptions(event);
+            } else if (event.type === 'grant_record_marker_permission') {
+                this._grantRecordMarkerPermission(event);
+            } else if (event.type === 'revoke_record_marker_permission') {
+                this._revokeRecordMarkerPermission(event);
             }
         }
     }
@@ -863,6 +872,116 @@ export class RecordsManager {
         }
     }
 
+    private async _grantRecordMarkerPermission(
+        event: GrantRecordMarkerPermissionAction
+    ) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            console.log(
+                '[RecordsManager] Granting policy permission...',
+                event
+            );
+            let requestData: any = {
+                recordName: event.recordName,
+                marker: event.marker,
+                permission: event.permission,
+                instances: [this._helper.id],
+            };
+
+            const result: AxiosResponse<RevokeMarkerPermissionResult> =
+                await axios.post(
+                    await this._publishUrl(
+                        info.auth,
+                        '/api/v2/records/policy/grantPermission'
+                    ),
+                    requestData,
+                    {
+                        ...this._axiosOptions,
+                        headers: info.headers,
+                    }
+                );
+
+            if (result.data.success) {
+                console.log('[RecordsManager] Permission granted!');
+            }
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error(
+                '[RecordsManager] Error granting policy permission:',
+                e
+            );
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _revokeRecordMarkerPermission(
+        event: RevokeRecordMarkerPermissionAction
+    ) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            console.log(
+                '[RecordsManager] Granting policy permission...',
+                event
+            );
+            let requestData: any = {
+                recordName: event.recordName,
+                marker: event.marker,
+                permission: event.permission,
+                instances: [this._helper.id],
+            };
+
+            const result: AxiosResponse<RevokeMarkerPermissionResult> =
+                await axios.post(
+                    await this._publishUrl(
+                        info.auth,
+                        '/api/v2/records/policy/revokePermission'
+                    ),
+                    requestData,
+                    {
+                        ...this._axiosOptions,
+                        headers: info.headers,
+                    }
+                );
+
+            if (result.data.success) {
+                console.log('[RecordsManager] Permission granted!');
+            }
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error(
+                '[RecordsManager] Error granting policy permission:',
+                e
+            );
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
     private async _resolveInfoForEvent(
         event:
             | RecordFileAction
@@ -870,6 +989,8 @@ export class RecordsManager {
             | RecordDataAction
             | EraseRecordDataAction
             | RecordEventAction
+            | GrantRecordMarkerPermissionAction
+            | RevokeRecordMarkerPermissionAction
     ): Promise<{
         error: boolean;
         auth: AuthHelperInterface;
@@ -894,29 +1015,34 @@ export class RecordsManager {
             };
         }
 
-        const policy = await auth.getRecordKeyPolicy(event.recordKey);
         let token: string;
         let headers: { [key: string]: string } = {};
+        if ('recordKey' in event && isRecordKey(event.recordKey)) {
+            const policy = await auth.getRecordKeyPolicy(event.recordKey);
 
-        if (policy !== 'subjectless') {
-            token = await this._getAuthToken(auth);
-            if (!token) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_logged_in',
-                            errorMessage: 'The user is not logged in.',
-                        } as RecordDataResult)
-                    );
+            if (policy !== 'subjectless') {
+                token = await this._getAuthToken(auth);
+                if (!token) {
+                    if (hasValue(event.taskId)) {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, {
+                                success: false,
+                                errorCode: 'not_logged_in',
+                                errorMessage: 'The user is not logged in.',
+                            } as RecordDataResult)
+                        );
+                    }
+                    return {
+                        error: true,
+                        auth: null,
+                        headers: null,
+                    };
                 }
-                return {
-                    error: true,
-                    auth: null,
-                    headers: null,
-                };
-            }
 
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+        } else {
+            token = await this._getAuthToken(auth);
             headers['Authorization'] = `Bearer ${token}`;
         }
 

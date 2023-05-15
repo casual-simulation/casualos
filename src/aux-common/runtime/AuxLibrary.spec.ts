@@ -215,6 +215,8 @@ import {
     KNOWN_TAGS,
     showConfirm,
     StoredAuxVersion2,
+    grantRecordMarkerPermission,
+    revokeRecordMarkerPermission,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -5083,6 +5085,58 @@ describe('AuxLibrary', () => {
                 const expected = getPublicRecordKey(
                     'name',
                     'subjectless',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.grantRecordMarkerPermission()', () => {
+            it('should emit a GrantRecordMarkerPermissionAction', async () => {
+                const action: any = library.api.os.grantRecordMarkerPermission(
+                    'record',
+                    'marker',
+                    {
+                        type: 'data.create',
+                        role: 'developer',
+                        addresses: true,
+                    }
+                );
+                const expected = grantRecordMarkerPermission(
+                    'record',
+                    'marker',
+                    {
+                        type: 'data.create',
+                        role: 'developer',
+                        addresses: true,
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.revokeRecordMarkerPermission()', () => {
+            it('should emit a RevokeRecordMarkerPermissionAction', async () => {
+                const action: any = library.api.os.revokeRecordMarkerPermission(
+                    'record',
+                    'marker',
+                    {
+                        type: 'data.create',
+                        role: 'developer',
+                        addresses: true,
+                    }
+                );
+                const expected = revokeRecordMarkerPermission(
+                    'record',
+                    'marker',
+                    {
+                        type: 'data.create',
+                        role: 'developer',
+                        addresses: true,
+                    },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);

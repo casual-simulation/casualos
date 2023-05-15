@@ -22,6 +22,8 @@ import {
     leaveRoom,
     setRoomOptions,
     getRoomOptions,
+    grantRecordMarkerPermission,
+    revokeRecordMarkerPermission,
 } from '@casual-simulation/aux-common';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -3964,6 +3966,138 @@ describe('RecordsManager', () => {
                         errorMessage: 'Could not set room options.',
                     }),
                 ]);
+            });
+        });
+
+        describe('grant_record_marker_permission', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+
+                vm.id = 'instId';
+            });
+
+            it('should make a POST request to /api/v2/records/policy/grantPermission', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    grantRecordMarkerPermission(
+                        'recordName',
+                        'marker',
+                        {
+                            type: 'data.create',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/records/policy/grantPermission',
+                    {
+                        recordName: 'recordName',
+                        marker: 'marker',
+                        permission: {
+                            type: 'data.create',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        instances: ['instId'],
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+        });
+
+        describe('revoke_record_marker_permission', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+
+                vm.id = 'instId';
+            });
+
+            it('should make a POST request to /api/v2/records/policy/revokePermission', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    revokeRecordMarkerPermission(
+                        'recordName',
+                        'marker',
+                        {
+                            type: 'data.create',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/records/policy/revokePermission',
+                    {
+                        recordName: 'recordName',
+                        marker: 'marker',
+                        permission: {
+                            type: 'data.create',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        instances: ['instId'],
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
             });
         });
 

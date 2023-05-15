@@ -319,6 +319,8 @@ import {
     StoredAux,
     StoredAuxVersion2,
     StoredAuxVersion1,
+    grantRecordMarkerPermission as calcGrantRecordMarkerPermission,
+    revokeRecordMarkerPermission as calcRevokeRecordMarkerPermission,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -391,6 +393,8 @@ import {
     ListDataResult,
     AddCountResult,
     GetCountResult,
+    GrantMarkerPermissionResponse,
+    RevokeMarkerPermissionResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -1801,6 +1805,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 getPublicRecordKey,
                 getSubjectlessPublicRecordKey,
+                grantRecordMarkerPermission,
+                revokeRecordMarkerPermission,
                 isRecordKey,
                 recordData,
                 recordManualApprovalData,
@@ -4314,6 +4320,40 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ): Promise<CreatePublicRecordKeyResult> {
         const task = context.createTask();
         const event = calcGetPublicRecordKey(name, 'subjectless', task.taskId);
+        return addAsyncAction(task, event);
+    }
+
+    function grantRecordMarkerPermission(
+        recordName: string,
+        marker: string,
+        permission: object,
+        options: RecordActionOptions = {}
+    ): Promise<GrantMarkerPermissionResponse> {
+        const task = context.createTask();
+        const event = calcGrantRecordMarkerPermission(
+            recordName,
+            marker,
+            permission,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    function revokeRecordMarkerPermission(
+        recordName: string,
+        marker: string,
+        permission: object,
+        options: RecordActionOptions = {}
+    ): Promise<RevokeMarkerPermissionResult> {
+        const task = context.createTask();
+        const event = calcRevokeRecordMarkerPermission(
+            recordName,
+            marker,
+            permission,
+            options,
+            task.taskId
+        );
         return addAsyncAction(task, event);
     }
 

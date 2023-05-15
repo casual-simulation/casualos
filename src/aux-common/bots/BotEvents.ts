@@ -216,6 +216,8 @@ export type AsyncActions =
     | DefineGlobalBotAction
     | ConvertGeolocationToWhat3WordsAction
     | GetPublicRecordKeyAction
+    | GrantRecordMarkerPermissionAction
+    | RevokeRecordMarkerPermissionAction
     | RecordDataAction
     | GetRecordDataAction
     | ListRecordDataAction
@@ -3831,6 +3833,47 @@ export interface GetPublicRecordKeyAction extends AsyncAction {
     policy?: PublicRecordKeyPolicy;
 }
 
+/**
+ * Defines an interface that represents an action that grants a permission to a record marker.
+ */
+export interface GrantRecordMarkerPermissionAction extends RecordsAction {
+    type: 'grant_record_marker_permission';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The marker that should be granted permission.
+     */
+    marker: string;
+
+    /**
+     * The permission that should be granted.
+     */
+    permission: object;
+}
+
+export interface RevokeRecordMarkerPermissionAction extends RecordsAction {
+    type: 'revoke_record_marker_permission';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The marker that should be revoked permission.
+     */
+    marker: string;
+
+    /**
+     * The permission that should be revoked.
+     */
+    permission: object;
+}
+
 export interface MediaPermssionOptions {
     /**
      * Should include audio permission.
@@ -7352,6 +7395,56 @@ export function getPublicRecordKey(
         type: 'get_public_record_key',
         recordName,
         policy,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GrantRecordMarkerPermissionAction.
+ * @param recordName The name of the record.
+ * @param marker The marker.
+ * @param permission The permission that should be granted.
+ * @param options The options for the action.
+ * @param taskId The ID of the task.
+ */
+export function grantRecordMarkerPermission(
+    recordName: string,
+    marker: string,
+    permission: object,
+    options: RecordActionOptions,
+    taskId: number | string
+): GrantRecordMarkerPermissionAction {
+    return {
+        type: 'grant_record_marker_permission',
+        recordName,
+        marker,
+        permission,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a RevokeRecordMarkerPermissionAction.
+ * @param recordName The name of the record.
+ * @param marker The marker.
+ * @param permission The permission that should be granted.
+ * @param options The options for the action.
+ * @param taskId The ID of the task.
+ */
+export function revokeRecordMarkerPermission(
+    recordName: string,
+    marker: string,
+    permission: object,
+    options: RecordActionOptions,
+    taskId: number | string
+): RevokeRecordMarkerPermissionAction {
+    return {
+        type: 'revoke_record_marker_permission',
+        recordName,
+        marker,
+        permission,
+        options,
         taskId,
     };
 }
