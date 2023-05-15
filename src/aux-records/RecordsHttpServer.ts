@@ -774,6 +774,7 @@ export class RecordsHttpServer {
                 })
                 .nonempty('marker must not be empty'),
             permission: AVAILABLE_PERMISSIONS_VALIDATION,
+            instances: z.array(z.string()).nonempty().optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -782,7 +783,7 @@ export class RecordsHttpServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordName, marker, permission } = parseResult.data;
+        const { recordName, marker, permission, instances } = parseResult.data;
 
         // const validation = ZOD_PERMISSION_MAP[permission.type as (keyof typeof ZOD_PERMISSION_MAP)];
 
@@ -813,6 +814,7 @@ export class RecordsHttpServer {
             marker: marker,
             userId: sessionKeyValidation.userId,
             permission: permission as any,
+            instances,
         });
 
         return returnResult(result);
@@ -849,6 +851,7 @@ export class RecordsHttpServer {
                 })
                 .nonempty('marker must not be empty'),
             permission: AVAILABLE_PERMISSIONS_VALIDATION,
+            instances: z.array(z.string()).nonempty().optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -857,7 +860,7 @@ export class RecordsHttpServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordName, marker, permission } = parseResult.data;
+        const { recordName, marker, permission, instances } = parseResult.data;
 
         const sessionKeyValidation = await this._validateSessionKey(request);
         if (sessionKeyValidation.success === false) {
@@ -872,6 +875,7 @@ export class RecordsHttpServer {
             marker: marker,
             userId: sessionKeyValidation.userId,
             permission: permission as any,
+            instances,
         });
 
         return returnResult(result);

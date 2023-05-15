@@ -4700,6 +4700,99 @@ describe('RecordsHttpServer', () => {
             });
         });
 
+        it('should deny the request if the user is not authorized', async () => {
+            delete policyStore.roles[recordName][userId];
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/policy/grantPermission`,
+                    JSON.stringify({
+                        recordName,
+                        marker: 'test',
+                        permission: {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        id: userId,
+                        kind: 'user',
+                        marker: 'account',
+                        permission: 'policy.grantPermission',
+                        role: null,
+                        type: 'missing_permission',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const policy = await policyStore.getUserPolicy(recordName, 'test');
+
+            expect(policy).toEqual({
+                success: false,
+                errorCode: 'policy_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
+
+        it('should deny the request if the inst is not authorized', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/policy/grantPermission`,
+                    JSON.stringify({
+                        recordName,
+                        marker: 'test',
+                        permission: {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        instances: ['inst'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        id: 'inst',
+                        kind: 'inst',
+                        marker: 'account',
+                        permission: 'policy.grantPermission',
+                        role: null,
+                        type: 'missing_permission',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const policy = await policyStore.getUserPolicy(recordName, 'test');
+
+            expect(policy).toEqual({
+                success: false,
+                errorCode: 'policy_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
+
         it('should return an unacceptable_request result when given a non-string marker', async () => {
             const result = await server.handleRequest(
                 httpPost(
@@ -4909,6 +5002,115 @@ describe('RecordsHttpServer', () => {
                 success: true,
                 document: {
                     permissions: [],
+                },
+                markers: [ACCOUNT_MARKER],
+            });
+        });
+
+        it('should deny the request if the user is not authorized', async () => {
+            delete policyStore.roles[recordName][userId];
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/policy/revokePermission`,
+                    JSON.stringify({
+                        recordName,
+                        marker: 'test',
+                        permission: {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        id: userId,
+                        kind: 'user',
+                        marker: 'account',
+                        permission: 'policy.revokePermission',
+                        role: null,
+                        type: 'missing_permission',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const policy = await policyStore.getUserPolicy(recordName, 'test');
+
+            expect(policy).toEqual({
+                success: true,
+                document: {
+                    permissions: [
+                        {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                },
+                markers: [ACCOUNT_MARKER],
+            });
+        });
+
+        it('should deny the request if the inst is not authorized', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/policy/revokePermission`,
+                    JSON.stringify({
+                        recordName,
+                        marker: 'test',
+                        permission: {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        instances: ['inst'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        id: 'inst',
+                        kind: 'inst',
+                        marker: 'account',
+                        permission: 'policy.revokePermission',
+                        role: null,
+                        type: 'missing_permission',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const policy = await policyStore.getUserPolicy(recordName, 'test');
+
+            expect(policy).toEqual({
+                success: true,
+                document: {
+                    permissions: [
+                        {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
                 },
                 markers: [ACCOUNT_MARKER],
             });
