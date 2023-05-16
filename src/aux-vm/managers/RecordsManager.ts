@@ -261,6 +261,12 @@ export class RecordsManager {
                 return;
             }
 
+            let instances: string[] = undefined;
+
+            if (this._helper.inst) {
+                instances = [this._helper.inst];
+            }
+
             if (hasValue(event.taskId)) {
                 const result: AxiosResponse<GetDataResult> = await axios.get(
                     await this._publishUrl(
@@ -271,6 +277,7 @@ export class RecordsManager {
                         {
                             recordName: event.recordName,
                             address: event.address,
+                            instances,
                         }
                     ),
                     {
@@ -326,11 +333,17 @@ export class RecordsManager {
                 return;
             }
 
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.inst)) {
+                instances = [this._helper.inst];
+            }
+
             if (hasValue(event.taskId)) {
                 const result: AxiosResponse<ListDataResult> = await axios.get(
                     await this._publishUrl(auth, '/api/v2/records/data/list', {
                         recordName: event.recordName,
                         address: event.startingAddress || null,
+                        instances,
                     }),
                     {
                         ...this._axiosOptions,
@@ -363,6 +376,11 @@ export class RecordsManager {
 
             console.log('[RecordsManager] Deleting data...', event);
 
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.inst)) {
+                instances = [this._helper.inst];
+            }
+
             const result: AxiosResponse<RecordDataResult> = await axios.request(
                 {
                     ...this._axiosOptions,
@@ -376,6 +394,7 @@ export class RecordsManager {
                     data: {
                         recordKey: event.recordKey,
                         address: event.address,
+                        instances,
                     },
                     headers: info.headers,
                 }
@@ -1279,7 +1298,11 @@ export class RecordsManager {
         for (let key in queryParams) {
             const val = queryParams[key];
             if (hasValue(val)) {
-                url.searchParams.set(key, val);
+                if (Array.isArray(val)) {
+                    url.searchParams.set(key, val.join(','));
+                } else {
+                    url.searchParams.set(key, val);
+                }
             }
         }
 
