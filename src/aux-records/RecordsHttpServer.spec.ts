@@ -3310,6 +3310,48 @@ describe('RecordsHttpServer', () => {
             });
         });
 
+        it('should support instances', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpDelete(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey: recordName,
+                        fileUrl,
+                        instances: ['inst'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'inst',
+                        permission: 'file.delete',
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await filesStore.getFileRecord(recordName, fileName);
+            expect(data).toMatchObject({
+                success: true,
+            });
+        });
+
         it('should return an unacceptable_request if given a non-string recordKey', async () => {
             const result = await server.handleRequest(
                 httpDelete(
@@ -3514,6 +3556,110 @@ describe('RecordsHttpServer', () => {
                 url: `${recordName}/${hash}.json`,
                 uploaded: false,
                 markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it.only('should support markers', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const hash = getHash('hello');
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey: recordName,
+                        fileSha256Hex: hash,
+                        fileByteLength: 10,
+                        fileMimeType: 'application/json',
+                        fileDescription: 'description',
+                        markers: ['secret'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    uploadUrl: `http://localhost:9191/${recordName}/${hash}.json`,
+                    fileName: `${hash}.json`,
+                    uploadMethod: 'POST',
+                    uploadHeaders: {
+                        'content-type': 'application/json',
+                        'record-name': recordName,
+                    },
+                    markers: ['secret'],
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await filesStore.getFileRecord(
+                recordName,
+                `${hash}.json`
+            );
+            expect(data).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                fileName: `${hash}.json`,
+                publisherId: userId,
+                subjectId: userId,
+                sizeInBytes: 10,
+                description: 'description',
+                url: `${recordName}/${hash}.json`,
+                uploaded: false,
+                markers: ['secret'],
+            });
+        });
+
+        it.only('should support instances', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const hash = getHash('hello');
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey: recordName,
+                        fileSha256Hex: hash,
+                        fileByteLength: 10,
+                        fileMimeType: 'application/json',
+                        fileDescription: 'description',
+                        instances: ['inst'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'inst',
+                        permission: 'file.create',
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await filesStore.getFileRecord(
+                recordName,
+                `${hash}.json`
+            );
+            expect(data).toMatchObject({
+                success: false,
             });
         });
 

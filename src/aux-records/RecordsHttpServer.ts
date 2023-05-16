@@ -1442,6 +1442,14 @@ export class RecordsHttpServer {
                     required_error: 'fileDescription is required.',
                 })
                 .optional(),
+            markers: z
+                .array(z.string(), {
+                    invalid_type_error: 'markers must be an array of strings.',
+                    required_error: 'markers is required.',
+                })
+                .nonempty('markers must be non-empty.')
+                .optional(),
+            instances: z.array(z.string()).nonempty().optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -1456,6 +1464,8 @@ export class RecordsHttpServer {
             fileByteLength,
             fileMimeType,
             fileDescription,
+            markers,
+            instances,
         } = parseResult.data;
 
         if (!recordKey || typeof recordKey !== 'string') {
@@ -1510,6 +1520,8 @@ export class RecordsHttpServer {
             fileMimeType,
             fileDescription,
             headers: {},
+            markers,
+            instances,
         });
 
         return returnResult(result);
@@ -1673,6 +1685,7 @@ export class RecordsHttpServer {
                 invalid_type_error: 'fileUrl must be a string.',
                 required_error: 'fileUrl is required.',
             }),
+            instances: z.array(z.string()).nonempty().optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -1681,7 +1694,7 @@ export class RecordsHttpServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordKey, fileUrl } = parseResult.data;
+        const { recordKey, fileUrl, instances } = parseResult.data;
 
         if (!recordKey || typeof recordKey !== 'string') {
             return returnResult({
@@ -1717,7 +1730,8 @@ export class RecordsHttpServer {
         const result = await this._files.eraseFile(
             recordKey,
             fileNameResult.fileName,
-            userId
+            userId,
+            instances
         );
         return returnResult(result);
     }

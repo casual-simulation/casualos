@@ -3218,6 +3218,82 @@ describe('RecordsManager', () => {
                 expect(authMock.getAuthToken).not.toBeCalled();
                 expect(authMock.getRecordKeyPolicy).toBeCalled();
             });
+
+            it.only('should include the inst', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        uploadUrl: 'https://example.com/upload',
+                        uploadMethod: 'POST',
+                        uploadHeaders: {
+                            test: 'abc',
+                        },
+                        fileName: 'test.txt',
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.id = 'myInst';
+
+                records.handleEvents([
+                    recordFile(
+                        'myToken',
+                        'myFile',
+                        'test.txt',
+                        undefined,
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileSha256Hex:
+                                '7b8478283c88551efc6a8e64248cf6b44aa8be4d06e412eb9e4f66a1771bea50',
+                            fileByteLength: 6,
+                            fileMimeType: 'text/plain',
+                            fileDescription: 'test.txt',
+                            instances: ['myInst'],
+                        },
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'post',
+                        'https://example.com/upload',
+                        expect.expect('toBeUtf8EncodedText', 'myFile'),
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        url: 'https://example.com/upload',
+                        sha256Hash:
+                            '7b8478283c88551efc6a8e64248cf6b44aa8be4d06e412eb9e4f66a1771bea50',
+                    }),
+                ]);
+            });
         });
 
         describe('erase_file', () => {
