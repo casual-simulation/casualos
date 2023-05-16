@@ -1310,7 +1310,31 @@ export class RecordsHttpServer {
     private async _listData(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
-        const { recordName, address } = request.query || {};
+        const schema = z.object({
+            recordName: z
+                .string({
+                    required_error: 'recordName is required.',
+                    invalid_type_error: 'recordName must be a string.',
+                })
+                .nonempty('recordName must not be empty'),
+            address: z.union([z.string(), z.null()]).optional(),
+            instances: z
+                .string({
+                    invalid_type_error: 'instances must be a string.',
+                    required_error: 'instances is required.',
+                })
+                .nonempty('instances must not be empty')
+                .optional()
+                .transform((value) => parseInstancesList(value)),
+        });
+
+        const parseResult = schema.safeParse(request.query || {});
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, address, instances } = parseResult.data;
 
         if (!recordName || typeof recordName !== 'string') {
             return returnResult({
@@ -1331,7 +1355,20 @@ export class RecordsHttpServer {
             });
         }
 
-        const result = await this._data.listData(recordName, address || null);
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (
+            sessionKeyValidation.success === false &&
+            sessionKeyValidation.errorCode !== 'no_session_key'
+        ) {
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._data.listData(
+            recordName,
+            address || null,
+            sessionKeyValidation.userId,
+            instances
+        );
         return returnResult(result);
     }
 
@@ -1720,6 +1757,7 @@ export class RecordsHttpServer {
                 })
                 .optional(),
             markers: MARKERS_VALIDATION.optional(),
+            instances: z.array(z.string()).nonempty().optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -1735,6 +1773,7 @@ export class RecordsHttpServer {
             updatePolicy,
             deletePolicy,
             markers,
+            instances,
         } = parseResult.data;
 
         if (!recordKey || typeof recordKey !== 'string') {
@@ -1775,7 +1814,8 @@ export class RecordsHttpServer {
             userId,
             updatePolicy,
             deletePolicy,
-            markers
+            markers,
+            instances
         );
         return returnResult(result);
     }
@@ -1796,7 +1836,36 @@ export class RecordsHttpServer {
         request: GenericHttpRequest,
         controller: DataRecordsController
     ): Promise<GenericHttpResponse> {
-        const { recordName, address } = request.query || {};
+        const schema = z.object({
+            recordName: z
+                .string({
+                    required_error: 'recordName is required.',
+                    invalid_type_error: 'recordName must be a string.',
+                })
+                .nonempty('recordName must not be empty'),
+            address: z
+                .string({
+                    required_error: 'address is required.',
+                    invalid_type_error: 'address must be a string.',
+                })
+                .nonempty('address must not be empty'),
+            instances: z
+                .string({
+                    invalid_type_error: 'instances must be a string.',
+                    required_error: 'instances is required.',
+                })
+                .nonempty('instances must not be empty')
+                .optional()
+                .transform((value) => parseInstancesList(value)),
+        });
+
+        const parseResult = schema.safeParse(request.query || {});
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, address, instances } = parseResult.data;
 
         if (!recordName || typeof recordName !== 'string') {
             return returnResult({
@@ -1813,7 +1882,20 @@ export class RecordsHttpServer {
             });
         }
 
-        const result = await controller.getData(recordName, address);
+        const validation = await this._validateSessionKey(request);
+        if (
+            validation.success === false &&
+            validation.errorCode !== 'no_session_key'
+        ) {
+            return returnResult(validation);
+        }
+
+        const result = await controller.getData(
+            recordName,
+            address,
+            validation.userId,
+            instances
+        );
         return returnResult(result);
     }
 
@@ -1850,6 +1932,7 @@ export class RecordsHttpServer {
         const schema = z.object({
             recordKey: RECORD_KEY_VALIDATION,
             address: ADDRESS_VALIDATION,
+            instances: z.array(z.string()).nonempty().optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -1858,7 +1941,7 @@ export class RecordsHttpServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordKey, address } = parseResult.data;
+        const { recordKey, address, instances } = parseResult.data;
 
         if (!recordKey || typeof recordKey !== 'string') {
             return returnResult({
@@ -1884,7 +1967,12 @@ export class RecordsHttpServer {
         }
 
         const userId = validation.userId;
-        const result = await controller.eraseData(recordKey, address, userId);
+        const result = await controller.eraseData(
+            recordKey,
+            address,
+            userId,
+            instances
+        );
         return returnResult(result);
     }
 

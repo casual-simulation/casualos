@@ -539,6 +539,34 @@ describe('DataRecordsController', () => {
                 errorMessage: expect.any(String),
             });
         });
+
+        it('should reject the request if the inst does not have permission to create the data', async () => {
+            policiesStore.roles['testRecord'] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = (await manager.recordData(
+                'testRecord',
+                'address',
+                'data',
+                userId,
+                null,
+                null,
+                ['secret'],
+                ['inst']
+            )) as RecordDataFailure;
+
+            expect(result.success).toBe(false);
+            expect(result.errorCode).toBe('not_authorized');
+
+            await expect(
+                store.getData('testRecord', 'address')
+            ).resolves.toEqual({
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
     });
 
     describe('getData()', () => {
@@ -651,6 +679,44 @@ describe('DataRecordsController', () => {
             expect(result.errorMessage).toBe(
                 'The user must be logged in. Please provide a sessionKey or a recordKey.'
             );
+        });
+
+        it('should reject if the inst does not have permission', async () => {
+            policiesStore.roles['testRecord'] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await store.setData(
+                'testRecord',
+                'address',
+                'data',
+                'testUser',
+                'subjectId',
+                true,
+                true,
+                ['secret']
+            );
+
+            const result = (await manager.getData(
+                'testRecord',
+                'address',
+                userId,
+                ['inst']
+            )) as GetDataFailure;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    kind: 'inst',
+                    id: 'inst',
+                    permission: 'data.read',
+                    marker: 'secret',
+                    role: null,
+                },
+            });
         });
 
         it('should be able to retrieve secret data if the user has the admin role', async () => {
@@ -855,6 +921,38 @@ describe('DataRecordsController', () => {
                         markers: [PUBLIC_READ_MARKER],
                     },
                 ],
+            });
+        });
+
+        it('should only return data that the inst is allowed to access', async () => {
+            policiesStore.roles['testRecord'] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            for (let i = 0; i < 5; i++) {
+                await store.setData(
+                    'testRecord',
+                    'address/' + i,
+                    'data' + i,
+                    'testUser',
+                    'subjectId',
+                    true,
+                    true,
+                    ['secret']
+                );
+            }
+
+            const result = await manager.listData(
+                'testRecord',
+                'address/2',
+                userId,
+                ['inst']
+            );
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                items: [],
             });
         });
     });
@@ -1187,6 +1285,44 @@ describe('DataRecordsController', () => {
                     type: 'missing_permission',
                     kind: 'user',
                     id: userId,
+                    marker: 'secret',
+                    permission: 'data.delete',
+                    role: null,
+                },
+            });
+        });
+
+        it('should reject the request if the inst is not authorized', async () => {
+            policiesStore.roles['testRecord'] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await store.setData(
+                'testRecord',
+                'address',
+                'data',
+                'testUser',
+                'subjectId',
+                true,
+                true,
+                ['secret']
+            );
+
+            const result = (await manager.eraseData(
+                'testRecord',
+                'address',
+                userId,
+                ['inst']
+            )) as EraseDataSuccess;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: expect.any(String),
+                reason: {
+                    type: 'missing_permission',
+                    kind: 'inst',
+                    id: 'inst',
                     marker: 'secret',
                     permission: 'data.delete',
                     role: null,
