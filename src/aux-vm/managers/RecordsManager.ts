@@ -192,6 +192,14 @@ export class RecordsManager {
                 data: event.data,
             };
 
+            if (hasValue(this._helper.inst)) {
+                requestData.instances = [this._helper.inst];
+            }
+
+            if (hasValue(event.options.markers)) {
+                requestData.markers = event.options.markers;
+            }
+
             if (hasValue(event.options.updatePolicy)) {
                 requestData.updatePolicy = event.options.updatePolicy;
             }
@@ -902,7 +910,7 @@ export class RecordsManager {
                 recordName: event.recordName,
                 marker: event.marker,
                 permission: event.permission,
-                instances: [this._helper.id],
+                instances: [this._helper.inst],
             };
 
             const result: AxiosResponse<RevokeMarkerPermissionResult> =
@@ -957,7 +965,7 @@ export class RecordsManager {
                 recordName: event.recordName,
                 marker: event.marker,
                 permission: event.permission,
-                instances: [this._helper.id],
+                instances: [this._helper.inst],
             };
 
             const result: AxiosResponse<RevokeMarkerPermissionResult> =
@@ -1019,7 +1027,7 @@ export class RecordsManager {
             console.log('[RecordsManager] Granting inst admin role...', event);
             let requestData: any = {
                 recordName: event.recordName,
-                inst: this._helper.id,
+                inst: this._helper.inst,
                 role: 'admin',
                 expireTimeMs: startOfNextDay.toMillis(),
             };
@@ -1069,7 +1077,7 @@ export class RecordsManager {
                 inst: event.inst,
                 role: event.role,
                 expireTimeMs: event.expireTimeMs,
-                instances: [this._helper.id],
+                instances: [this._helper.inst],
             };
 
             const result: AxiosResponse<GrantRoleResult> = await axios.post(
@@ -1113,7 +1121,7 @@ export class RecordsManager {
                 userId: event.userId,
                 inst: event.inst,
                 role: event.role,
-                instances: [this._helper.id],
+                instances: [this._helper.inst],
             };
 
             const result: AxiosResponse<RevokeRoleResult> = await axios.post(

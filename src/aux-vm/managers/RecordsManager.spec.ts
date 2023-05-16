@@ -313,6 +313,128 @@ describe('RecordsManager', () => {
                 expect(authMock.getAuthToken).toBeCalled();
             });
 
+            it('should include the markers', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    recordData(
+                        'myToken',
+                        'myAddress',
+                        {
+                            myRecord: true,
+                        },
+                        false,
+                        {
+                            markers: ['marker1', 'marker2'],
+                        },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/records/data',
+                    {
+                        recordKey: 'myToken',
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
+                        },
+                        markers: ['marker1', 'marker2'],
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should include the inst', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.id = 'testId';
+
+                records.handleEvents([
+                    recordData(
+                        'myToken',
+                        'myAddress',
+                        {
+                            myRecord: true,
+                        },
+                        false,
+                        {},
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/records/data',
+                    {
+                        recordKey: 'myToken',
+                        address: 'myAddress',
+                        data: {
+                            myRecord: true,
+                        },
+                        instances: ['testId'],
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
             it('should support custom endpoints', async () => {
                 setResponse({
                     data: {

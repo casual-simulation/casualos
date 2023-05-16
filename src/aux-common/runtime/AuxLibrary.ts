@@ -4525,7 +4525,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordKey: string,
         address: string,
         data: any,
-        endpointOrOptions?: string | DataRecordOptions
+        endpointOrOptions?: string | (DataRecordOptions & { marker?: string })
     ) {
         return baseRecordData(
             recordKey,
@@ -4549,7 +4549,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordKey: string,
         address: string,
         data: any,
-        endpointOrOptions?: string | DataRecordOptions
+        endpointOrOptions?: string | (DataRecordOptions & { marker?: string })
     ) {
         return baseRecordData(
             recordKey,
@@ -4572,7 +4572,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         address: string,
         data: any,
         requiresApproval: boolean,
-        endpointOrOptions: string | DataRecordOptions = null
+        endpointOrOptions:
+            | string
+            | (DataRecordOptions & { marker?: string }) = null
     ): Promise<RecordDataResult> {
         const task = context.createTask();
         let options: DataRecordOptions = {};
@@ -4580,7 +4582,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             if (typeof endpointOrOptions === 'string') {
                 options.endpoint = endpointOrOptions;
             } else {
-                options = endpointOrOptions;
+                let { marker, ...rest } = endpointOrOptions;
+                options = rest;
+                if (hasValue(marker)) {
+                    options.markers = [
+                        endpointOrOptions.marker,
+                        ...(endpointOrOptions.markers ?? []),
+                    ];
+                }
             }
         }
         const event = calcRecordData(

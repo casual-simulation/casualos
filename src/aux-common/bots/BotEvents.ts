@@ -3586,6 +3586,11 @@ export interface DataRecordOptions extends RecordActionOptions {
      * The policy that should be used for deleting the record.
      */
     deletePolicy?: RecordUserPolicyType;
+
+    /**
+     * The markers that should be applied to the record.
+     */
+    markers?: string[];
 }
 
 /**

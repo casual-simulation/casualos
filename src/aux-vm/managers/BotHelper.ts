@@ -50,7 +50,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     /**
      * The ID of the simulation that the VM is running.
      */
-    get id() {
+    get inst() {
         return this._vm.id;
     }
 

@@ -5337,6 +5337,50 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
+            it('should support a single marker', async () => {
+                const action: any = library.api.os.recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    { marker: 'test', endpoint: 'myEndpoint' }
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    false,
+                    {
+                        markers: ['test'],
+                        endpoint: 'myEndpoint',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support markers', async () => {
+                const action: any = library.api.os.recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    { markers: ['test'], endpoint: 'myEndpoint' }
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    false,
+                    {
+                        markers: ['test'],
+                        endpoint: 'myEndpoint',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
             it('should convert bots to copiable values', () => {
                 const action: any = library.api.os.recordData(
                     'recordKey',
@@ -5437,6 +5481,44 @@ describe('AuxLibrary', () => {
                     { data: true },
                     true,
                     { updatePolicy: true, endpoint: 'myEndpoint' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support setting a marker', async () => {
+                const action: any = library.api.os.recordManualApprovalData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    { marker: 'test', endpoint: 'myEndpoint' }
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    true,
+                    { markers: ['test'], endpoint: 'myEndpoint' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support setting markers', async () => {
+                const action: any = library.api.os.recordManualApprovalData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    { markers: ['test'], endpoint: 'myEndpoint' }
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    true,
+                    { markers: ['test'], endpoint: 'myEndpoint' },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
