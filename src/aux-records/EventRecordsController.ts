@@ -42,17 +42,20 @@ export class EventRecordsController {
      * @param eventName The name of the events to record.
      * @param count The number of events to add/subtract.
      * @param subjectId The ID of the user that is adding the count.
+     * @param instances The list of instances that are currently loaded by the client.
      */
     async addCount(
         recordKeyOrRecordName: string,
         eventName: string,
         count: number,
-        subjectId: string
+        subjectId: string,
+        instances?: string[]
     ): Promise<AddCountResult> {
         try {
             const baseRequest = {
                 recordKeyOrRecordName: recordKeyOrRecordName,
                 userId: subjectId,
+                instances,
             };
             const context = await this._policies.constructAuthorizationContext(
                 baseRequest
@@ -135,16 +138,19 @@ export class EventRecordsController {
      * @param recordKeyOrRecordName The name of the record.
      * @param eventName The name of the events
      * @param userId The ID of the user that is getting the count.
+     * @param instances The list of instances that are currently loaded by the client.
      */
     async getCount(
         recordKeyOrRecordName: string,
         eventName: string,
-        userId: string
+        userId: string,
+        instances?: string[]
     ): Promise<GetCountResult> {
         try {
             const baseRequest = {
                 recordKeyOrRecordName: recordKeyOrRecordName,
                 userId,
+                instances,
             };
 
             const context = await this._policies.constructAuthorizationContext(
@@ -205,6 +211,7 @@ export class EventRecordsController {
             const baseRequest = {
                 recordKeyOrRecordName: request.recordKeyOrRecordName,
                 userId: request.userId,
+                instances: request.instances,
             };
 
             const eventName = request.eventName;
@@ -363,6 +370,11 @@ export interface UpdateEventRecordRequest {
      * If null or undefined, then it will not be updated.
      */
     markers?: string[];
+
+    /**
+     * The list of instances that are currently loaded by the client.
+     */
+    instances?: string[];
 }
 
 export type UpdateEventRecordResult =

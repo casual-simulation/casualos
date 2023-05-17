@@ -3718,6 +3718,56 @@ describe('RecordsManager', () => {
                 expect(authMock.getAuthToken).toBeCalled();
             });
 
+            it('should include the inst', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.id = 'myInst';
+
+                records.handleEvents([
+                    recordEvent('recordKey', 'eventName', 10, {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/records/events/count',
+                    {
+                        recordKey: 'recordKey',
+                        eventName: 'eventName',
+                        count: 10,
+                        instances: ['myInst'],
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
             it('should support custom endpoints', async () => {
                 setResponse({
                     data: {
@@ -3940,6 +3990,43 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/records/events/count?recordName=testRecord&eventName=myAddress',
+                    { validateStatus: expect.any(Function) },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                        count: 10,
+                    }),
+                ]);
+            });
+
+            it('should include the inst', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                        count: 10,
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.id = 'myInst';
+
+                records.handleEvents([
+                    getEventCount('testRecord', 'myAddress', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/events/count?recordName=testRecord&eventName=myAddress&instances=myInst',
                     { validateStatus: expect.any(Function) },
                 ]);
 

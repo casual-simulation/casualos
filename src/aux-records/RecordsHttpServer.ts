@@ -1558,6 +1558,7 @@ export class RecordsHttpServer {
                     required_error: 'markers is required.',
                 })
                 .nonempty('markers must be non-empty.'),
+            instances: z.array(z.string()).nonempty().optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -1587,7 +1588,8 @@ export class RecordsHttpServer {
             parseResult.data.recordKey,
             fileNameResult.fileName,
             userId,
-            parseResult.data.markers
+            parseResult.data.markers,
+            parseResult.data.instances
         );
         return returnResult(result);
     }
@@ -1595,7 +1597,41 @@ export class RecordsHttpServer {
     private async _readFile(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
-        let { fileUrl, recordName, fileName } = request.query || {};
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must be non-empty.'),
+            fileName: z
+                .string({
+                    invalid_type_error: 'fileName must be a string.',
+                    required_error: 'fileName is required.',
+                })
+                .nonempty('fileName must be non-empty.')
+                .optional(),
+            fileUrl: z
+                .string({
+                    invalid_type_error: 'fileUrl must be a string.',
+                    required_error: 'fileUrl is required.',
+                })
+                .nonempty('fileUrl must be non-empty.')
+                .optional(),
+            instances: z
+                .string()
+                .nonempty()
+                .optional()
+                .transform((value) => parseInstancesList(value)),
+        });
+
+        const parseResult = schema.safeParse(request.query || {});
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        let { fileUrl, recordName, fileName, instances } = parseResult.data;
 
         if (!!fileUrl && typeof fileUrl !== 'string') {
             return returnResult({
@@ -1658,7 +1694,12 @@ export class RecordsHttpServer {
             fileName = fileNameResult.fileName;
         }
 
-        const result = await this._files.readFile(recordName, fileName, userId);
+        const result = await this._files.readFile(
+            recordName,
+            fileName,
+            userId,
+            instances
+        );
         return returnResult(result);
     }
 
@@ -2009,7 +2050,33 @@ export class RecordsHttpServer {
             return returnResult(INVALID_ORIGIN_RESULT);
         }
 
-        const { recordName, eventName } = request.query || {};
+        const schema = z.object({
+            recordName: z
+                .string({
+                    required_error: 'recordName is required.',
+                    invalid_type_error: 'recordName must be a string.',
+                })
+                .nonempty('recordName must not be empty'),
+            eventName: z
+                .string({
+                    required_error: 'eventName is required.',
+                    invalid_type_error: 'eventName must be a string.',
+                })
+                .nonempty('eventName must not be empty'),
+            instances: z
+                .string()
+                .nonempty()
+                .optional()
+                .transform((value) => parseInstancesList(value)),
+        });
+
+        const parseResult = schema.safeParse(request.query || {});
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, eventName, instances } = parseResult.data;
 
         if (!recordName || typeof recordName !== 'string') {
             return returnResult({
@@ -2039,7 +2106,8 @@ export class RecordsHttpServer {
         const result = await this._events.getCount(
             recordName,
             eventName,
-            userId
+            userId,
+            instances
         );
         return returnResult(result);
     }
@@ -2068,6 +2136,7 @@ export class RecordsHttpServer {
                 invalid_type_error: 'count must be a number.',
                 required_error: 'count is required.',
             }),
+            instances: z.array(z.string()).nonempty().optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -2076,7 +2145,7 @@ export class RecordsHttpServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordKey, eventName, count } = parseResult.data;
+        const { recordKey, eventName, count, instances } = parseResult.data;
 
         if (!recordKey || typeof recordKey !== 'string') {
             return returnResult({
@@ -2115,7 +2184,8 @@ export class RecordsHttpServer {
             recordKey,
             eventName,
             count,
-            userId
+            userId,
+            instances
         );
 
         return returnResult(result);
@@ -2143,6 +2213,7 @@ export class RecordsHttpServer {
             eventName: EVENT_NAME_VALIDATION,
             count: z.number().optional(),
             markers: MARKERS_VALIDATION.optional(),
+            instances: z.array(z.string()).nonempty().optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -2151,7 +2222,8 @@ export class RecordsHttpServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordKey, eventName, count, markers } = parseResult.data;
+        const { recordKey, eventName, count, markers, instances } =
+            parseResult.data;
 
         if (!recordKey || typeof recordKey !== 'string') {
             return returnResult({
@@ -2196,6 +2268,7 @@ export class RecordsHttpServer {
             eventName,
             count,
             markers,
+            instances,
         });
 
         return returnResult(result);

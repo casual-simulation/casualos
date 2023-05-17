@@ -3559,7 +3559,7 @@ describe('RecordsHttpServer', () => {
             });
         });
 
-        it.only('should support markers', async () => {
+        it('should support markers', async () => {
             policyStore.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
@@ -3614,7 +3614,7 @@ describe('RecordsHttpServer', () => {
             });
         });
 
-        it.only('should support instances', async () => {
+        it('should support instances', async () => {
             policyStore.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };

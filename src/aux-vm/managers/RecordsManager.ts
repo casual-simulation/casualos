@@ -658,6 +658,11 @@ export class RecordsManager {
 
             console.log('[RecordsManager] Recording event...', event);
 
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.inst)) {
+                instances = [this._helper.inst];
+            }
+
             const result: AxiosResponse<RecordDataResult> = await axios.post(
                 await this._publishUrl(
                     info.auth,
@@ -667,6 +672,7 @@ export class RecordsManager {
                     recordKey: event.recordKey,
                     eventName: event.eventName,
                     count: event.count,
+                    instances,
                 },
                 {
                     ...this._axiosOptions,
@@ -711,6 +717,10 @@ export class RecordsManager {
             }
 
             if (hasValue(event.taskId)) {
+                let instances: string[] = undefined;
+                if (hasValue(this._helper.inst)) {
+                    instances = [this._helper.inst];
+                }
                 const result: AxiosResponse<GetDataResult> = await axios.get(
                     await this._publishUrl(
                         auth,
@@ -718,6 +728,7 @@ export class RecordsManager {
                         {
                             recordName: event.recordName,
                             eventName: event.eventName,
+                            instances,
                         }
                     ),
                     { ...this._axiosOptions }

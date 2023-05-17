@@ -19,7 +19,11 @@ import {
 import { PolicyController } from './PolicyController';
 import { PolicyStore } from './PolicyStore';
 import { MemoryPolicyStore } from './MemoryPolicyStore';
-import { ACCOUNT_MARKER, PUBLIC_READ_MARKER } from './PolicyPermissions';
+import {
+    ACCOUNT_MARKER,
+    ADMIN_ROLE_NAME,
+    PUBLIC_READ_MARKER,
+} from './PolicyPermissions';
 
 console.log = jest.fn();
 
@@ -183,6 +187,41 @@ describe('EventRecordsController', () => {
                 count: 0,
             });
         });
+
+        it('should deny the request if the inst does not have permissions', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = (await manager.addCount(
+                recordName,
+                'address',
+                5,
+                userId,
+                ['inst']
+            )) as AddCountFailure;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    kind: 'inst',
+                    id: 'inst',
+                    permission: 'event.increment',
+                    marker: PUBLIC_READ_MARKER,
+                    role: null,
+                },
+            });
+
+            await expect(
+                store.getEventCount('testRecord', 'address')
+            ).resolves.toEqual({
+                success: true,
+                count: 0,
+            });
+        });
     });
 
     describe('getData()', () => {
@@ -288,6 +327,38 @@ describe('EventRecordsController', () => {
                     type: 'missing_permission',
                     kind: 'user',
                     id: userId,
+                    permission: 'event.count',
+                    marker: 'secret',
+                    role: null,
+                },
+            });
+        });
+
+        it('should deny requests for events that the inst doesnt have permission for', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+            await store.updateEvent(recordName, 'address', {
+                markers: ['secret'],
+            });
+
+            await store.addEventCount(recordName, 'address', 10);
+
+            const result = (await manager.getCount(
+                recordName,
+                'address',
+                userId,
+                ['inst']
+            )) as GetCountFailure;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    kind: 'inst',
+                    id: 'inst',
                     permission: 'event.count',
                     marker: 'secret',
                     role: null,
@@ -445,6 +516,74 @@ describe('EventRecordsController', () => {
                 success: true,
                 count: 0,
                 markers: ['secret'],
+            });
+        });
+
+        it('should deny the request if the user doesnt have permissions', async () => {
+            await store.addEventCount('testRecord', 'address', 10);
+
+            const result = (await manager.updateEvent({
+                recordKeyOrRecordName: recordName,
+                eventName: 'address',
+                userId,
+                count: 0,
+            })) as UpdateEventRecordSuccess;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    kind: 'user',
+                    id: userId,
+                    permission: 'event.update',
+                    marker: PUBLIC_READ_MARKER,
+                    role: null,
+                },
+            });
+
+            await expect(
+                store.getEventCount(recordName, 'address')
+            ).resolves.toEqual({
+                success: true,
+                count: 10,
+            });
+        });
+
+        it('should deny the request if the inst doesnt have permissions', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+            await store.addEventCount('testRecord', 'address', 10);
+
+            const result = (await manager.updateEvent({
+                recordKeyOrRecordName: recordName,
+                eventName: 'address',
+                userId,
+                count: 0,
+                instances: ['inst'],
+            })) as UpdateEventRecordSuccess;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    kind: 'inst',
+                    id: 'inst',
+                    permission: 'event.update',
+                    marker: PUBLIC_READ_MARKER,
+                    role: null,
+                },
+            });
+
+            await expect(
+                store.getEventCount(recordName, 'address')
+            ).resolves.toEqual({
+                success: true,
+                count: 10,
             });
         });
     });
