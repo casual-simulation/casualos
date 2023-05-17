@@ -3683,6 +3683,13 @@ export interface EraseRecordDataAction extends DataRecordAction {
     address: string;
 }
 
+export interface RecordFileActionOptions extends RecordActionOptions {
+    /**
+     * The markers that should be applied to the record.
+     */
+    markers?: string[];
+}
+
 /**
  * Defines an event that publishes a file to a record.
  */
@@ -3708,6 +3715,11 @@ export interface RecordFileAction extends RecordsAction {
      * The MIME type of the uploaded file.
      */
     mimeType?: string;
+
+    /**
+     * The options for the action.
+     */
+    options: RecordFileActionOptions;
 }
 
 /**
@@ -7792,6 +7804,7 @@ export function approveAction<T extends ApprovableAction>(action: T): T {
  * @param data The data to store.
  * @param description The description of the file.
  * @param mimeType The MIME type of the file.
+ * @param markers The markers to associate with the file.
  * @param options The options that should be used for the action.
  */
 export function recordFile(
@@ -7799,7 +7812,7 @@ export function recordFile(
     data: any,
     description: string,
     mimeType: string,
-    options: RecordActionOptions,
+    options: RecordFileActionOptions,
     taskId?: number | string
 ): RecordFileAction {
     return {

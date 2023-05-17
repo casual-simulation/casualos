@@ -522,6 +522,11 @@ export class RecordsManager {
                 }
             }
 
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.inst)) {
+                instances = [this._helper.inst];
+            }
+
             const result: AxiosResponse<RecordFileResult> = await axios.post(
                 await this._publishUrl(info.auth, '/api/v2/records/file'),
                 {
@@ -530,6 +535,8 @@ export class RecordsManager {
                     fileMimeType: mimeType,
                     fileByteLength: byteLength,
                     fileDescription: event.description,
+                    markers: event.options?.markers,
+                    instances,
                 },
                 {
                     ...this._axiosOptions,

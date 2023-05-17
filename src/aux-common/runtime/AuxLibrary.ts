@@ -326,6 +326,7 @@ import {
     revokeUserRole as calcRevokeUserRole,
     grantInstRole as calcGrantInstRole,
     revokeInstRole as calcRevokeInstRole,
+    RecordFileActionOptions,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1413,6 +1414,16 @@ export interface RecordFileOptions {
      * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types for more information.
      */
     mimeType?: string;
+
+    /**
+     * The marker that should be applied to the file.
+     */
+    marker?: string;
+
+    /**
+     * The markers that should be applied to the file.
+     */
+    markers?: string[];
 }
 
 /**
@@ -4780,7 +4791,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             throw new Error('data must be provided.');
         }
 
-        let recordOptions: RecordActionOptions = {};
+        let recordOptions: RecordFileActionOptions = {};
+        if (hasValue(options)) {
+            let { marker, markers } = options;
+            recordOptions.markers = markers;
+            if (hasValue(marker)) {
+                recordOptions.markers = [
+                    options.marker,
+                    ...(options.markers ?? []),
+                ];
+            }
+        }
         if (hasValue(endpoint)) {
             recordOptions.endpoint = endpoint;
         }

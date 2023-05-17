@@ -5925,6 +5925,48 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
+            it('should support specifying a single marker', async () => {
+                const action: any = library.api.os.recordFile(
+                    'recordKey',
+                    'data',
+                    {
+                        description: 'description',
+                        marker: 'test',
+                    }
+                );
+                const expected = recordFile(
+                    'recordKey',
+                    'data',
+                    'description',
+                    undefined,
+                    { markers: ['test'] },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom markers', async () => {
+                const action: any = library.api.os.recordFile(
+                    'recordKey',
+                    'data',
+                    {
+                        description: 'description',
+                        markers: ['test1', 'test2'],
+                    }
+                );
+                const expected = recordFile(
+                    'recordKey',
+                    'data',
+                    'description',
+                    undefined,
+                    { markers: ['test1', 'test2'] },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
             it('should support custom endpoints', async () => {
                 const action: any = library.api.os.recordFile(
                     'recordKey',
