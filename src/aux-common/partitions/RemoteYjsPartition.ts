@@ -727,9 +727,13 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                             const val = ensureTagIsSerializable(
                                 event.bot.tags[tag]
                             );
-                            const yVal =
-                                typeof val === 'string' ? new Text(val) : val;
-                            map.set(tag, yVal);
+                            if (hasValue(val)) {
+                                const yVal =
+                                    typeof val === 'string'
+                                        ? new Text(val)
+                                        : val;
+                                map.set(tag, yVal);
+                            }
                         }
 
                         if (this.space && event.bot.masks) {
@@ -740,12 +744,13 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                                     const val = ensureTagIsSerializable(
                                         tags[tag]
                                     );
-                                    const yVal =
-                                        typeof val === 'string'
-                                            ? new Text(val)
-                                            : val;
-
-                                    this._masks.set(maskId, yVal);
+                                    if (hasValue(val)) {
+                                        const yVal =
+                                            typeof val === 'string'
+                                                ? new Text(val)
+                                                : val;
+                                        this._masks.set(maskId, yVal);
+                                    }
                                 }
                             }
                         }
@@ -933,12 +938,14 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         for (let [key, value] of map.entries()) {
             const val = map.get(key);
             let finalVal: string | number | boolean | object;
-            if (val instanceof Text) {
-                finalVal = val.toString();
-            } else {
-                finalVal = val;
+            if (hasValue(val)) {
+                if (val instanceof Text) {
+                    finalVal = val.toString();
+                } else {
+                    finalVal = val;
+                }
+                tags[key] = finalVal;
             }
-            tags[key] = finalVal;
         }
 
         return createBot(id, tags);
