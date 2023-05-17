@@ -38,6 +38,7 @@
 -   Fixed an issue where gltf models with multiple materials and textures would not be properly disposed.
 -   Fixed an issue where `os.beginAudioRecording` would fail to provide audio chunks in stream mode if the mimeType was anything other than `audio/x-raw`.
 -   Fixed some potential issues with the `tempShared` and `remoteTempShared` spaces.
+-   Fixed an issue creating a bot with a `null` tag value would cause the null value to become visible after a refresh.
 
 ## V3.1.28
 
