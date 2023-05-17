@@ -614,6 +614,11 @@ export class RecordsManager {
 
             console.log('[RecordsManager] Deleting file...', event);
 
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.inst)) {
+                instances = [this._helper.inst];
+            }
+
             const result: AxiosResponse<EraseFileResult> = await axios.request({
                 ...this._axiosOptions,
                 method: 'DELETE',
@@ -621,6 +626,7 @@ export class RecordsManager {
                 data: {
                     recordKey: event.recordKey,
                     fileUrl: event.fileUrl,
+                    instances,
                 },
                 headers: info.headers,
             });

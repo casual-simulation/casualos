@@ -3421,6 +3421,58 @@ describe('RecordsManager', () => {
                 expect(authMock.getAuthToken).toBeCalled();
             });
 
+            it('should include the inst', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        fileName: 'myFile',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.id = 'myInst';
+
+                records.handleEvents([
+                    eraseFile('myToken', 'myFileUrl', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'DELETE',
+                        'http://localhost:3002/api/v2/records/file',
+                        {
+                            recordKey: 'myToken',
+                            fileUrl: 'myFileUrl',
+                            instances: ['myInst'],
+                        },
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        fileName: 'myFile',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
             it('should support custom endpoints', async () => {
                 setResponse({
                     data: {
