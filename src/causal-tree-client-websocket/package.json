@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-client-websocket",
-    "version": "3.1.29-alpha.4950390412",
+    "version": "3.1.29-alpha.5017204444",
     "description": "A set of services that can be used to network with @casual-simulation/causal-tree-server-websocket",
     "keywords": [
         "websocket",
@@ -42,7 +42,7 @@
         "url": "https://github.com/casual-simulation/casualos/issues"
     },
     "dependencies": {
-        "@casual-simulation/causal-trees": "^3.1.29-alpha.4950390412",
+        "@casual-simulation/causal-trees": "^3.1.29-alpha.5017204444",
         "@casual-simulation/crypto": "^3.1.23",
         "@casual-simulation/crypto-browser": "^3.1.23",
         "@casual-simulation/websocket": "^3.1.11",
