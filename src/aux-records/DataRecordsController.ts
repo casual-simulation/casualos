@@ -54,6 +54,7 @@ export class DataRecordsController {
      * @param updatePolicy The update policy that the new data should use.
      * @param deletePolicy the delete policy that the new data should use.
      * @param markers The list of markers that should be applied to the new record. If null, then the publicRead marker will be applied.
+     * @param instances The list of instances that are currently loaded.
      */
     async recordData(
         recordKeyOrRecordName: string,
@@ -62,12 +63,14 @@ export class DataRecordsController {
         subjectId: string,
         updatePolicy: UserPolicy,
         deletePolicy: UserPolicy,
-        markers: string[] = null
+        markers: string[] = null,
+        instances: string[] = null
     ): Promise<RecordDataResult> {
         try {
             const baseRequest: Omit<AuthorizeRequestBase, 'action'> = {
                 recordKeyOrRecordName,
                 userId: subjectId,
+                instances,
             };
 
             const result = await this._policies.constructAuthorizationContext(
@@ -246,16 +249,19 @@ export class DataRecordsController {
      * @param recordName The name (or record key) of the record that the data is stored in.
      * @param address The address that the data is stored in.
      * @param userId The ID of the user who is retrieving the data. If null, then it is assumed that the user is not logged in.
+     * @param instances The list of instances that are loaded.
      */
     async getData(
         recordName: string,
         address: string,
-        userId?: string
+        userId?: string,
+        instances?: string[]
     ): Promise<GetDataResult> {
         try {
             const baseRequest = {
                 recordKeyOrRecordName: recordName,
                 userId,
+                instances,
             };
             const context = await this._policies.constructAuthorizationContext(
                 baseRequest
@@ -321,16 +327,19 @@ export class DataRecordsController {
      * @param recordName The name (or record key) of the record.
      * @param address The address that the listing should start at. If null, then the listing will start with the first item.
      * @param userId The ID of the user who is retrieving the data. If null, then it is assumed that the user is not logged in.
+     * @param instances The instances that are loaded.
      */
     async listData(
         recordName: string,
         address: string | null,
-        userId?: string
+        userId?: string,
+        instances?: string[]
     ): Promise<ListDataResult> {
         try {
             const baseRequest = {
                 recordKeyOrRecordName: recordName,
                 userId,
+                instances,
             };
             const context = await this._policies.constructAuthorizationContext(
                 baseRequest
@@ -397,12 +406,14 @@ export class DataRecordsController {
      * Uses the given record key to access the record and the given subject ID to determine if the user is allowed to access the record.
      * @param recordKey The key that should be used to access the record.
      * @param address The address that the record should be deleted from.
-     * @param subjectId THe ID of the user that this request came from.
+     * @param subjectId The ID of the user that this request came from.
+     * @param instances The instances that are loaded.
      */
     async eraseData(
         recordKeyOrName: string,
         address: string,
-        subjectId: string
+        subjectId: string,
+        instances?: string[]
     ): Promise<EraseDataResult> {
         try {
             // const result = await this._manager.validatePublicRecordKey(
@@ -432,6 +443,7 @@ export class DataRecordsController {
             const baseRequest: Omit<AuthorizeRequestBase, 'action'> = {
                 recordKeyOrRecordName: recordKeyOrName,
                 userId: subjectId,
+                instances,
             };
             const context = await this._policies.constructAuthorizationContext(
                 baseRequest

@@ -319,6 +319,14 @@ import {
     StoredAux,
     StoredAuxVersion2,
     StoredAuxVersion1,
+    grantRecordMarkerPermission as calcGrantRecordMarkerPermission,
+    revokeRecordMarkerPermission as calcRevokeRecordMarkerPermission,
+    grantInstAdminPermission as calcGrantInstAdminPermission,
+    grantUserRole as calcGrantUserRole,
+    revokeUserRole as calcRevokeUserRole,
+    grantInstRole as calcGrantInstRole,
+    revokeInstRole as calcRevokeInstRole,
+    RecordFileActionOptions,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -391,6 +399,10 @@ import {
     ListDataResult,
     AddCountResult,
     GetCountResult,
+    GrantMarkerPermissionResponse,
+    RevokeMarkerPermissionResult,
+    GrantRoleResult,
+    RevokeRoleResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -1402,6 +1414,16 @@ export interface RecordFileOptions {
      * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types for more information.
      */
     mimeType?: string;
+
+    /**
+     * The marker that should be applied to the file.
+     */
+    marker?: string;
+
+    /**
+     * The markers that should be applied to the file.
+     */
+    markers?: string[];
 }
 
 /**
@@ -1801,6 +1823,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 getPublicRecordKey,
                 getSubjectlessPublicRecordKey,
+                grantRecordMarkerPermission,
+                revokeRecordMarkerPermission,
+                grantInstAdminPermission,
+                grantUserRole,
+                revokeUserRole,
+                grantInstRole,
+                revokeInstRole,
                 isRecordKey,
                 recordData,
                 recordManualApprovalData,
@@ -4318,6 +4347,177 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Grants the given marker the given permission in the given record.
+     * @param recordName The name of the record.
+     * @param marker The marker.
+     * @param permission The permission to grant.
+     * @param options The options.
+     */
+    function grantRecordMarkerPermission(
+        recordName: string,
+        marker: string,
+        permission: object,
+        options: RecordActionOptions = {}
+    ): Promise<GrantMarkerPermissionResponse> {
+        const task = context.createTask();
+        const event = calcGrantRecordMarkerPermission(
+            recordName,
+            marker,
+            permission,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Revokes the given permission from the given marker in the given record.
+     * @param recordName The name of the record.
+     * @param marker The name of the marker.
+     * @param permission The permission that should be revoked.
+     * @param options The options.
+     */
+    function revokeRecordMarkerPermission(
+        recordName: string,
+        marker: string,
+        permission: object,
+        options: RecordActionOptions = {}
+    ): Promise<RevokeMarkerPermissionResult> {
+        const task = context.createTask();
+        const event = calcRevokeRecordMarkerPermission(
+            recordName,
+            marker,
+            permission,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Attempts to grant the current inst admin permissions in the given record for the rest of the day.
+     *
+     * When called, the user will be prompted to accept/deny the request.
+     *
+     * @param recordName The name of the record.
+     * @param options The options.
+     */
+    function grantInstAdminPermission(
+        recordName: string,
+        options: RecordActionOptions = {}
+    ): Promise<GrantRoleResult> {
+        const task = context.createTask();
+        const event = calcGrantInstAdminPermission(
+            recordName,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Grants the given user the given role in the given record for the specified time.
+     * @param recordName The name of the record.
+     * @param role The role that should be granted.
+     * @param userId The ID of the user that should be granted the role.
+     * @param expireTimeMs The time that the role grant expires. If null, then the role will not expire.
+     * @param options The options.
+     */
+    function grantUserRole(
+        recordName: string,
+        role: string,
+        userId: string,
+        expireTimeMs: number = null,
+        options: RecordActionOptions = {}
+    ): Promise<GrantRoleResult> {
+        const task = context.createTask();
+        const event = calcGrantUserRole(
+            recordName,
+            role,
+            userId,
+            expireTimeMs,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Revokes the given role from the given user in the given record.
+     * @param recordName The name of the record.
+     * @param role The role that should be revoked.
+     * @param userId The ID of the user.
+     * @param options The options.
+     */
+    function revokeUserRole(
+        recordName: string,
+        role: string,
+        userId: string,
+        options: RecordActionOptions = {}
+    ): Promise<RevokeRoleResult> {
+        const task = context.createTask();
+        const event = calcRevokeUserRole(
+            recordName,
+            role,
+            userId,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Grants the given user the given role in the given record for the specified time.
+     * @param recordName The name of the record.
+     * @param role The role that should be granted.
+     * @param inst The inst that should be granted the role.
+     * @param expireTimeMs The time that the role grant expires. If null, then the role will not expire.
+     * @param options The options.
+     */
+    function grantInstRole(
+        recordName: string,
+        role: string,
+        inst: string,
+        expireTimeMs: number = null,
+        options: RecordActionOptions = {}
+    ): Promise<GrantRoleResult> {
+        const task = context.createTask();
+        const event = calcGrantInstRole(
+            recordName,
+            role,
+            inst,
+            expireTimeMs,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Revokes the given role from the given user in the given record.
+     * @param recordName The name of the record.
+     * @param role The role that should be revoked.
+     * @param inst The inst.
+     * @param options The options.
+     */
+    function revokeInstRole(
+        recordName: string,
+        role: string,
+        inst: string,
+        options: RecordActionOptions = {}
+    ): Promise<RevokeRoleResult> {
+        const task = context.createTask();
+        const event = calcRevokeInstRole(
+            recordName,
+            role,
+            inst,
+            options,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
      * Determines if the given value is a record key.
      * @param key The value to check.
      */
@@ -4336,7 +4536,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordKey: string,
         address: string,
         data: any,
-        endpointOrOptions?: string | DataRecordOptions
+        endpointOrOptions?: string | (DataRecordOptions & { marker?: string })
     ) {
         return baseRecordData(
             recordKey,
@@ -4360,7 +4560,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordKey: string,
         address: string,
         data: any,
-        endpointOrOptions?: string | DataRecordOptions
+        endpointOrOptions?: string | (DataRecordOptions & { marker?: string })
     ) {
         return baseRecordData(
             recordKey,
@@ -4383,7 +4583,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         address: string,
         data: any,
         requiresApproval: boolean,
-        endpointOrOptions: string | DataRecordOptions = null
+        endpointOrOptions:
+            | string
+            | (DataRecordOptions & { marker?: string }) = null
     ): Promise<RecordDataResult> {
         const task = context.createTask();
         let options: DataRecordOptions = {};
@@ -4391,7 +4593,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             if (typeof endpointOrOptions === 'string') {
                 options.endpoint = endpointOrOptions;
             } else {
-                options = endpointOrOptions;
+                let { marker, ...rest } = endpointOrOptions;
+                options = rest;
+                if (hasValue(marker)) {
+                    options.markers = [
+                        endpointOrOptions.marker,
+                        ...(endpointOrOptions.markers ?? []),
+                    ];
+                }
             }
         }
         const event = calcRecordData(
@@ -4582,7 +4791,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             throw new Error('data must be provided.');
         }
 
-        let recordOptions: RecordActionOptions = {};
+        let recordOptions: RecordFileActionOptions = {};
+        if (hasValue(options)) {
+            let { marker, markers } = options;
+            recordOptions.markers = markers;
+            if (hasValue(marker)) {
+                recordOptions.markers = [
+                    options.marker,
+                    ...(options.markers ?? []),
+                ];
+            }
+        }
         if (hasValue(endpoint)) {
             recordOptions.endpoint = endpoint;
         }

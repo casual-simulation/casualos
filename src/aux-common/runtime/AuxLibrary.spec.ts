@@ -215,6 +215,13 @@ import {
     KNOWN_TAGS,
     showConfirm,
     StoredAuxVersion2,
+    grantRecordMarkerPermission,
+    revokeRecordMarkerPermission,
+    grantInstAdminPermission,
+    grantUserRole,
+    revokeUserRole,
+    grantInstRole,
+    revokeInstRole,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -5090,6 +5097,152 @@ describe('AuxLibrary', () => {
             });
         });
 
+        describe('os.grantRecordMarkerPermission()', () => {
+            it('should emit a GrantRecordMarkerPermissionAction', async () => {
+                const action: any = library.api.os.grantRecordMarkerPermission(
+                    'record',
+                    'marker',
+                    {
+                        type: 'data.create',
+                        role: 'developer',
+                        addresses: true,
+                    }
+                );
+                const expected = grantRecordMarkerPermission(
+                    'record',
+                    'marker',
+                    {
+                        type: 'data.create',
+                        role: 'developer',
+                        addresses: true,
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.revokeRecordMarkerPermission()', () => {
+            it('should emit a RevokeRecordMarkerPermissionAction', async () => {
+                const action: any = library.api.os.revokeRecordMarkerPermission(
+                    'record',
+                    'marker',
+                    {
+                        type: 'data.create',
+                        role: 'developer',
+                        addresses: true,
+                    }
+                );
+                const expected = revokeRecordMarkerPermission(
+                    'record',
+                    'marker',
+                    {
+                        type: 'data.create',
+                        role: 'developer',
+                        addresses: true,
+                    },
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.grantInstAdminPermission()', () => {
+            it('should emit a GrantInstAdminPermissionAction', async () => {
+                const action: any =
+                    library.api.os.grantInstAdminPermission('recordName');
+                const expected = grantInstAdminPermission(
+                    'recordName',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.grantUserRole()', () => {
+            it('should emit a GrantRoleAction', async () => {
+                const action: any = library.api.os.grantUserRole(
+                    'record',
+                    'role',
+                    'userId'
+                );
+                const expected = grantUserRole(
+                    'record',
+                    'role',
+                    'userId',
+                    null,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.revokeUserRole()', () => {
+            it('should emit a RevokeRoleAction', async () => {
+                const action: any = library.api.os.revokeUserRole(
+                    'record',
+                    'role',
+                    'userId'
+                );
+                const expected = revokeUserRole(
+                    'record',
+                    'role',
+                    'userId',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.grantInstRole()', () => {
+            it('should emit a GrantRoleAction', async () => {
+                const action: any = library.api.os.grantInstRole(
+                    'record',
+                    'role',
+                    'inst'
+                );
+                const expected = grantInstRole(
+                    'record',
+                    'role',
+                    'inst',
+                    null,
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.revokeInstRole()', () => {
+            it('should emit a RevokeRoleAction', async () => {
+                const action: any = library.api.os.revokeInstRole(
+                    'record',
+                    'role',
+                    'inst'
+                );
+                const expected = revokeInstRole(
+                    'record',
+                    'role',
+                    'inst',
+                    {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
         describe('os.isRecordKey()', () => {
             it('should return true if the value is a v1 record key', () => {
                 expect(
@@ -5176,6 +5329,50 @@ describe('AuxLibrary', () => {
                     false,
                     {
                         updatePolicy: true,
+                        endpoint: 'myEndpoint',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support a single marker', async () => {
+                const action: any = library.api.os.recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    { marker: 'test', endpoint: 'myEndpoint' }
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    false,
+                    {
+                        markers: ['test'],
+                        endpoint: 'myEndpoint',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support markers', async () => {
+                const action: any = library.api.os.recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    { markers: ['test'], endpoint: 'myEndpoint' }
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    false,
+                    {
+                        markers: ['test'],
                         endpoint: 'myEndpoint',
                     },
                     context.tasks.size
@@ -5284,6 +5481,44 @@ describe('AuxLibrary', () => {
                     { data: true },
                     true,
                     { updatePolicy: true, endpoint: 'myEndpoint' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support setting a marker', async () => {
+                const action: any = library.api.os.recordManualApprovalData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    { marker: 'test', endpoint: 'myEndpoint' }
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    true,
+                    { markers: ['test'], endpoint: 'myEndpoint' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support setting markers', async () => {
+                const action: any = library.api.os.recordManualApprovalData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    { markers: ['test'], endpoint: 'myEndpoint' }
+                );
+                const expected = recordData(
+                    'recordKey',
+                    'address',
+                    { data: true },
+                    true,
+                    { markers: ['test'], endpoint: 'myEndpoint' },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5684,6 +5919,48 @@ describe('AuxLibrary', () => {
                     'description',
                     undefined,
                     {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support specifying a single marker', async () => {
+                const action: any = library.api.os.recordFile(
+                    'recordKey',
+                    'data',
+                    {
+                        description: 'description',
+                        marker: 'test',
+                    }
+                );
+                const expected = recordFile(
+                    'recordKey',
+                    'data',
+                    'description',
+                    undefined,
+                    { markers: ['test'] },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom markers', async () => {
+                const action: any = library.api.os.recordFile(
+                    'recordKey',
+                    'data',
+                    {
+                        description: 'description',
+                        markers: ['test1', 'test2'],
+                    }
+                );
+                const expected = recordFile(
+                    'recordKey',
+                    'data',
+                    'description',
+                    undefined,
+                    { markers: ['test1', 'test2'] },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);

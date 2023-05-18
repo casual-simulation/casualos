@@ -138,6 +138,7 @@ export class BaseSimulation implements Simulation {
     constructor(id: string, vm: AuxVM) {
         this._vm = vm;
         this._originalId = id || 'default';
+        this._vm.id = this._originalId;
         this._parsedId = parseSimulationId(this._originalId);
         this._id = this._getTreeName(this._parsedId.channel);
         this._onSubSimulationAdded = new Subject();

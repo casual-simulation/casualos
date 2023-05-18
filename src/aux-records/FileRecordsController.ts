@@ -57,6 +57,7 @@ export class FileRecordsController {
                 resourceMarkers: markers,
                 fileSizeInBytes: request.fileByteLength,
                 fileMimeType: request.fileMimeType,
+                instances: request.instances,
             });
 
             if (result.allowed === false) {
@@ -188,16 +189,19 @@ export class FileRecordsController {
      * @param recordKey The key that should be used to erase the file.
      * @param fileName The name of the file.
      * @param subjectId The ID of the user that is making this request. Null if the user is not logged in.
+     * @param instances The instances that are loaded.
      */
     async eraseFile(
         recordKeyOrRecordName: string,
         fileName: string,
-        subjectId: string
+        subjectId: string,
+        instances?: string[]
     ): Promise<EraseFileResult> {
         try {
             const baseRequest = {
                 recordKeyOrRecordName,
                 userId: subjectId,
+                instances,
             };
             const context = await this._policies.constructAuthorizationContext(
                 baseRequest
@@ -284,16 +288,19 @@ export class FileRecordsController {
      * @param recordKeyOrRecordName The name of the record or the record key of the record.
      * @param fileName The name of the file.
      * @param subjectId The ID of the user that is making this request. Null if the user is not logged in.
+     * @param instances The instances that are loaded.
      */
     async readFile(
         recordKeyOrRecordName: string,
         fileName: string,
-        subjectId: string
+        subjectId: string,
+        instances?: string[]
     ): Promise<ReadFileResult> {
         try {
             const baseRequest = {
                 recordKeyOrRecordName,
                 userId: subjectId,
+                instances,
             };
             const context = await this._policies.constructAuthorizationContext(
                 baseRequest
@@ -380,12 +387,14 @@ export class FileRecordsController {
         recordKeyOrRecordName: string,
         fileName: string,
         subjectId: string,
-        markers: string[]
+        markers: string[],
+        instances?: string[]
     ): Promise<UpdateFileRecordResult> {
         try {
             const baseRequest = {
                 recordKeyOrRecordName,
                 userId: subjectId,
+                instances,
             };
             const context = await this._policies.constructAuthorizationContext(
                 baseRequest
@@ -557,6 +566,11 @@ export interface RecordFileRequest {
      * The markers that should be applied to the file.
      */
     markers?: string[];
+
+    /**
+     * The instances that are currently loaded.
+     */
+    instances?: string[];
 }
 
 export type RecordFileResult = RecordFileSuccess | RecordFileFailure;

@@ -2139,7 +2139,16 @@ describe('RecordsHttpServer', () => {
                     success: false,
                     errorCode: 'unacceptable_request',
                     errorMessage:
-                        'recordName is required and must be a string.',
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName is required.',
+                            path: ['recordName'],
+                            received: 'undefined',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -2158,7 +2167,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'eventName is required and must be a string.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'eventName is required.',
+                            path: ['eventName'],
+                            received: 'undefined',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -2429,6 +2448,173 @@ describe('RecordsHttpServer', () => {
             });
         });
 
+        it('should delete the data if the user has permission', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await manualDataController.recordData(
+                recordKey,
+                'testAddress',
+                'hello, world!',
+                userId,
+                null,
+                null,
+                ['secret']
+            );
+
+            const result = await server.handleRequest(
+                httpDelete(
+                    '/api/v2/records/manual/data',
+                    JSON.stringify({
+                        recordKey: recordName,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    address: 'testAddress',
+                    recordName,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await manualDataStore.getData(
+                recordName,
+                'testAddress'
+            );
+
+            expect(data).toEqual({
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
+
+        it('should return not_authorized if the user does not have permission', async () => {
+            await manualDataController.recordData(
+                recordKey,
+                'testAddress',
+                'hello, world!',
+                userId,
+                null,
+                null,
+                ['secret']
+            );
+
+            const result = await server.handleRequest(
+                httpDelete(
+                    '/api/v2/records/manual/data',
+                    JSON.stringify({
+                        recordKey: recordName,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        permission: 'data.delete',
+                        role: null,
+                        marker: 'secret',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await manualDataStore.getData(
+                recordName,
+                'testAddress'
+            );
+
+            expect(data).toEqual({
+                success: true,
+                data: 'hello, world!',
+                publisherId: userId,
+                subjectId: userId,
+                deletePolicy: true,
+                updatePolicy: true,
+                markers: ['secret'],
+            });
+        });
+
+        it('should return not_authorized if the inst does not have permission', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await manualDataController.recordData(
+                recordKey,
+                'testAddress',
+                'hello, world!',
+                userId,
+                null,
+                null,
+                ['secret']
+            );
+
+            const result = await server.handleRequest(
+                httpDelete(
+                    '/api/v2/records/manual/data',
+                    JSON.stringify({
+                        recordKey: recordName,
+                        address: 'testAddress',
+                        instances: ['inst'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'inst',
+                        permission: 'data.delete',
+                        role: null,
+                        marker: 'secret',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await manualDataStore.getData(
+                recordName,
+                'testAddress'
+            );
+
+            expect(data).toEqual({
+                success: true,
+                data: 'hello, world!',
+                publisherId: userId,
+                subjectId: userId,
+                deletePolicy: true,
+                updatePolicy: true,
+                markers: ['secret'],
+            });
+        });
+
         it('should return an unacceptable_request result when given a non-string recordKey', async () => {
             const result = await server.handleRequest(
                 httpDelete(
@@ -2560,6 +2746,116 @@ describe('RecordsHttpServer', () => {
             });
         });
 
+        it('should return a 401 when the user needs to be logged in', async () => {
+            await manualDataController.recordData(
+                recordKey,
+                'testAddress',
+                'hello, world!',
+                userId,
+                null,
+                null,
+                ['secret']
+            );
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/manual/data?recordName=${recordName}&address=testAddress`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return a 403 when the user is not authorized', async () => {
+            await manualDataController.recordData(
+                recordKey,
+                'testAddress',
+                'hello, world!',
+                userId,
+                null,
+                null,
+                ['secret']
+            );
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/manual/data?recordName=${recordName}&address=testAddress`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        permission: 'data.read',
+                        marker: 'secret',
+                        role: null,
+                    },
+                },
+                headers: corsHeaders(apiHeaders['origin']),
+            });
+        });
+
+        it('should return a 403 when the inst is not authorized', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await manualDataController.recordData(
+                recordKey,
+                'testAddress',
+                'hello, world!',
+                userId,
+                null,
+                null,
+                ['secret']
+            );
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/manual/data?recordName=${recordName}&address=testAddress&instances=${'inst'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'inst',
+                        permission: 'data.read',
+                        marker: 'secret',
+                        role: null,
+                    },
+                },
+                headers: corsHeaders(apiHeaders['origin']),
+            });
+        });
+
         it('should return an unacceptable_request result when not given a recordName', async () => {
             const result = await server.handleRequest(
                 httpGet(
@@ -2574,7 +2870,16 @@ describe('RecordsHttpServer', () => {
                     success: false,
                     errorCode: 'unacceptable_request',
                     errorMessage:
-                        'recordName is required and must be a string.',
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName is required.',
+                            path: ['recordName'],
+                            received: 'undefined',
+                        },
+                    ],
                 },
                 headers: corsHeaders(defaultHeaders['origin']),
             });
@@ -2593,7 +2898,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'address is required and must be a string.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'address is required.',
+                            path: ['address'],
+                            received: 'undefined',
+                        },
+                    ],
                 },
                 headers: corsHeaders(defaultHeaders['origin']),
             });
@@ -2710,6 +3025,91 @@ describe('RecordsHttpServer', () => {
                 updatePolicy: true,
                 deletePolicy: true,
                 markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should reject the request if the user is not authorized', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/manual/data`,
+                    JSON.stringify({
+                        recordKey: recordName,
+                        address: 'testAddress',
+                        data: 'hello, world',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        permission: 'data.create',
+                        marker: 'publicRead',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await dataStore.getData(recordName, 'testAddress');
+            expect(data).toEqual({
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: 'The data was not found.',
+            });
+        });
+
+        it('should reject the request if the inst is not authorized', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/manual/data`,
+                    JSON.stringify({
+                        recordKey: recordName,
+                        address: 'testAddress',
+                        data: 'hello, world',
+                        instances: ['inst'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        permission: 'data.create',
+                        marker: 'publicRead',
+                        kind: 'inst',
+                        id: 'inst',
+                        role: null,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await dataStore.getData(recordName, 'testAddress');
+            expect(data).toEqual({
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: 'The data was not found.',
             });
         });
 
@@ -2929,6 +3329,48 @@ describe('RecordsHttpServer', () => {
             });
         });
 
+        it('should support instances', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpDelete(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey: recordName,
+                        fileUrl,
+                        instances: ['inst'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'inst',
+                        permission: 'file.delete',
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await filesStore.getFileRecord(recordName, fileName);
+            expect(data).toMatchObject({
+                success: true,
+            });
+        });
+
         it('should return an unacceptable_request if given a non-string recordKey', async () => {
             const result = await server.handleRequest(
                 httpDelete(
@@ -3133,6 +3575,110 @@ describe('RecordsHttpServer', () => {
                 url: `${recordName}/${hash}.json`,
                 uploaded: false,
                 markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should support markers', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const hash = getHash('hello');
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey: recordName,
+                        fileSha256Hex: hash,
+                        fileByteLength: 10,
+                        fileMimeType: 'application/json',
+                        fileDescription: 'description',
+                        markers: ['secret'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    uploadUrl: `http://localhost:9191/${recordName}/${hash}.json`,
+                    fileName: `${hash}.json`,
+                    uploadMethod: 'POST',
+                    uploadHeaders: {
+                        'content-type': 'application/json',
+                        'record-name': recordName,
+                    },
+                    markers: ['secret'],
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await filesStore.getFileRecord(
+                recordName,
+                `${hash}.json`
+            );
+            expect(data).toEqual({
+                success: true,
+                recordName: 'testRecord',
+                fileName: `${hash}.json`,
+                publisherId: userId,
+                subjectId: userId,
+                sizeInBytes: 10,
+                description: 'description',
+                url: `${recordName}/${hash}.json`,
+                uploaded: false,
+                markers: ['secret'],
+            });
+        });
+
+        it('should support instances', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const hash = getHash('hello');
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/file`,
+                    JSON.stringify({
+                        recordKey: recordName,
+                        fileSha256Hex: hash,
+                        fileByteLength: 10,
+                        fileMimeType: 'application/json',
+                        fileDescription: 'description',
+                        instances: ['inst'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'inst',
+                        permission: 'file.create',
+                        role: null,
+                        marker: PUBLIC_READ_MARKER,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await filesStore.getFileRecord(
+                recordName,
+                `${hash}.json`
+            );
+            expect(data).toMatchObject({
+                success: false,
             });
         });
 
@@ -3957,6 +4503,164 @@ describe('RecordsHttpServer', () => {
             });
         });
 
+        it('should delete the data if the user has permission', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await dataController.recordData(
+                recordKey,
+                'testAddress',
+                'hello, world!',
+                userId,
+                null,
+                null,
+                ['secret']
+            );
+
+            const result = await server.handleRequest(
+                httpDelete(
+                    '/api/v2/records/data',
+                    JSON.stringify({
+                        recordKey: recordName,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    address: 'testAddress',
+                    recordName,
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await dataStore.getData(recordName, 'testAddress');
+
+            expect(data).toEqual({
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
+
+        it('should return not_authorized if the user does not have permission', async () => {
+            await dataController.recordData(
+                recordKey,
+                'testAddress',
+                'hello, world!',
+                userId,
+                null,
+                null,
+                ['secret']
+            );
+
+            const result = await server.handleRequest(
+                httpDelete(
+                    '/api/v2/records/data',
+                    JSON.stringify({
+                        recordKey: recordName,
+                        address: 'testAddress',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        permission: 'data.delete',
+                        role: null,
+                        marker: 'secret',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await dataStore.getData(recordName, 'testAddress');
+
+            expect(data).toEqual({
+                success: true,
+                data: 'hello, world!',
+                publisherId: userId,
+                subjectId: userId,
+                deletePolicy: true,
+                updatePolicy: true,
+                markers: ['secret'],
+            });
+        });
+
+        it('should return not_authorized if the inst does not have permission', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await dataController.recordData(
+                recordKey,
+                'testAddress',
+                'hello, world!',
+                userId,
+                null,
+                null,
+                ['secret']
+            );
+
+            const result = await server.handleRequest(
+                httpDelete(
+                    '/api/v2/records/data',
+                    JSON.stringify({
+                        recordKey: recordName,
+                        address: 'testAddress',
+                        instances: ['inst'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'inst',
+                        permission: 'data.delete',
+                        role: null,
+                        marker: 'secret',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await dataStore.getData(recordName, 'testAddress');
+
+            expect(data).toEqual({
+                success: true,
+                data: 'hello, world!',
+                publisherId: userId,
+                subjectId: userId,
+                deletePolicy: true,
+                updatePolicy: true,
+                markers: ['secret'],
+            });
+        });
+
         it('should return an unacceptable_request if given a non-string recordKey', async () => {
             const result = await server.handleRequest(
                 httpDelete(
@@ -4091,6 +4795,116 @@ describe('RecordsHttpServer', () => {
             });
         });
 
+        it('should return a 401 when the user needs to be logged in', async () => {
+            await dataController.recordData(
+                recordKey,
+                'testAddress',
+                'hello, world!',
+                userId,
+                null,
+                null,
+                ['secret']
+            );
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/data?recordName=${recordName}&address=testAddress`,
+                    defaultHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 401,
+                body: {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                },
+                headers: corsHeaders(defaultHeaders['origin']),
+            });
+        });
+
+        it('should return a 403 when the user is not authorized', async () => {
+            await dataController.recordData(
+                recordKey,
+                'testAddress',
+                'hello, world!',
+                userId,
+                null,
+                null,
+                ['secret']
+            );
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/data?recordName=${recordName}&address=testAddress`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        permission: 'data.read',
+                        marker: 'secret',
+                        role: null,
+                    },
+                },
+                headers: corsHeaders(apiHeaders['origin']),
+            });
+        });
+
+        it('should return a 403 when the inst is not authorized', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await dataController.recordData(
+                recordKey,
+                'testAddress',
+                'hello, world!',
+                userId,
+                null,
+                null,
+                ['secret']
+            );
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/data?recordName=${recordName}&address=testAddress&instances=${'inst'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'inst',
+                        id: 'inst',
+                        permission: 'data.read',
+                        marker: 'secret',
+                        role: null,
+                    },
+                },
+                headers: corsHeaders(apiHeaders['origin']),
+            });
+        });
+
         it('should return an unacceptable_request result when not given a recordName', async () => {
             const result = await server.handleRequest(
                 httpGet(
@@ -4105,7 +4919,16 @@ describe('RecordsHttpServer', () => {
                     success: false,
                     errorCode: 'unacceptable_request',
                     errorMessage:
-                        'recordName is required and must be a string.',
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName is required.',
+                            path: ['recordName'],
+                            received: 'undefined',
+                        },
+                    ],
                 },
                 headers: corsHeaders(defaultHeaders['origin']),
             });
@@ -4124,7 +4947,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'address is required and must be a string.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'address is required.',
+                            path: ['address'],
+                            received: 'undefined',
+                        },
+                    ],
                 },
                 headers: corsHeaders(defaultHeaders['origin']),
             });
@@ -4250,6 +5083,129 @@ describe('RecordsHttpServer', () => {
             });
         });
 
+        it('should list what the user can access', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await dataController.recordData(
+                recordKey,
+                'address3',
+                'crazy message!',
+                userId,
+                null,
+                null,
+                ['secret']
+            );
+            await dataController.recordData(
+                recordKey,
+                'address1',
+                'hello, world!',
+                userId,
+                null,
+                null,
+                ['secret']
+            );
+            await dataController.recordData(
+                recordKey,
+                'address2',
+                'other message!',
+                userId,
+                null,
+                null,
+                ['secret']
+            );
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/data/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    items: [
+                        {
+                            address: 'address3',
+                            data: 'crazy message!',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'address1',
+                            data: 'hello, world!',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'address2',
+                            data: 'other message!',
+                            markers: ['secret'],
+                        },
+                    ],
+                },
+                headers: corsHeaders(apiHeaders['origin']),
+            });
+        });
+
+        it('should list what the inst can access', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            await dataController.recordData(
+                recordKey,
+                'address3',
+                'crazy message!',
+                userId,
+                null,
+                null,
+                ['secret']
+            );
+            await dataController.recordData(
+                recordKey,
+                'address1',
+                'hello, world!',
+                userId,
+                null,
+                null
+            );
+            await dataController.recordData(
+                recordKey,
+                'address2',
+                'other message!',
+                userId,
+                null,
+                null,
+                ['secret']
+            );
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/data/list?recordName=${recordName}&instances=${'inst'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    items: [
+                        {
+                            address: 'address1',
+                            data: 'hello, world!',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                },
+                headers: corsHeaders(apiHeaders['origin']),
+            });
+        });
+
         it('should return an unacceptable_request result when not given a recordName', async () => {
             const result = await server.handleRequest(
                 httpGet(
@@ -4264,7 +5220,16 @@ describe('RecordsHttpServer', () => {
                     success: false,
                     errorCode: 'unacceptable_request',
                     errorMessage:
-                        'recordName is required and must be a string.',
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName is required.',
+                            path: ['recordName'],
+                            received: 'undefined',
+                        },
+                    ],
                 },
                 headers: corsHeaders(defaultHeaders['origin']),
             });
@@ -4357,6 +5322,91 @@ describe('RecordsHttpServer', () => {
                 updatePolicy: true,
                 deletePolicy: true,
                 markers: [PUBLIC_READ_MARKER],
+            });
+        });
+
+        it('should reject the request if the user is not authorized', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/data`,
+                    JSON.stringify({
+                        recordKey: recordName,
+                        address: 'testAddress',
+                        data: 'hello, world',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        permission: 'data.create',
+                        marker: 'publicRead',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await dataStore.getData(recordName, 'testAddress');
+            expect(data).toEqual({
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: 'The data was not found.',
+            });
+        });
+
+        it('should reject the request if the inst is not authorized', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/data`,
+                    JSON.stringify({
+                        recordKey: recordName,
+                        address: 'testAddress',
+                        data: 'hello, world',
+                        instances: ['inst'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        permission: 'data.create',
+                        marker: 'publicRead',
+                        kind: 'inst',
+                        id: 'inst',
+                        role: null,
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const data = await dataStore.getData(recordName, 'testAddress');
+            expect(data).toEqual({
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: 'The data was not found.',
             });
         });
 
@@ -4700,6 +5750,99 @@ describe('RecordsHttpServer', () => {
             });
         });
 
+        it('should deny the request if the user is not authorized', async () => {
+            delete policyStore.roles[recordName][userId];
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/policy/grantPermission`,
+                    JSON.stringify({
+                        recordName,
+                        marker: 'test',
+                        permission: {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        id: userId,
+                        kind: 'user',
+                        marker: 'account',
+                        permission: 'policy.grantPermission',
+                        role: null,
+                        type: 'missing_permission',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const policy = await policyStore.getUserPolicy(recordName, 'test');
+
+            expect(policy).toEqual({
+                success: false,
+                errorCode: 'policy_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
+
+        it('should deny the request if the inst is not authorized', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/policy/grantPermission`,
+                    JSON.stringify({
+                        recordName,
+                        marker: 'test',
+                        permission: {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        instances: ['inst'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        id: 'inst',
+                        kind: 'inst',
+                        marker: 'account',
+                        permission: 'policy.grantPermission',
+                        role: null,
+                        type: 'missing_permission',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const policy = await policyStore.getUserPolicy(recordName, 'test');
+
+            expect(policy).toEqual({
+                success: false,
+                errorCode: 'policy_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
+
         it('should return an unacceptable_request result when given a non-string marker', async () => {
             const result = await server.handleRequest(
                 httpPost(
@@ -4909,6 +6052,115 @@ describe('RecordsHttpServer', () => {
                 success: true,
                 document: {
                     permissions: [],
+                },
+                markers: [ACCOUNT_MARKER],
+            });
+        });
+
+        it('should deny the request if the user is not authorized', async () => {
+            delete policyStore.roles[recordName][userId];
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/policy/revokePermission`,
+                    JSON.stringify({
+                        recordName,
+                        marker: 'test',
+                        permission: {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        id: userId,
+                        kind: 'user',
+                        marker: 'account',
+                        permission: 'policy.revokePermission',
+                        role: null,
+                        type: 'missing_permission',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const policy = await policyStore.getUserPolicy(recordName, 'test');
+
+            expect(policy).toEqual({
+                success: true,
+                document: {
+                    permissions: [
+                        {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                },
+                markers: [ACCOUNT_MARKER],
+            });
+        });
+
+        it('should deny the request if the inst is not authorized', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/records/policy/revokePermission`,
+                    JSON.stringify({
+                        recordName,
+                        marker: 'test',
+                        permission: {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                        instances: ['inst'],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        id: 'inst',
+                        kind: 'inst',
+                        marker: 'account',
+                        permission: 'policy.revokePermission',
+                        role: null,
+                        type: 'missing_permission',
+                    },
+                },
+                headers: apiCorsHeaders,
+            });
+
+            const policy = await policyStore.getUserPolicy(recordName, 'test');
+
+            expect(policy).toEqual({
+                success: true,
+                document: {
+                    permissions: [
+                        {
+                            type: 'data.read',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
                 },
                 markers: [ACCOUNT_MARKER],
             });
