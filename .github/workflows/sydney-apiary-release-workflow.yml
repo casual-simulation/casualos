@@ -30,7 +30,7 @@ jobs:
                   npm run bootstrap
             - name: Test
               run: |
-                  npx jest src/casual-apiary-aws --detectOpenHandles --forceExit --no-cache
+                  npx jest src/casual-apiary --detectOpenHandles --forceExit --no-cache
             - name: Build
               run: |
                   npm run build:apiary:aws
