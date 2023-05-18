@@ -39,6 +39,7 @@
 -   Fixed an issue where `os.beginAudioRecording` would fail to provide audio chunks in stream mode if the mimeType was anything other than `audio/x-raw`.
 -   Fixed some potential issues with the `tempShared` and `remoteTempShared` spaces.
 -   Fixed an issue creating a bot with a `null` tag value would cause the null value to become visible after a refresh.
+-   Fixed an issue where a player disconnect event may not be sent if the server failed to message the disconnected player before it processed the disconnection.
 
 ## V3.1.28
 
