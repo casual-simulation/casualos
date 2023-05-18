@@ -26,6 +26,15 @@
     -   A `formOpacity` value of `1` means that the bot's mesh materials are effectively in their default opacity and transparency state.
     -   A `formOpacity` value `< 1` means that the bot's mesh materials become transparent and that the `formOpacity` value is used to modify each material's default opacity level.
     -   A `formOpacity` value of `0` would effectively make the bot invisible.
+-   Added several functions to help manage policies and roles:
+    -   `os.grantRecordMarkerPermission()`
+    -   `os.revokeRecordMarkerPermission()`
+    -   `os.grantInstAdminPermission()`
+    -   `os.grantUserRole()`
+    -   `os.grantInstRole()`
+    -   `os.revokeUserRole()`
+    -   `os.revokeInstRole()`
+    -   See the documentation for more information.
 
 ### :bug: Bug Fixes
 
