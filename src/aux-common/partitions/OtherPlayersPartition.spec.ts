@@ -69,6 +69,8 @@ describe('OtherPlayersPartition', () => {
     let sub: Subscription;
 
     let device1 = deviceInfo('device1', 'device1Id', 'device1SessionId');
+    let device2 = deviceInfo('device2', 'device2Id', 'device2SessionId');
+    let device3 = deviceInfo('device3', 'device3Id', 'device3SessionId');
 
     describe('connection', () => {
         describe('causal_repo_client', () => {
@@ -2119,6 +2121,502 @@ describe('OtherPlayersPartition', () => {
                                 protocol: 'updates',
                                 siteId: expect.any(String),
                             },
+                        },
+                    ]);
+                });
+
+                it('should handle when two connected events are recieved from the same device', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages.slice(1)).toEqual([
+                        {
+                            name: WATCH_BRANCH,
+                            data: {
+                                branch: 'testBranch-player-device1SessionId',
+                                temporary: true,
+                                siteId: expect.any(String),
+                                protocol: 'updates',
+                            },
+                        },
+                    ]);
+
+                    const state = partition.state;
+
+                    await tempPartition.applyEvents([
+                        botAdded(
+                            createBot('test1', {
+                                abc: 'def',
+                            })
+                        ),
+                    ]);
+
+                    const update = fromByteArray(
+                        encodeStateAsUpdate(tempPartition.doc)
+                    );
+
+                    addUpdates.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        updates: [update],
+                        initial: true,
+                    });
+
+                    await waitAsync();
+
+                    expect(added).toEqual([
+                        createBot('test1', {
+                            abc: 'def',
+                        }),
+                    ]);
+                    expect(partition.state).toEqual({
+                        test1: createBot('test1', {
+                            abc: 'def',
+                        }),
+                    });
+
+                    // Should make a new state object on updates.
+                    // This is because AuxHelper expects this in order for its caching to work properly.
+                    expect(partition.state).not.toBe(state);
+                    expect(updates).toEqual([
+                        {
+                            state: {
+                                test1: createBot('test1', {
+                                    abc: 'def',
+                                }),
+                            },
+                            addedBots: ['test1'],
+                            removedBots: [],
+                            updatedBots: [],
+                            version: null,
+                        },
+                    ]);
+                });
+
+                it('should handle when two disconnected events are recieved from the same device', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+
+                    deviceDisconnected.next({
+                        broadcast: false,
+                        branch: 'testBranch',
+                        device: device1,
+                    });
+
+                    deviceDisconnected.next({
+                        broadcast: false,
+                        branch: 'testBranch',
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages.slice(1)).toEqual([]);
+                    expect(partition.state).toEqual({});
+                });
+
+                it('should handle when a device is connected and disconnected at the same time', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
+
+                    deviceDisconnected.next({
+                        broadcast: false,
+                        branch: 'testBranch',
+                        device: device1,
+                    });
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages.slice(1)).toEqual([
+                        {
+                            name: WATCH_BRANCH,
+                            data: {
+                                branch: 'testBranch-player-device1SessionId',
+                                temporary: true,
+                                siteId: expect.any(String),
+                                protocol: 'updates',
+                            },
+                        },
+                        {
+                            name: UNWATCH_BRANCH,
+                            data: 'testBranch-player-device1SessionId',
+                        },
+                    ]);
+
+                    const state = partition.state;
+
+                    await tempPartition.applyEvents([
+                        botAdded(
+                            createBot('test1', {
+                                abc: 'def',
+                            })
+                        ),
+                    ]);
+
+                    const update = fromByteArray(
+                        encodeStateAsUpdate(tempPartition.doc)
+                    );
+
+                    addUpdates.next({
+                        branch: 'testBranch-player-device1SessionId',
+                        updates: [update],
+                        initial: true,
+                    });
+
+                    await waitAsync();
+
+                    expect(added).toEqual([]);
+                    expect(partition.state).toEqual({});
+
+                    // Should make a new state object on updates.
+                    // This is because AuxHelper expects this in order for its caching to work properly.
+                    expect(partition.state).toBe(state);
+                    expect(updates).toEqual([]);
+                });
+
+                it('should handle when multiple devices disconnect at the same time', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device2,
+                    });
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device3,
+                    });
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages.slice(1)).toEqual([
+                        {
+                            name: WATCH_BRANCH,
+                            data: {
+                                branch: 'testBranch-player-device1SessionId',
+                                temporary: true,
+                                siteId: expect.any(String),
+                                protocol: 'updates',
+                            },
+                        },
+                        {
+                            name: WATCH_BRANCH,
+                            data: {
+                                branch: 'testBranch-player-device2SessionId',
+                                temporary: true,
+                                siteId: expect.any(String),
+                                protocol: 'updates',
+                            },
+                        },
+                        {
+                            name: WATCH_BRANCH,
+                            data: {
+                                branch: 'testBranch-player-device3SessionId',
+                                temporary: true,
+                                siteId: expect.any(String),
+                                protocol: 'updates',
+                            },
+                        },
+                    ]);
+
+                    deviceDisconnected.next({
+                        broadcast: false,
+                        branch: 'testBranch',
+                        device: device2,
+                    });
+
+                    deviceDisconnected.next({
+                        broadcast: false,
+                        branch: 'testBranch',
+                        device: device1,
+                    });
+
+                    deviceDisconnected.next({
+                        broadcast: false,
+                        branch: 'testBranch',
+                        device: device3,
+                    });
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages.slice(4)).toEqual([
+                        {
+                            name: UNWATCH_BRANCH,
+                            data: 'testBranch-player-device2SessionId',
+                        },
+                        {
+                            name: UNWATCH_BRANCH,
+                            data: 'testBranch-player-device1SessionId',
+                        },
+                        {
+                            name: UNWATCH_BRANCH,
+                            data: 'testBranch-player-device3SessionId',
+                        },
+                    ]);
+                });
+
+                it('should not send unwatch events when the connection is lost', async () => {
+                    partition.connect();
+
+                    await waitAsync();
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device2,
+                    });
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device3,
+                    });
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages.slice(1)).toEqual([
+                        {
+                            name: WATCH_BRANCH,
+                            data: {
+                                branch: 'testBranch-player-device1SessionId',
+                                temporary: true,
+                                siteId: expect.any(String),
+                                protocol: 'updates',
+                            },
+                        },
+                        {
+                            name: WATCH_BRANCH,
+                            data: {
+                                branch: 'testBranch-player-device2SessionId',
+                                temporary: true,
+                                siteId: expect.any(String),
+                                protocol: 'updates',
+                            },
+                        },
+                        {
+                            name: WATCH_BRANCH,
+                            data: {
+                                branch: 'testBranch-player-device3SessionId',
+                                temporary: true,
+                                siteId: expect.any(String),
+                                protocol: 'updates',
+                            },
+                        },
+                    ]);
+
+                    connection.disconnect();
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages.slice(4)).toEqual([]);
+                });
+
+                it('should handle when the connection is disconnected and then reconnected at the same time', async () => {
+                    partition.connect();
+
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe((e) => events.push(...e));
+
+                    await waitAsync();
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device1,
+                    });
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device2,
+                    });
+
+                    deviceConnected.next({
+                        broadcast: false,
+                        branch: {
+                            branch: 'testBranch',
+                        },
+                        device: device3,
+                    });
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages.slice(1)).toEqual([
+                        {
+                            name: WATCH_BRANCH,
+                            data: {
+                                branch: 'testBranch-player-device1SessionId',
+                                temporary: true,
+                                siteId: expect.any(String),
+                                protocol: 'updates',
+                            },
+                        },
+                        {
+                            name: WATCH_BRANCH,
+                            data: {
+                                branch: 'testBranch-player-device2SessionId',
+                                temporary: true,
+                                siteId: expect.any(String),
+                                protocol: 'updates',
+                            },
+                        },
+                        {
+                            name: WATCH_BRANCH,
+                            data: {
+                                branch: 'testBranch-player-device3SessionId',
+                                temporary: true,
+                                siteId: expect.any(String),
+                                protocol: 'updates',
+                            },
+                        },
+                    ]);
+
+                    expect(events).toEqual([
+                        action(ON_REMOTE_JOINED_ACTION_NAME, null, null, {
+                            remoteId: 'device1SessionId',
+                        }),
+                        action(
+                            ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
+                            null,
+                            null,
+                            {
+                                playerId: 'device1SessionId',
+                            }
+                        ),
+                        action(ON_REMOTE_JOINED_ACTION_NAME, null, null, {
+                            remoteId: 'device2SessionId',
+                        }),
+                        action(
+                            ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
+                            null,
+                            null,
+                            {
+                                playerId: 'device2SessionId',
+                            }
+                        ),
+                        action(ON_REMOTE_JOINED_ACTION_NAME, null, null, {
+                            remoteId: 'device3SessionId',
+                        }),
+                        action(
+                            ON_REMOTE_PLAYER_SUBSCRIBED_ACTION_NAME,
+                            null,
+                            null,
+                            {
+                                playerId: 'device3SessionId',
+                            }
+                        ),
+                    ]);
+
+                    events = [];
+
+                    connection.disconnect();
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        action(ON_REMOTE_LEAVE_ACTION_NAME, null, null, {
+                            remoteId: 'device1SessionId',
+                        }),
+                        action(
+                            ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
+                            null,
+                            null,
+                            {
+                                playerId: 'device1SessionId',
+                            }
+                        ),
+                        action(ON_REMOTE_LEAVE_ACTION_NAME, null, null, {
+                            remoteId: 'device2SessionId',
+                        }),
+                        action(
+                            ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
+                            null,
+                            null,
+                            {
+                                playerId: 'device2SessionId',
+                            }
+                        ),
+                        action(ON_REMOTE_LEAVE_ACTION_NAME, null, null, {
+                            remoteId: 'device3SessionId',
+                        }),
+                        action(
+                            ON_REMOTE_PLAYER_UNSUBSCRIBED_ACTION_NAME,
+                            null,
+                            null,
+                            {
+                                playerId: 'device3SessionId',
+                            }
+                        ),
+                    ]);
+
+                    connection.connect();
+
+                    await waitAsync();
+
+                    expect(connection.sentMessages.slice(4)).toEqual([
+                        {
+                            name: WATCH_BRANCH_DEVICES,
+                            data: 'testBranch',
                         },
                     ]);
                 });

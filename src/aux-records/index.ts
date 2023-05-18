@@ -21,3 +21,11 @@ export * from './RecordsHttpServer';
 
 export * from './SubscriptionController';
 export * from './StripeInterface';
+
+export * from './MemoryRateLimiter';
+export * from './RateLimitController';
+
+export * from './PolicyController';
+export * from './PolicyPermissions';
+export * from './PolicyStore';
+export * from './MemoryPolicyStore';

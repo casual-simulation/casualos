@@ -191,6 +191,7 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
         this.display = new Group();
         this.scaleContainer = new Group();
         this.transformContainer = new Group();
+        this.transformContainer.userData.isBotTransformContainer = true;
         this.add(this.container);
         this.container.add(this.scaleContainer);
         this.scaleContainer.add(this.display);

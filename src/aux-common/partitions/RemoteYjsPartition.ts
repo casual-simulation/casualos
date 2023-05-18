@@ -68,6 +68,7 @@ import {
     CreateInitializationUpdateAction,
     InstUpdate,
     ApplyUpdatesToInstAction,
+    ON_SPACE_MAX_SIZE_REACHED,
 } from '../bots';
 import {
     PartitionConfig,
@@ -132,6 +133,7 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
     protected _hasRegisteredSubs = false;
     private _sub = new Subscription();
 
+    private _emittedMaxSizeReached: boolean = false;
     private _localId: number;
     private _remoteId: number;
     private _doc: Doc = new Doc();
@@ -638,6 +640,30 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                             } else {
                                 this._onEvents.next([event.action]);
                             }
+                        } else if (event.type === 'error') {
+                            if (event.errorCode === 'max_size_reached') {
+                                if (!this._emittedMaxSizeReached) {
+                                    console.log(
+                                        '[RemoteYjsPartition] Max size reached!',
+                                        this.space
+                                    );
+                                    this._emittedMaxSizeReached = true;
+                                    this._onEvents.next([
+                                        action(
+                                            ON_SPACE_MAX_SIZE_REACHED,
+                                            null,
+                                            null,
+                                            {
+                                                space: this.space,
+                                                maxSizeInBytes:
+                                                    event.maxBranchSizeInBytes,
+                                                neededSizeInBytes:
+                                                    event.neededBranchSizeInBytes,
+                                            }
+                                        ),
+                                    ]);
+                                }
+                            }
                         }
                     },
                     (err) => this._onError.next(err)
@@ -701,9 +727,13 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                             const val = ensureTagIsSerializable(
                                 event.bot.tags[tag]
                             );
-                            const yVal =
-                                typeof val === 'string' ? new Text(val) : val;
-                            map.set(tag, yVal);
+                            if (hasValue(val)) {
+                                const yVal =
+                                    typeof val === 'string'
+                                        ? new Text(val)
+                                        : val;
+                                map.set(tag, yVal);
+                            }
                         }
 
                         if (this.space && event.bot.masks) {
@@ -714,12 +744,13 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                                     const val = ensureTagIsSerializable(
                                         tags[tag]
                                     );
-                                    const yVal =
-                                        typeof val === 'string'
-                                            ? new Text(val)
-                                            : val;
-
-                                    this._masks.set(maskId, yVal);
+                                    if (hasValue(val)) {
+                                        const yVal =
+                                            typeof val === 'string'
+                                                ? new Text(val)
+                                                : val;
+                                        this._masks.set(maskId, yVal);
+                                    }
                                 }
                             }
                         }
@@ -907,12 +938,14 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         for (let [key, value] of map.entries()) {
             const val = map.get(key);
             let finalVal: string | number | boolean | object;
-            if (val instanceof Text) {
-                finalVal = val.toString();
-            } else {
-                finalVal = val;
+            if (hasValue(val)) {
+                if (val instanceof Text) {
+                    finalVal = val.toString();
+                } else {
+                    finalVal = val;
+                }
+                tags[key] = finalVal;
             }
-            tags[key] = finalVal;
         }
 
         return createBot(id, tags);

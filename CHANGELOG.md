@@ -1,5 +1,55 @@
 # CasualOS Changelog
 
+## V3.1.29
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `@onSpaceMaxSizeReached` shout.
+    -   This is a shout that is sent when a space has reached its maximum persistent storage size.
+    -   `that` is an object with the following properties:
+        -   `space` - The space that reached is maximum storage size. Generally, this is `shared`.
+        -   `maxSizeInBytes` - The maximum allowed size for the space in bytes.
+        -   `neededSizeInBytes` - The number of bytes that would be needed to store the data that was placed in the space.
+    -   Note that this only applies to persistent storage. That is, if you create a bot in the `shared` space and receive this shout, then it is possible that the bot was not persistently stored and shared, but it is still available by scripts until the browser tab is refreshed or the PC is restarted.
+    -   Generally, if you receive this shout, then it is a good idea to backup your inst.
+-   Added configurable support for IP-based rate limiting.
+    -   Applies to websockets as well as the API.
+    -   Requires a Redis connection and is configurable by the following environment variables:
+        -   `RATE_LIMIT_MAX` - The maximum number of requests that can be recieved from an IP address over the window.
+        -   `RATE_LIMIT_WINDOW_MS` - The size of the window for requests represented in miliseconds.
+    -   If any of the above environment variables are not specified, then rate limiting will be disabled.
+-   Added API support for policies and roles.
+    -   In the future, additional functions will be added to CasualOS to make accessing these new capabilities easier.
+-   Added `formOpacity` tag, which allows bots to be semi-transparent.
+    -   A `formOpacity` value of `1` means that the bot's mesh materials are effectively in their default opacity and transparency state.
+    -   A `formOpacity` value `< 1` means that the bot's mesh materials become transparent and that the `formOpacity` value is used to modify each material's default opacity level.
+    -   A `formOpacity` value of `0` would effectively make the bot invisible.
+-   Added several functions to help manage policies and roles:
+    -   `os.grantRecordMarkerPermission()`
+    -   `os.revokeRecordMarkerPermission()`
+    -   `os.grantInstAdminPermission()`
+    -   `os.grantUserRole()`
+    -   `os.grantInstRole()`
+    -   `os.revokeUserRole()`
+    -   `os.revokeInstRole()`
+    -   See the documentation for more information.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where `os.getMediaPermission` would leave tracks in a MediaStream running. Some browsers/devices release these automatically, while others would leave the tracks running and cause issues with other systems that utilize audio and video hardware like augmented reality.
+-   Fixed an issue where `data:` URLs would not work in the `formAddress` tag without a workaround.
+-   Fixed an issue where it was impossible to create record keys on deployments that did not have a subscription configuration.
+-   Fixed an issue where the bounding objects of a transformed bot did not update if its `transformer` moved.
+    -   This fixes a reported bug with `lineTo` to updating correctly while using the `transformer` tag. [Issue #276](https://github.com/casual-simulation/casualos/issues/276)
+-   Fixed an issue where the `color` tag would not apply to all materials in a gltf model.
+-   Fixed an issue where gltf models with multiple materials and textures would not be properly disposed.
+-   Fixed an issue where `os.beginAudioRecording` would fail to provide audio chunks in stream mode if the mimeType was anything other than `audio/x-raw`.
+-   Fixed some potential issues with the `tempShared` and `remoteTempShared` spaces.
+-   Fixed an issue creating a bot with a `null` tag value would cause the null value to become visible after a refresh.
+-   Fixed an issue where a player disconnect event may not be sent if the server failed to message the disconnected player before it processed the disconnection.
+
 ## V3.1.28
 
 #### Date: 3/22/2023

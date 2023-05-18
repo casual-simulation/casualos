@@ -989,6 +989,21 @@ For GLTF forms, this should be the URL of the GLTF file that contains the animat
   </PossibleValue>
 </PossibleValuesTable>
 
+### `formOpacity`
+
+The opacity of the bot's form. Allows bots to be semi-transparent.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='1'>
+    (default)
+  </PossibleValueCode>
+  <PossibleValue value='Any Number >= 0 and <= 1'>
+    The bot's form will use the given opacity.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `formRenderOrder`
 
 The render order that should be used for this bot in the grid portals.
@@ -3130,17 +3145,17 @@ If there is only one tag and it ends with an extension like specified above then
 
 1. Request the JSON of the Bot with the given ID:
 ```
-https://auxplayer.com?inst=my-aux&dataPortal=bf68e5cc-993b-42fd-a142-a23de6d2cdcb
+https://auxplayer.org?inst=my-aux&dataPortal=bf68e5cc-993b-42fd-a142-a23de6d2cdcb
 ```
 
 2. Request all the <TagLink tag='label'/> tags values.
 ```
-https://auxplayer.com?inst=my-aux&dataPortal=label
+https://auxplayer.org?inst=my-aux&dataPortal=label
 ```
 
 3. Request a web page from the `test.html` tag.
 ```
-https://auxplayer.com?inst=my-aux&dataPortal=test.html
+https://auxplayer.org?inst=my-aux&dataPortal=test.html
 ```
 
 ### `mousePointerPosition`

@@ -152,6 +152,8 @@ export class MongoDBAuthStore implements AuthStore {
                     openAiKey: user.openAiKey,
                     subscriptionStatus: user.subscriptionStatus,
                     subscriptionId: user.subscriptionId,
+                    banTimeMs: user.banTimeMs,
+                    banReason: user.banReason,
                 },
             },
             {
@@ -192,6 +194,8 @@ export class MongoDBAuthStore implements AuthStore {
             subscriptionStatus: user.subscriptionStatus,
             subscriptionId: user.subscriptionId,
             openAiKey: user.openAiKey,
+            banTimeMs: user.banTimeMs,
+            banReason: user.banReason,
         });
 
         return {
@@ -379,6 +383,8 @@ export interface MongoDBAuthUser {
     subscriptionStatus?: string;
     subscriptionId?: string;
     openAiKey?: string;
+    banTimeMs?: number;
+    banReason?: AuthUser['banReason'];
 }
 
 export interface MongoDBLoginRequest {

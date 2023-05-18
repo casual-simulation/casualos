@@ -15,6 +15,8 @@ let folders = [
     `${__dirname}/src/aux-vm-node`,
     `${__dirname}/src/aux-vm-browser`,
     `${__dirname}/src/aux-vm-deno`,
+    `${__dirname}/src/causal-apiary`,
+    `${__dirname}/src/causal-apiary-redis`,
     `${__dirname}/src/causal-trees`,
     `${__dirname}/src/causal-tree-server`,
     `${__dirname}/src/causal-tree-server-websocket`,
@@ -40,6 +42,7 @@ let folders = [
     `${__dirname}/src/timesync`,
     `${__dirname}/src/js-interpreter`,
     `${__dirname}/src/vue-shortkey`,
+    `${__dirname}/src/rate-limit-redis`,
 ];
 
 let patterns = [

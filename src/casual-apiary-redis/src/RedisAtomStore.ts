@@ -1,9 +1,8 @@
 import { Atom, atomIdToString } from '@casual-simulation/causal-trees';
-import { ApiaryAtomStore } from './ApiaryAtomStore';
+import { ApiaryAtomStore } from '@casual-simulation/casual-apiary';
 import { sortBy } from 'lodash';
 import { RedisClient } from 'redis';
 import { promisify } from 'util';
-import { spanify } from './Utils';
 
 /**
  * The size, in bytes, of the maximum request that should be made with redis.
@@ -41,30 +40,12 @@ export class RedisAtomStore implements ApiaryAtomStore {
         this._globalNamespace = globalNamespace;
         this._redis = client;
 
-        this.del = spanify(
-            'Redis DEL',
-            promisify(this._redis.del).bind(this._redis)
-        );
-        this.hset = spanify(
-            'Redis HSET',
-            promisify(this._redis.hset).bind(this._redis)
-        );
-        this.hdel = spanify(
-            'Redis HDEL',
-            promisify(this._redis.hdel).bind(this._redis)
-        );
-        this.hvals = spanify(
-            'Redis HVALS',
-            promisify(this._redis.hvals).bind(this._redis)
-        );
-        this.hlen = spanify(
-            'Redis HLEN',
-            promisify(this._redis.hlen).bind(this._redis)
-        );
-        this.hscan = spanify(
-            'Redis HSCAN',
-            promisify(this._redis.hscan).bind(this._redis)
-        );
+        this.del = promisify(this._redis.del).bind(this._redis);
+        this.hset = promisify(this._redis.hset).bind(this._redis);
+        this.hdel = promisify(this._redis.hdel).bind(this._redis);
+        this.hvals = promisify(this._redis.hvals).bind(this._redis);
+        this.hlen = promisify(this._redis.hlen).bind(this._redis);
+        this.hscan = promisify(this._redis.hscan).bind(this._redis);
     }
 
     async saveAtoms(namespace: string, atoms: Atom<any>[]): Promise<void> {

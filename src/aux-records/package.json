@@ -38,7 +38,9 @@
     },
     "dependencies": {
         "@casual-simulation/crypto": "^3.1.23",
+        "@casual-simulation/rate-limit-redis": "^3.0.1",
         "livekit-server-sdk": "1.0.2",
-        "tweetnacl": "1.0.3"
+        "tweetnacl": "1.0.3",
+        "zod": "3.21.4"
     }
 }

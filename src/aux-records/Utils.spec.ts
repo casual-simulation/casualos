@@ -1,3 +1,4 @@
+import { PUBLIC_READ_MARKER } from './PolicyPermissions';
 import {
     toBase64String,
     fromBase64String,
@@ -13,6 +14,8 @@ import {
     tryParseJson,
     isStringValid,
     isActiveSubscription,
+    getMarkersOrDefault,
+    parseInstancesList,
 } from './Utils';
 
 const cases = [['abc', 'YWJj']];
@@ -435,6 +438,23 @@ describe('encodeHexUtf8()', () => {
     );
 });
 
+describe('parseInstancesList()', () => {
+    it('should return undefined if given an empty string', () => {
+        expect(parseInstancesList('')).toEqual(undefined);
+    });
+    it('should return the instance name', () => {
+        expect(parseInstancesList('inst')).toEqual(['inst']);
+    });
+
+    it('should split by comma', () => {
+        expect(parseInstancesList('inst1,inst2')).toEqual(['inst1', 'inst2']);
+    });
+
+    it('should ignore empty instance names', () => {
+        expect(parseInstancesList('inst1,,inst2')).toEqual(['inst1', 'inst2']);
+    });
+});
+
 describe('getStatusCode()', () => {
     it('should return 200 when given a success result', () => {
         expect(getStatusCode({ success: true })).toBe(200);
@@ -472,6 +492,9 @@ describe('getStatusCode()', () => {
         ['operation_not_found', 404] as const,
         ['other', 400] as const,
         ['price_does_not_match', 412] as const,
+        ['user_is_banned', 403] as const,
+        ['rate_limit_exceeded', 429] as const,
+        ['not_authorized', 403] as const,
     ];
 
     it.each(cases)('should map error code %s to %s', (code, expectedStatus) => {
@@ -604,5 +627,19 @@ describe('isActiveSubscription()', () => {
 
     it.each(statusTypes)('should map %s to %s', (status, expected) => {
         expect(isActiveSubscription(status)).toBe(expected);
+    });
+});
+
+describe('getMarkersOrDefault()', () => {
+    it('should return the given list of markers', () => {
+        expect(getMarkersOrDefault(['abc', 'def'])).toEqual(['abc', 'def']);
+    });
+
+    it('should return the default markers if the given list is empty', () => {
+        expect(getMarkersOrDefault([])).toEqual([PUBLIC_READ_MARKER]);
+    });
+
+    it('should return the default markers if the given list is null', () => {
+        expect(getMarkersOrDefault(null)).toEqual([PUBLIC_READ_MARKER]);
     });
 });

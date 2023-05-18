@@ -1,6 +1,8 @@
 import {
     FileRecordsStore,
     GetFileNameFromUrlResult,
+    PresignFileReadRequest,
+    PresignFileReadResult,
     signRequest,
 } from '@casual-simulation/aux-records';
 import {
@@ -11,8 +13,13 @@ import {
     MarkFileRecordAsUploadedResult,
     EraseFileStoreResult,
 } from '@casual-simulation/aux-records';
+import { UpdateFileResult } from '@casual-simulation/aux-records/FileRecordsStore';
+import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-records/PolicyPermissions';
 import AWS from 'aws-sdk';
 import dynamodb from 'aws-sdk/clients/dynamodb';
+
+export const EMPTY_STRING_SHA256_HASH_HEX =
+    'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 
 /**
  * Defines a class that can manage file records in DynamoDB and S3.
@@ -113,7 +120,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
             'content-type': request.fileMimeType,
             'content-length': request.fileByteLength.toString(),
             'cache-control': 'max-age=31536000',
-            'x-amz-acl': 'public-read',
+            'x-amz-acl': s3AclForMarkers(request.markers),
             'x-amz-storage-class': this._storageClass,
             host: fileUrl.host,
         };
@@ -149,6 +156,60 @@ export class DynamoDBFileStore implements FileRecordsStore {
         };
     }
 
+    async presignFileRead(
+        request: PresignFileReadRequest
+    ): Promise<PresignFileReadResult> {
+        const credentials = await this._getCredentials();
+
+        const secretAccessKey = credentials
+            ? credentials.secretAccessKey
+            : null;
+        const accessKeyId = credentials ? credentials.accessKeyId : null;
+
+        const now = request.date ?? new Date();
+        const fileUrl = this._fileUrl(request.recordName, request.fileName);
+        const requiredHeaders = {
+            host: fileUrl.host,
+        };
+
+        if (credentials && credentials.sessionToken) {
+            (requiredHeaders as any)['x-amz-security-token'] =
+                credentials.sessionToken;
+        }
+
+        const result = signRequest(
+            {
+                method: 'GET',
+                payloadSha256Hex: EMPTY_STRING_SHA256_HASH_HEX,
+                headers: {
+                    ...request.headers,
+                    ...requiredHeaders,
+                },
+                queryString: {
+                    'response-cache-control': 'max-age=31536000',
+                },
+                path: fileUrl.pathname,
+            },
+            secretAccessKey,
+            accessKeyId,
+            now,
+            this._region,
+            's3'
+        );
+
+        const url = new URL(fileUrl.href);
+        for (let key in result.queryString) {
+            url.searchParams.set(key, result.queryString[key]);
+        }
+
+        return {
+            success: true,
+            requestUrl: url.href,
+            requestHeaders: result.headers,
+            requestMethod: result.method,
+        };
+    }
+
     async getFileRecord(
         recordName: string,
         fileName: string
@@ -177,6 +238,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
                     sizeInBytes: file.sizeInBytes,
                     uploaded: file.uploadTime !== null,
                     url: url.href,
+                    markers: file.markers,
                 };
             } else {
                 return {
@@ -201,7 +263,8 @@ export class DynamoDBFileStore implements FileRecordsStore {
         publisherId: string,
         subjectId: string,
         sizeInBytes: number,
-        description: string
+        description: string,
+        markers: string[]
     ): Promise<AddFileResult> {
         try {
             const publishTime = Date.now();
@@ -214,6 +277,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
                 description,
                 publishTime,
                 uploadTime: null,
+                markers,
             };
 
             await this._dynamo
@@ -237,6 +301,52 @@ export class DynamoDBFileStore implements FileRecordsStore {
                     success: false,
                     errorCode: 'file_already_exists',
                     errorMessage: 'The file already exists.',
+                };
+            } else {
+                console.error(err);
+                return {
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'An unexpected error occurred.',
+                };
+            }
+        }
+    }
+
+    async updateFileRecord(
+        recordName: string,
+        fileName: string,
+        markers: string[]
+    ): Promise<UpdateFileResult> {
+        try {
+            await this._dynamo
+                .update({
+                    TableName: this._tableName,
+                    Key: {
+                        recordName: recordName,
+                        fileName: fileName,
+                    },
+                    ConditionExpression:
+                        'attribute_exists(recordName) AND attribute_exists(fileName)',
+                    UpdateExpression: 'SET markers = :markers',
+                    ExpressionAttributeValues: {
+                        ':markers': markers,
+                    },
+                })
+                .promise();
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            if (
+                err instanceof Error &&
+                err.name === 'ConditionalCheckFailedException'
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'file_not_found',
+                    errorMessage: 'The file was not found.',
                 };
             } else {
                 console.error(err);
@@ -380,6 +490,18 @@ export class DynamoDBFileStore implements FileRecordsStore {
 }
 
 /**
+ * Gets the Access Control List (ACL) that should be used for files uploaded with the given markers.
+ * @param markers The markers that are applied to the file.
+ */
+export function s3AclForMarkers(markers: readonly string[]): string {
+    if (markers.some((m) => m === PUBLIC_READ_MARKER)) {
+        return 'public-read';
+    }
+
+    return 'private';
+}
+
+/**
  * Defines the interface that file records stored in DynamoDB adhere to.
  */
 interface StoredFile {
@@ -422,4 +544,9 @@ interface StoredFile {
      * The time that the file was uploaded. Null if the file has not been uploaded.
      */
     uploadTime: number;
+
+    /**
+     * The markers that have been applied to the file.
+     */
+    markers?: string[] | null;
 }

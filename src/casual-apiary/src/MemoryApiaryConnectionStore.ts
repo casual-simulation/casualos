@@ -112,6 +112,19 @@ export class MemoryApiaryConnectionStore implements ApiaryConnectionStore {
         this._connections.delete(connectionId);
     }
 
+    expireConnection(connectionId: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            setTimeout(async () => {
+                try {
+                    await this.clearConnection(connectionId);
+                    resolve();
+                } catch (err) {
+                    reject(err);
+                }
+            }, 10);
+        });
+    }
+
     async getConnectionsByNamespace(
         namespace: string
     ): Promise<DeviceNamespaceConnection[]> {
