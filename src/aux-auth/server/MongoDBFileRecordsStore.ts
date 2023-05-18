@@ -7,6 +7,9 @@ import {
     MarkFileRecordAsUploadedResult,
     EraseFileStoreResult,
     GetFileNameFromUrlResult,
+    UpdateFileResult,
+    PresignFileReadRequest,
+    PresignFileReadResult,
 } from '@casual-simulation/aux-records';
 import { Collection } from 'mongodb';
 
@@ -67,6 +70,20 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
         };
     }
 
+    async presignFileRead(
+        request: PresignFileReadRequest
+    ): Promise<PresignFileReadResult> {
+        return {
+            success: true,
+            requestHeaders: {
+                ...request.headers,
+                'record-name': request.recordName,
+            },
+            requestMethod: 'POST',
+            requestUrl: `${this._fileUploadUrl}/${request.fileName}`,
+        };
+    }
+
     async getFileRecord(
         recordName: string,
         fileName: string
@@ -94,6 +111,7 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
             subjectId: record.subjectId,
             sizeInBytes: record.sizeInBytes,
             uploaded: record.uploaded,
+            markers: record.markers,
         };
     }
 
@@ -103,7 +121,8 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
         publisherId: string,
         subjectId: string,
         sizeInBytes: number,
-        description: string
+        description: string,
+        markers: string[]
     ): Promise<AddFileResult> {
         const record = await this._collection.findOne({
             recordName,
@@ -126,7 +145,38 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
             sizeInBytes,
             description,
             uploaded: false,
+            markers,
         });
+
+        return {
+            success: true,
+        };
+    }
+
+    async updateFileRecord(
+        recordName: string,
+        fileName: string,
+        markers: string[]
+    ): Promise<UpdateFileResult> {
+        const result = await this._collection.updateOne(
+            {
+                recordName,
+                fileName,
+            },
+            {
+                $set: {
+                    markers,
+                },
+            }
+        );
+
+        if (result.modifiedCount <= 0) {
+            return {
+                success: false,
+                errorCode: 'file_not_found',
+                errorMessage: 'The file was not found in the store.',
+            };
+        }
 
         return {
             success: true,
@@ -198,4 +248,5 @@ export interface FileRecord {
     sizeInBytes: number;
     description: string;
     uploaded: boolean;
+    markers?: string[];
 }

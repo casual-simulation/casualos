@@ -2,7 +2,7 @@
 
 ## V3.1.29
 
-#### Date: 5/11/2023
+#### Date: 5/18/2023
 
 ### :rocket: Improvements
 
@@ -20,10 +20,21 @@
         -   `RATE_LIMIT_MAX` - The maximum number of requests that can be recieved from an IP address over the window.
         -   `RATE_LIMIT_WINDOW_MS` - The size of the window for requests represented in miliseconds.
     -   If any of the above environment variables are not specified, then rate limiting will be disabled.
+-   Added API support for policies and roles.
+    -   In the future, additional functions will be added to CasualOS to make accessing these new capabilities easier.
 -   Added `formOpacity` tag, which allows bots to be semi-transparent.
     -   A `formOpacity` value of `1` means that the bot's mesh materials are effectively in their default opacity and transparency state.
     -   A `formOpacity` value `< 1` means that the bot's mesh materials become transparent and that the `formOpacity` value is used to modify each material's default opacity level.
     -   A `formOpacity` value of `0` would effectively make the bot invisible.
+-   Added several functions to help manage policies and roles:
+    -   `os.grantRecordMarkerPermission()`
+    -   `os.revokeRecordMarkerPermission()`
+    -   `os.grantInstAdminPermission()`
+    -   `os.grantUserRole()`
+    -   `os.grantInstRole()`
+    -   `os.revokeUserRole()`
+    -   `os.revokeInstRole()`
+    -   See the documentation for more information.
 
 ### :bug: Bug Fixes
 
@@ -34,6 +45,10 @@
     -   This fixes a reported bug with `lineTo` to updating correctly while using the `transformer` tag. [Issue #276](https://github.com/casual-simulation/casualos/issues/276)
 -   Fixed an issue where the `color` tag would not apply to all materials in a gltf model.
 -   Fixed an issue where gltf models with multiple materials and textures would not be properly disposed.
+-   Fixed an issue where `os.beginAudioRecording` would fail to provide audio chunks in stream mode if the mimeType was anything other than `audio/x-raw`.
+-   Fixed some potential issues with the `tempShared` and `remoteTempShared` spaces.
+-   Fixed an issue creating a bot with a `null` tag value would cause the null value to become visible after a refresh.
+-   Fixed an issue where a player disconnect event may not be sent if the server failed to message the disconnected player before it processed the disconnection.
 
 ## V3.1.28
 

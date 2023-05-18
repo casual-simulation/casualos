@@ -33,7 +33,8 @@ export class DynamoDBDataStore implements DataRecordsStore {
         publisherId: string,
         subjectId: string,
         updatePolicy: UserPolicy,
-        deletePolicy: UserPolicy
+        deletePolicy: UserPolicy,
+        markers: string[]
     ): Promise<SetDataResult> {
         const item: StoredData = {
             recordName: recordName,
@@ -44,6 +45,7 @@ export class DynamoDBDataStore implements DataRecordsStore {
             publishTime: Date.now(),
             updatePolicy: updatePolicy,
             deletePolicy: deletePolicy,
+            markers: markers,
         };
         const result = await this._dynamo
             .put({
@@ -130,6 +132,7 @@ export class DynamoDBDataStore implements DataRecordsStore {
                 subjectId: item.subjectId,
                 updatePolicy: item.updatePolicy,
                 deletePolicy: item.deletePolicy,
+                markers: item.markers,
             };
         }
 
@@ -209,6 +212,7 @@ export class DynamoDBDataStore implements DataRecordsStore {
         let items: ListDataStoreResult['items'] = result.Items.map((i) => ({
             address: i.address,
             data: i.data,
+            markers: i.markers,
         }));
 
         return {
@@ -258,4 +262,9 @@ interface StoredData {
      * The delete policy for the item.
      */
     deletePolicy?: UserPolicy;
+
+    /**
+     * The list of markers for the item.
+     */
+    markers?: string[];
 }

@@ -20,24 +20,35 @@ import {
     SetRoomOptionsAction,
     GetRoomOptionsAction,
     RoomJoinOptions,
+    GrantRecordMarkerPermissionAction,
+    RevokeRecordMarkerPermissionAction,
+    GrantInstAdminPermissionAction,
+    GrantRoleAction,
+    RevokeRoleAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
 import type { AxiosResponse, AxiosRequestConfig } from 'axios';
 import { AuthHelperInterface } from './AuthHelperInterface';
 import { BotHelper } from './BotHelper';
-import type {
+import {
     EraseFileResult,
     GetDataResult,
     ListDataResult,
     RecordDataResult,
     RecordFileResult,
     IssueMeetTokenResult,
+    isRecordKey,
+    GrantMarkerPermissionResponse,
+    RevokeMarkerPermissionResult,
+    GrantRoleResult,
+    RevokeRoleResult,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import '@casual-simulation/aux-common/runtime/BlobPolyfill';
 import { Observable, Subject } from 'rxjs';
+import { DateTime } from 'luxon';
 
 /**
  * The list of headers that JavaScript applications are not allowed to set by themselves.
@@ -149,6 +160,16 @@ export class RecordsManager {
                 this._setRoomOptions(event);
             } else if (event.type === 'get_room_options') {
                 this._getRoomOptions(event);
+            } else if (event.type === 'grant_record_marker_permission') {
+                this._grantRecordMarkerPermission(event);
+            } else if (event.type === 'revoke_record_marker_permission') {
+                this._revokeRecordMarkerPermission(event);
+            } else if (event.type === 'grant_inst_admin_permission') {
+                this._grantInstAdminPermission(event);
+            } else if (event.type === 'grant_role') {
+                this._grantRole(event);
+            } else if (event.type === 'revoke_role') {
+                this._revokeRole(event);
             }
         }
     }
@@ -170,6 +191,14 @@ export class RecordsManager {
                 address: event.address,
                 data: event.data,
             };
+
+            if (hasValue(this._helper.inst)) {
+                requestData.instances = [this._helper.inst];
+            }
+
+            if (hasValue(event.options.markers)) {
+                requestData.markers = event.options.markers;
+            }
 
             if (hasValue(event.options.updatePolicy)) {
                 requestData.updatePolicy = event.options.updatePolicy;
@@ -232,6 +261,12 @@ export class RecordsManager {
                 return;
             }
 
+            let instances: string[] = undefined;
+
+            if (this._helper.inst) {
+                instances = [this._helper.inst];
+            }
+
             if (hasValue(event.taskId)) {
                 const result: AxiosResponse<GetDataResult> = await axios.get(
                     await this._publishUrl(
@@ -242,6 +277,7 @@ export class RecordsManager {
                         {
                             recordName: event.recordName,
                             address: event.address,
+                            instances,
                         }
                     ),
                     {
@@ -297,11 +333,17 @@ export class RecordsManager {
                 return;
             }
 
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.inst)) {
+                instances = [this._helper.inst];
+            }
+
             if (hasValue(event.taskId)) {
                 const result: AxiosResponse<ListDataResult> = await axios.get(
                     await this._publishUrl(auth, '/api/v2/records/data/list', {
                         recordName: event.recordName,
                         address: event.startingAddress || null,
+                        instances,
                     }),
                     {
                         ...this._axiosOptions,
@@ -334,6 +376,11 @@ export class RecordsManager {
 
             console.log('[RecordsManager] Deleting data...', event);
 
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.inst)) {
+                instances = [this._helper.inst];
+            }
+
             const result: AxiosResponse<RecordDataResult> = await axios.request(
                 {
                     ...this._axiosOptions,
@@ -347,6 +394,7 @@ export class RecordsManager {
                     data: {
                         recordKey: event.recordKey,
                         address: event.address,
+                        instances,
                     },
                     headers: info.headers,
                 }
@@ -474,6 +522,11 @@ export class RecordsManager {
                 }
             }
 
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.inst)) {
+                instances = [this._helper.inst];
+            }
+
             const result: AxiosResponse<RecordFileResult> = await axios.post(
                 await this._publishUrl(info.auth, '/api/v2/records/file'),
                 {
@@ -482,6 +535,8 @@ export class RecordsManager {
                     fileMimeType: mimeType,
                     fileByteLength: byteLength,
                     fileDescription: event.description,
+                    markers: event.options?.markers,
+                    instances,
                 },
                 {
                     ...this._axiosOptions,
@@ -559,6 +614,11 @@ export class RecordsManager {
 
             console.log('[RecordsManager] Deleting file...', event);
 
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.inst)) {
+                instances = [this._helper.inst];
+            }
+
             const result: AxiosResponse<EraseFileResult> = await axios.request({
                 ...this._axiosOptions,
                 method: 'DELETE',
@@ -566,6 +626,7 @@ export class RecordsManager {
                 data: {
                     recordKey: event.recordKey,
                     fileUrl: event.fileUrl,
+                    instances,
                 },
                 headers: info.headers,
             });
@@ -597,6 +658,11 @@ export class RecordsManager {
 
             console.log('[RecordsManager] Recording event...', event);
 
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.inst)) {
+                instances = [this._helper.inst];
+            }
+
             const result: AxiosResponse<RecordDataResult> = await axios.post(
                 await this._publishUrl(
                     info.auth,
@@ -606,6 +672,7 @@ export class RecordsManager {
                     recordKey: event.recordKey,
                     eventName: event.eventName,
                     count: event.count,
+                    instances,
                 },
                 {
                     ...this._axiosOptions,
@@ -650,6 +717,10 @@ export class RecordsManager {
             }
 
             if (hasValue(event.taskId)) {
+                let instances: string[] = undefined;
+                if (hasValue(this._helper.inst)) {
+                    instances = [this._helper.inst];
+                }
                 const result: AxiosResponse<GetDataResult> = await axios.get(
                     await this._publishUrl(
                         auth,
@@ -657,6 +728,7 @@ export class RecordsManager {
                         {
                             recordName: event.recordName,
                             eventName: event.eventName,
+                            instances,
                         }
                     ),
                     { ...this._axiosOptions }
@@ -863,6 +935,268 @@ export class RecordsManager {
         }
     }
 
+    private async _grantRecordMarkerPermission(
+        event: GrantRecordMarkerPermissionAction
+    ) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            console.log(
+                '[RecordsManager] Granting policy permission...',
+                event
+            );
+            let requestData: any = {
+                recordName: event.recordName,
+                marker: event.marker,
+                permission: event.permission,
+                instances: [this._helper.inst],
+            };
+
+            const result: AxiosResponse<RevokeMarkerPermissionResult> =
+                await axios.post(
+                    await this._publishUrl(
+                        info.auth,
+                        '/api/v2/records/policy/grantPermission'
+                    ),
+                    requestData,
+                    {
+                        ...this._axiosOptions,
+                        headers: info.headers,
+                    }
+                );
+
+            if (result.data.success) {
+                console.log('[RecordsManager] Permission granted!');
+            }
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error(
+                '[RecordsManager] Error granting policy permission:',
+                e
+            );
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _revokeRecordMarkerPermission(
+        event: RevokeRecordMarkerPermissionAction
+    ) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            console.log(
+                '[RecordsManager] Revoking policy permission...',
+                event
+            );
+            let requestData: any = {
+                recordName: event.recordName,
+                marker: event.marker,
+                permission: event.permission,
+                instances: [this._helper.inst],
+            };
+
+            const result: AxiosResponse<RevokeMarkerPermissionResult> =
+                await axios.post(
+                    await this._publishUrl(
+                        info.auth,
+                        '/api/v2/records/policy/revokePermission'
+                    ),
+                    requestData,
+                    {
+                        ...this._axiosOptions,
+                        headers: info.headers,
+                    }
+                );
+
+            if (result.data.success) {
+                console.log('[RecordsManager] Permission revoked!');
+            }
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error(
+                '[RecordsManager] Error revoking policy permission:',
+                e
+            );
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _grantInstAdminPermission(
+        event: GrantInstAdminPermissionAction
+    ) {
+        if (!event[APPROVED_SYMBOL]) {
+            return;
+        }
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            const now = DateTime.now();
+            const plusOneDay = now.plus({ day: 1 });
+            const startOfNextDay = plusOneDay.set({
+                hour: 0,
+                minute: 0,
+                second: 0,
+                millisecond: 0,
+            });
+
+            console.log('[RecordsManager] Granting inst admin role...', event);
+            let requestData: any = {
+                recordName: event.recordName,
+                inst: this._helper.inst,
+                role: 'admin',
+                expireTimeMs: startOfNextDay.toMillis(),
+            };
+
+            const result: AxiosResponse<GrantRoleResult> = await axios.post(
+                await this._publishUrl(info.auth, '/api/v2/records/role/grant'),
+                requestData,
+                {
+                    ...this._axiosOptions,
+                    headers: info.headers,
+                }
+            );
+
+            if (result.data.success) {
+                console.log('[RecordsManager] Role granted!');
+            }
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error(
+                '[RecordsManager] Error granting inst admin role:',
+                e
+            );
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _grantRole(event: GrantRoleAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            console.log('[RecordsManager] Granting role...', event);
+            let requestData: any = {
+                recordName: event.recordName,
+                userId: event.userId,
+                inst: event.inst,
+                role: event.role,
+                expireTimeMs: event.expireTimeMs,
+                instances: [this._helper.inst],
+            };
+
+            const result: AxiosResponse<GrantRoleResult> = await axios.post(
+                await this._publishUrl(info.auth, '/api/v2/records/role/grant'),
+                requestData,
+                {
+                    ...this._axiosOptions,
+                    headers: info.headers,
+                }
+            );
+
+            if (result.data.success) {
+                console.log('[RecordsManager] Role granted!');
+            }
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error granting role:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _revokeRole(event: RevokeRoleAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            console.log('[RecordsManager] Revoking role...', event);
+            let requestData: any = {
+                recordName: event.recordName,
+                userId: event.userId,
+                inst: event.inst,
+                role: event.role,
+                instances: [this._helper.inst],
+            };
+
+            const result: AxiosResponse<RevokeRoleResult> = await axios.post(
+                await this._publishUrl(
+                    info.auth,
+                    '/api/v2/records/role/revoke'
+                ),
+                requestData,
+                {
+                    ...this._axiosOptions,
+                    headers: info.headers,
+                }
+            );
+
+            if (result.data.success) {
+                console.log('[RecordsManager] Role revoked!');
+            }
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error revoking role:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
     private async _resolveInfoForEvent(
         event:
             | RecordFileAction
@@ -870,6 +1204,11 @@ export class RecordsManager {
             | RecordDataAction
             | EraseRecordDataAction
             | RecordEventAction
+            | GrantRecordMarkerPermissionAction
+            | RevokeRecordMarkerPermissionAction
+            | GrantInstAdminPermissionAction
+            | GrantRoleAction
+            | RevokeRoleAction
     ): Promise<{
         error: boolean;
         auth: AuthHelperInterface;
@@ -894,30 +1233,37 @@ export class RecordsManager {
             };
         }
 
-        const policy = await auth.getRecordKeyPolicy(event.recordKey);
         let token: string;
         let headers: { [key: string]: string } = {};
+        if ('recordKey' in event && isRecordKey(event.recordKey)) {
+            const policy = await auth.getRecordKeyPolicy(event.recordKey);
 
-        if (policy !== 'subjectless') {
-            token = await this._getAuthToken(auth);
-            if (!token) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_logged_in',
-                            errorMessage: 'The user is not logged in.',
-                        } as RecordDataResult)
-                    );
+            if (policy !== 'subjectless') {
+                token = await this._getAuthToken(auth);
+                if (!token) {
+                    if (hasValue(event.taskId)) {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, {
+                                success: false,
+                                errorCode: 'not_logged_in',
+                                errorMessage: 'The user is not logged in.',
+                            } as RecordDataResult)
+                        );
+                    }
+                    return {
+                        error: true,
+                        auth: null,
+                        headers: null,
+                    };
                 }
-                return {
-                    error: true,
-                    auth: null,
-                    headers: null,
-                };
-            }
 
-            headers['Authorization'] = `Bearer ${token}`;
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+        } else {
+            token = await this._getAuthToken(auth);
+            if (hasValue(token)) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
         }
 
         return {
@@ -976,7 +1322,11 @@ export class RecordsManager {
         for (let key in queryParams) {
             const val = queryParams[key];
             if (hasValue(val)) {
-                url.searchParams.set(key, val);
+                if (Array.isArray(val)) {
+                    url.searchParams.set(key, val.join(','));
+                } else {
+                    url.searchParams.set(key, val);
+                }
             }
         }
 

@@ -1227,6 +1227,148 @@ describe('RemoteYjsPartition', () => {
                 expect(bot.get('abc')).toBe(123);
             });
 
+            it('should not store null values on new bots', async () => {
+                setupPartition({
+                    type: 'remote_yjs',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                });
+
+                partition.connect();
+
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('test1', {
+                            abc: null,
+                            def: 123,
+                        })
+                    ),
+                ]);
+                await waitAsync();
+
+                expect(connection.sentMessages.slice(1).length).toBe(1);
+
+                const addUpdatesMessage = connection.sentMessages[1];
+                expect(addUpdatesMessage.name).toEqual(ADD_UPDATES);
+                expect(addUpdatesMessage.data.branch).toEqual('testBranch');
+
+                const doc = createDocFromUpdates(
+                    addUpdatesMessage.data.updates
+                );
+                const bots = doc.getMap('bots');
+                expect(bots.size).toBe(1);
+
+                const bot: any = bots.get('test1');
+                expect(bot).not.toBeUndefined();
+                expect(bot.size).toBe(1);
+                expect(bot.has('abc')).toBe(false);
+                expect(bot.get('def')).toBe(123);
+            });
+
+            it('should be able to load existing bots', async () => {
+                setupPartition({
+                    type: 'remote_yjs',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                });
+
+                partition.connect();
+
+                const updates = getUpdates((doc, bots) => {
+                    bots.set(
+                        'bot1',
+                        new YMap([
+                            ['string', 'abc'],
+                            ['number', 123],
+                            ['boolean', true],
+                            [
+                                'object',
+                                {
+                                    abc: 'def',
+                                },
+                            ],
+                            ['array', [123, true]],
+                            ['null', null],
+                            ['undefined', undefined],
+                            ['empty', ''],
+                        ])
+                    );
+                    bots.set(
+                        'bot2',
+                        new YMap([
+                            ['string', 'abc'],
+                            ['number', 123],
+                            ['boolean', true],
+                            [
+                                'object',
+                                {
+                                    abc: 'def',
+                                },
+                            ],
+                            ['array', [123, true]],
+                            ['null', null],
+                            ['undefined', undefined],
+                            ['empty', ''],
+                        ])
+                    );
+                });
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    updates,
+                    initial: true,
+                });
+
+                await waitAsync();
+
+                expect(partition.state).toEqual({
+                    bot1: createBot('bot1', {
+                        string: 'abc',
+                        number: 123,
+                        boolean: true,
+                        object: {
+                            abc: 'def',
+                        },
+                        array: [123, true],
+                    }),
+                    bot2: createBot('bot2', {
+                        string: 'abc',
+                        number: 123,
+                        boolean: true,
+                        object: {
+                            abc: 'def',
+                        },
+                        array: [123, true],
+                    }),
+                });
+            });
+
+            it('should not load null values from existing bots', async () => {
+                setupPartition({
+                    type: 'remote_yjs',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                });
+
+                partition.connect();
+
+                const updates = getUpdates((doc, bots) => {
+                    bots.set('bot1', new YMap([['tag1', null]]));
+                });
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    updates,
+                    initial: true,
+                });
+
+                await waitAsync();
+
+                expect(partition.state).toEqual({
+                    bot1: createBot('bot1', {}),
+                });
+            });
+
             it('should not try to send remote updates to the server', async () => {
                 setupPartition({
                     type: 'remote_yjs',

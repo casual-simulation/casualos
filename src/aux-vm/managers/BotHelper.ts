@@ -48,6 +48,13 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     private _batchPromise: Promise<void>;
 
     /**
+     * The ID of the simulation that the VM is running.
+     */
+    get inst() {
+        return this._vm.id;
+    }
+
+    /**
      * Creates a new bot helper.
      * @param vm The VM that is in use.
      * @param batch Whether to batch bot updates together.
@@ -90,9 +97,9 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      * Updates the given bot with the given data.
      * @param bot The bot.
      * @param newData The new data that the bot should have.
-    */
+     */
     async updateBot(bot: Bot, newData: PartialBot): Promise<void> {
-        if (this._batchUpdates) {   
+        if (this._batchUpdates) {
             this._botUpdates.push(botUpdated(bot.id, newData));
             if (!this._batchPending) {
                 this._batchPending = true;

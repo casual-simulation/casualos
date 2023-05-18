@@ -29,5 +29,8 @@
         "yjs": "13.5.41"
     },
     "author": "Kallyn Gowdy <kal@casualsimulation.org>",
-    "license": "MIT"
+    "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    }
 }

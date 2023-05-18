@@ -5,8 +5,11 @@ import {
     GetFileNameFromUrlResult,
     GetFileRecordResult,
     MarkFileRecordAsUploadedResult,
+    PresignFileReadRequest,
+    PresignFileReadResult,
     PresignFileUploadRequest,
     PresignFileUploadResult,
+    UpdateFileResult,
 } from './FileRecordsStore';
 
 export class MemoryFileRecordsStore implements FileRecordsStore {
@@ -25,6 +28,20 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
             },
             uploadMethod: 'POST',
             uploadUrl: `${this._fileUploadUrl}/${request.recordName}/${request.fileName}`,
+        };
+    }
+
+    async presignFileRead(
+        request: PresignFileReadRequest
+    ): Promise<PresignFileReadResult> {
+        return {
+            success: true,
+            requestHeaders: {
+                ...request.headers,
+                'record-name': request.recordName,
+            },
+            requestMethod: 'GET',
+            requestUrl: `${this._fileUploadUrl}/${request.recordName}/${request.fileName}`,
         };
     }
 
@@ -84,6 +101,7 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
                 uploaded: file.uploaded,
                 description: file.description,
                 url: `${file.recordName}/${file.fileName}`,
+                markers: file.markers,
             };
         } else {
             return {
@@ -100,7 +118,8 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
         publisherId: string,
         subjectId: string,
         sizeInBytes: number,
-        description: string
+        description: string,
+        markers: string[]
     ): Promise<AddFileResult> {
         if (this._files.has(fileName)) {
             return {
@@ -117,10 +136,36 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
             subjectId,
             sizeInBytes,
             description,
+            markers,
             uploaded: false,
         };
 
         this._files.set(fileName, file);
+
+        return {
+            success: true,
+        };
+    }
+
+    async updateFileRecord(
+        recordName: string,
+        fileName: string,
+        markers: string[]
+    ): Promise<UpdateFileResult> {
+        if (!this._files.has(fileName)) {
+            return {
+                success: false,
+                errorCode: 'file_not_found',
+                errorMessage: 'The file was not found in the store.',
+            };
+        }
+
+        let file = this._files.get(fileName);
+
+        this._files.set(fileName, {
+            ...file,
+            markers: markers.slice(),
+        });
 
         return {
             success: true,
@@ -178,4 +223,5 @@ interface StoredFile {
     sizeInBytes: number;
     uploaded: boolean;
     description: string;
+    markers: string[];
 }

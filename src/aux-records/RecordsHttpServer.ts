@@ -1,8 +1,16 @@
-import { getStatusCode, tryDecodeUriComponent, tryParseJson } from './Utils';
+import {
+    getStatusCode,
+    parseInstancesList,
+    tryDecodeUriComponent,
+    tryParseJson,
+} from './Utils';
 import {
     AuthController,
     INVALID_KEY_ERROR_MESSAGE,
     INVALID_REQUEST_ERROR_MESSAGE,
+    MAX_EMAIL_ADDRESS_LENGTH,
+    MAX_OPEN_AI_API_KEY_LENGTH,
+    MAX_SMS_ADDRESS_LENGTH,
     ValidateSessionKeyResult,
 } from './AuthController';
 import { parseSessionKey } from './AuthUtils';
@@ -15,7 +23,11 @@ import {
     CreateManageSubscriptionRequest,
     SubscriptionController,
 } from './SubscriptionController';
+import { z } from 'zod';
+import { PublicRecordKeyPolicy } from './RecordsStore';
 import { RateLimitController } from './RateLimitController';
+import { AVAILABLE_PERMISSIONS_VALIDATION } from './PolicyPermissions';
+import { PolicyController } from './PolicyController';
 
 /**
  * Defines an interface for a generic HTTP request.
@@ -136,6 +148,54 @@ const UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON = {
 };
 
 /**
+ * The Zod validation for record keys.
+ */
+const RECORD_KEY_VALIDATION = z
+    .string({
+        invalid_type_error: 'recordKey must be a string.',
+        required_error: 'recordKey is required.',
+    })
+    .nonempty('recordKey must not be empty.');
+
+/**
+ * The Zod validation for addresses.
+ */
+const ADDRESS_VALIDATION = z
+    .string({
+        invalid_type_error: 'address must be a string.',
+        required_error: 'address is required.',
+    })
+    .nonempty('address must not be empty.');
+
+/**
+ * The Zod validation for event names.
+ */
+const EVENT_NAME_VALIDATION = z
+    .string({
+        invalid_type_error: 'eventName must be a string.',
+        required_error: 'eventName is required.',
+    })
+    .nonempty('eventName must not be empty.');
+
+/**
+ * The Zod validation for markers.
+ */
+const MARKERS_VALIDATION = z
+    .array(
+        z
+            .string({
+                invalid_type_error: 'individual markers must be strings.',
+                required_error: 'invidiaul markers must not be null or empty.',
+            })
+            .nonempty('invidiaul markers must not be null or empty.'),
+        {
+            invalid_type_error: 'markers must be an array of strings.',
+            required_error: 'markers is required.',
+        }
+    )
+    .nonempty('markers must not be empty.');
+
+/**
  * Defines a class that represents a generic HTTP server suitable for Records HTTP Requests.
  */
 export class RecordsHttpServer {
@@ -158,6 +218,7 @@ export class RecordsHttpServer {
      */
     private _allowedAccountOrigins: Set<string>;
     private _rateLimit: RateLimitController;
+    private _policyController: PolicyController;
 
     constructor(
         allowedAccountOrigins: Set<string>,
@@ -170,7 +231,8 @@ export class RecordsHttpServer {
         manualDataController: DataRecordsController,
         filesController: FileRecordsController,
         subscriptionController: SubscriptionController,
-        rateLimitController: RateLimitController
+        rateLimitController: RateLimitController,
+        policyController: PolicyController
     ) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -183,6 +245,7 @@ export class RecordsHttpServer {
         this._files = filesController;
         this._subscriptions = subscriptionController;
         this._rateLimit = rateLimitController;
+        this._policyController = policyController;
     }
 
     /**
@@ -357,6 +420,15 @@ export class RecordsHttpServer {
                 this._allowedApiOrigins
             );
         } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/records/events'
+        ) {
+            return formatResponse(
+                request,
+                await this._postRecordsEvents(request),
+                this._allowedApiOrigins
+            );
+        } else if (
             request.method === 'DELETE' &&
             request.path === '/api/v2/records/manual/data'
         ) {
@@ -384,6 +456,15 @@ export class RecordsHttpServer {
                 this._allowedApiOrigins
             );
         } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/file'
+        ) {
+            return formatResponse(
+                request,
+                await this._readFile(request),
+                this._allowedApiOrigins
+            );
+        } else if (
             request.method === 'DELETE' &&
             request.path === '/api/v2/records/file'
         ) {
@@ -399,6 +480,15 @@ export class RecordsHttpServer {
             return formatResponse(
                 request,
                 await this._recordFile(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'PUT' &&
+            request.path === '/api/v2/records/file'
+        ) {
+            return formatResponse(
+                request,
+                await this._updateFile(request),
                 this._allowedApiOrigins
             );
         } else if (
@@ -445,6 +535,87 @@ export class RecordsHttpServer {
             return formatResponse(
                 request,
                 await this._createRecordKey(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/records/policy/grantPermission'
+        ) {
+            return formatResponse(
+                request,
+                await this._policyGrantPermission(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/records/policy/revokePermission'
+        ) {
+            return formatResponse(
+                request,
+                await this._policyRevokePermission(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/policy'
+        ) {
+            return formatResponse(
+                request,
+                await this._policyRead(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/policy/list'
+        ) {
+            return formatResponse(
+                request,
+                await this._policyList(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/role/user/list'
+        ) {
+            return formatResponse(
+                request,
+                await this._roleUserList(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/role/inst/list'
+        ) {
+            return formatResponse(
+                request,
+                await this._roleInstList(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/role/assignments/list'
+        ) {
+            return formatResponse(
+                request,
+                await this._roleAssignmentsList(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/records/role/grant'
+        ) {
+            return formatResponse(
+                request,
+                await this._roleGrant(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/records/role/revoke'
+        ) {
+            return formatResponse(
+                request,
+                await this._roleRevoke(request),
                 this._allowedApiOrigins
             );
         } else if (request.method === 'OPTIONS') {
@@ -528,7 +699,24 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
-        const { recordName, policy } = jsonResult.value;
+        const schema = z.object({
+            recordName: z.string({
+                invalid_type_error: 'recordName must be a string.',
+                required_error: 'recordName is required.',
+            }),
+            policy: z.string({
+                invalid_type_error: 'policy must be a string.',
+                required_error: 'policy is required.',
+            }),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, policy } = parseResult.data;
 
         if (!recordName || typeof recordName !== 'string') {
             return returnResult({
@@ -548,8 +736,572 @@ export class RecordsHttpServer {
 
         const result = await this._records.createPublicRecordKey(
             recordName,
-            policy,
+            policy as PublicRecordKeyPolicy,
             validation.userId
+        );
+
+        return returnResult(result);
+    }
+
+    private async _policyGrantPermission(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must not be empty'),
+            marker: z
+                .string({
+                    invalid_type_error: 'marker must be a string.',
+                    required_error: 'marker is required.',
+                })
+                .nonempty('marker must not be empty'),
+            permission: AVAILABLE_PERMISSIONS_VALIDATION,
+            instances: z.array(z.string()).nonempty().optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, marker, permission, instances } = parseResult.data;
+
+        // const validation = ZOD_PERMISSION_MAP[permission.type as (keyof typeof ZOD_PERMISSION_MAP)];
+
+        // if (!validation) {
+        //     const validPermissionTypes = Object.keys(ZOD_PERMISSION_MAP).sort();
+        //     return returnResult({
+        //         success: false,
+        //         errorCode: 'unacceptable_request',
+        //         errorMessage: `Permission type not found. type must be one of: ${validPermissionTypes.join(', ')}`,
+        //     });
+        // }
+
+        // const validationParseResult = validation.safeParse(permission);
+        // if (validationParseResult.success === false) {
+        //     return returnZodError(validationParseResult.error);
+        // }
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._policyController.grantMarkerPermission({
+            recordKeyOrRecordName: recordName,
+            marker: marker,
+            userId: sessionKeyValidation.userId,
+            permission: permission as any,
+            instances,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _policyRevokePermission(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must not be empty'),
+            marker: z
+                .string({
+                    invalid_type_error: 'marker must be a string.',
+                    required_error: 'marker is required.',
+                })
+                .nonempty('marker must not be empty'),
+            permission: AVAILABLE_PERMISSIONS_VALIDATION,
+            instances: z.array(z.string()).nonempty().optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, marker, permission, instances } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._policyController.revokeMarkerPermission({
+            recordKeyOrRecordName: recordName,
+            marker: marker,
+            userId: sessionKeyValidation.userId,
+            permission: permission as any,
+            instances,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _policyRead(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must not be empty'),
+            marker: z
+                .string({
+                    invalid_type_error: 'marker must be a string.',
+                    required_error: 'marker is required.',
+                })
+                .nonempty('marker must not be empty'),
+        });
+
+        const parseResult = schema.safeParse(request.query);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, marker } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._policyController.readUserPolicy(
+            recordName,
+            sessionKeyValidation.userId,
+            marker
+        );
+
+        return returnResult(result);
+    }
+
+    private async _policyList(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must not be empty'),
+            startingMarker: z
+                .string({
+                    invalid_type_error: 'startingMarker must be a string.',
+                    required_error: 'startingMarker is required.',
+                })
+                .nonempty('startingMarker must not be empty')
+                .optional(),
+        });
+
+        const parseResult = schema.safeParse(request.query);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, startingMarker } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._policyController.listUserPolicies(
+            recordName,
+            sessionKeyValidation.userId,
+            startingMarker
+        );
+
+        return returnResult(result);
+    }
+
+    private async _roleUserList(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must not be empty'),
+            userId: z
+                .string({
+                    invalid_type_error: 'userId must be a string.',
+                    required_error: 'userId is required.',
+                })
+                .nonempty('userId must not be empty'),
+            instances: z
+                .string({
+                    invalid_type_error: 'instances must be a string.',
+                    required_error: 'instances is required.',
+                })
+                .nonempty('instances must not be empty')
+                .optional()
+                .transform((value) => parseInstancesList(value)),
+        });
+
+        const parseResult = schema.safeParse(request.query);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, userId, instances } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._policyController.listUserRoles(
+            recordName,
+            sessionKeyValidation.userId,
+            userId,
+            instances
+        );
+
+        return returnResult(result);
+    }
+
+    private async _roleInstList(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must not be empty'),
+            inst: z
+                .string({
+                    invalid_type_error: 'inst must be a string.',
+                    required_error: 'inst is required.',
+                })
+                .nonempty('inst must not be empty'),
+            instances: z
+                .string({
+                    invalid_type_error: 'instances must be a string.',
+                    required_error: 'instances is required.',
+                })
+                .nonempty('instances must not be empty')
+                .optional()
+                .transform((value) => parseInstancesList(value)),
+        });
+
+        const parseResult = schema.safeParse(request.query);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, inst, instances } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._policyController.listInstRoles(
+            recordName,
+            sessionKeyValidation.userId,
+            inst,
+            instances
+        );
+
+        return returnResult(result);
+    }
+
+    private async _roleAssignmentsList(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must not be empty'),
+            role: z
+                .string({
+                    invalid_type_error: 'role must be a string.',
+                    required_error: 'role is required.',
+                })
+                .nonempty('role must not be empty'),
+            instances: z
+                .string({
+                    invalid_type_error: 'instances must be a string.',
+                    required_error: 'instances is required.',
+                })
+                .nonempty('instances must not be empty')
+                .optional()
+                .transform((value) => parseInstancesList(value)),
+        });
+
+        const parseResult = schema.safeParse(request.query);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, role, instances } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._policyController.listRoleAssignments(
+            recordName,
+            sessionKeyValidation.userId,
+            role,
+            instances
+        );
+
+        return returnResult(result);
+    }
+
+    private async _roleGrant(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must not be empty'),
+            userId: z
+                .string({
+                    invalid_type_error: 'userId must be a string.',
+                    required_error: 'userId is required.',
+                })
+                .nonempty('userId must not be empty')
+                .optional(),
+            inst: z
+                .string({
+                    invalid_type_error: 'inst must be a string.',
+                    required_error: 'inst is required.',
+                })
+                .nonempty('inst must not be empty')
+                .optional(),
+            role: z
+                .string({
+                    invalid_type_error: 'role must be a string.',
+                    required_error: 'role is required.',
+                })
+                .nonempty('role must not be empty'),
+            expireTimeMs: z
+                .number({
+                    invalid_type_error: 'expireTimeMs must be a number.',
+                    required_error: 'expireTimeMs is required.',
+                })
+                .positive('expireTimeMs must be positive')
+                .optional(),
+            instances: z.array(z.string()).nonempty().optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, userId, inst, expireTimeMs, role, instances } =
+            parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._policyController.grantRole(
+            recordName,
+            sessionKeyValidation.userId,
+            {
+                instance: inst,
+                userId: userId,
+                role,
+                expireTimeMs,
+            },
+            instances
+        );
+
+        return returnResult(result);
+    }
+
+    private async _roleRevoke(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must not be empty'),
+            userId: z
+                .string({
+                    invalid_type_error: 'userId must be a string.',
+                    required_error: 'userId is required.',
+                })
+                .nonempty('userId must not be empty')
+                .optional(),
+            inst: z
+                .string({
+                    invalid_type_error: 'inst must be a string.',
+                    required_error: 'inst is required.',
+                })
+                .nonempty('inst must not be empty')
+                .optional(),
+            role: z
+                .string({
+                    invalid_type_error: 'role must be a string.',
+                    required_error: 'role is required.',
+                })
+                .nonempty('role must not be empty'),
+            instances: z.array(z.string()).nonempty().optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, userId, inst, role, instances } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._policyController.revokeRole(
+            recordName,
+            sessionKeyValidation.userId,
+            {
+                instance: inst,
+                userId: userId,
+                role,
+            },
+            instances
         );
 
         return returnResult(result);
@@ -558,7 +1310,31 @@ export class RecordsHttpServer {
     private async _listData(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
-        const { recordName, address } = request.query || {};
+        const schema = z.object({
+            recordName: z
+                .string({
+                    required_error: 'recordName is required.',
+                    invalid_type_error: 'recordName must be a string.',
+                })
+                .nonempty('recordName must not be empty'),
+            address: z.union([z.string(), z.null()]).optional(),
+            instances: z
+                .string({
+                    invalid_type_error: 'instances must be a string.',
+                    required_error: 'instances is required.',
+                })
+                .nonempty('instances must not be empty')
+                .optional()
+                .transform((value) => parseInstancesList(value)),
+        });
+
+        const parseResult = schema.safeParse(request.query || {});
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, address, instances } = parseResult.data;
 
         if (!recordName || typeof recordName !== 'string') {
             return returnResult({
@@ -579,7 +1355,20 @@ export class RecordsHttpServer {
             });
         }
 
-        const result = await this._data.listData(recordName, address || null);
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (
+            sessionKeyValidation.success === false &&
+            sessionKeyValidation.errorCode !== 'no_session_key'
+        ) {
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._data.listData(
+            recordName,
+            address || null,
+            sessionKeyValidation.userId,
+            instances
+        );
         return returnResult(result);
     }
 
@@ -627,13 +1416,57 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
+        const schema = z.object({
+            recordKey: RECORD_KEY_VALIDATION,
+            fileSha256Hex: z
+                .string({
+                    invalid_type_error: 'fileSha256Hex must be a string.',
+                    required_error: 'fileSha256Hex is required.',
+                })
+                .nonempty('fileSha256Hex must be non-empty.'),
+            fileByteLength: z
+                .number({
+                    invalid_type_error:
+                        'fileByteLength must be a positive integer number.',
+                    required_error: 'fileByteLength is required.',
+                })
+                .positive('fileByteLength must be a positive integer number.')
+                .int('fileByteLength must be a positive integer number.'),
+            fileMimeType: z.string({
+                invalid_type_error: 'fileMimeType must be a string.',
+                required_error: 'fileMimeType is required.',
+            }),
+            fileDescription: z
+                .string({
+                    invalid_type_error: 'fileDescription must be a string.',
+                    required_error: 'fileDescription is required.',
+                })
+                .optional(),
+            markers: z
+                .array(z.string(), {
+                    invalid_type_error: 'markers must be an array of strings.',
+                    required_error: 'markers is required.',
+                })
+                .nonempty('markers must be non-empty.')
+                .optional(),
+            instances: z.array(z.string()).nonempty().optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
         const {
             recordKey,
             fileSha256Hex,
             fileByteLength,
             fileMimeType,
             fileDescription,
-        } = jsonResult.value;
+            markers,
+            instances,
+        } = parseResult.data;
 
         if (!recordKey || typeof recordKey !== 'string') {
             return returnResult({
@@ -687,8 +1520,187 @@ export class RecordsHttpServer {
             fileMimeType,
             fileDescription,
             headers: {},
+            markers,
+            instances,
         });
 
+        return returnResult(result);
+    }
+
+    private async _updateFile(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            recordKey: RECORD_KEY_VALIDATION,
+            fileUrl: z
+                .string({
+                    invalid_type_error: 'fileUrl must be a string.',
+                    required_error: 'fileUrl is required.',
+                })
+                .nonempty('fileUrl must be non-empty.'),
+            markers: z
+                .array(z.string(), {
+                    invalid_type_error: 'markers must be an array of strings.',
+                    required_error: 'markers is required.',
+                })
+                .nonempty('markers must be non-empty.'),
+            instances: z.array(z.string()).nonempty().optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const validation = await this._validateSessionKey(request);
+        if (
+            validation.success === false &&
+            validation.errorCode !== 'no_session_key'
+        ) {
+            return returnResult(validation);
+        }
+        const userId = validation.userId;
+
+        const fileNameResult = await this._files.getFileNameFromUrl(
+            parseResult.data.fileUrl
+        );
+
+        if (!fileNameResult.success) {
+            return returnResult(fileNameResult);
+        }
+
+        const result = await this._files.updateFile(
+            parseResult.data.recordKey,
+            fileNameResult.fileName,
+            userId,
+            parseResult.data.markers,
+            parseResult.data.instances
+        );
+        return returnResult(result);
+    }
+
+    private async _readFile(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must be non-empty.')
+                .optional(),
+            fileName: z
+                .string({
+                    invalid_type_error: 'fileName must be a string.',
+                    required_error: 'fileName is required.',
+                })
+                .nonempty('fileName must be non-empty.')
+                .optional(),
+            fileUrl: z
+                .string({
+                    invalid_type_error: 'fileUrl must be a string.',
+                    required_error: 'fileUrl is required.',
+                })
+                .nonempty('fileUrl must be non-empty.')
+                .optional(),
+            instances: z
+                .string()
+                .nonempty()
+                .optional()
+                .transform((value) => parseInstancesList(value)),
+        });
+
+        const parseResult = schema.safeParse(request.query || {});
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        let { fileUrl, recordName, fileName, instances } = parseResult.data;
+
+        if (!!fileUrl && typeof fileUrl !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'fileUrl must be a string.',
+            });
+        }
+        if (!!recordName && typeof recordName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'recordName must be a string.',
+            });
+        }
+        if (!!fileName && typeof fileName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'fileName must be a string.',
+            });
+        }
+
+        if (!fileUrl && (!recordName || !fileName)) {
+            let message: string;
+            if (!!fileName) {
+                message = 'recordName is required when fileName is provided.';
+            } else if (!!recordName) {
+                message = 'fileName is required when recordName is provided.';
+            } else {
+                message =
+                    'fileUrl or both recordName and fileName are required.';
+            }
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: message,
+            });
+        }
+
+        const validation = await this._validateSessionKey(request);
+        if (
+            validation.success === false &&
+            validation.errorCode !== 'no_session_key'
+        ) {
+            return returnResult(validation);
+        }
+        const userId = validation.userId;
+
+        if (!!fileUrl) {
+            const fileNameResult = await this._files.getFileNameFromUrl(
+                fileUrl
+            );
+
+            if (!fileNameResult.success) {
+                return returnResult(fileNameResult);
+            }
+
+            recordName = fileNameResult.recordName;
+            fileName = fileNameResult.fileName;
+        }
+
+        const result = await this._files.readFile(
+            recordName,
+            fileName,
+            userId,
+            instances
+        );
         return returnResult(result);
     }
 
@@ -709,7 +1721,22 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
-        const { recordKey, fileUrl } = jsonResult.value;
+        const schema = z.object({
+            recordKey: RECORD_KEY_VALIDATION,
+            fileUrl: z.string({
+                invalid_type_error: 'fileUrl must be a string.',
+                required_error: 'fileUrl is required.',
+            }),
+            instances: z.array(z.string()).nonempty().optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordKey, fileUrl, instances } = parseResult.data;
 
         if (!recordKey || typeof recordKey !== 'string') {
             return returnResult({
@@ -745,7 +1772,8 @@ export class RecordsHttpServer {
         const result = await this._files.eraseFile(
             recordKey,
             fileNameResult.fileName,
-            userId
+            userId,
+            instances
         );
         return returnResult(result);
     }
@@ -768,8 +1796,41 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
-        const { recordKey, address, data, updatePolicy, deletePolicy } =
-            jsonResult.value;
+        const schema = z.object({
+            recordKey: RECORD_KEY_VALIDATION,
+            address: ADDRESS_VALIDATION,
+            data: z.any(),
+            updatePolicy: z
+                .union([z.literal(true), z.array(z.string())], {
+                    invalid_type_error:
+                        'updatePolicy must be a boolean or an array of strings.',
+                })
+                .optional(),
+            deletePolicy: z
+                .union([z.literal(true), z.array(z.string())], {
+                    invalid_type_error:
+                        'deletePolicy must be a boolean or an array of strings.',
+                })
+                .optional(),
+            markers: MARKERS_VALIDATION.optional(),
+            instances: z.array(z.string()).nonempty().optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const {
+            recordKey,
+            address,
+            data,
+            updatePolicy,
+            deletePolicy,
+            markers,
+            instances,
+        } = parseResult.data;
 
         if (!recordKey || typeof recordKey !== 'string') {
             return returnResult({
@@ -808,7 +1869,9 @@ export class RecordsHttpServer {
             data,
             userId,
             updatePolicy,
-            deletePolicy
+            deletePolicy,
+            markers,
+            instances
         );
         return returnResult(result);
     }
@@ -829,7 +1892,36 @@ export class RecordsHttpServer {
         request: GenericHttpRequest,
         controller: DataRecordsController
     ): Promise<GenericHttpResponse> {
-        const { recordName, address } = request.query || {};
+        const schema = z.object({
+            recordName: z
+                .string({
+                    required_error: 'recordName is required.',
+                    invalid_type_error: 'recordName must be a string.',
+                })
+                .nonempty('recordName must not be empty'),
+            address: z
+                .string({
+                    required_error: 'address is required.',
+                    invalid_type_error: 'address must be a string.',
+                })
+                .nonempty('address must not be empty'),
+            instances: z
+                .string({
+                    invalid_type_error: 'instances must be a string.',
+                    required_error: 'instances is required.',
+                })
+                .nonempty('instances must not be empty')
+                .optional()
+                .transform((value) => parseInstancesList(value)),
+        });
+
+        const parseResult = schema.safeParse(request.query || {});
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, address, instances } = parseResult.data;
 
         if (!recordName || typeof recordName !== 'string') {
             return returnResult({
@@ -846,7 +1938,20 @@ export class RecordsHttpServer {
             });
         }
 
-        const result = await controller.getData(recordName, address);
+        const validation = await this._validateSessionKey(request);
+        if (
+            validation.success === false &&
+            validation.errorCode !== 'no_session_key'
+        ) {
+            return returnResult(validation);
+        }
+
+        const result = await controller.getData(
+            recordName,
+            address,
+            validation.userId,
+            instances
+        );
         return returnResult(result);
     }
 
@@ -880,7 +1985,19 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
-        const { recordKey, address } = jsonResult.value;
+        const schema = z.object({
+            recordKey: RECORD_KEY_VALIDATION,
+            address: ADDRESS_VALIDATION,
+            instances: z.array(z.string()).nonempty().optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordKey, address, instances } = parseResult.data;
 
         if (!recordKey || typeof recordKey !== 'string') {
             return returnResult({
@@ -906,7 +2023,12 @@ export class RecordsHttpServer {
         }
 
         const userId = validation.userId;
-        const result = await controller.eraseData(recordKey, address, userId);
+        const result = await controller.eraseData(
+            recordKey,
+            address,
+            userId,
+            instances
+        );
         return returnResult(result);
     }
 
@@ -929,7 +2051,33 @@ export class RecordsHttpServer {
             return returnResult(INVALID_ORIGIN_RESULT);
         }
 
-        const { recordName, eventName } = request.query || {};
+        const schema = z.object({
+            recordName: z
+                .string({
+                    required_error: 'recordName is required.',
+                    invalid_type_error: 'recordName must be a string.',
+                })
+                .nonempty('recordName must not be empty'),
+            eventName: z
+                .string({
+                    required_error: 'eventName is required.',
+                    invalid_type_error: 'eventName must be a string.',
+                })
+                .nonempty('eventName must not be empty'),
+            instances: z
+                .string()
+                .nonempty()
+                .optional()
+                .transform((value) => parseInstancesList(value)),
+        });
+
+        const parseResult = schema.safeParse(request.query || {});
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, eventName, instances } = parseResult.data;
 
         if (!recordName || typeof recordName !== 'string') {
             return returnResult({
@@ -946,7 +2094,22 @@ export class RecordsHttpServer {
             });
         }
 
-        const result = await this._events.getCount(recordName, eventName);
+        const validation = await this._validateSessionKey(request);
+
+        if (
+            validation.success === false &&
+            validation.errorCode !== 'no_session_key'
+        ) {
+            return returnResult(validation);
+        }
+
+        const userId = validation.userId;
+        const result = await this._events.getCount(
+            recordName,
+            eventName,
+            userId,
+            instances
+        );
         return returnResult(result);
     }
 
@@ -967,7 +2130,23 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
-        const { recordKey, eventName, count } = jsonResult.value;
+        const schema = z.object({
+            recordKey: RECORD_KEY_VALIDATION,
+            eventName: EVENT_NAME_VALIDATION,
+            count: z.number({
+                invalid_type_error: 'count must be a number.',
+                required_error: 'count is required.',
+            }),
+            instances: z.array(z.string()).nonempty().optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordKey, eventName, count, instances } = parseResult.data;
 
         if (!recordKey || typeof recordKey !== 'string') {
             return returnResult({
@@ -1006,8 +2185,92 @@ export class RecordsHttpServer {
             recordKey,
             eventName,
             count,
-            userId
+            userId,
+            instances
         );
+
+        return returnResult(result);
+    }
+
+    private async _postRecordsEvents(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            recordKey: RECORD_KEY_VALIDATION,
+            eventName: EVENT_NAME_VALIDATION,
+            count: z.number().optional(),
+            markers: MARKERS_VALIDATION.optional(),
+            instances: z.array(z.string()).nonempty().optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordKey, eventName, count, markers, instances } =
+            parseResult.data;
+
+        if (!recordKey || typeof recordKey !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'recordKey is required and must be a string.',
+            });
+        }
+        if (!eventName || typeof eventName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'eventName is required and must be a string.',
+            });
+        }
+        if (
+            count !== null &&
+            typeof count !== 'undefined' &&
+            typeof count !== 'number'
+        ) {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'count must be a number.',
+            });
+        }
+
+        const validation = await this._validateSessionKey(request);
+
+        if (
+            validation.success === false &&
+            validation.errorCode !== 'no_session_key'
+        ) {
+            return returnResult(validation);
+        }
+
+        const userId = validation.userId;
+
+        const result = await this._events.updateEvent({
+            recordKeyOrRecordName: recordKey,
+            userId,
+            eventName,
+            count,
+            markers,
+            instances,
+        });
 
         return returnResult(result);
     }
@@ -1029,7 +2292,18 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
-        const { roomName, userName } = jsonResult.value;
+        const schema = z.object({
+            roomName: z.string(),
+            userName: z.string(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { roomName, userName } = parseResult.data;
         const result = await this._livekit.issueToken(roomName, userName);
 
         return returnResult(result);
@@ -1080,7 +2354,19 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
-        const { userId, requestId, code } = jsonResult.value;
+        const schema = z.object({
+            userId: z.string(),
+            requestId: z.string(),
+            code: z.string(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { userId, requestId, code } = parseResult.data;
 
         const result = await this._auth.completeLogin({
             userId,
@@ -1109,11 +2395,23 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
+        const schema = z.object({
+            userId: z.string().optional(),
+            sessionId: z.string().optional(),
+            sessionKey: z.string().optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
         let {
             userId,
             sessionId,
             sessionKey: sessionKeyToRevoke,
-        } = jsonResult.value;
+        } = parseResult.data;
 
         // Parse the User ID and Session ID from the sessionKey that is provided in
         // session key that should be revoked
@@ -1155,7 +2453,17 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
 
-        const { userId } = jsonResult.value;
+        const schema = z.object({
+            userId: z.string(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { userId } = parseResult.data;
 
         const authorization = getSessionKey(request);
 
@@ -1306,17 +2614,33 @@ export class RecordsHttpServer {
         if (typeof request.body === 'string' && request.body) {
             let body = tryParseJson(request.body);
             if (body.success) {
-                if (typeof body.value.subscriptionId === 'string') {
-                    subscriptionId = body.value.subscriptionId;
+                const schema = z.object({
+                    subscriptionId: z.string(),
+                    expectedPrice: z
+                        .object({
+                            currency: z.string(),
+                            cost: z.number(),
+                            interval: z.enum(['month', 'year', 'week', 'day']),
+                            intervalLength: z.number(),
+                        })
+                        .required(),
+                });
+
+                const parseResult = schema.safeParse(body.value);
+
+                if (parseResult.success === false) {
+                    return returnZodError(parseResult.error);
                 }
-                if (typeof body.value.expectedPrice === 'object') {
-                    expectedPrice = body.value.expectedPrice;
+
+                if (typeof parseResult.data.subscriptionId === 'string') {
+                    subscriptionId = parseResult.data.subscriptionId;
+                }
+                if (typeof parseResult.data.expectedPrice === 'object') {
+                    expectedPrice = parseResult.data
+                        .expectedPrice as CreateManageSubscriptionRequest['expectedPrice'];
                 }
             }
         }
-
-        console.log('sub id', subscriptionId);
-        console.log('expected price', expectedPrice);
 
         const result = await this._subscriptions.createManageSubscriptionLink({
             sessionKey,
@@ -1421,10 +2745,26 @@ export class RecordsHttpServer {
             return returnResult(UNACCEPTABLE_USER_ID);
         }
 
+        const schema = z.object({
+            name: z.string().min(1).optional(),
+            email: z.string().email().max(MAX_EMAIL_ADDRESS_LENGTH).optional(),
+            phoneNumber: z.string().max(MAX_SMS_ADDRESS_LENGTH).optional(),
+            avatarUrl: z.string().url().optional(),
+            avatarPortraitUrl: z.string().url().optional(),
+            openAiKey: z.string().max(MAX_OPEN_AI_API_KEY_LENGTH).optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const update = parseResult.data;
         const result = await this._auth.updateUserInfo({
             sessionKey: sessionKey,
             userId: userId,
-            update: jsonResult.value,
+            update,
         });
 
         if (!result.success) {
@@ -1551,4 +2891,18 @@ export interface NoSessionKeyResult {
     userId: null;
     errorCode: 'no_session_key';
     errorMessage: string;
+}
+
+/**
+ * Returns the given ZodError as a GenericHttpResponse.
+ * @param error The error.
+ */
+export function returnZodError(error: z.ZodError<any>): GenericHttpResponse {
+    return returnResult({
+        success: false,
+        errorCode: 'unacceptable_request',
+        errorMessage:
+            'The request was invalid. One or more fields were invalid.',
+        issues: error.issues,
+    });
 }

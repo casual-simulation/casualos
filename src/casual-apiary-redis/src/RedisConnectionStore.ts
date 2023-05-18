@@ -20,6 +20,7 @@ export class RedisConnectionStore implements ApiaryConnectionStore {
     private hkeys: (key: string) => Promise<string[]>;
     private hget: (key: string, field: string) => Promise<string>;
     private del: (key: string) => Promise<void>;
+    private expire: (key: string, seconds: number) => Promise<void>;
 
     constructor(globalNamespace: string, client: RedisClient) {
         this._globalNamespace = globalNamespace;
@@ -32,6 +33,7 @@ export class RedisConnectionStore implements ApiaryConnectionStore {
         this.hkeys = promisify(this._redis.hkeys).bind(this._redis);
         this.hlen = promisify(this._redis.hlen).bind(this._redis);
         this.hget = promisify(this._redis.hget).bind(this._redis);
+        this.expire = promisify(this._redis.expire).bind(this._redis);
     }
 
     // /{global}/connections
@@ -97,6 +99,28 @@ export class RedisConnectionStore implements ApiaryConnectionStore {
         );
         await this.hdel([connectionsKey(this._globalNamespace), connectionId]);
         await this.del(connectionIdKey(this._globalNamespace, connectionId));
+    }
+
+    async expireConnection(connectionId: string): Promise<void> {
+        // Delete the connection from the namespaces and from the global list of connections,
+        // but set a 10 second expiration on all the namespaces that the connection is connected to.
+        // This preserves
+        const namespaces = await this.hkeys(
+            connectionIdKey(this._globalNamespace, connectionId)
+        );
+        await Promise.all(
+            namespaces.map((n) =>
+                this.hdel([
+                    namespaceConnectionsKey(this._globalNamespace, n),
+                    connectionId,
+                ])
+            )
+        );
+        await this.hdel([connectionsKey(this._globalNamespace), connectionId]);
+        await this.expire(
+            connectionIdKey(this._globalNamespace, connectionId),
+            10
+        );
     }
 
     async getConnectionsByNamespace(

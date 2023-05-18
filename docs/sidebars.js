@@ -14,6 +14,13 @@ module.exports = {
                 'learn/pillars',
                 'learn/getting-started',
                 'learn/scripting',
+                {
+                    type: 'category',
+                    label: 'Records',
+                    items: [
+                        'learn/records/security',
+                    ]
+                }
             ]
         },
         {
