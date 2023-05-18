@@ -2139,7 +2139,16 @@ describe('RecordsHttpServer', () => {
                     success: false,
                     errorCode: 'unacceptable_request',
                     errorMessage:
-                        'recordName is required and must be a string.',
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName is required.',
+                            path: ['recordName'],
+                            received: 'undefined',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });
@@ -2158,7 +2167,17 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: false,
                     errorCode: 'unacceptable_request',
-                    errorMessage: 'eventName is required and must be a string.',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'eventName is required.',
+                            path: ['eventName'],
+                            received: 'undefined',
+                        },
+                    ],
                 },
                 headers: apiCorsHeaders,
             });

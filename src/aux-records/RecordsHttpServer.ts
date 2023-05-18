@@ -1603,7 +1603,8 @@ export class RecordsHttpServer {
                     invalid_type_error: 'recordName must be a string.',
                     required_error: 'recordName is required.',
                 })
-                .nonempty('recordName must be non-empty.'),
+                .nonempty('recordName must be non-empty.')
+                .optional(),
             fileName: z
                 .string({
                     invalid_type_error: 'fileName must be a string.',
