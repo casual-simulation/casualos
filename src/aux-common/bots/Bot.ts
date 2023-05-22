@@ -1772,6 +1772,12 @@ export const ON_ANY_FORM_ANIMATION_LOOPED: string = 'onAnyFormAnimationLooped';
 export const ON_SPACE_MAX_SIZE_REACHED: string = 'onSpaceMaxSizeReached';
 
 /**
+ * The name of the event that is triggered when a network rate limit is exceeded.
+ */
+export const ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME: string =
+    'onSpaceRateLimitExceeded';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots

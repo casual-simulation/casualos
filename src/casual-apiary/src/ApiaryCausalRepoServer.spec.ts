@@ -36,6 +36,7 @@ import {
     remoteResult,
     SESSION_ID_CLAIM,
     USERNAME_CLAIM,
+    RATE_LIMIT_EXCEEDED,
 } from '@casual-simulation/causal-trees';
 import {
     action,
@@ -57,12 +58,7 @@ import {
     YjsPartitionImpl,
 } from '@casual-simulation/aux-common/partitions/YjsPartition';
 import { DEVICE_COUNT } from './ApiaryMessenger';
-import {
-    ADD_UPDATES,
-    UPDATES_RECEIVED,
-    SYNC_TIME,
-    RATE_LIMIT_EXCEEDED,
-} from './ExtraEvents';
+import { ADD_UPDATES, UPDATES_RECEIVED, SYNC_TIME } from './ExtraEvents';
 import { encodeStateAsUpdate } from 'yjs';
 import { fromByteArray } from 'base64-js';
 import { getStateFromUpdates } from '@casual-simulation/aux-common/partitions/PartitionUtils';

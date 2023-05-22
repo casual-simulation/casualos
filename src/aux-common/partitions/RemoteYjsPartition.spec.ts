@@ -27,6 +27,8 @@ import {
     WATCH_BRANCH,
     UpdatesReceivedEvent,
     UPDATES_RECEIVED,
+    RATE_LIMIT_EXCEEDED,
+    RateLimitExceededEvent,
 } from '@casual-simulation/causal-trees';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { applyUpdate, Doc, Map as YMap, Text as YText } from 'yjs';
@@ -51,6 +53,7 @@ import {
     getServerStatuses,
     InstUpdate,
     listInstUpdates,
+    ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME,
     ON_REMOTE_DATA_ACTION_NAME,
     ON_REMOTE_WHISPER_ACTION_NAME,
     ON_SPACE_MAX_SIZE_REACHED,
@@ -1112,6 +1115,49 @@ describe('RemoteYjsPartition', () => {
                             tag1: 'abc',
                         }),
                     });
+                });
+            });
+
+            describe('rate_limit_exceeded', () => {
+                it('should emit a shout when the event is recieved', async () => {
+                    setupPartition({
+                        type: 'remote_yjs',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    partition.space = 'test';
+                    const rateLimitExceeded =
+                        new Subject<RateLimitExceededEvent>();
+                    connection.events.set(
+                        RATE_LIMIT_EXCEEDED,
+                        rateLimitExceeded
+                    );
+
+                    partition.connect();
+
+                    const events = [] as Action[];
+                    partition.onEvents.subscribe((e) => events.push(...e));
+
+                    await waitAsync();
+
+                    rateLimitExceeded.next({
+                        retryAfter: 123,
+                        totalHits: 999,
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        action(
+                            ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME,
+                            undefined,
+                            undefined,
+                            {
+                                space: 'test',
+                            }
+                        ),
+                    ]);
                 });
             });
         });

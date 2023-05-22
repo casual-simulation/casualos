@@ -34,6 +34,8 @@ import {
     USERNAME_CLAIM,
     WatchBranchEvent,
     UpdatesStore,
+    RateLimitExceededEvent,
+    RATE_LIMIT_EXCEEDED,
 } from '@casual-simulation/causal-trees';
 import { ApiaryAtomStore } from './ApiaryAtomStore';
 // import { ApiaryAtomStore } from './ApiaryAtomStore';
@@ -51,8 +53,6 @@ import {
     TimeSyncResponse,
     UPDATES_RECEIVED,
     WatchBranch,
-    RATE_LIMIT_EXCEEDED,
-    RateLimitExceeded,
 } from './ExtraEvents';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { applyUpdate, mergeUpdates } from 'yjs';
@@ -806,7 +806,7 @@ export class ApiaryCausalRepoServer {
                 data: {
                     retryAfter,
                     totalHits,
-                } as RateLimitExceeded,
+                } as RateLimitExceededEvent,
             });
         }
     }

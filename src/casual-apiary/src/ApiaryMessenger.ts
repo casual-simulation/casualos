@@ -17,6 +17,8 @@ import {
     WatchBranchEvent,
     WATCH_BRANCH,
     WATCH_BRANCH_DEVICES,
+    RATE_LIMIT_EXCEEDED,
+    RateLimitExceededEvent,
 } from '@casual-simulation/causal-trees';
 import { Packet } from './Events';
 import {
@@ -26,8 +28,6 @@ import {
     TimeSyncResponse,
     UpdatesReceivedEvent,
     UPDATES_RECEIVED,
-    RATE_LIMIT_EXCEEDED,
-    RateLimitExceeded,
 } from './ExtraEvents';
 
 /**
@@ -159,5 +159,5 @@ export interface GetUpdatesMessage {
 
 export interface RateLimitExceededMessage {
     name: typeof RATE_LIMIT_EXCEEDED;
-    data: RateLimitExceeded;
+    data: RateLimitExceededEvent;
 }
