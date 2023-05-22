@@ -35,6 +35,7 @@
     -   `os.revokeUserRole()`
     -   `os.revokeInstRole()`
     -   See the documentation for more information.
+-   Added the `@onSpaceRateLimitExceeded` shout which occurs when a space rejects a tag change or event because a rate limit was exceeded.
 
 ### :bug: Bug Fixes
 
