@@ -19,6 +19,8 @@ export class RedisConnectionStore implements ApiaryConnectionStore {
     private hvals: (key: string) => Promise<string[]>;
     private hkeys: (key: string) => Promise<string[]>;
     private hget: (key: string, field: string) => Promise<string>;
+    private get: (key: string) => Promise<string>;
+    private set: (key: string, value: any) => Promise<void>;
     private del: (key: string) => Promise<void>;
     private expire: (key: string, seconds: number) => Promise<void>;
 
@@ -34,6 +36,8 @@ export class RedisConnectionStore implements ApiaryConnectionStore {
         this.hlen = promisify(this._redis.hlen).bind(this._redis);
         this.hget = promisify(this._redis.hget).bind(this._redis);
         this.expire = promisify(this._redis.expire).bind(this._redis);
+        this.get = promisify(this._redis.get).bind(this._redis);
+        this.set = promisify(this._redis.set).bind(this._redis);
     }
 
     // /{global}/connections
@@ -180,6 +184,33 @@ export class RedisConnectionStore implements ApiaryConnectionStore {
         const count = await this.hlen(connectionsKey(this._globalNamespace));
         return count;
     }
+
+    async getConnectionRateLimitExceededTime(
+        connectionId: string
+    ): Promise<number> {
+        const key = connectionRateLimitKey(this._globalNamespace, connectionId);
+        const value = await this.get(key);
+        if (!value) {
+            return null;
+        }
+        const parsed = parseInt(value);
+        if (isNaN(parsed)) {
+            return null;
+        }
+        return parsed;
+    }
+
+    async setConnectionRateLimitExceededTime(
+        connectionId: string,
+        timeMs: number
+    ): Promise<void> {
+        const key = connectionRateLimitKey(this._globalNamespace, connectionId);
+        if (timeMs === null || timeMs === undefined) {
+            await this.del(key);
+        } else {
+            await this.set(key, timeMs.toString()), await this.expire(key, 100);
+        }
+    }
 }
 
 function connectionsKey(globalNamespace: string) {
@@ -192,4 +223,8 @@ function namespaceConnectionsKey(globalNamespace: string, namespace: string) {
 
 function connectionIdKey(globalNamespace: string, connectionId: string) {
     return `/${globalNamespace}/connections/${connectionId}`;
+}
+
+function connectionRateLimitKey(globalNamespace: string, connectionId: string) {
+    return `/${globalNamespace}/rate_limited/${connectionId}`;
 }

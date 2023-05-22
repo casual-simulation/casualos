@@ -69,6 +69,7 @@ import {
     InstUpdate,
     ApplyUpdatesToInstAction,
     ON_SPACE_MAX_SIZE_REACHED,
+    ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME,
 } from '../bots';
 import {
     PartitionConfig,
@@ -668,6 +669,20 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                     },
                     (err) => this._onError.next(err)
                 )
+        );
+        this._sub.add(
+            this._client.watchRateLimitExceeded().subscribe((event) => {
+                this._onEvents.next([
+                    action(
+                        ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME,
+                        null,
+                        null,
+                        {
+                            space: this.space,
+                        }
+                    ),
+                ]);
+            })
         );
 
         const updateHandler = (

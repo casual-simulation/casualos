@@ -249,7 +249,6 @@ export async function instData(
     try {
         const rateLimitResult = await rateLimit(rateLimiter, event);
         if (!rateLimitResult.success) {
-            // TODO: Send a response
             return {
                 statusCode: 429,
                 headers: {
@@ -305,8 +304,14 @@ async function processUpload(
 
     try {
         const rateLimitResult = await rateLimit(rateLimiter, event);
+        const connectionId = event.requestContext.connectionId;
         if (!rateLimitResult.success) {
-            // TODO: Send a response
+            await server.rateLimitExceeded(
+                connectionId,
+                rateLimitResult.retryAfterSeconds,
+                rateLimitResult.totalHits,
+                Date.now()
+            );
             return;
         }
 
@@ -315,10 +320,7 @@ async function processUpload(
                 'The messenger must implement sendRaw() to support AWS lambda!'
             );
         }
-        await server.messenger.sendRaw(
-            event.requestContext.connectionId,
-            JSON.stringify(response)
-        );
+        await server.messenger.sendRaw(connectionId, JSON.stringify(response));
     } finally {
         cleanup();
     }
@@ -343,13 +345,19 @@ async function login(event: APIGatewayProxyEvent, packet: LoginPacket) {
     const [server, cleanup, rateLimiter] = getCausalRepoServer(event);
     try {
         const rateLimitResult = await rateLimit(rateLimiter, event);
+        const connectionId = event.requestContext.connectionId;
         if (!rateLimitResult.success) {
-            // TODO: Send a response
+            await server.rateLimitExceeded(
+                connectionId,
+                rateLimitResult.retryAfterSeconds,
+                rateLimitResult.totalHits,
+                Date.now()
+            );
             return;
         }
 
         await server.connect({
-            connectionId: event.requestContext.connectionId,
+            connectionId: connectionId,
             sessionId: packet.sessionId,
             username: packet.username,
             token: packet.token,
@@ -362,10 +370,7 @@ async function login(event: APIGatewayProxyEvent, packet: LoginPacket) {
                 'The messenger must implement sendPacket() to support AWS lambda!'
             );
         }
-        await server.messenger.sendPacket(
-            event.requestContext.connectionId,
-            result
-        );
+        await server.messenger.sendPacket(connectionId, result);
     } finally {
         console.log('[handler] Cleaning up!');
         cleanup();
@@ -378,9 +383,15 @@ async function messagePacket(
 ) {
     const [server, cleanup, rateLimiter] = getCausalRepoServer(event);
     try {
+        const connectionId = event.requestContext.connectionId;
         const rateLimitResult = await rateLimit(rateLimiter, event);
         if (!rateLimitResult.success) {
-            // TODO: Send a response
+            await server.rateLimitExceeded(
+                connectionId,
+                rateLimitResult.retryAfterSeconds,
+                rateLimitResult.totalHits,
+                Date.now()
+            );
             return;
         }
 
@@ -388,7 +399,6 @@ async function messagePacket(
             name: <any>packet.channel,
             data: packet.data,
         };
-        const connectionId = event.requestContext.connectionId;
         if (message.name === WATCH_BRANCH) {
             await server.watchBranch(connectionId, message.data);
         } else if (message.name === ADD_ATOMS) {
@@ -535,6 +545,7 @@ async function rateLimit(
             return {
                 success: false,
                 retryAfterSeconds: Math.ceil(RATE_LIMIT_WINDOW_MS / 1000),
+                totalHits: result.totalHits,
             };
         }
     }

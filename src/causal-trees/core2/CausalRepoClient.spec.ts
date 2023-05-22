@@ -68,6 +68,8 @@ import {
     GET_UPDATES,
     SYNC_TIME,
     TimeSyncResponse,
+    RateLimitExceededEvent,
+    RATE_LIMIT_EXCEEDED,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
@@ -82,7 +84,6 @@ import {
 import { DeviceInfo } from '../core/DeviceInfo';
 import { CausalRepoCommit, index, commit } from '.';
 import { TimeSample } from '@casual-simulation/timesync';
-import { updateRenderer } from 'esri/smartMapping/renderers/relationship';
 
 describe('CausalRepoClient', () => {
     let client: CausalRepoClient;
@@ -1117,6 +1118,40 @@ describe('CausalRepoClient', () => {
                         updateId: 1,
                         updates: ['111', '222'],
                     },
+                },
+            ]);
+        });
+    });
+
+    describe('watchRateLimitExceeded()', () => {
+        let rateLimitExceeded: Subject<RateLimitExceededEvent>;
+        beforeEach(() => {
+            rateLimitExceeded = new Subject();
+            connection.events.set(RATE_LIMIT_EXCEEDED, rateLimitExceeded);
+        });
+
+        it('should relay rate_limit_exceeded messages', async () => {
+            let events = [] as RateLimitExceededEvent[];
+            client.watchRateLimitExceeded().subscribe((e) => events.push(e));
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            rateLimitExceeded.next({
+                retryAfter: 123,
+                totalHits: 999,
+            });
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                {
+                    retryAfter: 123,
+                    totalHits: 999,
                 },
             ]);
         });

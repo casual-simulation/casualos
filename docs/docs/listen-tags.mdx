@@ -2114,3 +2114,19 @@ let that: {
     neededSizeInBytes: number;
 };
 ```
+
+### `@onSpaceRateLimitExceeded`
+
+A shout that is sent to all bots when a space rejects a change because it would exceed the rate limit for the space.
+
+Rate limits are used to prevent too many changes at one time from overloading the system, and they only apply to the `shared` space.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The space that rejected some changes/messages due to rate limits.
+     */
+    space: string;
+}
+```

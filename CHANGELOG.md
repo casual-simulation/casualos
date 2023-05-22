@@ -2,7 +2,7 @@
 
 ## V3.1.29
 
-#### Date: 5/18/2023
+#### Date: 5/22/2023
 
 ### :rocket: Improvements
 
@@ -35,6 +35,7 @@
     -   `os.revokeUserRole()`
     -   `os.revokeInstRole()`
     -   See the documentation for more information.
+-   Added the `@onSpaceRateLimitExceeded` shout which occurs when a space rejects a tag change or event because a rate limit was exceeded.
 
 ### :bug: Bug Fixes
 

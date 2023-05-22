@@ -76,6 +76,8 @@ import {
     SYNC_TIME,
     TimeSyncRequest,
     TimeSyncResponse,
+    RATE_LIMIT_EXCEEDED,
+    RateLimitExceededEvent,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import {
@@ -470,6 +472,17 @@ export class CausalRepoClient {
                     this._client.send(UNWATCH_BRANCH, name);
                 }
             })
+        );
+    }
+
+    /**
+     * Watches for rate limit exceeded events.
+     */
+    watchRateLimitExceeded() {
+        return this._whenConnected().pipe(
+            switchMap(() =>
+                this._client.event<RateLimitExceededEvent>(RATE_LIMIT_EXCEEDED)
+            )
         );
     }
 
