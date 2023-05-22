@@ -58,6 +58,6 @@ jobs:
                   REDIS_MAX_BATCH_SIZE: '0'
                   REDIS_MAX_BRANCH_SIZE: '25000000' # 25 MB
                   MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED: 'true'
-                  RATE_LIMIT_MAX: '100' # 100 requests/minute = 144k requests/day
+                  RATE_LIMIT_MAX: '1000' # 1000 requests/minute = 1.4m requests/day
                   RATE_LIMIT_WINDOW_MS: '60000' # 60 seconds
                   STACK_NAME: sydney-apiary
