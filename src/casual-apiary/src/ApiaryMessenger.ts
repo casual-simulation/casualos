@@ -26,6 +26,8 @@ import {
     TimeSyncResponse,
     UpdatesReceivedEvent,
     UPDATES_RECEIVED,
+    RATE_LIMIT_EXCEEDED,
+    RateLimitExceeded,
 } from './ExtraEvents';
 
 /**
@@ -68,7 +70,8 @@ export type Message =
     | UnatchBranchDevicesMessage
     | DeviceCountMessage
     | SyncTimeMessage
-    | GetUpdatesMessage;
+    | GetUpdatesMessage
+    | RateLimitExceededMessage;
 
 export interface WatchBranchMessage {
     name: typeof WATCH_BRANCH;
@@ -152,4 +155,9 @@ export interface SyncTimeMessage {
 export interface GetUpdatesMessage {
     name: typeof GET_UPDATES;
     data: string;
+}
+
+export interface RateLimitExceededMessage {
+    name: typeof RATE_LIMIT_EXCEEDED;
+    data: RateLimitExceeded;
 }

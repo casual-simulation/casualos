@@ -15,6 +15,11 @@ export const UPDATES_RECEIVED = 'repo/updates_received';
  */
 export const SYNC_TIME = 'sync/time';
 
+/**
+ * The name of the event which is used to notify a connection that the rate limit has been exceeded.
+ */
+export const RATE_LIMIT_EXCEEDED = 'rate_limit_exceeded';
+
 export type WatchBranch = WatchBranchEvent & WatchBranchProtocol;
 
 export interface WatchBranchProtocol {
@@ -123,4 +128,9 @@ export interface TimeSyncResponse {
      * The time that the server sent this response at in miliseconds since Jan 1 1970 UTC-0.
      */
     serverTransmitTime: number;
+}
+
+export interface RateLimitExceeded {
+    retryAfter: number;
+    totalHits: number;
 }

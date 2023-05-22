@@ -82,6 +82,24 @@ export interface ApiaryConnectionStore {
      * Counts the number of active connections.
      */
     countConnections(): Promise<number>;
+
+    /**
+     * Gets the last time that the connection rate limit was exceeded for the given connection ID.
+     * @param connectionId The ID of the connection.
+     */
+    getConnectionRateLimitExceededTime(
+        connectionId: string
+    ): Promise<number | null>;
+
+    /**
+     * Sets the last time that the connection rate limit was exceeded for the given connection ID.
+     * @param connectionId The ID of the connection.
+     * @param timeMs The unix time in miliseconds.
+     */
+    setConnectionRateLimitExceededTime(
+        connectionId: string,
+        timeMs: number | null
+    ): Promise<void>;
 }
 
 /**

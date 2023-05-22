@@ -51,6 +51,8 @@ import {
     TimeSyncResponse,
     UPDATES_RECEIVED,
     WatchBranch,
+    RATE_LIMIT_EXCEEDED,
+    RateLimitExceeded,
 } from './ExtraEvents';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { applyUpdate, mergeUpdates } from 'yjs';
@@ -773,6 +775,40 @@ export class ApiaryCausalRepoServer {
                 serverTransmitTime: Date.now(),
             } as TimeSyncResponse,
         });
+    }
+
+    /**
+     * Handles when the rate limit has been exceeded by the given connection.
+     * @param connectionId The ID of the connection.
+     * @param retryAfter The Retry-After header value.
+     * @param totalHits The total number of hits by the connection.
+     * @param timeMs The current time in unix time in miliseconds.
+     */
+    async rateLimitExceeded(
+        connectionId: string,
+        retryAfter: number,
+        totalHits: number,
+        timeMs: number
+    ): Promise<void> {
+        const lastHit =
+            (await this._connectionStore.getConnectionRateLimitExceededTime(
+                connectionId
+            )) ?? -Infinity;
+        const difference = timeMs - lastHit;
+        await this._connectionStore.setConnectionRateLimitExceededTime(
+            connectionId,
+            timeMs
+        );
+
+        if (difference >= 1000) {
+            await this._messenger.sendMessage([connectionId], {
+                name: RATE_LIMIT_EXCEEDED,
+                data: {
+                    retryAfter,
+                    totalHits,
+                } as RateLimitExceeded,
+            });
+        }
     }
 }
 

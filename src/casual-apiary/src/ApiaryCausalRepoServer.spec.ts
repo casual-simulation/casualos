@@ -57,7 +57,12 @@ import {
     YjsPartitionImpl,
 } from '@casual-simulation/aux-common/partitions/YjsPartition';
 import { DEVICE_COUNT } from './ApiaryMessenger';
-import { ADD_UPDATES, UPDATES_RECEIVED, SYNC_TIME } from './ExtraEvents';
+import {
+    ADD_UPDATES,
+    UPDATES_RECEIVED,
+    SYNC_TIME,
+    RATE_LIMIT_EXCEEDED,
+} from './ExtraEvents';
 import { encodeStateAsUpdate } from 'yjs';
 import { fromByteArray } from 'base64-js';
 import { getStateFromUpdates } from '@casual-simulation/aux-common/partitions/PartitionUtils';
@@ -2172,7 +2177,7 @@ describe('ApiaryCausalRepoServer', () => {
             ]);
         });
 
-        it.only('should merge updates when the max size was exceeded if configured', async () => {
+        it('should merge updates when the max size was exceeded if configured', async () => {
             updateStore.maxAllowedInstSize = 150;
             server.mergeUpdatesOnMaxSizeExceeded = true;
 
@@ -3959,6 +3964,88 @@ describe('ApiaryCausalRepoServer', () => {
                     device
                 )
             ).toBe(true);
+        });
+    });
+
+    describe('rateLimitExceeded()', () => {
+        it('should send a message to the device', async () => {
+            await server.rateLimitExceeded(
+                device1Info.connectionId,
+                1000,
+                10,
+                123
+            );
+            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
+                {
+                    name: RATE_LIMIT_EXCEEDED,
+                    data: {
+                        retryAfter: 1000,
+                        totalHits: 10,
+                    },
+                },
+            ]);
+
+            // Should store the last time the rate limit was exceeded by the connection
+            const time =
+                await connectionStore.getConnectionRateLimitExceededTime(
+                    device1Info.connectionId
+                );
+
+            expect(time).toBe(123);
+        });
+
+        it('should not send a message if the rate limit was recently exceeded', async () => {
+            await connectionStore.setConnectionRateLimitExceededTime(
+                device1Info.connectionId,
+                123
+            );
+
+            await server.rateLimitExceeded(
+                device1Info.connectionId,
+                1000,
+                10,
+                200
+            );
+            expect(messenger.getMessages(device1Info.connectionId)).toEqual([]);
+
+            // Should store the last time the rate limit was exceeded by the connection
+            const time =
+                await connectionStore.getConnectionRateLimitExceededTime(
+                    device1Info.connectionId
+                );
+
+            expect(time).toBe(200);
+        });
+
+        it('should send a message if it has been a second since the last time the limit was exceeded', async () => {
+            await connectionStore.setConnectionRateLimitExceededTime(
+                device1Info.connectionId,
+                1000
+            );
+
+            await server.rateLimitExceeded(
+                device1Info.connectionId,
+                1000,
+                10,
+                2000
+            );
+            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
+                {
+                    name: RATE_LIMIT_EXCEEDED,
+                    data: {
+                        retryAfter: 1000,
+                        totalHits: 10,
+                    },
+                },
+            ]);
+
+            // Should store the last time the rate limit was exceeded by the connection
+            const time =
+                await connectionStore.getConnectionRateLimitExceededTime(
+                    device1Info.connectionId
+                );
+
+            expect(time).toBe(2000);
         });
     });
 });
