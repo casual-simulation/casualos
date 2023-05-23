@@ -292,7 +292,7 @@ Resources:
                         Path: /api/v2/records/role/grant
                         Method: POST
                 RevokeRole:
-                    Type: APi
+                    Type: Api
                     Properties:
                         Path: /api/v2/records/role/revoke
                         Method: POST
