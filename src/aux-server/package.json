@@ -67,6 +67,7 @@
         "@casual-simulation/tunnel": "^3.1.28",
         "@casual-simulation/vue-shortkey": "^3.1.20",
         "@casual-simulation/websocket": "^3.1.11",
+        "@casual-simulation/casual-apiary-redis": "^3.1.28",
         "@chenfengyuan/vue-qrcode": "^1.0.0",
         "@ericblade/quagga2": "1.4.2",
         "@hapi/joi": "15.1.1",

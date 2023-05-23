@@ -424,6 +424,7 @@ export interface BotTags {
     ['form']?: BotShape;
     ['formAnimation']?: string;
     ['formAddress']?: string;
+    ['formOpacity']?: unknown;
     ['orientationMode']?: string;
     ['anchorPoint']?: string;
     ['creator']?: string;
@@ -1766,6 +1767,17 @@ export const ON_FORM_ANIMATION_LOOPED: string = 'onFormAnimationLooped';
 export const ON_ANY_FORM_ANIMATION_LOOPED: string = 'onAnyFormAnimationLooped';
 
 /**
+ * The name of the event that is triggered when a space's max size has been reached.
+ */
+export const ON_SPACE_MAX_SIZE_REACHED: string = 'onSpaceMaxSizeReached';
+
+/**
+ * The name of the event that is triggered when a network rate limit is exceeded.
+ */
+export const ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME: string =
+    'onSpaceRateLimitExceeded';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -2259,6 +2271,7 @@ export const KNOWN_TAGS: string[] = [
     'form',
     'formAnimation',
     'formAnimationAddress',
+    'formOpacity',
     'formRenderOrder',
     'orientationMode',
     'anchorPoint',
@@ -2430,6 +2443,7 @@ export const KNOWN_TAGS: string[] = [
     ON_ANY_FORM_ANIMATION_STOPPED,
     ON_FORM_ANIMATION_LOOPED,
     ON_ANY_FORM_ANIMATION_LOOPED,
+    ON_SPACE_MAX_SIZE_REACHED,
 ];
 
 export function onClickArg(

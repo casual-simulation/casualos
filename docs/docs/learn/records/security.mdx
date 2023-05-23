@@ -1,0 +1,100 @@
+---
+id: security
+title: Security
+sidebar_label: Security
+description: Learn how to secure records using Policies and Roles
+---
+
+## Overview
+
+CasualOS supports various kinds of permanent storage. Key/Value storage is supported by data records, and blob storage is supported by file records. There are also event records, and more kinds of functionality will be coming in the future. Collectively, it is useful for think about all these kinds as "resources". Resources are stored in records, and access to resources is governed by three things:
+
+-   Resource Markers
+-   Policies
+-   Roles
+
+Let's start with the first:
+
+### Resource Markers
+
+Resource Markers are indicators that are used to indentify which policies govern the usage of which resources. For now, markers are stored alongside the resource and are simply the name of the policy that is used to govern access to the resource.
+
+If a resource marker is assigned to a resource, then the policy of the same name controls how that resource is managed. A resource can be assigned multiple resource markers, and when such a case arises, then either policy can be used to grant access to the resource.
+
+### Policies
+
+Policies are a list of permissions that can grant access to resources under different scenarios. By default, CasualOS denies all access to resources, so policies need to be used to grant any sort of ability to read, update, create, or delete resources. As mentioned above, a single policy is in charge of a resource marker, and they are associated by their names. If a data record has the `secret` resource marker applied to it, then the `secret` policy contains the list of permissions that are allowed to be performed on the resource.
+
+There are two exceptions to this, the first is a policy is built-in to CasualOS and is associated with every resource marker (You can find the list of permissions for it [here](https://github.com/casual-simulation/casualos/blob/93c8b271586fa67ebeb113d6ed5d61a0bfb8a73e/src/aux-records/PolicyPermissions.ts#L716)), and the second is a policy built-in to CasualOS and is associated with the `publicRead` resource marker (You can find the list of permissions for it [here](https://github.com/casual-simulation/casualos/blob/93c8b271586fa67ebeb113d6ed5d61a0bfb8a73e/src/aux-records/PolicyPermissions.ts#L847)). We call the first policy the `DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT` policy, and it is used to ensure that admin users are never locked out of the account. The second policy is the `DEFAULT_PUBLIC_READ_POLICY_DOCUMENT` policy, and it is used to keep public access for resources that were created before this update goes into effect.
+
+The structure of a policy is as follows:
+
+```typescript
+let policy: {
+    permissions: Permission[]
+};
+```
+
+Each permission in a policy grants the ability to perform an action on a particular set of resources. For example, this permission:
+
+```typescript
+let permission: {
+    // Read data
+    type: 'data.read',
+
+    // Only identifies with the "developer" role
+    role: 'developer',
+
+    // Any address in the record that the policy applies to
+    addresses: true
+};
+```
+
+grants access to read data records from any address, but only to identifies that are assigned the `developer` role. Note that this permission only works for resources that have the resource marker for the policy applied. So this permission doesn't grant every `developer` read access to every data record, instead it grants every `developer` read access to every data record that has the resource marker for the policy applied.
+
+The following permission types are supported:
+
+-   `data.create`
+-   `data.read`
+-   `data.update`
+-   `data.delete`
+-   `data.list`
+-   `file.create`
+-   `file.read`
+-   `file.update`
+-   `file.delete`
+-   `event.increment`
+-   `event.count`
+-   `event.update`
+-   `policy.grantPermission`
+-   `policy.revokePermission`
+-   `policy.read`
+-   `policy.list`
+-   `policy.assign`
+-   `policy.unassign`
+-   `role.grant`
+-   `role.revoke`
+-   `role.list`
+
+You can also find the up-to-date list [here](https://github.com/casual-simulation/casualos/blob/develop/src/aux-records/PolicyPermissions.ts).
+
+### Roles
+
+Roles are like resource markers, but they are applied to identites. Identities in this case are users and instances, but more will come in the future.
+
+Generally, any system that is able to act on its own is an identity. Users are able to act on their own, so they are identities. Insts are also able to act (via code), so they also get their own identites.
+
+Like resource markers, users and insts can be assigned multiple roles and they are then used to associate users & insts with specific permissions from a policy.
+
+Unlike resource markers, roles can have additional rules that determine when a user can impersonate them. For example, a role can be set to expire after a set time so that a user only has limited access to a resource.
+
+Many permissions require that both the user and the inst be authorized to access the resource. As a result, if the user needs to use a role to access the resource, but the inst does not, then the request is rejected. This is to help prevent the [Confused Deputy Problem](https://en.wikipedia.org/wiki/Confused_deputy_problem), where the user is logged in but the inst tries to access something that is shouldn't have access to.
+
+## Key Points
+
+Policies and Roles control who is allowed to access specific resources, and are a powerful tool for managing permissions and access.
+
+-   Policies are a list of permissions that map resource markers to (permission, role) pairs.
+-   Roles determine whether someone is allowed to use a permission.
+-   Resource markers are applied to resources and determine which policies (and therefore which permissions) apply to the resource.
+-   Roles are assigned to identities and determine which specific permissions an identity can use.

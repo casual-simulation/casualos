@@ -4,8 +4,7 @@ import {
     ApiaryConnectionStore,
     DeviceConnection,
     DeviceNamespaceConnection,
-} from './ApiaryConnectionStore';
-import { spanify } from './Utils';
+} from '@casual-simulation/casual-apiary';
 
 /**
  * Defines a class that specifies a Redis implementation of an ApiaryAtomStore.
@@ -20,40 +19,25 @@ export class RedisConnectionStore implements ApiaryConnectionStore {
     private hvals: (key: string) => Promise<string[]>;
     private hkeys: (key: string) => Promise<string[]>;
     private hget: (key: string, field: string) => Promise<string>;
+    private get: (key: string) => Promise<string>;
+    private set: (key: string, value: any) => Promise<void>;
     private del: (key: string) => Promise<void>;
+    private expire: (key: string, seconds: number) => Promise<void>;
 
     constructor(globalNamespace: string, client: RedisClient) {
         this._globalNamespace = globalNamespace;
         this._redis = client;
 
-        this.del = spanify(
-            'Redis DEL',
-            promisify(this._redis.del).bind(this._redis)
-        );
-        this.hset = spanify(
-            'Redis HSET',
-            promisify(this._redis.hset).bind(this._redis)
-        );
-        this.hdel = spanify(
-            'Redis HDEL',
-            promisify(this._redis.hdel).bind(this._redis)
-        );
-        this.hvals = spanify(
-            'Redis HVALS',
-            promisify(this._redis.hvals).bind(this._redis)
-        );
-        this.hkeys = spanify(
-            'Redis HKEYS',
-            promisify(this._redis.hkeys).bind(this._redis)
-        );
-        this.hlen = spanify(
-            'Redis HLEN',
-            promisify(this._redis.hlen).bind(this._redis)
-        );
-        this.hget = spanify(
-            'Redis HGET',
-            promisify(this._redis.hget).bind(this._redis)
-        );
+        this.del = promisify(this._redis.del).bind(this._redis);
+        this.hset = promisify(this._redis.hset).bind(this._redis);
+        this.hdel = promisify(this._redis.hdel).bind(this._redis);
+        this.hvals = promisify(this._redis.hvals).bind(this._redis);
+        this.hkeys = promisify(this._redis.hkeys).bind(this._redis);
+        this.hlen = promisify(this._redis.hlen).bind(this._redis);
+        this.hget = promisify(this._redis.hget).bind(this._redis);
+        this.expire = promisify(this._redis.expire).bind(this._redis);
+        this.get = promisify(this._redis.get).bind(this._redis);
+        this.set = promisify(this._redis.set).bind(this._redis);
     }
 
     // /{global}/connections
@@ -121,6 +105,28 @@ export class RedisConnectionStore implements ApiaryConnectionStore {
         await this.del(connectionIdKey(this._globalNamespace, connectionId));
     }
 
+    async expireConnection(connectionId: string): Promise<void> {
+        // Delete the connection from the namespaces and from the global list of connections,
+        // but set a 10 second expiration on all the namespaces that the connection is connected to.
+        // This preserves
+        const namespaces = await this.hkeys(
+            connectionIdKey(this._globalNamespace, connectionId)
+        );
+        await Promise.all(
+            namespaces.map((n) =>
+                this.hdel([
+                    namespaceConnectionsKey(this._globalNamespace, n),
+                    connectionId,
+                ])
+            )
+        );
+        await this.hdel([connectionsKey(this._globalNamespace), connectionId]);
+        await this.expire(
+            connectionIdKey(this._globalNamespace, connectionId),
+            10
+        );
+    }
+
     async getConnectionsByNamespace(
         namespace: string
     ): Promise<DeviceNamespaceConnection[]> {
@@ -178,6 +184,33 @@ export class RedisConnectionStore implements ApiaryConnectionStore {
         const count = await this.hlen(connectionsKey(this._globalNamespace));
         return count;
     }
+
+    async getConnectionRateLimitExceededTime(
+        connectionId: string
+    ): Promise<number> {
+        const key = connectionRateLimitKey(this._globalNamespace, connectionId);
+        const value = await this.get(key);
+        if (!value) {
+            return null;
+        }
+        const parsed = parseInt(value);
+        if (isNaN(parsed)) {
+            return null;
+        }
+        return parsed;
+    }
+
+    async setConnectionRateLimitExceededTime(
+        connectionId: string,
+        timeMs: number
+    ): Promise<void> {
+        const key = connectionRateLimitKey(this._globalNamespace, connectionId);
+        if (timeMs === null || timeMs === undefined) {
+            await this.del(key);
+        } else {
+            await this.set(key, timeMs.toString()), await this.expire(key, 100);
+        }
+    }
 }
 
 function connectionsKey(globalNamespace: string) {
@@ -190,4 +223,8 @@ function namespaceConnectionsKey(globalNamespace: string, namespace: string) {
 
 function connectionIdKey(globalNamespace: string, connectionId: string) {
     return `/${globalNamespace}/connections/${connectionId}`;
+}
+
+function connectionRateLimitKey(globalNamespace: string, connectionId: string) {
+    return `/${globalNamespace}/rate_limited/${connectionId}`;
 }

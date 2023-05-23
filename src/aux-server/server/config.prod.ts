@@ -146,6 +146,7 @@ const config: Config = {
         dbName: 'aux-trees',
     },
     repos: {
+        redis: null,
         mongodb: {
             dbName: 'aux-repos',
             stage: stageType === 'mongodb',

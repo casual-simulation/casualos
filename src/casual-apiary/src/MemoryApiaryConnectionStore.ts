@@ -21,10 +21,13 @@ export class MemoryApiaryConnectionStore implements ApiaryConnectionStore {
 
     private _connections = new Map<string, DeviceConnection>();
 
+    private _rateLimits = new Map<string, number>();
+
     reset() {
         this._namespaceMap = new Map();
         this._connectionMap = new Map();
         this._connections = new Map();
+        this._rateLimits = new Map();
     }
 
     async saveConnection(connection: DeviceConnection): Promise<void> {
@@ -112,6 +115,19 @@ export class MemoryApiaryConnectionStore implements ApiaryConnectionStore {
         this._connections.delete(connectionId);
     }
 
+    expireConnection(connectionId: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            setTimeout(async () => {
+                try {
+                    await this.clearConnection(connectionId);
+                    resolve();
+                } catch (err) {
+                    reject(err);
+                }
+            }, 10);
+        });
+    }
+
     async getConnectionsByNamespace(
         namespace: string
     ): Promise<DeviceNamespaceConnection[]> {
@@ -163,5 +179,18 @@ export class MemoryApiaryConnectionStore implements ApiaryConnectionStore {
             this._connectionMap.set(connectionId, list);
         }
         return list;
+    }
+
+    async getConnectionRateLimitExceededTime(
+        connectionId: string
+    ): Promise<number | null> {
+        return this._rateLimits.get(connectionId) ?? null;
+    }
+
+    async setConnectionRateLimitExceededTime(
+        connectionId: string,
+        timeMs: number
+    ): Promise<void> {
+        this._rateLimits.set(connectionId, timeMs);
     }
 }

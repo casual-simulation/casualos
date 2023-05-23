@@ -32,6 +32,22 @@ Parameters:
         Type: String
         Description: The size, in bytes, of the maximum request that should be made with redis. Lambda Store has a max request size of 400k but we have a 2k buffer to be safe. Will be ignored if set to 0.
         Default: '0'
+    MaxBranchSizeParameter:
+        Type: String
+        Description: The size, in bytes, of the maximum size a branch should be allowed to be. If set to Infinity, then there is no maximum size.
+        Default: 'Infinity'
+    MergeUpdatesOnMaxSizeExceededParameter:
+        Type: String
+        Description: Whether instance updates should be merged when the space size limit is exceeded.
+        Default: 'false'
+    RateLimitMaxParameter:
+        Type: String
+        Description: The maximum number of requests that can be made from an IP address over the window. If set to an empty string, then there is no rate limiting.
+        Default: ''
+    RateLimitWindowMSParameter:
+        Type: String
+        Description: The window, in milliseconds, that requests are allowed to be made over for rate limiting. i.e. if set to 1000, then RateLimitMaxParameter number of requests can be made over 1 second. If set to an empty string, then there is no rate limiting.
+        Default: ''
     WebsocketURLParameter:
         Type: String
         Description: The URL of the API Gateway endpoint that server messages should be sent through.
@@ -279,8 +295,12 @@ Resources:
                     REDIS_TLS: !Ref RedisUseTLSParameter
                     REDIS_NAMESPACE: !Ref RedisNamespaceParameter
                     MAX_REDIS_BATCH_SIZE: !Ref MaxRedisBatchSizeParameter
+                    MAX_BRANCH_SIZE: !Ref MaxBranchSizeParameter
+                    MERGE_UPDATES_ON_MAX_SIZE_EXCEEDED: !Ref MergeUpdatesOnMaxSizeExceededParameter
                     WEBSOCKET_URL: !Ref WebsocketURLParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
+                    RATE_LIMIT_MAX: !Ref RateLimitMaxParameter
+                    RATE_LIMIT_WINDOW_MS: !Ref RateLimitWindowMSParameter
     HandleMessagePermission:
         Type: AWS::Lambda::Permission
         DependsOn:
@@ -393,6 +413,9 @@ Resources:
                 BlockPublicPolicy: false
                 IgnorePublicAcls: false
                 RestrictPublicBuckets: false
+            OwnershipControls:
+                Rules:
+                    - ObjectOwnership: BucketOwnerPreferred
     MessagesBucketPolicy:
         Type: AWS::S3::BucketPolicy
         Properties:

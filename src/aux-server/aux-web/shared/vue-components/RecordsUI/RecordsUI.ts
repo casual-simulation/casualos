@@ -10,13 +10,14 @@ import {
     asyncError,
     RecordDataAction,
     DataRecordAction,
-    approveDataRecord,
+    approveAction,
     GetRecordDataAction,
     EraseRecordDataAction,
     APPROVED_SYMBOL,
     hasValue,
     cleanPhoneNumber,
     mightBeEmailAddress,
+    GrantInstAdminPermissionAction,
 } from '@casual-simulation/aux-common';
 import {
     CreatePublicRecordKeyResult,
@@ -61,7 +62,12 @@ export default class RecordsUI extends Vue {
     showInvalidAddressError: boolean = false;
     showTermsOfServiceError: boolean = false;
     showInvalidCodeError: boolean = false;
+    showBannedUserError: boolean = false;
     processing: boolean = false;
+
+    showGrantInstAdminPermission: boolean = false;
+    completedGrantInstAdminPermission: boolean = false;
+    grantInstId: string = '';
 
     private _requestRecordTaskId: number | string;
     private _requestRecordSimulation: BrowserSimulation;
@@ -69,11 +75,15 @@ export default class RecordsUI extends Vue {
     private _currentLoginAuth: AuthHelperInterface;
     private _loginSim: BrowserSimulation;
 
+    grantInstPermissionEvent: GrantInstAdminPermissionAction;
+    private _grantInstPermisisonSimulation: BrowserSimulation;
+
     get emailFieldClass() {
         return this.showEmailError ||
             this.showSmsError ||
             this.showEnterAddressError ||
-            this.showInvalidAddressError
+            this.showInvalidAddressError ||
+            this.showBannedUserError
             ? 'md-invalid'
             : '';
     }
@@ -185,7 +195,7 @@ export default class RecordsUI extends Vue {
 
     allowRecordData() {
         this.completedAllowRecord = true;
-        const newEvent = approveDataRecord(this.recordDataEvent);
+        const newEvent = approveAction(this.recordDataEvent);
         this._allowRecordSimulation.records.handleEvents([
             newEvent as
                 | RecordDataAction
@@ -214,6 +224,33 @@ export default class RecordsUI extends Vue {
         this.allowAddress = '';
         this.allowRecordName = '';
         this.completedAllowRecord = false;
+    }
+
+    grantInstPermission() {
+        this.completedGrantInstAdminPermission = true;
+        const newEvent = approveAction(this.grantInstPermissionEvent);
+        this._grantInstPermisisonSimulation.records.handleEvents([newEvent]);
+        this.cancelGrantInstPermission();
+    }
+
+    cancelGrantInstPermission() {
+        this.showGrantInstAdminPermission = false;
+        if (
+            this.grantInstPermissionEvent &&
+            hasValue(this.grantInstPermissionEvent.taskId) &&
+            !this.completedGrantInstAdminPermission
+        ) {
+            this._grantInstPermisisonSimulation.helper.transaction(
+                asyncResult(this.grantInstPermissionEvent.taskId, {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: 'The user denied this operation.',
+                })
+            );
+        }
+        this.grantInstPermissionEvent = null;
+        this.allowRecordName = '';
+        this.completedGrantInstAdminPermission = false;
     }
 
     private _simulationAdded(sim: BrowserSimulation): void {
@@ -263,6 +300,13 @@ export default class RecordsUI extends Vue {
                     } else {
                         this.allowRecordName = 'N/A';
                     }
+                } else if (e.type === 'grant_inst_admin_permission') {
+                    this._grantInstPermisisonSimulation = sim;
+                    this.showGrantInstAdminPermission = true;
+                    this.completedGrantInstAdminPermission = false;
+                    this.grantInstPermissionEvent = e;
+                    this.allowRecordName = e.recordName;
+                    this.grantInstId = sim.id;
                 }
             })
         );
@@ -287,6 +331,7 @@ export default class RecordsUI extends Vue {
                         e.showInvalidSmsError || e.showEnterSmsError;
                     this.showTermsOfServiceError =
                         e.showAcceptTermsOfServiceError;
+                    this.showBannedUserError = e.showBannedUserError;
                     this.supportsSms = e.supportsSms;
                     this.processing = false;
                     this.$emit('visible');

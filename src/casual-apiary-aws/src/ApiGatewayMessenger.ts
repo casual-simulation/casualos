@@ -1,12 +1,15 @@
 import { ApiGatewayManagementApi } from 'aws-sdk';
-import { ApiaryConnectionStore } from './ApiaryConnectionStore';
-import { ApiaryMessenger, Message } from './ApiaryMessenger';
+import {
+    Packet,
+    ApiaryConnectionStore,
+    ApiaryMessenger,
+    Message,
+} from '@casual-simulation/casual-apiary';
 import {
     AwsDownloadRequest,
     AwsMessageData,
     AwsMessageTypes,
 } from './AwsMessages';
-import { Packet } from './Events';
 import { getS3Client, uploadMessage } from './Utils';
 
 export const MAX_MESSAGE_SIZE = 32_000;
@@ -91,9 +94,9 @@ export class ApiGatewayMessenger implements ApiaryMessenger {
                         if (err.code === 'GoneException') {
                             // The connection no longer exists. We should remove it.
                             console.log(
-                                `[ApiGatewayMessenger] Connection ${id} missing. Removing.`
+                                `[ApiGatewayMessenger] Connection ${id} missing. Expiring.`
                             );
-                            await this._connections.clearConnection(id);
+                            await this._connections.expireConnection(id);
                         } else {
                             throw err;
                         }
@@ -118,9 +121,9 @@ export class ApiGatewayMessenger implements ApiaryMessenger {
                         if (err.code === 'GoneException') {
                             // The connection no longer exists. We should remove it.
                             console.log(
-                                `[ApiGatewayMessenger] Connection ${id} missing. Removing.`
+                                `[ApiGatewayMessenger] Connection ${id} missing. Expiring.`
                             );
-                            await this._connections.clearConnection(id);
+                            await this._connections.expireConnection(id);
                         } else {
                             throw err;
                         }

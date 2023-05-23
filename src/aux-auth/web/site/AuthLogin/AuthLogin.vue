@@ -27,6 +27,9 @@
                                     >This value is not recognized as a phone number or email
                                     address</span
                                 >
+                                <span v-if="showBannedUserError" class="md-error"
+                                    >This user has been banned.</span
+                                >
                                 <span v-if="showEnterAddressError" class="md-error">{{
                                     enterAddressErrorMessage
                                 }}</span>

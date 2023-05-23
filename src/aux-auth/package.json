@@ -45,6 +45,7 @@
         "@casual-simulation/aux-records-aws": "^3.1.26",
         "@casual-simulation/aux-vm": "^3.1.28",
         "@casual-simulation/aux-vm-browser": "^3.1.28",
+        "@casual-simulation/rate-limit-redis": "^3.0.1",
         "@casual-simulation/vue-shortkey": "^3.1.20",
         "aws-sdk": "^2.968.0",
         "axios": "0.25.0",

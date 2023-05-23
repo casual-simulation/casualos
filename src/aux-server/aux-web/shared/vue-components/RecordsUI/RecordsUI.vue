@@ -111,6 +111,9 @@
                             <span v-if="showEnterAddressError" class="md-error">{{
                                 enterAddressErrorMessage
                             }}</span>
+                            <span v-if="showBannedUserError" class="md-error"
+                                >This user has been banned.</span
+                            >
                         </md-field>
                     </div>
                 </div>
@@ -181,6 +184,45 @@
                     >
                     <span v-else>Send</span>
                 </md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
+        <md-dialog
+            :md-active.sync="showGrantInstAdminPermission"
+            :md-fullscreen="false"
+            @md-closed="cancelGrantInstPermission()"
+            class="input-dialog"
+        >
+            <md-dialog-title>Grant inst Admin?</md-dialog-title>
+            <md-dialog-content class="allow-record-data-dialog-content">
+                <p>
+                    Do you want to grant this inst (<strong>{{ grantInstId }}</strong
+                    >) admin permission to {{ allowRecordName }}?
+                </p>
+                <p>
+                    This will allow the inst to perform the following actions when you are logged
+                    in:
+                </p>
+                <ul>
+                    <li>Create, read, update, or delete any data in the record.</li>
+                    <li>Create, read, update, or delete any files in the record.</li>
+                    <li>Increment, read, or update any events in the record.</li>
+                    <li>Mark or unmark any resources in the record with any resource markers.</li>
+                    <li>List all the resource markers in the record.</li>
+                    <li>List all the role assignments in the record.</li>
+                    <li>Grant or revoke any permissions to any resource markers.</li>
+                    <li>Grant or revoke any roles to any users.</li>
+                </ul>
+            </md-dialog-content>
+            <md-dialog-actions>
+                <md-button class="md-primary" @click="grantInstPermission()">Grant Admin</md-button>
+                <md-button
+                    @click="
+                        showGrantInstAdminPermission = false;
+                        allowRecordName = '';
+                    "
+                    >Cancel</md-button
+                >
             </md-dialog-actions>
         </md-dialog>
 

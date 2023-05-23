@@ -33,6 +33,17 @@ export interface ApiaryConnectionStore {
     clearConnection(connectionId: string): Promise<void>;
 
     /**
+     * Marks all the connections associated with the given connection ID as expired so that they can be deleted in the future.
+     * Works similarly to clearConnection(), but instead of deleting the connection, it marks them as expired.
+     *
+     * After calling this, the given connection ID will not be present in getConnectionsByNamespace() or countConnections(),
+     * but the connection will still be present in getConnection() (until the connection expires).
+     *
+     * @param connectionId The ID of the connection.
+     */
+    expireConnection(connectionId: string): Promise<void>;
+
+    /**
      * Gets all the connections for the given namespace.
      * @param namespace The namespace.
      */
@@ -71,6 +82,24 @@ export interface ApiaryConnectionStore {
      * Counts the number of active connections.
      */
     countConnections(): Promise<number>;
+
+    /**
+     * Gets the last time that the connection rate limit was exceeded for the given connection ID.
+     * @param connectionId The ID of the connection.
+     */
+    getConnectionRateLimitExceededTime(
+        connectionId: string
+    ): Promise<number | null>;
+
+    /**
+     * Sets the last time that the connection rate limit was exceeded for the given connection ID.
+     * @param connectionId The ID of the connection.
+     * @param timeMs The unix time in miliseconds.
+     */
+    setConnectionRateLimitExceededTime(
+        connectionId: string,
+        timeMs: number | null
+    ): Promise<void>;
 }
 
 /**

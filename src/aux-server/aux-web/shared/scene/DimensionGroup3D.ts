@@ -119,6 +119,7 @@ export class DimensionGroup3D extends GameObject implements DimensionGroup {
         this._helper = new DimensionGroupHelper<AuxBot3D>(bot);
         this.domain = domain;
         this.display = new Group();
+        this.display.userData.isDimensionGroupDisplay = true;
         this._decoratorFactory = decoratorFactory;
         this._portalTag = portalTag;
         this._coordinateTransformer = null;

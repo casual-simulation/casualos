@@ -13,6 +13,7 @@ export interface DataRecordsStore {
      * @param subjectId The ID of the user that was logged in when the data was published.
      * @param updatePolicy The update policy that should be stored.
      * @param deletePolicy The delete policy that should be stored.
+     * @param markers The list of resource markers that should be applied to the data.
      */
     setData(
         recordName: string,
@@ -22,6 +23,7 @@ export interface DataRecordsStore {
         subjectId: string,
         updatePolicy: UserPolicy,
         deletePolicy: UserPolicy,
+        markers: string[]
     ): Promise<SetDataResult>;
 
     /**
@@ -71,6 +73,7 @@ export interface GetDataStoreResult {
     subjectId?: string;
     updatePolicy?: UserPolicy;
     deletePolicy?: UserPolicy;
+    markers?: string[];
 
     errorCode?: 'data_not_found' | ServerError;
     errorMessage?: string;
@@ -90,15 +93,15 @@ export interface ListDataStoreResult {
     items?: {
         data: any;
         address: string;
+        markers?: string[];
     }[];
     errorCode?: ServerError;
     errorMessage?: string;
 }
 
-
 /**
  * Defines a type that represents a policy that indicates which users are allowed to affect a record.
- * 
+ *
  * True indicates that any user can edit the record.
  * An array of strings indicates the list of users that are allowed to edit the record.
  */
@@ -108,10 +111,10 @@ export type UserPolicy = true | string[];
  * Determines if the given value represents a valid user policy.
  */
 export function isValidUserPolicy(value: unknown): boolean {
-    if(value === true) {
+    if (value === true) {
         return true;
     } else if (Array.isArray(value)) {
-        return value.every(v => typeof v === 'string');
+        return value.every((v) => typeof v === 'string');
     }
 
     return false;
@@ -122,10 +125,13 @@ export function isValidUserPolicy(value: unknown): boolean {
  * @param policy The policy.
  * @param subjectId The subject ID.
  */
-export function doesSubjectMatchPolicy(policy: UserPolicy, subjectId: string): boolean {
+export function doesSubjectMatchPolicy(
+    policy: UserPolicy,
+    subjectId: string
+): boolean {
     if (policy === true) {
         return true;
     } else {
-        return policy.some(id => id === subjectId);
+        return policy.some((id) => id === subjectId);
     }
 }

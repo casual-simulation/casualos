@@ -83,6 +83,11 @@ export const MAX_EMAIL_ADDRESS_LENGTH = 200;
 export const MAX_SMS_ADDRESS_LENGTH = 30;
 
 /**
+ * The maximum allowed length for an OpenAI API key.
+ */
+export const MAX_OPEN_AI_API_KEY_LENGTH = 100;
+
+/**
  * Defines a class that is able to authenticate users.
  */
 export class AuthController {
@@ -205,6 +210,15 @@ export class AuthController {
                         errorMessage: 'The given address is not accepted.',
                     };
                 }
+            }
+
+            if (user.banTimeMs > 0) {
+                return {
+                    success: false,
+                    errorCode: 'user_is_banned',
+                    errorMessage: 'The user has been banned.',
+                    banReason: user.banReason,
+                };
             }
 
             const requestTime = Date.now();
@@ -582,6 +596,15 @@ export class AuthController {
                             errorMessage: INVALID_KEY_ERROR_MESSAGE,
                         };
                     }
+                }
+
+                if (userInfo.banTimeMs > 0) {
+                    return {
+                        success: false,
+                        errorCode: 'user_is_banned',
+                        errorMessage: 'The user has been banned.',
+                        banReason: userInfo.banReason,
+                    };
                 }
             }
 
@@ -1001,12 +1024,12 @@ export class AuthController {
 
             let sub: SubscriptionConfiguration['subscriptions'][0];
             if (result.subscriptionId) {
-                sub = this._subscriptionConfig.subscriptions.find(
+                sub = this._subscriptionConfig?.subscriptions.find(
                     (s) => s.id === result.subscriptionId
                 );
             }
             if (!sub) {
-                sub = this._subscriptionConfig.subscriptions.find(
+                sub = this._subscriptionConfig?.subscriptions.find(
                     (s) => s.defaultSubscription
                 );
                 if (sub) {
@@ -1017,7 +1040,7 @@ export class AuthController {
             }
 
             if (!sub) {
-                sub = this._subscriptionConfig.subscriptions[0];
+                sub = this._subscriptionConfig?.subscriptions[0];
                 if (sub) {
                     console.log(
                         '[AuthController] [getUserInfo] Using first subscription for user.'
@@ -1264,12 +1287,18 @@ export interface LoginRequestFailure {
         | 'unacceptable_address_type'
         | 'unacceptable_ip_address'
         | 'address_type_not_supported'
+        | 'user_is_banned'
         | ServerError;
 
     /**
      * The error message for the failure.
      */
     errorMessage: string;
+
+    /**
+     * The ban reason for the user.
+     */
+    banReason?: AuthUser['banReason'];
 }
 
 export interface CompleteLoginRequest {
@@ -1354,8 +1383,11 @@ export interface ValidateSessionKeyFailure {
         | 'unacceptable_session_key'
         | 'invalid_key'
         | 'session_expired'
+        | 'user_is_banned'
         | ServerError;
     errorMessage: string;
+
+    banReason?: AuthUser['banReason'];
 }
 
 export interface RevokeSessionRequest {
@@ -1391,6 +1423,7 @@ export interface RevokeSessionFailure {
         | 'session_expired'
         | 'session_not_found'
         | 'session_already_revoked'
+        | 'user_is_banned'
         | ServerError;
     errorMessage: string;
 }
@@ -1422,6 +1455,7 @@ export interface RevokeAllSessionsFailure {
         | 'unacceptable_session_key'
         | 'invalid_key'
         | 'session_expired'
+        | 'user_is_banned'
         | ServerError;
     errorMessage: string;
 }
@@ -1461,6 +1495,7 @@ export interface ListSessionsFailure {
         | 'unacceptable_expire_time'
         | 'unacceptable_session_key'
         | 'invalid_key'
+        | 'user_is_banned'
         | 'session_expired'
         | ServerError;
     errorMessage: string;

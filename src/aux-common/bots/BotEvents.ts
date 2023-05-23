@@ -216,6 +216,11 @@ export type AsyncActions =
     | DefineGlobalBotAction
     | ConvertGeolocationToWhat3WordsAction
     | GetPublicRecordKeyAction
+    | GrantRecordMarkerPermissionAction
+    | RevokeRecordMarkerPermissionAction
+    | GrantInstAdminPermissionAction
+    | GrantRoleAction
+    | RevokeRoleAction
     | RecordDataAction
     | GetRecordDataAction
     | ListRecordDataAction
@@ -3581,6 +3586,11 @@ export interface DataRecordOptions extends RecordActionOptions {
      * The policy that should be used for deleting the record.
      */
     deletePolicy?: RecordUserPolicyType;
+
+    /**
+     * The markers that should be applied to the record.
+     */
+    markers?: string[];
 }
 
 /**
@@ -3673,6 +3683,13 @@ export interface EraseRecordDataAction extends DataRecordAction {
     address: string;
 }
 
+export interface RecordFileActionOptions extends RecordActionOptions {
+    /**
+     * The markers that should be applied to the record.
+     */
+    markers?: string[];
+}
+
 /**
  * Defines an event that publishes a file to a record.
  */
@@ -3698,6 +3715,11 @@ export interface RecordFileAction extends RecordsAction {
      * The MIME type of the uploaded file.
      */
     mimeType?: string;
+
+    /**
+     * The options for the action.
+     */
+    options: RecordFileActionOptions;
 }
 
 /**
@@ -3829,6 +3851,129 @@ export interface GetPublicRecordKeyAction extends AsyncAction {
      * The policy that the record key should have.
      */
     policy?: PublicRecordKeyPolicy;
+}
+
+/**
+ * Defines an interface that represents an action that grants a permission to a record marker.
+ */
+export interface GrantRecordMarkerPermissionAction extends RecordsAction {
+    type: 'grant_record_marker_permission';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The marker that should be granted permission.
+     */
+    marker: string;
+
+    /**
+     * The permission that should be granted.
+     */
+    permission: object;
+}
+
+/**
+ * Defines an interface that represents an action that revokes a permission from a record marker.
+ */
+export interface RevokeRecordMarkerPermissionAction extends RecordsAction {
+    type: 'revoke_record_marker_permission';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The marker that should be revoked permission.
+     */
+    marker: string;
+
+    /**
+     * The permission that should be revoked.
+     */
+    permission: object;
+}
+
+/**
+ * Defines an action that represents an action that grants admin permissions to the inst for the day.
+ */
+export interface GrantInstAdminPermissionAction extends RecordsAction {
+    type: 'grant_inst_admin_permission';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * Whether this action has been manually approved.
+     *
+     * Uses a symbol to ensure that it cannot be copied across security boundaries.
+     * As a result, it should be impossible to generate actions that are pre-approved.
+     */
+    [APPROVED_SYMBOL]?: boolean;
+}
+
+/**
+ * Defines an action that grants a role to a user or inst.
+ */
+export interface GrantRoleAction extends RecordsAction {
+    type: 'grant_role';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The role that should be granted.
+     */
+    role: string;
+
+    /**
+     * The ID of the user that should be granted the role.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the inst that should be granted the role.
+     */
+    inst?: string;
+
+    /**
+     * The Unix time (in miliseconds) that the role grant expires.
+     */
+    expireTimeMs: number | null;
+}
+
+/**
+ * Defines an action that revokes a role from a user or inst.
+ */
+export interface RevokeRoleAction extends RecordsAction {
+    type: 'revoke_role';
+
+    /**
+     * The name of the record.
+     */
+    recordName: string;
+
+    /**
+     * The role that should be revoked.
+     */
+    role: string;
+
+    /**
+     * The ID of the user that should be revoked the role.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the inst that should be revoked the role.
+     */
+    inst?: string;
 }
 
 export interface MediaPermssionOptions {
@@ -7357,6 +7502,181 @@ export function getPublicRecordKey(
 }
 
 /**
+ * Creates a GrantRecordMarkerPermissionAction.
+ * @param recordName The name of the record.
+ * @param marker The marker.
+ * @param permission The permission that should be granted.
+ * @param options The options for the action.
+ * @param taskId The ID of the task.
+ */
+export function grantRecordMarkerPermission(
+    recordName: string,
+    marker: string,
+    permission: object,
+    options: RecordActionOptions,
+    taskId: number | string
+): GrantRecordMarkerPermissionAction {
+    return {
+        type: 'grant_record_marker_permission',
+        recordName,
+        marker,
+        permission,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a RevokeRecordMarkerPermissionAction.
+ * @param recordName The name of the record.
+ * @param marker The marker.
+ * @param permission The permission that should be granted.
+ * @param options The options for the action.
+ * @param taskId The ID of the task.
+ */
+export function revokeRecordMarkerPermission(
+    recordName: string,
+    marker: string,
+    permission: object,
+    options: RecordActionOptions,
+    taskId: number | string
+): RevokeRecordMarkerPermissionAction {
+    return {
+        type: 'revoke_record_marker_permission',
+        recordName,
+        marker,
+        permission,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GrantRoleAction for a user.
+ * @param recordName The name of the record.
+ * @param role The role that should be granted.
+ * @param userId The ID of the user.
+ * @param expireTimeMs The Unix time (in miliseconds) that the role grant expires.
+ * @param options The options for the action.
+ * @param taskId The ID of the task.
+ */
+export function grantUserRole(
+    recordName: string,
+    role: string,
+    userId: string,
+    expireTimeMs: number | null,
+    options: RecordActionOptions,
+    taskId: number | string
+): GrantRoleAction {
+    return {
+        type: 'grant_role',
+        recordName,
+        role,
+        userId,
+        expireTimeMs,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GrantRoleAction for an inst.
+ * @param recordName The name of the record.
+ * @param role The role that should be granted.
+ * @param inst The ID of the inst.
+ * @param expireTimeMs The Unix time (in miliseconds) that the role grant expires.
+ * @param options The options for the action.
+ * @param taskId The ID of the task.
+ */
+export function grantInstRole(
+    recordName: string,
+    role: string,
+    inst: string,
+    expireTimeMs: number | null,
+    options: RecordActionOptions,
+    taskId: number | string
+): GrantRoleAction {
+    return {
+        type: 'grant_role',
+        recordName,
+        role,
+        inst,
+        expireTimeMs,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GrantRoleAction for a user.
+ * @param recordName The name of the record.
+ * @param role The role that should be granted.
+ * @param userId The ID of the user.
+ * @param options The options for the action.
+ * @param taskId The ID of the task.
+ */
+export function revokeUserRole(
+    recordName: string,
+    role: string,
+    userId: string,
+    options: RecordActionOptions,
+    taskId: number | string
+): RevokeRoleAction {
+    return {
+        type: 'revoke_role',
+        recordName,
+        role,
+        userId,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a revokeRoleAction for an inst.
+ * @param recordName The name of the record.
+ * @param role The role that should be revokeed.
+ * @param inst The ID of the inst.
+ * @param options The options for the action.
+ * @param taskId The ID of the task.
+ */
+export function revokeInstRole(
+    recordName: string,
+    role: string,
+    inst: string,
+    options: RecordActionOptions,
+    taskId: number | string
+): RevokeRoleAction {
+    return {
+        type: 'revoke_role',
+        recordName,
+        role,
+        inst,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GrantInstAdminPermissionAction.
+ * @param recordName The name of the record.
+ * @param options The options for the action.
+ * @param taskId The ID of the task.
+ */
+export function grantInstAdminPermission(
+    recordName: string,
+    options: RecordActionOptions,
+    taskId: number | string
+): GrantInstAdminPermissionAction {
+    return {
+        type: 'grant_inst_admin_permission',
+        recordName,
+        options,
+        taskId,
+    };
+}
+
+/**
  * Creates a RecordDataAction.
  * @param recordKey The key that should be used to access the record.
  * @param address The address that the data should be stored at in the record.
@@ -7457,11 +7777,21 @@ export function eraseRecordData(
     };
 }
 
+export interface ApprovableAction {
+    /**
+     * Whether this action has been manually approved.
+     *
+     * Uses a symbol to ensure that it cannot be copied across security boundaries.
+     * As a result, it should be impossible to generate actions that are pre-approved.
+     */
+    [APPROVED_SYMBOL]?: boolean;
+}
+
 /**
  * Approves the given data record action and returns a new action that has been approved.
  * @param action The action to approve.
  */
-export function approveDataRecord<T extends DataRecordAction>(action: T): T {
+export function approveAction<T extends ApprovableAction>(action: T): T {
     return {
         ...action,
         [APPROVED_SYMBOL]: true,
@@ -7474,6 +7804,7 @@ export function approveDataRecord<T extends DataRecordAction>(action: T): T {
  * @param data The data to store.
  * @param description The description of the file.
  * @param mimeType The MIME type of the file.
+ * @param markers The markers to associate with the file.
  * @param options The options that should be used for the action.
  */
 export function recordFile(
@@ -7481,7 +7812,7 @@ export function recordFile(
     data: any,
     description: string,
     mimeType: string,
-    options: RecordActionOptions,
+    options: RecordFileActionOptions,
     taskId?: number | string
 ): RecordFileAction {
     return {

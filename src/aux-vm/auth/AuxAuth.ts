@@ -74,6 +74,11 @@ export interface LoginUIAddressStatus {
     showInvalidSmsError?: boolean;
 
     /**
+     * Whether to show an error message that the user was banned.
+     */
+    showBannedUserError?: boolean;
+
+    /**
      * The error code that ocurred.
      */
     errorCode?: string;

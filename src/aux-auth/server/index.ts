@@ -29,6 +29,8 @@ import {
     JsonParseResult,
     StripeInterface,
     tryParseSubscriptionConfig,
+    RateLimitController,
+    PolicyController,
 } from '@casual-simulation/aux-records';
 import { MongoDBRecordsStore } from './MongoDBRecordsStore';
 import { MongoDBDataRecordsStore, DataRecord } from './MongoDBDataRecordsStore';
@@ -47,8 +49,13 @@ import {
 } from './MongoDBAuthStore';
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
 import { StripeIntegration } from '../shared/StripeIntegration';
+import {
+    MongoDBRateLimiter,
+    MongoDBRateLimitRecord,
+} from './MongoDBRateLimiter';
 import * as dotenv from 'dotenv';
 import Stripe from 'stripe';
+import { MongoDBPolicyStore } from './MongoDBPolicyStore';
 
 // Load env file
 const secretsFile = path.resolve(__dirname, '..', 'secrets.env.json');
@@ -88,6 +95,13 @@ const MONGO_USE_NEW_URL_PARSER =
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? null;
 const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY ?? null;
 const SUBSCRIPTION_CONFIG = process.env.SUBSCRIPTION_CONFIG ?? null;
+
+const RATE_LIMIT_MAX: number = process.env.RATE_LIMIT_MAX
+    ? parseInt(process.env.RATE_LIMIT_MAX)
+    : null;
+const RATE_LIMIT_WINDOW_MS: number = process.env.RATE_LIMIT_WINDOW_MS
+    ? parseInt(process.env.RATE_LIMIT_WINDOW_MS)
+    : null;
 
 function getAuthMessenger(): AuthMessenger {
     const API_KEY = process.env.TEXT_IT_API_KEY;
@@ -167,6 +181,11 @@ async function start() {
     const recordsEventsCollection = db.collection<any>('recordsEvents');
     const emailRules = db.collection<any>('emailRules');
     const smsRules = db.collection<any>('smsRules');
+    const rateLimits = db.collection<any>('rateLimits');
+
+    const policies = db.collection<any>('policies');
+    const roles = db.collection<any>('roles');
+
     const tempRecords = [] as AppRecord[];
 
     const authStore = new MongoDBAuthStore(
@@ -176,36 +195,6 @@ async function start() {
         emailRules,
         smsRules
     );
-    const recordsStore = new MongoDBRecordsStore(
-        recordsCollection,
-        recordsKeysCollection
-    );
-    const recordsManager = new RecordsController(recordsStore);
-    const dataStore = new MongoDBDataRecordsStore(recordsDataCollection);
-    const dataManager = new DataRecordsController(recordsManager, dataStore);
-    const eventStore = new MongoDBEventRecordsStore(recordsEventsCollection);
-    const eventManager = new EventRecordsController(recordsManager, eventStore);
-
-    const manualDataStore = new MongoDBDataRecordsStore(
-        manualRecordsDataCollection
-    );
-    const manualDataManager = new DataRecordsController(
-        recordsManager,
-        manualDataStore
-    );
-
-    const fileStore = new MongoDBFileRecordsStore(
-        recordsFilesCollection,
-        'http://localhost:2998/api/v2/records/file'
-    );
-    const fileController = new FileRecordsController(recordsManager, fileStore);
-
-    const livekitController = new LivekitController(
-        LIVEKIT_API_KEY,
-        LIVEKIT_SECRET_KEY,
-        LIVEKIT_ENDPOINT
-    );
-
     const messenger = getAuthMessenger();
 
     let forceAllowSubscriptionFeatures = false;
@@ -234,6 +223,63 @@ async function start() {
         messenger,
         subscriptionConfig,
         forceAllowSubscriptionFeatures
+    );
+
+    const recordsStore = new MongoDBRecordsStore(
+        recordsCollection,
+        recordsKeysCollection
+    );
+    const recordsManager = new RecordsController(recordsStore);
+
+    const policyStore = new MongoDBPolicyStore(policies, roles);
+    const policyController = new PolicyController(
+        authController,
+        recordsManager,
+        policyStore
+    );
+
+    const dataStore = new MongoDBDataRecordsStore(recordsDataCollection);
+    const dataManager = new DataRecordsController(policyController, dataStore);
+    const eventStore = new MongoDBEventRecordsStore(recordsEventsCollection);
+    const eventManager = new EventRecordsController(
+        policyController,
+        eventStore
+    );
+
+    const rateLimiter = new MongoDBRateLimiter(rateLimits);
+    let rateManager: RateLimitController = null;
+
+    if (RATE_LIMIT_MAX && RATE_LIMIT_WINDOW_MS) {
+        console.log('[AuxAuth] Enabling rate limiting.');
+        rateManager = new RateLimitController(rateLimiter, {
+            maxHits: RATE_LIMIT_MAX,
+            windowMs: RATE_LIMIT_WINDOW_MS,
+        });
+    } else {
+        console.log('[AuxAuth] Disabling rate limiting.');
+    }
+
+    const manualDataStore = new MongoDBDataRecordsStore(
+        manualRecordsDataCollection
+    );
+    const manualDataManager = new DataRecordsController(
+        policyController,
+        manualDataStore
+    );
+
+    const fileStore = new MongoDBFileRecordsStore(
+        recordsFilesCollection,
+        'http://localhost:2998/api/v2/records/file'
+    );
+    const fileController = new FileRecordsController(
+        policyController,
+        fileStore
+    );
+
+    const livekitController = new LivekitController(
+        LIVEKIT_API_KEY,
+        LIVEKIT_SECRET_KEY,
+        LIVEKIT_ENDPOINT
     );
 
     const subscriptionController = new SubscriptionController(
@@ -272,7 +318,9 @@ async function start() {
         dataManager,
         manualDataManager,
         fileController,
-        subscriptionController
+        subscriptionController,
+        rateManager,
+        policyController
     );
 
     async function handleRequest(req: Request, res: Response) {

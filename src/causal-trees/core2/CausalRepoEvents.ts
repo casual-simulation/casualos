@@ -216,6 +216,11 @@ export const AUTHENTICATED_TO_BRANCH = 'repo/authenticated_to_branch';
 export const SYNC_TIME = 'sync/time';
 
 /**
+ * The name of the event which is used to notify a connection that the rate limit has been exceeded.
+ */
+export const RATE_LIMIT_EXCEEDED = 'rate_limit_exceeded';
+
+/**
  * Defines an event which indicates that a branch should be watched.
  */
 export interface WatchBranchEvent {
@@ -336,6 +341,24 @@ export interface UpdatesReceivedEvent {
      * The ID that was included in the original "add update" event.
      */
     updateId: number;
+
+    /**
+     * The error code that occurred.
+     * If omitted, then no error occurred.
+     */
+    errorCode?: 'max_size_reached';
+
+    /**
+     * The maximum allowed size for the inst.
+     * Only included when the errorCode is set to "max_size_reached".
+     */
+    maxBranchSizeInBytes?: number;
+
+    /**
+     * The size that the inst would be at if the updates were added.
+     * Only included when the errorCode is set to "max_size_reached".
+     */
+    neededBranchSizeInBytes?: number;
 }
 
 /**
@@ -641,4 +664,9 @@ export interface TimeSyncResponse {
      * The time that the server sent this response at in miliseconds since Jan 1 1970 UTC-0.
      */
     serverTransmitTime: number;
+}
+
+export interface RateLimitExceededEvent {
+    retryAfter: number;
+    totalHits: number;
 }

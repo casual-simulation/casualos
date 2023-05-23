@@ -2,6 +2,8 @@ import {
     EventRecordsStore,
     AddEventCountStoreResult,
     GetEventCountStoreResult,
+    EventRecordUpdate,
+    UpdateEventResult,
 } from '@casual-simulation/aux-records';
 import dynamodb from 'aws-sdk/clients/dynamodb';
 
@@ -61,7 +63,8 @@ export class DynamoDBEventStore implements EventRecordsStore {
             const item = result.Item as StoredData;
             return {
                 success: true,
-                count: item.eventCount,
+                count: item.eventCount ?? 0,
+                markers: item.markers,
             };
         } else {
             return {
@@ -69,6 +72,49 @@ export class DynamoDBEventStore implements EventRecordsStore {
                 count: 0,
             };
         }
+    }
+
+    async updateEvent(
+        recordName: string,
+        eventName: string,
+        updates: EventRecordUpdate
+    ): Promise<UpdateEventResult> {
+        let updateExpression = 'SET updateTime = :updateTime';
+        let hasUpdate = false;
+        if ('markers' in updates) {
+            updateExpression += ', markers = :markers';
+            hasUpdate = true;
+        }
+        if ('count' in updates) {
+            updateExpression += ', eventCount = :eventCount';
+            hasUpdate = true;
+        }
+
+        if (!hasUpdate) {
+            return {
+                success: true,
+            };
+        }
+
+        const result = await this._dynamo
+            .update({
+                TableName: this._tableName,
+                Key: {
+                    recordName: recordName,
+                    eventName: eventName,
+                },
+                UpdateExpression: updateExpression,
+                ExpressionAttributeValues: {
+                    ':updateTime': Date.now(),
+                    ':markers': updates.markers,
+                    ':eventCount': updates.count,
+                },
+            })
+            .promise();
+
+        return {
+            success: true,
+        };
     }
 }
 
@@ -92,4 +138,9 @@ interface StoredData {
      * The time that the data was updated in miliseconds since January 1 1970 00:00:00 UTC.
      */
     updateTime: number;
+
+    /**
+     * The markers that are applied to the event.
+     */
+    markers?: string[];
 }

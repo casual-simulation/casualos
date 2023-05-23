@@ -61,6 +61,10 @@ import { Game } from '../Game';
 import TWEEN, { Tween } from '@tweenjs/tween.js';
 import { MapSimulation3D } from '../../../aux-player/scene/MapSimulation3D';
 import { CoordinateSystem } from '../CoordinateSystem';
+import { DimensionGroup3D } from '../DimensionGroup3D';
+
+const tempVector3 = new Vector3();
+const tempQuaternion = new Quaternion();
 
 /**
  * Defines an interface that contains possible options for DimensionPositionDecorator objects.
@@ -88,6 +92,8 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
     private _rotationObj: Object3D;
     private _game: Game;
     private _tween: any;
+    private _parentWorldPos: Vector3;
+    private _parentWorldRot: Quaternion;
 
     constructor(
         bot3D: AuxBot3D,
@@ -384,6 +390,52 @@ export class DimensionPositionDecorator extends AuxBot3DDecoratorBase {
 
             if (update) {
                 this.bot3D.updateMatrixWorld(true);
+            }
+        }
+
+        // Update bounding objects if parent moves.
+        // If this bot is parented to a bot or dimension group, crawl up the parent tree until we find it.
+        let parent3D: AuxBot3D | DimensionGroup3D;
+
+        if (
+            this.bot3D.parent.userData.isBotTransformContainer ||
+            this.bot3D.parent.userData.isDimensionGroupDisplay
+        ) {
+            let grandparent = this.bot3D.parent;
+
+            while (!parent3D && grandparent) {
+                if (
+                    grandparent instanceof AuxBot3D ||
+                    grandparent instanceof DimensionGroup3D
+                ) {
+                    parent3D = grandparent;
+                }
+
+                grandparent = grandparent.parent;
+            }
+        }
+
+        if (parent3D) {
+            if (!this._parentWorldPos || !this._parentWorldRot) {
+                this._parentWorldPos = new Vector3();
+                this._parentWorldRot = new Quaternion();
+                parent3D.display.getWorldPosition(this._parentWorldPos);
+                parent3D.display.getWorldQuaternion(this._parentWorldRot);
+                this.bot3D.forceComputeBoundingObjects();
+            } else {
+                this._parentWorldPos.copy(tempVector3);
+                this._parentWorldRot.copy(tempQuaternion);
+
+                parent3D.display.getWorldPosition(this._parentWorldPos);
+                parent3D.display.getWorldQuaternion(this._parentWorldRot);
+
+                const parentMoved =
+                    !this._parentWorldPos.equals(tempVector3) ||
+                    !this._parentWorldRot.equals(tempQuaternion);
+
+                if (parentMoved) {
+                    this.bot3D.forceComputeBoundingObjects();
+                }
             }
         }
     }

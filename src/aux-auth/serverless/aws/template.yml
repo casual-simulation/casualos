@@ -67,6 +67,14 @@ Parameters:
     AllowedApiOriginsParameter:
         Type: String
         Description: The allowed origin domains that are able to make requests for the records APIs. This value should be a space-separated string that includes the origins that are allowed to request/publish records to this site.
+    RateLimitMaxParameter:
+        Type: String
+        Description: The maximum number of requests that can be made from an IP address over the window. If set to an empty string, then there is no rate limiting.
+        Default: ''
+    RateLimitWindowMSParameter:
+        Type: String
+        Description: The window, in milliseconds, that requests are allowed to be made over for rate limiting. i.e. if set to 1000, then RateLimitMaxParameter number of requests can be made over 1 second. If set to an empty string, then there is no rate limiting.
+        Default: ''
 
 Globals:
     Api:
@@ -149,8 +157,19 @@ Resources:
                     USER_ADDRESSES_TABLE: !Ref UserAddressesTable
                     LOGIN_REQUESTS_TABLE: !Ref LoginRequestsTable
                     SESSIONS_TABLE: !Ref SessionsTable
+                    POLICIES_TABLE: !Ref PoliciesTable
+                    ROLES_TABLE: !Ref RolesTable
+                    SUBJECT_ROLES_TABLE: !Ref SubjectRolesTable
+                    ROLE_SUBJECTS_TABLE: !Ref RoleSubjectsTable
                     EMAIL_TABLE: !Ref EmailRulesTable
                     SMS_TABLE: !Ref SmsRulesTable
+                    REDIS_HOST: !Ref RedisHostParameter
+                    REDIS_PORT: !Ref RedisPortParameter
+                    REDIS_PASS: !Ref RedisPasswordParameter
+                    REDIS_TLS: !Ref RedisUseTLSParameter
+                    REDIS_NAMESPACE: !Ref RedisRecordsNamespaceParameter
+                    RATE_LIMIT_MAX: !Ref RateLimitMaxParameter
+                    RATE_LIMIT_WINDOW_MS: !Ref RateLimitWindowMSParameter
             Events:
                 CreateRecordKey:
                     Type: Api
@@ -202,6 +221,16 @@ Resources:
                     Properties:
                         Path: /api/v2/records/file
                         Method: DELETE
+                ReadFile:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/file
+                        Method: GET
+                UpdateFile:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/file
+                        Method: PUT
                 AddEventCount:
                     Type: Api
                     Properties:
@@ -212,11 +241,61 @@ Resources:
                     Properties:
                         Path: /api/v2/records/events/count
                         Method: GET
+                UpdateEvent:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/events
+                        Method: POST
                 MarkFileUploaded:
                     Type: S3
                     Properties:
                         Bucket: !Ref FilesBucket
                         Events: s3:ObjectCreated:Put
+                ReadPolicy:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/policy
+                        Method: GET
+                ListPolicies:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/policy/list
+                        Method: GET
+                GrantPermission:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/policy/grantPermission
+                        Method: POST
+                RevokePermission:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/policy/revokePermission
+                        Method: POST
+                ListUserRoles:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/role/user/list
+                        Method: GET
+                ListInstRoles:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/role/inst/list
+                        Method: GET
+                ListRolesAssignments:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/role/assignments/list
+                        Method: GET
+                GrantRole:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/role/grant
+                        Method: POST
+                RevokeRole:
+                    Type: APi
+                    Properties:
+                        Path: /api/v2/records/role/revoke
+                        Method: POST
                 GetMeetToken:
                     Type: Api
                     Properties:
@@ -379,6 +458,61 @@ Resources:
                   Projection:
                       ProjectionType: ALL
 
+    PoliciesTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: recordName
+                  KeyType: HASH
+                - AttributeName: marker
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: recordName
+                  AttributeType: S
+                - AttributeName: marker
+                  AttributeType: S
+    RolesTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: recordName
+                  KeyType: HASH
+                - AttributeName: role
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: recordName
+                  AttributeType: S
+                - AttributeName: role
+                  AttributeType: S
+
+    SubjectRolesTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: subjectId
+                  KeyType: HASH
+                - AttributeName: recordName
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: subjectId
+                  AttributeType: S
+                - AttributeName: recordName
+                  AttributeType: S
+
+    RoleSubjectsTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            KeySchema:
+                - AttributeName: roleId
+                  KeyType: HASH
+                - AttributeName: subjectId
+                  KeyType: RANGE
+            AttributeDefinitions:
+                - AttributeName: roleId
+                  AttributeType: S
+                - AttributeName: subjectId
+                  AttributeType: S
+
     # DynamoDB table to store records
     RecordsTable:
         Type: AWS::DynamoDB::Table
@@ -423,12 +557,6 @@ Resources:
                 ReadCapacityUnits: 2
                 WriteCapacityUnits: 2
 
-    RecordsBucket:
-        Type: AWS::S3::Bucket
-        DeletionPolicy: Retain
-        Properties:
-            AccessControl: PublicRead
-
     FilesBucket:
         Type: AWS::S3::Bucket
         DeletionPolicy: Retain
@@ -446,6 +574,14 @@ Resources:
                           - '*'
                       ExposedHeaders: []
                       MaxAge: 3000
+            PublicAccessBlockConfiguration:
+                BlockPublicAcls: false
+                BlockPublicPolicy: false
+                IgnorePublicAcls: false
+                RestrictPublicBuckets: false
+            OwnershipControls:
+                Rules:
+                    - ObjectOwnership: BucketOwnerPreferred
 
     PublicRecordsTable:
         Type: AWS::DynamoDB::Table

@@ -25,6 +25,10 @@ import {
     StatusUpdate,
     VersionVector,
     WATCH_BRANCH,
+    UpdatesReceivedEvent,
+    UPDATES_RECEIVED,
+    RATE_LIMIT_EXCEEDED,
+    RateLimitExceededEvent,
 } from '@casual-simulation/causal-trees';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { applyUpdate, Doc, Map as YMap, Text as YText } from 'yjs';
@@ -49,8 +53,10 @@ import {
     getServerStatuses,
     InstUpdate,
     listInstUpdates,
+    ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME,
     ON_REMOTE_DATA_ACTION_NAME,
     ON_REMOTE_WHISPER_ACTION_NAME,
+    ON_SPACE_MAX_SIZE_REACHED,
     stateUpdatedEvent,
     StateUpdatedEvent,
     unlockSpace,
@@ -62,6 +68,8 @@ import { del, edit, insert, preserve } from '../aux-format-2';
 import { createDocFromUpdates, getUpdates } from '../test/YjsTestHelpers';
 import { flatMap } from 'lodash';
 import { YjsPartitionImpl } from './YjsPartition';
+
+console.log = jest.fn();
 
 describe('RemoteYjsPartition', () => {
     testPartitionImplementation(
@@ -118,6 +126,7 @@ describe('RemoteYjsPartition', () => {
         let partition: RemoteYjsPartitionImpl;
         let receiveEvent: Subject<ReceiveDeviceActionEvent>;
         let addAtoms: Subject<AddUpdatesEvent>;
+        let updatesReceived: Subject<UpdatesReceivedEvent>;
         let added: Bot[];
         let removed: string[];
         let updated: UpdatedBot[];
@@ -130,8 +139,10 @@ describe('RemoteYjsPartition', () => {
             connection = new MemoryConnectionClient();
             receiveEvent = new Subject<ReceiveDeviceActionEvent>();
             addAtoms = new Subject<AddUpdatesEvent>();
+            updatesReceived = new Subject<UpdatesReceivedEvent>();
             connection.events.set(RECEIVE_EVENT, receiveEvent);
             connection.events.set(ADD_UPDATES, addAtoms);
+            connection.events.set(UPDATES_RECEIVED, updatesReceived);
             client = new CausalRepoClient(connection);
             connection.connect();
             sub = new Subscription();
@@ -1106,6 +1117,49 @@ describe('RemoteYjsPartition', () => {
                     });
                 });
             });
+
+            describe('rate_limit_exceeded', () => {
+                it('should emit a shout when the event is recieved', async () => {
+                    setupPartition({
+                        type: 'remote_yjs',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    partition.space = 'test';
+                    const rateLimitExceeded =
+                        new Subject<RateLimitExceededEvent>();
+                    connection.events.set(
+                        RATE_LIMIT_EXCEEDED,
+                        rateLimitExceeded
+                    );
+
+                    partition.connect();
+
+                    const events = [] as Action[];
+                    partition.onEvents.subscribe((e) => events.push(...e));
+
+                    await waitAsync();
+
+                    rateLimitExceeded.next({
+                        retryAfter: 123,
+                        totalHits: 999,
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        action(
+                            ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME,
+                            undefined,
+                            undefined,
+                            {
+                                space: 'test',
+                            }
+                        ),
+                    ]);
+                });
+            });
         });
 
         describe('remote atoms', () => {
@@ -1217,6 +1271,148 @@ describe('RemoteYjsPartition', () => {
                 expect(bot).not.toBeUndefined();
                 expect(bot.size).toBe(1);
                 expect(bot.get('abc')).toBe(123);
+            });
+
+            it('should not store null values on new bots', async () => {
+                setupPartition({
+                    type: 'remote_yjs',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                });
+
+                partition.connect();
+
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('test1', {
+                            abc: null,
+                            def: 123,
+                        })
+                    ),
+                ]);
+                await waitAsync();
+
+                expect(connection.sentMessages.slice(1).length).toBe(1);
+
+                const addUpdatesMessage = connection.sentMessages[1];
+                expect(addUpdatesMessage.name).toEqual(ADD_UPDATES);
+                expect(addUpdatesMessage.data.branch).toEqual('testBranch');
+
+                const doc = createDocFromUpdates(
+                    addUpdatesMessage.data.updates
+                );
+                const bots = doc.getMap('bots');
+                expect(bots.size).toBe(1);
+
+                const bot: any = bots.get('test1');
+                expect(bot).not.toBeUndefined();
+                expect(bot.size).toBe(1);
+                expect(bot.has('abc')).toBe(false);
+                expect(bot.get('def')).toBe(123);
+            });
+
+            it('should be able to load existing bots', async () => {
+                setupPartition({
+                    type: 'remote_yjs',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                });
+
+                partition.connect();
+
+                const updates = getUpdates((doc, bots) => {
+                    bots.set(
+                        'bot1',
+                        new YMap([
+                            ['string', 'abc'],
+                            ['number', 123],
+                            ['boolean', true],
+                            [
+                                'object',
+                                {
+                                    abc: 'def',
+                                },
+                            ],
+                            ['array', [123, true]],
+                            ['null', null],
+                            ['undefined', undefined],
+                            ['empty', ''],
+                        ])
+                    );
+                    bots.set(
+                        'bot2',
+                        new YMap([
+                            ['string', 'abc'],
+                            ['number', 123],
+                            ['boolean', true],
+                            [
+                                'object',
+                                {
+                                    abc: 'def',
+                                },
+                            ],
+                            ['array', [123, true]],
+                            ['null', null],
+                            ['undefined', undefined],
+                            ['empty', ''],
+                        ])
+                    );
+                });
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    updates,
+                    initial: true,
+                });
+
+                await waitAsync();
+
+                expect(partition.state).toEqual({
+                    bot1: createBot('bot1', {
+                        string: 'abc',
+                        number: 123,
+                        boolean: true,
+                        object: {
+                            abc: 'def',
+                        },
+                        array: [123, true],
+                    }),
+                    bot2: createBot('bot2', {
+                        string: 'abc',
+                        number: 123,
+                        boolean: true,
+                        object: {
+                            abc: 'def',
+                        },
+                        array: [123, true],
+                    }),
+                });
+            });
+
+            it('should not load null values from existing bots', async () => {
+                setupPartition({
+                    type: 'remote_yjs',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                });
+
+                partition.connect();
+
+                const updates = getUpdates((doc, bots) => {
+                    bots.set('bot1', new YMap([['tag1', null]]));
+                });
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    updates,
+                    initial: true,
+                });
+
+                await waitAsync();
+
+                expect(partition.state).toEqual({
+                    bot1: createBot('bot1', {}),
+                });
             });
 
             it('should not try to send remote updates to the server', async () => {
@@ -1356,6 +1552,70 @@ describe('RemoteYjsPartition', () => {
 
                 expect(states[1].state.bot1.tags.tag1.version).toEqual({
                     [version.currentSite]: 0,
+                });
+            });
+        });
+
+        describe('errors', () => {
+            describe('max_size_reached', () => {
+                it('should emit a onSpaceMaxSizeReached shout', async () => {
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe((e) => events.push(...e));
+                    partition.space = 'shared';
+
+                    partition.connect();
+
+                    updatesReceived.next({
+                        branch: 'testBranch',
+                        updateId: 1,
+                        errorCode: 'max_size_reached',
+                        maxBranchSizeInBytes: 10,
+                        neededBranchSizeInBytes: 11,
+                    });
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        action(ON_SPACE_MAX_SIZE_REACHED, null, null, {
+                            space: 'shared',
+                            maxSizeInBytes: 10,
+                            neededSizeInBytes: 11,
+                        }),
+                    ]);
+                });
+
+                it('should only emit the onSpaceMaxSizeReached shout once', async () => {
+                    let events = [] as Action[];
+                    partition.onEvents.subscribe((e) => events.push(...e));
+                    partition.space = 'shared';
+
+                    partition.connect();
+
+                    updatesReceived.next({
+                        branch: 'testBranch',
+                        updateId: 1,
+                        errorCode: 'max_size_reached',
+                        maxBranchSizeInBytes: 10,
+                        neededBranchSizeInBytes: 11,
+                    });
+                    await waitAsync();
+
+                    updatesReceived.next({
+                        branch: 'testBranch',
+                        updateId: 2,
+                        errorCode: 'max_size_reached',
+                        maxBranchSizeInBytes: 25,
+                        neededBranchSizeInBytes: 99,
+                    });
+
+                    await waitAsync();
+
+                    expect(events).toEqual([
+                        action(ON_SPACE_MAX_SIZE_REACHED, null, null, {
+                            space: 'shared',
+                            maxSizeInBytes: 10,
+                            neededSizeInBytes: 11,
+                        }),
+                    ]);
                 });
             });
         });

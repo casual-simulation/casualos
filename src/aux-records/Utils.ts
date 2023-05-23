@@ -1,6 +1,7 @@
 import { fromByteArray, toByteArray } from 'base64-js';
 import _, { omitBy, padStart, sortBy, StringChain } from 'lodash';
 import { sha256, hmac } from 'hash.js';
+import { PUBLIC_READ_MARKER } from './PolicyPermissions';
 
 /**
  * Converts the given string into a base64 string.
@@ -309,6 +310,20 @@ function getAmzDateString(date: Date): string {
 }
 
 /**
+ * Parses the given string of instance names into an array of instance names.
+ * @param instances The names of the instances.
+ */
+export function parseInstancesList(instances: string): string[] {
+    if (!instances) {
+        return undefined;
+    }
+    return instances
+        .split(',')
+        .map((instance) => instance.trim())
+        .filter((i) => !!i);
+}
+
+/**
  * Gets the status code that should be used for the given response.
  * @param response The response.
  */
@@ -372,6 +387,12 @@ export function getStatusCode(
             return 403;
         } else if (response.errorCode === 'price_does_not_match') {
             return 412;
+        } else if (response.errorCode === 'user_is_banned') {
+            return 403;
+        } else if (response.errorCode === 'rate_limit_exceeded') {
+            return 429;
+        } else if (response.errorCode === 'not_authorized') {
+            return 403;
         } else {
             return 400;
         }
@@ -478,4 +499,16 @@ export function tryDecodeUriComponent(component: string): string | null {
  */
 export function isActiveSubscription(status: string): boolean {
     return status === 'active' || status === 'trialing';
+}
+
+/**
+ * Gets the list of markers that should be used, or the default list if none are provided.
+ * @param markers
+ */
+export function getMarkersOrDefault(markers: string[] | null): string[] {
+    if (markers === null || markers === undefined || markers.length <= 0) {
+        return [PUBLIC_READ_MARKER];
+    }
+
+    return markers;
 }

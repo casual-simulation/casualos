@@ -445,6 +445,16 @@ export class AuthHandler implements AuxAuth {
                             errorMessage: 'Email addresses are not supported',
                             supportsSms: this._supportsSms,
                         });
+                    } else if (result.errorCode === 'user_is_banned') {
+                        this._loginUIStatus.next({
+                            page: 'enter_address',
+                            siteName: this.siteName,
+                            termsOfServiceUrl: this.termsOfServiceUrl,
+                            showBannedUserError: true,
+                            errorCode: 'user_is_banned',
+                            errorMessage: result.errorMessage,
+                            supportsSms: this._supportsSms,
+                        });
                     }
 
                     return NEVER;
