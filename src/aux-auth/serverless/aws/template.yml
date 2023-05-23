@@ -129,6 +129,14 @@ Resources:
                       TableName: !Ref EmailRulesTable
                 - DynamoDBCrudPolicy:
                       TableName: !Ref SmsRulesTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref PoliciesTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref RolesTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref SubjectRolesTable
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref RoleSubjectsTable
                 - S3CrudPolicy:
                       BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
             Environment:
