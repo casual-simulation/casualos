@@ -23,8 +23,6 @@ model User {
     openAiKey String?
     banTimeMs BigInt?
     banReason String?
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
 
     loginRequests LoginRequest[]
     sessions AuthSession[]
@@ -37,6 +35,9 @@ model User {
 
     publishedFileRecords FileRecord[] @relation("PublishedFileRecords")
     subjectFileRecords FileRecord[] @relation("SubjectFileRecords")
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model LoginRequest {
@@ -110,6 +111,9 @@ model Record {
     dataRecords DataRecord[]
     fileRecords FileRecord[]
     eventRecords EventRecord[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model RecordKey {
@@ -122,6 +126,9 @@ model RecordKey {
     policy String
     creatorId String
     creator User @relation(fields: [creatorId], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 // Policies
@@ -133,6 +140,9 @@ model Policy {
     marker String
     document Json
     markers String[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model Role {
@@ -144,6 +154,9 @@ model Role {
     markers String[]
 
     roleAssignments RoleAssignment[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model RoleAssignment {
@@ -160,6 +173,9 @@ model RoleAssignment {
 
     userId String?
     user User? @relation(fields: [userId], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 // Data
@@ -182,6 +198,9 @@ model DataRecord {
     deletePolicy String
 
     markers String[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model FileRecord {
@@ -203,6 +222,9 @@ model FileRecord {
     uploaded Boolean
 
     markers String[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model EventRecord {
@@ -214,4 +236,7 @@ model EventRecord {
 
     count BigInt
     markers String[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
