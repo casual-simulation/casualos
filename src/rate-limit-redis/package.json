@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/rate-limit-redis",
-    "version": "3.1.23",
+    "version": "3.1.29",
     "description": "A Redis store for the `express-rate-limit` middleware",
     "homepage": "https://github.com/casual-simulation/casualos",
     "license": "MIT",
@@ -47,8 +47,8 @@
         "express-rate-limit": "^6"
     },
     "devDependencies": {
-        "@types/ioredis-mock": "^5.6.0",
         "@types/ioredis": "4.28.10",
+        "@types/ioredis-mock": "^5.6.0",
         "ioredis": "^4.28.3",
         "ioredis-mock": "^5.8.1"
     }

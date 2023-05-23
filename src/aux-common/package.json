@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-common",
-    "version": "3.1.28",
+    "version": "3.1.29",
     "description": "Common library for AUX projects",
     "main": "index.js",
     "types": "index.d.ts",
@@ -32,8 +32,8 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/aux-records": "^3.1.26",
-        "@casual-simulation/causal-trees": "^3.1.28",
+        "@casual-simulation/aux-records": "^3.1.29",
+        "@casual-simulation/causal-trees": "^3.1.29",
         "@casual-simulation/crypto": "^3.1.23",
         "@casual-simulation/engine262": "0.0.1-4de2170374e22761996e46eb1362f4496ee57f8f",
         "@casual-simulation/error-stack-parser": "^2.0.7",
@@ -53,6 +53,7 @@
         "expect": "27.3.1",
         "hash.js": "1.1.7",
         "htm": "3.1.0",
+        "lib0": "0.2.49",
         "lru-cache": "^5.1.1",
         "luxon": "2.3.0",
         "preact": "10.10.1",
@@ -60,8 +61,7 @@
         "seedrandom": "3.0.5",
         "stackframe": "^1.2.0",
         "uuid": "^8.3.2",
-        "yjs": "13.5.41",
-        "lib0": "0.2.49"
+        "yjs": "13.5.41"
     },
     "devDependencies": {
         "benchmark": "2.1.4",
