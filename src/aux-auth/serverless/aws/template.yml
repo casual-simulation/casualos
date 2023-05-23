@@ -461,6 +461,7 @@ Resources:
     PoliciesTable:
         Type: AWS::DynamoDB::Table
         Properties:
+            BillingMode: PAY_PER_REQUEST
             KeySchema:
                 - AttributeName: recordName
                   KeyType: HASH
@@ -474,6 +475,7 @@ Resources:
     RolesTable:
         Type: AWS::DynamoDB::Table
         Properties:
+            BillingMode: PAY_PER_REQUEST
             KeySchema:
                 - AttributeName: recordName
                   KeyType: HASH
@@ -488,6 +490,7 @@ Resources:
     SubjectRolesTable:
         Type: AWS::DynamoDB::Table
         Properties:
+            BillingMode: PAY_PER_REQUEST
             KeySchema:
                 - AttributeName: subjectId
                   KeyType: HASH
@@ -502,6 +505,7 @@ Resources:
     RoleSubjectsTable:
         Type: AWS::DynamoDB::Table
         Properties:
+            BillingMode: PAY_PER_REQUEST
             KeySchema:
                 - AttributeName: roleId
                   KeyType: HASH
