@@ -1,0 +1,217 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "cockroachdb"
+  url      = env("DATABASE_URL")
+}
+
+// Auth
+model User {
+    id String @id
+    name String
+    email String @unique
+    avatarPortraitUrl String?
+    avatarUrl String?
+    allSessionRevokeTimeMs BigInt?
+    currentLoginRequestId String?
+    stripeCustomerId String?
+    openAiKey String?
+    banTimeMs BigInt?
+    banReason String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    loginRequests LoginRequest[]
+    sessions AuthSession[]
+    records Record[]
+    recordKeys RecordKey[]
+    roleAssignments RoleAssignment[]
+
+    publishedDataRecords DataRecord[] @relation("PublishedDataRecords")
+    subjectDataRecords DataRecord[] @relation("SubjectDataRecords")
+
+    publishedFileRecords FileRecord[] @relation("PublishedFileRecords")
+    subjectFileRecords FileRecord[] @relation("SubjectFileRecords")
+}
+
+model LoginRequest {
+    id String @id
+    userId String
+    user User @relation(fields: [userId], references: [id])
+    secretHash String
+    requestTimeMs BigInt
+    expireTimeMs BigInt
+    completedTimeMs BigInt?
+    attemptCount Int
+    address String
+    addressType String
+    ipAddress String
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    sessions AuthSession[]
+}
+
+model AuthSession {
+    id String @id
+    userId String
+    user User @relation(fields: [userId], references: [id])
+
+    secretHash String
+    grantedTimeMs BigInt
+    expireTimeMs BigInt
+    revokeTimeMs BigInt?
+
+    requestId String?
+    request LoginRequest? @relation(fields: [requestId], references: [id])
+
+    previousSessionId String? @unique
+    previousSession AuthSession? @relation("PreviousSession", fields: [previousSessionId], references: [id])
+    nextSession AuthSession? @relation("PreviousSession")
+
+    ipAddress String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model EmailRule {
+    id BigInt @id @default(autoincrement())
+    type String
+    pattern String
+}
+
+model SmsRule {
+    id BigInt @id @default(autoincrement())
+    type String
+    pattern String
+}
+
+// Records
+model Record {
+    name String @id
+    ownerId String
+    owner User @relation(fields: [ownerId], references: [id])
+
+    secretHashes String[]
+    secretSalt String
+
+    recordKeys RecordKey[]
+    policies Policy[]
+    roles Role[]
+    roleAssignments RoleAssignment[]
+
+    dataRecords DataRecord[]
+    fileRecords FileRecord[]
+    eventRecords EventRecord[]
+}
+
+model RecordKey {
+    @@id([recordName, secretHash])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name])
+
+    secretHash String
+    policy String
+    creatorId String
+    creator User @relation(fields: [creatorId], references: [id])
+}
+
+// Policies
+model Policy {
+    @@id([recordName, marker])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name])
+    marker String
+    document Json
+    markers String[]
+}
+
+model Role {
+    @@id([recordName, name])
+    recordName String
+    record Record @relation(fields: [recordName], references: [name])
+
+    name String
+    markers String[]
+
+    roleAssignments RoleAssignment[]
+}
+
+model RoleAssignment {
+    @@id([recordName, roleId, subjectId])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name])
+    roleId String
+    role Role @relation(fields: [recordName, roleId], references: [recordName, name])
+
+    subjectId String
+    type String
+    expireTimeMs BigInt?
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id])
+}
+
+// Data
+model DataRecord {
+    @@id([recordName, address])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name])
+    
+    address String
+    data Json
+    
+    publisherId String
+    publisher User @relation("PublishedDataRecords", fields: [publisherId], references: [id])
+
+    subjectId String
+    subject User @relation("SubjectDataRecords", fields: [subjectId], references: [id])
+
+    updatePolicy String
+    deletePolicy String
+
+    markers String[]
+}
+
+model FileRecord {
+    @@id([recordName, fileName])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name])
+    fileName String
+
+    publisherId String
+    publisher User @relation("PublishedFileRecords", fields: [publisherId], references: [id])
+
+    subjectId String
+    subject User @relation("SubjectFileRecords", fields: [subjectId], references: [id])
+
+    sizeInBytes BigInt
+    description String
+
+    uploaded Boolean
+
+    markers String[]
+}
+
+model EventRecord {
+    @@id([recordName, name])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name])
+    name String
+
+    count BigInt
+    markers String[]
+}

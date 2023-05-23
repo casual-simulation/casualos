@@ -153,5 +153,8 @@
         "source-map": "0.7.3",
         "http-server": "14.1.1"
     },
-    "dependencies": {}
+    "dependencies": {},
+    "prisma": {
+        "schema": "./src/aux-auth/schemas/auth.prisma"
+    }
 }
