@@ -203,8 +203,8 @@ model DataRecord {
     subjectId String
     subject User @relation("SubjectDataRecords", fields: [subjectId], references: [id])
 
-    updatePolicy String
-    deletePolicy String
+    updatePolicy Json
+    deletePolicy Json
 
     markers String[]
 

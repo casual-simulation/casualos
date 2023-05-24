@@ -7,15 +7,20 @@ import {
     EraseDataStoreResult,
     ListDataStoreResult,
     UserPolicy,
+    cleanupObject,
 } from '@casual-simulation/aux-records';
+import {
+    PrismaClient,
+    DataRecord as PrismaDataRecord,
+    Prisma,
+} from '@prisma/client';
+import z from 'zod';
 
-import { Collection, FilterQuery } from 'mongodb';
-
-export class MongoDBDataRecordsStore implements DataRecordsStore {
+export class PrismaDataRecordsStore implements DataRecordsStore {
     private _client: PrismaClient;
 
-    constructor(collection: Collection<DataRecord>) {
-        this._collection = collection;
+    constructor(client: PrismaClient) {
+        this._client = client;
     }
 
     async setData(
@@ -28,27 +33,26 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
         deletePolicy: UserPolicy,
         markers: string[]
     ): Promise<SetDataResult> {
-        await this._collection.updateOne(
-            {
-                recordName: recordName,
-                address: address,
-            },
-            {
-                $set: {
+        const dataRecord = {
+            recordName: recordName,
+            address: address,
+            data: data,
+            publisherId: publisherId,
+            subjectId: subjectId,
+            updatePolicy: updatePolicy as any,
+            deletePolicy: deletePolicy as any,
+            markers: markers,
+        };
+        await this._client.dataRecord.upsert({
+            where: {
+                recordName_address: {
                     recordName: recordName,
                     address: address,
-                    data: data,
-                    publisherId: publisherId,
-                    subjectId: subjectId,
-                    updatePolicy: updatePolicy,
-                    deletePolicy: deletePolicy,
-                    markers: markers,
                 },
             },
-            {
-                upsert: true,
-            }
-        );
+            create: dataRecord,
+            update: dataRecord,
+        });
 
         return {
             success: true,
@@ -59,19 +63,31 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
         recordName: string,
         address: string
     ): Promise<GetDataStoreResult> {
-        const record = await this._collection.findOne({
-            recordName: recordName,
-            address: address,
+        const record = await this._client.dataRecord.findUnique({
+            where: {
+                recordName_address: {
+                    recordName: recordName,
+                    address: address,
+                },
+            },
         });
 
         if (record) {
+            const policySchema = z.union([
+                z.literal(true),
+                z.array(z.string()),
+                z.null(),
+            ]);
+            const updatePolicy = policySchema.safeParse(record.updatePolicy);
+            const deletePolicy = policySchema.safeParse(record.deletePolicy);
+
             return {
                 success: true,
                 data: record.data,
                 publisherId: record.publisherId,
                 subjectId: record.subjectId,
-                updatePolicy: record.updatePolicy,
-                deletePolicy: record.deletePolicy,
+                updatePolicy: updatePolicy.success ? updatePolicy.data : null,
+                deletePolicy: deletePolicy.success ? deletePolicy.data : null,
                 markers: record.markers,
             };
         }
@@ -87,20 +103,24 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
         recordName: string,
         address: string
     ): Promise<ListDataStoreResult> {
-        let query = {
+        let query: Prisma.DataRecordWhereInput = {
             recordName: recordName,
-        } as FilterQuery<DataRecord>;
+        };
         if (!!address) {
-            query.address = { $gt: address };
+            query.address = { gt: address };
         }
-        const records = await this._collection
-            .find(query)
-            .map((r) => ({
-                address: r.address,
-                data: r.data,
-                markers: r.markers,
-            }))
-            .toArray();
+        const records = await this._client.dataRecord.findMany({
+            where: query,
+            orderBy: {
+                address: 'asc',
+            },
+            select: {
+                address: true,
+                data: true,
+                markers: true,
+            },
+            take: 10,
+        });
 
         return {
             success: true,
@@ -112,21 +132,30 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
         recordName: string,
         address: string
     ): Promise<EraseDataStoreResult> {
-        const result = await this._collection.deleteOne({
-            recordName: recordName,
-            address: address,
-        });
-
-        if (result.deletedCount <= 0) {
+        try {
+            await this._client.dataRecord.delete({
+                where: {
+                    recordName_address: {
+                        recordName: recordName,
+                        address: address,
+                    },
+                },
+            });
             return {
-                success: false,
-                errorCode: 'data_not_found',
-                errorMessage: 'The data was not found.',
+                success: true,
             };
+        } catch (err) {
+            if (err instanceof Prisma.PrismaClientKnownRequestError) {
+                if (err.code === 'P2025') {
+                    return {
+                        success: false,
+                        errorCode: 'data_not_found',
+                        errorMessage: 'The data was not found.',
+                    };
+                }
+            }
+            throw err;
         }
-        return {
-            success: true,
-        };
     }
 }
 
