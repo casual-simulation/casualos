@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.30
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where using the sheetPortal to delete a bot that had circular `creator` tag references would freeze CasualOS.
+
 ## V3.1.29
 
 #### Date: 5/23/2023
