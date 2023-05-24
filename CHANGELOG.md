@@ -4,6 +4,13 @@
 
 #### Date: TBD
 
+### :rocket: Improvements
+
+-   Added the `meetPortalLanguage` tag.
+    -   Sets the language that is displayed in the meetPortal interface by default.
+    -   If omitted, then the user-configured language will be used. (English if never changed)
+    -   Must be set on the `meetPortalBot` before the meetPortal is loaded in order to take effect.
+
 ### :bug: Bug Fixes
 
 -   Fixed an issue where using the sheetPortal to delete a bot that had circular `creator` tag references would freeze CasualOS.
