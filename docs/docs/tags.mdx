@@ -2198,6 +2198,25 @@ Whether the meet portal should hide the option to send private chat messages to 
   </PossibleValueCode>
 </PossibleValuesTable>
 
+### `meetPortalLanguage`
+<Badges>
+    <MeetPortalBadge/>
+</Badges>
+
+The language that should be used for the meet portal interface by default.
+Only works if this tag is set before the meet portal is loaded.
+
+#### Possible Values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='null'>
+    The user-configured value will be used for the meetPortal interface. (Default)
+  </PossibleValueCode>
+  <PossibleValue value='Any ISO 639-1 Code'>
+    The interface will use the given <a href='https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes'>ISO 639-1</a> language code.
+    Note that not all langauge codes are supported. The full list of supported translations can be found <a href='https://github.com/jitsi/jitsi-meet/tree/master/lang'>here</a>.
+  </PossibleValue>
+</PossibleValuesTable>
+
 ### `meetPortalJWT`
 <Badges>
     <MeetPortalBadge/>

@@ -63,6 +63,7 @@ export default class MeetPortal extends Vue {
             interfaceConfigOverwrite: this.interfaceConfig,
             configOverwrite: this.config,
             jwt: this.meetJwt,
+            lang: this._currentConfig?.language,
             onload: () => {
                 if (this._currentSim) {
                     this._currentSim.helper.action(ON_MEET_LOADED, null, {
