@@ -228,7 +228,7 @@ model FileRecord {
     sizeInBytes BigInt
     description String
 
-    uploaded Boolean
+    uploadedAt DateTime?
 
     markers String[]
 
