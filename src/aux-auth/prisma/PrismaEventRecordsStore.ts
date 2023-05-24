@@ -6,13 +6,13 @@ import {
     UpdateEventResult,
     cleanupObject,
 } from '@casual-simulation/aux-records';
-import { Collection, FilterQuery } from 'mongodb';
+import { PrismaClient } from '@prisma/client';
 
-export class MongoDBEventRecordsStore implements EventRecordsStore {
-    private _collection: Collection<EventRecord>;
+export class PrismaEventRecordsStore implements EventRecordsStore {
+    private _client: PrismaClient;
 
-    constructor(collection: Collection<EventRecord>) {
-        this._collection = collection;
+    constructor(client: PrismaClient) {
+        this._client = client;
     }
 
     async addEventCount(
@@ -20,23 +20,24 @@ export class MongoDBEventRecordsStore implements EventRecordsStore {
         eventName: string,
         count: number
     ): Promise<AddEventCountStoreResult> {
-        const result = await this._collection.updateOne(
-            {
-                recordName: recordName,
-                eventName: eventName,
+        await this._client.eventRecord.upsert({
+            where: {
+                recordName_name: {
+                    recordName,
+                    name: eventName,
+                },
             },
-            {
-                $inc: { count: count },
-            }
-        );
-
-        if (result.modifiedCount <= 0) {
-            await this._collection.insertOne({
-                recordName,
-                eventName,
-                count,
-            });
-        }
+            create: {
+                name: eventName,
+                recordName: recordName,
+                count: count,
+            },
+            update: {
+                count: {
+                    increment: count,
+                },
+            },
+        });
 
         return {
             success: true,
@@ -47,15 +48,19 @@ export class MongoDBEventRecordsStore implements EventRecordsStore {
         recordName: string,
         eventName: string
     ): Promise<GetEventCountStoreResult> {
-        const result = await this._collection.findOne({
-            recordName,
-            eventName,
+        const result = await this._client.eventRecord.findUnique({
+            where: {
+                recordName_name: {
+                    recordName,
+                    name: eventName,
+                },
+            },
         });
 
         if (result) {
             return {
                 success: true,
-                count: result.count,
+                count: Number(result.count),
             };
         } else {
             return {
@@ -70,21 +75,26 @@ export class MongoDBEventRecordsStore implements EventRecordsStore {
         eventName: string,
         updates: EventRecordUpdate
     ): Promise<UpdateEventResult> {
-        await this._collection.updateOne(
-            {
-                recordName: { $eq: recordName },
-                eventName: { $eq: eventName },
+        await this._client.eventRecord.upsert({
+            where: {
+                recordName_name: {
+                    recordName,
+                    name: eventName,
+                },
             },
-            {
-                $set: cleanupObject({
-                    recordName: recordName,
-                    eventName: eventName,
-                    count: updates.count,
-                    markers: updates.markers,
-                }),
+            create: {
+                recordName: recordName,
+                name: eventName,
+                count: updates.count ?? 0,
+                markers: updates.markers,
             },
-            { upsert: true }
-        );
+            update: cleanupObject({
+                recordName: recordName,
+                name: eventName,
+                count: updates.count,
+                markers: updates.markers,
+            }),
+        });
 
         return {
             success: true,
