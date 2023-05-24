@@ -21,7 +21,7 @@ export interface AuthStore {
      * Finds the user with the given ID.
      * @param userId The ID of the user.
      */
-    findUser(userId: string): Promise<AuthUser>;
+    findUser(userId: string): Promise<AuthUser | null>;
 
     /**
      * Finds the user that represents the given address.
@@ -31,13 +31,13 @@ export interface AuthStore {
     findUserByAddress(
         address: string,
         addressType: AddressType
-    ): Promise<AuthUser>;
+    ): Promise<AuthUser | null>;
 
     /**
      * Finds the user that is associated with the given Stripe Customer ID.
      * @param customerId The ID of the customer.
      */
-    findUserByStripeCustomerId(customerId: string): Promise<AuthUser>;
+    findUserByStripeCustomerId(customerId: string): Promise<AuthUser | null>;
 
     /**
      * Finds a login request for the given user and request ID.
@@ -47,14 +47,14 @@ export interface AuthStore {
     findLoginRequest(
         userId: string,
         requestId: string
-    ): Promise<AuthLoginRequest>;
+    ): Promise<AuthLoginRequest | null>;
 
     /**
      * Finds a login session for the given user and session ID.
      * @param userId The ID of the user.
      * @param sessionId The ID of the session.
      */
-    findSession(userId: string, sessionId: string): Promise<AuthSession>;
+    findSession(userId: string, sessionId: string): Promise<AuthSession | null>;
 
     /**
      * Saves the given login request.

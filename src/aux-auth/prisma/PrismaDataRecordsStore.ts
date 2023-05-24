@@ -8,10 +8,11 @@ import {
     ListDataStoreResult,
     UserPolicy,
 } from '@casual-simulation/aux-records';
+
 import { Collection, FilterQuery } from 'mongodb';
 
 export class MongoDBDataRecordsStore implements DataRecordsStore {
-    private _collection: Collection<DataRecord>;
+    private _client: PrismaClient;
 
     constructor(collection: Collection<DataRecord>) {
         this._collection = collection;

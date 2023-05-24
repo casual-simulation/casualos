@@ -8,7 +8,14 @@ import {
     ListSessionsDataResult,
     SaveNewUserResult,
 } from '@casual-simulation/aux-records/AuthStore';
-import { PrismaClient } from '@prisma/client';
+import {
+    LoginRequest,
+    Prisma,
+    PrismaClient,
+    User,
+    AuthSession as PrismaSession,
+} from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 
 export class PrismaAuthStore implements AuthStore {
     private _client: PrismaClient;
@@ -18,171 +25,150 @@ export class PrismaAuthStore implements AuthStore {
     }
 
     async listEmailRules(): Promise<RegexRule[]> {
-        const result = await this._emailRules.find().toArray();
-
-        return result.map((r) => ({
-            type: r.type,
+        const rules = await this._client.emailRule.findMany();
+        return rules.map((r) => ({
+            type: r.type as RegexRule['type'],
             pattern: r.pattern,
         }));
     }
 
     async listSmsRules(): Promise<RegexRule[]> {
-        const result = await this._smsRules.find().toArray();
-
-        return result.map((r) => ({
-            type: r.type,
+        const rules = await this._client.smsRule.findMany();
+        return rules.map((r) => ({
+            type: r.type as RegexRule['type'],
             pattern: r.pattern,
         }));
     }
 
-    async findUser(userId: string): Promise<AuthUser> {
-        const user = await this._users.findOne({
-            _id: userId,
+    async findUser(userId: string): Promise<AuthUser | null> {
+        const user = await this._client.user.findUnique({
+            where: {
+                id: userId,
+            },
         });
 
-        if (user) {
-            const { _id, ...rest } = user;
-            return {
-                id: _id,
-                ...rest,
-            };
-        }
-
-        return null;
+        return this._convertToAuthUser(user);
     }
 
-    async findUserByStripeCustomerId(customerId: string): Promise<AuthUser> {
-        const user = await this._users.findOne({
-            stripeCustomerId: customerId,
+    async findUserByStripeCustomerId(
+        customerId: string
+    ): Promise<AuthUser | null> {
+        const user = await this._client.user.findUnique({
+            where: {
+                stripeCustomerId: customerId,
+            },
         });
 
-        if (user) {
-            const { _id, ...rest } = user;
-            return {
-                id: _id,
-                ...rest,
-            };
-        }
-
-        return null;
+        return this._convertToAuthUser(user);
     }
 
     async setRevokeAllSessionsTimeForUser(
         userId: string,
         allSessionRevokeTimeMs: number
     ): Promise<void> {
-        await this._users.updateOne(
-            { _id: userId },
-            {
-                $set: {
-                    allSessionRevokeTimeMs,
-                },
-            }
-        );
+        await this._client.user.update({
+            where: {
+                id: userId,
+            },
+            data: {
+                allSessionRevokeTime: convertToDate(allSessionRevokeTimeMs),
+            },
+        });
     }
 
     async setCurrentLoginRequest(
         userId: string,
         requestId: string
     ): Promise<void> {
-        await this._users.updateOne(
-            { _id: userId },
-            {
-                $set: {
-                    currentLoginRequestId: requestId,
-                },
-            }
-        );
+        await this._client.user.update({
+            where: {
+                id: userId,
+            },
+            data: {
+                currentLoginRequestId: requestId,
+            },
+        });
     }
 
     async findUserByAddress(
         address: string,
         addressType: AddressType
-    ): Promise<AuthUser> {
-        const user = await this._users.findOne(
-            addressType === 'email'
-                ? {
-                      email: { $eq: address },
-                  }
-                : {
-                      phoneNumber: { $eq: address },
-                  }
-        );
+    ): Promise<AuthUser | null> {
+        const user = await this._client.user.findUnique({
+            where:
+                addressType === 'email'
+                    ? {
+                          email: address,
+                      }
+                    : {
+                          phoneNumber: address,
+                      },
+        });
 
-        if (user) {
-            const { _id, ...rest } = user;
-            return {
-                id: _id,
-                ...rest,
-            };
-        }
-
-        return null;
+        return this._convertToAuthUser(user);
     }
 
     async saveUser(user: AuthUser): Promise<void> {
-        user.subscriptionStatus;
-        await this._users.updateOne(
-            { _id: user.id },
-            {
-                $set: {
-                    _id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    phoneNumber: user.phoneNumber,
-                    avatarUrl: user.avatarUrl,
-                    avatarPortraitUrl: user.avatarPortraitUrl,
-                    allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
-                    currentLoginRequestId: user.currentLoginRequestId,
-                    stripeCustomerId: user.stripeCustomerId,
-                    openAiKey: user.openAiKey,
-                    subscriptionStatus: user.subscriptionStatus,
-                    subscriptionId: user.subscriptionId,
-                    banTimeMs: user.banTimeMs,
-                    banReason: user.banReason,
-                },
+        const userData = {
+            id: user.id,
+            name: user.name as string,
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+            avatarUrl: user.avatarUrl as string,
+            avatarPortraitUrl: user.avatarPortraitUrl as string,
+            allSessionRevokeTime: convertToDate(user.allSessionRevokeTimeMs),
+            currentLoginRequestId: user.currentLoginRequestId as string,
+            stripeCustomerId: user.stripeCustomerId as string,
+            openAiKey: user.openAiKey as string,
+            subscriptionStatus: user.subscriptionStatus as string,
+            subscriptionId: user.subscriptionId as string,
+            banTime: convertToDate(user.banTimeMs),
+            banReason: user.banReason as string,
+        };
+
+        await this._client.user.upsert({
+            where: {
+                id: user.id,
             },
-            {
-                upsert: true,
-            }
-        );
+            create: userData,
+            update: userData,
+        });
     }
 
     async saveNewUser(user: AuthUser): Promise<SaveNewUserResult> {
-        const filters = [
-            user.email ? { email: { $eq: user.email } } : null,
-            user.phoneNumber
-                ? { phoneNumber: { $eq: user.phoneNumber } }
-                : null,
-        ].filter((a) => !!a);
-        const existingUser = await this._users.findOne({
-            $or: [...filters],
-        });
-
-        if (existingUser) {
-            return {
-                success: false,
-                errorCode: 'user_already_exists',
-                errorMessage: 'The user already exists.',
-            };
+        try {
+            await this._client.user.create({
+                data: {
+                    id: user.id,
+                    name: user.name as string,
+                    email: user.email,
+                    phoneNumber: user.phoneNumber,
+                    avatarUrl: user.avatarUrl as string,
+                    avatarPortraitUrl: user.avatarPortraitUrl as string,
+                    allSessionRevokeTime: convertToDate(
+                        user.allSessionRevokeTimeMs
+                    ),
+                    currentLoginRequestId: user.currentLoginRequestId as string,
+                    stripeCustomerId: user.stripeCustomerId as string,
+                    openAiKey: user.openAiKey as string,
+                    subscriptionStatus: user.subscriptionStatus as string,
+                    subscriptionId: user.subscriptionId as string,
+                    banTime: convertToDate(user.banTimeMs),
+                    banReason: user.banReason as string,
+                },
+            });
+        } catch (err) {
+            if (err instanceof PrismaClientKnownRequestError) {
+                if (err.code === 'P2002') {
+                    return {
+                        success: false,
+                        errorCode: 'user_already_exists',
+                        errorMessage: 'The user already exists.',
+                    };
+                }
+            }
+            throw err;
         }
-
-        await this._users.insertOne({
-            _id: user.id,
-            name: user.name,
-            email: user.email,
-            phoneNumber: user.phoneNumber,
-            avatarPortraitUrl: user.avatarPortraitUrl,
-            avatarUrl: user.avatarUrl,
-            allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
-            currentLoginRequestId: user.currentLoginRequestId,
-            stripeCustomerId: user.stripeCustomerId,
-            subscriptionStatus: user.subscriptionStatus,
-            subscriptionId: user.subscriptionId,
-            openAiKey: user.openAiKey,
-            banTimeMs: user.banTimeMs,
-            banReason: user.banReason,
-        });
 
         return {
             success: true,
@@ -192,67 +178,70 @@ export class PrismaAuthStore implements AuthStore {
     async findLoginRequest(
         userId: string,
         requestId: string
-    ): Promise<AuthLoginRequest> {
-        const request = await this._loginRequests.findOne({
-            _id: requestId,
-            userId: { $eq: userId },
+    ): Promise<AuthLoginRequest | null> {
+        const request = await this._client.loginRequest.findUnique({
+            where: {
+                requestId: requestId,
+            },
         });
 
         if (!request) {
             return null;
         }
 
-        const { _id, ...rest } = request;
         return {
-            requestId: request._id,
-            ...rest,
+            requestId: request.requestId,
+            address: request.address,
+            addressType: request.addressType as AddressType,
+            userId: request.userId,
+            attemptCount: request.attemptCount,
+            completedTimeMs: convertToMillis(request.completedTime),
+            expireTimeMs: convertToMillis(request.expireTime) as number,
+            requestTimeMs: convertToMillis(request.requestTime) as number,
+            ipAddress: request.ipAddress,
+            secretHash: request.secretHash,
         };
     }
 
-    async findSession(userId: string, sessionId: string): Promise<AuthSession> {
-        const session = await this._sessions.findOne({
-            _id: sessionId,
-            userId: { $eq: userId },
+    async findSession(
+        userId: string,
+        sessionId: string
+    ): Promise<AuthSession | null> {
+        const session = await this._client.authSession.findUnique({
+            where: {
+                sessionId: sessionId,
+            },
         });
 
         if (!session) {
             return null;
         }
 
-        const { _id, ...rest } = session;
-        return {
-            sessionId: session._id,
-            ...rest,
-        };
+        return this._convertToSession(session);
     }
 
     async saveLoginRequest(
         request: AuthLoginRequest
     ): Promise<AuthLoginRequest> {
-        await this._loginRequests.updateOne(
-            {
-                _id: request.requestId,
-                userId: { $eq: request.userId },
+        const loginRequest = {
+            requestId: request.requestId,
+            userId: request.userId,
+            secretHash: request.secretHash,
+            address: request.address,
+            addressType: request.addressType,
+            attemptCount: request.attemptCount,
+            expireTime: convertToDate(request.expireTimeMs) as Date,
+            requestTime: convertToDate(request.requestTimeMs) as Date,
+            completedTime: convertToDate(request.completedTimeMs),
+            ipAddress: request.ipAddress,
+        };
+        await this._client.loginRequest.upsert({
+            where: {
+                requestId: request.requestId,
             },
-            {
-                $set: {
-                    _id: request.requestId,
-                    userId: request.userId,
-                    secretHash: request.secretHash,
-                    requestTimeMs: request.requestTimeMs,
-                    completedTimeMs: request.completedTimeMs,
-                    expireTimeMs: request.expireTimeMs,
-                    attemptCount: request.attemptCount,
-                    address: request.address,
-                    addressType: request.addressType,
-                    ipAddress: request.ipAddress,
-                },
-            },
-            {
-                upsert: true,
-            }
-        );
-
+            create: loginRequest,
+            update: loginRequest,
+        });
         return request;
     }
 
@@ -261,99 +250,132 @@ export class PrismaAuthStore implements AuthStore {
         requestId: string,
         completedTimeMs: number
     ): Promise<void> {
-        const request = await this._loginRequests.findOne({
-            _id: requestId,
-            userId: { $eq: userId },
-        });
-
-        if (!request) {
-            return;
-        }
-
-        await this._loginRequests.updateOne(
-            {
-                _id: requestId,
-                userId: { $eq: userId },
+        await this._client.loginRequest.update({
+            where: {
+                requestId: requestId,
             },
-            {
-                $set: {
-                    completedTimeMs: completedTimeMs,
-                },
-            }
-        );
+            data: {
+                completedTime: convertToDate(completedTimeMs),
+            },
+        });
     }
 
     async incrementLoginRequestAttemptCount(
         userId: string,
         requestId: string
     ): Promise<void> {
-        const result = await this._loginRequests.updateOne(
-            {
-                _id: { $eq: requestId },
-                userId: { $eq: userId },
+        await this._client.loginRequest.update({
+            where: {
+                requestId: requestId,
             },
-            {
-                $inc: { attemptCount: 1 },
-            }
-        );
+            data: {
+                attemptCount: {
+                    increment: 1,
+                },
+            },
+        });
     }
 
     async saveSession(session: AuthSession): Promise<void> {
-        const result = await this._sessions.updateOne(
-            {
-                _id: { $eq: session.sessionId },
-                userId: { $eq: session.userId },
+        const sessionData = {
+            sessionId: session.sessionId,
+            userId: session.userId,
+            secretHash: session.secretHash,
+            grantedTime: convertToDate(session.grantedTimeMs) as Date,
+            expireTime: convertToDate(session.expireTimeMs) as Date,
+            revokeTime: convertToDate(session.revokeTimeMs),
+            requestId: session.requestId,
+            previousSessionId: session.previousSessionId,
+            nextSessionId: session.nextSessionId,
+            ipAddress: session.ipAddress,
+        };
+        await this._client.authSession.upsert({
+            where: {
+                sessionId: session.sessionId,
             },
-            {
-                $set: {
-                    _id: session.sessionId,
-                    userId: session.userId,
-                    secretHash: session.secretHash,
-                    grantedTimeMs: session.grantedTimeMs,
-                    expireTimeMs: session.expireTimeMs,
-                    revokeTimeMs: session.revokeTimeMs,
-                    requestId: session.requestId,
-                    previousSessionId: session.previousSessionId,
-                    nextSessionId: session.nextSessionId,
-                    ipAddress: session.ipAddress,
-                },
-            },
-            {
-                upsert: true,
-            }
-        );
+            create: sessionData,
+            update: sessionData,
+        });
     }
 
     async listSessions(
         userId: string,
         expireTimeMs: number
     ): Promise<ListSessionsDataResult> {
-        let query: FilterQuery<AuthSession> = {
+        let where = {
             userId: userId,
         };
         if (expireTimeMs) {
-            query['expireTimeMs'] = { $lt: expireTimeMs };
+            where['expireTimeMs'] = { lt: expireTimeMs };
         }
-        const sessions = await this._sessions
-            .find(query, {
-                sort: {
-                    expireTimeMs: -1,
-                },
-                limit: 10,
-            })
-            .toArray();
+
+        const sessions = await this._client.authSession.findMany({
+            where,
+            orderBy: {
+                expireTime: 'desc',
+            },
+            take: 10,
+        });
 
         return {
             success: true,
-            sessions: sessions.map((s) => {
-                let { _id, ...rest } = s;
-                return {
-                    sessionId: _id,
-                    ...rest,
-                };
-            }),
+            sessions: sessions.map((s) => this._convertToSession(s)),
         };
     }
+
+    private _convertToAuthUser(user: User | null): AuthUser | null {
+        if (user) {
+            return {
+                id: user.id,
+                email: user.email,
+                phoneNumber: user.phoneNumber,
+                name: user.name,
+                avatarUrl: user.avatarUrl,
+                avatarPortraitUrl: user.avatarPortraitUrl,
+                stripeCustomerId: user.stripeCustomerId,
+                allSessionRevokeTimeMs: convertToMillis(
+                    user.allSessionRevokeTime
+                ),
+                openAiKey: user.openAiKey,
+                currentLoginRequestId: user.currentLoginRequestId,
+                subscriptionStatus:
+                    user.subscriptionStatus as AuthUser['subscriptionStatus'],
+                banTimeMs: convertToMillis(user.banTime),
+                banReason: user.banReason as AuthUser['banReason'],
+                subscriptionId: user.subscriptionId as string | undefined,
+            };
+        }
+        return null;
+    }
+
+    private _convertToSession(session: PrismaSession): AuthSession {
+        return {
+            sessionId: session.sessionId,
+            userId: session.userId,
+            secretHash: session.secretHash,
+            expireTimeMs: convertToMillis(session.expireTime) as number,
+            grantedTimeMs: convertToMillis(session.grantedTime) as number,
+            revokeTimeMs: convertToMillis(session.revokeTime) as number,
+            requestId: session.requestId,
+            previousSessionId: session.previousSessionId,
+            ipAddress: session.ipAddress,
+            nextSessionId: session.nextSessionId,
+        };
+    }
+}
+
+export function convertToDate(timeMs: number | null | undefined): Date | null {
+    if (!timeMs) {
+        return null;
+    }
+    return new Date(timeMs);
+}
+
+function convertToMillis(time: Date | null): number | null {
+    if (!time) {
+        return null;
+    }
+    return Number(time);
 }
 
 export interface MongoDBAuthUser {

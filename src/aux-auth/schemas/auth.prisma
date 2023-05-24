@@ -14,15 +14,19 @@ datasource db {
 model User {
     id String @id
     name String
-    email String @unique
+    email String? @unique
+    phoneNumber String? @unique
     avatarPortraitUrl String?
     avatarUrl String?
-    allSessionRevokeTimeMs BigInt?
-    currentLoginRequestId String?
-    stripeCustomerId String?
+    allSessionRevokeTime DateTime?
+    currentLoginRequestId String? @unique
+    currentLoginRequest LoginRequest? @relation("CurrentLoginRequest", fields: [currentLoginRequestId], references: [requestId])
     openAiKey String?
-    banTimeMs BigInt?
+    banTime DateTime?
     banReason String?
+    subscriptionStatus String?
+    stripeCustomerId String? @unique
+    subscriptionId String?
 
     loginRequests LoginRequest[]
     sessions AuthSession[]
@@ -41,13 +45,13 @@ model User {
 }
 
 model LoginRequest {
-    id String @id
+    requestId String @id
     userId String
     user User @relation(fields: [userId], references: [id])
     secretHash String
-    requestTimeMs BigInt
-    expireTimeMs BigInt
-    completedTimeMs BigInt?
+    requestTime DateTime
+    expireTime DateTime
+    completedTime DateTime?
     attemptCount Int
     address String
     addressType String
@@ -57,24 +61,29 @@ model LoginRequest {
     updatedAt DateTime @updatedAt
 
     sessions AuthSession[]
+    activeUser User? @relation("CurrentLoginRequest")
 }
 
 model AuthSession {
-    id String @id
+    sessionId String @id
     userId String
     user User @relation(fields: [userId], references: [id])
 
     secretHash String
-    grantedTimeMs BigInt
-    expireTimeMs BigInt
-    revokeTimeMs BigInt?
+    grantedTime DateTime
+    expireTime DateTime
+    revokeTime DateTime?
 
     requestId String?
-    request LoginRequest? @relation(fields: [requestId], references: [id])
+    request LoginRequest? @relation(fields: [requestId], references: [requestId])
 
     previousSessionId String? @unique
-    previousSession AuthSession? @relation("PreviousSession", fields: [previousSessionId], references: [id])
-    nextSession AuthSession? @relation("PreviousSession")
+    previousSession AuthSession? @relation("PreviousSession", fields: [previousSessionId], references: [sessionId])
+    previousSession1 AuthSession? @relation("PreviousSession")
+
+    nextSessionId String? @unique
+    nextSession AuthSession? @relation("NextSession", fields: [nextSessionId], references: [sessionId])
+    nextSession1 AuthSession? @relation("NextSession")
 
     ipAddress String
 
@@ -169,7 +178,7 @@ model RoleAssignment {
 
     subjectId String
     type String
-    expireTimeMs BigInt?
+    expireTime DateTime?
 
     userId String?
     user User? @relation(fields: [userId], references: [id])
