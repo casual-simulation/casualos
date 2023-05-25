@@ -1406,17 +1406,27 @@ declare interface ShowInputOptions {
      * Whether the text in the input box should be automatically selected.
      */
     autoSelect: boolean;
+
+    /**
+     * The items that should be shown in the list.
+     */
+    items?: ShowInputItem[];
+}
+
+export interface ShowInputItem {
+    label: string;
+    value: any;
 }
 
 /**
  * Defines the possible input types.
  */
-declare type ShowInputType = 'text' | 'color' | 'secret' | 'date';
+declare type ShowInputType = 'text' | 'color' | 'secret' | 'date' | 'list';
 
 /**
  * Defines the possible input types.
  */
-declare type ShowInputSubtype = 'basic' | 'swatch' | 'advanced';
+declare type ShowInputSubtype = 'basic' | 'swatch' | 'advanced' | 'select' | 'multiSelect' | 'radio' | 'checkbox';
 
 /**
  * Defines an event that is used to show a confirmation dialog.

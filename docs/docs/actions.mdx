@@ -4432,13 +4432,135 @@ const secret = await os.showInput('', {
 os.toast(secret);
 ```
 
-5. Show an input for entering dates.
+6. Show an input for entering dates.
 ```typescript
 const date = await os.showInput('', {
     type: 'date',
     title: 'Enter a date'
 });
 os.toast(date);
+```
+
+7. Show an input with a list of options.
+```typescript
+// Null means nothing is selected
+// To pre-select an item, pass in the index of the item you want selected.
+const selectedItem = await os.showInput(null, {
+    title: 'Select your favorite superhero',
+    type: 'list',
+    placeholder: 'Superhero',
+    items: [
+        {
+            label: 'Superman',
+            value: 1
+        },
+        {
+            label: 'Iron Man',
+            value: 2
+        },
+        {
+            label: 'Batman',
+            value: 3
+        },
+        {
+            label: 'Wonder Woman',
+            value: 4
+        }
+    ]
+});
+os.toast(selectedItem);
+```
+
+8. Show an input with a list of checkboxes.
+```typescript
+// Empty array means nothing is selected.
+// To pre-select items, pass in an array with the indexes of the items you want selected.
+const selectedItems = await os.showInput([], {
+    title: 'Check your favorite superheroes',
+    type: 'list',
+    subtype: 'checkbox',
+    items: [
+        {
+            label: 'Superman',
+            value: 1
+        },
+        {
+            label: 'Iron Man',
+            value: 2
+        },
+        {
+            label: 'Batman',
+            value: 3
+        },
+        {
+            label: 'Wonder Woman',
+            value: 4
+        }
+    ]
+});
+os.toast(selectedItems);
+```
+
+9. Show an input with a dropdown of checkboxes.
+```typescript
+// Empty array means nothing is selected.
+// To pre-select items, pass in an array with the indexes of the items you want selected.
+const selectedItems = await os.showInput([], {
+    title: 'Select your favorite superheroes',
+    type: 'list',
+    subtype: 'multiSelect',
+    placeholder: 'Superhero',
+    items: [
+        {
+            label: 'Superman',
+            value: 1
+        },
+        {
+            label: 'Iron Man',
+            value: 2
+        },
+        {
+            label: 'Batman',
+            value: 3
+        },
+        {
+            label: 'Wonder Woman',
+            value: 4
+        }
+    ]
+});
+os.toast(selectedItems);
+```
+
+10. Show an input with a list of [radio buttons](https://en.wikipedia.org/wiki/Radio_button).
+```typescript
+// Null means nothing is selected.
+// To pre-select an item, pass in the index of the item you want selected.
+const selectedItem = await os.showInput(null, {
+    title: 'Check your favorite superheroe',
+    type: 'list',
+    subtype: 'radio',
+    placeholder: 'Superhero',
+    items: [
+        {
+            label: 'Superman',
+            value: 1
+        },
+        {
+            label: 'Iron Man',
+            value: 2
+        },
+        {
+            label: 'Batman',
+            value: 3
+        },
+        {
+            label: 'Wonder Woman',
+            value: 4
+        }
+    ]
+});
+os.toast(selectedItem);
 ```
 
 ### `os.showInputForTag(bot, tag, options?)`

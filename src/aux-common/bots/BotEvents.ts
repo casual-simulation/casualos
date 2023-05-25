@@ -1538,17 +1538,34 @@ export interface ShowInputOptions {
      * Whether the text in the input box should be automatically selected.
      */
     autoSelect: boolean;
+
+    /**
+     * The list of items that should be displayed.
+     */
+    items?: ShowInputItem[];
+}
+
+export interface ShowInputItem {
+    label: string;
+    value: any;
 }
 
 /**
  * Defines the possible input types.
  */
-export type ShowInputType = 'text' | 'color' | 'secret' | 'date';
+export type ShowInputType = 'text' | 'color' | 'secret' | 'date' | 'list';
 
 /**
  * Defines the possible input types.
  */
-export type ShowInputSubtype = 'basic' | 'swatch' | 'advanced';
+export type ShowInputSubtype =
+    | 'basic'
+    | 'swatch'
+    | 'advanced'
+    | 'select'
+    | 'multiSelect'
+    | 'radio'
+    | 'checkbox';
 
 /**
  * Defines an event for actions.

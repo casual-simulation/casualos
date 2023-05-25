@@ -47,6 +47,7 @@ import {
     MdSwitch,
     MdBadge,
     MdDialogPrompt,
+    MdRadio,
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css';
 import './themes/default.scss';
@@ -94,6 +95,7 @@ Vue.use(MdSwitch);
 Vue.use(MdBadge);
 Vue.use(MdDialogPrompt);
 Vue.use(MdDatepicker);
+Vue.use(MdRadio);
 Vue.use(VueShortkey, {
     ignore: ['input.no-shortcuts', 'textarea.no-shortcuts'],
 });

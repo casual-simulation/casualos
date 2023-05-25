@@ -295,3 +295,15 @@ export function setTheme(theme: 'auto' | 'light' | 'dark') {
         setTheme(getSystemTheme());
     }
 }
+
+/**
+ * Gets the theme that is currently set.
+ */
+export function getCurrentTheme(): 'dark' | 'light' {
+    const theming = (Vue as any).material.theming;
+    if (theming.theme === 'dark') {
+        return 'dark';
+    }
+
+    return 'light';
+}
