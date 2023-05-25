@@ -37,7 +37,7 @@ export function calculateDestroyBotEvents(
         events.push(botRemoved(id));
     }
 
-    destroyChildren(calc, events, id);
+    destroyChildren(calc, events, id, new Set([id]));
 
     return events;
 }
@@ -45,7 +45,8 @@ export function calculateDestroyBotEvents(
 function destroyChildren(
     calc: BotCalculationContext,
     events: BotAction[],
-    id: string
+    id: string,
+    destroyedIds: Set<string>
 ) {
     const result = calc.objects.filter(
         (o) => calculateBotValue(calc, o, 'creator') === id
@@ -55,8 +56,11 @@ function destroyChildren(
         if (!isDestroyable(calc, child)) {
             return;
         }
-        events.push(botRemoved(child.id));
-        destroyChildren(calc, events, child.id);
+        if (!destroyedIds.has(child.id)) {
+            events.push(botRemoved(child.id));
+            destroyedIds.add(child.id);
+            destroyChildren(calc, events, child.id, destroyedIds);
+        }
     });
 }
 

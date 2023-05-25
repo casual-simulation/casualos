@@ -24,6 +24,59 @@
                     >
                         <label :style="{ color: labelColor }">{{ currentPlaceholder }}</label>
                     </md-datepicker>
+                    <p v-if="currentType === 'list' && items.length === 0">There are no items.</p>
+                    <md-field v-else-if="isSelect">
+                        <!-- List {{currentSubtype}} -->
+                        <label for="input-list" :style="{ color: labelColor }">{{
+                            currentPlaceholder
+                        }}</label>
+                        <md-select
+                            v-model="currentValue"
+                            v-if="currentSubtype === 'multiSelect'"
+                            ref="inputModalField"
+                            multiple
+                            id="input-list"
+                        >
+                            <md-option
+                                v-for="(option, index) in items"
+                                :key="index"
+                                :value="index"
+                                :style="{ color: labelColor }"
+                            >
+                                {{ option.label }}
+                            </md-option>
+                        </md-select>
+                        <md-select v-model="currentValue" v-else id="input-list">
+                            <!-- <md-option value="Test1">Option 1</md-option>
+                            <md-option value="Test2">Option 2</md-option> -->
+                            <md-option
+                                v-for="(option, index) in items"
+                                :key="index"
+                                :value="index"
+                                :style="{ color: labelColor }"
+                            >
+                                {{ option.label }}
+                            </md-option>
+                        </md-select>
+                    </md-field>
+                    <div v-else-if="currentType === 'list' && currentSubtype === 'radio'">
+                        <md-radio
+                            v-model="currentValue"
+                            v-for="(option, index) in items"
+                            :key="index"
+                            :value="index"
+                            >{{ option.label }}</md-radio
+                        >
+                    </div>
+                    <div v-else-if="currentType === 'list' && currentSubtype === 'checkbox'">
+                        <md-checkbox
+                            v-model="currentValue"
+                            v-for="(option, index) in items"
+                            :key="index"
+                            :value="index"
+                            >{{ option.label }}</md-checkbox
+                        >
+                    </div>
                     <md-field v-else>
                         <label :style="{ color: labelColor }">{{ currentPlaceholder }}</label>
                         <md-immediate-input
@@ -64,3 +117,4 @@
 </template>
 <script src="./ShowInputModal.ts"></script>
 <style src="./ShowInputModal.css" scoped></style>
+<style src="./ShowInputModalGlobal.css"></style>

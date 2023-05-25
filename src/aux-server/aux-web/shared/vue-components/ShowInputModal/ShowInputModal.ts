@@ -15,8 +15,10 @@ import {
     ShowInputForTagAction,
     ShowInputAction,
     asyncResult,
+    ShowInputItem,
 } from '@casual-simulation/aux-common';
 import { Swatches, Chrome, Compact } from 'vue-color';
+import { getCurrentTheme } from '../../StyleHelpers';
 
 @Component({
     components: {
@@ -39,11 +41,28 @@ export default class ShowInputModal extends Vue {
     backgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
     autoSelect: boolean = false;
+    items: ShowInputItem[] = [];
 
     private _currentTag: string = '';
     private _currentBot: Bot = null;
     private _currentTask: number | string = null;
     private _inputDialogSimulation: Simulation = null;
+
+    get hasTextInput() {
+        return (
+            this.currentType === 'text' ||
+            this.currentType === 'color' ||
+            this.currentType === 'secret'
+        );
+    }
+
+    get isSelect() {
+        return (
+            this.currentType === 'list' &&
+            this.currentSubtype !== 'radio' &&
+            this.currentSubtype !== 'checkbox'
+        );
+    }
 
     created() {
         this._sub = new Subscription();
@@ -101,6 +120,7 @@ export default class ShowInputModal extends Vue {
         this._updateLabel(event.options);
         this._updateColor(event.options);
         this._updateInputForTag(calc, bot, event.tag, event.options);
+        this.items = event.options.items ?? [];
         this._inputDialogSimulation = simulation;
         this.autoSelect = !!(event.options.autoSelect || false);
         this.showInputDialog = true;
@@ -113,6 +133,7 @@ export default class ShowInputModal extends Vue {
         this._updateLabel(event.options);
         this._updateColor(event.options);
         this._updateInput(event.currentValue, event.options, '');
+        this.items = event.options.items ?? [];
         this._inputDialogSimulation = simulation;
         this._currentTask = event.taskId;
         this.autoSelect = !!(event.options.autoSelect || false);
@@ -186,6 +207,12 @@ export default class ShowInputModal extends Vue {
             } else {
                 value = this.currentValue;
             }
+        } else if (this.currentType === 'list') {
+            if (Array.isArray(this.currentValue)) {
+                value = this.currentValue.map((v) => this.items[v]);
+            } else {
+                value = this.items[this.currentValue];
+            }
         } else {
             value = this.currentValue;
         }
@@ -238,7 +265,12 @@ export default class ShowInputModal extends Vue {
         if (typeof options.backgroundColor !== 'undefined') {
             this.backgroundColor = options.backgroundColor;
         } else {
-            this.backgroundColor = '#FFF';
+            const theme = getCurrentTheme();
+            if (theme === 'dark') {
+                this.backgroundColor = null;
+            } else {
+                this.backgroundColor = '#FFF';
+            }
         }
     }
 
@@ -252,7 +284,12 @@ export default class ShowInputModal extends Vue {
         if (typeof options.foregroundColor !== 'undefined') {
             this.labelColor = options.foregroundColor;
         } else {
-            this.labelColor = '#000';
+            const theme = getCurrentTheme();
+            if (theme === 'dark') {
+                this.labelColor = null;
+            } else {
+                this.labelColor = '#000';
+            }
         }
     }
 
@@ -279,9 +316,16 @@ export default class ShowInputModal extends Vue {
         defaultPlaceholder: string
     ) {
         this.currentType = options.type || 'text';
-        this.currentValue =
-            currentValue || (this.currentType === 'date' ? null : '');
         this.currentSubtype = options.subtype || 'basic';
+        this.currentValue =
+            currentValue ??
+            (this.currentType === 'date'
+                ? null
+                : this.currentType === 'list' &&
+                  (this.currentSubtype === 'checkbox' ||
+                      this.currentSubtype === 'multiSelect')
+                ? []
+                : '');
 
         if (typeof options.placeholder !== 'undefined') {
             this.currentPlaceholder = options.placeholder;
