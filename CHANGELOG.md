@@ -14,6 +14,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where using the sheetPortal to delete a bot that had circular `creator` tag references would freeze CasualOS.
+-   Fixed an issue where `#` symbols at the start of a tag value would be hidden in the multiline code editor.
 
 ## V3.1.29
 
