@@ -6301,6 +6301,20 @@ The **first parameter** is the list of updates that should be applied to this in
 await os.applyUpdatesToInst([ tags.savedUpdate ]);
 ```
 
+### `os.mergeInstUpdates(updates)`
+
+Merges the given updates into a single update. Returns the merged update.
+
+This function is useful for compressing a list of updates into a single update that can be applied to an inst.
+
+The **first parameter** is the list of updates that should be merged.
+
+#### Examples
+
+```typescript title='Merge a list of updates'
+const merged = os.mergeInstUpdates(updates);
+```
+
 ### `os.beginAudioRecording(options?)`
 
 Starts a new audio recording. Returns a promise that resolves when recording has started.

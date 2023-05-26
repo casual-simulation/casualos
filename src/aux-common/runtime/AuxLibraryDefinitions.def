@@ -11019,6 +11019,12 @@ interface Os {
     applyUpdatesToInst(updates: InstUpdate[]): Promise<void>;
 
     /**
+     * Merges the given instance updates into a single update.
+     * @param updates The list of updates to merge.
+     */
+    mergeInstUpdates(updates: InstUpdate[]): InstUpdate;
+
+    /**
      * Sends an event to the server to setup a new inst if it does not exist.
      * @param inst The inst.
      * @param botOrMod The bot or mod that should be cloned into the new inst.
