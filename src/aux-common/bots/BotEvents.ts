@@ -1311,6 +1311,13 @@ export interface ApplyUpdatesToInstAction extends Action {
 }
 
 /**
+ * Defines an event that is used to get the current inst update.
+ */
+export interface GetCurrentInstUpdateAction extends Action {
+    type: 'get_current_inst_update';
+}
+
+/**
  * Defines an event that is used to send the player to a dimension.
  */
 export interface GoToDimensionAction extends Action {
@@ -5527,6 +5534,15 @@ export function applyUpdatesToInst(
     return {
         type: 'apply_updates_to_inst',
         updates,
+    };
+}
+
+/**
+ * Creates a new GetCurrentInstUpdateAction.
+ */
+export function getCurrentInstUpdate(): GetCurrentInstUpdateAction {
+    return {
+        type: 'get_current_inst_update',
     };
 }
 
