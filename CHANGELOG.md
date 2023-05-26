@@ -1,5 +1,18 @@
 # CasualOS Changelog
 
+## V3.1.31
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `os.getCurrentInstUpdate()` function.
+    -   Returns a promise that resolves an inst update that represents the current local shared state of the inst.
+    -   This function is useful for whenever you want a snapshot of the current `shared` space state and want to be able to restore it to an inst after it is wiped.
+-   Added the `os.mergeInstUpdates(updates)` function.
+    -   This function merges the given list of inst updates into a single update.
+    -   Mostly useful for consolidation and maintenence of updates.
+
 ## V3.1.30
 
 #### Date: 5/25/2023
