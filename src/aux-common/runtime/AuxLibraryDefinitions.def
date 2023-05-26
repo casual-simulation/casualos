@@ -11019,6 +11019,14 @@ interface Os {
     applyUpdatesToInst(updates: InstUpdate[]): Promise<void>;
 
     /**
+     * Gets the current inst update.
+     * 
+     * This function is somewhat equivalent to calling os.listInstUpdates() followed by os.mergeInstUpdates(), but it uses the locally available state instead of fetching from the server.
+     * This makes it more efficient as well as usable even when the server is not available.
+     */
+    getCurrentInstUpdate(): Promise<InstUpdate>;
+
+    /**
      * Merges the given instance updates into a single update.
      * @param updates The list of updates to merge.
      */

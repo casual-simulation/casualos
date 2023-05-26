@@ -223,6 +223,7 @@ import {
     grantInstRole,
     revokeInstRole,
     InstUpdate,
+    getCurrentInstUpdate,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -8678,6 +8679,25 @@ describe('AuxLibrary', () => {
                         num: 999,
                     }),
                 });
+            });
+        });
+
+        describe('os.getCurrentInstUpdate()', () => {
+            it('should emit a remote action with a get_current_inst_update action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.getCurrentInstUpdate();
+                const expected = remote(
+                    getCurrentInstUpdate(),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
             });
         });
 

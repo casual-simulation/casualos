@@ -6260,6 +6260,40 @@ for(let i = 5; i >= 0; i--) {
 console.log('Deltas: ', deltas);
 ```
 
+### `os.getCurrentInstUpdate()`
+
+Retrieves an inst update that represents the current local shared state of the inst. Returns a promise that resolves with the update.
+
+Note that the inst update only contains bots and tag masks from the `shared` space.
+Useful for saving the current shared state of the inst so that it can be restored later or transferred to another inst.
+
+Unlike <ActionLink action='os.createInitializationUpdate(bots)'/>, this function creates an update that is linked to this inst.
+This means that applying the update to the inst it was created in will not create duplicate bots.
+It is still possible to apply the update to other insts, but it may create duplicate bots depending on the history of the other inst.
+
+#### Examples
+
+```typescript title='Save the current inst state to a local bot'
+const update = await os.getCurrentInstUpdate();
+create({
+    space: 'local',
+    backup: true,
+    timestamp: update.timestamp,
+    update: update
+});
+```
+
+```typescript title='Restore from a local bot'
+const savedUpdates = getBots(bySpace('local'), byTag('backup', true));
+savedUpdates.sort((a, b) => b.timestamp - a.timestamp);
+
+if (savedUpdates.length > 0) {
+    const update = savedUpdates[0].tags.update;
+    await os.applyUpdatesToInst([update]);
+    os.toast("Restored!");
+}
+```
+
 ### `os.createInitializationUpdate(bots)`
 
 Creates an inst update that, when applied, ensures the given bots are created on this inst.
@@ -6269,6 +6303,8 @@ Note that you can apply the same update multiple times and you will end up with 
 Additionally, future changes to the bots will be preserved even if the update is applied again.
 
 This feature makes inst updates useful when you want to ensure that an experience starts in an initial state but also able to change over time.
+
+Unlike <ActionLink action='os.getCurrentInstUpdate()'/>, this function creates an update that is not linked to this inst. This means that applying the update to the inst it was created in will create duplicate bots.
 
 The **first parameter** is the list of bots that should be included in the update.
 

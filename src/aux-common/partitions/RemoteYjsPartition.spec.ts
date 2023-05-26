@@ -31,7 +31,13 @@ import {
     RateLimitExceededEvent,
 } from '@casual-simulation/causal-trees';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
-import { applyUpdate, Doc, Map as YMap, Text as YText } from 'yjs';
+import {
+    applyUpdate,
+    Doc,
+    encodeStateAsUpdate,
+    Map as YMap,
+    Text as YText,
+} from 'yjs';
 import { testPartitionImplementation } from './test/PartitionTests';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { RemoteYjsPartitionImpl } from './RemoteYjsPartition';
@@ -61,6 +67,7 @@ import {
     StateUpdatedEvent,
     unlockSpace,
     UpdatedBot,
+    getCurrentInstUpdate,
 } from '../bots';
 import { RemoteYjsPartitionConfig } from './AuxPartitionConfig';
 import { wait, waitAsync } from '../test/TestHelpers';
@@ -1115,6 +1122,63 @@ describe('RemoteYjsPartition', () => {
                             tag1: 'abc',
                         }),
                     });
+                });
+            });
+
+            describe('get_current_inst_update', () => {
+                it('should return the current doc state as an update', async () => {
+                    setupPartition({
+                        type: 'remote_yjs',
+                        branch: 'testBranch',
+                        host: 'testHost',
+                    });
+
+                    partition.connect();
+
+                    await partition.applyEvents([
+                        botAdded(
+                            createBot('test1', {
+                                abc: 'def',
+                            })
+                        ),
+                        botAdded(
+                            createBot('test2', {
+                                num: 124,
+                            })
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    const events = [] as Action[];
+                    partition.onEvents.subscribe((e) => events.push(...e));
+
+                    await partition.sendRemoteEvents([
+                        remote(
+                            getCurrentInstUpdate(),
+                            undefined,
+                            undefined,
+                            'task1'
+                        ),
+                    ]);
+
+                    await waitAsync();
+
+                    const expectedUpdate = fromByteArray(
+                        encodeStateAsUpdate(partition.doc)
+                    );
+
+                    expect(events).toEqual([
+                        asyncResult(
+                            'task1',
+                            {
+                                id: 0,
+                                timestamp: expect.any(Number),
+                                update: expectedUpdate,
+                            },
+                            false
+                        ),
+                    ]);
                 });
             });
 
