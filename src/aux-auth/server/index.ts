@@ -12,7 +12,6 @@ import {
 import pify from 'pify';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { hasValue } from '@casual-simulation/aux-common/bots/BotCalculations';
-import { Record } from '@casual-simulation/aux-common/bots/Bot';
 import {
     RecordsController,
     Record as NewRecord,
@@ -32,10 +31,13 @@ import {
     RateLimitController,
     PolicyController,
 } from '@casual-simulation/aux-records';
-import { MongoDBRecordsStore } from './MongoDBRecordsStore';
-import { MongoDBDataRecordsStore, DataRecord } from './MongoDBDataRecordsStore';
-import { MongoDBFileRecordsStore } from './MongoDBFileRecordsStore';
-import { MongoDBEventRecordsStore } from './MongoDBEventRecordsStore';
+import { MongoDBRecordsStore } from '../mongo/MongoDBRecordsStore';
+import {
+    MongoDBDataRecordsStore,
+    DataRecord,
+} from '../mongo/MongoDBDataRecordsStore';
+import { MongoDBFileRecordsStore } from '../mongo/MongoDBFileRecordsStore';
+import { MongoDBEventRecordsStore } from '../mongo/MongoDBEventRecordsStore';
 import { LivekitController } from '@casual-simulation/aux-records/LivekitController';
 import { AuthController } from '@casual-simulation/aux-records/AuthController';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
@@ -46,16 +48,17 @@ import {
     MongoDBAuthStore,
     MongoDBAuthUser,
     MongoDBLoginRequest,
-} from './MongoDBAuthStore';
+} from '../mongo/MongoDBAuthStore';
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
 import { StripeIntegration } from '../shared/StripeIntegration';
 import {
     MongoDBRateLimiter,
     MongoDBRateLimitRecord,
-} from './MongoDBRateLimiter';
+} from '../mongo/MongoDBRateLimiter';
 import * as dotenv from 'dotenv';
 import Stripe from 'stripe';
-import { MongoDBPolicyStore } from './MongoDBPolicyStore';
+import { MongoDBPolicyStore } from '../mongo/MongoDBPolicyStore';
+import { BuilderOptions, ServerBuilder } from 'shared/ServerBuilder';
 
 // Load env file
 const secretsFile = path.resolve(__dirname, '..', 'secrets.env.json');
@@ -80,8 +83,6 @@ if (existsSync(secretsFile)) {
 } else {
     console.log('[AuxAuth] No secrets file.');
 }
-
-// declare var MAGIC_SECRET_KEY: string;
 
 const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY ?? 'APIu7LWFmsZckWx';
 const LIVEKIT_SECRET_KEY =
@@ -160,136 +161,34 @@ const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
 
 async function start() {
     let app = express();
-    let mongo: MongoClient = await connect(MONGO_URL, {
-        useNewUrlParser: MONGO_USE_NEW_URL_PARSER,
-    });
-    // const magic = new Magic(MAGIC_SECRET_KEY, {});
-    let cursors = new Map<string, Cursor<AppRecord>>();
 
-    const db = mongo.db('aux-auth');
-    const users = db.collection<MongoDBAuthUser>('users');
-    const loginRequests = db.collection<MongoDBLoginRequest>('loginRequests');
-    const sessions = db.collection<MongoDBAuthSession>('sessions');
-    const permanentRecords = db.collection<AppRecord>('permanentRecords');
-    const recordsCollection = db.collection<NewRecord>('records');
-    const recordsKeysCollection = db.collection<RecordKey>('recordsKeys');
-    const recordsDataCollection = db.collection<DataRecord>('recordsData');
-    const manualRecordsDataCollection =
-        db.collection<DataRecord>('manualRecordsData');
-    const recordsFilesCollection = db.collection<any>('recordsFilesInfo');
-    const filesCollection = db.collection<any>('recordsFilesData');
-    const recordsEventsCollection = db.collection<any>('recordsEvents');
-    const emailRules = db.collection<any>('emailRules');
-    const smsRules = db.collection<any>('smsRules');
-    const rateLimits = db.collection<any>('rateLimits');
+    const subscriptions = tryParseJson(SUBSCRIPTION_CONFIG);
 
-    const policies = db.collection<any>('policies');
-    const roles = db.collection<any>('roles');
-
-    const tempRecords = [] as AppRecord[];
-
-    const authStore = new MongoDBAuthStore(
-        users,
-        loginRequests,
-        sessions,
-        emailRules,
-        smsRules
-    );
-    const messenger = getAuthMessenger();
-
-    let forceAllowSubscriptionFeatures = false;
-    const subscriptionConfig = tryParseSubscriptionConfig(SUBSCRIPTION_CONFIG);
-
-    let stripe: StripeInterface;
-    if (!!STRIPE_SECRET_KEY && !!STRIPE_PUBLISHABLE_KEY && subscriptionConfig) {
-        console.log('[AuxAuth] Integrating with Stripe.');
-        stripe = new StripeIntegration(
-            new Stripe(STRIPE_SECRET_KEY, {
-                apiVersion: '2022-11-15',
-            }),
-            STRIPE_PUBLISHABLE_KEY
-        );
-    } else {
-        console.log('[AuxAuth] Disabling Stripe Features.');
-        console.log(
-            '[AuxAuth] Allowing all subscription features because Stripe is not configured.'
-        );
-        stripe = null;
-        forceAllowSubscriptionFeatures = true;
-    }
-
-    const authController = new AuthController(
-        authStore,
-        messenger,
-        subscriptionConfig,
-        forceAllowSubscriptionFeatures
-    );
-
-    const recordsStore = new MongoDBRecordsStore(
-        recordsCollection,
-        recordsKeysCollection
-    );
-    const recordsManager = new RecordsController(recordsStore);
-
-    const policyStore = new MongoDBPolicyStore(policies, roles);
-    const policyController = new PolicyController(
-        authController,
-        recordsManager,
-        policyStore
-    );
-
-    const dataStore = new MongoDBDataRecordsStore(recordsDataCollection);
-    const dataManager = new DataRecordsController(policyController, dataStore);
-    const eventStore = new MongoDBEventRecordsStore(recordsEventsCollection);
-    const eventManager = new EventRecordsController(
-        policyController,
-        eventStore
-    );
-
-    const rateLimiter = new MongoDBRateLimiter(rateLimits);
-    let rateManager: RateLimitController = null;
-
-    if (RATE_LIMIT_MAX && RATE_LIMIT_WINDOW_MS) {
-        console.log('[AuxAuth] Enabling rate limiting.');
-        rateManager = new RateLimitController(rateLimiter, {
+    const config: BuilderOptions = {
+        mongodb: {
+            url: MONGO_URL,
+            useNewUrlParser: MONGO_USE_NEW_URL_PARSER === 'true',
+            database: 'aux-auth',
+        },
+        livekit: {
+            apiKey: LIVEKIT_API_KEY,
+            secretKey: LIVEKIT_SECRET_KEY,
+            endpoint: LIVEKIT_ENDPOINT,
+        },
+        rateLimit: {
             maxHits: RATE_LIMIT_MAX,
             windowMs: RATE_LIMIT_WINDOW_MS,
-        });
-    } else {
-        console.log('[AuxAuth] Disabling rate limiting.');
-    }
-
-    const manualDataStore = new MongoDBDataRecordsStore(
-        manualRecordsDataCollection
-    );
-    const manualDataManager = new DataRecordsController(
-        policyController,
-        manualDataStore
-    );
-
-    const fileStore = new MongoDBFileRecordsStore(
-        recordsFilesCollection,
-        'http://localhost:2998/api/v2/records/file'
-    );
-    const fileController = new FileRecordsController(
-        policyController,
-        fileStore
-    );
-
-    const livekitController = new LivekitController(
-        LIVEKIT_API_KEY,
-        LIVEKIT_SECRET_KEY,
-        LIVEKIT_ENDPOINT
-    );
-
-    const subscriptionController = new SubscriptionController(
-        stripe,
-        authController,
-        authStore,
-        subscriptionConfig
-    );
-
-    const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
+        },
+        textIt: {
+            apiKey: process.env.TEXT_IT_API_KEY,
+            flowId: process.env.TEXT_IT_FLOW_ID,
+        },
+        stripe: {
+            secretKey: STRIPE_SECRET_KEY,
+            publishableKey: STRIPE_PUBLISHABLE_KEY,
+        },
+        subscriptions: subscriptions.success ? subscriptions.value : null,
+    };
 
     const allowedRecordsOrigins = new Set([
         'http://localhost:3000',
@@ -308,20 +207,32 @@ async function start() {
         ...getAllowedAPIOrigins(),
     ]);
 
-    const server = new RecordsHttpServer(
-        allowedRecordsOrigins,
-        allowedRecordsOrigins,
-        authController,
-        livekitController,
-        recordsManager,
-        eventManager,
-        dataManager,
-        manualDataManager,
-        fileController,
-        subscriptionController,
-        rateManager,
-        policyController
-    );
+    const builder = new ServerBuilder(config)
+        .useAllowedAccountOrigins(allowedRecordsOrigins)
+        .useAllowedApiOrigins(allowedRecordsOrigins)
+        .useMongoDB()
+        .useMongoDBRateLimit();
+
+    if (config.textIt.apiKey && config.textIt.flowId) {
+        builder.useTextItAuthMessenger();
+    } else {
+        console.log('[AuxAuth] Using Console Auth Messenger.');
+        builder.useConsoleAuthMessenger();
+    }
+
+    if (config.stripe.secretKey && config.stripe.publishableKey) {
+        builder.useStripeSubscriptions();
+    }
+
+    if (config.rateLimit.windowMs && config.rateLimit.maxHits) {
+        builder.useMongoDBRateLimit();
+    }
+
+    const { server, filesController, mongoDatabase } =
+        await builder.buildAsync();
+    const filesCollection = mongoDatabase.collection<any>('recordsFilesData');
+
+    const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
 
     async function handleRequest(req: Request, res: Response) {
         const query: GenericHttpRequest['query'] = {};
@@ -400,7 +311,7 @@ async function start() {
                 body: req.body,
             });
 
-            const result = await fileController.markFileAsUploaded(
+            const result = await filesController.markFileAsUploaded(
                 recordName,
                 fileName
             );
