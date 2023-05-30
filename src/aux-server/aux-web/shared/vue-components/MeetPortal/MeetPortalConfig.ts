@@ -32,6 +32,15 @@ export class MeetPortalConfig implements SubscriptionLike {
     private _disablePrivateMessages: boolean;
     private _meetJwt: string;
     private _updated: Subject<void>;
+    private _language: string;
+
+    get language(): string {
+        if (hasValue(this._language)) {
+            return this._language;
+        } else {
+            return undefined;
+        }
+    }
 
     /**
      * Gets whether the portal should be visible.
@@ -162,6 +171,7 @@ export class MeetPortalConfig implements SubscriptionLike {
         this._style = null;
         this._meetJwt = null;
         this._disablePrivateMessages = null;
+        this._language = null;
         this._updated.next();
     }
 
@@ -234,6 +244,13 @@ export class MeetPortalConfig implements SubscriptionLike {
             calc,
             bot,
             'meetPortalJWT',
+            null
+        );
+
+        this._language = calculateStringTagValue(
+            calc,
+            bot,
+            'meetPortalLanguage',
             null
         );
 

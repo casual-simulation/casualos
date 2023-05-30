@@ -3170,6 +3170,35 @@ export function botCalculationContextTests(
                 botRemoved('bot4'),
             ]);
         });
+
+        it('should handle circular creators', () => {
+            const bot1 = createBot('bot1', {
+                creator: 'bot5',
+            });
+            const bot2 = createBot('bot2', {
+                creator: 'bot1',
+            });
+            const bot3 = createBot('bot3', {
+                creator: 'bot2',
+            });
+            const bot4 = createBot('bot4', {
+                creator: 'bot3',
+            });
+            const bot5 = createBot('bot5');
+
+            const calc = createPrecalculatedContext(
+                [bot1, bot2, bot3, bot4, bot5],
+                undefined
+            );
+            const events = calculateDestroyBotEvents(calc, bot1);
+
+            expect(events).toEqual([
+                botRemoved('bot1'),
+                botRemoved('bot2'),
+                botRemoved('bot3'),
+                botRemoved('bot4'),
+            ]);
+        });
     });
 
     describe('resolveRejectedActions()', () => {

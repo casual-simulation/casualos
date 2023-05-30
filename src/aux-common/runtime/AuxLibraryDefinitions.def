@@ -1406,17 +1406,27 @@ declare interface ShowInputOptions {
      * Whether the text in the input box should be automatically selected.
      */
     autoSelect: boolean;
+
+    /**
+     * The items that should be shown in the list.
+     */
+    items?: ShowInputItem[];
+}
+
+export interface ShowInputItem {
+    label: string;
+    value: any;
 }
 
 /**
  * Defines the possible input types.
  */
-declare type ShowInputType = 'text' | 'color' | 'secret' | 'date';
+declare type ShowInputType = 'text' | 'color' | 'secret' | 'date' | 'list';
 
 /**
  * Defines the possible input types.
  */
-declare type ShowInputSubtype = 'basic' | 'swatch' | 'advanced';
+declare type ShowInputSubtype = 'basic' | 'swatch' | 'advanced' | 'select' | 'multiSelect' | 'radio' | 'checkbox';
 
 /**
  * Defines an event that is used to show a confirmation dialog.
@@ -11007,6 +11017,20 @@ interface Os {
      * @param updates The updates that should be applied to the inst.
      */
     applyUpdatesToInst(updates: InstUpdate[]): Promise<void>;
+
+    /**
+     * Gets the current inst update.
+     * 
+     * This function is somewhat equivalent to calling os.listInstUpdates() followed by os.mergeInstUpdates(), but it uses the locally available state instead of fetching from the server.
+     * This makes it more efficient as well as usable even when the server is not available.
+     */
+    getCurrentInstUpdate(): Promise<InstUpdate>;
+
+    /**
+     * Merges the given instance updates into a single update.
+     * @param updates The list of updates to merge.
+     */
+    mergeInstUpdates(updates: InstUpdate[]): InstUpdate;
 
     /**
      * Sends an event to the server to setup a new inst if it does not exist.

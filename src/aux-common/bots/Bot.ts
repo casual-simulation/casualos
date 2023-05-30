@@ -2213,6 +2213,7 @@ export const KNOWN_TAGS: string[] = [
     'meetPortalRequireDisplayName',
     'meetPortalDisablePrivateMessages',
     'meetPortalJWT',
+    'meetPortalLanguage',
     'mapPortalBasemap',
 
     'tagPortalAnchorPoint',
