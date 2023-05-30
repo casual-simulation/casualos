@@ -464,6 +464,18 @@ describe('S3FileRecordsStore', () => {
     });
 
     describe('updateFileRecord()', () => {
+        beforeEach(async () => {
+            await lookup.addFileRecord(
+                'test-record',
+                'test file.xml',
+                'publisherId',
+                'subjectId',
+                256,
+                'test description',
+                [PUBLIC_READ_MARKER]
+            );
+        });
+
         it('should update a file in the lookup store', async () => {
             const result = (await store.updateFileRecord(
                 'test-record',
@@ -504,6 +516,7 @@ describe('S3FileRecordsStore', () => {
                 sizeInBytes: 256,
                 description: 'test description',
                 uploaded: false,
+                markers: [PUBLIC_READ_MARKER],
             });
         });
 
