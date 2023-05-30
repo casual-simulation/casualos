@@ -65,6 +65,10 @@ Most of them are NPM scripts, so they're easy to run.
     -   `npm run test:watch`
 -   Run tests
     -   `npm test`
+-   Reset your database
+    -   `prisma migrate reset`
+-   Update your database to match schema (creates a migration if needed)
+    -   `prisma migrate dev`
 
 You can find other scripts in the `package.json` file at the root of the repository.
 
