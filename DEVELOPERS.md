@@ -29,7 +29,8 @@ Make sure you have all the prerequisite tools installed:
         - Powershell: `npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}`
 3. Start CockroachDB
     - Use a separate terminal tab
-    - `cockroach start-single-node --insecure`
+    - `npm run cockroach`
+    - If you want, you can choose to start CockroachDB when your system starts or use something like Docker to host your CockroachDB instance.
 4. (Optional) Add `casualos.localhost` to your [hosts file][hosts-file].
     - You can use this domain to prevent the service worker from installing.
     - Follow these steps:

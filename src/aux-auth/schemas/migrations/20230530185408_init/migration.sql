@@ -2,15 +2,18 @@
 CREATE TABLE "User" (
     "id" STRING NOT NULL,
     "name" STRING NOT NULL,
-    "email" STRING NOT NULL,
+    "email" STRING,
+    "phoneNumber" STRING,
     "avatarPortraitUrl" STRING,
     "avatarUrl" STRING,
-    "allSessionRevokeTimeMs" INT8,
+    "allSessionRevokeTime" TIMESTAMP(3),
     "currentLoginRequestId" STRING,
-    "stripeCustomerId" STRING,
     "openAiKey" STRING,
-    "banTimeMs" INT8,
+    "banTime" TIMESTAMP(3),
     "banReason" STRING,
+    "subscriptionStatus" STRING,
+    "stripeCustomerId" STRING,
+    "subscriptionId" STRING,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -19,12 +22,12 @@ CREATE TABLE "User" (
 
 -- CreateTable
 CREATE TABLE "LoginRequest" (
-    "id" STRING NOT NULL,
+    "requestId" STRING NOT NULL,
     "userId" STRING NOT NULL,
     "secretHash" STRING NOT NULL,
-    "requestTimeMs" INT8 NOT NULL,
-    "expireTimeMs" INT8 NOT NULL,
-    "completedTimeMs" INT8,
+    "requestTime" TIMESTAMP(3) NOT NULL,
+    "expireTime" TIMESTAMP(3) NOT NULL,
+    "completedTime" TIMESTAMP(3),
     "attemptCount" INT4 NOT NULL,
     "address" STRING NOT NULL,
     "addressType" STRING NOT NULL,
@@ -32,24 +35,25 @@ CREATE TABLE "LoginRequest" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "LoginRequest_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "LoginRequest_pkey" PRIMARY KEY ("requestId")
 );
 
 -- CreateTable
 CREATE TABLE "AuthSession" (
-    "id" STRING NOT NULL,
+    "sessionId" STRING NOT NULL,
     "userId" STRING NOT NULL,
     "secretHash" STRING NOT NULL,
-    "grantedTimeMs" INT8 NOT NULL,
-    "expireTimeMs" INT8 NOT NULL,
-    "revokeTimeMs" INT8,
+    "grantedTime" TIMESTAMP(3) NOT NULL,
+    "expireTime" TIMESTAMP(3) NOT NULL,
+    "revokeTime" TIMESTAMP(3),
     "requestId" STRING,
     "previousSessionId" STRING,
+    "nextSessionId" STRING,
     "ipAddress" STRING NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "AuthSession_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "AuthSession_pkey" PRIMARY KEY ("sessionId")
 );
 
 -- CreateTable
@@ -123,7 +127,7 @@ CREATE TABLE "RoleAssignment" (
     "roleId" STRING NOT NULL,
     "subjectId" STRING NOT NULL,
     "type" STRING NOT NULL,
-    "expireTimeMs" INT8,
+    "expireTime" TIMESTAMP(3),
     "userId" STRING,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -138,8 +142,8 @@ CREATE TABLE "DataRecord" (
     "data" JSONB NOT NULL,
     "publisherId" STRING NOT NULL,
     "subjectId" STRING NOT NULL,
-    "updatePolicy" STRING NOT NULL,
-    "deletePolicy" STRING NOT NULL,
+    "updatePolicy" JSONB NOT NULL,
+    "deletePolicy" JSONB NOT NULL,
     "markers" STRING[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -155,7 +159,7 @@ CREATE TABLE "FileRecord" (
     "subjectId" STRING NOT NULL,
     "sizeInBytes" INT8 NOT NULL,
     "description" STRING NOT NULL,
-    "uploaded" BOOL NOT NULL,
+    "uploadedAt" TIMESTAMP(3),
     "markers" STRING[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -179,7 +183,22 @@ CREATE TABLE "EventRecord" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_phoneNumber_key" ON "User"("phoneNumber");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_currentLoginRequestId_key" ON "User"("currentLoginRequestId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_stripeCustomerId_key" ON "User"("stripeCustomerId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "AuthSession_previousSessionId_key" ON "AuthSession"("previousSessionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "AuthSession_nextSessionId_key" ON "AuthSession"("nextSessionId");
+
+-- AddForeignKey
+ALTER TABLE "User" ADD CONSTRAINT "User_currentLoginRequestId_fkey" FOREIGN KEY ("currentLoginRequestId") REFERENCES "LoginRequest"("requestId") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "LoginRequest" ADD CONSTRAINT "LoginRequest_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -188,10 +207,13 @@ ALTER TABLE "LoginRequest" ADD CONSTRAINT "LoginRequest_userId_fkey" FOREIGN KEY
 ALTER TABLE "AuthSession" ADD CONSTRAINT "AuthSession_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "AuthSession" ADD CONSTRAINT "AuthSession_requestId_fkey" FOREIGN KEY ("requestId") REFERENCES "LoginRequest"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "AuthSession" ADD CONSTRAINT "AuthSession_requestId_fkey" FOREIGN KEY ("requestId") REFERENCES "LoginRequest"("requestId") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "AuthSession" ADD CONSTRAINT "AuthSession_previousSessionId_fkey" FOREIGN KEY ("previousSessionId") REFERENCES "AuthSession"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "AuthSession" ADD CONSTRAINT "AuthSession_previousSessionId_fkey" FOREIGN KEY ("previousSessionId") REFERENCES "AuthSession"("sessionId") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AuthSession" ADD CONSTRAINT "AuthSession_nextSessionId_fkey" FOREIGN KEY ("nextSessionId") REFERENCES "AuthSession"("sessionId") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Record" ADD CONSTRAINT "Record_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
