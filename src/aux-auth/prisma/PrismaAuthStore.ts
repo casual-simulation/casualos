@@ -302,11 +302,11 @@ export class PrismaAuthStore implements AuthStore {
         userId: string,
         expireTimeMs: number
     ): Promise<ListSessionsDataResult> {
-        let where = {
+        let where: Prisma.AuthSessionWhereInput = {
             userId: userId,
         };
         if (expireTimeMs) {
-            where['expireTimeMs'] = { lt: expireTimeMs };
+            where['expireTime'] = { lt: new Date(expireTimeMs) };
         }
 
         const sessions = await this._client.authSession.findMany({

@@ -30,7 +30,6 @@ import { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
 import { LivekitController } from '@casual-simulation/aux-records/LivekitController';
 import { SubscriptionConfiguration } from '@casual-simulation/aux-records/SubscriptionConfiguration';
-import { S3Config } from 'aws-sdk/clients/connect';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { createClient as createRedisClient } from 'redis';
 import RedisRateLimitStore from '@casual-simulation/rate-limit-redis';
