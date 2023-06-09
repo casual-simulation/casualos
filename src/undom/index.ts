@@ -123,6 +123,11 @@ export const BUILTIN_HTML_VIDEO_ELEMENT_FUNCTIONS = [
     'requestPictureInPicture',
 ];
 
+export const BUILTIN_HTML_CANVAS_ELEMENT_FUNCTIONS = [
+    'transferControlToOffscreen',
+    'getContext',
+];
+
 export interface UndomOptions {
     /**
      * The list of event names that should be added to the Node class.
@@ -609,6 +614,17 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         BUILTIN_HTML_VIDEO_ELEMENT_FUNCTIONS
     );
 
+    class HTMLCanvasElement extends HTMLElement {
+        constructor() {
+            super(null, 'CANVAS');
+        }
+    }
+
+    registerBuiltinMethods(
+        HTMLCanvasElement,
+        BUILTIN_HTML_CANVAS_ELEMENT_FUNCTIONS
+    );
+
     class SVGElement extends Element {}
 
     class Document extends Element {
@@ -850,6 +866,8 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
             element = new HTMLFormElement();
         } else if (typeUpper === 'VIDEO') {
             element = new HTMLVideoElement();
+        } else if (typeUpper === 'CANVAS') {
+            element = new HTMLCanvasElement();
         } else {
             element = new HTMLElement(null, typeUpper);
         }
@@ -878,6 +896,7 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
                 Node,
                 Text,
                 Element,
+                HTMLCanvasElement,
                 HTMLInputElement,
                 HTMLFormElement,
                 HTMLMediaElement,

@@ -5,6 +5,7 @@ import {
     ProxyBridgePartitionImpl,
     RuntimeStateVersion,
     StoredAux,
+    AsyncResultAction,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
 import { wrap, proxy, Remote, expose, transfer, createEndpoint } from 'comlink';
@@ -201,6 +202,32 @@ export class AuxVMImpl implements AuxVM {
      */
     async sendEvents(events: BotAction[]): Promise<void> {
         if (!this._proxy) return null;
+        if (events && events.length) {
+            const transferables = [];
+            for (let event of events) {
+                if ((event as any).result) {
+                    event = <AsyncResultAction>event;
+
+                    if (event.result instanceof OffscreenCanvas) {
+                        console.log(
+                            `[AuxVMImpl] marked OffscreenCanvas as transferable in AsyncResultAction`,
+                            event
+                        );
+                        transferables.push(event.result);
+                    }
+                }
+            }
+
+            if (transferables.length > 0) {
+                console.log(
+                    `[AuxVMImpl] sendEvents marking transferables from events`,
+                    events,
+                    transferables
+                );
+                transfer(events, transferables);
+            }
+        }
+
         return await this._proxy.sendEvents(events);
     }
 
