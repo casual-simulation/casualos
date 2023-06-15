@@ -1,4 +1,4 @@
-import { RegexRule } from '@casual-simulation/aux-records';
+import { RegexRule, cleanupObject } from '@casual-simulation/aux-records';
 import {
     AddressType,
     AuthLoginRequest,
@@ -138,25 +138,34 @@ export class PrismaAuthStore implements AuthStore {
 
     async saveNewUser(user: AuthUser): Promise<SaveNewUserResult> {
         try {
+            let createData: Prisma.UserCreateInput = {
+                id: user.id,
+                name: user.name as string,
+                email: user.email,
+                phoneNumber: user.phoneNumber,
+                avatarUrl: user.avatarUrl as string,
+                avatarPortraitUrl: user.avatarPortraitUrl as string,
+                allSessionRevokeTime: convertToDate(
+                    user.allSessionRevokeTimeMs
+                ),
+                stripeCustomerId: user.stripeCustomerId as string,
+                openAiKey: user.openAiKey as string,
+                subscriptionStatus: user.subscriptionStatus as string,
+                subscriptionId: user.subscriptionId as string,
+                banTime: convertToDate(user.banTimeMs),
+                banReason: user.banReason as string,
+            };
+
+            if (!!user.currentLoginRequestId) {
+                createData.currentLoginRequest = {
+                    connect: {
+                        requestId: user.currentLoginRequestId as string,
+                    },
+                };
+            }
+
             await this._client.user.create({
-                data: {
-                    id: user.id,
-                    name: user.name as string,
-                    email: user.email,
-                    phoneNumber: user.phoneNumber,
-                    avatarUrl: user.avatarUrl as string,
-                    avatarPortraitUrl: user.avatarPortraitUrl as string,
-                    allSessionRevokeTime: convertToDate(
-                        user.allSessionRevokeTimeMs
-                    ),
-                    currentLoginRequestId: user.currentLoginRequestId as string,
-                    stripeCustomerId: user.stripeCustomerId as string,
-                    openAiKey: user.openAiKey as string,
-                    subscriptionStatus: user.subscriptionStatus as string,
-                    subscriptionId: user.subscriptionId as string,
-                    banTime: convertToDate(user.banTimeMs),
-                    banReason: user.banReason as string,
-                },
+                data: createData,
             });
         } catch (err) {
             if (err instanceof PrismaClientKnownRequestError) {
