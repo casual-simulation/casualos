@@ -43,19 +43,33 @@ async function start() {
     let questions = [];
 
     const environmentVariables = [
-        ['TEXT_IT_API_KEY', 'Please enter the API Key for TextIt'],
-        ['TEXT_IT_FLOW_ID', 'Please enter the Flow ID for TextIt'],
-        ['STRIPE_SECRET_KEY', 'Please enter the Stripe Secret Key'],
-        ['STRIPE_PUBLISHABLE_KEY', 'Please enter the Stripe Publishable Key'],
-        ['SUBSCRIPTION_CONFIG', 'Please enter the Subscription Config'],
+        ['SERVER_CONFIG.textIt.apiKey', 'Please enter the API Key for TextIt'],
+        ['SERVER_CONFIG.textIt.flowId', 'Please enter the Flow ID for TextIt'],
+        [
+            'SERVER_CONFIG.stripe.secretKey',
+            'Please enter the Stripe Secret Key',
+        ],
+        [
+            'SERVER_CONFIG.stripe.publishableKey',
+            'Please enter the Stripe Publishable Key',
+        ],
+        [
+            'SERVER_CONFIG.subscriptions',
+            'Please enter the Subscription Config',
+            (json) => JSON.parse(json),
+        ],
     ];
 
-    for (let [name, desc] of environmentVariables) {
-        if (!serverlessResult?.handleRecords?.[name] || !serverResult?.[name]) {
+    for (let [name, desc, transform] of environmentVariables) {
+        if (
+            !_.get(serverlessResult?.handleRecords, name) ||
+            !_.get(serverResult, name)
+        ) {
             questions.push({
                 type: 'text',
                 name: name,
                 message: desc,
+                format: transform,
             });
         }
     }
@@ -99,12 +113,18 @@ async function start() {
 
     if (questions.length > 0) {
         const response = await prompts(questions);
+
+        let final = {};
+        for (let key in response) {
+            _.set(final, key, response[key] ? response[key] : undefined);
+        }
+
         serverlessResult = _.merge({}, serverlessResult, {
             handleRecords: {
-                ...response,
+                ...final,
             },
         });
-        serverResult = _.merge({}, serverResult, response);
+        serverResult = _.merge({}, serverResult, final);
 
         needsUpdate = true;
     }

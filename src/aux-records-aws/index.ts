@@ -5,3 +5,4 @@ export * from './DynamoDBEventStore';
 export * from './DynamoDBAuthStore';
 export * from './DynamoDBPolicyStore';
 export * from './TextItAuthMessenger';
+export { S3FileRecordsStore } from './S3FileRecordsStore';

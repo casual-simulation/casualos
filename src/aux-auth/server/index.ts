@@ -58,64 +58,29 @@ import {
 import * as dotenv from 'dotenv';
 import Stripe from 'stripe';
 import { MongoDBPolicyStore } from '../mongo/MongoDBPolicyStore';
-import { BuilderOptions, ServerBuilder } from 'shared/ServerBuilder';
+import {
+    BuilderOptions,
+    ServerBuilder,
+    optionsSchema,
+} from 'shared/ServerBuilder';
+import { listEnvironmentFiles, loadEnvFile } from './EnvUtils';
+import { loadConfig } from './ConfigUtils';
 
-// Load env file
-const secretsFile = path.resolve(__dirname, '..', 'secrets.env.json');
-if (existsSync(secretsFile)) {
-    const json = readFileSync(secretsFile, { encoding: 'utf-8' });
-    const parsed = tryParseJson(json);
+declare const DEVELOPMENT: boolean;
 
-    if (parsed.success) {
-        // console.log('[AuxAuth] Parsed!');
-        for (let key in parsed.value) {
-            console.log('[AuxAuth] Injecting Key from secrets.env.json', key);
-            const value = parsed.value[key];
-            if (value === null || value === undefined || value === '') {
-                delete process.env[key];
-            } else if (typeof value === 'object') {
-                process.env[key] = JSON.stringify(value);
-            } else {
-                process.env[key] = String(value);
-            }
-        }
-    }
-} else {
-    console.log('[AuxAuth] No secrets file.');
-}
+const envFiles = listEnvironmentFiles(path.resolve(__dirname, '..'));
 
-const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY ?? 'APIu7LWFmsZckWx';
-const LIVEKIT_SECRET_KEY =
-    process.env.LIVEKIT_SECRET_KEY ??
-    'YOaoO1yUQgugMgn77dSYiVLzqdmiITNUgs3TNeZAufZ';
-const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT ?? 'ws://localhost:7880';
-const MONGO_URL = process.env.MONGO_URL ?? 'mongodb://127.0.0.1:27017';
-const MONGO_USE_NEW_URL_PARSER =
-    process.env.MONGO_USE_NEW_URL_PARSER ?? 'false';
-
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? null;
-const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY ?? null;
-const SUBSCRIPTION_CONFIG = process.env.SUBSCRIPTION_CONFIG ?? null;
-
-const RATE_LIMIT_MAX: number = process.env.RATE_LIMIT_MAX
-    ? parseInt(process.env.RATE_LIMIT_MAX)
-    : null;
-const RATE_LIMIT_WINDOW_MS: number = process.env.RATE_LIMIT_WINDOW_MS
-    ? parseInt(process.env.RATE_LIMIT_WINDOW_MS)
-    : null;
-
-function getAuthMessenger(): AuthMessenger {
-    const API_KEY = process.env.TEXT_IT_API_KEY;
-    const FLOW_ID = process.env.TEXT_IT_FLOW_ID;
-
-    if (API_KEY && FLOW_ID) {
-        console.log('[AuxAuth] Using TextIt Auth Messenger.');
-        return new TextItAuthMessenger(API_KEY, FLOW_ID);
-    } else {
-        console.log('[AuxAuth] Using Console Auth Messenger.');
-        return new ConsoleAuthMessenger();
+for (let file of envFiles) {
+    if (!file.endsWith('.dev.env.json') || DEVELOPMENT) {
+        loadEnvFile(file);
     }
 }
+
+if (envFiles.length < 0) {
+    console.log('[AuxAuth] No environment files found.');
+}
+
+const options = loadConfig();
 
 function getAllowedAPIOrigins(): string[] {
     const origins = process.env.ALLOWED_API_ORIGINS;
@@ -125,30 +90,6 @@ function getAllowedAPIOrigins(): string[] {
     }
 
     return [];
-}
-
-const connect = pify(MongoClient.connect);
-
-type RecordVisibility = 'global' | 'restricted';
-
-interface AppRecord {
-    _id?: string;
-    issuer: string;
-    address: string;
-    visibility: RecordVisibility;
-    creationDate: number;
-    authorizedUsers: string[];
-    record: any;
-}
-
-export interface EmailRule {
-    type: 'allow' | 'deny';
-    pattern: string;
-}
-
-// see https://stackoverflow.com/a/6969486/1832856
-function escapeRegExp(str: string) {
-    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
 
 const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
@@ -161,34 +102,6 @@ const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
 
 async function start() {
     let app = express();
-
-    const subscriptions = tryParseJson(SUBSCRIPTION_CONFIG);
-
-    const config: BuilderOptions = {
-        mongodb: {
-            url: MONGO_URL,
-            useNewUrlParser: MONGO_USE_NEW_URL_PARSER === 'true',
-            database: 'aux-auth',
-        },
-        livekit: {
-            apiKey: LIVEKIT_API_KEY,
-            secretKey: LIVEKIT_SECRET_KEY,
-            endpoint: LIVEKIT_ENDPOINT,
-        },
-        rateLimit: {
-            maxHits: RATE_LIMIT_MAX,
-            windowMs: RATE_LIMIT_WINDOW_MS,
-        },
-        textIt: {
-            apiKey: process.env.TEXT_IT_API_KEY,
-            flowId: process.env.TEXT_IT_FLOW_ID,
-        },
-        stripe: {
-            secretKey: STRIPE_SECRET_KEY,
-            publishableKey: STRIPE_PUBLISHABLE_KEY,
-        },
-        subscriptions: subscriptions.success ? subscriptions.value : null,
-    };
 
     const allowedRecordsOrigins = new Set([
         'http://localhost:3000',
@@ -207,25 +120,36 @@ async function start() {
         ...getAllowedAPIOrigins(),
     ]);
 
-    const builder = new ServerBuilder(config)
+    const builder = new ServerBuilder(options)
         .useAllowedAccountOrigins(allowedRecordsOrigins)
-        .useAllowedApiOrigins(allowedRecordsOrigins)
-        .useMongoDB()
-        .useMongoDBRateLimit();
+        .useAllowedApiOrigins(allowedRecordsOrigins);
 
-    if (config.textIt.apiKey && config.textIt.flowId) {
+    if (options.prisma && options.mongodb) {
+        builder.usePrismaWithMongoDBFileStore();
+    } else {
+        builder.useMongoDB();
+    }
+
+    if (options.textIt.apiKey && options.textIt.flowId) {
         builder.useTextItAuthMessenger();
     } else {
-        console.log('[AuxAuth] Using Console Auth Messenger.');
         builder.useConsoleAuthMessenger();
     }
 
-    if (config.stripe.secretKey && config.stripe.publishableKey) {
+    if (options.stripe.secretKey && options.stripe.publishableKey) {
         builder.useStripeSubscriptions();
     }
 
-    if (config.rateLimit.windowMs && config.rateLimit.maxHits) {
-        builder.useMongoDBRateLimit();
+    if (
+        options.rateLimit &&
+        options.rateLimit.windowMs &&
+        options.rateLimit.maxHits
+    ) {
+        if (options.redis) {
+            builder.useRedisRateLimit();
+        } else {
+            builder.useMongoDBRateLimit();
+        }
     }
 
     const { server, filesController, mongoDatabase } =

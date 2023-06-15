@@ -24,6 +24,7 @@ import {
     DynamoDBFileStore,
     DynamoDBPolicyStore,
     DynamoDBRecordsStore,
+    S3FileRecordsStore,
     TextItAuthMessenger,
 } from '@casual-simulation/aux-records-aws';
 import { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
@@ -58,12 +59,23 @@ import {
     MongoDBDataRecordsStore,
     MongoDBPolicyStore,
     MongoDBRecordsStore,
+    MongoDBFileRecordsLookup,
 } from '../mongo';
 import { sortBy } from 'lodash';
+import { PrismaClient } from '@prisma/client';
+import {
+    PrismaAuthStore,
+    PrismaDataRecordsStore,
+    PrismaEventRecordsStore,
+    PrismaFileRecordsLookup,
+    PrismaPolicyStore,
+    PrismaRecordsStore,
+} from '../prisma';
 
 export class ServerBuilder {
     private _docClient: DocumentClient;
     private _mongoClient: MongoClient;
+    private _prismaClient: PrismaClient;
     private _mongoDb: Db;
 
     private _authStore: AuthStore;
@@ -221,12 +233,10 @@ export class ServerBuilder {
                     db.collection<DataRecord>('manualRecordsData');
                 const recordsFilesCollection =
                     db.collection<any>('recordsFilesInfo');
-                // const filesCollection = db.collection<any>('recordsFilesData');
                 const recordsEventsCollection =
                     db.collection<any>('recordsEvents');
                 const emailRules = db.collection<any>('emailRules');
                 const smsRules = db.collection<any>('smsRules');
-                // const rateLimits = db.collection<any>('rateLimits');
 
                 const policies = db.collection<any>('policies');
                 const roles = db.collection<any>('roles');
@@ -250,16 +260,110 @@ export class ServerBuilder {
                 this._eventsStore = new MongoDBEventRecordsStore(
                     recordsEventsCollection
                 );
-                // this._rateLimit = new MongoDBRateLimiter(rateLimits);
                 this._manualDataStore = new MongoDBDataRecordsStore(
                     manualRecordsDataCollection
                 );
+                const fileLookup = new MongoDBFileRecordsLookup(
+                    recordsFilesCollection
+                );
                 this._filesStore = new MongoDBFileRecordsStore(
-                    recordsFilesCollection,
-                    'http://localhost:2998/api/v2/records/file'
+                    fileLookup,
+                    mongodb.fileUploadUrl
                 );
             },
         });
+        return this;
+    }
+
+    usePrismaWithS3(
+        options: Pick<BuilderOptions, 'prisma' | 's3'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using Prisma with S3.');
+        if (!options.prisma) {
+            throw new Error('Prisma options must be provided.');
+        }
+
+        if (!options.s3) {
+            throw new Error('S3 options must be provided.');
+        }
+
+        const prisma = options.prisma;
+        const s3 = options.s3;
+
+        this._prismaClient = new PrismaClient();
+        this._authStore = new PrismaAuthStore(this._prismaClient);
+        this._recordsStore = new PrismaRecordsStore(this._prismaClient);
+        this._policyStore = new PrismaPolicyStore(this._prismaClient);
+        this._dataStore = new PrismaDataRecordsStore(this._prismaClient);
+        this._manualDataStore = new PrismaDataRecordsStore(
+            this._prismaClient,
+            true
+        );
+        const filesLookup = new PrismaFileRecordsLookup(this._prismaClient);
+        this._filesStore = new S3FileRecordsStore(
+            s3.region,
+            s3.filesBucket,
+            filesLookup,
+            s3.filesStorageClass,
+            undefined,
+            s3.host,
+            s3.options
+        );
+        this._eventsStore = new PrismaEventRecordsStore(this._prismaClient);
+
+        return this;
+    }
+
+    usePrismaWithMongoDBFileStore(
+        options: Pick<BuilderOptions, 'prisma' | 'mongodb'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using Prisma with MongoDB File Store.');
+        if (!options.prisma) {
+            throw new Error('Prisma options must be provided.');
+        }
+
+        if (!options.mongodb) {
+            throw new Error('MongoDB options must be provided.');
+        }
+
+        const prisma = options.prisma;
+        const mongodb = options.mongodb;
+
+        this._actions.push({
+            priority: 0,
+            action: async () => {
+                this._prismaClient = new PrismaClient();
+                const connect = pify(MongoClient.connect);
+                const mongo: MongoClient = await connect(mongodb.url, {
+                    useNewUrlParser: mongodb.useNewUrlParser,
+                });
+                this._mongoClient = mongo;
+                const db = mongo.db(mongodb.database);
+                this._mongoDb = db;
+
+                this._authStore = new PrismaAuthStore(this._prismaClient);
+                this._recordsStore = new PrismaRecordsStore(this._prismaClient);
+                this._policyStore = new PrismaPolicyStore(this._prismaClient);
+                this._dataStore = new PrismaDataRecordsStore(
+                    this._prismaClient
+                );
+                this._manualDataStore = new PrismaDataRecordsStore(
+                    this._prismaClient,
+                    true
+                );
+                const filesLookup = new PrismaFileRecordsLookup(
+                    this._prismaClient
+                );
+                this._filesStore = new MongoDBFileRecordsStore(
+                    filesLookup,
+                    mongodb.fileUploadUrl
+                );
+                this._eventsStore = new PrismaEventRecordsStore(
+                    this._prismaClient
+                );
+            },
+        });
+
         return this;
     }
 
@@ -578,14 +682,14 @@ const s3Schema = z.object({
 });
 
 const livekitSchema = z.object({
-    apiKey: z.string().nonempty(),
-    secretKey: z.string().nonempty(),
-    endpoint: z.string().nonempty(),
+    apiKey: z.string().nonempty().nullable(),
+    secretKey: z.string().nonempty().nullable(),
+    endpoint: z.string().nonempty().nullable(),
 });
 
 const textItSchema = z.object({
-    apiKey: z.string().nonempty(),
-    flowId: z.string().nonempty(),
+    apiKey: z.string().nonempty().nullable(),
+    flowId: z.string().nonempty().nullable(),
 });
 
 const redisSchema = z.object({
@@ -613,8 +717,8 @@ const subscriptionConfigSchema = z.object({
     cancelUrl: z.string().nonempty(),
     returnUrl: z.string().nonempty(),
 
-    portalConfig: z.object({}).passthrough(),
-    checkoutConfig: z.object({}).passthrough(),
+    portalConfig: z.object({}).passthrough().optional().nullable(),
+    checkoutConfig: z.object({}).passthrough().optional().nullable(),
 
     subscriptions: z.array(
         z.object({
@@ -633,12 +737,16 @@ const mongodbSchema = z.object({
     url: z.string().nonempty(),
     useNewUrlParser: z.boolean().optional().default(false),
     database: z.string().nonempty(),
+    fileUploadUrl: z.string().nonempty().optional(),
 });
 
-const optionsSchema = z.object({
+const prismaSchema = z.object({});
+
+export const optionsSchema = z.object({
     dynamodb: dynamoDbSchema.optional(),
     s3: s3Schema.optional(),
     mongodb: mongodbSchema.optional(),
+    prisma: prismaSchema.optional(),
     livekit: livekitSchema.optional(),
     textIt: textItSchema.optional(),
     redis: redisSchema.optional(),
