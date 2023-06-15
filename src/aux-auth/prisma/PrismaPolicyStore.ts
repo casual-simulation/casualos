@@ -15,21 +15,18 @@ import {
     UserPolicyRecord,
     getExpireTime,
 } from '@casual-simulation/aux-records';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { Collection, FilterQuery } from 'mongodb';
+import { convertToDate, convertToMillis } from './Utils';
 
 /**
- * Implements PolicyStore for MongoDB.
+ * Implements PolicyStore for Prisma.
  */
-export class MongoDBPolicyStore implements PolicyStore {
-    private _policies: Collection<MongoDBPolicy>;
-    private _roles: Collection<MongoDBRole>;
+export class PrismaPolicyStore implements PolicyStore {
+    private _client: PrismaClient;
 
-    constructor(
-        policies: Collection<MongoDBPolicy>,
-        roles: Collection<MongoDBRole>
-    ) {
-        this._policies = policies;
-        this._roles = roles;
+    constructor(client: PrismaClient) {
+        this._client = client;
     }
 
     async listPoliciesForMarker(
@@ -40,10 +37,17 @@ export class MongoDBPolicyStore implements PolicyStore {
         if (marker === PUBLIC_READ_MARKER) {
             policies.push(DEFAULT_PUBLIC_READ_POLICY_DOCUMENT);
         }
-        const id = policyId(recordName, marker);
-        const policy = await this._policies.findOne({ _id: id });
+        // const id = policyId(recordName, marker);
+        const policy = await this._client.policy.findUnique({
+            where: {
+                recordName_marker: {
+                    recordName: recordName,
+                    marker: marker,
+                },
+            },
+        });
         if (policy) {
-            policies.push(policy.document);
+            policies.push(policy.document as unknown as PolicyDocument);
         }
         return policies;
     }
@@ -52,19 +56,27 @@ export class MongoDBPolicyStore implements PolicyStore {
         recordName: string,
         startingMarker: string
     ): Promise<ListedUserPolicy[]> {
-        let query = {
-            recordName: { $eq: recordName },
-        } as FilterQuery<MongoDBPolicy>;
+        let query: Prisma.PolicyWhereInput = {
+            recordName: recordName,
+        };
 
         if (!!startingMarker) {
-            query.marker = { $gt: startingMarker };
+            query.marker = {
+                gt: startingMarker,
+            };
         }
-        const policies = await this._policies.find(query).toArray();
+        const policies = await this._client.policy.findMany({
+            where: query,
+            orderBy: {
+                marker: 'asc',
+            },
+            take: 10,
+        });
 
         return policies.map((p) => {
             return {
                 marker: p.marker,
-                document: p.document,
+                document: p.document as unknown as PolicyDocument,
             } as ListedUserPolicy;
         });
     }
@@ -73,20 +85,33 @@ export class MongoDBPolicyStore implements PolicyStore {
         recordName: string,
         userId: string
     ): Promise<AssignedRole[]> {
-        const roles = await this._roles.findOne({
-            recordName: { $eq: recordName },
-            type: 'user',
-            id: { $eq: userId },
+        const now = new Date();
+        const assignments = await this._client.roleAssignment.findMany({
+            where: {
+                recordName: recordName,
+                type: 'user',
+                userId: userId,
+                OR: [
+                    {
+                        expireTime: {
+                            gt: now,
+                        },
+                    },
+                    {
+                        expireTime: {
+                            equals: null,
+                        },
+                    },
+                ],
+            },
         });
 
-        if (!roles) {
-            return [];
-        }
-
-        const now = Date.now();
-
-        return roles.assignments.filter(
-            (r) => getExpireTime(r.expireTimeMs) > now
+        return assignments.map(
+            (r) =>
+                ({
+                    role: r.roleId,
+                    expireTimeMs: getExpireTime(convertToMillis(r.expireTime)),
+                } as AssignedRole)
         );
     }
 
@@ -94,20 +119,33 @@ export class MongoDBPolicyStore implements PolicyStore {
         recordName: string,
         inst: string
     ): Promise<AssignedRole[]> {
-        const roles = await this._roles.findOne({
-            recordName: { $eq: recordName },
-            type: 'inst',
-            id: { $eq: inst },
+        const now = new Date();
+        const assignments = await this._client.roleAssignment.findMany({
+            where: {
+                recordName: recordName,
+                type: 'inst',
+                subjectId: inst,
+                OR: [
+                    {
+                        expireTime: {
+                            gt: now,
+                        },
+                    },
+                    {
+                        expireTime: {
+                            equals: null,
+                        },
+                    },
+                ],
+            },
         });
 
-        if (!roles) {
-            return [];
-        }
-
-        const now = Date.now();
-
-        return roles.assignments.filter(
-            (r) => getExpireTime(r.expireTimeMs) > now
+        return assignments.map(
+            (r) =>
+                ({
+                    role: r.roleId,
+                    expireTimeMs: getExpireTime(convertToMillis(r.expireTime)),
+                } as AssignedRole)
         );
     }
 
@@ -115,43 +153,52 @@ export class MongoDBPolicyStore implements PolicyStore {
         recordName: string,
         role: string
     ): Promise<ListedRoleAssignments> {
-        const roles = await this._roles
-            .find({
-                recordName: { $eq: recordName },
-                role: { $eq: role },
-            })
-            .toArray();
-
-        let assignments: RoleAssignment[] = [];
-
-        for (let r of roles) {
-            if (r.type === 'inst') {
-                for (let a of r.assignments) {
-                    assignments.push({
-                        type: 'inst',
-                        inst: r.id,
-                        role: {
-                            role: a.role,
-                            expireTimeMs: getExpireTime(a.expireTimeMs),
+        const now = new Date();
+        const assignments = await this._client.roleAssignment.findMany({
+            where: {
+                recordName: recordName,
+                roleId: role,
+                OR: [
+                    {
+                        expireTime: {
+                            gt: now,
                         },
-                    });
-                }
-            } else {
-                for (let a of r.assignments) {
-                    assignments.push({
-                        type: 'user',
-                        userId: r.id,
-                        role: {
-                            role: a.role,
-                            expireTimeMs: getExpireTime(a.expireTimeMs),
+                    },
+                    {
+                        expireTime: {
+                            equals: null,
                         },
-                    });
-                }
-            }
-        }
+                    },
+                ],
+            },
+        });
 
         return {
-            assignments,
+            assignments: assignments.map((a) => {
+                if (a.type === 'inst') {
+                    return {
+                        type: 'inst',
+                        inst: a.subjectId,
+                        role: {
+                            role: a.roleId,
+                            expireTimeMs: getExpireTime(
+                                convertToMillis(a.expireTime)
+                            ),
+                        },
+                    };
+                } else {
+                    return {
+                        type: 'user',
+                        userId: a.userId,
+                        role: {
+                            role: a.roleId,
+                            expireTimeMs: getExpireTime(
+                                convertToMillis(a.expireTime)
+                            ),
+                        },
+                    };
+                }
+            }),
         };
     }
 
@@ -159,13 +206,19 @@ export class MongoDBPolicyStore implements PolicyStore {
         recordName: string,
         marker: string
     ): Promise<GetUserPolicyResult> {
-        const id = policyId(recordName, marker);
-        const policy = await this._policies.findOne({ _id: id });
+        const policy = await this._client.policy.findUnique({
+            where: {
+                recordName_marker: {
+                    recordName: recordName,
+                    marker,
+                },
+            },
+        });
         if (policy) {
             return {
                 success: true,
                 markers: policy.markers,
-                document: policy.document,
+                document: policy.document as unknown as PolicyDocument,
             };
         } else {
             return {
@@ -181,96 +234,80 @@ export class MongoDBPolicyStore implements PolicyStore {
         marker: string,
         policy: UserPolicyRecord
     ): Promise<UpdateUserPolicyResult> {
-        const id = policyId(recordName, marker);
-
-        await this._policies.updateOne(
-            {
-                _id: { $eq: id },
-            },
-            {
-                $set: {
-                    recordName: recordName,
-                    marker: marker,
-                    markers: policy.markers,
-                    document: policy.document,
+        await this._client.policy.upsert({
+            where: {
+                recordName_marker: {
+                    recordName,
+                    marker,
                 },
             },
-            { upsert: true }
-        );
+            create: {
+                recordName: recordName,
+                marker: marker,
+                document: policy.document as any,
+                markers: policy.markers,
+            },
+            update: {
+                document: policy.document as any,
+                markers: policy.markers,
+            },
+        });
 
         return {
             success: true,
         };
     }
 
-    async updateUserRoles(
+    async assignSubjectRole(
         recordName: string,
-        userId: string,
-        update: UpdateRolesUpdate
+        subjectId: string,
+        type: 'user' | 'inst',
+        role: AssignedRole
     ): Promise<UpdateUserRolesResult> {
-        const assignments = update.roles
-            .filter((r) => getExpireTime(r.expireTimeMs) > Date.now())
-            .map((r) => ({
-                ...r,
-                expireTimeMs:
-                    r.expireTimeMs === Infinity ? null : r.expireTimeMs,
-            }));
+        const expireTime =
+            role.expireTimeMs === Infinity ? null : new Date(role.expireTimeMs);
 
-        await this._roles.updateOne(
-            {
-                recordName: { $eq: recordName },
-                type: 'user',
-                id: { $eq: userId },
-            },
-            {
-                $set: {
+        await this._client.roleAssignment.upsert({
+            where: {
+                recordName_roleId_subjectId: {
                     recordName: recordName,
-                    type: 'user',
-                    id: userId,
-                    assignments: assignments,
+                    subjectId: subjectId,
+                    roleId: role.role,
                 },
             },
-            {
-                upsert: true,
-            }
-        );
+            create: {
+                recordName: recordName,
+                roleId: role.role,
+                subjectId: subjectId,
+                type: type,
+                userId: type === 'user' ? subjectId : null,
+                expireTime: expireTime,
+            },
+            update: {
+                expireTime: expireTime,
+            },
+        });
 
         return {
             success: true,
         };
     }
 
-    async updateInstRoles(
+    async revokeSubjectRole(
         recordName: string,
-        inst: string,
-        update: UpdateRolesUpdate
+        subjectId: string,
+        type: 'user' | 'inst',
+        role: string
     ): Promise<UpdateUserRolesResult> {
-        const assignments = update.roles
-            .filter((r) => getExpireTime(r.expireTimeMs) > Date.now())
-            .map((r) => ({
-                ...r,
-                expireTimeMs:
-                    r.expireTimeMs === Infinity ? null : r.expireTimeMs,
-            }));
-
-        await this._roles.updateOne(
-            {
-                recordName: { $eq: recordName },
-                type: 'inst',
-                id: { $eq: inst },
-            },
-            {
-                $set: {
+        await this._client.roleAssignment.delete({
+            where: {
+                recordName_roleId_subjectId: {
                     recordName: recordName,
-                    type: 'inst',
-                    id: inst,
-                    assignments: assignments,
+                    subjectId: subjectId,
+                    roleId: role,
                 },
             },
-            {
-                upsert: true,
-            }
-        );
+        });
 
         return {
             success: true,

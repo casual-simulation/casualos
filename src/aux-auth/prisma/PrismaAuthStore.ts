@@ -16,6 +16,7 @@ import {
     AuthSession as PrismaSession,
 } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
+import { convertToDate, convertToMillis } from './Utils';
 
 export class PrismaAuthStore implements AuthStore {
     private _client: PrismaClient;
@@ -362,20 +363,6 @@ export class PrismaAuthStore implements AuthStore {
             nextSessionId: session.nextSessionId,
         };
     }
-}
-
-export function convertToDate(timeMs: number | null | undefined): Date | null {
-    if (!timeMs) {
-        return null;
-    }
-    return new Date(timeMs);
-}
-
-function convertToMillis(time: Date | null): number | null {
-    if (!time) {
-        return null;
-    }
-    return Number(time);
 }
 
 export interface MongoDBAuthUser {
