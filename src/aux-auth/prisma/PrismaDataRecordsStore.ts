@@ -18,9 +18,15 @@ import z from 'zod';
 
 export class PrismaDataRecordsStore implements DataRecordsStore {
     private _client: PrismaClient;
+    private _collection:
+        | PrismaClient['dataRecord']
+        | PrismaClient['manualDataRecord'];
 
-    constructor(client: PrismaClient) {
+    constructor(client: PrismaClient, manualData: boolean = false) {
         this._client = client;
+        this._collection = manualData
+            ? client.manualDataRecord
+            : client.dataRecord;
     }
 
     async setData(
@@ -43,16 +49,18 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
             deletePolicy: deletePolicy as any,
             markers: markers,
         };
-        await this._client.dataRecord.upsert({
-            where: {
-                recordName_address: {
-                    recordName: recordName,
-                    address: address,
+        await (this._collection.upsert as PrismaClient['dataRecord']['upsert'])(
+            {
+                where: {
+                    recordName_address: {
+                        recordName: recordName,
+                        address: address,
+                    },
                 },
-            },
-            create: dataRecord,
-            update: dataRecord,
-        });
+                create: dataRecord,
+                update: dataRecord,
+            }
+        );
 
         return {
             success: true,
@@ -63,7 +71,7 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
         recordName: string,
         address: string
     ): Promise<GetDataStoreResult> {
-        const record = await this._client.dataRecord.findUnique({
+        const record = await this._collection.findUnique({
             where: {
                 recordName_address: {
                     recordName: recordName,
@@ -109,7 +117,7 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
         if (!!address) {
             query.address = { gt: address };
         }
-        const records = await this._client.dataRecord.findMany({
+        const records = await this._collection.findMany({
             where: query,
             orderBy: {
                 address: 'asc',
@@ -133,7 +141,7 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
         address: string
     ): Promise<EraseDataStoreResult> {
         try {
-            await this._client.dataRecord.delete({
+            await this._collection.delete({
                 where: {
                     recordName_address: {
                         recordName: recordName,
