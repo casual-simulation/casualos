@@ -258,7 +258,7 @@ model FileRecord {
     subject User @relation("SubjectFileRecords", fields: [subjectId], references: [id])
 
     sizeInBytes BigInt
-    description String
+    description String?
 
     uploadedAt DateTime?
 
