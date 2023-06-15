@@ -49,7 +49,12 @@ import Stripe from 'stripe';
 import { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
 import RedisRateLimitStore from '@casual-simulation/rate-limit-redis';
 import { createClient as createRedisClient } from 'redis';
-import { BuilderOptions, ServerBuilder } from 'shared/ServerBuilder';
+import {
+    BuilderOptions,
+    ServerBuilder,
+} from '../../../../shared/ServerBuilder';
+import { loadConfig } from '../../../../shared/ConfigUtils';
+import { merge } from 'lodash';
 
 declare var S3_ENDPOINT: string;
 declare var DYNAMODB_ENDPOINT: string;
@@ -60,39 +65,11 @@ const PUBLIC_RECORDS_TABLE = process.env.PUBLIC_RECORDS_TABLE;
 const PUBLIC_RECORDS_KEYS_TABLE = process.env.PUBLIC_RECORDS_KEYS_TABLE;
 const DATA_TABLE = process.env.DATA_TABLE;
 const MANUAL_DATA_TABLE = process.env.MANUAL_DATA_TABLE;
-
-const REGION = process.env.AWS_REGION;
 const FILES_BUCKET = process.env.FILES_BUCKET;
 const FILES_STORAGE_CLASS = process.env.FILES_STORAGE_CLASS;
 const FILES_TABLE = process.env.FILES_TABLE;
 const EVENTS_TABLE = process.env.EVENTS_TABLE;
-
-const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
-const LIVEKIT_SECRET_KEY = process.env.LIVEKIT_SECRET_KEY;
-const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT;
-
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? null;
-const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY ?? null;
-const SUBSCRIPTION_CONFIG = process.env.SUBSCRIPTION_CONFIG ?? null;
-
-const REDIS_HOST: string = process.env.REDIS_HOST as string;
-const REDIS_PORT: number = parseInt(process.env.REDIS_PORT as string);
-const REDIS_PASS: string = process.env.REDIS_PASS as string;
-const REDIS_TLS: boolean = process.env.REDIS_TLS
-    ? process.env.REDIS_TLS === 'true'
-    : true;
-const REDIS_NAMESPACE: string = process.env.REDIS_NAMESPACE as string;
-
-const RATE_LIMIT_WINDOW_MS: number = process.env.RATE_LIMIT_WINDOW_MS
-    ? parseInt(process.env.RATE_LIMIT_WINDOW_MS)
-    : null;
-
-const RATE_LIMIT_MAX: number = process.env.RATE_LIMIT_MAX
-    ? parseInt(process.env.RATE_LIMIT_MAX)
-    : null;
-
-const RATE_LIMIT_PREFIX = `${REDIS_NAMESPACE}:rate-limit/`;
-
+const REGION = process.env.AWS_REGION;
 const USERS_TABLE = process.env.USERS_TABLE;
 const USER_ADDRESSES_TABLE = process.env.USER_ADDRESSES_TABLE;
 const LOGIN_REQUESTS_TABLE = process.env.LOGIN_REQUESTS_TABLE;
@@ -105,12 +82,10 @@ const SUBJECT_ROLES_TABLE = process.env.SUBJECT_ROLES_TABLE;
 const ROLE_SUBJECTS_TABLE = process.env.ROLE_SUBJECTS_TABLE;
 const STRIPE_CUSTOMER_ID_INDEX_NAME = 'StripeCustomerIdsIndex';
 
-const API_KEY = process.env.TEXT_IT_API_KEY;
-const FLOW_ID = process.env.TEXT_IT_FLOW_ID;
+// const RATE_LIMIT_PREFIX = `${REDIS_NAMESPACE}:rate-limit/`;
 
-const subscriptions = tryParseJson(SUBSCRIPTION_CONFIG);
-
-const config: BuilderOptions = {
+const staticConfig = loadConfig();
+const dynamicConfig: BuilderOptions = {
     dynamodb: {
         usersTable: USERS_TABLE,
         userAddressesTable: USER_ADDRESSES_TABLE,
@@ -146,32 +121,72 @@ const config: BuilderOptions = {
             s3ForcePathStyle: DEVELOPMENT,
         },
     },
-    livekit: {
-        apiKey: LIVEKIT_API_KEY,
-        secretKey: LIVEKIT_SECRET_KEY,
-        endpoint: LIVEKIT_ENDPOINT,
-    },
-    rateLimit: {
-        windowMs: RATE_LIMIT_WINDOW_MS,
-        maxHits: RATE_LIMIT_MAX,
-    },
-    redis: {
-        host: REDIS_HOST,
-        port: REDIS_PORT,
-        password: REDIS_PASS,
-        tls: REDIS_TLS,
-        rateLimitPrefix: RATE_LIMIT_PREFIX,
-    },
-    textIt: {
-        apiKey: API_KEY,
-        flowId: FLOW_ID,
-    },
-    stripe: {
-        secretKey: STRIPE_SECRET_KEY,
-        publishableKey: STRIPE_PUBLISHABLE_KEY,
-    },
-    subscriptions: subscriptions.success ? subscriptions.value : undefined,
 };
+
+const config = merge({}, staticConfig, dynamicConfig);
+
+// const config: BuilderOptions = {
+//     dynamodb: {
+//         usersTable: USERS_TABLE,
+//         userAddressesTable: USER_ADDRESSES_TABLE,
+//         loginRequestsTable: LOGIN_REQUESTS_TABLE,
+//         sessionsTable: SESSIONS_TABLE,
+//         emailTable: EMAIL_TABLE,
+//         smsTable: SMS_TABLE,
+//         policiesTable: POLICIES_TABLE,
+//         rolesTable: ROLES_TABLE,
+//         subjectRolesTable: SUBJECT_ROLES_TABLE,
+//         roleSubjectsTable: ROLE_SUBJECTS_TABLE,
+//         stripeCustomerIdsIndexName: STRIPE_CUSTOMER_ID_INDEX_NAME,
+//         dataTable: DATA_TABLE,
+//         manualDataTable: MANUAL_DATA_TABLE,
+//         filesTable: FILES_TABLE,
+//         eventsTable: EVENTS_TABLE,
+//         publicRecordsTable: PUBLIC_RECORDS_TABLE,
+//         publicRecordsKeysTable: PUBLIC_RECORDS_KEYS_TABLE,
+//         endpoint: DYNAMODB_ENDPOINT,
+//     },
+//     s3: {
+//         region: REGION,
+//         filesBucket: FILES_BUCKET,
+//         filesStorageClass: FILES_STORAGE_CLASS,
+
+//         // We reference the Vite server in development.
+//         // since any preflight request with an Origin header is rejected by localstack (see https://github.com/localstack/localstack/issues/4056)
+//         // This parameter is mostly only used so that the file URLs point to the correct S3 instance. As such,
+//         // this value is mostly used by browsers trying to upload files.
+//         host: DEVELOPMENT ? `http://localhost:3002/s3` : undefined,
+//         options: {
+//             endpoint: S3_ENDPOINT,
+//             s3ForcePathStyle: DEVELOPMENT,
+//         },
+//     },
+//     livekit: {
+//         apiKey: LIVEKIT_API_KEY,
+//         secretKey: LIVEKIT_SECRET_KEY,
+//         endpoint: LIVEKIT_ENDPOINT,
+//     },
+//     rateLimit: {
+//         windowMs: RATE_LIMIT_WINDOW_MS,
+//         maxHits: RATE_LIMIT_MAX,
+//     },
+//     redis: {
+//         host: REDIS_HOST,
+//         port: REDIS_PORT,
+//         password: REDIS_PASS,
+//         tls: REDIS_TLS,
+//         rateLimitPrefix: RATE_LIMIT_PREFIX,
+//     },
+//     textIt: {
+//         apiKey: API_KEY,
+//         flowId: FLOW_ID,
+//     },
+//     stripe: {
+//         secretKey: STRIPE_SECRET_KEY,
+//         publishableKey: STRIPE_PUBLISHABLE_KEY,
+//     },
+//     subscriptions: subscriptions.success ? subscriptions.value : undefined,
+// };
 
 const allowedApiOrigins = new Set([
     'http://localhost:3000',
@@ -192,11 +207,19 @@ const allowedApiOrigins = new Set([
 
 const builder = new ServerBuilder(config)
     .useAllowedApiOrigins(allowedApiOrigins)
-    .useAllowedAccountOrigins(allowedOrigins)
-    .useDynamoDB()
-    .useLivekit();
+    .useAllowedAccountOrigins(allowedOrigins);
 
-if (config.textIt.apiKey && config.textIt.flowId) {
+if (config.prisma && config.s3) {
+    builder.usePrismaWithS3();
+} else if (config.dynamodb) {
+    builder.useDynamoDB();
+}
+
+if (config.livekit) {
+    builder.useLivekit();
+}
+
+if (config.textIt && config.textIt.apiKey && config.textIt.flowId) {
     builder.useTextItAuthMessenger();
 } else {
     builder.useConsoleAuthMessenger();
@@ -210,7 +233,7 @@ if (
     builder.useStripeSubscriptions();
 }
 
-if (config.rateLimit.windowMs && config.rateLimit.maxHits) {
+if (config.rateLimit && config.rateLimit.windowMs && config.rateLimit.maxHits) {
     builder.useRedisRateLimit();
 }
 

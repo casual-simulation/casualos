@@ -63,8 +63,8 @@ import {
     ServerBuilder,
     optionsSchema,
 } from 'shared/ServerBuilder';
-import { listEnvironmentFiles, loadEnvFile } from './EnvUtils';
-import { loadConfig } from './ConfigUtils';
+import { listEnvironmentFiles, loadEnvFile } from '../shared/EnvUtils';
+import { loadConfig } from '../shared/ConfigUtils';
 
 declare const DEVELOPMENT: boolean;
 
