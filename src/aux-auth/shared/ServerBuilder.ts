@@ -290,7 +290,7 @@ export class ServerBuilder {
         const prisma = options.prisma;
         const s3 = options.s3;
 
-        this._prismaClient = new PrismaClient();
+        this._prismaClient = new PrismaClient(prisma.options as any);
         this._authStore = new PrismaAuthStore(this._prismaClient);
         this._recordsStore = new PrismaRecordsStore(this._prismaClient);
         this._policyStore = new PrismaPolicyStore(this._prismaClient);
@@ -332,7 +332,7 @@ export class ServerBuilder {
         this._actions.push({
             priority: 0,
             action: async () => {
-                this._prismaClient = new PrismaClient();
+                this._prismaClient = new PrismaClient(prisma.options as any);
                 const connect = pify(MongoClient.connect);
                 const mongo: MongoClient = await connect(mongodb.url, {
                     useNewUrlParser: mongodb.useNewUrlParser,
@@ -740,7 +740,9 @@ const mongodbSchema = z.object({
     fileUploadUrl: z.string().nonempty().optional(),
 });
 
-const prismaSchema = z.object({});
+const prismaSchema = z.object({
+    options: z.object({}).passthrough().optional(),
+});
 
 export const optionsSchema = z.object({
     dynamodb: dynamoDbSchema.optional(),

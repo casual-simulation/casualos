@@ -28,17 +28,24 @@ export const DEV_CONFIG: BuilderOptions = {
 export function loadConfig() {
     const SERVER_CONFIG = process.env.SERVER_CONFIG;
 
-    const serverConfigParseResult = tryParseJson(SERVER_CONFIG);
+    let configObject: any;
 
-    if (serverConfigParseResult.success === false) {
-        throw new Error(
-            `SERVER_CONFIG must be valid JSON: ${serverConfigParseResult.error}`
-        );
+    if (typeof SERVER_CONFIG === 'string') {
+        const serverConfigParseResult = tryParseJson(SERVER_CONFIG);
+
+        if (serverConfigParseResult.success === false) {
+            throw new Error(
+                `SERVER_CONFIG must be valid JSON: ${serverConfigParseResult.error}`
+            );
+        }
+        configObject = serverConfigParseResult.value;
+    } else if (typeof SERVER_CONFIG === 'object') {
+        configObject = SERVER_CONFIG;
+    } else {
+        throw new Error(`SERVER_CONFIG must be a JSON string or an object.`);
     }
 
-    const optionsResult = optionsSchema.safeParse(
-        serverConfigParseResult.value
-    );
+    const optionsResult = optionsSchema.safeParse(configObject);
 
     if (optionsResult.success === false) {
         console.error(
