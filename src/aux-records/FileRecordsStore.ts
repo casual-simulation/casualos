@@ -1,9 +1,73 @@
 import { ServerError } from './Errors';
 
 /**
- * Defines an interface that provides a way to store file records.
+ * Defines an interface for systems that are able to store info about file records.
  */
-export interface FileRecordsStore {
+export interface FileRecordsLookup {
+    /**
+     * Gets the file record for the file with the given name.
+     * @param recordName The name of the record that the file is stored in.
+     * @param fileName The name of the file.
+     */
+    getFileRecord(
+        recordName: string,
+        fileName: string
+    ): Promise<FileRecord | null>;
+
+    /**
+     * Attempts to add a record for a file to the store.
+     * @param recordName The name of the record that the file was recorded in.
+     * @param fileName The name of the file that should be recorded.
+     * @param publisherId The ID of the publisher that published the record.
+     * @param subjectId The ID of the subject that was logged in when the record was published.
+     * @param sizeInBytes The size of the file in bytes.
+     * @param description The description of the file.
+     * @param markers The resource markers for the file.
+     */
+    addFileRecord(
+        recordName: string,
+        fileName: string,
+        publisherId: string,
+        subjectId: string,
+        sizeInBytes: number,
+        description: string,
+        markers: string[]
+    ): Promise<AddFileResult>;
+
+    /**
+     * Attempts to update the given file record.
+     * @param recordName The name of the record that the file was recorded in.
+     * @param fileName The name of the file.
+     * @param markers The markers that should be set on the file.
+     */
+    updateFileRecord(
+        recordName: string,
+        fileName: string,
+        markers: string[]
+    ): Promise<UpdateFileResult>;
+
+    /**
+     * Marks the given file record as having been uploaded.
+     * @param recordName The reocrd that the file was uploaded to.
+     * @param fileName The name of the file that was uploaded.
+     */
+    setFileRecordAsUploaded(
+        recordName: string,
+        fileName: string
+    ): Promise<MarkFileRecordAsUploadedResult>;
+
+    /**
+     * Attempts to delete the given file from the given record.
+     * @param recordName The name of the record that the file was recorded in.
+     * @param fileName The name of the file that should be deleted.
+     */
+    eraseFileRecord(
+        recordName: string,
+        fileName: string
+    ): Promise<EraseFileStoreResult>;
+}
+
+export interface FileRecordsVault {
     /**
      * Presigns a request to record a file.
      * Returns the URL that should be used to upload the file and the headers that should be included in the upload request.
@@ -22,6 +86,22 @@ export interface FileRecordsStore {
         request: PresignFileReadRequest
     ): Promise<PresignFileReadResult>;
 
+    /**
+     * Attempts to get the record name and file name from the given URL.
+     * @param fileUrl The URL.
+     */
+    getFileNameFromUrl(fileUrl: string): Promise<GetFileNameFromUrlResult>;
+
+    /**
+     * Gets the list of headers that should be allowed via CORS.
+     */
+    getAllowedUploadHeaders(): string[];
+}
+
+/**
+ * Defines an interface that provides a way to store file records.
+ */
+export interface FileRecordsStore extends FileRecordsVault {
     /**
      * Gets the file record for the file with the given name.
      * @param recordName The name of the record that the file is stored in.
@@ -83,17 +163,52 @@ export interface FileRecordsStore {
         recordName: string,
         fileName: string
     ): Promise<EraseFileStoreResult>;
+}
+
+/**
+ * Defines the structure of a file record.
+ */
+export interface FileRecord {
+    /**
+     * The name of the file.
+     */
+    fileName: string;
 
     /**
-     * Attempts to get the record name and file name from the given URL.
-     * @param fileUrl The URL.
+     * The description of the file.
      */
-    getFileNameFromUrl(fileUrl: string): Promise<GetFileNameFromUrlResult>;
+    description: string;
 
     /**
-     * Gets the list of headers that should be allowed via CORS.
+     * The name of the record that the file was recorded in.
      */
-    getAllowedUploadHeaders(): string[];
+    recordName: string;
+
+    /**
+     * The ID of the publisher that published the record.
+     */
+    publisherId: string;
+
+    /**
+     * The ID of the subject that was logged in when the record was published.
+     */
+    subjectId: string;
+
+    /**
+     * The size of the record in bytes.
+     */
+    sizeInBytes: number;
+
+    /**
+     * Whether the record was uploaded to the server.
+     */
+    uploaded: boolean;
+
+    /**
+     * The resource markers for the file.
+     * Null if the file was created without markers.
+     */
+    markers: string[] | null;
 }
 
 export type GetFileRecordResult = GetFileRecordSuccess | GetFileRecordFailure;

@@ -75,27 +75,35 @@ export interface PolicyStore {
     ): Promise<UpdateUserPolicyResult>;
 
     /**
-     * Updates the list of roles that are assigned to the user.
-     * @param recordName The name of the record that the roles exist in.
-     * @param userId The ID of the user.
-     * @param update The update.
+     * Assigns the given role to the given subject.
+     * If the role already is assigned, then it will be overwritten.
+     *
+     * @param recordName The name of the record.
+     * @param subjectId The ID of the subject.
+     * @param type The type of subject.
+     * @param role The role that should be assigned.
      */
-    updateUserRoles(
+    assignSubjectRole(
         recordName: string,
-        userId: string,
-        update: UpdateRolesUpdate
+        subjectId: string,
+        type: 'user' | 'inst',
+        role: AssignedRole
     ): Promise<UpdateUserRolesResult>;
 
     /**
-     * Updates the list of roles that are assigned to the inst.
-     * @param recordName The name of the record that the roles exist in.
-     * @param inst The name of the inst.
-     * @param update The update.
+     * Revokes the given role from the subject.
+     * If the role is not assigned, then this function does nothing.
+     *
+     * @param recordName The name of the record.
+     * @param subjectId The ID of the subject.
+     * @param type The type of subject.
+     * @param role The ID of the role that should be revoked.
      */
-    updateInstRoles(
+    revokeSubjectRole(
         recordName: string,
-        inst: string,
-        update: UpdateRolesUpdate
+        subjectId: string,
+        type: 'user' | 'inst',
+        role: string
     ): Promise<UpdateUserRolesResult>;
 }
 

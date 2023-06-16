@@ -70,6 +70,7 @@ import {
     ApplyUpdatesToInstAction,
     ON_SPACE_MAX_SIZE_REACHED,
     ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME,
+    GetCurrentInstUpdateAction,
 } from '../bots';
 import {
     PartitionConfig,
@@ -499,6 +500,22 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
                         );
                         this._onEvents.next([
                             asyncResult(event.taskId, null, false),
+                        ]);
+                    } catch (err) {
+                        this._onEvents.next([asyncError(event.taskId, err)]);
+                    }
+                } else if (event.event.type === 'get_current_inst_update') {
+                    const action = <GetCurrentInstUpdateAction>event.event;
+                    try {
+                        const update: InstUpdate = {
+                            id: 0,
+                            timestamp: Date.now(),
+                            update: fromByteArray(
+                                encodeStateAsUpdate(this._doc)
+                            ),
+                        };
+                        this._onEvents.next([
+                            asyncResult(event.taskId, update, false),
                         ]);
                     } catch (err) {
                         this._onEvents.next([asyncError(event.taskId, err)]);

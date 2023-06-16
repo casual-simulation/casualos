@@ -33,3 +33,7 @@
 .md-dialog.input-dialog {
     z-index: 20;
 }
+
+.md-radio {
+    display: flex;
+}

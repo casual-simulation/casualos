@@ -12,7 +12,6 @@ import {
 import pify from 'pify';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { hasValue } from '@casual-simulation/aux-common/bots/BotCalculations';
-import { Record } from '@casual-simulation/aux-common/bots/Bot';
 import {
     RecordsController,
     Record as NewRecord,
@@ -32,10 +31,13 @@ import {
     RateLimitController,
     PolicyController,
 } from '@casual-simulation/aux-records';
-import { MongoDBRecordsStore } from './MongoDBRecordsStore';
-import { MongoDBDataRecordsStore, DataRecord } from './MongoDBDataRecordsStore';
-import { MongoDBFileRecordsStore } from './MongoDBFileRecordsStore';
-import { MongoDBEventRecordsStore } from './MongoDBEventRecordsStore';
+import { MongoDBRecordsStore } from '../mongo/MongoDBRecordsStore';
+import {
+    MongoDBDataRecordsStore,
+    DataRecord,
+} from '../mongo/MongoDBDataRecordsStore';
+import { MongoDBFileRecordsStore } from '../mongo/MongoDBFileRecordsStore';
+import { MongoDBEventRecordsStore } from '../mongo/MongoDBEventRecordsStore';
 import { LivekitController } from '@casual-simulation/aux-records/LivekitController';
 import { AuthController } from '@casual-simulation/aux-records/AuthController';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
@@ -46,75 +48,39 @@ import {
     MongoDBAuthStore,
     MongoDBAuthUser,
     MongoDBLoginRequest,
-} from './MongoDBAuthStore';
+} from '../mongo/MongoDBAuthStore';
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
 import { StripeIntegration } from '../shared/StripeIntegration';
 import {
     MongoDBRateLimiter,
     MongoDBRateLimitRecord,
-} from './MongoDBRateLimiter';
+} from '../mongo/MongoDBRateLimiter';
 import * as dotenv from 'dotenv';
 import Stripe from 'stripe';
-import { MongoDBPolicyStore } from './MongoDBPolicyStore';
+import { MongoDBPolicyStore } from '../mongo/MongoDBPolicyStore';
+import {
+    BuilderOptions,
+    ServerBuilder,
+    optionsSchema,
+} from 'shared/ServerBuilder';
+import { listEnvironmentFiles, loadEnvFile } from '../shared/EnvUtils';
+import { loadConfig } from '../shared/ConfigUtils';
 
-// Load env file
-const secretsFile = path.resolve(__dirname, '..', 'secrets.env.json');
-if (existsSync(secretsFile)) {
-    const json = readFileSync(secretsFile, { encoding: 'utf-8' });
-    const parsed = tryParseJson(json);
+declare const DEVELOPMENT: boolean;
 
-    if (parsed.success) {
-        // console.log('[AuxAuth] Parsed!');
-        for (let key in parsed.value) {
-            console.log('[AuxAuth] Injecting Key from secrets.env.json', key);
-            const value = parsed.value[key];
-            if (value === null || value === undefined || value === '') {
-                delete process.env[key];
-            } else if (typeof value === 'object') {
-                process.env[key] = JSON.stringify(value);
-            } else {
-                process.env[key] = String(value);
-            }
-        }
-    }
-} else {
-    console.log('[AuxAuth] No secrets file.');
-}
+const envFiles = listEnvironmentFiles(path.resolve(__dirname, '..'));
 
-// declare var MAGIC_SECRET_KEY: string;
-
-const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY ?? 'APIu7LWFmsZckWx';
-const LIVEKIT_SECRET_KEY =
-    process.env.LIVEKIT_SECRET_KEY ??
-    'YOaoO1yUQgugMgn77dSYiVLzqdmiITNUgs3TNeZAufZ';
-const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT ?? 'ws://localhost:7880';
-const MONGO_URL = process.env.MONGO_URL ?? 'mongodb://127.0.0.1:27017';
-const MONGO_USE_NEW_URL_PARSER =
-    process.env.MONGO_USE_NEW_URL_PARSER ?? 'false';
-
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? null;
-const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY ?? null;
-const SUBSCRIPTION_CONFIG = process.env.SUBSCRIPTION_CONFIG ?? null;
-
-const RATE_LIMIT_MAX: number = process.env.RATE_LIMIT_MAX
-    ? parseInt(process.env.RATE_LIMIT_MAX)
-    : null;
-const RATE_LIMIT_WINDOW_MS: number = process.env.RATE_LIMIT_WINDOW_MS
-    ? parseInt(process.env.RATE_LIMIT_WINDOW_MS)
-    : null;
-
-function getAuthMessenger(): AuthMessenger {
-    const API_KEY = process.env.TEXT_IT_API_KEY;
-    const FLOW_ID = process.env.TEXT_IT_FLOW_ID;
-
-    if (API_KEY && FLOW_ID) {
-        console.log('[AuxAuth] Using TextIt Auth Messenger.');
-        return new TextItAuthMessenger(API_KEY, FLOW_ID);
-    } else {
-        console.log('[AuxAuth] Using Console Auth Messenger.');
-        return new ConsoleAuthMessenger();
+for (let file of envFiles) {
+    if (!file.endsWith('.dev.env.json') || DEVELOPMENT) {
+        loadEnvFile(file);
     }
 }
+
+if (envFiles.length < 0) {
+    console.log('[AuxAuth] No environment files found.');
+}
+
+const options = loadConfig();
 
 function getAllowedAPIOrigins(): string[] {
     const origins = process.env.ALLOWED_API_ORIGINS;
@@ -124,30 +90,6 @@ function getAllowedAPIOrigins(): string[] {
     }
 
     return [];
-}
-
-const connect = pify(MongoClient.connect);
-
-type RecordVisibility = 'global' | 'restricted';
-
-interface AppRecord {
-    _id?: string;
-    issuer: string;
-    address: string;
-    visibility: RecordVisibility;
-    creationDate: number;
-    authorizedUsers: string[];
-    record: any;
-}
-
-export interface EmailRule {
-    type: 'allow' | 'deny';
-    pattern: string;
-}
-
-// see https://stackoverflow.com/a/6969486/1832856
-function escapeRegExp(str: string) {
-    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
 
 const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
@@ -160,136 +102,6 @@ const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
 
 async function start() {
     let app = express();
-    let mongo: MongoClient = await connect(MONGO_URL, {
-        useNewUrlParser: MONGO_USE_NEW_URL_PARSER,
-    });
-    // const magic = new Magic(MAGIC_SECRET_KEY, {});
-    let cursors = new Map<string, Cursor<AppRecord>>();
-
-    const db = mongo.db('aux-auth');
-    const users = db.collection<MongoDBAuthUser>('users');
-    const loginRequests = db.collection<MongoDBLoginRequest>('loginRequests');
-    const sessions = db.collection<MongoDBAuthSession>('sessions');
-    const permanentRecords = db.collection<AppRecord>('permanentRecords');
-    const recordsCollection = db.collection<NewRecord>('records');
-    const recordsKeysCollection = db.collection<RecordKey>('recordsKeys');
-    const recordsDataCollection = db.collection<DataRecord>('recordsData');
-    const manualRecordsDataCollection =
-        db.collection<DataRecord>('manualRecordsData');
-    const recordsFilesCollection = db.collection<any>('recordsFilesInfo');
-    const filesCollection = db.collection<any>('recordsFilesData');
-    const recordsEventsCollection = db.collection<any>('recordsEvents');
-    const emailRules = db.collection<any>('emailRules');
-    const smsRules = db.collection<any>('smsRules');
-    const rateLimits = db.collection<any>('rateLimits');
-
-    const policies = db.collection<any>('policies');
-    const roles = db.collection<any>('roles');
-
-    const tempRecords = [] as AppRecord[];
-
-    const authStore = new MongoDBAuthStore(
-        users,
-        loginRequests,
-        sessions,
-        emailRules,
-        smsRules
-    );
-    const messenger = getAuthMessenger();
-
-    let forceAllowSubscriptionFeatures = false;
-    const subscriptionConfig = tryParseSubscriptionConfig(SUBSCRIPTION_CONFIG);
-
-    let stripe: StripeInterface;
-    if (!!STRIPE_SECRET_KEY && !!STRIPE_PUBLISHABLE_KEY && subscriptionConfig) {
-        console.log('[AuxAuth] Integrating with Stripe.');
-        stripe = new StripeIntegration(
-            new Stripe(STRIPE_SECRET_KEY, {
-                apiVersion: '2022-11-15',
-            }),
-            STRIPE_PUBLISHABLE_KEY
-        );
-    } else {
-        console.log('[AuxAuth] Disabling Stripe Features.');
-        console.log(
-            '[AuxAuth] Allowing all subscription features because Stripe is not configured.'
-        );
-        stripe = null;
-        forceAllowSubscriptionFeatures = true;
-    }
-
-    const authController = new AuthController(
-        authStore,
-        messenger,
-        subscriptionConfig,
-        forceAllowSubscriptionFeatures
-    );
-
-    const recordsStore = new MongoDBRecordsStore(
-        recordsCollection,
-        recordsKeysCollection
-    );
-    const recordsManager = new RecordsController(recordsStore);
-
-    const policyStore = new MongoDBPolicyStore(policies, roles);
-    const policyController = new PolicyController(
-        authController,
-        recordsManager,
-        policyStore
-    );
-
-    const dataStore = new MongoDBDataRecordsStore(recordsDataCollection);
-    const dataManager = new DataRecordsController(policyController, dataStore);
-    const eventStore = new MongoDBEventRecordsStore(recordsEventsCollection);
-    const eventManager = new EventRecordsController(
-        policyController,
-        eventStore
-    );
-
-    const rateLimiter = new MongoDBRateLimiter(rateLimits);
-    let rateManager: RateLimitController = null;
-
-    if (RATE_LIMIT_MAX && RATE_LIMIT_WINDOW_MS) {
-        console.log('[AuxAuth] Enabling rate limiting.');
-        rateManager = new RateLimitController(rateLimiter, {
-            maxHits: RATE_LIMIT_MAX,
-            windowMs: RATE_LIMIT_WINDOW_MS,
-        });
-    } else {
-        console.log('[AuxAuth] Disabling rate limiting.');
-    }
-
-    const manualDataStore = new MongoDBDataRecordsStore(
-        manualRecordsDataCollection
-    );
-    const manualDataManager = new DataRecordsController(
-        policyController,
-        manualDataStore
-    );
-
-    const fileStore = new MongoDBFileRecordsStore(
-        recordsFilesCollection,
-        'http://localhost:2998/api/v2/records/file'
-    );
-    const fileController = new FileRecordsController(
-        policyController,
-        fileStore
-    );
-
-    const livekitController = new LivekitController(
-        LIVEKIT_API_KEY,
-        LIVEKIT_SECRET_KEY,
-        LIVEKIT_ENDPOINT
-    );
-
-    const subscriptionController = new SubscriptionController(
-        stripe,
-        authController,
-        authStore,
-        subscriptionConfig
-    );
-
-    const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
 
     const allowedRecordsOrigins = new Set([
         'http://localhost:3000',
@@ -308,20 +120,43 @@ async function start() {
         ...getAllowedAPIOrigins(),
     ]);
 
-    const server = new RecordsHttpServer(
-        allowedRecordsOrigins,
-        allowedRecordsOrigins,
-        authController,
-        livekitController,
-        recordsManager,
-        eventManager,
-        dataManager,
-        manualDataManager,
-        fileController,
-        subscriptionController,
-        rateManager,
-        policyController
-    );
+    const builder = new ServerBuilder(options)
+        .useAllowedAccountOrigins(allowedRecordsOrigins)
+        .useAllowedApiOrigins(allowedRecordsOrigins);
+
+    if (options.prisma && options.mongodb) {
+        builder.usePrismaWithMongoDBFileStore();
+    } else {
+        builder.useMongoDB();
+    }
+
+    if (options.textIt.apiKey && options.textIt.flowId) {
+        builder.useTextItAuthMessenger();
+    } else {
+        builder.useConsoleAuthMessenger();
+    }
+
+    if (options.stripe.secretKey && options.stripe.publishableKey) {
+        builder.useStripeSubscriptions();
+    }
+
+    if (
+        options.rateLimit &&
+        options.rateLimit.windowMs &&
+        options.rateLimit.maxHits
+    ) {
+        if (options.redis) {
+            builder.useRedisRateLimit();
+        } else {
+            builder.useMongoDBRateLimit();
+        }
+    }
+
+    const { server, filesController, mongoDatabase } =
+        await builder.buildAsync();
+    const filesCollection = mongoDatabase.collection<any>('recordsFilesData');
+
+    const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
 
     async function handleRequest(req: Request, res: Response) {
         const query: GenericHttpRequest['query'] = {};
@@ -400,7 +235,7 @@ async function start() {
                 body: req.body,
             });
 
-            const result = await fileController.markFileAsUploaded(
+            const result = await filesController.markFileAsUploaded(
                 recordName,
                 fileName
             );

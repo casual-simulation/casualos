@@ -222,6 +222,8 @@ import {
     revokeUserRole,
     grantInstRole,
     revokeInstRole,
+    InstUpdate,
+    getCurrentInstUpdate,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -294,6 +296,8 @@ import {
     constructInitializationUpdate,
     getStateFromUpdates,
 } from '../partitions/PartitionUtils';
+import { YjsPartitionImpl } from '../partitions';
+import { applyUpdate } from 'yjs';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -8605,6 +8609,85 @@ describe('AuxLibrary', () => {
                             timestamp: 456,
                         },
                     ]),
+                    undefined,
+                    undefined,
+                    'uuid'
+                );
+
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                const task = context.tasks.get('uuid');
+                expect(task.allowRemoteResolution).toBe(true);
+            });
+        });
+
+        describe('os.mergeInstUpdates()', () => {
+            it('should merge the given inst updates', async () => {
+                const partition = new YjsPartitionImpl({
+                    type: 'yjs',
+                });
+
+                let updates: InstUpdate[] = [];
+                partition.doc.on('update', (update: Uint8Array) => {
+                    updates.push({
+                        id: updates.length,
+                        timestamp: updates.length * 10,
+                        update: fromByteArray(update),
+                    });
+                });
+
+                await partition.applyEvents([
+                    botAdded(createBot('test1', { abc: 'def' })),
+                ]);
+
+                await waitAsync();
+
+                await partition.applyEvents([
+                    botAdded(createBot('test2', { num: 999 })),
+                ]);
+
+                await waitAsync();
+
+                await partition.applyEvents([
+                    botUpdated('test1', { tags: { abc: 'xyz' } }),
+                ]);
+
+                await waitAsync();
+
+                const mergedUpdate = library.api.os.mergeInstUpdates(updates);
+
+                expect(mergedUpdate).toEqual({
+                    id: 3,
+                    timestamp: expect.any(Number),
+                    update: expect.any(String),
+                });
+
+                const validationPartition = new YjsPartitionImpl({
+                    type: 'yjs',
+                });
+                applyUpdate(
+                    validationPartition.doc,
+                    toByteArray(mergedUpdate.update)
+                );
+
+                expect(validationPartition.state).toEqual({
+                    test1: createBot('test1', {
+                        abc: 'xyz',
+                    }),
+                    test2: createBot('test2', {
+                        num: 999,
+                    }),
+                });
+            });
+        });
+
+        describe('os.getCurrentInstUpdate()', () => {
+            it('should emit a remote action with a get_current_inst_update action', () => {
+                uuidMock.mockReturnValueOnce('uuid');
+                const action: any = library.api.os.getCurrentInstUpdate();
+                const expected = remote(
+                    getCurrentInstUpdate(),
                     undefined,
                     undefined,
                     'uuid'

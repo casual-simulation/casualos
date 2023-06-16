@@ -1,8 +1,69 @@
 # CasualOS Changelog
 
+## V3.1.32
+
+#### Date: 6/16/2023
+
+### :rocket: Improvements
+
+-   Improved the backend to use a SQL Database instead of DynamoDB tables.
+    -   This will make development quicker and easier in the future in addition to being more cost effective.
+
+## V3.1.31
+
+#### Date: 5/26/2023
+
+### :rocket: Improvements
+
+-   Added the `os.getCurrentInstUpdate()` function.
+    -   Returns a promise that resolves an inst update that represents the current local shared state of the inst.
+    -   This function is useful for whenever you want a snapshot of the current `shared` space state and want to be able to restore it to an inst after it is wiped.
+-   Added the `os.mergeInstUpdates(updates)` function.
+    -   This function merges the given list of inst updates into a single update.
+    -   Mostly useful for consolidation and maintenence of updates.
+
+## V3.1.30
+
+#### Date: 5/25/2023
+
+### :rocket: Improvements
+
+-   Added the `meetPortalLanguage` tag.
+    -   Sets the language that is displayed in the meetPortal interface by default.
+    -   If omitted, then the user-configured language will be used. (English if never changed)
+    -   Must be set on the `meetPortalBot` before the meetPortal is loaded in order to take effect.
+-   Added support for displaying a list of options using `os.showInput()`.
+
+    -   To display a list, use the `list` type.
+    -   The supported list subtypes are:
+        -   `select` - Displays a dropdown list that the user can select from.
+        -   `multiSelect` - Displays a dropdown list of checkboxes that the user can check.
+        -   `checkbox` - Displays a list of checkboxes.
+        -   `radio` - Displays a list of radio buttons.
+    -   When using the `list` type, you should pass in an array of items that have the following structure:
+
+        ```typescript
+        let item: {
+            /**
+             * The label that should be displayed for the item.
+             */
+            label: string;
+
+            /**
+             * The value that is associated with the item.
+             */
+            value: any;
+        };
+        ```
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where using the sheetPortal to delete a bot that had circular `creator` tag references would freeze CasualOS.
+-   Fixed an issue where `#` symbols at the start of a tag value would be hidden in the multiline code editor.
+
 ## V3.1.29
 
-#### Date: 5/22/2023
+#### Date: 5/23/2023
 
 ### :rocket: Improvements
 

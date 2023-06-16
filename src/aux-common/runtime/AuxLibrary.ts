@@ -327,6 +327,7 @@ import {
     grantInstRole as calcGrantInstRole,
     revokeInstRole as calcRevokeInstRole,
     RecordFileActionOptions,
+    getCurrentInstUpdate as calcGetCurrentInstUpdate,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -420,7 +421,10 @@ import {
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
 import { INTERPRETABLE_FUNCTION } from './AuxCompiler';
 import type { AuxRuntime } from './AuxRuntime';
-import { constructInitializationUpdate } from '../partitions/PartitionUtils';
+import {
+    constructInitializationUpdate,
+    mergeInstUpdates as calcMergeInstUpdates,
+} from '../partitions/PartitionUtils';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -1864,6 +1868,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getInstStateFromUpdates,
                 createInitializationUpdate,
                 applyUpdatesToInst,
+                getCurrentInstUpdate,
+                mergeInstUpdates,
                 instances: servers,
                 remoteCount: serverRemoteCount,
                 totalRemoteCount: totalRemoteCount,
@@ -6322,6 +6328,31 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             task.taskId
         );
         return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the current inst update.
+     *
+     * This function is somewhat equivalent to calling os.listInstUpdates() followed by os.mergeInstUpdates(), but it uses the locally available state instead of fetching from the server.
+     * This makes it more efficient as well as usable even when the server is not available.
+     */
+    function getCurrentInstUpdate(): Promise<InstUpdate> {
+        const task = context.createTask(true, true);
+        const event = calcRemote(
+            calcGetCurrentInstUpdate(),
+            undefined,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Merges the given instance updates into a single update.
+     * @param updates The list of updates to merge.
+     */
+    function mergeInstUpdates(updates: InstUpdate[]): InstUpdate {
+        return calcMergeInstUpdates(updates);
     }
 
     /**

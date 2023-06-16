@@ -1,5 +1,5 @@
 import { fromByteArray, toByteArray } from 'base64-js';
-import { applyUpdate } from 'yjs';
+import { applyUpdate, mergeUpdates } from 'yjs';
 import {
     botAdded,
     BotsState,
@@ -53,4 +53,21 @@ export function getStateFromUpdates(
     }
 
     return partition.state;
+}
+
+/**
+ * Merges the given inst updates into a single update.
+ * @param updates The list of updates to merge.
+ */
+export function mergeInstUpdates(
+    updates: InstUpdate[],
+    id: number = updates.length,
+    timestamp: number = Date.now()
+): InstUpdate {
+    const update = mergeUpdates(updates.map((u) => toByteArray(u.update)));
+    return {
+        id,
+        timestamp,
+        update: fromByteArray(update),
+    };
 }

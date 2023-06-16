@@ -1311,6 +1311,13 @@ export interface ApplyUpdatesToInstAction extends Action {
 }
 
 /**
+ * Defines an event that is used to get the current inst update.
+ */
+export interface GetCurrentInstUpdateAction extends Action {
+    type: 'get_current_inst_update';
+}
+
+/**
  * Defines an event that is used to send the player to a dimension.
  */
 export interface GoToDimensionAction extends Action {
@@ -1538,17 +1545,34 @@ export interface ShowInputOptions {
      * Whether the text in the input box should be automatically selected.
      */
     autoSelect: boolean;
+
+    /**
+     * The list of items that should be displayed.
+     */
+    items?: ShowInputItem[];
+}
+
+export interface ShowInputItem {
+    label: string;
+    value: any;
 }
 
 /**
  * Defines the possible input types.
  */
-export type ShowInputType = 'text' | 'color' | 'secret' | 'date';
+export type ShowInputType = 'text' | 'color' | 'secret' | 'date' | 'list';
 
 /**
  * Defines the possible input types.
  */
-export type ShowInputSubtype = 'basic' | 'swatch' | 'advanced';
+export type ShowInputSubtype =
+    | 'basic'
+    | 'swatch'
+    | 'advanced'
+    | 'select'
+    | 'multiSelect'
+    | 'radio'
+    | 'checkbox';
 
 /**
  * Defines an event for actions.
@@ -5510,6 +5534,15 @@ export function applyUpdatesToInst(
     return {
         type: 'apply_updates_to_inst',
         updates,
+    };
+}
+
+/**
+ * Creates a new GetCurrentInstUpdateAction.
+ */
+export function getCurrentInstUpdate(): GetCurrentInstUpdateAction {
+    return {
+        type: 'get_current_inst_update',
     };
 }
 
