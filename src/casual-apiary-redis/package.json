@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/casual-apiary-redis",
-    "version": "3.1.32-alpha.5293107523",
+    "version": "3.1.32-alpha.5293235047",
     "description": "Redis integrations for Serverless CasualOS",
     "main": "index.js",
     "types": "index.d.ts",
@@ -20,8 +20,8 @@
         "test": "jest --verbose"
     },
     "dependencies": {
-        "@casual-simulation/casual-apiary": "^3.1.32-alpha.5293107523",
-        "@casual-simulation/causal-trees": "^3.1.32-alpha.5293107523",
+        "@casual-simulation/casual-apiary": "^3.1.32-alpha.5293235047",
+        "@casual-simulation/causal-trees": "^3.1.32-alpha.5293235047",
         "base64-js": "^1.5.1",
         "lib0": "0.2.49",
         "lodash": "4.17.21",
