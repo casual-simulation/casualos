@@ -136,7 +136,11 @@ async function start() {
         builder.useConsoleAuthMessenger();
     }
 
-    if (options.stripe.secretKey && options.stripe.publishableKey) {
+    if (
+        options.stripe &&
+        options.stripe.secretKey &&
+        options.stripe.publishableKey
+    ) {
         builder.useStripeSubscriptions();
     }
 
