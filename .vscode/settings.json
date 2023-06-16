@@ -92,17 +92,5 @@
     "jest.autoEnable": false,
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "typescript.tsserver.maxTsServerMemory": 8192,
-    "jest.autoRun": "off",
-    "sqltools.connections": [
-        {
-            "previewLimit": 50,
-            "server": "localhost",
-            "port": 26257,
-            "driver": "CockroachDB",
-            "name": "Local",
-            "database": "defaultdb",
-            "username": "root",
-            "password": ""
-        }
-    ]
+    "jest.autoRun": "off"
 }
