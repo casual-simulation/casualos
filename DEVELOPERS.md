@@ -15,6 +15,7 @@ Make sure you have all the prerequisite tools installed:
     -   Used to make development with extra services (MongoDB, Redis, etc.) easy.
     -   It works exactly like `docker`, except the command is `nerdctl`.
 -   [AWS CLI](https://aws.amazon.com/cli/)
+-   [CockroachDB](https://www.cockroachlabs.com/docs/stable/install-cockroachdb-mac.html)
 -   (Windows Only)[Visual Studio with C++ tools](https://visualstudio.microsoft.com/)(Windows Only)
     -   Select the "Desktop Development with C++" workflow.
 
@@ -23,10 +24,14 @@ Make sure you have all the prerequisite tools installed:
 1. Clone the repository.
     - `git clone https://github.com/casual-simulation/casualos.git`
 2. Make sure global dependencies are installed.
-    - `npm install -g lerna jake node-gyp`
+    - `npm install -g lerna jake node-gyp prisma`
     - (Windows Only) [Tell NPM to use the global `node-gyp`.](https://github.com/nodejs/node-gyp/issues/2272) (Older versions of node-gyp cannot detect Visual Studio 2022)
         - Powershell: `npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}`
-3. (Optional) Add `casualos.localhost` to your [hosts file][hosts-file].
+3. Start CockroachDB
+    - Use a separate terminal tab
+    - `npm run cockroach`
+    - If you want, you can choose to start CockroachDB when your system starts or use something like Docker to host your CockroachDB instance.
+4. (Optional) Add `casualos.localhost` to your [hosts file][hosts-file].
     - You can use this domain to prevent the service worker from installing.
     - Follow these steps:
         1. Open the hosts file as Sudo/Admin.
@@ -36,11 +41,11 @@ Make sure you have all the prerequisite tools installed:
             ```
             127.0.0.1 casualos.localhost
             ```
-4. Start related services:
+5. Start related services:
     1. `nerdctl compose -f docker/docker-compose.dev.yml up -d`
-5. Bootstrap the project.
+6. Bootstrap the project.
     - `npm run bootstrap`
-6. Install commit hooks.
+7. Install commit hooks.
     - `npx husky install`
 
 ## Commands
@@ -60,6 +65,10 @@ Most of them are NPM scripts, so they're easy to run.
     -   `npm run test:watch`
 -   Run tests
     -   `npm test`
+-   Reset your database
+    -   `prisma migrate reset`
+-   Update your database to match schema (creates a migration if needed)
+    -   `prisma migrate dev`
 
 You can find other scripts in the `package.json` file at the root of the repository.
 

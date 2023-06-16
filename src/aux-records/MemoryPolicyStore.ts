@@ -186,6 +186,59 @@ export class MemoryPolicyStore implements PolicyStore {
         };
     }
 
+    async assignSubjectRole(
+        recordName: string,
+        subjectId: string,
+        type: 'user' | 'inst',
+        role: AssignedRole
+    ): Promise<UpdateUserRolesResult> {
+        if (!this.roleAssignments[recordName]) {
+            this.roleAssignments[recordName] = {};
+        }
+
+        const roles = this.roleAssignments[recordName][subjectId] ?? [];
+
+        const filtered = roles.filter(
+            (r) =>
+                r.role !== role.role ||
+                getExpireTime(r.expireTimeMs) <= role.expireTimeMs
+        );
+
+        this.roleAssignments[recordName][subjectId] = [
+            ...filtered,
+            {
+                role: role.role,
+                expireTimeMs:
+                    role.expireTimeMs === Infinity ? null : role.expireTimeMs,
+            },
+        ];
+
+        return {
+            success: true,
+        };
+    }
+
+    async revokeSubjectRole(
+        recordName: string,
+        subjectId: string,
+        type: 'user' | 'inst',
+        role: string
+    ): Promise<UpdateUserRolesResult> {
+        if (!this.roleAssignments[recordName]) {
+            this.roleAssignments[recordName] = {};
+        }
+
+        const roles = this.roleAssignments[recordName][subjectId] ?? [];
+
+        const filtered = roles.filter((r) => r.role !== role);
+
+        this.roleAssignments[recordName][subjectId] = filtered;
+
+        return {
+            success: true,
+        };
+    }
+
     async updateUserRoles(
         recordName: string,
         userId: string,

@@ -13,68 +13,18 @@ Transform:
     - AWS::Serverless-2016-10-31
 
 Parameters:
-    TextItAPIKeyParameter:
-        Type: String
-        Description: The API Key that is used to access the TextIt API.
-    TextItFlowIDParameter:
-        Type: String
-        Description: The ID of the Flow that should be triggered for TextIt messages.
-    RedisPortParameter:
-        Type: Number
-        Description: The port number that the redis server is listening on.
-    RedisHostParameter:
-        Type: String
-        Description: The hostname of the redis server.
-    RedisUseTLSParameter:
-        Type: String
-        Description: Whether to use TLS when connecting to the redis server.
-    RedisRecordsNamespaceParameter:
-        Type: String
-        Description: The namespace to use for the redis records.
-    RedisPasswordParameter:
-        Type: String
-        Description: The password to use when connecting to the redis server.
     FileRecordsS3StorageClassParameter:
         Type: String
         Description: The S3 Storage Class that should be used for file records.
-    LivekitAPIKeyParameter:
-        Type: String
-        Description: The API Key that should be used to authorize access to the Livekit endpoint.
-        Default: ''
-    LivekitSecretKeyParameter:
-        Type: String
-        Description: The Secret Key that should be used to authorize access to the Livekit endpoint.
-        Default: ''
-    LivekitEndpointParameter:
-        Type: String
-        Description: The WebSocket endpoint that the Livekit server(s) are available at.
-        Default: ''
-    StripeSecretKeyParameter:
-        Type: String
-        Description: The Secret Key that should be used to access the Stripe API.
-        Default: ''
-    StripePublishableKeyParameter:
-        Type: String
-        Description: The Publishable Key that should be used to access the Stripe API.
-        Default: ''
-    SubscriptionConfigParameter:
-        Type: String
-        Description: The configuration that should be used for subscriptions.
-        Default: ''
     AllowedOriginsParameter:
         Type: String
         Description: The allowed origin domains that are able to make requests for the internal auth site APIs. This value should be a space-separated string that includes the origins that the auth site is hosted on.
     AllowedApiOriginsParameter:
         Type: String
         Description: The allowed origin domains that are able to make requests for the records APIs. This value should be a space-separated string that includes the origins that are allowed to request/publish records to this site.
-    RateLimitMaxParameter:
+    ServerConfigParameter:
         Type: String
-        Description: The maximum number of requests that can be made from an IP address over the window. If set to an empty string, then there is no rate limiting.
-        Default: ''
-    RateLimitWindowMSParameter:
-        Type: String
-        Description: The window, in milliseconds, that requests are allowed to be made over for rate limiting. i.e. if set to 1000, then RateLimitMaxParameter number of requests can be made over 1 second. If set to an empty string, then there is no rate limiting.
-        Default: ''
+        Description: The JSON configuration that should be used.
 
 Globals:
     Api:
@@ -141,26 +91,21 @@ Resources:
                       BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
             Environment:
                 Variables:
+                    SERVER_CONFIG: !Ref ServerConfigParameter
+
                     # Make table name accessible as environment variable from function code during execution
-                    TEXT_IT_API_KEY: !Ref TextItAPIKeyParameter
-                    TEXT_IT_FLOW_ID: !Ref TextItFlowIDParameter
-                    STRIPE_SECRET_KEY: !Ref StripeSecretKeyParameter
-                    STRIPE_PUBLISHABLE_KEY: !Ref StripePublishableKeyParameter
-                    SUBSCRIPTION_CONFIG: !Ref SubscriptionConfigParameter
-                    PUBLIC_RECORDS_TABLE: !Ref PublicRecordsTable
-                    PUBLIC_RECORDS_KEYS_TABLE: !Ref PublicRecordsKeysTable
-                    DATA_TABLE: !Ref DataTable
                     MANUAL_DATA_TABLE: !Ref ManualDataTable
                     EVENTS_TABLE: !Ref EventsTable
                     REGION: !Ref 'AWS::Region'
                     FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
-                    FILES_TABLE: !Ref FilesTable
                     FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
                     ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
-                    LIVEKIT_API_KEY: !Ref LivekitAPIKeyParameter
-                    LIVEKIT_SECRET_KEY: !Ref LivekitSecretKeyParameter
-                    LIVEKIT_ENDPOINT: !Ref LivekitEndpointParameter
+
+                    PUBLIC_RECORDS_TABLE: !Ref PublicRecordsTable
+                    PUBLIC_RECORDS_KEYS_TABLE: !Ref PublicRecordsKeysTable
+                    DATA_TABLE: !Ref DataTable
+                    FILES_TABLE: !Ref FilesTable
                     USERS_TABLE: !Ref UsersTable
                     USER_ADDRESSES_TABLE: !Ref UserAddressesTable
                     LOGIN_REQUESTS_TABLE: !Ref LoginRequestsTable
@@ -171,13 +116,6 @@ Resources:
                     ROLE_SUBJECTS_TABLE: !Ref RoleSubjectsTable
                     EMAIL_TABLE: !Ref EmailRulesTable
                     SMS_TABLE: !Ref SmsRulesTable
-                    REDIS_HOST: !Ref RedisHostParameter
-                    REDIS_PORT: !Ref RedisPortParameter
-                    REDIS_PASS: !Ref RedisPasswordParameter
-                    REDIS_TLS: !Ref RedisUseTLSParameter
-                    REDIS_NAMESPACE: !Ref RedisRecordsNamespaceParameter
-                    RATE_LIMIT_MAX: !Ref RateLimitMaxParameter
-                    RATE_LIMIT_WINDOW_MS: !Ref RateLimitWindowMSParameter
             Events:
                 CreateRecordKey:
                     Type: Api

@@ -11,6 +11,8 @@
         "./serverless/**/*",
         "./web/**/*",
         "./shared/**/*",
+        "./prisma/**/*",
+        "./mongo/**/*",
         "../aux-server/typings/*"
     ],
     "exclude": ["**/node_modules/**", "./web/vite.config.ts"],

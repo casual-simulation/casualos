@@ -6,6 +6,7 @@
         "start": "node ./src/aux-server/server/dist/main.js",
         "bootstrap": "lerna bootstrap --hoist -- --legacy-peer-deps && npm run bootstrap:aws",
         "bootstrap:aws": "node src/aux-auth/scripts/bootstrap.js",
+        "cockroach": "cockroach start-single-node --insecure",
         "reset:aws": "node src/aux-auth/scripts/bootstrap.js --reset",
         "watch": "npm run clean && concurrently --names \"Libs,Server,Auth\" \"npm run watch:libs\" \"npm run watch:server\" \"npm run watch:auth\"",
         "watch:secure": "npm run clean && concurrently --names \"Libs,Server,Auth\" \"npm run watch:libs\" \"npm run watch:server:secure\" \"npm run watch:auth\"",
@@ -136,6 +137,7 @@
         "vite": "2.9.14",
         "sass": "1.56.1",
         "esbuild": "^0.13.8",
+        "esbuild-copy-static-files": "0.1.0",
         "chalk": "4.1.2",
         "vite-plugin-vue2": "1.7.3",
         "vue-template-compiler": "^2.6.14",
@@ -153,5 +155,8 @@
         "source-map": "0.7.3",
         "http-server": "14.1.1"
     },
-    "dependencies": {}
+    "dependencies": {},
+    "prisma": {
+        "schema": "./src/aux-auth/schemas/auth.prisma"
+    }
 }

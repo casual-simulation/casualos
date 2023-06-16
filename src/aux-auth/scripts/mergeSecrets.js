@@ -30,7 +30,15 @@ async function start() {
         ? JSON.parse(readFileSync(serverlessSecretsFile, 'utf8'))
         : {};
 
+    if (serverlessSecrets.handleRecords?.SERVER_CONFIG) {
+        serverlessSecrets.handleRecords.SERVER_CONFIG = JSON.parse(
+            serverlessSecrets.handleRecords.SERVER_CONFIG
+        );
+    }
+
     let serverlessResult = _.merge({}, env, serverlessSecrets);
+    let serverlessConfig = serverlessResult.handleRecords?.SERVER_CONFIG ?? {};
+
     let needsUpdate = !serverlessSecretsExists;
 
     const serverSecretsExists = existsSync(serverSecretsFile);
@@ -39,72 +47,52 @@ async function start() {
         : {};
 
     let serverResult = _.merge({}, serverSecrets);
+    let serverConfig = serverResult.SERVER_CONFIG ?? {};
 
     let questions = [];
 
     const environmentVariables = [
-        ['TEXT_IT_API_KEY', 'Please enter the API Key for TextIt'],
-        ['TEXT_IT_FLOW_ID', 'Please enter the Flow ID for TextIt'],
-        ['STRIPE_SECRET_KEY', 'Please enter the Stripe Secret Key'],
-        ['STRIPE_PUBLISHABLE_KEY', 'Please enter the Stripe Publishable Key'],
-        ['SUBSCRIPTION_CONFIG', 'Please enter the Subscription Config'],
+        ['textIt.apiKey', 'Please enter the API Key for TextIt'],
+        ['textIt.flowId', 'Please enter the Flow ID for TextIt'],
+        ['stripe.secretKey', 'Please enter the Stripe Secret Key'],
+        ['stripe.publishableKey', 'Please enter the Stripe Publishable Key'],
+        [
+            'subscriptions',
+            'Please enter the Subscription Config',
+            (json) => JSON.parse(json),
+        ],
     ];
 
-    for (let [name, desc] of environmentVariables) {
-        if (!serverlessResult?.handleRecords?.[name] || !serverResult?.[name]) {
+    for (let [name, desc, transform] of environmentVariables) {
+        if (!_.get(serverlessConfig, name) || !_.get(serverConfig, name)) {
             questions.push({
                 type: 'text',
                 name: name,
                 message: desc,
+                format: transform,
             });
         }
     }
 
-    // if ( ||
-    //     !serverResult?.TEXT_IT_API_KEY) {
-
-    // }
-
-    // if (!serverlessResult?.handleRecords?.TEXT_IT_FLOW_ID) {
-    //     questions.push({
-    //         type: 'text',
-    //         name: 'TEXT_IT_FLOW_ID',
-    //         message: '',
-    //     });
-    // }
-
-    // if (!serverlessResult?.handleRecords?.STRIPE_SECRET_KEY) {
-    //     questions.push({
-    //         type: 'text',
-    //         name: 'STRIPE_SECRET_KEY',
-    //         message: 'Please enter the Stripe Secret Key',
-    //     });
-    // }
-
-    // if (!serverlessResult?.handleRecords?.SUBSCRIPTION_CONFIG) {
-    //     questions.push({
-    //         type: 'text',
-    //         name: 'SUBSCRIPTION_CONFIG',
-    //         message: 'Please enter the Subscription Config',
-    //     });
-    // }
-
-    // if (!result?.handleRecords?.STRIPE_SECRET_KEY) {
-    //     questions.push({
-    //         type: 'text',
-    //         name: 'STRIPE_SECRET_KEY',
-    //         message: 'Please enter the Stripe Secret Key',
-    //     });
-    // }
-
     if (questions.length > 0) {
         const response = await prompts(questions);
+
+        let final = {};
+        for (let key in response) {
+            const value = response[key];
+            if (value) {
+                _.set(final, key, response[key] ? response[key] : undefined);
+            }
+        }
+
         serverlessResult = _.merge({}, serverlessResult, {
-            handleRecords: {
-                ...response,
-            },
+            handleRecords: {},
         });
-        serverResult = _.merge({}, serverResult, response);
+
+        serverlessResult.handleRecords.SERVER_CONFIG = JSON.stringify(
+            _.merge({}, serverlessConfig, final)
+        );
+        serverResult.SERVER_CONFIG = _.merge({}, serverConfig, final);
 
         needsUpdate = true;
     }

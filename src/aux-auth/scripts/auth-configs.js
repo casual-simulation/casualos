@@ -10,6 +10,7 @@ const {
 } = require('../../../script/build-helpers');
 const fs = require('fs');
 const { GIT_HASH, GIT_TAG } = require('../../../script/git-stats');
+const copy = require('esbuild-copy-static-files');
 
 const src = path.resolve(paths.root, 'src');
 const auxAuth = path.resolve(src, 'aux-auth');
@@ -22,6 +23,8 @@ const serverless = path.resolve(auxAuth, 'serverless');
 const serverlessDist = path.resolve(serverless, 'aws', 'dist');
 const serverlessSrc = path.resolve(serverless, 'aws', 'src');
 const serverlessHandlers = path.resolve(serverlessSrc, 'handlers');
+
+const schema = path.resolve(auxAuth, 'schemas', 'auth.prisma');
 
 module.exports = {
     createConfigs,
@@ -74,6 +77,31 @@ function createConfigs(dev, version) {
                         ? JSON.stringify('http://s3:4566')
                         : JSON.stringify(undefined),
                 },
+                plugins: [
+                    copy({
+                        src: schema,
+                        dest: path.resolve(
+                            serverlessDist,
+                            'handlers',
+                            'schema.prisma'
+                        ),
+                        force: true,
+                    }),
+                    copy({
+                        src: path.resolve(
+                            paths.nodeModules,
+                            '.prisma',
+                            'client',
+                            'libquery_engine-rhel-openssl-1.0.x.so.node'
+                        ),
+                        dest: path.resolve(
+                            serverlessDist,
+                            'handlers',
+                            'libquery_engine-rhel-openssl-1.0.x.so.node'
+                        ),
+                        force: true,
+                    }),
+                ],
                 minify: !dev,
             },
         ],
