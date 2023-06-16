@@ -226,6 +226,7 @@ if (config.textIt && config.textIt.apiKey && config.textIt.flowId) {
 }
 
 if (
+    config.stripe &&
     config.stripe.secretKey &&
     config.stripe.publishableKey &&
     config.subscriptions
