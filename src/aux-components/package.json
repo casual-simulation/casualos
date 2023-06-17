@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-components",
-    "version": "3.1.31",
+    "version": "3.1.32",
     "description": "Common library for AUX Vue components and Misc",
     "main": "index.js",
     "types": "index.d.ts",
@@ -33,12 +33,12 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.1.31",
-        "@casual-simulation/aux-vm": "^3.1.31",
-        "@casual-simulation/aux-vm-browser": "^3.1.31",
-        "@casual-simulation/aux-vm-client": "^3.1.31",
-        "@casual-simulation/aux-vm-deno": "^3.1.31",
-        "@casual-simulation/aux-vm-node": "^3.1.31",
+        "@casual-simulation/aux-common": "^3.1.32",
+        "@casual-simulation/aux-vm": "^3.1.32",
+        "@casual-simulation/aux-vm-browser": "^3.1.32",
+        "@casual-simulation/aux-vm-client": "^3.1.32",
+        "@casual-simulation/aux-vm-deno": "^3.1.32",
+        "@casual-simulation/aux-vm-node": "^3.1.32",
         "@casual-simulation/causal-tree-server": "^3.1.29",
         "@casual-simulation/causal-tree-store-cassandradb": "^3.1.29",
         "@casual-simulation/causal-tree-store-mongodb": "^3.1.29",
