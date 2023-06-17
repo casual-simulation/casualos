@@ -780,34 +780,14 @@ export class PolicyController {
                 return returnAuthorizationResult(authorization);
             }
 
-            const makeNewRoles = (
-                roles: AssignedRole[],
-                role: AssignedRole
-            ) => {
-                // Remove all the same roles that expire before the new one.
-                const filtered = roles.filter(
-                    (r) =>
-                        r.role !== request.role ||
-                        getExpireTime(r.expireTimeMs) <= expireTimeMs
-                );
-                return [...filtered, role];
-            };
-
             if (targetUserId) {
-                const roles = await this._policies.listRolesForUser(
-                    recordName,
-                    targetUserId
-                );
-                const newRoles = makeNewRoles(roles, {
-                    role: request.role,
-                    expireTimeMs,
-                });
-
-                const result = await this._policies.updateUserRoles(
+                const result = await this._policies.assignSubjectRole(
                     recordName,
                     targetUserId,
+                    'user',
                     {
-                        roles: newRoles,
+                        role: request.role,
+                        expireTimeMs,
                     }
                 );
 
@@ -819,19 +799,13 @@ export class PolicyController {
                     success: true,
                 };
             } else if (targetInstance) {
-                const roles = await this._policies.listRolesForInst(
-                    recordName,
-                    targetInstance
-                );
-                const newRoles = makeNewRoles(roles, {
-                    role: request.role,
-                    expireTimeMs,
-                });
-                const result = await this._policies.updateInstRoles(
+                const result = await this._policies.assignSubjectRole(
                     recordName,
                     targetInstance,
+                    'inst',
                     {
-                        roles: newRoles,
+                        role: request.role,
+                        expireTimeMs,
                     }
                 );
 
@@ -909,17 +883,11 @@ export class PolicyController {
             }
 
             if (targetUserId) {
-                const roles = await this._policies.listRolesForUser(
-                    recordName,
-                    targetUserId
-                );
-                const newRoles = roles.filter((r) => r.role !== request.role);
-                const result = await this._policies.updateUserRoles(
+                const result = await this._policies.revokeSubjectRole(
                     recordName,
                     targetUserId,
-                    {
-                        roles: newRoles,
-                    }
+                    'user',
+                    request.role
                 );
 
                 if (result.success === false) {
@@ -930,17 +898,11 @@ export class PolicyController {
                     success: true,
                 };
             } else if (targetInstance) {
-                const roles = await this._policies.listRolesForInst(
-                    recordName,
-                    targetInstance
-                );
-                const newRoles = roles.filter((r) => r.role !== request.role);
-                const result = await this._policies.updateInstRoles(
+                const result = await this._policies.revokeSubjectRole(
                     recordName,
                     targetInstance,
-                    {
-                        roles: newRoles,
-                    }
+                    'inst',
+                    request.role
                 );
 
                 if (result.success === false) {

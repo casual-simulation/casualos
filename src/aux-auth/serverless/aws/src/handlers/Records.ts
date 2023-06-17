@@ -21,6 +21,7 @@ import {
     tryParseSubscriptionConfig,
     RateLimitController,
     PolicyController,
+    tryParseJson,
 } from '@casual-simulation/aux-records';
 import { AuthController } from '@casual-simulation/aux-records/AuthController';
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
@@ -48,6 +49,12 @@ import Stripe from 'stripe';
 import { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
 import RedisRateLimitStore from '@casual-simulation/rate-limit-redis';
 import { createClient as createRedisClient } from 'redis';
+import {
+    BuilderOptions,
+    ServerBuilder,
+} from '../../../../shared/ServerBuilder';
+import { loadConfig } from '../../../../shared/ConfigUtils';
+import { merge } from 'lodash';
 
 declare var S3_ENDPOINT: string;
 declare var DYNAMODB_ENDPOINT: string;
@@ -58,51 +65,11 @@ const PUBLIC_RECORDS_TABLE = process.env.PUBLIC_RECORDS_TABLE;
 const PUBLIC_RECORDS_KEYS_TABLE = process.env.PUBLIC_RECORDS_KEYS_TABLE;
 const DATA_TABLE = process.env.DATA_TABLE;
 const MANUAL_DATA_TABLE = process.env.MANUAL_DATA_TABLE;
-
-const REGION = process.env.AWS_REGION;
 const FILES_BUCKET = process.env.FILES_BUCKET;
 const FILES_STORAGE_CLASS = process.env.FILES_STORAGE_CLASS;
 const FILES_TABLE = process.env.FILES_TABLE;
 const EVENTS_TABLE = process.env.EVENTS_TABLE;
-
-const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
-const LIVEKIT_SECRET_KEY = process.env.LIVEKIT_SECRET_KEY;
-const LIVEKIT_ENDPOINT = process.env.LIVEKIT_ENDPOINT;
-
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? null;
-const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY ?? null;
-const SUBSCRIPTION_CONFIG = process.env.SUBSCRIPTION_CONFIG ?? null;
-
-const REDIS_HOST: string = process.env.REDIS_HOST as string;
-const REDIS_PORT: number = parseInt(process.env.REDIS_PORT as string);
-const REDIS_PASS: string = process.env.REDIS_PASS as string;
-const REDIS_TLS: boolean = process.env.REDIS_TLS
-    ? process.env.REDIS_TLS === 'true'
-    : true;
-const REDIS_NAMESPACE: string = process.env.REDIS_NAMESPACE as string;
-
-const RATE_LIMIT_WINDOW_MS: number = process.env.RATE_LIMIT_WINDOW_MS
-    ? parseInt(process.env.RATE_LIMIT_WINDOW_MS)
-    : null;
-
-const RATE_LIMIT_MAX: number = process.env.RATE_LIMIT_MAX
-    ? parseInt(process.env.RATE_LIMIT_MAX)
-    : null;
-
-const RATE_LIMIT_PREFIX = `${REDIS_NAMESPACE}:rate-limit/`;
-
-// Create a DocumentClient that represents the query to add an item
-const dynamodb = require('aws-sdk/clients/dynamodb');
-const docClient = new dynamodb.DocumentClient({
-    endpoint: DYNAMODB_ENDPOINT,
-});
-const S3 = require('aws-sdk/clients/s3');
-const s3Options: AWS.S3.ClientConfiguration = {
-    endpoint: S3_ENDPOINT,
-    s3ForcePathStyle: DEVELOPMENT,
-};
-const s3Client = new S3(s3Options);
-
+const REGION = process.env.AWS_REGION;
 const USERS_TABLE = process.env.USERS_TABLE;
 const USER_ADDRESSES_TABLE = process.env.USER_ADDRESSES_TABLE;
 const LOGIN_REQUESTS_TABLE = process.env.LOGIN_REQUESTS_TABLE;
@@ -115,165 +82,111 @@ const SUBJECT_ROLES_TABLE = process.env.SUBJECT_ROLES_TABLE;
 const ROLE_SUBJECTS_TABLE = process.env.ROLE_SUBJECTS_TABLE;
 const STRIPE_CUSTOMER_ID_INDEX_NAME = 'StripeCustomerIdsIndex';
 
-const authStore = new DynamoDBAuthStore(
-    docClient,
-    USERS_TABLE,
-    USER_ADDRESSES_TABLE,
-    LOGIN_REQUESTS_TABLE,
-    SESSIONS_TABLE,
-    'ExpireTimeIndex',
-    EMAIL_TABLE,
-    SMS_TABLE,
-    STRIPE_CUSTOMER_ID_INDEX_NAME
-);
+// const RATE_LIMIT_PREFIX = `${REDIS_NAMESPACE}:rate-limit/`;
 
-const API_KEY = process.env.TEXT_IT_API_KEY;
-const FLOW_ID = process.env.TEXT_IT_FLOW_ID;
+const staticConfig = loadConfig();
+const dynamicConfig: BuilderOptions = {
+    dynamodb: {
+        usersTable: USERS_TABLE,
+        userAddressesTable: USER_ADDRESSES_TABLE,
+        loginRequestsTable: LOGIN_REQUESTS_TABLE,
+        sessionsTable: SESSIONS_TABLE,
+        emailTable: EMAIL_TABLE,
+        smsTable: SMS_TABLE,
+        policiesTable: POLICIES_TABLE,
+        rolesTable: ROLES_TABLE,
+        subjectRolesTable: SUBJECT_ROLES_TABLE,
+        roleSubjectsTable: ROLE_SUBJECTS_TABLE,
+        stripeCustomerIdsIndexName: STRIPE_CUSTOMER_ID_INDEX_NAME,
+        dataTable: DATA_TABLE,
+        manualDataTable: MANUAL_DATA_TABLE,
+        filesTable: FILES_TABLE,
+        eventsTable: EVENTS_TABLE,
+        publicRecordsTable: PUBLIC_RECORDS_TABLE,
+        publicRecordsKeysTable: PUBLIC_RECORDS_KEYS_TABLE,
+        endpoint: DYNAMODB_ENDPOINT,
+    },
+    s3: {
+        region: REGION,
+        filesBucket: FILES_BUCKET,
+        filesStorageClass: FILES_STORAGE_CLASS,
 
-let messenger: AuthMessenger;
-if (API_KEY && FLOW_ID) {
-    console.log('[Records] Using TextIt Auth Messenger.');
-    messenger = new TextItAuthMessenger(API_KEY, FLOW_ID);
-} else {
-    console.log('[Records] Using Console Auth Messenger.');
-    messenger = new ConsoleAuthMessenger();
-}
-
-const subscriptionConfig = tryParseSubscriptionConfig(SUBSCRIPTION_CONFIG);
-
-let forceAllowSubscriptionFeatures = false;
-let stripe: StripeInterface;
-if (!!STRIPE_SECRET_KEY && !!STRIPE_PUBLISHABLE_KEY && subscriptionConfig) {
-    console.log('[Records] Integrating with Stripe.');
-    stripe = new StripeIntegration(
-        new Stripe(STRIPE_SECRET_KEY, {
-            apiVersion: '2022-11-15',
-        }),
-        STRIPE_PUBLISHABLE_KEY
-    );
-} else {
-    console.log('[Records] Disabling Stripe Features.');
-    console.log(
-        '[AuxAuth] Allowing all subscription features because Stripe is not configured.'
-    );
-    stripe = null;
-    forceAllowSubscriptionFeatures = true;
-}
-
-const authController = new AuthController(
-    authStore,
-    messenger,
-    subscriptionConfig,
-    forceAllowSubscriptionFeatures
-);
-
-const recordsStore = new DynamoDBRecordsStore(
-    docClient,
-    PUBLIC_RECORDS_TABLE,
-    PUBLIC_RECORDS_KEYS_TABLE
-);
-const recordsController = new RecordsController(recordsStore);
-
-const policyStore = new DynamoDBPolicyStore(
-    docClient,
-    POLICIES_TABLE,
-    SUBJECT_ROLES_TABLE,
-    ROLE_SUBJECTS_TABLE,
-    ROLES_TABLE
-);
-const policyController = new PolicyController(
-    authController,
-    recordsController,
-    policyStore
-);
-
-const dataStore = new DynamoDBDataStore(docClient, DATA_TABLE);
-const dataController = new DataRecordsController(policyController, dataStore);
-
-const eventsStore = new DynamoDBEventStore(docClient, EVENTS_TABLE);
-const eventsController = new EventRecordsController(
-    policyController,
-    eventsStore
-);
-
-const manualDataStore = new DynamoDBDataStore(docClient, MANUAL_DATA_TABLE);
-const manualDataController = new DataRecordsController(
-    policyController,
-    manualDataStore
-);
-
-const fileStore = new DynamoDBFileStore(
-    REGION,
-    FILES_BUCKET,
-    docClient,
-    FILES_TABLE,
-    FILES_STORAGE_CLASS,
-    undefined,
-
-    // We reference the Vite server in development.
-    // since any preflight request with an Origin header is rejected by localstack (see https://github.com/localstack/localstack/issues/4056)
-    // This parameter is mostly only used so that the file URLs point to the correct S3 instance. As such,
-    // this value is mostly used by browsers trying to upload files.
-    DEVELOPMENT ? `http://localhost:3002/s3` : undefined,
-    s3Options
-);
-const filesController = new FileRecordsController(policyController, fileStore);
-
-const livekitController = new LivekitController(
-    LIVEKIT_API_KEY,
-    LIVEKIT_SECRET_KEY,
-    LIVEKIT_ENDPOINT
-);
-
-const subscriptionController = new SubscriptionController(
-    stripe,
-    authController,
-    authStore,
-    subscriptionConfig
-);
-
-let rateLimit: RateLimitController = null;
-if (REDIS_HOST && REDIS_PORT && RATE_LIMIT_WINDOW_MS && RATE_LIMIT_MAX) {
-    console.log('[Records] Using Redis Rate Limiter.');
-    const client = createRedisClient({
-        host: REDIS_HOST,
-        port: REDIS_PORT,
-        password: REDIS_PASS,
-        tls: REDIS_TLS,
-
-        retry_strategy: function (options) {
-            if (options.error && options.error.code === 'ECONNREFUSED') {
-                // End reconnecting on a specific error and flush all commands with
-                // a individual error
-                return new Error('The server refused the connection');
-            }
-            // reconnect after min(100ms per attempt, 3 seconds)
-            return Math.min(options.attempt * 100, 3000);
+        // We reference the Vite server in development.
+        // since any preflight request with an Origin header is rejected by localstack (see https://github.com/localstack/localstack/issues/4056)
+        // This parameter is mostly only used so that the file URLs point to the correct S3 instance. As such,
+        // this value is mostly used by browsers trying to upload files.
+        host: DEVELOPMENT ? `http://localhost:3002/s3` : undefined,
+        options: {
+            endpoint: S3_ENDPOINT,
+            s3ForcePathStyle: DEVELOPMENT,
         },
-    });
+    },
+};
 
-    const store = new RedisRateLimitStore({
-        sendCommand: (command: string, ...args: (string | number)[]) => {
-            return new Promise((resolve, reject) => {
-                client.sendCommand(command, args, (err, result) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(result);
-                    }
-                });
-            });
-        },
-    });
-    store.prefix = RATE_LIMIT_PREFIX;
+const config = merge({}, staticConfig, dynamicConfig);
 
-    rateLimit = new RateLimitController(store, {
-        maxHits: RATE_LIMIT_MAX,
-        windowMs: RATE_LIMIT_WINDOW_MS,
-    });
-} else {
-    console.log('[Records] Not using rate limiting.');
-}
+// const config: BuilderOptions = {
+//     dynamodb: {
+//         usersTable: USERS_TABLE,
+//         userAddressesTable: USER_ADDRESSES_TABLE,
+//         loginRequestsTable: LOGIN_REQUESTS_TABLE,
+//         sessionsTable: SESSIONS_TABLE,
+//         emailTable: EMAIL_TABLE,
+//         smsTable: SMS_TABLE,
+//         policiesTable: POLICIES_TABLE,
+//         rolesTable: ROLES_TABLE,
+//         subjectRolesTable: SUBJECT_ROLES_TABLE,
+//         roleSubjectsTable: ROLE_SUBJECTS_TABLE,
+//         stripeCustomerIdsIndexName: STRIPE_CUSTOMER_ID_INDEX_NAME,
+//         dataTable: DATA_TABLE,
+//         manualDataTable: MANUAL_DATA_TABLE,
+//         filesTable: FILES_TABLE,
+//         eventsTable: EVENTS_TABLE,
+//         publicRecordsTable: PUBLIC_RECORDS_TABLE,
+//         publicRecordsKeysTable: PUBLIC_RECORDS_KEYS_TABLE,
+//         endpoint: DYNAMODB_ENDPOINT,
+//     },
+//     s3: {
+//         region: REGION,
+//         filesBucket: FILES_BUCKET,
+//         filesStorageClass: FILES_STORAGE_CLASS,
+
+//         // We reference the Vite server in development.
+//         // since any preflight request with an Origin header is rejected by localstack (see https://github.com/localstack/localstack/issues/4056)
+//         // This parameter is mostly only used so that the file URLs point to the correct S3 instance. As such,
+//         // this value is mostly used by browsers trying to upload files.
+//         host: DEVELOPMENT ? `http://localhost:3002/s3` : undefined,
+//         options: {
+//             endpoint: S3_ENDPOINT,
+//             s3ForcePathStyle: DEVELOPMENT,
+//         },
+//     },
+//     livekit: {
+//         apiKey: LIVEKIT_API_KEY,
+//         secretKey: LIVEKIT_SECRET_KEY,
+//         endpoint: LIVEKIT_ENDPOINT,
+//     },
+//     rateLimit: {
+//         windowMs: RATE_LIMIT_WINDOW_MS,
+//         maxHits: RATE_LIMIT_MAX,
+//     },
+//     redis: {
+//         host: REDIS_HOST,
+//         port: REDIS_PORT,
+//         password: REDIS_PASS,
+//         tls: REDIS_TLS,
+//         rateLimitPrefix: RATE_LIMIT_PREFIX,
+//     },
+//     textIt: {
+//         apiKey: API_KEY,
+//         flowId: FLOW_ID,
+//     },
+//     stripe: {
+//         secretKey: STRIPE_SECRET_KEY,
+//         publishableKey: STRIPE_PUBLISHABLE_KEY,
+//     },
+//     subscriptions: subscriptions.success ? subscriptions.value : undefined,
+// };
 
 const allowedApiOrigins = new Set([
     'http://localhost:3000',
@@ -292,20 +205,40 @@ const allowedApiOrigins = new Set([
     ...getAllowedAPIOrigins(),
 ]);
 
-const httpServer = new RecordsHttpServer(
-    allowedOrigins,
-    allowedApiOrigins,
-    authController,
-    livekitController,
-    recordsController,
-    eventsController,
-    dataController,
-    manualDataController,
-    filesController,
-    subscriptionController,
-    rateLimit,
-    policyController
-);
+const builder = new ServerBuilder(config)
+    .useAllowedApiOrigins(allowedApiOrigins)
+    .useAllowedAccountOrigins(allowedOrigins);
+
+if (config.prisma && config.s3) {
+    builder.usePrismaWithS3();
+} else if (config.dynamodb) {
+    builder.useDynamoDB();
+}
+
+if (config.livekit) {
+    builder.useLivekit();
+}
+
+if (config.textIt && config.textIt.apiKey && config.textIt.flowId) {
+    builder.useTextItAuthMessenger();
+} else {
+    builder.useConsoleAuthMessenger();
+}
+
+if (
+    config.stripe &&
+    config.stripe.secretKey &&
+    config.stripe.publishableKey &&
+    config.subscriptions
+) {
+    builder.useStripeSubscriptions();
+}
+
+if (config.rateLimit && config.rateLimit.windowMs && config.rateLimit.maxHits) {
+    builder.useRedisRateLimit();
+}
+
+const { server, filesStore } = builder.build();
 
 async function handleEventBridgeEvent(event: EventBridgeEvent<any, any>) {
     console.log('[Records] Got EventBridge event:', event);
@@ -335,7 +268,7 @@ async function handleS3Event(event: S3Event) {
             const recordName = key.substring(0, firstSlash);
             const fileName = key.substring(firstSlash + 1);
 
-            const result = await fileStore.setFileRecordAsUploaded(
+            const result = await filesStore.setFileRecordAsUploaded(
                 recordName,
                 fileName
             );
@@ -364,7 +297,7 @@ export async function handleApiEvent(
         headers[key.toLowerCase()] = value;
     }
 
-    const response = await httpServer.handleRequest({
+    const response = await server.handleRequest({
         method: event.httpMethod as GenericHttpRequest['method'],
         path: event.path,
         pathParams: event.pathParameters,

@@ -203,6 +203,55 @@ export class MongoDBPolicyStore implements PolicyStore {
         };
     }
 
+    async assignSubjectRole(
+        recordName: string,
+        subjectId: string,
+        type: 'user' | 'inst',
+        role: AssignedRole
+    ): Promise<UpdateUserRolesResult> {
+        const roles =
+            type === 'user'
+                ? await this.listRolesForUser(recordName, subjectId)
+                : await this.listRolesForInst(recordName, subjectId);
+
+        const filtered = roles.filter(
+            (r) =>
+                r.role !== role.role ||
+                getExpireTime(r.expireTimeMs) <= role.expireTimeMs
+        );
+
+        if (type === 'user') {
+            return await this.updateUserRoles(recordName, subjectId, {
+                roles: [...filtered, role],
+            });
+        } else {
+            return await this.updateInstRoles(recordName, subjectId, {
+                roles: [...filtered, role],
+            });
+        }
+    }
+
+    async revokeSubjectRole(
+        recordName: string,
+        subjectId: string,
+        type: 'user' | 'inst',
+        role: string
+    ): Promise<UpdateUserRolesResult> {
+        const roles = await this.listRolesForUser(recordName, subjectId);
+
+        const filtered = roles.filter((r) => r.role !== role);
+
+        if (type === 'user') {
+            return await this.updateUserRoles(recordName, subjectId, {
+                roles: [...filtered],
+            });
+        } else {
+            return await this.updateInstRoles(recordName, subjectId, {
+                roles: [...filtered],
+            });
+        }
+    }
+
     async updateUserRoles(
         recordName: string,
         userId: string,

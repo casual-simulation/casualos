@@ -105,7 +105,7 @@ export interface ListDataStoreResult {
  * True indicates that any user can edit the record.
  * An array of strings indicates the list of users that are allowed to edit the record.
  */
-export type UserPolicy = true | string[];
+export type UserPolicy = true | string[] | null;
 
 /**
  * Determines if the given value represents a valid user policy.

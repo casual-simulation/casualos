@@ -1,6 +1,8 @@
 import {
     AddFileResult,
     EraseFileStoreResult,
+    FileRecord,
+    FileRecordsLookup,
     FileRecordsStore,
     GetFileNameFromUrlResult,
     GetFileRecordResult,
@@ -212,6 +214,130 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
 
     getAllowedUploadHeaders(): string[] {
         return ['record-name', 'content-type'];
+    }
+}
+
+export class MemoryFileRecordsLookup implements FileRecordsLookup {
+    private _files: Map<string, StoredFile> = new Map();
+
+    async getFileRecord(
+        recordName: string,
+        fileName: string
+    ): Promise<FileRecord> {
+        let file = this._files.get(fileName);
+
+        if (file) {
+            return {
+                fileName: file.fileName,
+                recordName: file.recordName,
+                publisherId: file.publisherId,
+                subjectId: file.subjectId,
+                sizeInBytes: file.sizeInBytes,
+                uploaded: file.uploaded,
+                description: file.description,
+                markers: file.markers,
+            };
+        } else {
+            return null;
+        }
+    }
+
+    async addFileRecord(
+        recordName: string,
+        fileName: string,
+        publisherId: string,
+        subjectId: string,
+        sizeInBytes: number,
+        description: string,
+        markers: string[]
+    ): Promise<AddFileResult> {
+        if (this._files.has(fileName)) {
+            return {
+                success: false,
+                errorCode: 'file_already_exists',
+                errorMessage: 'The file already exists in the store.',
+            };
+        }
+
+        let file: StoredFile = {
+            fileName: fileName,
+            recordName: recordName,
+            publisherId,
+            subjectId,
+            sizeInBytes,
+            description,
+            markers,
+            uploaded: false,
+        };
+
+        this._files.set(fileName, file);
+
+        return {
+            success: true,
+        };
+    }
+
+    async updateFileRecord(
+        recordName: string,
+        fileName: string,
+        markers: string[]
+    ): Promise<UpdateFileResult> {
+        if (!this._files.has(fileName)) {
+            return {
+                success: false,
+                errorCode: 'file_not_found',
+                errorMessage: 'The file was not found in the store.',
+            };
+        }
+
+        let file = this._files.get(fileName);
+
+        this._files.set(fileName, {
+            ...file,
+            markers: markers.slice(),
+        });
+
+        return {
+            success: true,
+        };
+    }
+
+    async setFileRecordAsUploaded(
+        recordName: string,
+        fileName: string
+    ): Promise<MarkFileRecordAsUploadedResult> {
+        let file = this._files.get(fileName);
+
+        if (!file) {
+            return {
+                success: false,
+                errorCode: 'file_not_found',
+                errorMessage: 'The file was not found in the store.',
+            };
+        }
+
+        file.uploaded = true;
+        return {
+            success: true,
+        };
+    }
+
+    async eraseFileRecord(
+        recordName: string,
+        fileName: string
+    ): Promise<EraseFileStoreResult> {
+        const deleted = this._files.delete(fileName);
+        if (!deleted) {
+            return {
+                success: false,
+                errorCode: 'file_not_found',
+                errorMessage: 'The file was not found in the store.',
+            };
+        }
+
+        return {
+            success: true,
+        };
     }
 }
 

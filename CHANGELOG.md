@@ -1,5 +1,14 @@
 # CasualOS Changelog
 
+## V3.1.32
+
+#### Date: 6/17/2023
+
+### :rocket: Improvements
+
+-   Improved the backend to use a SQL Database instead of DynamoDB tables.
+    -   This will make development quicker and easier in the future in addition to being more cost effective.
+
 ## V3.1.31
 
 #### Date: 5/26/2023

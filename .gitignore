@@ -15,3 +15,5 @@ ecosystem.json
 *.d.ts.map
 .DS_Store
 test-results
+cockroach
+cockroach-data

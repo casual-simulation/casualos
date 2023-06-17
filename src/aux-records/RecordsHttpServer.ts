@@ -2746,12 +2746,25 @@ export class RecordsHttpServer {
         }
 
         const schema = z.object({
-            name: z.string().min(1).optional(),
-            email: z.string().email().max(MAX_EMAIL_ADDRESS_LENGTH).optional(),
-            phoneNumber: z.string().max(MAX_SMS_ADDRESS_LENGTH).optional(),
-            avatarUrl: z.string().url().optional(),
-            avatarPortraitUrl: z.string().url().optional(),
-            openAiKey: z.string().max(MAX_OPEN_AI_API_KEY_LENGTH).optional(),
+            name: z.string().min(1).optional().nullable(),
+            email: z
+                .string()
+                .email()
+                .max(MAX_EMAIL_ADDRESS_LENGTH)
+                .optional()
+                .nullable(),
+            phoneNumber: z
+                .string()
+                .max(MAX_SMS_ADDRESS_LENGTH)
+                .optional()
+                .nullable(),
+            avatarUrl: z.string().url().optional().nullable(),
+            avatarPortraitUrl: z.string().url().optional().nullable(),
+            openAiKey: z
+                .string()
+                .max(MAX_OPEN_AI_API_KEY_LENGTH)
+                .optional()
+                .nullable(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
