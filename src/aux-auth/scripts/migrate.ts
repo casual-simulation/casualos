@@ -136,7 +136,7 @@ async function migrate() {
     console.log('Migrating users...');
     const users = await downloadAllItems(response.UsersTable, dynamo);
 
-    const validUsers = users.filter((u) => !!u.email || !!u.phoneNumber);
+    const validUsers = users;
     const userIds = new Set<string>(validUsers.map((u) => u.id));
 
     console.log('Creating user records...');
@@ -165,7 +165,6 @@ async function migrate() {
     console.log('Creating email rule records...');
     const emailRuleCount = await client.emailRule.createMany({
         data: emailRules.map((rule) => ({
-            id: rule.id,
             type: rule.type,
             pattern: rule.pattern,
         })),
@@ -180,7 +179,6 @@ async function migrate() {
     console.log('Creating sms rule records...');
     const smsRuleCount = await client.smsRule.createMany({
         data: smsRules.map((rule) => ({
-            id: rule.id,
             type: rule.type,
             pattern: rule.pattern,
         })),
@@ -195,7 +193,7 @@ async function migrate() {
         dynamo
     );
     const validRecords = publicRecords.filter((r) => userIds.has(r.ownerId));
-    const recordNames = new Set<string>(validRecords.map((r) => r.name));
+    const recordNames = new Set<string>(validRecords.map((r) => r.recordName));
 
     console.log('Creating public record records...');
     const publicRecordCount = await client.record.createMany({
@@ -249,9 +247,9 @@ async function migrate() {
                 address: d.address,
                 data: d.data,
                 publisherId: d.publisherId,
-                subjectId: d.subjectId,
-                updatePolicy: d.updatePolicy,
-                deletePolicy: d.deletePolicy,
+                subjectId: d.subjectId ?? null,
+                updatePolicy: d.updatePolicy ?? true,
+                deletePolicy: d.deletePolicy ?? true,
                 markers: d.markers,
             })),
         skipDuplicates: true,
@@ -324,7 +322,7 @@ async function migrate() {
             .map((e) => ({
                 recordName: e.recordName,
                 name: e.eventName,
-                count: e.count,
+                count: e.eventCount,
                 markers: e.markers,
                 updatedAt: convertMsToDate(e.updateTime),
             })),
