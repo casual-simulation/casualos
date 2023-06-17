@@ -208,8 +208,8 @@ model DataRecord {
     publisherId String
     publisher User @relation("PublishedDataRecords", fields: [publisherId], references: [id])
 
-    subjectId String
-    subject User @relation("SubjectDataRecords", fields: [subjectId], references: [id])
+    subjectId String?
+    subject User? @relation("SubjectDataRecords", fields: [subjectId], references: [id])
 
     updatePolicy Json
     deletePolicy Json
@@ -233,8 +233,8 @@ model ManualDataRecord {
     publisherId String
     publisher User @relation("PublishedManualDataRecords", fields: [publisherId], references: [id])
 
-    subjectId String
-    subject User @relation("SubjectManualDataRecords", fields: [subjectId], references: [id])
+    subjectId String?
+    subject User? @relation("SubjectManualDataRecords", fields: [subjectId], references: [id])
 
     updatePolicy Json
     deletePolicy Json
@@ -255,8 +255,8 @@ model FileRecord {
     publisherId String
     publisher User @relation("PublishedFileRecords", fields: [publisherId], references: [id])
 
-    subjectId String
-    subject User @relation("SubjectFileRecords", fields: [subjectId], references: [id])
+    subjectId String?
+    subject User? @relation("SubjectFileRecords", fields: [subjectId], references: [id])
 
     sizeInBytes BigInt
     description String?

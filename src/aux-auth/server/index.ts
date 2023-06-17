@@ -130,7 +130,7 @@ async function start() {
         builder.useMongoDB();
     }
 
-    if (options.textIt.apiKey && options.textIt.flowId) {
+    if (options.textIt && options.textIt.apiKey && options.textIt.flowId) {
         builder.useTextItAuthMessenger();
     } else {
         builder.useConsoleAuthMessenger();
