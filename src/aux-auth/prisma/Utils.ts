@@ -11,3 +11,7 @@ export function convertToMillis(time: Date | null): number | null {
     }
     return Number(time);
 }
+
+export function convertMarkers(markers: string[]): string[] | null {
+    return markers && markers.length > 0 ? markers : null;
+}

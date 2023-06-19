@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.34
+
+#### Date: 6/19/2023
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where some records could not be retrieved due to the database returning the data in an unexpected format.
+
 ## V3.1.33
 
 #### Date: 6/19/2023

@@ -17,7 +17,7 @@ import {
 } from '@casual-simulation/aux-records';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { Collection, FilterQuery } from 'mongodb';
-import { convertToDate, convertToMillis } from './Utils';
+import { convertMarkers, convertToDate, convertToMillis } from './Utils';
 
 /**
  * Implements PolicyStore for Prisma.
@@ -217,7 +217,7 @@ export class PrismaPolicyStore implements PolicyStore {
         if (policy) {
             return {
                 success: true,
-                markers: policy.markers,
+                markers: convertMarkers(policy.markers),
                 document: policy.document as unknown as PolicyDocument,
             };
         } else {

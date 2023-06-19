@@ -20,6 +20,7 @@ import {
 } from '@casual-simulation/aux-records/FileRecordsStore';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-records/PolicyPermissions';
 import { Prisma, PrismaClient } from '@prisma/client';
+import { convertMarkers } from './Utils';
 
 /**
  * Defines a class that can manage file records in Prisma.
@@ -50,7 +51,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
                 fileName: result.fileName,
                 description: result.description,
                 sizeInBytes: Number(result.sizeInBytes),
-                markers: result.markers,
+                markers: convertMarkers(result.markers),
                 publisherId: result.publisherId,
                 subjectId: result.subjectId,
                 uploaded: !result.uploadedAt
