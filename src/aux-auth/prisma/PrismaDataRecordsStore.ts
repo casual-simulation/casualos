@@ -15,6 +15,7 @@ import {
     Prisma,
 } from '@prisma/client';
 import z from 'zod';
+import { convertMarkers } from './Utils';
 
 export class PrismaDataRecordsStore implements DataRecordsStore {
     private _client: PrismaClient;
@@ -96,7 +97,7 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
                 subjectId: record.subjectId,
                 updatePolicy: updatePolicy.success ? updatePolicy.data : null,
                 deletePolicy: deletePolicy.success ? deletePolicy.data : null,
-                markers: record.markers,
+                markers: convertMarkers(record.markers),
             };
         }
 
@@ -132,7 +133,11 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
 
         return {
             success: true,
-            items: records,
+            items: records.map((r) => ({
+                address: r.address,
+                data: r.data,
+                markers: convertMarkers(r.markers),
+            })),
         };
     }
 
