@@ -70,9 +70,6 @@ function createConfigs(dev, version) {
                 define: {
                     ...versionVariables,
                     ...developmentVariables,
-                    DYNAMODB_ENDPOINT: dev
-                        ? JSON.stringify('http://dynamodb:8000')
-                        : JSON.stringify(undefined),
                     S3_ENDPOINT: dev
                         ? JSON.stringify('http://s3:4566')
                         : JSON.stringify(undefined),
