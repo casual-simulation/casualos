@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.33
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Removed unused DynamoDB tables from the backend.
+
 ## V3.1.32
 
 #### Date: 6/17/2023
