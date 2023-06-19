@@ -290,6 +290,338 @@ Resources:
                 Rules:
                     - ObjectOwnership: BucketOwnerPreferred
 
+    WebsocketsApi:
+        Type: AWS::ApiGatewayV2::Api
+        Properties:
+            Name: !Sub '${AWS::StackName}-websockets'
+            ProtocolType: WEBSOCKET
+            RouteSelectionExpression: '$request.body.action'
+    ConnectRoute:
+        Type: AWS::ApiGatewayV2::Route
+        Properties:
+            ApiId: !Ref WebsocketsApi
+            RouteKey: $connect
+            AuthorizationType: NONE
+            OperationName: ConnectRoute
+            Target: !Join
+                - '/'
+                - - 'integrations'
+                  - !Ref ConnectIntegration
+    ConnectIntegration:
+        Type: AWS::ApiGatewayV2::Integration
+        Properties:
+            ApiId: !Ref WebsocketsApi
+            Description: Connect Integration
+            IntegrationType: AWS_PROXY
+            IntegrationUri:
+                Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HandleConnectFunction.Arn}/invocations
+    DisconnectRoute:
+        Type: AWS::ApiGatewayV2::Route
+        Properties:
+            ApiId: !Ref WebsocketsApi
+            RouteKey: $disconnect
+            AuthorizationType: NONE
+            OperationName: DisconnectRoute
+            Target: !Join
+                - '/'
+                - - 'integrations'
+                  - !Ref DisconnectIntegration
+    DisconnectIntegration:
+        Type: AWS::ApiGatewayV2::Integration
+        Properties:
+            ApiId: !Ref WebsocketsApi
+            Description: Disconnect Integration
+            IntegrationType: AWS_PROXY
+            IntegrationUri:
+                Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HandleDisconnectFunction.Arn}/invocations
+    DefaultRoute:
+        Type: AWS::ApiGatewayV2::Route
+        Properties:
+            ApiId: !Ref WebsocketsApi
+            RouteKey: $default
+            AuthorizationType: NONE
+            OperationName: DefaultRoute
+            Target: !Join
+                - '/'
+                - - 'integrations'
+                  - !Ref DefaultIntegration
+    DefaultIntegration:
+        Type: AWS::ApiGatewayV2::Integration
+        Properties:
+            ApiId: !Ref WebsocketsApi
+            Description: Default Integration
+            IntegrationType: AWS_PROXY
+            IntegrationUri:
+                Fn::Sub: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HandleMessageFunction.Arn}/invocations
+    Deployment:
+        Type: AWS::ApiGatewayV2::Deployment
+        DependsOn:
+            - ConnectRoute
+            - DefaultRoute
+            - DisconnectRoute
+        Properties:
+            ApiId: !Ref WebsocketsApi
+    Stage:
+        Type: AWS::ApiGatewayV2::Stage
+        Properties:
+            StageName: Prod
+            Description: Prod Stage
+            DeploymentId: !Ref Deployment
+            ApiId: !Ref WebsocketsApi
+
+    ExecutionRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: !Sub '${AWS::StackName}-websockets-execute-api-role'
+            AssumeRolePolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                    - Effect: Allow
+                      Principal:
+                          Service:
+                              - lambda.amazonaws.com
+                      Action:
+                          - sts:AssumeRole
+            Policies:
+                - PolicyName: !Sub '${AWS::StackName}-websockets-logs-policy'
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 'logs:CreateLogStream'
+                                - 'logs:CreateLogGroup'
+                                - 'logs:PutLogEvents'
+                            Resource:
+                                - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}*:*
+                                - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}*:*:*
+                - PolicyName: !Sub '${AWS::StackName}-websockets-s3-crud-policy'
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 's3:GetObject'
+                                - 's3:ListBucket'
+                                - 's3:GetBucketLocation'
+                                - 's3:GetObjectVersion'
+                                - 's3:PutObject'
+                                - 's3:PutObjectAcl'
+                                - 's3:GetLifecycleConfiguration'
+                                - 's3:PutLifecycleConfiguration'
+                                - 's3:DeleteObject'
+                            Resource:
+                                - !Sub 'arn:${AWS::Partition}:s3:::${MessagesBucket}'
+                                - !Sub 'arn:${AWS::Partition}:s3:::${MessagesBucket}/*'
+                - PolicyName: !Sub '${AWS::StackName}-websockets-execute-api-policy'
+                  PolicyDocument:
+                      Version: 2012-10-17
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 'execute-api:ManageConnections'
+                            Resource:
+                                - !Sub 'arn:${AWS::Partition}:execute-api:*:*:${WebsocketsApi}/Prod/*/@connections/*'
+
+    HandleConnectFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: websockets.connect
+            CodeUri: dist/handlers
+            Runtime: nodejs14.x
+            MemorySize: 256
+            Timeout: 100
+            Description: A function handles websocket connections
+            Role: !GetAtt
+                - ExecutionRole
+                - Arn
+            Environment:
+                Variables:
+                    SERVER_CONFIG: !Ref ServerConfigParameter
+                    MESSAGES_BUCKET: !Ref MessagesBucket
+                    WEBSOCKET_URL: !Sub '${WebsocketsApi.ApiEndpoint}/Prod'
+    HandleConnectPermission:
+        Type: AWS::Lambda::Permission
+        DependsOn:
+            - WebsocketsApi
+        Properties:
+            Action: lambda:InvokeFunction
+            FunctionName: !Ref HandleConnectFunction
+            Principal: apigateway.amazonaws.com
+    HandleConnectLogGroup:
+        Type: AWS::Logs::LogGroup
+        DeletionPolicy: Delete
+        Properties:
+            LogGroupName: !Sub '/aws/lambda/${HandleConnectFunction}'
+            RetentionInDays: 14
+
+    HandleDisconnectFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: websockets.disconnect
+            CodeUri: dist/handlers
+            Runtime: nodejs14.x
+            MemorySize: 256
+            Timeout: 100
+            Description: A function that handles websocket disconnections.
+            Role: !GetAtt
+                - ExecutionRole
+                - Arn
+            Environment:
+                Variables:
+                    SERVER_CONFIG: !Ref ServerConfigParameter
+                    MESSAGES_BUCKET: !Ref MessagesBucket
+                    WEBSOCKET_URL: !Sub '${WebsocketsApi.ApiEndpoint}/Prod'
+    HandleDisconnectPermission:
+        Type: AWS::Lambda::Permission
+        DependsOn:
+            - WebsocketsApi
+        Properties:
+            Action: lambda:InvokeFunction
+            FunctionName: !Ref HandleDisconnectFunction
+            Principal: apigateway.amazonaws.com
+    HandleDisconnectLogGroup:
+        Type: AWS::Logs::LogGroup
+        DeletionPolicy: Delete
+        Properties:
+            LogGroupName: !Sub '/aws/lambda/${HandleDisconnectFunction}'
+            RetentionInDays: 14
+
+    HandleMessageFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: websockets.message
+            CodeUri: dist/handlers
+            Runtime: nodejs14.x
+            MemorySize: 256
+            Timeout: 100
+            Description: A function handle websocket messages.
+            Role: !GetAtt
+                - ExecutionRole
+                - Arn
+            Environment:
+                Variables:
+                    SERVER_CONFIG: !Ref ServerConfigParameter
+                    MESSAGES_BUCKET: !Ref MessagesBucket
+                    WEBSOCKET_URL: !Sub '${WebsocketsApi.ApiEndpoint}/Prod'
+    HandleMessagePermission:
+        Type: AWS::Lambda::Permission
+        DependsOn:
+            - WebsocketsApi
+        Properties:
+            Action: lambda:InvokeFunction
+            FunctionName: !Ref HandleMessageFunction
+            Principal: apigateway.amazonaws.com
+    HandleMessageLogGroup:
+        Type: AWS::Logs::LogGroup
+        DeletionPolicy: Delete
+        Properties:
+            LogGroupName: !Sub '/aws/lambda/${HandleMessageFunction}'
+            RetentionInDays: 14
+
+    HandleWebhooksFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: websockets.webhook
+            CodeUri: dist/handlers
+            Runtime: nodejs14.x
+            MemorySize: 256
+            Timeout: 100
+            Description: A function handle webhook requests.
+            Role: !GetAtt
+                - ExecutionRole
+                - Arn
+            Environment:
+                Variables:
+                    SERVER_CONFIG: !Ref ServerConfigParameter
+                    MESSAGES_BUCKET: !Ref MessagesBucket
+                    WEBSOCKET_URL: !Sub '${WebsocketsApi.ApiEndpoint}/Prod'
+            Events:
+                Webhook:
+                    Type: Api
+                    Properties:
+                        Path: /webhook
+                        Method: ANY
+    HandleWebhooksLogGroup:
+        Type: AWS::Logs::LogGroup
+        DeletionPolicy: Delete
+        Properties:
+            LogGroupName: !Sub '/aws/lambda/${HandleWebhooksFunction}'
+            RetentionInDays: 14
+
+    HandleInstDataFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: websockets.instData
+            CodeUri: dist/handlers
+            Runtime: nodejs14.x
+            MemorySize: 256
+            Timeout: 100
+            Description: A function handle inst data requests.
+            Role: !GetAtt
+                - ExecutionRole
+                - Arn
+            Environment:
+                Variables:
+                    SERVER_CONFIG: !Ref ServerConfigParameter
+                    MESSAGES_BUCKET: !Ref MessagesBucket
+                    WEBSOCKET_URL: !Sub '${WebsocketsApi.ApiEndpoint}/Prod'
+            Events:
+                DataPortal:
+                    Type: Api
+                    Properties:
+                        Path: /instData
+                        Method: GET
+    HandleInstDataLogGroup:
+        Type: AWS::Logs::LogGroup
+        DeletionPolicy: Delete
+        Properties:
+            LogGroupName: !Sub '/aws/lambda/${HandleInstDataFunction}'
+            RetentionInDays: 14
+
+    # S3 Bucket to large messages
+    MessagesBucket:
+        Type: 'AWS::S3::Bucket'
+        Properties:
+            AccessControl: Private
+            LifecycleConfiguration:
+                Rules:
+                    - Id: CleanupRule
+                      Prefix: ''
+                      Status: Enabled
+                      ExpirationInDays: 1
+            CorsConfiguration:
+                CorsRules:
+                    - Id: AllowReadWriteCorsRule
+                      AllowedMethods:
+                          - GET
+                          - PUT
+                      AllowedOrigins:
+                          - '*'
+                      AllowedHeaders:
+                          - '*'
+                      MaxAge: '3600'
+            PublicAccessBlockConfiguration:
+                BlockPublicAcls: false
+                BlockPublicPolicy: false
+                IgnorePublicAcls: false
+                RestrictPublicBuckets: false
+            OwnershipControls:
+                Rules:
+                    - ObjectOwnership: BucketOwnerPreferred
+    MessagesBucketPolicy:
+        Type: AWS::S3::BucketPolicy
+        Properties:
+            Bucket: !Ref MessagesBucket
+            PolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                    - Action:
+                          - 's3:GetObject'
+                      Effect: Allow
+                      Resource: !Sub arn:${AWS::Partition}:s3:::${MessagesBucket}/*
+                      Principal: '*'
+
 Outputs:
     WebEndpoint:
         Description: 'API Gateway endpoint URL for Prod stage'

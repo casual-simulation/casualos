@@ -102,5 +102,22 @@ function createConfigs(dev, version) {
                 minify: !dev,
             },
         ],
+        [
+            'Auth Serverless Websockets',
+            {
+                entryPoints: [path.resolve(serverlessHandlers, 'websockets')],
+                outdir: path.resolve(serverlessDist, 'handlers'),
+                platform: 'node',
+                target: ['node14.16'],
+                define: {
+                    ...versionVariables,
+                    ...developmentVariables,
+                    S3_ENDPOINT: dev
+                        ? JSON.stringify('http://s3:4566')
+                        : JSON.stringify(undefined),
+                },
+                minify: !dev,
+            },
+        ],
     ];
 }

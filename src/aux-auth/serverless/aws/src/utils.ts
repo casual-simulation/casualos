@@ -3,13 +3,6 @@ import {
     AuthController,
     ValidateSessionKeyResult,
 } from '@casual-simulation/aux-records/AuthController';
-import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
-import {
-    DynamoDBAuthStore,
-    TextItAuthMessenger,
-} from '@casual-simulation/aux-records-aws';
-import { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
-import { getStatusCode } from '@casual-simulation/aux-records/Utils';
 
 export const allowedOrigins = new Set([
     'http://localhost:3002',

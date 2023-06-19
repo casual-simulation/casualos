@@ -698,7 +698,12 @@ const redisSchema = z.object({
     password: z.string().nonempty(),
     tls: z.boolean(),
 
+    causalRepoNamespace: z.string().nonempty().optional(),
     rateLimitPrefix: z.string().nonempty().optional(),
+
+    maxBatchSizeBytes: z.number().optional(),
+    maxBranchSizeBytes: z.number().optional(),
+    mergeUpdatesOnMaxSizeExceeded: z.boolean().optional(),
 });
 
 const rateLimitSchema = z.object({
