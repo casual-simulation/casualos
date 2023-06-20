@@ -1,4 +1,7 @@
-import { AppMetadata, UserMetadata } from '../../../shared/AuthMetadata';
+import {
+    AppMetadata,
+    UserMetadata,
+} from '../../../../aux-backend/shared/AuthMetadata';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Watch } from 'vue-property-decorator';

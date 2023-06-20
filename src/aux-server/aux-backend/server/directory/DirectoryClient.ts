@@ -91,7 +91,7 @@ export class DirectoryClient {
         try {
             const address = this._getIpAddress();
             console.log('[DirectoryClient] Pinging directory...');
-            const url = new URL('/api/directory', this._config.upstream);
+            const url = new URL('/directory/api', this._config.upstream);
             const response = await axios.put(url.href, {
                 key: this._settings.key,
                 password: this._settings.password,

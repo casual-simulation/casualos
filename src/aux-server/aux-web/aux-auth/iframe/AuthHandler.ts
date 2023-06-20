@@ -5,7 +5,7 @@ import {
     listenForChannels,
     setupChannel,
     waitForLoad,
-} from '../../../aux-vm-browser/html/IFrameHelpers';
+} from '../../../../aux-vm-browser/html/IFrameHelpers';
 import { authManager } from '../shared/index';
 import {
     CreatePublicRecordKeyResult,

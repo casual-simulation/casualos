@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Subject, BehaviorSubject, Observable, from } from 'rxjs';
-import { AppMetadata } from '../../shared/AuthMetadata';
+import { AppMetadata } from '../../../aux-backend/shared/AuthMetadata';
 import {
     CreatePublicRecordKeyResult,
     PublicRecordKeyPolicy,

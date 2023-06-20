@@ -133,7 +133,7 @@ describe('DirectoryClient', () => {
             let request = require('axios').__getLastPut();
             expect(request).toMatchInlineSnapshot(`
                 Array [
-                  "https://example.com/api/directory",
+                  "https://example.com/directory/api",
                   Object {
                     "key": "test",
                     "password": "def",
@@ -149,7 +149,7 @@ describe('DirectoryClient', () => {
             request = require('axios').__getLastPut();
             expect(request).toMatchInlineSnapshot(`
                 Array [
-                  "https://example.com/api/directory",
+                  "https://example.com/directory/api",
                   Object {
                     "key": "test",
                     "password": "def",
@@ -167,7 +167,7 @@ describe('DirectoryClient', () => {
             request = require('axios').__getLastPut();
             expect(request).toMatchInlineSnapshot(`
                 Array [
-                  "https://example.com/api/directory",
+                  "https://example.com/directory/api",
                   Object {
                     "key": "test",
                     "password": "def",

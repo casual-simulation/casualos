@@ -8,7 +8,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { injectHtml } from 'vite-plugin-html';
 
 // @ts-ignore
-import { GIT_HASH, GIT_TAG } from '../../../script/git-stats';
+import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats';
 
 const distDir = path.resolve(__dirname, 'dist');
 
@@ -104,7 +104,7 @@ export default defineConfig(({ command, mode }) => {
             fs: {
                 strict: true,
                 allow: [
-                    path.resolve(__dirname, '..', '..'), // src folder
+                    path.resolve(__dirname, '..', '..', '..'), // src folder
                 ],
             },
             proxy: {

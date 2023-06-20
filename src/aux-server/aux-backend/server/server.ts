@@ -130,26 +130,6 @@ export class ClientServer {
     }
 
     configure() {
-        this._app.get(
-            '/api/config',
-            asyncMiddleware(async (req, res) => {
-                const config: WebConfig = {
-                    ...this._player.web,
-                    version: 2,
-                };
-                res.send(config);
-            })
-        );
-
-        this._app.get('/api/manifest', (req, res) => {
-            res.sendFile(
-                path.join(
-                    this._config.collaboration.dist,
-                    this._player.manifest
-                )
-            );
-        });
-
         this._app.use(express.static(this._config.collaboration.dist));
 
         const driveMiddleware = [
@@ -454,6 +434,8 @@ export class Server {
     }
 
     async configure() {
+        await this._configureBackend();
+
         if (
             this._config.collaboration.proxy &&
             this._config.collaboration.proxy.trust
@@ -741,6 +723,7 @@ export class Server {
         );
 
         app.use(
+            '/api/*',
             express.text({
                 type: 'application/json',
             })
@@ -760,6 +743,24 @@ export class Server {
 
         app.post('/api/:userId/subscription/manage', async (req, res) => {
             await handleRequest(req, res);
+        });
+
+        const player = this._config.collaboration.player;
+        app.get(
+            '/api/config',
+            asyncMiddleware(async (req, res) => {
+                const config: WebConfig = {
+                    ...player.web,
+                    version: 2,
+                };
+                res.send(config);
+            })
+        );
+
+        app.get('/api/manifest', (req, res) => {
+            res.sendFile(
+                path.join(this._config.collaboration.dist, player.manifest)
+            );
         });
 
         app.all(
@@ -1005,7 +1006,7 @@ export class Server {
             this._config.collaboration.directory.server
         );
         this._app.get(
-            '/api/directory',
+            '/directory/api',
             asyncMiddleware(async (req, res) => {
                 const ip = req.ip;
                 const result = await this._directory.findEntries(ip);
@@ -1027,7 +1028,7 @@ export class Server {
             })
         );
         this._app.put(
-            '/api/directory',
+            '/directory/api',
             asyncMiddleware(async (req, res) => {
                 const ip = req.ip;
                 const result = await this._directory.update({

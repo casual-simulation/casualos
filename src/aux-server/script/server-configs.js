@@ -9,6 +9,7 @@ const {
     replaceThreePlugin,
 } = require('../../../script/build-helpers');
 const { GIT_HASH, GIT_TAG } = require('../../../script/git-stats');
+const copy = require('esbuild-copy-static-files');
 
 const src = path.resolve(paths.root, 'src');
 const auxServer = path.resolve(src, 'aux-server');

@@ -1,7 +1,7 @@
 import { BotStore } from '../storage/BotStore';
 import { Collection, Db } from 'mongodb';
 import { Bot, TagFilter } from '@casual-simulation/aux-common';
-import { BotsServerConfig } from 'server/config';
+import { BotsServerConfig } from '../config';
 
 /**
  * Defines a class that provides an implemention of a Bot store backed by MongoDB.
