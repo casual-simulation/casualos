@@ -444,7 +444,7 @@ describe('DirectoryClient', () => {
             });
 
             let requests: TestRequest[] = [];
-            tunnel.requests.subscribe(r => requests.push(r));
+            tunnel.requests.subscribe((r) => requests.push(r));
 
             await client.init();
 
@@ -465,7 +465,7 @@ describe('DirectoryClient', () => {
             });
 
             let requests: TestRequest[] = [];
-            tunnel.requests.subscribe(r => requests.push(r));
+            tunnel.requests.subscribe((r) => requests.push(r));
 
             await client.init();
 
@@ -480,7 +480,7 @@ describe('DirectoryClient', () => {
             });
 
             let requests: TestRequest[] = [];
-            tunnel.requests.subscribe(r => requests.push(r));
+            tunnel.requests.subscribe((r) => requests.push(r));
 
             await client.init();
 
@@ -508,7 +508,7 @@ describe('DirectoryClient', () => {
             });
 
             let requests: TestRequest[] = [];
-            tunnel.requests.subscribe(r => requests.push(r));
+            tunnel.requests.subscribe((r) => requests.push(r));
 
             await client.init();
 
@@ -547,7 +547,7 @@ describe('DirectoryClient', () => {
             });
 
             let requests: TestRequest[] = [];
-            tunnel.requests.subscribe(r => requests.push(r));
+            tunnel.requests.subscribe((r) => requests.push(r));
 
             await client.init();
 
@@ -586,7 +586,7 @@ describe('DirectoryClient', () => {
             });
 
             let requests: TestRequest[] = [];
-            tunnel.requests.subscribe(r => requests.push(r));
+            tunnel.requests.subscribe((r) => requests.push(r));
 
             await client.init();
 

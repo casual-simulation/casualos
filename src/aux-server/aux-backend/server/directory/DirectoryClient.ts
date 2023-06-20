@@ -16,6 +16,7 @@ import {
     defer,
     throwError,
     empty,
+    NEVER,
 } from 'rxjs';
 import {
     retryWhen,
@@ -35,8 +36,8 @@ export class DirectoryClient {
     private _store: DirectoryStore;
     private _timeoutId: NodeJS.Timeout | number;
     private _settings: DirectoryClientSettings;
-    private _tunnelClient: TunnelClient;
-    private _tunnelSub: SubscriptionLike;
+    private _tunnelClient: TunnelClient | null;
+    private _tunnelSub: SubscriptionLike | null;
     private _pendingPing: Promise<any>;
     private _httpPort: number;
 
@@ -46,7 +47,7 @@ export class DirectoryClient {
 
     constructor(
         store: DirectoryStore,
-        tunnelClient: TunnelClient,
+        tunnelClient: TunnelClient | null,
         config: DirectoryClientConfig,
         httpPort: number
     ) {
@@ -140,9 +141,12 @@ export class DirectoryClient {
         }
 
         const deferred = defer(() => {
+            if (!this._tunnelClient) {
+                return NEVER;
+            }
             return this._tunnelClient.open({
                 direction: 'reverse',
-                token: this._settings.token,
+                token: this._settings.token as string,
                 localHost: '127.0.0.1',
                 localPort: this._httpPort, // TODO: Config
             });

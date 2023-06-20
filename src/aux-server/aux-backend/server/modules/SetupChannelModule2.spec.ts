@@ -38,7 +38,7 @@ describe('SetupChannelModule2', () => {
     let serverConnection: Connection;
     let processingClient: CausalRepoClient;
     let simulation: Simulation;
-    let sub: Subscription;
+    let sub: Subscription | null;
 
     beforeEach(async () => {
         user = {
@@ -115,7 +115,7 @@ describe('SetupChannelModule2', () => {
                 const channelInfo = await serverClient
                     .branchInfo('newChannel')
                     .toPromise();
-                expect(channelInfo.exists).toBe(true);
+                expect(channelInfo?.exists).toBe(true);
             });
 
             it('should clone the given bot into the new channel', async () => {
@@ -135,7 +135,7 @@ describe('SetupChannelModule2', () => {
                 const channelInfo = await serverClient
                     .branchInfo('newChannel')
                     .toPromise();
-                expect(channelInfo.exists).toBe(true);
+                expect(channelInfo?.exists).toBe(true);
 
                 const newChannelSim = nodeSimulationForBranch(
                     processingUser,
@@ -170,7 +170,7 @@ describe('SetupChannelModule2', () => {
                 const channelInfo = await serverClient
                     .branchInfo('newChannel')
                     .toPromise();
-                expect(channelInfo.exists).toBe(true);
+                expect(channelInfo?.exists).toBe(true);
 
                 const newChannelSim = nodeSimulationForBranch(
                     processingUser,
@@ -205,7 +205,7 @@ describe('SetupChannelModule2', () => {
                 const channelInfo = await serverClient
                     .branchInfo('newChannel')
                     .toPromise();
-                expect(channelInfo.exists).toBe(true);
+                expect(channelInfo?.exists).toBe(true);
 
                 const newChannelSim = nodeSimulationForBranch(
                     processingUser,

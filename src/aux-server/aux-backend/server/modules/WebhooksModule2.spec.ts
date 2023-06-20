@@ -21,7 +21,7 @@ describe('WebhooksModule2', () => {
     let device: DeviceInfo;
     let config: AuxConfig;
     let subject: WebhooksModule2;
-    let sub: Subscription;
+    let sub: Subscription | null;
 
     beforeEach(async () => {
         user = {

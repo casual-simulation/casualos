@@ -27,12 +27,12 @@ export class MongoDBStageStore implements CausalRepoStageStore {
             .find({ branch: branch })
             .toArray();
         const addedAtoms = stagedAtoms.filter(
-            a => a.type === 'added'
+            (a) => a.type === 'added'
         ) as MongoDBAddedAtom[];
         const removedAtoms = stagedAtoms.filter(
-            a => a.type === 'removed'
+            (a) => a.type === 'removed'
         ) as MongoDBRemovedAtom[];
-        const added = addedAtoms.map(a => a.atom);
+        const added = addedAtoms.map((a) => a.atom);
         let deletions: AtomIndexFullDiff['deletions'] = {};
         for (let atom of removedAtoms) {
             deletions[atom.hash] = atom.id;
@@ -55,7 +55,7 @@ export class MongoDBStageStore implements CausalRepoStageStore {
             return;
         }
         const final = atoms.map(
-            a =>
+            (a) =>
                 ({
                     type: 'added',
                     branch: branch,
@@ -75,7 +75,7 @@ export class MongoDBStageStore implements CausalRepoStageStore {
             return;
         }
         const final = atoms.map(
-            a =>
+            (a) =>
                 ({
                     type: 'removed',
                     branch: branch,

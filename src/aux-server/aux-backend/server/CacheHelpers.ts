@@ -16,7 +16,7 @@ export function parseCacheControlHeader(
 ): CacheControlHeaderValues {
     let values: any = {};
 
-    const directives = value.split(',').map(d => d.trim());
+    const directives = value.split(',').map((d) => d.trim());
     for (let i = 0; i < directives.length; i++) {
         const split = directives[i].split('=');
         if (split.length === 2) {

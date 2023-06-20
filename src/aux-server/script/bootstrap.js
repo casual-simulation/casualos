@@ -25,7 +25,14 @@ async function start() {
     const reset = process.argv.includes('--reset');
 
     const templateSrc = readFileSync(
-        path.resolve(__dirname, '..', 'serverless', 'aws', 'template.yml'),
+        path.resolve(
+            __dirname,
+            '..',
+            'aux-backend',
+            'serverless',
+            'aws',
+            'template.yml'
+        ),
         { encoding: 'utf8' }
     );
     const template = YAML.parseDocument(templateSrc).toJSON();

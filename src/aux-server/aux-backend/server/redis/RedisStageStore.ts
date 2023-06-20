@@ -32,8 +32,8 @@ export class RedisStageStore implements CausalRepoStageStore {
     async getStage(branch: string): Promise<AtomIndexFullDiff> {
         const addedJson = await this.lrange(addedKey(branch), 0, -1);
         const removedJson = await this.lrange(removedKey(branch), 0, -1);
-        const added = addedJson.map(a => JSON.parse(a));
-        const removed = removedJson.map(a => JSON.parse(a));
+        const added = addedJson.map((a) => JSON.parse(a));
+        const removed = removedJson.map((a) => JSON.parse(a));
         let deletions: AtomIndexFullDiff['deletions'] = {};
         for (let atom of removed) {
             deletions[atom.hash] = atomIdToString(atom.id);
@@ -56,7 +56,7 @@ export class RedisStageStore implements CausalRepoStageStore {
         }
         await this.rpush(
             addedKey(branch),
-            ...atoms.map(a => JSON.stringify(a))
+            ...atoms.map((a) => JSON.stringify(a))
         );
     }
 
@@ -66,7 +66,7 @@ export class RedisStageStore implements CausalRepoStageStore {
         }
         await this.rpush(
             removedKey(branch),
-            ...atoms.map(a => JSON.stringify(a))
+            ...atoms.map((a) => JSON.stringify(a))
         );
     }
 }

@@ -3,7 +3,7 @@ import { DeviceInfo } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import { SendWebhookAction } from '@casual-simulation/aux-common';
-import { sendWebhook } from '../../shared/WebhookUtils';
+import { sendWebhook } from '../../../shared/WebhookUtils';
 
 /**
  * Defines an AuxModule that adds Admin-related functionality to the module.
@@ -19,7 +19,7 @@ export class WebhooksModule2 implements AuxModule2 {
         sub.add(
             simulation.localEvents
                 .pipe(
-                    flatMap(async event => {
+                    flatMap(async (event) => {
                         if (event.type === 'send_webhook') {
                             await this._sendWebhook(simulation, event);
                         }

@@ -40,7 +40,7 @@ export class FilesModule2 implements AuxModule2 {
         sub.add(
             simulation.localEvents
                 .pipe(
-                    flatMap(async event => {
+                    flatMap(async (event) => {
                         if (event.type === 'save_file') {
                             await this._saveFile(simulation, event);
                         } else if (event.type === 'load_file') {
@@ -56,7 +56,7 @@ export class FilesModule2 implements AuxModule2 {
 
     private async _loadFile(simulation: Simulation, event: LoadFileAction) {
         try {
-            const filenamePath = getFilenamePath(event.options.path);
+            const filenamePath = getFilenamePath(event.options.path as string);
 
             const fullPath = path.join(this.storageDir, filenamePath);
             const loaded = await this._tryLoadFile(fullPath, simulation, event);
@@ -155,7 +155,7 @@ export class FilesModule2 implements AuxModule2 {
     private async _saveFile(simulation: Simulation, event: SaveFileAction) {
         try {
             const filePath = getFilenamePath(event.options.path);
-            const parts = filePath.split('/').filter(s => s !== '');
+            const parts = filePath.split('/').filter((s) => s !== '');
             if (parts.length > 1) {
                 const originalDirectory = path.join(this.storageDir, parts[0]);
                 const originalDirectoryExists = await existsAsync(

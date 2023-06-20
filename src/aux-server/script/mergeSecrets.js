@@ -7,6 +7,7 @@ async function start() {
     const envFile = path.resolve(
         __dirname,
         '..',
+        'aux-backend',
         'serverless',
         'aws',
         'env.json'
@@ -14,6 +15,7 @@ async function start() {
     const serverlessSecretsFile = path.resolve(
         __dirname,
         '..',
+        'aux-backend',
         'serverless',
         'aws',
         'secrets.env.json'
@@ -21,6 +23,7 @@ async function start() {
     const serverSecretsFile = path.resolve(
         __dirname,
         '..',
+        'aux-backend',
         'server',
         'secrets.env.json'
     );

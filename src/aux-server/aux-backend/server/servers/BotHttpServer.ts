@@ -1,8 +1,8 @@
 import express, { Response } from 'express';
 import { BotStore } from '../storage/BotStore';
-import { AddBotsRequest } from '../../shared/AddBotsRequest';
-import { LookupBotsRequest } from '../../shared/LookupBotsRequest';
-import { ClearBotsRequest } from '../../shared/ClearBotsRequest';
+import { AddBotsRequest } from '../../../shared/AddBotsRequest';
+import { LookupBotsRequest } from '../../../shared/LookupBotsRequest';
+import { ClearBotsRequest } from '../../../shared/ClearBotsRequest';
 import { asyncMiddleware } from '../utils';
 
 /**

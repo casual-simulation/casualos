@@ -90,7 +90,7 @@ export class DirectoryService {
 
     private async _updateEntry(
         entry: DirectoryEntry,
-        previous: DirectoryEntry
+        previous: DirectoryEntry | null
     ): Promise<DirectoryResult> {
         if (this._config.webhook) {
             entry.webhookSucceeded = await _sendWebhook(
@@ -138,7 +138,7 @@ export function unixTime(): number {
 }
 
 async function _sendWebhook(
-    previous: DirectoryEntry,
+    previous: DirectoryEntry | null,
     entry: DirectoryEntry,
     webhook: string
 ): Promise<boolean> {

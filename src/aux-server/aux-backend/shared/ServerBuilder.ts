@@ -117,7 +117,7 @@ export class ServerBuilder {
         'http://localhost:3002',
     ]);
 
-    private _options: BuilderOptions | null;
+    private _options: BuilderOptions;
 
     /**
      * The actions that should be performed when the server is built.
@@ -132,7 +132,7 @@ export class ServerBuilder {
     }
 
     constructor(options?: BuilderOptions) {
-        this._options = options;
+        this._options = options ?? {};
     }
 
     useDynamoDB(
@@ -268,7 +268,7 @@ export class ServerBuilder {
                 );
                 this._filesStore = new MongoDBFileRecordsStore(
                     fileLookup,
-                    mongodb.fileUploadUrl
+                    mongodb.fileUploadUrl as string
                 );
             },
         });
@@ -356,7 +356,7 @@ export class ServerBuilder {
                 );
                 this._filesStore = new MongoDBFileRecordsStore(
                     filesLookup,
-                    mongodb.fileUploadUrl
+                    mongodb.fileUploadUrl as string
                 );
                 this._eventsStore = new PrismaEventRecordsStore(
                     this._prismaClient
@@ -381,7 +381,12 @@ export class ServerBuilder {
 
     useLivekit(options: Pick<BuilderOptions, 'livekit'> = this._options): this {
         console.log('[ServerBuilder] Using Livekit.');
-        if (!options.livekit) {
+        if (
+            !options.livekit ||
+            !options.livekit.apiKey ||
+            !options.livekit.secretKey ||
+            !options.livekit.endpoint
+        ) {
             throw new Error('Livekit options must be provided.');
         }
         this._livekitController = new LivekitController(
@@ -465,7 +470,11 @@ export class ServerBuilder {
         options: Pick<BuilderOptions, 'rateLimit'> = this._options
     ): this {
         console.log('[ServerBuilder] Using MongoDB Rate Limiter.');
-        if (!options.rateLimit) {
+        if (
+            !options.rateLimit ||
+            !options.rateLimit.maxHits ||
+            !options.rateLimit.windowMs
+        ) {
             throw new Error('Rate limit options must be provided.');
         }
         this._actions.push({
@@ -475,6 +484,13 @@ export class ServerBuilder {
                     throw new Error(
                         'useMongoDB() must be called in order to configure MongoDB rate limiting.'
                     );
+                }
+                if (
+                    !options.rateLimit ||
+                    !options.rateLimit.maxHits ||
+                    !options.rateLimit.windowMs
+                ) {
+                    throw new Error('Rate limit options must be provided.');
                 }
                 const db = this._mongoDb;
                 const rateLimits = db.collection<any>('rateLimits');
@@ -695,7 +711,7 @@ const textItSchema = z.object({
 const redisSchema = z.object({
     host: z.string().nonempty(),
     port: z.number(),
-    password: z.string().nonempty(),
+    password: z.string().nonempty().optional(),
     tls: z.boolean(),
 
     causalRepoNamespace: z.string().nonempty().optional(),

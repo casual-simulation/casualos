@@ -11,8 +11,8 @@ import {
 export function getChannelIds(calc: BotCalculationContext): string[] {
     const bots = botsInDimension(calc, 'aux.channels');
     const channels = bots
-        .map(f => getBotChannel(calc, f))
-        .filter(channel => channel);
+        .map((f) => getBotChannel(calc, f))
+        .filter((channel) => channel);
     const channelsSet = new Set([...channels, 'admin']);
-    return [...channelsSet].map(c => `aux-${c}`);
+    return [...channelsSet].map((c) => `aux-${c}`);
 }

@@ -439,7 +439,7 @@ export function getBotSpace(bot: Bot): BotSpace {
 }
 
 export function calculateBotValue(
-    context: BotObjectsContext,
+    context: BotObjectsContext | null,
     object: Bot | PrecalculatedBot,
     tag: keyof BotTags
 ) {

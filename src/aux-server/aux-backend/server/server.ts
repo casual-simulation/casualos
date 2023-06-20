@@ -1,19 +1,12 @@
 import * as Http from 'http';
 import * as Https from 'https';
-import express, { Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import * as bodyParser from 'body-parser';
 import * as path from 'path';
 import * as url from 'url';
 import cors from 'cors';
 import pify from 'pify';
-import { MongoClient, MongoClientOptions } from 'mongodb';
-import {
-    Client as CassandraClient,
-    tracker as CassandraTracker,
-    DseClientOptions,
-    ExecutionProfile,
-    types,
-} from 'cassandra-driver';
+import { Binary, MongoClient, MongoClientOptions } from 'mongodb';
 import { asyncMiddleware } from './utils';
 import { Config, ClientConfig, RedisConfig, DRIVES_URL } from './config';
 import { WebSocketConnectionServer } from '@casual-simulation/causal-tree-server-websocket';
@@ -39,7 +32,6 @@ import {
     CacheControlHeaderValues,
     formatCacheControlHeader,
 } from './CacheHelpers';
-import { Request } from 'express';
 import useragent from 'useragent';
 import {
     DeviceInfo,
@@ -73,7 +65,6 @@ import {
     MemoryStageStore,
     CausalRepoClient,
     CausalRepoStore,
-    CombinedCausalRepoStore,
     CausalRepoStageStore,
     UpdatesStore,
 } from '@casual-simulation/causal-trees/core2';
@@ -82,20 +73,19 @@ import { map, first } from 'rxjs/operators';
 import { pickBy, sortBy } from 'lodash';
 import { BotHttpServer } from './servers/BotHttpServer';
 import { MongoDBBotStore } from './mongodb/MongoDBBotStore';
-import {
-    CassandraDBObjectStore,
-    AWS_KEYSPACES_REGIONS,
-} from '@casual-simulation/causal-tree-store-cassandradb';
-import { EventEmitter } from 'events';
-import { readFileSync } from 'fs';
-import AmazonRootCA1 from '@casual-simulation/causal-tree-store-cassandradb/certificates/AmazonRootCA1.pem';
 import mime from 'mime';
 import { GpioModule2 } from './modules/GpioModule2';
 import { SerialModule } from './modules/SerialModule';
 import { MongoDBStageStore } from './mongodb/MongoDBStageStore';
-import { WebConfig } from 'shared/WebConfig';
+import { WebConfig } from '../../shared/WebConfig';
 import compression from 'compression';
 import { RedisUpdatesStore } from '@casual-simulation/casual-apiary-redis';
+import { ServerBuilder } from '../shared/ServerBuilder';
+import {
+    GenericHttpHeaders,
+    GenericHttpRequest,
+    getStatusCode,
+} from '@casual-simulation/aux-records';
 
 const connect = pify(MongoClient.connect);
 
@@ -111,11 +101,11 @@ const imageMimeTypes = [
 
 export class ClientServer {
     private _app: express.Express;
-    private _redisClient: RedisClient;
+    private _redisClient: RedisClient | null;
     private _hgetall: any;
     private _player: ClientConfig;
     private _config: Config;
-    private _cacheExpireSeconds: number;
+    private _cacheExpireSeconds: number | null;
 
     get app() {
         return this._app;
@@ -124,14 +114,14 @@ export class ClientServer {
     constructor(
         config: Config,
         player: ClientConfig,
-        redisClient: RedisClient,
-        redisConfig: RedisConfig
+        redisClient: RedisClient | null,
+        redisConfig: RedisConfig | null
     ) {
         this._app = express();
         this._config = config;
         this._player = player;
         this._redisClient = redisClient;
-        this._hgetall = redisClient
+        this._hgetall = this._redisClient
             ? util.promisify(this._redisClient.hgetall).bind(this._redisClient)
             : null;
         this._cacheExpireSeconds = redisConfig
@@ -152,15 +142,22 @@ export class ClientServer {
         );
 
         this._app.get('/api/manifest', (req, res) => {
-            res.sendFile(path.join(this._config.dist, this._player.manifest));
+            res.sendFile(
+                path.join(
+                    this._config.collaboration.dist,
+                    this._player.manifest
+                )
+            );
         });
 
-        this._app.use(express.static(this._config.dist));
+        this._app.use(express.static(this._config.collaboration.dist));
 
         const driveMiddleware = [
-            express.static(this._config.drives),
+            express.static(this._config.collaboration.drives),
             ...[...new Array(5)].map((_, i) =>
-                express.static(path.join(this._config.drives, i.toString()))
+                express.static(
+                    path.join(this._config.collaboration.drives, i.toString())
+                )
             ),
         ];
         this._app.use(DRIVES_URL, driveMiddleware);
@@ -212,8 +209,8 @@ export class ClientServer {
                         resp.headers['cache-control'] || ''
                     );
 
-                    let optimizedData: Buffer = null;
-                    let optimizedContentType: string = null;
+                    let optimizedData: Buffer | null = null;
+                    let optimizedContentType: string | null = null;
                     if (
                         this._redisClient &&
                         this._shouldCache(contentType, cacheControl)
@@ -271,10 +268,10 @@ export class ClientServer {
                             )
                         );
 
-                        this._redisClient.EXPIRE(url, expire);
+                        this._redisClient.EXPIRE(url, expire as number);
                         cacheControl = {
                             public: true,
-                            'max-age': expire,
+                            'max-age': expire as number,
                         };
                     }
 
@@ -344,15 +341,24 @@ export class ClientServer {
         });
 
         this._app.get('/terms', (req, res) => {
-            res.sendFile(path.join(this._config.dist, 'terms-of-service.txt'));
+            res.sendFile(
+                path.join(
+                    this._config.collaboration.dist,
+                    'terms-of-service.txt'
+                )
+            );
         });
 
         this._app.get('/privacy-policy', (req, res) => {
-            res.sendFile(path.join(this._config.dist, 'privacy-policy.txt'));
+            res.sendFile(
+                path.join(this._config.collaboration.dist, 'privacy-policy.txt')
+            );
         });
 
         this._app.get('*', (req, res) => {
-            res.sendFile(path.join(this._config.dist, this._player.index));
+            res.sendFile(
+                path.join(this._config.collaboration.dist, this._player.index)
+            );
         });
     }
 
@@ -373,8 +379,8 @@ export class ClientServer {
         req: Request,
         originalContentType: string,
         originalData: Buffer,
-        optimizedContentType: string,
-        optimizedData: Buffer
+        optimizedContentType: string | null,
+        optimizedData: Buffer | null
     ): [string, Buffer] {
         const ua = useragent.is(req.header('user-agent'));
         if (ua.safari || ua.mobile_safari) {
@@ -417,8 +423,7 @@ export class Server {
     private _config: Config;
     private _client: ClientServer;
     private _mongoClient: MongoClient;
-    private _cassandraClient: CassandraClient;
-    private _redisClient: RedisClient;
+    private _redisClient: RedisClient | null;
     private _directory: DirectoryService;
     private _directoryStore: DirectoryStore;
     private _directoryClient: DirectoryClient;
@@ -428,11 +433,11 @@ export class Server {
     constructor(config: Config) {
         this._config = config;
         this._app = express();
-        if (this._config.tls) {
+        if (this._config.collaboration.tls) {
             this._http = <any>Https.createServer(
                 {
-                    cert: this._config.tls.cert,
-                    key: this._config.tls.key,
+                    cert: this._config.collaboration.tls.cert,
+                    key: this._config.collaboration.tls.key,
                 },
                 this._app
             );
@@ -440,17 +445,23 @@ export class Server {
             this._http = new Http.Server(this._app);
         }
         this._config = config;
-        this._redisClient = config.redis
+        this._redisClient = this._config.collaboration.redis
             ? createRedisClient({
-                  ...config.redis.options,
+                  ...this._config.collaboration.redis.options,
                   return_buffers: true,
               })
             : null;
     }
 
     async configure() {
-        if (this._config.proxy && this._config.proxy.trust) {
-            this._app.set('trust proxy', this._config.proxy.trust);
+        if (
+            this._config.collaboration.proxy &&
+            this._config.collaboration.proxy.trust
+        ) {
+            this._app.set(
+                'trust proxy',
+                this._config.collaboration.proxy.trust
+            );
         }
 
         // TODO: Enable CSP when we know where it works and does not work
@@ -460,105 +471,17 @@ export class Server {
 
         this._app.use(compression());
 
-        this._mongoClient = await connect(this._config.mongodb.url, {
-            useNewUrlParser: this._config.mongodb.useNewUrlParser,
-            useUnifiedTopology: !!this._config.mongodb.useUnifiedTopology,
-        } as MongoClientOptions);
-        if (this._config.cassandradb) {
-            console.log('[Server] Using CassandraDB');
-            const requestTracker = new CassandraTracker.RequestLogger({
-                slowThreshold: this._config.cassandradb.slowRequestTime,
-            });
-            const requestEmitter = <EventEmitter>(<any>requestTracker).emitter;
-            requestEmitter.on('slow', (message) => {
-                console.log(`[Cassandra] ${message}`);
-            });
+        this._mongoClient = await connect(
+            this._config.collaboration.mongodb.url,
+            {
+                useNewUrlParser:
+                    this._config.collaboration.mongodb.useNewUrlParser,
+                useUnifiedTopology:
+                    !!this._config.collaboration.mongodb.useUnifiedTopology,
+            } as MongoClientOptions
+        );
 
-            let options = {} as DseClientOptions;
-            if ('awsRegion' in this._config.cassandradb) {
-                const config = this._config.cassandradb;
-                const region = AWS_KEYSPACES_REGIONS.find(
-                    (r) => r.region === config.awsRegion
-                );
-                if (!region) {
-                    throw new Error(
-                        'Unable to find Cassandra endpoint information for the given region.'
-                    );
-                }
-                options.contactPoints = [region.endpoint];
-                options.localDataCenter = region.region;
-                options.protocolOptions = {
-                    port: region.port,
-                };
-                options.sslOptions = {
-                    host: region.endpoint,
-                    port: region.port,
-                    servername: region.endpoint,
-                    rejectUnauthorized: true,
-                    ca: [AmazonRootCA1],
-                };
-            } else {
-                options.contactPoints = this._config.cassandradb.contactPoints;
-                options.localDataCenter =
-                    this._config.cassandradb.localDataCenter;
-                if (this._config.cassandradb.requireTLS) {
-                    options.sslOptions = {
-                        rejectUnauthorized: this._config.cassandradb.requireTLS,
-                    };
-                    if (
-                        this._config.cassandradb.certificateAuthorityPublicKey
-                    ) {
-                        options.sslOptions.ca = [
-                            readFileSync(
-                                this._config.cassandradb
-                                    .certificateAuthorityPublicKey
-                            ),
-                        ];
-                    }
-                }
-            }
-            if (this._config.cassandradb.credentials) {
-                options.credentials = this._config.cassandradb.credentials;
-            }
-            const readProfile = new ExecutionProfile('read', {
-                consistency: types.consistencies.localOne,
-            });
-            const writeProfile = new ExecutionProfile('write', {
-                consistency: types.consistencies.localQuorum,
-            });
-            const defaultProfile = new ExecutionProfile('default', {
-                consistency: types.consistencies.localQuorum,
-            });
-            options.profiles = [readProfile, writeProfile, defaultProfile];
-            this._cassandraClient = new CassandraClient(options);
-
-            //     {
-            //     contactPoints: this._config.cassandradb.contactPoints,
-            //     localDataCenter: this._config.cassandradb.localDataCenter,
-            //     requestTracker,
-            //     sslOptions,
-            // });
-
-            this._cassandraClient.on(
-                'log',
-                (level, loggerName, message, furtherInfo) => {
-                    if (level === 'warning') {
-                        console.warn(`[Cassandra-${loggerName}]: ${message}`);
-                    } else if (level === 'error') {
-                        console.error(`[Cassandra-${loggerName}]: ${message}`);
-                    } else if (level === 'info') {
-                        console.log(`[Cassandra-${loggerName}]: ${message}`);
-                    }
-                }
-            );
-
-            await this._cassandraClient.connect();
-        } else {
-            console.log('[Server] Skipping CassandraDB');
-            this._config.cassandradb = null;
-        }
-
-        if (this._config.sandbox === 'deno') {
+        if (this._config.collaboration.sandbox === 'deno') {
             console.log('[Server] Using Deno Sandboxing');
         } else {
             console.log('[Server] Skipping Sandboxing');
@@ -569,9 +492,9 @@ export class Server {
 
         this._client = new ClientServer(
             this._config,
-            this._config.player,
+            this._config.collaboration.player,
             this._redisClient,
-            this._config.redis
+            this._config.collaboration.redis
         );
         this._client.configure();
 
@@ -608,7 +531,7 @@ export class Server {
 
         this._directoryStore = new MongoDBDirectoryStore(
             this._mongoClient,
-            this._config.directory.dbName
+            this._config.collaboration.directory.dbName
         );
         await this._directoryStore.init();
 
@@ -643,12 +566,248 @@ export class Server {
         this._app.use(this._client.app);
     }
 
+    private async _configureBackend() {
+        const app = this._app;
+        const options = this._config.backend;
+
+        const allowedRecordsOrigins = new Set([
+            'http://localhost:3000',
+            'http://localhost:3002',
+            'http://player.localhost:3000',
+            'https://localhost:3000',
+            'https://localhost:3002',
+            'https://player.localhost:3000',
+            'https://casualos.com',
+            'https://casualos.me',
+            'https://ab1.link',
+            'https://publicos.com',
+            'https://alpha.casualos.com',
+            'https://static.casualos.com',
+            'https://stable.casualos.com',
+            ...getAllowedAPIOrigins(),
+        ]);
+
+        const builder = new ServerBuilder(options)
+            .useAllowedAccountOrigins(allowedRecordsOrigins)
+            .useAllowedApiOrigins(allowedRecordsOrigins);
+
+        if (options.prisma && options.mongodb) {
+            builder.usePrismaWithMongoDBFileStore();
+        } else {
+            builder.useMongoDB();
+        }
+
+        if (options.textIt && options.textIt.apiKey && options.textIt.flowId) {
+            builder.useTextItAuthMessenger();
+        } else {
+            builder.useConsoleAuthMessenger();
+        }
+
+        if (
+            options.stripe &&
+            options.stripe.secretKey &&
+            options.stripe.publishableKey
+        ) {
+            builder.useStripeSubscriptions();
+        }
+
+        if (
+            options.rateLimit &&
+            options.rateLimit.windowMs &&
+            options.rateLimit.maxHits
+        ) {
+            if (options.redis) {
+                builder.useRedisRateLimit();
+            } else {
+                builder.useMongoDBRateLimit();
+            }
+        }
+
+        const { server, filesController, mongoDatabase } =
+            await builder.buildAsync();
+        const filesCollection =
+            mongoDatabase.collection<any>('recordsFilesData');
+
+        const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
+
+        async function handleRequest(req: Request, res: Response) {
+            const query: GenericHttpRequest['query'] = {};
+            for (let key in req.query) {
+                const value = req.query[key];
+                if (typeof value === 'string') {
+                    query[key] = value;
+                } else if (Array.isArray(value)) {
+                    query[key] = value[0] as string;
+                }
+            }
+
+            const headers: GenericHttpHeaders = {};
+            for (let key in req.headers) {
+                const value = req.headers[key];
+                if (!value) continue;
+                if (typeof value === 'string') {
+                    headers[key] = value;
+                } else {
+                    headers[key] = value[0];
+                }
+            }
+
+            const response = await server.handleRequest({
+                method: req.method as any,
+                path: req.path,
+                body: req.body,
+                ipAddress: req.ip,
+                pathParams: req.params,
+                query,
+                headers,
+            });
+
+            for (let key in response.headers) {
+                const value = response.headers[key];
+                if (hasValue(value)) {
+                    res.setHeader(key, value);
+                }
+            }
+
+            res.status(response.statusCode);
+
+            if (response.body) {
+                res.send(response.body);
+            } else {
+                res.send();
+            }
+        }
+
+        app.use(express.static(dist));
+
+        app.use(
+            '/api/v2/records/file/*',
+            express.raw({
+                type: () => true,
+            })
+        );
+
+        app.post(
+            '/api/v2/records/file/*',
+            asyncMiddleware(async (req, res) => {
+                handleRecordsCorsHeaders(req, res);
+                const recordName = req.headers['record-name'] as string;
+
+                if (!recordName) {
+                    res.status(400).send();
+                    return;
+                }
+
+                const fileName = req.path.slice('/api/v2/records/file/'.length);
+                const mimeType = req.headers['content-type'] as string;
+
+                await filesCollection.insertOne({
+                    recordName,
+                    fileName,
+                    mimeType,
+                    body: req.body,
+                });
+
+                const result = await filesController.markFileAsUploaded(
+                    recordName,
+                    fileName
+                );
+
+                return returnResponse(res, result);
+            })
+        );
+
+        app.get(
+            '/api/v2/records/file/*',
+            asyncMiddleware(async (req, res) => {
+                handleRecordsCorsHeaders(req, res);
+                const fileName = req.path.slice('/api/v2/records/file/'.length);
+
+                const file = await filesCollection.findOne({
+                    fileName,
+                });
+
+                if (!file) {
+                    res.status(404).send();
+                    return;
+                }
+
+                if (file.body instanceof Binary) {
+                    res.status(200).send(file.body.buffer);
+                } else {
+                    res.status(200).send(file.body);
+                }
+            })
+        );
+
+        app.use(
+            express.text({
+                type: 'application/json',
+            })
+        );
+
+        app.get('/api/:userId/metadata', async (req, res) => {
+            await handleRequest(req, res);
+        });
+
+        app.put('/api/:userId/metadata', async (req, res) => {
+            await handleRequest(req, res);
+        });
+
+        app.get('/api/:userId/subscription', async (req, res) => {
+            await handleRequest(req, res);
+        });
+
+        app.post('/api/:userId/subscription/manage', async (req, res) => {
+            await handleRequest(req, res);
+        });
+
+        app.all(
+            '/api/*',
+            asyncMiddleware(async (req, res) => {
+                await handleRequest(req, res);
+            })
+        );
+
+        function handleRecordsCorsHeaders(req: Request, res: Response) {
+            if (allowedRecordsOrigins.has(req.headers.origin as string)) {
+                res.setHeader(
+                    'Access-Control-Allow-Origin',
+                    req.headers.origin as string
+                );
+                res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+                res.setHeader(
+                    'Access-Control-Allow-Headers',
+                    'Content-Type, Authorization'
+                );
+            }
+        }
+
+        function returnResponse(res: Response, result: any) {
+            const statusCode = getStatusCode(result);
+            return res.status(statusCode).send(result);
+        }
+
+        function getAllowedAPIOrigins(): string[] {
+            const origins = process.env.ALLOWED_API_ORIGINS;
+            if (origins) {
+                const values = origins.split(' ');
+                return values.filter((v) => !!v);
+            }
+
+            return [];
+        }
+    }
+
     private _configureBotHttpServer() {
-        if (!this._config.bots) {
+        if (!this._config.collaboration.bots) {
             return;
         }
-        const db = this._mongoClient.db(this._config.bots.dbName);
-        const botStore = new MongoDBBotStore(this._config.bots, db);
+        const db = this._mongoClient.db(this._config.collaboration.bots.dbName);
+        const botStore = new MongoDBBotStore(
+            this._config.collaboration.bots,
+            db
+        );
         this._botServer = new BotHttpServer(botStore);
         this._botServer.configure();
     }
@@ -681,7 +840,7 @@ export class Server {
 
         const user = getWebhooksUser();
         const simulation =
-            this._config.sandbox === 'deno'
+            this._config.collaboration.sandbox === 'deno'
                 ? new DenoSimulationImpl(
                       user,
                       id,
@@ -689,7 +848,7 @@ export class Server {
                           config: {
                               version: null,
                               versionHash: null,
-                              debug: this._config.debug,
+                              debug: this._config.collaboration.debug,
                           },
                           partitions: DenoSimulationImpl.createPartitions(
                               id,
@@ -832,7 +991,7 @@ export class Server {
     }
 
     private async _serveDirectory() {
-        if (!this._config.directory.server) {
+        if (!this._config.collaboration.directory.server) {
             console.log(
                 '[Server] Disabling Directory Server because no config is available for it.'
             );
@@ -843,7 +1002,7 @@ export class Server {
 
         this._directory = new DirectoryService(
             this._directoryStore,
-            this._config.directory.server
+            this._config.collaboration.directory.server
         );
         this._app.get(
             '/api/directory',
@@ -897,7 +1056,7 @@ export class Server {
     }
 
     private async _startDirectoryClient() {
-        if (!this._config.directory.client) {
+        if (!this._config.collaboration.directory.client) {
             console.log(
                 '[Server] Disabling Directory Client because no config is available for it.'
             );
@@ -905,11 +1064,13 @@ export class Server {
         }
 
         console.log(
-            `[Server] Configuring Directory Client for ${this._config.directory.client.upstream}`
+            `[Server] Configuring Directory Client for ${this._config.collaboration.directory.client.upstream}`
         );
 
-        const tunnelClient = this._config.directory.client.tunnel
-            ? new WebSocketClient(this._config.directory.client.tunnel)
+        const tunnelClient = this._config.collaboration.directory.client.tunnel
+            ? new WebSocketClient(
+                  this._config.collaboration.directory.client.tunnel
+              )
             : null;
 
         if (!tunnelClient) {
@@ -921,15 +1082,15 @@ export class Server {
         this._directoryClient = new DirectoryClient(
             this._directoryStore,
             tunnelClient,
-            this._config.directory.client,
-            this._config.httpPort
+            this._config.collaboration.directory.client,
+            this._config.collaboration.httpPort
         );
     }
 
     start() {
-        this._http.listen(this._config.httpPort, () =>
+        this._http.listen(this._config.collaboration.httpPort, () =>
             console.log(
-                `[Server] Server listening on port ${this._config.httpPort}!`
+                `[Server] Server listening on port ${this._config.collaboration.httpPort}!`
             )
         );
 
@@ -943,12 +1104,12 @@ export class Server {
         const [store, stageStore, updatesStore] = await this._setupRepoStore();
         const websocketServer = new WebSocketConnectionServer(
             this._http,
-            this._config.socket
+            this._config.collaboration.socket
         );
         const serverUser = getServerUser();
         const serverDevice = deviceInfoFromUser(serverUser);
 
-        if (this._config.executeLoadedInstances) {
+        if (this._config.collaboration.executeLoadedInstances) {
             const { connections, manager, webhooksClient } =
                 this._createRepoManager(serverDevice, serverUser);
             const fixedServer = new FixedConnectionServer(connections);
@@ -1011,7 +1172,7 @@ export class Server {
         const client = new CausalRepoClient(bridge.clientConnection);
         const setupChannel = this._createSetupChannelModule();
         const webhooks = this._createWebhooksClient();
-        const gpioModules = this._config.gpio
+        const gpioModules = this._config.collaboration.gpio
             ? [new GpioModule2(), new SerialModule()]
             : [];
         const manager = new AuxCausalRepoManager(
@@ -1019,12 +1180,12 @@ export class Server {
             client,
             [
                 new AdminModule2(),
-                new FilesModule2(this._config.drives),
+                new FilesModule2(this._config.collaboration.drives),
                 new WebhooksModule2(),
                 ...gpioModules,
                 setupChannel.module,
             ],
-            this._config.sandbox === 'deno'
+            this._config.collaboration.sandbox === 'deno'
                 ? (user, client, branch) =>
                       new DenoSimulationImpl(
                           user,
@@ -1033,7 +1194,7 @@ export class Server {
                               config: {
                                   version: null,
                                   versionHash: null,
-                                  debug: this._config.debug,
+                                  debug: this._config.collaboration.debug,
                               },
                               partitions: DenoSimulationImpl.createPartitions(
                                   branch,
@@ -1083,7 +1244,9 @@ export class Server {
     private async _setupRepoStore(): Promise<
         [CausalRepoStore, CausalRepoStageStore, UpdatesStore]
     > {
-        const db = this._mongoClient.db(this._config.repos.mongodb.dbName);
+        const db = this._mongoClient.db(
+            this._config.collaboration.repos.mongodb.dbName
+        );
         const objectsCollection = db.collection('objects');
         const headsCollection = db.collection('heads');
         const indexesCollection = db.collection('indexes');
@@ -1101,20 +1264,10 @@ export class Server {
         await mongoStore.init();
 
         let store: CausalRepoStore = mongoStore;
-        if (this._config.repos.cassandra && this._cassandraClient) {
-            console.log('[Server] Using Cassandra Support for Causal Repos');
-            const cassandraStore = new CassandraDBObjectStore(
-                this._config.repos.cassandra,
-                this._cassandraClient
-            );
-            await cassandraStore.init();
-            store = new CombinedCausalRepoStore(mongoStore, cassandraStore);
-        }
-
-        let stageStore: CausalRepoStageStore;
+        let stageStore: CausalRepoStageStore | null = null;
         if (
-            this._config.repos.mongodb &&
-            this._config.repos.mongodb.stage === true
+            this._config.collaboration.repos.mongodb &&
+            this._config.collaboration.repos.mongodb.stage === true
         ) {
             console.log(
                 '[Server] Using MongoDB Stage support for Causal Repos.'
@@ -1140,19 +1293,21 @@ export class Server {
         }
 
         let updatesStore: UpdatesStore;
-        if (this._config.repos.redis) {
+        if (this._config.collaboration.repos.redis) {
             let store = (updatesStore = new RedisUpdatesStore(
-                this._config.repos.redis.namespace,
+                this._config.collaboration.repos.redis.namespace,
                 createRedisClient({
-                    ...this._config.redis.options,
+                    ...this._config.collaboration.redis?.options,
                 })
             ));
             store.maxBranchSizeInBytes =
-                this._config.repos.redis.maxBranchSizeInBytes;
-        } else if (this._config.repos.mongodb) {
+                this._config.collaboration.repos.redis.maxBranchSizeInBytes;
+        } else if (this._config.collaboration.repos.mongodb) {
             const updates = db.collection('updates');
             let store = (updatesStore = new MongoDBUpdatesStore(updates));
             await store.init();
+        } else {
+            throw new Error('No updates store configured!');
         }
 
         return [store, stageStore, updatesStore];

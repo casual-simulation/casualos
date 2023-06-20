@@ -64,7 +64,7 @@ export class GpioModule2 implements AuxModule2 {
         sub.add(
             simulation.localEvents
                 .pipe(
-                    flatMap(async event => {
+                    flatMap(async (event) => {
                         // GPIO
                         if (event.type === 'rpio_init') {
                             await this._rpioInit(simulation, event);

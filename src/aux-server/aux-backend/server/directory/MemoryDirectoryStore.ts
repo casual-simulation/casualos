@@ -21,11 +21,11 @@ export class MemoryDirectoryStore implements DirectoryStore {
 
     async findByPublicIpAddress(ipAddress: string): Promise<DirectoryEntry[]> {
         let values = [...this._map.values()];
-        return values.filter(v => v.publicIpAddress === ipAddress);
+        return values.filter((v) => v.publicIpAddress === ipAddress);
     }
 
     async findByHash(hash: string): Promise<DirectoryEntry> {
-        return this._map.get(hash);
+        return this._map.get(hash) as DirectoryEntry;
     }
 
     async getClientSettings(): Promise<DirectoryClientSettings> {
