@@ -12,7 +12,8 @@
                 </p>
                 <p>
                     By using our products or services, you agree to this Acceptable Use Policy as
-                    well as our <a href="/terms">Terms of Service</a> and <a href="/privacy-policy">Privacy Policy</a>.
+                    well as our <a href="/terms">Terms of Service</a> and
+                    <a href="/privacy-policy">Privacy Policy</a>.
                 </p>
                 <div class="acceptable-use-policy-content">
                     <h3 id="toc">
@@ -48,7 +49,8 @@
                         </ol>
                     </h3>
                     <p>
-                        This Acceptable Use Policy pertains to the legal obligations you assume when you access the following websites:
+                        This Acceptable Use Policy pertains to the legal obligations you assume when
+                        you access the following websites:
                     </p>
                     <ul>
                         <li><a href="https://ab1.bot">ab1.bot</a></li>
@@ -71,24 +73,28 @@
                         <li><a href="https://stable.auxplayer.org">stable.auxplayer.org</a></li>
                         <li><a href="https://auxbackend.com">auxbackend.com</a></li>
                         <li><a href="https://webhook.auxbackend.com">webhook.auxbackend.com</a></li>
-                        <li><a href="https://websocket.auxbackend.com">websocket.auxbackend.com</a></li>
+                        <li>
+                            <a href="https://websocket.auxbackend.com">websocket.auxbackend.com</a>
+                        </li>
                         <li><a href="https://docs.casualos.com">docs.casualos.com</a></li>
                         <li><a href="https://docs.ab1.bot">docs.ab1.bot</a></li>
                     </ul>
                     <p>
-                        This Acceptable Use Policy further relates to any access points, endpoints, webhooks, 
-                        or any other services provided at the below above listed domains (&ldquo;Services&rdquo;)
-                        and create a legal agreement between you (&ldquo;you&rdquo; or &ldquo;your&rdquo;) and Casual Simulation, Inc, a 501(c)(3) not-for-profit
-                        company registered in Michigan whose address is 
-                        879 4 Mile RD NE, Grand Rapids, MI, 49525 (&ldquo;Casual Simulation,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or  &ldquo;our&rdquo;).
+                        This Acceptable Use Policy further relates to any access points, endpoints,
+                        webhooks, or any other services provided at the below above listed domains
+                        (&ldquo;Services&rdquo;) and create a legal agreement between you
+                        (&ldquo;you&rdquo; or &ldquo;your&rdquo;) and Casual Simulation, Inc, a
+                        501(c)(3) not-for-profit company registered in Michigan whose address is 879
+                        4 Mile RD NE, Grand Rapids, MI, 49525 (&ldquo;Casual Simulation,&rdquo;
+                        &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;).
                     </p>
                     <p>
-                        If you are using the Site on behalf of you
-                        personally, &ldquo;you&rdquo; means you individually; if you represent an
-                        organization, &ldquo;you&rdquo; means your organization. You agree that by
-                        accessing our Services, you are agreeing to this Acceptable Use Policy, our
-                        Terms of Service, and our Privacy Policy. If you do not agree with these
-                        terms THEN YOU SHOULD NOT ACCESS OUR SERVICES.
+                        If you are using the Site on behalf of you personally, &ldquo;you&rdquo;
+                        means you individually; if you represent an organization, &ldquo;you&rdquo;
+                        means your organization. You agree that by accessing our Services, you are
+                        agreeing to this Acceptable Use Policy, our Terms of Service, and our
+                        Privacy Policy. If you do not agree with these terms THEN YOU SHOULD NOT
+                        ACCESS OUR SERVICES.
                     </p>
                     <p>
                         The intent of this document is to clarify what we consider to be acceptable

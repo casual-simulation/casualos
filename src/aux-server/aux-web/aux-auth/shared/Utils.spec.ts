@@ -52,14 +52,14 @@ describe('isStringValid()', () => {
     it('should support SMS codes', () => {
         expect(
             isStringValid('+16165551234', [
-                { pattern: '^\\+1616', type: 'allow' }
+                { pattern: '^\\+1616', type: 'allow' },
             ])
         ).toBe(true);
 
         expect(
             isStringValid('+26165551234', [
-                { pattern: '^\\+1616', type: 'allow' }
+                { pattern: '^\\+1616', type: 'allow' },
             ])
         ).toBe(false);
-    })
+    });
 });

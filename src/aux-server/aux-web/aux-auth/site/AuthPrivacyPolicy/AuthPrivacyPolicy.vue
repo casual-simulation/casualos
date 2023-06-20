@@ -12,8 +12,10 @@
                 </p>
 
                 <p>
-                    By using our products or services, you agree to this Privacy Policy as well as our 
-                    <a href="/acceptable-use-policy">Acceptable Use Policy</a> and <a href="/terms">Terms of Service</a>.
+                    By using our products or services, you agree to this Privacy Policy as well as
+                    our
+                    <a href="/acceptable-use-policy">Acceptable Use Policy</a> and
+                    <a href="/terms">Terms of Service</a>.
                 </p>
 
                 <div class="privacy-policy-content">
@@ -38,12 +40,14 @@
                         </ol>
                     </h3>
                     <p>
-                        Casual Simulation offers tools for authoring open source experiences.
-                        We at Casual Simulation Inc. strive to respect the privacy of everyone to the best of our ability.
-                        This document describes how we collect, process, and store personal data.
+                        Casual Simulation offers tools for authoring open source experiences. We at
+                        Casual Simulation Inc. strive to respect the privacy of everyone to the best
+                        of our ability. This document describes how we collect, process, and store
+                        personal data.
                     </p>
                     <p>
-                        To that end, we provide you with this Privacy Policy to advise you of how your data may be collected or used when you access the following websites:
+                        To that end, we provide you with this Privacy Policy to advise you of how
+                        your data may be collected or used when you access the following websites:
                     </p>
                     <ul>
                         <li><a href="https://ab1.bot">ab1.bot</a></li>
@@ -66,22 +70,28 @@
                         <li><a href="https://stable.auxplayer.org">stable.auxplayer.org</a></li>
                         <li><a href="https://auxbackend.com">auxbackend.com</a></li>
                         <li><a href="https://webhook.auxbackend.com">webhook.auxbackend.com</a></li>
-                        <li><a href="https://websocket.auxbackend.com">websocket.auxbackend.com</a></li>
+                        <li>
+                            <a href="https://websocket.auxbackend.com">websocket.auxbackend.com</a>
+                        </li>
                         <li><a href="https://docs.casualos.com">docs.casualos.com</a></li>
                         <li><a href="https://docs.ab1.bot">docs.ab1.bot</a></li>
                     </ul>
                     <p>
-                        This Privacy Policy further relates to access points, endpoints, webhooks, or any other services provided by this or the above listed websites (&ldquo;Services&rdquo;).
-                        This Privacy Policy creates a legal agreement between you (&ldquo;you&rdquo; or &ldquo;your&rdquo;) and
-                        Casual Simulation, Inc, a 501(c)(3) not-for-profit company registered in Michigan
-                        whose address is 879 4 Mile RD NE, Grand Rapids, MI, 49525 (&ldquo;Casual Simulation,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or  &ldquo;our&rdquo;). 
+                        This Privacy Policy further relates to access points, endpoints, webhooks,
+                        or any other services provided by this or the above listed websites
+                        (&ldquo;Services&rdquo;). This Privacy Policy creates a legal agreement
+                        between you (&ldquo;you&rdquo; or &ldquo;your&rdquo;) and Casual Simulation,
+                        Inc, a 501(c)(3) not-for-profit company registered in Michigan whose address
+                        is 879 4 Mile RD NE, Grand Rapids, MI, 49525 (&ldquo;Casual
+                        Simulation,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or
+                        &ldquo;our&rdquo;).
                     </p>
                     <p>
-                        If you are using the Services on
-                        behalf of you personally, &ldquo;you&rdquo; means you individually; if you
-                        represent an organization, &ldquo;you&rdquo; means your organization. You
-                        agree that by accessing our Services, you are agreeing to these terms. If
-                        you do not agree with these terms THEN YOU SHOULD NOT ACCESS OUR SERVICES.
+                        If you are using the Services on behalf of you personally, &ldquo;you&rdquo;
+                        means you individually; if you represent an organization, &ldquo;you&rdquo;
+                        means your organization. You agree that by accessing our Services, you are
+                        agreeing to these terms. If you do not agree with these terms THEN YOU
+                        SHOULD NOT ACCESS OUR SERVICES.
                     </p>
                     <h3 id="personal-information">
                         <ol start="2">
@@ -94,14 +104,18 @@
                     </p>
                     <p>
                         If you wish to use the Services anonymously and free of charge simply launch
-                        any instance at <a target="_blank" href="https://ab1.bot">ab1.bot</a> (a new instance is automatically created when you visit the website), create any User Content, and then download your
-                        User Content.
+                        any instance at <a target="_blank" href="https://ab1.bot">ab1.bot</a> (a new
+                        instance is automatically created when you visit the website), create any
+                        User Content, and then download your User Content.
                     </p>
                     <p>
-                        If you access the Services at all we reserve the collect anonymous usage data regarding your use
-                        of the Services for debugging purposes and to improve the Services.
-                        We post publicly available analytics of our website traffic at <a target="_blank" href="https://simpleanalytics.com/ab1.bot">https://simpleanalytics.com/ab1.bot</a>.
-                        WE DO NOT SHARE OR SELL THIS DATA other than described in this paragraph.
+                        If you access the Services at all we reserve the collect anonymous usage
+                        data regarding your use of the Services for debugging purposes and to
+                        improve the Services. We post publicly available analytics of our website
+                        traffic at
+                        <a target="_blank" href="https://simpleanalytics.com/ab1.bot"
+                            >https://simpleanalytics.com/ab1.bot</a
+                        >. WE DO NOT SHARE OR SELL THIS DATA other than described in this paragraph.
                     </p>
                     <p>
                         You must create an account and login to publish User Content via aux bundles
@@ -138,8 +152,10 @@
                     </p>
                     <p>
                         After creating an account and logging in, your User Content you publish via
-                        aux bundles are stored &ldquo;as is&rdquo; by use of public <a target="_blank" href="https://docs.casualos.com/docs/glossary#record">CasualOS Records</a>.
-                        This means any unencrypted data you publish is publically available and
+                        aux bundles are stored &ldquo;as is&rdquo; by use of public
+                        <a target="_blank" href="https://docs.casualos.com/docs/glossary#record"
+                            >CasualOS Records</a
+                        >. This means any unencrypted data you publish is publically available and
                         can be accessed by anyone who discovers it. ANY ENCRYPTED DATA YOU PUBLISHED
                         IS STORED &ldquo;AS IS&rdquo; AND WE DO NOT HAVE THE MEANS TO UNENCRYPT IT
                         NOR WILL WE ATTEMPT TO.

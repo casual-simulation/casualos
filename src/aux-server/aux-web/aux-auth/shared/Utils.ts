@@ -1,4 +1,3 @@
-
 export interface RegexRule {
     type: 'allow' | 'deny';
     pattern: string;
