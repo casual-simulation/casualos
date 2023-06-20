@@ -18,13 +18,16 @@
         "build": "npm run build:clean && npm run build:server && npm run build:web",
         "build:web": "npm run build:interpreter && node --max_old_space_size=6144 ../../node_modules/vite/bin/vite.js build ./aux-web/aux-player && node --max_old_space_size=6144 ../../node_modules/vite/bin/vite.js build ./aux-web/aux-auth",
         "build:server": "node --max_old_space_size=6144 ./script/build-server.js",
+        "build:server:dev": "node --max_old_space_size=6144 ./script/build-server.js dev",
         "build:interpreter": "node --max_old_space_size=6144 ./script/build-interpreter.js",
+        "merge:secrets": "node ./script/mergeSecrets.js",
         "build:docs": "echo \"Nothing to build...\"",
         "build:clean": "node ./script/clean.js",
         "test": "jest",
         "test:watch": "jest --watchAll",
         "test:ci": "jest --ci --reporters=default --reporters=jest-junit",
-        "clean": "echo \"Nothing to clean\""
+        "clean": "echo \"Nothing to clean\"",
+        "serverless": "npm run build:server:dev && npm run merge:secrets && cd aux-backend/serverless/aws && sam local start-api -p 2998 --docker-network docker_default --env-vars env.json --env-vars secrets.env.json --log-file ./debug_logs.txt"
     },
     "repository": {
         "type": "git",
