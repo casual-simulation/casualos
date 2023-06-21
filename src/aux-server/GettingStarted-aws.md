@@ -26,7 +26,7 @@ To deploy this project to AWS Lambda, follow these steps:
     - Create a database and then write down the connection string for that database.
 4. Setup a CodeBuild pipeline.
     1. Setup `https://github.com/casual-simulation/casualos` as the GitHub source for the pipeline.
-    2. It should use [`.aws/auth.buildspec.yml`](../../.aws/auth.buildspec.yml) as the buildspec file.
+    2. It should use [`.aws/casualos.buildspec.yml`](../../.aws/casualos.buildspec.yml) as the buildspec file.
     3. It should also use the `master` branch for builds.
     4. Configure the following environment variables:
         - `STACK_NAME` - The name of the CloudFormation stack that you want to be created.
