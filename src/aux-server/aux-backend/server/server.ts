@@ -398,8 +398,10 @@ export class ClientServer {
  * Defines a class that represents a fully featured SO4 server.
  */
 export class Server {
-    private _app: express.Express;
-    private _http: Http.Server;
+    private _frontendApp: express.Express;
+    private _backendApp: express.Express;
+    private _frontendHttp: Http.Server;
+    private _backendHttp: Http.Server;
     private _config: Config;
     private _client: ClientServer;
     private _mongoClient: MongoClient;
@@ -412,17 +414,26 @@ export class Server {
 
     constructor(config: Config) {
         this._config = config;
-        this._app = express();
+        this._frontendApp = express();
+        this._backendApp = express();
         if (this._config.collaboration.tls) {
-            this._http = <any>Https.createServer(
+            this._frontendHttp = <any>Https.createServer(
                 {
                     cert: this._config.collaboration.tls.cert,
                     key: this._config.collaboration.tls.key,
                 },
-                this._app
+                this._frontendApp
+            );
+            this._backendHttp = <any>Https.createServer(
+                {
+                    cert: this._config.collaboration.tls.cert,
+                    key: this._config.collaboration.tls.key,
+                },
+                this._backendApp
             );
         } else {
-            this._http = new Http.Server(this._app);
+            this._frontendHttp = new Http.Server(this._frontendApp);
+            this._backendHttp = new Http.Server(this._backendApp);
         }
         this._config = config;
         this._redisClient = this._config.collaboration.redis
@@ -440,7 +451,7 @@ export class Server {
             this._config.collaboration.proxy &&
             this._config.collaboration.proxy.trust
         ) {
-            this._app.set(
+            this._frontendApp.set(
                 'trust proxy',
                 this._config.collaboration.proxy.trust
             );
@@ -449,9 +460,9 @@ export class Server {
         // TODO: Enable CSP when we know where it works and does not work
         // this._applyCSP();
 
-        this._app.use(cors());
+        this._frontendApp.use(cors());
 
-        this._app.use(compression());
+        this._frontendApp.use(compression());
 
         this._mongoClient = await connect(
             this._config.collaboration.mongodb.url,
@@ -470,7 +481,7 @@ export class Server {
         }
 
         await this._configureCausalRepoServices();
-        this._app.use(bodyParser.json());
+        this._frontendApp.use(bodyParser.json());
 
         this._client = new ClientServer(
             this._config,
@@ -482,13 +493,31 @@ export class Server {
 
         this._configureBotHttpServer();
 
-        this._app.use((req, res, next) => {
+        this._frontendApp.use((req, res, next) => {
             res.setHeader('Referrer-Policy', 'same-origin');
             res.setHeader('Access-Control-Allow-Credentials', 'true');
             next();
         });
 
-        this._app.post(
+        const player = this._config.collaboration.player;
+        this._frontendApp.get(
+            '/api/config',
+            asyncMiddleware(async (req, res) => {
+                const config: WebConfig = {
+                    ...player.web,
+                    version: 2,
+                };
+                res.send(config);
+            })
+        );
+
+        this._frontendApp.get('/api/manifest', (req, res) => {
+            res.sendFile(
+                path.join(this._config.collaboration.dist, player.manifest)
+            );
+        });
+
+        this._frontendApp.post(
             '/api/users',
             asyncMiddleware(async (req, res) => {
                 const json = req.body;
@@ -520,19 +549,19 @@ export class Server {
         await this._serveDirectory();
         await this._startDirectoryClient();
 
-        this._app.all(
+        this._frontendApp.all(
             '/webhook/*',
             asyncMiddleware(async (req, res) => {
                 await this._handleWebhook(req, res);
             })
         );
-        this._app.all(
+        this._frontendApp.all(
             '/webhook',
             asyncMiddleware(async (req, res) => {
                 await this._handleWebhook(req, res);
             })
         );
-        this._app.get(
+        this._frontendApp.get(
             '/',
             dataPortalMiddleware(
                 asyncMiddleware(async (req, res) => {
@@ -542,15 +571,19 @@ export class Server {
         );
 
         if (this._botServer) {
-            this._app.use(this._botServer.app);
+            this._frontendApp.use(this._botServer.app);
         }
 
-        this._app.use(this._client.app);
+        this._frontendApp.use(this._client.app);
     }
 
     private async _configureBackend() {
-        const app = this._app;
-        const options = this._config.backend;
+        const app = this._backendApp;
+        const options = this._config.backend.config;
+        if (!options) {
+            console.log('[Server] Skipping Backend.');
+            return;
+        }
 
         const allowedRecordsOrigins = new Set([
             'http://localhost:3000',
@@ -610,7 +643,7 @@ export class Server {
         const filesCollection =
             mongoDatabase.collection<any>('recordsFilesData');
 
-        const dist = path.resolve(__dirname, '..', '..', 'web', 'dist');
+        const dist = this._config.backend.dist;
 
         async function handleRequest(req: Request, res: Response) {
             const query: GenericHttpRequest['query'] = {};
@@ -745,30 +778,20 @@ export class Server {
             await handleRequest(req, res);
         });
 
-        const player = this._config.collaboration.player;
-        app.get(
-            '/api/config',
-            asyncMiddleware(async (req, res) => {
-                const config: WebConfig = {
-                    ...player.web,
-                    version: 2,
-                };
-                res.send(config);
-            })
-        );
-
-        app.get('/api/manifest', (req, res) => {
-            res.sendFile(
-                path.join(this._config.collaboration.dist, player.manifest)
-            );
-        });
-
         app.all(
             '/api/*',
             asyncMiddleware(async (req, res) => {
                 await handleRequest(req, res);
             })
         );
+
+        app.get('*', (req, res) => {
+            res.sendFile(path.join(dist, 'index.html'));
+        });
+
+        app.all('*', (req, res) => {
+            res.sendStatus(404);
+        });
 
         function handleRecordsCorsHeaders(req: Request, res: Response) {
             if (allowedRecordsOrigins.has(req.headers.origin as string)) {
@@ -1005,7 +1028,7 @@ export class Server {
             this._directoryStore,
             this._config.collaboration.directory.server
         );
-        this._app.get(
+        this._frontendApp.get(
             '/directory/api',
             asyncMiddleware(async (req, res) => {
                 const ip = req.ip;
@@ -1027,7 +1050,7 @@ export class Server {
                 }
             })
         );
-        this._app.put(
+        this._frontendApp.put(
             '/directory/api',
             asyncMiddleware(async (req, res) => {
                 const ip = req.ip;
@@ -1089,11 +1112,19 @@ export class Server {
     }
 
     start() {
-        this._http.listen(this._config.collaboration.httpPort, () =>
+        this._frontendHttp.listen(this._config.collaboration.httpPort, () =>
             console.log(
-                `[Server] Server listening on port ${this._config.collaboration.httpPort}!`
+                `[Server] Frontend listening on port ${this._config.collaboration.httpPort}!`
             )
         );
+
+        if (this._config.backend.config) {
+            this._backendHttp.listen(this._config.backend.httpPort, () =>
+                console.log(
+                    `[Server] Backend listening on port ${this._config.backend.httpPort}!`
+                )
+            );
+        }
 
         if (this._directoryClient) {
             console.log(`[Server] Starting Directory Client`);
@@ -1104,7 +1135,7 @@ export class Server {
     private async _configureCausalRepoServices() {
         const [store, stageStore, updatesStore] = await this._setupRepoStore();
         const websocketServer = new WebSocketConnectionServer(
-            this._http,
+            this._frontendHttp,
             this._config.collaboration.socket
         );
         const serverUser = getServerUser();

@@ -25,7 +25,7 @@ export const DEV_CONFIG: BuilderOptions = {
     },
 };
 
-export function loadConfig() {
+export function loadConfig(required: boolean = true) {
     const SERVER_CONFIG = process.env.SERVER_CONFIG;
 
     let configObject: any;
@@ -41,8 +41,10 @@ export function loadConfig() {
         configObject = serverConfigParseResult.value;
     } else if (typeof SERVER_CONFIG === 'object') {
         configObject = SERVER_CONFIG;
-    } else {
+    } else if (required) {
         throw new Error(`SERVER_CONFIG must be a JSON string or an object.`);
+    } else {
+        return null;
     }
 
     const optionsResult = optionsSchema.safeParse(configObject);

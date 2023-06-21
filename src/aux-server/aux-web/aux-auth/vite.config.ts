@@ -108,7 +108,7 @@ export default defineConfig(({ command, mode }) => {
                 ],
             },
             proxy: {
-                '/api': 'http://localhost:2999',
+                '/api': 'http://localhost:2998',
                 '/s3': {
                     target: 'http://localhost:4566',
                     changeOrigin: true,

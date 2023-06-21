@@ -56,7 +56,11 @@ export interface Config {
     /**
      * The options for the backend API.
      */
-    backend: BuilderOptions;
+    backend: {
+        httpPort: number;
+        dist: string;
+        config: BuilderOptions;
+    };
 }
 
 export type SandboxType = 'none' | 'deno';

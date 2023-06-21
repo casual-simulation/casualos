@@ -33,9 +33,11 @@ import { Config } from './config';
 const env = process.env.NODE_ENV;
 let config: Config;
 if (env === 'production') {
-    config = prodConfig;
+    console.log('[Server] Using production config.');
+    config = prodConfig();
 } else {
-    config = devConfig;
+    console.log('[Server] Using production config.');
+    config = devConfig();
 }
 
 const server = new Server(config);

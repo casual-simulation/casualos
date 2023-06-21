@@ -6,9 +6,9 @@
     "private": true,
     "scripts": {
         "start": "node aux-backend/server/dist/main.js",
-        "watch": "concurrently --names \"Server,Player,Auth\" \"npm:watch:server\" \"npm:watch:player\" \"npm:watch:auth\"",
-        "watch:secure": "concurrently --names \"Server,Player,Auth\" \"npm:watch:server\" \"npm:watch:player:secure\" \"npm:watch:auth:secure\"",
-        "watch:server": "concurrently --names \"Build,Inst\" \"node ./script/dev-server.js\" \"npm:watch:inst\"",
+        "watch": "concurrently --names \"Backend,Player,Auth\" \"npm:watch:server\" \"npm:watch:player\" \"npm:watch:auth\"",
+        "watch:secure": "concurrently --names \"Backend,Player,Auth\" \"npm:watch:server\" \"npm:watch:player:secure\" \"npm:watch:auth:secure\"",
+        "watch:server": "concurrently --names \"Build,Run\" \"node ./script/dev-server.js\" \"npm:watch:inst\"",
         "watch:player": "vite serve ./aux-web/aux-player",
         "watch:auth": "vite serve ./aux-web/aux-auth",
         "watch:player:secure": "vite serve ./aux-web/aux-player --host --https",
