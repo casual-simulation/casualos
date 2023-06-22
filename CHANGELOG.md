@@ -1,5 +1,16 @@
 # CasualOS Changelog
 
+## V3.1.35
+
+#### Date: 6/22/2023
+
+### :rocket: Improvements
+
+-   Merged the serverless and server backends.
+    -   This means that we now ship one docker image for both the aux server and auth server instead of two.
+    -   The aux server still runs on port 3000, while the auth server runs on port 3002 (by default).
+    -   The auth serverless backend has also been merged with the serverless apiary backends, so only one AWS CloudFormation deployment is needed to have a fully functioning deployment.
+
 ## V3.1.34
 
 #### Date: 6/19/2023

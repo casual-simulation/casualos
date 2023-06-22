@@ -20,7 +20,7 @@
     },
     "include": [
         "./aux-web/**/*",
-        "./server/**/*",
+        "./aux-backend/**/*",
         "./shared/**/*",
         "./typings/**/*"
         // "./node_modules/@casual-simulation/aux-common/**/*"
@@ -28,7 +28,9 @@
     "exclude": [
         "**/node_modules/**",
         "./aux-web/aux-player/sw.ts",
-        "./aux-web/aux-player/vite.config.ts"
+        "./aux-web/aux-player/vite.config.ts",
+        "./aux-web/aux-auth/sw.ts",
+        "./aux-web/aux-auth/vite.config.ts"
     ],
     "references": [
         { "path": "../aux-common" },

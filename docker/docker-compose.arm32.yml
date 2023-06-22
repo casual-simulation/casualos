@@ -6,6 +6,7 @@ services:
         restart: always
         ports:
             - '3000:3000'
+            - '3002:3002'
             - '4567:4567'
         depends_on:
             - mongo

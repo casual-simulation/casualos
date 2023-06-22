@@ -21,8 +21,8 @@ export interface AuxConfig {
 }
 
 export interface AuxConfigParameters {
-    version: string;
-    versionHash: string;
+    version: string | null;
+    versionHash: string | null;
     builder?: string;
     bootstrapState?: StoredAuxVersion1;
     device?: AuxDevice;

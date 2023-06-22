@@ -35,7 +35,6 @@ let folders = [
     `${__dirname}/src/fast-json-stable-stringify`,
     `${__dirname}/src/expect`,
     `${__dirname}/src/chalk`,
-    `${__dirname}/temp/aux-auth`,
     `${__dirname}/temp/aux-server`,
     `${__dirname}/src/aux-records`,
     `${__dirname}/src/aux-records-aws`,
@@ -77,6 +76,5 @@ task('clean-cache', [], async function () {
     const { deleteAsync } = await import('del');
     await deleteAsync([
         makeGlobbablePath(`${__dirname}/src/aux-server/node_modules/.vite`),
-        makeGlobbablePath(`${__dirname}/src/aux-auth/node_modules/.vite`),
     ]);
 });
