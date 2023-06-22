@@ -17,7 +17,8 @@ import { AppBackend } from './AppBackend';
 import { v4 as uuid } from 'uuid';
 import undom, {
     BUILTIN_HTML_CANVAS_ELEMENT_FUNCTIONS,
-    BUILTIN_HTML_ELEMENT_FUNCTIONS,
+    BUILTIN_HTML_ELEMENT_VOID_FUNCTIONS,
+    BUILTIN_HTML_ELEMENT_PROMISE_FUNCTIONS,
     registerMethodHandler,
     RootNode,
     supressMutations,
@@ -269,8 +270,12 @@ export class HtmlAppBackend implements AppBackend {
     }
 
     private _registerMethodHandlers(doc: Document) {
-        for (let method of BUILTIN_HTML_ELEMENT_FUNCTIONS) {
+        for (let method of BUILTIN_HTML_ELEMENT_VOID_FUNCTIONS) {
             this._registerVoidMethodHandler(doc, 'HTMLElement', method);
+        }
+
+        for (let method of BUILTIN_HTML_ELEMENT_PROMISE_FUNCTIONS) {
+            this._registerPromiseMethodHandler(doc, 'HTMLElement', method);
         }
 
         const inputElemenetFunctions = [

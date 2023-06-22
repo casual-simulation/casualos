@@ -89,7 +89,15 @@ function callMethodHandler(
     return undefined;
 }
 
-export const BUILTIN_HTML_ELEMENT_FUNCTIONS = ['click', 'focus', 'blur'];
+export const BUILTIN_HTML_ELEMENT_VOID_FUNCTIONS = [
+    'click',
+    'focus',
+    'blur',
+    'setPointerCapture',
+    'releasePointerCapture',
+];
+
+export const BUILTIN_HTML_ELEMENT_PROMISE_FUNCTIONS = ['getBoundingClientRect'];
 
 export const BUILTIN_HTML_INPUT_ELEMENT_FUNCTIONS = [
     'checkValidity',
@@ -542,7 +550,8 @@ export default function undom(options: UndomOptions = {}): globalThis.Document {
         }
     }
 
-    registerBuiltinMethods(HTMLElement, BUILTIN_HTML_ELEMENT_FUNCTIONS);
+    registerBuiltinMethods(HTMLElement, BUILTIN_HTML_ELEMENT_VOID_FUNCTIONS);
+    registerBuiltinMethods(HTMLElement, BUILTIN_HTML_ELEMENT_PROMISE_FUNCTIONS);
 
     function registerBuiltinMethods($class: any, methods: string[]) {
         for (let func of methods) {
