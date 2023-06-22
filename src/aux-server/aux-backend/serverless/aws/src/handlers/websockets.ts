@@ -67,7 +67,18 @@ optionsSchema.required({
     redis: true,
 });
 
-const redisSchema = optionsSchema.shape.redis.unwrap().required();
+const redisSchema = optionsSchema.shape.redis
+    .unwrap()
+    .required({
+        host: true,
+        port: true,
+        tls: true,
+        password: true,
+    })
+    .partial({
+        maxBranchSizeBytes: true,
+        mergeUpdatesOnMaxSizeExceeded: true,
+    });
 const rateLimitSchema = z.union([
     z.null(),
     optionsSchema.shape.rateLimit.unwrap().required(),
