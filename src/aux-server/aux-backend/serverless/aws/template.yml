@@ -439,7 +439,7 @@ Resources:
                 Variables:
                     SERVER_CONFIG: !Ref ServerConfigParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
-                    WEBSOCKET_URL: !Sub '${WebsocketsApi.ApiEndpoint}/Prod'
+                    WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
     HandleConnectPermission:
         Type: AWS::Lambda::Permission
         DependsOn:
@@ -471,7 +471,7 @@ Resources:
                 Variables:
                     SERVER_CONFIG: !Ref ServerConfigParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
-                    WEBSOCKET_URL: !Sub '${WebsocketsApi.ApiEndpoint}/Prod'
+                    WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
     HandleDisconnectPermission:
         Type: AWS::Lambda::Permission
         DependsOn:
@@ -503,7 +503,7 @@ Resources:
                 Variables:
                     SERVER_CONFIG: !Ref ServerConfigParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
-                    WEBSOCKET_URL: !Sub '${WebsocketsApi.ApiEndpoint}/Prod'
+                    WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
     HandleMessagePermission:
         Type: AWS::Lambda::Permission
         DependsOn:
@@ -535,7 +535,7 @@ Resources:
                 Variables:
                     SERVER_CONFIG: !Ref ServerConfigParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
-                    WEBSOCKET_URL: !Sub '${WebsocketsApi.ApiEndpoint}/Prod'
+                    WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
             Events:
                 Webhook:
                     Type: Api
@@ -565,7 +565,7 @@ Resources:
                 Variables:
                     SERVER_CONFIG: !Ref ServerConfigParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
-                    WEBSOCKET_URL: !Sub '${WebsocketsApi.ApiEndpoint}/Prod'
+                    WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
             Events:
                 DataPortal:
                     Type: Api
