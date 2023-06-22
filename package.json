@@ -3,7 +3,7 @@
     "private": true,
     "version": "0.3.0",
     "scripts": {
-        "start": "node ./src/aux-server/server/dist/main.js",
+        "start": "node ./src/aux-server/aux-backend/server/dist/main.js",
         "bootstrap": "lerna bootstrap --hoist -- --legacy-peer-deps && npm run bootstrap:aws",
         "bootstrap:aws": "node src/aux-server/script/bootstrap.js",
         "cockroach": "cockroach start-single-node --insecure",

@@ -36,7 +36,7 @@ if (env === 'production') {
     console.log('[Server] Using production config.');
     config = prodConfig();
 } else {
-    console.log('[Server] Using production config.');
+    console.log('[Server] Using dev config.');
     config = devConfig();
 }
 

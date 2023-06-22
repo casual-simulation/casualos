@@ -1,7 +1,8 @@
 import path from 'path';
 import { listEnvironmentFiles, loadEnvFile } from '../shared/EnvUtils';
 
-declare const DEVELOPMENT: boolean;
+const env = process.env.NODE_ENV;
+const DEVELOPMENT = env !== 'production';
 
 const envFiles = listEnvironmentFiles(path.resolve(__dirname, '..'));
 
