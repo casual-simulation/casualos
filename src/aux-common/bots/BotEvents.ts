@@ -4749,7 +4749,7 @@ export function transaction(events: BotAction[]): TransactionAction {
  */
 export function action(
     eventName: string,
-    botIds: string[] = null,
+    botIds: string[] | null = null,
     userId: string = null,
     arg?: any,
     sortIds: boolean = true
