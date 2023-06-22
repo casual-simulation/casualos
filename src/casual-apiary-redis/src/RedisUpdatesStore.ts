@@ -38,7 +38,7 @@ export class RedisUpdatesStore implements UpdatesStore {
     }
 
     set maxBranchSizeInBytes(value: number) {
-        this._maxSizeInBytes = value;
+        this._maxSizeInBytes = value ?? Infinity;
     }
 
     constructor(globalNamespace: string, client: RedisClient) {

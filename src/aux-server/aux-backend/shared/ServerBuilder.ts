@@ -717,7 +717,6 @@ const redisSchema = z.object({
     causalRepoNamespace: z.string().nonempty().optional(),
     rateLimitPrefix: z.string().nonempty().optional(),
 
-    maxBatchSizeBytes: z.number().optional(),
     maxBranchSizeBytes: z.number().optional(),
     mergeUpdatesOnMaxSizeExceeded: z.boolean().optional(),
 });
