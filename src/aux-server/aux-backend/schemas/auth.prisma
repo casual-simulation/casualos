@@ -167,8 +167,6 @@ model Role {
     name String
     markers String[]
 
-    roleAssignments RoleAssignment[]
-
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -179,7 +177,6 @@ model RoleAssignment {
     recordName String
     record Record @relation(fields: [recordName], references: [name])
     roleId String
-    role Role @relation(fields: [recordName, roleId], references: [recordName, name])
 
     subjectId String
     type String
