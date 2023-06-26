@@ -141,7 +141,7 @@
         "aws-sdk": "^2.968.0",
         "livekit-server-sdk": "1.0.2",
         "luxon": "2.3.0",
-        "prisma": "^4.14.1",
+        "prisma": "^4.16.1",
         "stripe": "11.13.0"
     },
     "devDependencies": {
