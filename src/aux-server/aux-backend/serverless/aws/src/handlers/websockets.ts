@@ -4,8 +4,6 @@ import {
     APIGatewayProxyStructuredResultV2,
     Context,
 } from 'aws-lambda';
-import AWS, { ApiGatewayManagementApi } from 'aws-sdk';
-import { v4 as uuid } from 'uuid';
 import {
     ADD_ATOMS,
     CausalRepoMessageHandlerMethods,

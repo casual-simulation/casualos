@@ -1,4 +1,4 @@
-const AWS = require('aws-sdk');
+const { S3 } = require('@aws-sdk/client-s3');
 const { readFileSync } = require('fs');
 const path = require('path');
 const YAML = require('yaml');
@@ -12,7 +12,7 @@ AWS.config.update({
     secretAccessKey: 'xxxx',
 });
 
-const s3 = new AWS.S3({
+const s3 = new S3({
     endpoint: 'http://localhost:4566',
     apiVersion: '2006-03-01',
     s3ForcePathStyle: true,

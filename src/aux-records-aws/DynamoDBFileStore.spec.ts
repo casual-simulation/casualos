@@ -3,7 +3,20 @@ import {
     EMPTY_STRING_SHA256_HASH_HEX,
     s3AclForMarkers,
 } from './DynamoDBFileStore';
-import type AWS from 'aws-sdk';
+import { DynamoDB } from '@aws-sdk/client-dynamodb';
+import {
+    DynamoDBDocumentClient,
+    GetCommand,
+    PutCommand,
+    UpdateCommand,
+    DeleteCommand,
+} from '@aws-sdk/lib-dynamodb';
+import { S3, S3ClientConfig } from '@aws-sdk/client-s3';
+import {
+    AwsCredentialIdentityProvider,
+    AwsCredentialIdentity,
+} from '@aws-sdk/types';
+import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import {
     awsResult,
     awsError,
@@ -26,7 +39,8 @@ import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-records/PolicyPermiss
 
 describe('DynamoDBFileStore', () => {
     let store: DynamoDBFileStore;
-    let credentials: AWS.Credentials;
+    let credentials: AwsCredentialIdentity;
+    let credentialsProvider: AwsCredentialIdentityProvider;
     let s3 = {
         deleteObject: jest.fn(),
     };
@@ -35,18 +49,12 @@ describe('DynamoDBFileStore', () => {
             return s3.deleteObject;
         }
     }
-    let aws = {
-        config: {
-            getCredentials: jest.fn(),
-            credentials,
-        },
-        S3: S3Test,
-    };
     let dynamodb = {
-        put: jest.fn(),
-        get: jest.fn(),
-        update: jest.fn(),
-        delete: jest.fn(),
+        send: jest.fn(),
+        // put: jest.fn(),
+        // get: jest.fn(),
+        // update: jest.fn(),
+        // delete: jest.fn(),
     };
 
     beforeEach(() => {
@@ -54,20 +62,13 @@ describe('DynamoDBFileStore', () => {
             accessKeyId: 'accessKeyId',
             secretAccessKey: 'secretAccessKey',
         } as any;
-        aws = {
-            config: {
-                getCredentials: jest.fn((callback: Function) => {
-                    callback.call(credentials, null, credentials);
-                }),
-                credentials: credentials,
-            },
-            S3: S3Test,
-        };
+        credentialsProvider = async () => credentials;
         dynamodb = {
-            put: jest.fn(),
-            get: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn(),
+            send: jest.fn(),
+            // put: jest.fn(),
+            // get: jest.fn(),
+            // update: jest.fn(),
+            // delete: jest.fn(),
         };
         s3 = {
             deleteObject: jest.fn(),
@@ -78,7 +79,8 @@ describe('DynamoDBFileStore', () => {
             dynamodb as any,
             'test-table',
             'STANDARD',
-            <typeof AWS>(<unknown>aws)
+            credentialsProvider,
+            new S3Test() as any
         );
     });
 
@@ -119,7 +121,8 @@ describe('DynamoDBFileStore', () => {
                 dynamodb as any,
                 'test-table',
                 'STANDARD',
-                <typeof AWS>(<unknown>aws),
+                credentialsProvider,
+                new S3Test() as any,
                 'http://s3:4567'
             );
             const result = (await store.presignFileUpload({
@@ -225,7 +228,8 @@ describe('DynamoDBFileStore', () => {
                 dynamodb as any,
                 'test-table',
                 'STANDARD',
-                <typeof AWS>(<unknown>aws)
+                credentialsProvider,
+                new S3Test() as any
             );
 
             const now = new Date(2022, 0, 4, 7, 3, 51);
@@ -336,7 +340,8 @@ describe('DynamoDBFileStore', () => {
                 dynamodb as any,
                 'test-table',
                 'STANDARD',
-                <typeof AWS>(<unknown>aws),
+                credentialsProvider,
+                new S3Test() as any,
                 'http://s3:4567'
             );
             const result = (await store.presignFileRead({
@@ -415,7 +420,8 @@ describe('DynamoDBFileStore', () => {
                 dynamodb as any,
                 'test-table',
                 'STANDARD',
-                <typeof AWS>(<unknown>aws)
+                credentialsProvider,
+                new S3Test() as any
             );
 
             const now = new Date(2022, 0, 4, 7, 3, 51);
@@ -461,7 +467,7 @@ describe('DynamoDBFileStore', () => {
 
     describe('addFileRecord()', () => {
         it('should put a file into the DynamoDB table', async () => {
-            dynamodb.put.mockReturnValue(awsResult({}));
+            dynamodb.send.mockReturnValue(awsResult({}));
             const result = (await store.addFileRecord(
                 'test-record',
                 'test file.xml',
@@ -475,26 +481,28 @@ describe('DynamoDBFileStore', () => {
             expect(result).toEqual({
                 success: true,
             });
-            expect(dynamodb.put).toBeCalledWith({
-                TableName: 'test-table',
-                Item: {
-                    recordName: 'test-record',
-                    fileName: 'test file.xml',
-                    publisherId: 'publisherId',
-                    subjectId: 'subjectId',
-                    sizeInBytes: 256,
-                    description: 'test description',
-                    publishTime: expect.any(Number),
-                    uploadTime: null,
-                    markers: [PUBLIC_READ_MARKER],
-                },
-                ConditionExpression:
-                    'attribute_not_exists(recordName) AND attribute_not_exists(fileName)',
-            });
+            expect(dynamodb.send).toBeCalledWith(
+                new PutCommand({
+                    TableName: 'test-table',
+                    Item: {
+                        recordName: 'test-record',
+                        fileName: 'test file.xml',
+                        publisherId: 'publisherId',
+                        subjectId: 'subjectId',
+                        sizeInBytes: 256,
+                        description: 'test description',
+                        publishTime: expect.any(Number),
+                        uploadTime: null,
+                        markers: [PUBLIC_READ_MARKER],
+                    },
+                    ConditionExpression:
+                        'attribute_not_exists(recordName) AND attribute_not_exists(fileName)',
+                })
+            );
         });
 
         it('should return a file_already_exists error if the condition expression fails', async () => {
-            dynamodb.put.mockReturnValue(
+            dynamodb.send.mockReturnValue(
                 awsError(new ConditionalCheckFailedException())
             );
             const result = (await store.addFileRecord(
@@ -517,7 +525,7 @@ describe('DynamoDBFileStore', () => {
 
     describe('updateFileRecord()', () => {
         it('should update a file in the DynamoDB table', async () => {
-            dynamodb.update.mockReturnValue(awsResult({}));
+            dynamodb.send.mockReturnValue(awsResult({}));
             const result = (await store.updateFileRecord(
                 'test-record',
                 'test file.xml',
@@ -527,23 +535,25 @@ describe('DynamoDBFileStore', () => {
             expect(result).toEqual({
                 success: true,
             });
-            expect(dynamodb.update).toBeCalledWith({
-                TableName: 'test-table',
-                Key: {
-                    recordName: 'test-record',
-                    fileName: 'test file.xml',
-                },
-                ExpressionAttributeValues: {
-                    ':markers': [PUBLIC_READ_MARKER],
-                },
-                UpdateExpression: 'SET markers = :markers',
-                ConditionExpression:
-                    'attribute_exists(recordName) AND attribute_exists(fileName)',
-            });
+            expect(dynamodb.send).toBeCalledWith(
+                new UpdateCommand({
+                    TableName: 'test-table',
+                    Key: {
+                        recordName: 'test-record',
+                        fileName: 'test file.xml',
+                    },
+                    ExpressionAttributeValues: {
+                        ':markers': [PUBLIC_READ_MARKER],
+                    },
+                    UpdateExpression: 'SET markers = :markers',
+                    ConditionExpression:
+                        'attribute_exists(recordName) AND attribute_exists(fileName)',
+                })
+            );
         });
 
         it('should return a file_not_found error if the condition expression fails', async () => {
-            dynamodb.update.mockReturnValue(
+            dynamodb.send.mockReturnValue(
                 awsError(new ConditionalCheckFailedException())
             );
             const result = (await store.updateFileRecord(
@@ -562,7 +572,7 @@ describe('DynamoDBFileStore', () => {
 
     describe('getFileRecord()', () => {
         it('should get the file record from the DynamoDB table', async () => {
-            dynamodb.get.mockReturnValue(
+            dynamodb.send.mockReturnValue(
                 awsResult({
                     Item: {
                         recordName: 'test record',
@@ -592,17 +602,19 @@ describe('DynamoDBFileStore', () => {
                 description: 'test description',
                 uploaded: false,
             });
-            expect(dynamodb.get).toBeCalledWith({
-                TableName: 'test-table',
-                Key: {
-                    recordName: 'test record',
-                    fileName: 'test file.xml',
-                },
-            });
+            expect(dynamodb.send).toBeCalledWith(
+                new GetCommand({
+                    TableName: 'test-table',
+                    Key: {
+                        recordName: 'test record',
+                        fileName: 'test file.xml',
+                    },
+                })
+            );
         });
 
         it('should return a file_not_found result if the file does not exist', async () => {
-            dynamodb.get.mockReturnValue(
+            dynamodb.send.mockReturnValue(
                 awsResult({
                     Item: null,
                 })
@@ -617,19 +629,21 @@ describe('DynamoDBFileStore', () => {
                 errorCode: 'file_not_found',
                 errorMessage: 'The file was not found.',
             });
-            expect(dynamodb.get).toBeCalledWith({
-                TableName: 'test-table',
-                Key: {
-                    recordName: 'test record',
-                    fileName: 'test file.xml',
-                },
-            });
+            expect(dynamodb.send).toBeCalledWith(
+                new GetCommand({
+                    TableName: 'test-table',
+                    Key: {
+                        recordName: 'test record',
+                        fileName: 'test file.xml',
+                    },
+                })
+            );
         });
     });
 
     describe('eraseFileRecord()', () => {
         it('should delete the file from the DynamoDB table', async () => {
-            dynamodb.delete.mockReturnValue(awsResult({}));
+            dynamodb.send.mockReturnValue(awsResult({}));
             s3.deleteObject.mockReturnValue(awsResult({}));
 
             const result = (await store.eraseFileRecord(
@@ -640,13 +654,15 @@ describe('DynamoDBFileStore', () => {
             expect(result).toEqual({
                 success: true,
             });
-            expect(dynamodb.delete).toBeCalledWith({
-                TableName: 'test-table',
-                Key: {
-                    recordName: 'test-record',
-                    fileName: 'test file.xml',
-                },
-            });
+            expect(dynamodb.send).toBeCalledWith(
+                new DeleteCommand({
+                    TableName: 'test-table',
+                    Key: {
+                        recordName: 'test-record',
+                        fileName: 'test file.xml',
+                    },
+                })
+            );
             expect(s3.deleteObject).toBeCalledWith({
                 Bucket: 'test-bucket',
                 Key: 'test-record/test file.xml',
@@ -656,7 +672,7 @@ describe('DynamoDBFileStore', () => {
 
     describe('setFileRecordAsUploaded()', () => {
         it('should update the given record with the upload time', async () => {
-            dynamodb.update.mockReturnValue(awsResult({}));
+            dynamodb.send.mockReturnValue(awsResult({}));
             const result = (await store.setFileRecordAsUploaded(
                 'test record',
                 'test file.xml'
@@ -665,26 +681,28 @@ describe('DynamoDBFileStore', () => {
             expect(result).toEqual({
                 success: true,
             });
-            expect(dynamodb.update).toBeCalledWith({
-                TableName: 'test-table',
-                Key: {
-                    recordName: 'test record',
-                    fileName: 'test file.xml',
-                },
-                ConditionExpression:
-                    'attribute_exists(recordName) AND attribute_exists(fileName)',
-                UpdateExpression: 'SET uploadTime = :uploadTime',
-                ExpressionAttributeValues: {
-                    ':uploadTime': expect.expect(
-                        'toBeGreaterThan',
-                        1640813000000
-                    ),
-                },
-            });
+            expect(dynamodb.send).toBeCalledWith(
+                new UpdateCommand({
+                    TableName: 'test-table',
+                    Key: {
+                        recordName: 'test record',
+                        fileName: 'test file.xml',
+                    },
+                    ConditionExpression:
+                        'attribute_exists(recordName) AND attribute_exists(fileName)',
+                    UpdateExpression: 'SET uploadTime = :uploadTime',
+                    ExpressionAttributeValues: {
+                        ':uploadTime': expect.expect(
+                            'toBeGreaterThan',
+                            1640813000000
+                        ),
+                    },
+                })
+            );
         });
 
         it('should return a file_not_found error if the condition expression check fails', async () => {
-            dynamodb.update.mockReturnValue(
+            dynamodb.send.mockReturnValue(
                 awsError(new ConditionalCheckFailedException())
             );
             const result = (await store.setFileRecordAsUploaded(

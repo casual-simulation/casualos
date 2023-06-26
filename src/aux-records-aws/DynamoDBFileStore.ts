@@ -15,8 +15,19 @@ import {
 } from '@casual-simulation/aux-records';
 import { UpdateFileResult } from '@casual-simulation/aux-records/FileRecordsStore';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-records/PolicyPermissions';
-import AWS from 'aws-sdk';
-import dynamodb from 'aws-sdk/clients/dynamodb';
+import { DynamoDB } from '@aws-sdk/client-dynamodb';
+import {
+    DynamoDBDocumentClient,
+    GetCommand,
+    PutCommand,
+    UpdateCommand,
+    DeleteCommand,
+} from '@aws-sdk/lib-dynamodb';
+import { S3, S3ClientConfig } from '@aws-sdk/client-s3';
+import { AwsCredentialIdentityProvider } from '@aws-sdk/types';
+import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
+// import AWS from 'aws-sdk';
+// import dynamodb from 'aws-sdk/clients/dynamodb';
 
 export const EMPTY_STRING_SHA256_HASH_HEX =
     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
@@ -28,31 +39,30 @@ export class DynamoDBFileStore implements FileRecordsStore {
     private _region: string;
     private _bucket: string;
     private _storageClass: string;
-    private _aws: typeof AWS;
-    private _dynamo: dynamodb.DocumentClient;
+    private _credentialsProvider: AwsCredentialIdentityProvider;
+    private _dynamo: DynamoDBDocumentClient;
     private _tableName: string;
     private _s3Host: string;
-    private _s3Options: AWS.S3.ClientConfiguration;
-    private _s3: AWS.S3;
+    private _s3: S3;
 
     constructor(
         region: string,
         bucket: string,
-        documentClient: dynamodb.DocumentClient,
+        documentClient: DynamoDB,
         tableName: string,
         storageClass: string = 'STANDARD',
-        aws: typeof AWS = AWS,
-        s3Host: string = null,
-        s3Options: AWS.S3.ClientConfiguration = {}
+        credentialsProvider: AwsCredentialIdentityProvider = fromNodeProviderChain(),
+        s3: S3 = null,
+        s3Host: string = null
     ) {
         this._region = region;
         this._bucket = bucket;
-        this._dynamo = documentClient;
+        this._dynamo = DynamoDBDocumentClient.from(documentClient);
         this._tableName = tableName;
         this._storageClass = storageClass;
-        this._aws = aws;
+        this._credentialsProvider = credentialsProvider;
+        this._s3 = s3 ?? new S3({ region: region });
         this._s3Host = s3Host;
-        this._s3Options = s3Options;
     }
 
     getAllowedUploadHeaders(): string[] {
@@ -215,30 +225,33 @@ export class DynamoDBFileStore implements FileRecordsStore {
         fileName: string
     ): Promise<GetFileRecordResult> {
         try {
-            const result = await this._dynamo
-                .get({
+            const result = await this._dynamo.send(
+                new GetCommand({
                     TableName: this._tableName,
                     Key: {
-                        recordName: recordName,
-                        fileName: fileName,
+                        recordName: { S: recordName },
+                        fileName: { S: fileName },
                     },
                 })
-                .promise();
+            );
 
             if (result.Item) {
-                const file = result.Item as StoredFile;
-                let url = this._fileUrl(file.recordName, file.fileName);
+                const fileResult = result.Item;
+                let url = this._fileUrl(
+                    fileResult.recordName,
+                    fileResult.fileName
+                );
                 return {
                     success: true,
-                    recordName: file.recordName,
-                    fileName: file.fileName,
-                    description: file.description,
-                    publisherId: file.publisherId,
-                    subjectId: file.subjectId,
-                    sizeInBytes: file.sizeInBytes,
-                    uploaded: file.uploadTime !== null,
+                    recordName: fileResult.recordName,
+                    fileName: fileResult.fileName,
+                    description: fileResult.description,
+                    publisherId: fileResult.publisherId,
+                    subjectId: fileResult.subjectId,
+                    sizeInBytes: fileResult.sizeInBytes,
+                    uploaded: fileResult.uploadTime !== null,
                     url: url.href,
-                    markers: file.markers,
+                    markers: fileResult.markers,
                 };
             } else {
                 return {
@@ -280,14 +293,14 @@ export class DynamoDBFileStore implements FileRecordsStore {
                 markers,
             };
 
-            await this._dynamo
-                .put({
+            await this._dynamo.send(
+                new PutCommand({
                     TableName: this._tableName,
                     Item: file,
                     ConditionExpression:
                         'attribute_not_exists(recordName) AND attribute_not_exists(fileName)',
                 })
-                .promise();
+            );
 
             return {
                 success: true,
@@ -319,8 +332,8 @@ export class DynamoDBFileStore implements FileRecordsStore {
         markers: string[]
     ): Promise<UpdateFileResult> {
         try {
-            await this._dynamo
-                .update({
+            await this._dynamo.send(
+                new UpdateCommand({
                     TableName: this._tableName,
                     Key: {
                         recordName: recordName,
@@ -333,7 +346,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
                         ':markers': markers,
                     },
                 })
-                .promise();
+            );
 
             return {
                 success: true,
@@ -364,8 +377,8 @@ export class DynamoDBFileStore implements FileRecordsStore {
         fileName: string
     ): Promise<MarkFileRecordAsUploadedResult> {
         try {
-            await this._dynamo
-                .update({
+            await this._dynamo.send(
+                new UpdateCommand({
                     TableName: this._tableName,
                     Key: {
                         recordName: recordName,
@@ -378,7 +391,7 @@ export class DynamoDBFileStore implements FileRecordsStore {
                         ':uploadTime': Date.now(),
                     },
                 })
-                .promise();
+            );
 
             return {
                 success: true,
@@ -409,25 +422,23 @@ export class DynamoDBFileStore implements FileRecordsStore {
         fileName: string
     ): Promise<EraseFileStoreResult> {
         try {
-            await this._dynamo
-                .delete({
+            await this._dynamo.send(
+                new DeleteCommand({
                     TableName: this._tableName,
                     Key: {
                         recordName: recordName,
                         fileName: fileName,
                     },
                 })
-                .promise();
+            );
 
-            const s3 = this._getS3();
+            // const s3 = this._getS3();
             const key = this._fileKey(recordName, fileName);
 
-            await s3
-                .deleteObject({
-                    Bucket: this._bucket,
-                    Key: key,
-                })
-                .promise();
+            await this._s3.deleteObject({
+                Bucket: this._bucket,
+                Key: key,
+            });
 
             return {
                 success: true,
@@ -442,29 +453,21 @@ export class DynamoDBFileStore implements FileRecordsStore {
         }
     }
 
-    private _getCredentials(): Promise<{
+    private async _getCredentials(): Promise<{
         secretAccessKey: string;
         accessKeyId: string;
         sessionToken?: string;
     }> {
-        return new Promise((resolve, reject) => {
-            this._aws.config.getCredentials(function (err, credentials) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(credentials);
-                }
-            });
-        });
+        return await this._credentialsProvider();
     }
 
-    private _getS3() {
-        if (!this._s3) {
-            this._s3 = new this._aws.S3(this._s3Options);
-        }
+    // private _getS3() {
+    //     if (!this._s3) {
+    //         this._s3 = new S3(this._s3Options);
+    //     }
 
-        return this._s3;
-    }
+    //     return this._s3;
+    // }
 
     private _fileUrl(recordName: string, fileName: string): URL {
         let filePath = this._fileKey(recordName, fileName);

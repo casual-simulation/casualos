@@ -16,8 +16,13 @@ import {
     UpdateFileResult,
 } from '@casual-simulation/aux-records';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-records/PolicyPermissions';
-import AWS from 'aws-sdk';
-import dynamodb from 'aws-sdk/clients/dynamodb';
+import { S3, S3ClientConfig } from '@aws-sdk/client-s3';
+import {
+    AwsCredentialIdentityProvider,
+    AwsCredentialIdentity,
+} from '@aws-sdk/types';
+import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
+// import AWS from 'aws-sdk';
 
 export const EMPTY_STRING_SHA256_HASH_HEX =
     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
@@ -29,10 +34,9 @@ export class S3FileRecordsStore implements FileRecordsStore {
     private _region: string;
     private _bucket: string;
     private _storageClass: string;
-    private _aws: typeof AWS;
     private _s3Host: string;
-    private _s3Options: AWS.S3.ClientConfiguration;
-    private _s3: AWS.S3;
+    private _s3: S3;
+    private _credentialProvider: AwsCredentialIdentityProvider;
 
     private _lookup: FileRecordsLookup;
 
@@ -41,17 +45,17 @@ export class S3FileRecordsStore implements FileRecordsStore {
         bucket: string,
         fileLookup: FileRecordsLookup,
         storageClass: string = 'STANDARD',
-        aws: typeof AWS = AWS,
+        s3: S3,
         s3Host: string = null,
-        s3Options: AWS.S3.ClientConfiguration = {}
+        credentialProvider: AwsCredentialIdentityProvider = fromNodeProviderChain()
     ) {
         this._region = region;
         this._bucket = bucket;
         this._lookup = fileLookup;
         this._storageClass = storageClass;
-        this._aws = aws;
+        this._s3 = s3;
         this._s3Host = s3Host;
-        this._s3Options = s3Options;
+        this._credentialProvider = credentialProvider;
     }
 
     getAllowedUploadHeaders(): string[] {
@@ -296,15 +300,12 @@ export class S3FileRecordsStore implements FileRecordsStore {
         try {
             await this._lookup.eraseFileRecord(recordName, fileName);
 
-            const s3 = this._getS3();
             const key = this._fileKey(recordName, fileName);
 
-            await s3
-                .deleteObject({
-                    Bucket: this._bucket,
-                    Key: key,
-                })
-                .promise();
+            await this._s3.deleteObject({
+                Bucket: this._bucket,
+                Key: key,
+            });
 
             return {
                 success: true,
@@ -319,28 +320,12 @@ export class S3FileRecordsStore implements FileRecordsStore {
         }
     }
 
-    private _getCredentials(): Promise<{
+    private async _getCredentials(): Promise<{
         secretAccessKey: string;
         accessKeyId: string;
         sessionToken?: string;
     }> {
-        return new Promise((resolve, reject) => {
-            this._aws.config.getCredentials(function (err, credentials) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(credentials);
-                }
-            });
-        });
-    }
-
-    private _getS3() {
-        if (!this._s3) {
-            this._s3 = new this._aws.S3(this._s3Options);
-        }
-
-        return this._s3;
+        return await this._credentialProvider();
     }
 
     private _fileUrl(recordName: string, fileName: string): URL {
