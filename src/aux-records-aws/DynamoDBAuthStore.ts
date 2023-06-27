@@ -8,11 +8,23 @@ import {
     SaveNewUserResult,
 } from '@casual-simulation/aux-records/AuthStore';
 import { RegexRule } from '@casual-simulation/aux-records/Utils';
-import dynamodb from 'aws-sdk/clients/dynamodb';
+// import dynamodb from 'aws-sdk/clients/dynamodb';
+import { DynamoDB } from '@aws-sdk/client-dynamodb';
+import {
+    DynamoDBDocumentClient,
+    GetCommand,
+    PutCommand,
+    UpdateCommand,
+    DeleteCommand,
+    TransactWriteCommand,
+    TransactWriteCommandInput,
+    QueryCommand,
+    ScanCommand,
+} from '@aws-sdk/lib-dynamodb';
 import { omitBy } from 'lodash';
 
 export class DynamoDBAuthStore implements AuthStore {
-    private _dynamo: dynamodb.DocumentClient;
+    private _dynamo: DynamoDBDocumentClient;
     private _usersTableName: string;
     private _userAddressesTableName: string;
     private _loginRequestsTableName: string;
@@ -23,7 +35,7 @@ export class DynamoDBAuthStore implements AuthStore {
     private _stripeCustomerIdIndexName: string;
 
     constructor(
-        dynamo: dynamodb.DocumentClient,
+        dynamo: DynamoDBDocumentClient,
         usersTableName: string,
         userAddressesTableName: string,
         loginRequestsTableName: string,
@@ -49,8 +61,8 @@ export class DynamoDBAuthStore implements AuthStore {
         userId: string,
         allSessionRevokeTimeMs: number
     ): Promise<void> {
-        await this._dynamo
-            .update({
+        await this._dynamo.send(
+            new UpdateCommand({
                 TableName: this._usersTableName,
                 Key: {
                     id: userId,
@@ -61,11 +73,11 @@ export class DynamoDBAuthStore implements AuthStore {
                     ':allSessionRevokeTimeMs': allSessionRevokeTimeMs,
                 },
             })
-            .promise();
+        );
     }
 
     async saveUser(user: AuthUser): Promise<void> {
-        let items: dynamodb.DocumentClient.TransactWriteItemList = [
+        let items: TransactWriteCommandInput['TransactItems'] = [
             {
                 Put: {
                     TableName: this._usersTableName,
@@ -123,15 +135,15 @@ export class DynamoDBAuthStore implements AuthStore {
             });
         }
 
-        await this._dynamo
-            .transactWrite({
+        await this._dynamo.send(
+            new TransactWriteCommand({
                 TransactItems: items,
             })
-            .promise();
+        );
     }
 
     saveNewUser(user: AuthUser): Promise<SaveNewUserResult> {
-        let items: dynamodb.DocumentClient.TransactWriteItemList = [
+        let items: TransactWriteCommandInput['TransactItems'] = [
             {
                 Put: {
                     TableName: this._usersTableName,
@@ -187,10 +199,11 @@ export class DynamoDBAuthStore implements AuthStore {
         }
 
         return this._dynamo
-            .transactWrite({
-                TransactItems: items,
-            })
-            .promise()
+            .send(
+                new TransactWriteCommand({
+                    TransactItems: items,
+                })
+            )
             .then(
                 (result) => {
                     return {
@@ -223,8 +236,8 @@ export class DynamoDBAuthStore implements AuthStore {
         userId: string,
         requestId: string
     ): Promise<void> {
-        await this._dynamo
-            .update({
+        await this._dynamo.send(
+            new UpdateCommand({
                 TableName: this._usersTableName,
                 Key: {
                     id: userId,
@@ -235,18 +248,18 @@ export class DynamoDBAuthStore implements AuthStore {
                     ':currentLoginRequestId': requestId,
                 },
             })
-            .promise();
+        );
     }
 
     async findUser(userId: string): Promise<AuthUser> {
-        const userResult = await this._dynamo
-            .get({
+        const userResult = await this._dynamo.send(
+            new GetCommand({
                 TableName: this._usersTableName,
                 Key: {
                     id: userId,
                 },
             })
-            .promise();
+        );
 
         const user = userResult.Item;
         if (user) {
@@ -272,8 +285,8 @@ export class DynamoDBAuthStore implements AuthStore {
     }
 
     async findUserByStripeCustomerId(customerId: string): Promise<AuthUser> {
-        const userResult = await this._dynamo
-            .query({
+        const userResult = await this._dynamo.send(
+            new QueryCommand({
                 TableName: this._usersTableName,
                 IndexName: this._stripeCustomerIdIndexName,
                 KeyConditionExpression: 'stripeCustomerId = :stripeCustomerId',
@@ -282,7 +295,7 @@ export class DynamoDBAuthStore implements AuthStore {
                 },
                 Limit: 1,
             })
-            .promise();
+        );
 
         if (!userResult.Items || userResult.Items.length <= 0) {
             return null;
@@ -300,15 +313,15 @@ export class DynamoDBAuthStore implements AuthStore {
         address: string,
         addressType: AddressType
     ): Promise<AuthUser> {
-        const addressQuery = await this._dynamo
-            .get({
+        const addressQuery = await this._dynamo.send(
+            new GetCommand({
                 TableName: this._userAddressesTableName,
                 Key: {
                     address: address,
                     addressType: addressType,
                 },
             })
-            .promise();
+        );
 
         if (addressQuery.Item) {
             const userId = addressQuery.Item.userId;
@@ -335,15 +348,15 @@ export class DynamoDBAuthStore implements AuthStore {
         userId: string,
         requestId: string
     ): Promise<AuthLoginRequest> {
-        const result = await this._dynamo
-            .get({
+        const result = await this._dynamo.send(
+            new GetCommand({
                 TableName: this._loginRequestsTableName,
                 Key: {
                     userId: userId,
                     requestId: requestId,
                 },
             })
-            .promise();
+        );
 
         if (result.Item) {
             return {
@@ -377,12 +390,12 @@ export class DynamoDBAuthStore implements AuthStore {
             ipAddress: request.ipAddress,
             attemptCount: request.attemptCount,
         };
-        await this._dynamo
-            .put({
+        await this._dynamo.send(
+            new PutCommand({
                 TableName: this._loginRequestsTableName,
                 Item: cleanupObject(data),
             })
-            .promise();
+        );
 
         return data;
     }
@@ -392,8 +405,8 @@ export class DynamoDBAuthStore implements AuthStore {
         requestId: string,
         completedTimeMs: number
     ): Promise<void> {
-        await this._dynamo
-            .update({
+        await this._dynamo.send(
+            new UpdateCommand({
                 TableName: this._loginRequestsTableName,
                 Key: {
                     userId: userId,
@@ -404,15 +417,15 @@ export class DynamoDBAuthStore implements AuthStore {
                     ':completedTimeMs': completedTimeMs,
                 },
             })
-            .promise();
+        );
     }
 
     async incrementLoginRequestAttemptCount(
         userId: string,
         requestId: string
     ): Promise<void> {
-        await this._dynamo
-            .update({
+        await this._dynamo.send(
+            new UpdateCommand({
                 TableName: this._loginRequestsTableName,
                 Key: {
                     userId: userId,
@@ -420,19 +433,19 @@ export class DynamoDBAuthStore implements AuthStore {
                 },
                 UpdateExpression: 'SET attemptCount = attemptCount + 1',
             })
-            .promise();
+        );
     }
 
     async findSession(userId: string, sessionId: string): Promise<AuthSession> {
-        const result = await this._dynamo
-            .get({
+        const result = await this._dynamo.send(
+            new GetCommand({
                 TableName: this._sessionsTableName,
                 Key: {
                     userId: userId,
                     sessionId: sessionId,
                 },
             })
-            .promise();
+        );
 
         if (result.Item) {
             return {
@@ -464,12 +477,12 @@ export class DynamoDBAuthStore implements AuthStore {
             previousSessionId: session.previousSessionId,
             nextSessionId: session.nextSessionId,
         };
-        await this._dynamo
-            .put({
+        await this._dynamo.send(
+            new PutCommand({
                 TableName: this._sessionsTableName,
                 Item: cleanupObject(data),
             })
-            .promise();
+        );
     }
 
     async listSessions(
@@ -490,8 +503,8 @@ export class DynamoDBAuthStore implements AuthStore {
                       ':userId': userId,
                   };
 
-        const result = await this._dynamo
-            .query({
+        const result = await this._dynamo.send(
+            new QueryCommand({
                 TableName: this._sessionsTableName,
                 IndexName: this._sessionsTableExpireTimeIndexName,
                 KeyConditionExpression: query,
@@ -499,7 +512,7 @@ export class DynamoDBAuthStore implements AuthStore {
                 ScanIndexForward: false,
                 Limit: 10,
             })
-            .promise();
+        );
 
         return {
             success: true,
@@ -522,11 +535,11 @@ export class DynamoDBAuthStore implements AuthStore {
     }
 
     async listEmailRules(): Promise<RegexRule[]> {
-        const result = await this._dynamo
-            .scan({
+        const result = await this._dynamo.send(
+            new ScanCommand({
                 TableName: this._emailRulesTableName,
             })
-            .promise();
+        );
 
         if (!result.Items) {
             return [];
@@ -542,11 +555,11 @@ export class DynamoDBAuthStore implements AuthStore {
     }
 
     async listSmsRules(): Promise<RegexRule[]> {
-        const result = await this._dynamo
-            .scan({
+        const result = await this._dynamo.send(
+            new ScanCommand({
                 TableName: this._smsRulesTableName,
             })
-            .promise();
+        );
 
         if (!result.Items) {
             return [];

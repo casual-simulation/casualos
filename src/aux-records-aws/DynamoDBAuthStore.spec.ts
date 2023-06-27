@@ -1,5 +1,4 @@
 import { DynamoDBAuthStore } from './DynamoDBAuthStore';
-import type { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { awsResult, awsError } from './AwsTestUtils';
 
 console.warn = jest.fn();
