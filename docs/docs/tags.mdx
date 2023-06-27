@@ -812,6 +812,9 @@ The shape that the bot should be displayed as.
   <PossibleValueCode value='cube'>
     Cube mesh (default)
   </PossibleValueCode>
+  <PossibleValueCode value='skybox'>
+    A Sphere mesh optimal for "skybox" implementation.
+  </PossibleValueCode>
   <PossibleValueCode value='sphere'>
     Sphere mesh
   </PossibleValueCode>
@@ -914,7 +917,7 @@ The subtype that the form should use. Useful for specifying how a mesh should be
 
 The address that the bot should represent data from.
 
-When <TagLink tag='form'/> is set to `cube`, `sphere`, or `sprite`, the address should be the URL of the image that the bot should display.
+When <TagLink tag='form'/> is set to `cube`, `skybox`, `sphere`, or `sprite`, the address should be the URL of the image that the bot should display.
 
 When <TagLink tag='form'/> is set to `mesh` and <TagLink tag='formSubtype'/> is set to `gltf`, the address should be the URL of the GLTF file that should be displayed.
 

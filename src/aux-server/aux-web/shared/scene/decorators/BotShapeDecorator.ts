@@ -33,6 +33,7 @@ import {
     createCube,
     isTransparent,
     disposeMesh,
+    createSkybox,
     createSphere,
     createSprite,
     disposeGroup,
@@ -689,6 +690,8 @@ export class BotShapeDecorator
 
         if (this._shape === 'cube') {
             this._createCube();
+        } else if (this._shape === 'skybox') {
+            this._createSkybox();
         } else if (this._shape === 'sphere') {
             this._createSphere();
         } else if (this._shape === 'sprite') {
@@ -939,6 +942,18 @@ export class BotShapeDecorator
 
     private _createSprite() {
         this.mesh = this.collider = createSprite(this._addressAspectRatio);
+        this.container.add(this.mesh);
+        this.bot3D.colliders.push(this.collider);
+        this.stroke = null;
+        this._canHaveStroke = false;
+    }
+
+    private _createSkybox() {
+        this.mesh = this.collider = createSkybox(
+            new Vector3(0, 0, 0),
+            0x000000,
+            0.5
+        );
         this.container.add(this.mesh);
         this.bot3D.colliders.push(this.collider);
         this.stroke = null;
