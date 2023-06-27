@@ -1695,6 +1695,7 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
     const shape: BotShape = calculateBotValue(calc, bot, 'auxForm');
     if (
         shape === 'cube' ||
+        shape === 'skybox' ||
         shape === 'sphere' ||
         shape === 'sprite' ||
         shape === 'mesh' ||
