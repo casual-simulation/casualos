@@ -614,6 +614,8 @@ export class Server {
 
         if (options.textIt && options.textIt.apiKey && options.textIt.flowId) {
             builder.useTextItAuthMessenger();
+        } else if (options.ses) {
+            builder.useSesAuthMessenger();
         } else {
             builder.useConsoleAuthMessenger();
         }

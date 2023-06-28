@@ -79,6 +79,8 @@ if (config.livekit) {
 
 if (config.textIt && config.textIt.apiKey && config.textIt.flowId) {
     builder.useTextItAuthMessenger();
+} else if (config.ses) {
+    builder.useSesAuthMessenger();
 } else {
     builder.useConsoleAuthMessenger();
 }
