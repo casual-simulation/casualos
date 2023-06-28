@@ -3,11 +3,13 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "docusaurus start -p 3001",
-    "build": "docusaurus build",
+    "start": "yarn build:plugin && docusaurus start -p 3001",
+    "build": "yarn build:plugin && docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
-    "serve": "docusaurus serve -p 3001"
+    "serve": "yarn build:plugin && docusaurus serve -p 3001",
+    "typedoc": "yarn build:plugin && node ./typedoc-plugin/dist/index.js",
+    "build:plugin": "node ./script/build-typedoc.js"
   },
   "dependencies": {
     "@docusaurus/core": "2.2.0",
@@ -19,7 +21,8 @@
     "rc-tooltip": "5.2.2",
     "typedoc": "0.22.15",
     "webpack-virtual-modules": "0.4.6",
-    "typescript": "^4.4.4"
+    "typescript": "^4.4.4",
+    "mustache": "4.2.0"
   },
   "browserslist": {
     "production": [

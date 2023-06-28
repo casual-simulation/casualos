@@ -3129,6 +3129,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param zoomValue The zoom value to use.
      * @param rotX The value to use for the X rotation. Units in degrees.
      * @param rotY The value to use for the Y rotation. Units in degrees.
+     * @param duration The duration of the tween in seconds.
      */
     function tweenTo(
         bot: Bot | string,
@@ -3335,6 +3336,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Enables Point-of-View mode.
+     * @param
      */
     function enablePointOfView(
         center: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 },
@@ -4532,20 +4534,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Records the given data to the given address inside the record for the given record key.
-     * @param recordKey The key that should be used to access the record.
+     * Records the given data to the given address inside the record for the given record key or record name.
+     * @param recordKeyOrRecordName The record key or record name that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
      * @param endpointOrOptions The options that should be used. Optional.
      */
     function recordData(
-        recordKey: string,
+        recordKeyOrRecordName: string,
         address: string,
         data: any,
         endpointOrOptions?: string | (DataRecordOptions & { marker?: string })
     ) {
         return baseRecordData(
-            recordKey,
+            recordKeyOrRecordName,
             address,
             data,
             false,
@@ -4554,22 +4556,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Records the given data to the given address inside the record for the given record key.
+     * Records the given data to the given address inside the record for the given record key or record name.
      * Requires manual approval in order to read, write, or erase this data.
      *
-     * @param recordKey The key that should be used to access the record.
+     * @param recordKey The record key or record name that should be used to access the record.
      * @param address The address that the data should be stored at inside the record.
      * @param data The data that should be stored.
      * @param endpointOrOptions The options that should be used. Optional.
      */
     function recordManualApprovalData(
-        recordKey: string,
+        recordKeyOrRecordName: string,
         address: string,
         data: any,
         endpointOrOptions?: string | (DataRecordOptions & { marker?: string })
     ) {
         return baseRecordData(
-            recordKey,
+            recordKeyOrRecordName,
             address,
             data,
             true,
@@ -4708,31 +4710,31 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Erases the data stored in the given record at the given address.
-     * @param recordKey The key that should be used to access the record.
+     * @param recordKeyOrName The record key or record name that should be used to access the record.
      * @param address The address that the data should be erased from.
      * @param endpoint The records endpoint that should be queried. Optional.
      */
     function eraseData(
-        recordKey: string,
+        recordKeyOrName: string,
         address: string,
         endpoint: string = null
     ): Promise<EraseDataResult> {
-        return baseEraseData(recordKey, address, false, endpoint);
+        return baseEraseData(recordKeyOrName, address, false, endpoint);
     }
 
     /**
      * Erases the data stored in the given record at the given address.
      *
-     * @param recordKey The key that should be used to access the record.
+     * @param recordKeyOrName The record key or name that should be used to access the record.
      * @param address The address that the data should be erased from.
      * @param endpoint The records endpoint that should be queried. Optional.
      */
     function eraseManualApprovalData(
-        recordKey: string,
+        recordKeyOrName: string,
         address: string,
         endpoint: string = null
     ): Promise<EraseDataResult> {
-        return baseEraseData(recordKey, address, true, endpoint);
+        return baseEraseData(recordKeyOrName, address, true, endpoint);
     }
 
     /**
@@ -4776,21 +4778,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Records the given data as a file.
-     * @param recordKey The record that the file should be recorded in.
+     * @param recordKeyOrName The record that the file should be recorded in.
      * @param data The data that should be recorded.
      * @param options The options that should be used to record the file.
      * @param endpoint The records endpoint that should be queried. Optional.
      */
     function recordFile(
-        recordKey: string,
+        recordKeyOrName: string,
         data: any,
         options?: RecordFileOptions,
         endpoint: string = null
     ): Promise<RecordFileApiResult> {
-        if (!hasValue(recordKey)) {
-            throw new Error('A recordKey must be provided.');
-        } else if (typeof recordKey !== 'string') {
-            throw new Error('recordKey must be a string.');
+        if (!hasValue(recordKeyOrName)) {
+            throw new Error('recordKeyOrName must be provided.');
+        } else if (typeof recordKeyOrName !== 'string') {
+            throw new Error('recordKeyOrName must be a string.');
         }
 
         if (!hasValue(data)) {
@@ -4814,7 +4816,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         const task = context.createTask();
         const event = calcRecordFile(
-            recordKey,
+            recordKeyOrName,
             convertToCopiableValue(data),
             options?.description,
             options?.mimeType,
@@ -4871,41 +4873,41 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Deletes the specified file using the given record key.
-     * @param recordKey The key that should be used to delete the file.
+     * @param recordKeyOrName The record key or name that should be used to delete the file.
      * @param result The successful result of a os.recordFile() call.
      * @param endpoint The records endpoint that should be queried. Optional.
      */
     function eraseFile(
-        recordKey: string,
+        recordKeyOrName: string,
         result: RecordFileApiSuccess,
         endpoint?: string
     ): Promise<EraseFileResult>;
     /**
      * Deletes the specified file using the given record key.
-     * @param recordKey The key that should be used to delete the file.
+     * @param recordKeyOrName The record key or record name that should be used to delete the file.
      * @param url The URL that the file is stored at.
      * @param endpoint The records endpoint that should be queried. Optional.
      */
     function eraseFile(
-        recordKey: string,
+        recordKeyOrName: string,
         url: string,
         endpoint?: string
     ): Promise<EraseFileResult>;
     /**
      * Deletes the specified file using the given record key.
-     * @param recordKey The key that should be used to delete the file.
+     * @param recordKeyOrName The record key or record name that should be used to delete the file.
      * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
      * @param endpoint The records endpoint that should be queried. Optional.
      */
     function eraseFile(
-        recordKey: string,
+        recordKeyOrName: string,
         fileUrlOrRecordFileResult: string | RecordFileApiSuccess,
         endpoint: string = null
     ): Promise<EraseFileResult> {
-        if (!hasValue(recordKey)) {
-            throw new Error('A recordKey must be provided.');
-        } else if (typeof recordKey !== 'string') {
-            throw new Error('recordKey must be a string.');
+        if (!hasValue(recordKeyOrName)) {
+            throw new Error('A recordKeyOrName must be provided.');
+        } else if (typeof recordKeyOrName !== 'string') {
+            throw new Error('recordKeyOrName must be a string.');
         }
 
         if (!hasValue(fileUrlOrRecordFileResult)) {
@@ -4932,25 +4934,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         const task = context.createTask();
-        const event = calcEraseFile(recordKey, url, options, task.taskId);
+        const event = calcEraseFile(recordKeyOrName, url, options, task.taskId);
         return addAsyncAction(task, event);
     }
 
     /**
      * Records that the given event occurred.
-     * @param recordKey The key that should be used to record the event.
+     * @param recordKeyOrName The record key or record name that should be used to record the event.
      * @param eventName The name of the event.
      * @param endpoint The records endpoint that should be queried. Optional.
      */
     function recordEvent(
-        recordKey: string,
+        recordKeyOrName: string,
         eventName: string,
         endpoint: string = null
     ): Promise<AddCountResult> {
-        if (!hasValue(recordKey)) {
-            throw new Error('A recordKey must be provided.');
-        } else if (typeof recordKey !== 'string') {
-            throw new Error('recordKey must be a string.');
+        if (!hasValue(recordKeyOrName)) {
+            throw new Error('A recordKeyOrName must be provided.');
+        } else if (typeof recordKeyOrName !== 'string') {
+            throw new Error('recordKeyOrName must be a string.');
         }
 
         if (!hasValue(eventName)) {
@@ -4966,7 +4968,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         const task = context.createTask();
         const event = calcRecordEvent(
-            recordKey,
+            recordKeyOrName,
             eventName,
             1,
             options,
@@ -9495,3 +9497,5 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             : undefined;
     }
 }
+
+export type DefaultLibrary = ReturnType<typeof createDefaultLibrary>;

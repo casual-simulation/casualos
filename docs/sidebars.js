@@ -32,15 +32,7 @@ module.exports = {
                 'variables',
                 'actions',
                 'glossary',
-                'ab-1',
-                {
-                    type: 'category',
-                    label: 'Math',
-                    items: [
-                        'math/vectors',
-                        'math/rotations'
-                    ]
-                }
+                'ab-1'
             ]
         },
     ],

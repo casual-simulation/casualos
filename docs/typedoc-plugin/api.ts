@@ -1,7 +1,7 @@
-const TypeDoc = require('typedoc');
-const path = require('path');
+import TypeDoc, { ProjectReflection } from 'typedoc';
+import path from 'path';
 
-let project;
+let project: ReturnType<typeof parseProject>;
 function parseProject() {
     const app = new TypeDoc.Application();
     
@@ -23,6 +23,6 @@ function getProject() {
     return project;
 }
 
-module.exports = {
+export {
     getProject
 };

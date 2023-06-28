@@ -2740,6 +2740,76 @@ if (result.success) {
 }
 ```
 
+### `os.grantRecordMarkerPermission(recordName, marker, permission, options?)`
+
+Grants the given permission to the given marker in the given record. Returns a promise with the result of the operation.
+
+See [Record Security](./learn/records/security.mdx) for more information about record markers and permissions.
+
+The **first parameter** is the name of the record that the marker is in.
+
+The **second parameter** is the name of the marker that the permission should be granted to.
+
+The **third parameter** is the permission that should be granted to the marker. It should be an object and can be one of the permissions listed in the [Permissions Reference](./records/permissions.mdx).
+
+The **fourth parameter** is optional and is an object with the following structure:
+
+```typescript
+let options: {
+    /**
+     * The HTTP endpoint that the request should interface with.
+     */
+    endpoint?: string;
+};
+```
+
+#### Examples:
+
+```typescript title='Grant the "data:read" permission to the "developerResource" marker for the "developer" role in the "myRecord" record'
+// If successful, then users that are assigned the "developer" role will be able to read all data that
+// is marked with the "developerResource" marker.
+await os.grantRecordMarkerPermission('myRecord', 'developerResource', {
+    type: 'data:read',
+    addresses: true,
+    role: 'developer'
+});
+```
+
+### `os.revokeRecordMarkerPermission(recordName, marker, permission, options?)`
+
+Revokes the given permission from the given marker in the given record. Returns a promise with the result of the operation.
+
+See [Record Security](./learn/records/security.mdx) for more information about record markers and permissions.
+
+The **first parameter** is the name of the record that the marker is in.
+
+The **second parameter** is the name of the marker that the permission should be revoked from.
+
+The **third parameter** is the permission that should be revoked from the marker. It should be an object and can be one of the permissions listed in the [Permissions Reference](./records/permissions.mdx).
+
+The **fourth parameter** is optional and is an object with the following structure:
+
+```typescript
+let options: {
+    /**
+     * The HTTP endpoint that the request should interface with.
+     */
+    endpoint?: string;
+};
+```
+
+#### Examples:
+
+```typescript title='Revoke the "data:read" permission from the "developerResource" marker for the "developer" role in the "myRecord" record'
+// If successful, then users that are assigned the "developer" role will no longer be able to read all data that
+// is marked with the "developerResource" marker.
+await os.revokeRecordMarkerPermission('myRecord', 'developerResource', {
+    type: 'data:read',
+    addresses: true,
+    role: 'developer'
+});
+```
+
 ## OS Actions
 
 ### `configBot`

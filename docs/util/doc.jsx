@@ -115,6 +115,46 @@ export function classTableOfContents(reflection) {
     return toc;
 }
 
+export function objectTableOfContents(reflection) {
+    let toc = [];
+
+    const declaration = reflection.type.declaration;
+
+    let { properties, constructors, methods } = groupMembers(declaration.children);
+
+    if (properties.length > 0) {
+        // toc.push({
+        //     value: 'Properties',
+        //     id: `${reflection.name}-properties`,
+        //     level: 3
+        // });
+
+        toc.push(...properties.map(m => memberTableOfContents(reflection, m)));
+    }
+
+    if (constructors.length > 0) {
+        // toc.push({
+        //     value: 'Constructors',
+        //     id: `${reflection.name}-constructors`,
+        //     level: 3
+        // });
+
+        toc.push(...constructors.map(m => memberTableOfContents(reflection, m)));
+    }
+
+    if (methods.length > 0) {
+        // toc.push({
+        //     value: 'Methods',
+        //     id: `${reflection.name}-methods`,
+        //     level: 3
+        // });
+
+        toc.push(...methods.map(m => memberTableOfContents(reflection, m)));
+    }
+
+    return toc;
+}
+
 export function ClassDescription(props) {
     const reflection = props.reflection;
     if (!reflection) {
@@ -218,12 +258,65 @@ export function ClassPropertyMethod(props) {
     )
 }
 
-export function FunctionSignature({func, sig, link}) {
+export function ObjectMembers(props) {
+    const reflection = props.reflection;
+    const declaration = reflection.type.declaration;
+
+    const children = sortMembers(declaration.children).filter(c => isFunctionProperty(c));
+
+    return (
+        <ReflectionBoundary reflection={reflection} root={true}>
+            <div className="api">
+                {children.map(c => <ObjectMember key={c.name} namespace={reflection.name} property={c} link={memberLink(reflection, c)}/>)}
+            </div>
+        </ReflectionBoundary>
+    )
+}
+
+export function ObjectMember(props) {
+    let detail;
+    if (isFunctionProperty(props.property)) {
+        // detail = <>{props.property.name}</>
+        detail = FunctionSignature({ name: props.namespace + '.' + props.property.name, func: props.property, sig: props.property.type.declaration.signatures[0], link: props.link });
+    } else if (props.property.kindString === 'Property') {
+        detail = ObjectProperty(props);
+    // } else if(props.member.kindString === 'Constructor') {
+    //     detail = ObjectPropertyConstructor(props);
+    // } else if (props.member.kindString === 'Method') {
+    //     detail = ObjectPropertyMethod(props);
+    // } else if(props.member.kindString === 'Accessor') {
+    //     detail = ObjectPropertyAccessor(props);
+    } else {
+        detail = 'Not found ' + props.property.kindString;
+    }
+    
+    return (
+        <ReflectionBoundary reflection={props.property}>
+            <div>
+                {detail}
+            </div>
+        </ReflectionBoundary>
+    )
+}
+
+export function ObjectProperty(props) {
+    return (
+        <div>
+            <Heading as='h3' id={props.link}>
+                <code>{props.property.name}: <TypeLink type={props.property.type}/></code>
+            </Heading>
+            <p>{props.property.comment?.shortText}</p>
+            <pre><code>{JSON.stringify(props.property, undefined, 2)}</code></pre>
+        </div>
+    )
+}
+
+export function FunctionSignature({func, sig, link, name}) {
     const params = (sig.parameters || []);
     return (
         <div>
             <Heading as='h3' id={link}>
-                <FunctionDefinition func={func} sig={sig}/>
+                <FunctionDefinition func={func} sig={sig} name={name}/>
             </Heading>
             <p>{sig.comment?.shortText}</p>
             {params.length > 0 ? (
@@ -236,10 +329,10 @@ export function FunctionSignature({func, sig, link}) {
     );
 }
 
-export function FunctionDefinition({ func, sig }) {
+export function FunctionDefinition({ func, sig, name }) {
     const params = sig.parameters || [];
     return (
-        <code>{(func.flags.isStatic ? 'static ' : '') + sig.name}({params.map((p, i) => <span key={p.name}>{i > 0 ? ', ' : ''}{p.name}: <TypeLink type={p.type}/></span>)}): <TypeLink type={sig.type}/></code>
+        <code>{(func.flags.isStatic ? 'static ' : '') + (name || sig.name)}({params.map((p, i) => <span key={p.name}>{i > 0 ? ', ' : ''}{p.name}: <TypeLink type={p.type}/></span>)}): <TypeLink type={sig.type}/></code>
     );
 }
 
@@ -297,7 +390,8 @@ function parameterDescription(param) {
     let comment = param.comment?.shortText;
 
     if (!comment) {
-        throw `A description for "${param.name}" is not available.`;
+        return '';
+        // throw `A description for "${param.name}" is not available.`;
     }
     // lowercase first char
     comment = comment.slice(0, 1).toLowerCase() + comment.slice(1);
@@ -326,6 +420,9 @@ function TypeLink({ type }) {
             </React.Fragment>)}</span>
     } else if (type.type === 'array') {
         return <><TypeLink type={type.elementType}/>[]</>
+    } else if(type.type === 'reflection') {
+        return '' + JSON.stringify(type);
+        // return <>Dynamic</>
     } else {
         return '' + JSON.stringify(type);
     }
@@ -371,3 +468,81 @@ export function IntrinsicType(props) {
 //         throw new Error(`[${name}] ${err}`);
 //     }
 // }
+
+export function DebugObject(props) {
+    return <pre><code>{JSON.stringify(props.object, undefined, 2)}</code></pre>
+}
+
+export function getReturnType(func) {
+    return func.signatures[0];
+}
+
+export function getProperty(obj, prop) {
+    return obj.type.declaration.children.find(c => c.name === prop && c.kindString === 'Property');
+}
+
+function isFunctionProperty(property) {
+    return property && property.type && property.type.type === 'reflection' &&
+        property.type.declaration && property.type.declaration.signatures &&
+        property.type.declaration.signatures.some(s => s.kindString === 'Call signature');
+}
+
+const keysMap = {
+    'Property': ['type'],
+    'reflection': ['declaration'],
+    'Type literal': ['children', 'signatures'],
+    'Call signature': ['parameters', 'comment', 'type']
+}
+
+export function walk(obj, callback, parent = null) {
+    walkSingle(obj, (value, parent, key) => {
+        callback(value, parent, key);
+        walk(value, callback, value); 
+    });
+}
+
+export function walkSingle(obj, callback, parent = null) {
+    let keys = keysMap[obj.kindString ?? obj.type] || [];
+    for(let key of keys) {
+        let value = obj[key];
+        if (Array.isArray(value)) {
+            for (let v of value) {
+                if (v) {
+                    callback(v, parent, key);
+                }
+            }
+        } else if (value) {
+            callback(value, parent, key);
+        }
+    }
+}
+
+export function getTypeReferences(type) {
+    return getByFilter(type, v => v.type === 'reference');
+}
+
+export function getByFilter(type, filter) {
+    let result = [];
+    walk(type, (value, parent, key) => {
+        if (filter(value, parent, key)) {
+            result.push(value);
+        }
+    });
+    return result;
+}
+
+export function RenderTree({ type }) {
+    let tree = [];
+
+    walkSingle(type, (value, parent) => {
+        console.log('value', value);
+        tree.push(<li key={value.id ?? Math.random()}>
+            {value.name}
+            <RenderTree type={value} />
+        </li>);
+    });
+
+    return <ul>
+        {tree}
+    </ul>;
+}
