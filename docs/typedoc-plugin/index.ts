@@ -46,7 +46,7 @@ async function start() {
             id = page.hash;
         }
 
-        const rendered = await renderDoc(page.contents);
+        // const rendered = await renderDoc(page.contents);
 
         const template = await loadTemplate(page);
         const pageContents = render(template, {
@@ -55,7 +55,7 @@ async function start() {
             sidebar_label: page.pageSidebarLabel ?? id,
             description: page.pageDescription ?? `API Docs for ${id}`,
             importPath: `@site${fullPath.substring(basePath.length).replace(/\\/g, '/')}`,
-            html: rendered
+            // html: rendered
         });
 
         await mkdir(path.dirname(docPath), { recursive: true });
