@@ -3,8 +3,19 @@
 // module.exports = function pluginTypedoc(context: any, options: any) {
 
 import { sortBy } from 'lodash';
-import { ReferenceType, Reflection, Type } from 'typedoc';
+import { ReferenceType, Reflection, ReflectionKind, Type, TypeKind, Comment } from 'typedoc';
 import { getProject } from './api';
+
+export type CommentType = {
+    shortText: string;
+    text: string;
+    returns: string;
+    tags: {
+        tagName: string;
+        paramName: string;
+        text: string;
+    }[];
+};
 
 export function loadContent() {
     const { app, project } = getProject();
@@ -17,18 +28,31 @@ export function loadContent() {
 
     let pages = new Map<string, {
         hash: string,
+        pageTitle: string,
+        pageDescription: string,
+        pageSidebarLabel: string,
         contents: {
             order: number,
             name: string,
-            reflection: any
+            reflection: any,
+            comment: CommentType
         }[]
     }>();
+
+    const allowedKinds = new Set<ReflectionKind>([
+        ReflectionKind.Class,
+        ReflectionKind.Interface,
+        ReflectionKind.ObjectLiteral
+    ]);
 
     const getPage = (hash: string) => {
         let page = pages.get(hash);
         if(!page) {
             page = {
                 hash,
+                pageTitle: null,
+                pageDescription: null,
+                pageSidebarLabel: null,
                 contents: []
             };
             pages.set(hash, page);
@@ -41,15 +65,30 @@ export function loadContent() {
             let hash = getReflectionHash(child);
             if (hash) {
                 let order = getReflectionOrder(child);
+
                 const page = getPage(hash);
+
+                if (!page.pageTitle) {
+                    page.pageTitle = getReflectionTag(child, 'doctitle');
+                }
+
+                if (!page.pageDescription) {
+                    page.pageDescription = getReflectionTag(child, 'docdescription');
+                }
+
+                if (!page.pageSidebarLabel) {
+                    page.pageSidebarLabel = getReflectionTag(child, 'docsidebar');
+                }
+
                 page.contents.push({
                     order,
                     name: child.name,
-                    reflection: app.serializer.toObject(child)
+                    reflection: app.serializer.toObject(child),
+                    comment: getReflectionComment(child)
                 });
                 typesWithPages.add(child);
             }
-        } else {
+        } else if ('type' in child) {
             if (child.type === 'reference') {
                 const referenceType = child as ReferenceType;
                 if (referenceType.reflection) {
@@ -63,12 +102,13 @@ export function loadContent() {
     });
 
     for (let type of allUsedTypes) {
-        if (!typesWithPages.has(type)) {
+        if (!typesWithPages.has(type) && allowedKinds.has(type.kind)) {
             const page = getPage('types');
             page.contents.push({
                 order: 0,
                 name: type.name,
-                reflection: app.serializer.toObject(type)
+                reflection: app.serializer.toObject(type),
+                comment: getReflectionComment(type)
             });
         }
     }
@@ -93,25 +133,43 @@ export function loadContent() {
     };
 }
 
+function getReflectionComment(type: Reflection): CommentType {
+    let comment;
+    if (type.hasComment()) {
+        comment = {
+            shortText: type.comment.shortText,
+            text: type.comment.text,
+            returns: type.comment.returns,
+            tags: type.comment.tags.map(t => ({
+                tagName: t.tagName,
+                paramName: t.paramName,
+                text: t.text
+            }))
+        };
+    }
+    return comment;
+}
+
+export type Content = ReturnType<typeof loadContent>;
+
 function getReflectionHash(reflection: Reflection): string {
-    const hash = reflection.comment?.tags.find(t => {
-        return t.tagName === 'dochash';
+    return getReflectionTag(reflection, 'dochash');
+}
+
+function getReflectionOrder(reflection: Reflection): number {
+    return parseInt(getReflectionTag(reflection, 'docorder') ?? '9999');
+}
+
+function getReflectionTag(reflection: Reflection, tag: string): string {
+    const tagValue = reflection.comment?.tags.find(t => {
+        return t.tagName === tag;
     });
-    if (hash) {
-        return hash.text.trim();
+    if (tagValue) {
+        return tagValue.text.trim();
     }
     return null;
 }
 
-function getReflectionOrder(reflection: Reflection): number {
-    const order = reflection.comment?.tags.find(t =>{
-        return t.tagName === 'docorder'
-    });
-    if (order) {
-        return parseInt(order.text.trim());
-    }
-    return 9999;
-}
 
 function resolveTypeReferences(typeReferences: ReferenceType[]): Set<Reflection> {
     let result: Set<Reflection> = new Set();
@@ -143,14 +201,16 @@ const keysMap = {
     'Project': ['children'],
 };
 
-function walk(obj: Reflection | Type, callback: (value: Reflection | Type, parent: Reflection | Type, key: string) => void, parent: Reflection = null) {
+type WalkType = Reflection | Type;
+
+function walk(obj: WalkType, callback: (value: WalkType, parent: WalkType, key: string) => void, parent: WalkType = null) {
     walkSingle(obj, (value, parent, key) => {
         callback(value, parent, key);
         walk(value, callback, value); 
     });
 }
 
-function walkSingle(obj: Reflection | Type, callback: (value: Reflection, parent: Reflection, key: string) => void, parent: Reflection = null) {
+function walkSingle(obj: WalkType, callback: (value: WalkType, parent: WalkType, key: string) => void, parent: WalkType = null) {
     let type = 'kind' in obj ? obj.kindString : obj.type;
     let keys = (keysMap as any)[type] || [];
     for(let key of keys) {
@@ -167,16 +227,22 @@ function walkSingle(obj: Reflection | Type, callback: (value: Reflection, parent
     }
 }
 
-function getTypeReferences(type: Reflection | Type): ReferenceType[] {
+function getTypeReferences(type: WalkType): ReferenceType[] {
     return getByFilter(type, v => 'type' in v && v.type === 'reference') as ReferenceType[];
 }
 
-function getByFilter(type: Reflection | Type, filter: (value: Reflection | Type, parent: Reflection | Type, key: string) => boolean) {
-    let result: (Reflection | Type)[] = [];
+function getByFilter(type: WalkType, filter: (value: WalkType, parent: WalkType, key: string) => boolean) {
+    let result: WalkType[] = [];
     walk(type, (value, parent, key) => {
         if (filter(value, parent, key)) {
             result.push(value);
         }
     });
     return result;
+}
+
+function isFunctionProperty(property: any) {
+    return property && property.type && property.type.type === 'reflection' &&
+        property.type.declaration && property.type.declaration.signatures &&
+        property.type.declaration.signatures.some(s => s.kindString === 'Call signature');
 }

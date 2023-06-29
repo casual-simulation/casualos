@@ -56,6 +56,8 @@ function createConfigs(dev, version) {
                 loader: {
                     '.mdx': 'text'
                 },
+                jsxFactory: 'h',
+                jsxFragment: 'Fragment',
                 minify: false,
                 plugins: [
                     copy({

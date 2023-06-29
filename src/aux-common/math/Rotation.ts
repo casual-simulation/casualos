@@ -4,6 +4,12 @@ import { Vector3 } from './Vector3';
 
 /**
  * Defines a class that can represent geometric rotations.
+ *
+ * @docHash math/rotations
+ * @docOrder 0
+ * @docTitle Rotations
+ * @docSidebar Rotations
+ * @docDescription Rotations help represent orientation.
  */
 export class Rotation {
     private _q: Quaternion;
@@ -447,6 +453,12 @@ export class Rotation {
 /**
  * Defines an interface that represents a from/to rotation.
  * That is, a rotation that is able to rotate a vector from the given vector direction to the given vector direction.
+ *
+ * @docHash math/rotations
+ * @docOrder 3
+ * @docTitle Rotations
+ * @docSidebar Rotations
+ * @docDescription Rotations help represent orientation.
  */
 export interface FromToRotation {
     /**
@@ -462,6 +474,12 @@ export interface FromToRotation {
 
 /**
  * Defines an interface that represents an Axis and Angle pair.
+ *
+ * @docHash math/rotations
+ * @docOrder 2
+ * @docTitle Rotations
+ * @docSidebar Rotations
+ * @docDescription Rotations help represent orientation.
  */
 export interface AxisAndAngle {
     /**
@@ -477,6 +495,12 @@ export interface AxisAndAngle {
 
 /**
  * Defines an interface that represents an Euler Angles rotation.
+ *
+ * @docHash math/rotations
+ * @docOrder 4
+ * @docTitle Rotations
+ * @docSidebar Rotations
+ * @docDescription Rotations help represent orientation.
  */
 export interface EulerAnglesRotation {
     euler: {
@@ -511,6 +535,12 @@ export interface EulerAnglesRotation {
 
 /**
  * Defines an interface that represents a sequence of rotations.
+ *
+ * @docHash math/rotations
+ * @docOrder 5
+ * @docTitle Rotations
+ * @docSidebar Rotations
+ * @docDescription Rotations help represent orientation.
  */
 export interface SequenceRotation {
     /**
@@ -519,12 +549,27 @@ export interface SequenceRotation {
     sequence: Rotation[];
 }
 
+/**
+ * Defines an interface that represents a rotation constructed from a Quaternion.
+ *
+ * @docHash math/rotations
+ * @docOrder 6
+ * @docTitle Rotations
+ * @docSidebar Rotations
+ * @docDescription Rotations help represent orientation.
+ */
 export interface QuaternionRotation {
     quaternion: { x: number; y: number; z: number; w: number };
 }
 
 /**
  * Defines an interface that represents a rotation transforms (0, 1, 0) and (0, 0, 1) to look along the given direction and upwards axes.
+ *
+ * @docHash math/rotations
+ * @docOrder 7
+ * @docTitle Rotations
+ * @docSidebar Rotations
+ * @docDescription Rotations help represent orientation.
  */
 export interface LookRotation {
     /**

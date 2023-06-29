@@ -3,11 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "yarn build:plugin && docusaurus start -p 3001",
-    "build": "yarn build:plugin && docusaurus build",
+    "start": "docusaurus start -p 3001",
+    "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
-    "serve": "yarn build:plugin && docusaurus serve -p 3001",
+    "serve": "docusaurus serve -p 3001",
     "typedoc": "yarn build:plugin && node ./typedoc-plugin/dist/index.js",
     "build:plugin": "node ./script/build-typedoc.js"
   },
@@ -22,6 +22,7 @@
     "typedoc": "0.22.15",
     "webpack-virtual-modules": "0.4.6",
     "typescript": "^4.4.4",
+    "vue": "3.3.4",
     "mustache": "4.2.0"
   },
   "browserslist": {

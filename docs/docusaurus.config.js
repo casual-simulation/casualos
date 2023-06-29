@@ -187,7 +187,6 @@ module.exports = {
             ],
         },
       ],
-      './plugins/simple-analytics',
-      './plugins/typedoc'
+      './plugins/simple-analytics'
   ]
 };

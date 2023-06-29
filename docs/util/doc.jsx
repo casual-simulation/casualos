@@ -155,6 +155,57 @@ export function objectTableOfContents(reflection) {
     return toc;
 }
 
+export function apiTableOfContents(doc) {
+    let toc = [];
+
+    for(let c of doc.contents) {
+        if(c.reflection.kindString === 'Interface' || c.reflection.kindString === 'Class') {
+            toc.push({
+                value: c.reflection.name,
+                id: c.reflection.name,
+                level: 2
+            });
+
+            toc.push(...classTableOfContents(c.reflection));
+        } else {
+            toc.push({
+                value: c.reflection.name,
+                id: c.reflection.name,
+                level: 2
+            });
+
+            toc.push(...objectTableOfContents(c.reflection));
+        }
+    }
+
+    return toc;
+}
+
+export function ApiContents({contents}) {
+    return (
+        <div class="api">
+            {contents.map(c => <ApiReflection key={c.name} reflection={c.reflection} />)}
+        </div>
+    );
+}
+
+function ApiReflection({ reflection }) {
+    return (
+        <div>
+            <Heading as='h2' id={reflection.name}>{reflection.name}</Heading>
+            <ApiMembers reflection={reflection} />
+        </div>
+    )
+}
+
+export function ApiMembers({reflection}) {
+    if (reflection.kindString === 'Interface' || reflection.kindString === 'Class') {
+        return <ClassMembers reflection={reflection} />
+    } else {
+        return <ObjectMembers reflection={reflection} />
+    }
+}
+
 export function ClassDescription(props) {
     const reflection = props.reflection;
     if (!reflection) {

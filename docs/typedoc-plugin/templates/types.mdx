@@ -1,0 +1,29 @@
+---
+id: {{id}}
+title: Types
+sidebar_label: Types
+description: Type definitions that CasualOS uses
+---
+
+import Doc from '{{{importPath}}}'
+import { 
+    objectTableOfContents,
+    ObjectMembers,
+    classTableOfContents,
+    setLinkMap,
+    DebugObject,
+    getReturnType,
+    getProperty,
+    RenderTree,
+    getTypeReferences,
+    ApiContents,
+    apiTableOfContents
+} from '@site/util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+{{{html}}}

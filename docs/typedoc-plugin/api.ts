@@ -9,7 +9,7 @@ function parseProject() {
 
     app.bootstrap({
         tsconfig: path.resolve(__dirname, 'tsconfig.json'),
-        entryPoints: [path.resolve(__dirname, 'entry.ts')]
+        entryPoints: [path.resolve(__dirname, 'entry.ts')],
     });
     
     const project = app.convert();

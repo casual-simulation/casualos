@@ -1,14 +1,18 @@
 const path = require('path');
-import { loadContent } from './loader';
+import { Content, loadContent } from './loader';
 const VirtualModulesPlugin = require('webpack-virtual-modules');
 import { ReferenceType, Reflection, ReflectionType, Type } from 'typedoc';
 import { getProject } from './api';
 import { sortBy } from 'lodash';
-import { writeFile, mkdir, rmdir } from 'fs/promises';
+import { writeFile, mkdir, rmdir, readFile } from 'fs/promises';
 import { render } from 'mustache';
-import Template from './template.mdx';
+import Template from './templates/generic.mdx';
+import { renderToString } from 'react-dom/server';
+import { renderDoc } from './doc';
 
-const basePath = path.resolve(__dirname, 'static', 'api');
+
+const basePath = path.resolve(__dirname, '..', '..');
+const templatesPath = path.resolve(basePath, 'typedoc-plugin', 'templates');
 const jsonDist = path.resolve(basePath, 'static', 'api');
 
 async function start() {
@@ -23,7 +27,7 @@ async function start() {
         let pagePath = page.hash;
 
         console.log('[docusarus-plugin-typedoc] Saving page data: ', pagePath);
-        const fullPath =path.resolve(jsonDist, `${pagePath}.json`);
+        const fullPath = path.resolve(jsonDist, `${pagePath}.json`);
         const dirname = path.dirname(fullPath);
         const fileName = path.basename(fullPath);
         
@@ -32,15 +36,28 @@ async function start() {
             encoding: 'utf-8'
         });
 
-        const pageContents = render(Template, {
-            id: fileName,
-            title: fileName,
-            sidebar_label: 'test',
-            description: 'test description',
-            importPath: `@site/${fullPath.substring(basePath.length).replace(/\\/g, '/')}`
+        const docPath = path.resolve(basePath, 'docs', `${pagePath}.mdx`);
+
+        let id;
+        let matches = page.hash.match(/\/[^\/]+$/);
+        if (matches) {
+            id = matches[0].substring(1);
+        } else {
+            id = page.hash;
+        }
+
+        const rendered = await renderDoc(page.contents);
+
+        const template = await loadTemplate(page);
+        const pageContents = render(template, {
+            id: id,
+            title: page.pageTitle ?? id,
+            sidebar_label: page.pageSidebarLabel ?? id,
+            description: page.pageDescription ?? `API Docs for ${id}`,
+            importPath: `@site${fullPath.substring(basePath.length).replace(/\\/g, '/')}`,
+            html: rendered
         });
 
-        const docPath = path.resolve(basePath, 'docs', `${pagePath}.mdx`);
         await mkdir(path.dirname(docPath), { recursive: true });
 
         console.log('[docusarus-plugin-typedoc] Saving page: ', docPath);
@@ -58,6 +75,18 @@ async function start() {
         // });
     }
 
+}
+
+async function loadTemplate(page: Content['pages'][0]): Promise<string> {
+    const templatePath = path.resolve(templatesPath, `${page.hash}.mdx`);
+    try {
+        const template = await readFile(templatePath, {
+            encoding: 'utf-8'
+        });
+        return template;
+    } catch (err) {
+        return Template;
+    }
 }
 
 start();
