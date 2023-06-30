@@ -17,7 +17,7 @@ const publicDir = path.resolve(__dirname, 'shared', 'static');
 const casualOsPackages = fs
     .readdirSync(
         // src folder
-        path.resolve(__dirname, '..', '..')
+        path.resolve(__dirname, '..', '..', '..')
     )
     .map((folder) => `@casual-simulation/${folder}`);
 
