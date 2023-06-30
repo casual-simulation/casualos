@@ -548,6 +548,7 @@ export interface WorkspaceHex {
 export type BotShape =
     | 'cube'
     | 'circle'
+    | 'skybox'
     | 'sphere'
     | 'sprite'
     | 'mesh'

@@ -53,11 +53,19 @@ import {
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
 import { Simulation } from '@casual-simulation/aux-vm';
+import { BackSide } from 'three';
 
 /**
  * Gets the direction of the up vector for 3D portals.
  */
 export const WORLD_UP = new Vector3(0, 0, 1);
+
+/**
+ * Create copy of material that skybox sphere mesh should use.
+ */
+export function baseAuxSkyboxMeshMaterial() {
+    return new MeshBasicMaterial({ side: BackSide });
+}
 
 /**
  * Create copy of material that most meshes in Aux Builder/Player use.
@@ -86,6 +94,26 @@ export function baseAuxDirectionalLight() {
     // let helper = new DirectionalLightHelper(dirLight);
     // dirLight.add(helper);
     return dirLight;
+}
+
+/**
+ * Creates a new hybrid sphere mesh optimal for Skybox implementations.
+ * @param position The position of the sphere.
+ * @param color The color of the sphere in linear space.
+ * @param size The radius of the sphere in meters.
+ */
+export function createSkybox(
+    position: Vector3,
+    color: number,
+    size: number = 0.1
+) {
+    const geometry = new SphereBufferGeometry(size, 20, 18);
+    let material = baseAuxSkyboxMeshMaterial();
+    material.color = new Color(color);
+
+    const sphere = new Mesh(geometry, material.clone());
+    sphere.position.copy(position);
+    return sphere;
 }
 
 /**

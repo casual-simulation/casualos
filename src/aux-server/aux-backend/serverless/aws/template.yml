@@ -25,6 +25,13 @@ Parameters:
     ServerConfigParameter:
         Type: String
         Description: The JSON configuration that should be used.
+    SESIdentityNameParameter:
+        Type: String
+        Description: The Simple Email Service (SES) Identity that the lambda function should be allowed to send emails from.
+        Default: ''
+
+Conditions:
+    UseSESCrud: !Not [!Equals [!Ref SESIdentityNameParameter, '']]
 
 Globals:
     Api:
@@ -56,6 +63,11 @@ Resources:
                 # Give Create/Read/Update/Delete Permissions to the Bucket
                 - S3CrudPolicy:
                       BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                - !If [
+                      UseSESCrud,
+                      !Ref SESIdentityNameParameter,
+                      !Ref 'AWS::NoValue',
+                  ]
             Environment:
                 Variables:
                     SERVER_CONFIG: !Ref ServerConfigParameter

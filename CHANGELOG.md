@@ -2,7 +2,7 @@
 
 ## V3.1.35
 
-#### Date: 6/22/2023
+#### Date: 6/30/2023
 
 ### :rocket: Improvements
 
@@ -10,6 +10,11 @@
     -   This means that we now ship one docker image for both the aux server and auth server instead of two.
     -   The aux server still runs on port 3000, while the auth server runs on port 3002 (by default).
     -   The auth serverless backend has also been merged with the serverless apiary backends, so only one AWS CloudFormation deployment is needed to have a fully functioning deployment.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where roles could not be granted because of a database configuration issue.
+-   Fixed an issue where auth sessions could not be renewed because of a database configuration issue.
 
 ## V3.1.34
 

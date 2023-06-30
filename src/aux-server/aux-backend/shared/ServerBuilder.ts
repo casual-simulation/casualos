@@ -25,6 +25,8 @@ import {
     DynamoDBPolicyStore,
     DynamoDBRecordsStore,
     S3FileRecordsStore,
+    SimpleEmailServiceAuthMessenger,
+    SimpleEmailServiceAuthMessengerOptions,
     TextItAuthMessenger,
 } from '@casual-simulation/aux-records-aws';
 import { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
@@ -32,6 +34,7 @@ import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuth
 import { LivekitController } from '@casual-simulation/aux-records/LivekitController';
 import { SubscriptionConfiguration } from '@casual-simulation/aux-records/SubscriptionConfiguration';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { SESV2 } from 'aws-sdk';
 import { createClient as createRedisClient } from 'redis';
 import RedisRateLimitStore from '@casual-simulation/rate-limit-redis';
 import z from 'zod';
@@ -411,6 +414,20 @@ export class ServerBuilder {
         return this;
     }
 
+    useSesAuthMessenger(
+        options: Pick<BuilderOptions, 'ses'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using SES Auth Messenger.');
+        if (!options.ses) {
+            throw new Error('SES options must be provided.');
+        }
+        this._authMessenger = new SimpleEmailServiceAuthMessenger(
+            new SESV2(),
+            options.ses as SimpleEmailServiceAuthMessengerOptions
+        );
+        return this;
+    }
+
     useConsoleAuthMessenger(): this {
         console.log('[ServerBuilder] Using Console Auth Messenger.');
         this._authMessenger = new ConsoleAuthMessenger();
@@ -708,6 +725,23 @@ const textItSchema = z.object({
     flowId: z.string().nonempty().nullable(),
 });
 
+const sesContentSchema = z.discriminatedUnion('type', [
+    z.object({
+        type: z.literal('template'),
+        templateArn: z.string().nonempty(),
+    }),
+    z.object({
+        type: z.literal('plain'),
+        subject: z.string().nonempty(),
+        body: z.string().nonempty(),
+    }),
+]);
+
+const sesSchema = z.object({
+    fromAddress: z.string().nonempty(),
+    content: sesContentSchema,
+});
+
 const redisSchema = z.object({
     host: z.string().nonempty(),
     port: z.number(),
@@ -771,6 +805,7 @@ export const optionsSchema = z.object({
     prisma: prismaSchema.optional(),
     livekit: livekitSchema.optional(),
     textIt: textItSchema.optional(),
+    ses: sesSchema.optional(),
     redis: redisSchema.optional(),
     rateLimit: rateLimitSchema.optional(),
 

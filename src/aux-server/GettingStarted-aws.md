@@ -42,6 +42,7 @@ To deploy this project to AWS Lambda, follow these steps:
         - `SERVER_CONFIG` - The config that should be used for the server. Provides the ability to configure TextIt, Livekit, Subscriptions, and more. See ServerBuilder.ts for the schema (BuilderOptions) that the SERVER_CONFIG uses.
         - `CAUSAL_REPO_CONNECTION_PROTOCOL` - Set this to `apiary-aws`.
         - `SHARED_PARTITIONS_VERSION` - Set this to `v2`.
+        - `SES_IDENTITY_NAME` - The Simple Email Service identity that emails should be allowed to be sent from. Only used for granting permissions to send emails to the lambda function. Use `SERVER_CONFIG` to actually configure the server to use SES. (Optional)
         - Configure any other optional environment variables listed below.
 5. Run a build.
 6. After the build, go to CloudFormation and find the stack update.

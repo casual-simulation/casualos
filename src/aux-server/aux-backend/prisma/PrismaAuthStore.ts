@@ -308,6 +308,38 @@ export class PrismaAuthStore implements AuthStore {
         });
     }
 
+    async replaceSession(
+        session: AuthSession,
+        newSession: AuthSession,
+        revokeTimeMs: number
+    ): Promise<void> {
+        await this._client.authSession.update({
+            where: {
+                sessionId: session.sessionId,
+            },
+            data: {
+                revokeTime: convertToDate(revokeTimeMs),
+                nextSession: {
+                    create: {
+                        sessionId: newSession.sessionId,
+                        userId: newSession.userId,
+                        secretHash: newSession.secretHash,
+                        grantedTime: convertToDate(
+                            newSession.grantedTimeMs
+                        ) as Date,
+                        expireTime: convertToDate(
+                            newSession.expireTimeMs
+                        ) as Date,
+                        revokeTime: convertToDate(newSession.revokeTimeMs),
+                        requestId: newSession.requestId,
+                        ipAddress: newSession.ipAddress,
+                        previousSessionId: session.sessionId,
+                    },
+                },
+            },
+        });
+    }
+
     async listSessions(
         userId: string,
         expireTimeMs: number
