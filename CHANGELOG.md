@@ -10,6 +10,7 @@
     -   This means that we now ship one docker image for both the aux server and auth server instead of two.
     -   The aux server still runs on port 3000, while the auth server runs on port 3002 (by default).
     -   The auth serverless backend has also been merged with the serverless apiary backends, so only one AWS CloudFormation deployment is needed to have a fully functioning deployment.
+-   Added the `skybox` form.
 
 ### :bug: Bug Fixes
 
