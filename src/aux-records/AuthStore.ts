@@ -91,6 +91,18 @@ export interface AuthStore {
     saveSession(session: AuthSession): Promise<void>;
 
     /**
+     * Marks the given session as replaced by the new session and saves the new session.
+     * @param session The session that was replaced.
+     * @param newSession The new session.
+     * @param revokeTimeMs The time that the old session is to be revoked at. (Usually now)
+     */
+    replaceSession(
+        session: AuthSession,
+        newSession: AuthSession,
+        revokeTimeMs: number
+    ): Promise<void>;
+
+    /**
      * Lists the sessions that belong to the given user.
      * @param userId The ID of the user.
      * @param expireTimeMs The expiration time that the list should start after.
