@@ -14,6 +14,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where roles could not be granted because of a database configuration issue.
+-   Fixed an issue where auth sessions could not be renewed because of a database configuration issue.
 
 ## V3.1.34
 
