@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-client-apiary",
-    "version": "3.1.35-alpha.5348454644",
+    "version": "3.1.35-alpha.5426304884",
     "description": "A set of services that can be used to network with a Casual Apiary.",
     "keywords": [
         "crdt",
