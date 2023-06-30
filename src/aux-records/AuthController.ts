@@ -94,12 +94,12 @@ export class AuthController {
     private _store: AuthStore;
     private _messenger: AuthMessenger;
     private _forceAllowSubscriptionFeatures: boolean;
-    private _subscriptionConfig: SubscriptionConfiguration;
+    private _subscriptionConfig: SubscriptionConfiguration | null;
 
     constructor(
         authStore: AuthStore,
         messenger: AuthMessenger,
-        subscriptionConfig: SubscriptionConfiguration,
+        subscriptionConfig: SubscriptionConfiguration | null,
         forceAllowSubscriptionFeatures: boolean = false
     ) {
         this._store = authStore;
@@ -850,13 +850,7 @@ export class AuthController {
                 };
             }
 
-            await this._store.saveSession({
-                ...session,
-                nextSessionId: newSessionId,
-                revokeTimeMs: now,
-            });
-
-            await this._store.saveSession(newSession);
+            await this._store.replaceSession(session, newSession, now);
 
             return {
                 success: true,

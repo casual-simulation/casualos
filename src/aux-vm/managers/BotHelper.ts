@@ -210,7 +210,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      */
     async shout(
         eventName: string,
-        bots: (Bot | string)[],
+        bots: (Bot | string)[] | null,
         arg?: any
     ): Promise<ChannelActionResult> {
         const botIds = bots

@@ -439,7 +439,7 @@ export function getBotSpace(bot: Bot): BotSpace {
 }
 
 export function calculateBotValue(
-    context: BotObjectsContext,
+    context: BotObjectsContext | null,
     object: Bot | PrecalculatedBot,
     tag: keyof BotTags
 ) {
@@ -1695,6 +1695,7 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
     const shape: BotShape = calculateBotValue(calc, bot, 'auxForm');
     if (
         shape === 'cube' ||
+        shape === 'skybox' ||
         shape === 'sphere' ||
         shape === 'sprite' ||
         shape === 'mesh' ||

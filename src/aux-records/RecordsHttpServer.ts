@@ -147,6 +147,12 @@ const UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON = {
         'The request body was not properly formatted. It should be valid JSON.',
 };
 
+const SUBSCRIPTIONS_NOT_SUPPORTED_RESULT = {
+    success: false,
+    errorCode: 'not_supported',
+    errorMessage: 'Subscriptions are not supported by this server.',
+};
+
 /**
  * The Zod validation for record keys.
  */
@@ -206,7 +212,7 @@ export class RecordsHttpServer {
     private _data: DataRecordsController;
     private _manualData: DataRecordsController;
     private _files: FileRecordsController;
-    private _subscriptions: SubscriptionController;
+    private _subscriptions: SubscriptionController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -230,7 +236,7 @@ export class RecordsHttpServer {
         dataController: DataRecordsController,
         manualDataController: DataRecordsController,
         filesController: FileRecordsController,
-        subscriptionController: SubscriptionController,
+        subscriptionController: SubscriptionController | null,
         rateLimitController: RateLimitController,
         policyController: PolicyController
     ) {
@@ -636,6 +642,10 @@ export class RecordsHttpServer {
     private async _stripeWebhook(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
+        if (!this._subscriptions) {
+            return returnResult(SUBSCRIPTIONS_NOT_SUPPORTED_RESULT);
+        }
+
         let body: string = null;
         if (typeof request.body === 'string') {
             body = request.body;
@@ -2534,6 +2544,10 @@ export class RecordsHttpServer {
     private async _getSubscriptionInfo(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
+        if (!this._subscriptions) {
+            return returnResult(SUBSCRIPTIONS_NOT_SUPPORTED_RESULT);
+        }
+
         if (!validateOrigin(request, this._allowedAccountOrigins)) {
             return returnResult(INVALID_ORIGIN_RESULT);
         }
@@ -2592,6 +2606,10 @@ export class RecordsHttpServer {
     private async _manageSubscription(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
+        if (!this._subscriptions) {
+            return returnResult(SUBSCRIPTIONS_NOT_SUPPORTED_RESULT);
+        }
+
         if (!validateOrigin(request, this._allowedAccountOrigins)) {
             return returnResult(INVALID_ORIGIN_RESULT);
         }

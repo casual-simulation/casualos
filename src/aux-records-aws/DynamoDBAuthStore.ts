@@ -472,6 +472,22 @@ export class DynamoDBAuthStore implements AuthStore {
             .promise();
     }
 
+    async replaceSession(
+        session: AuthSession,
+        newSession: AuthSession,
+        revokeTimeMs: number
+    ): Promise<void> {
+        await this.saveSession({
+            ...session,
+            revokeTimeMs: revokeTimeMs,
+            nextSessionId: newSession.sessionId,
+        });
+        await this.saveSession({
+            ...newSession,
+            previousSessionId: session.sessionId,
+        });
+    }
+
     async listSessions(
         userId: string,
         expireTimeMs: number | null

@@ -22,8 +22,8 @@ jobs:
               run: |
                   mkdir -p ./casualos/src/aux-server/aux-web/shared/ab1/prod
                   mkdir -p ./casualos/src/aux-server/aux-web/shared/ab1/staging
-                  cp ./ab1/dist/ab1* ./casualos/src/aux-server/aux-web/shared/ab1/prod/
-                  cp ./ab1/dist/staging/ab1* ./casualos/src/aux-server/aux-web/shared/ab1/staging/
+                  cp ./ab1/dist/ab* ./casualos/src/aux-server/aux-web/shared/ab1/prod/
+                  cp ./ab1/dist/staging/ab* ./casualos/src/aux-server/aux-web/shared/ab1/staging/
             - name: Commit and Push Changes
               run: |
                   cd casualos

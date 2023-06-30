@@ -506,6 +506,7 @@ test.describe('interaction', () => {
 
 test.describe('forms', () => {
     const forms = [
+        ['skybox'] as const,
         ['sphere'] as const,
         ['sprite'] as const,
         ['frustum'] as const,

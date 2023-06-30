@@ -189,6 +189,22 @@ export class MemoryAuthStore implements AuthStore {
         }
     }
 
+    async replaceSession(
+        session: AuthSession,
+        newSession: AuthSession,
+        revokeTimeMs: number
+    ): Promise<void> {
+        this.saveSession({
+            ...session,
+            revokeTimeMs: revokeTimeMs,
+            nextSessionId: newSession.sessionId,
+        });
+        this.saveSession({
+            ...newSession,
+            previousSessionId: session.sessionId,
+        });
+    }
+
     async listSessions(
         userId: string,
         expireTimeMs: number

@@ -857,6 +857,7 @@ export function botCalculationContextTests(
     describe('getBotShape()', () => {
         const cases = [
             ['cube'],
+            ['skybox'],
             ['sphere'],
             ['sprite'],
             ['circle'],
