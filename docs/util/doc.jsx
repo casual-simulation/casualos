@@ -1,7 +1,7 @@
 import React from 'react';
 import Heading from '@theme/Heading';
 import CodeBlock from '@theme/CodeBlock';
-import { sortBy } from 'lodash';
+import { flatMap, groupBy, sortBy } from 'lodash';
 import { ReflectionBoundary } from './errors';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import Link from '@docusaurus/Link';
@@ -120,41 +120,42 @@ export function classTableOfContents(reflection) {
 export function objectTableOfContents(reflection) {
     let toc = [];
 
-    const declaration = reflection.type.declaration;
+    const childGroups = calculateObjectMemberGroups(reflection);
 
-    let { properties, constructors, methods } = groupMembers(declaration.children);
+    for(let group of childGroups) {
+        const title = getGroupTitle(group);
 
-    if (properties.length > 0) {
-        // toc.push({
-        //     value: 'Properties',
-        //     id: `${reflection.name}-properties`,
-        //     level: 3
-        // });
+        toc.push({
+            value: title,
+            id: group.group,
+            level: 2
+        });
 
-        toc.push(...properties.map(m => memberTableOfContents(reflection, m)));
-    }
-
-    if (constructors.length > 0) {
-        // toc.push({
-        //     value: 'Constructors',
-        //     id: `${reflection.name}-constructors`,
-        //     level: 3
-        // });
-
-        toc.push(...constructors.map(m => memberTableOfContents(reflection, m)));
-    }
-
-    if (methods.length > 0) {
-        // toc.push({
-        //     value: 'Methods',
-        //     id: `${reflection.name}-methods`,
-        //     level: 3
-        // });
-
-        toc.push(...methods.map(m => memberTableOfContents(reflection, m)));
+        toc.push(...group.children.map(c => objectMemberTableOfContents(c)));
     }
 
     return toc;
+}
+
+function objectMemberTableOfContents({ reflection, child, group, namespace }) {
+    const name = namespace ? namespace + '.' + child.name : child.name;
+
+    let definition;
+    if (isFunctionProperty(child)) {
+        const declaration = child.type.declaration;
+        const signatures = declaration.signatures;
+        definition = functionDefinition(signatures[0], name);
+    } else {
+        definition = propertyDefinition(member, name);
+    }
+
+    definition = `<code>${definition}</code>`;
+
+    return {
+        value: definition,
+        id: `${reflection.name}-${child.name}`,
+        level: 3
+    };
 }
 
 export function apiTableOfContents(doc) {
@@ -322,23 +323,45 @@ export function ObjectMembers(props) {
     const reflection = props.reflection;
     const declaration = reflection.type.declaration;
 
-    const children = sortMembers(declaration.children).filter(c => isFunctionProperty(c));
+    const childGroups = calculateObjectMemberGroups(reflection);
+    console.log(childGroups);
+
+    // const children = sortMembers(declaration.children).filter(c => isFunctionProperty(c) || isObjectProperty(c));
+    // const isHiddenNamespace = getReflectionTag(reflection, 'hiddennamespace') !== null;
+    // const namespace = isHiddenNamespace ? null : reflection.name;
 
     return (
         <ReflectionBoundary reflection={reflection} root={true}>
             <div className="api">
                 <ReflectionDiscription reflection={reflection} />
-                {children.map(c => <ObjectMember key={c.name} namespace={reflection.name} property={c} link={memberLink(reflection, c)} references={props.references}/>)}
+                {childGroups.map(c => <GroupChildren key={c.group} group={c} references={props.references}/>)}
             </div>
         </ReflectionBoundary>
     )
+}
+
+export function GroupChildren({ group, references }) {
+    const children = group.children;
+
+    const title = getGroupTitle(group);
+
+    return <div>
+        <Heading as="h3" id={group.group}>{title}</Heading>
+        {children.map(c => {
+            return <ObjectMember key={c.child.id} namespace={c.namespace} property={c.child} link={memberLink(c.reflection, c.child)} references={references}/>
+        })}
+    </div>
 }
 
 export function ObjectMember(props) {
     let detail;
     if (isFunctionProperty(props.property)) {
         // detail = <>{props.property.name}</>
-        detail = FunctionSignature({ name: props.namespace + '.' + props.property.name, func: props.property, sig: props.property.type.declaration.signatures[0], link: props.link, references:props.references });
+        const name = props.namespace ? props.namespace + '.' + props.property.name : props.property.name;
+        detail = FunctionSignature({ name: name, func: props.property, sig: props.property.type.declaration.signatures[0], link: props.link, references:props.references });
+    } else if(isObjectProperty(props.property)) {
+        detail = <>This is really fun! {props.property.name}</>
+        // detail = ObjectMembers({ reflection: props.property, references: props.references });
     } else if (props.property.kindString === 'Property') {
         detail = ObjectProperty(props);
     // } else if(props.member.kindString === 'Constructor') {
@@ -401,9 +424,9 @@ export function FunctionDefinition({ func, sig, name, references }) {
     );
 }
 
-export function functionDefinition(func) {
+export function functionDefinition(func, name = func.name) {
     const params = func.parameters || [];
-    return `${func.name}(${params.map((p, i) => p.name).join(', ')}): ${typeName(func.type)}`;
+    return `${name}(${params.map((p, i) => p.name).join(', ')}): ${typeName(func.type)}`;
 }
 
 export function FunctionParameter({ param, index, references }) {
@@ -443,8 +466,8 @@ export function indexName(index) {
     return numberList[index];
 }
 
-export function propertyDefinition(prop) {
-    return `${prop.name}: ${typeName(prop.type)}`;
+export function propertyDefinition(prop, name = prop.name) {
+    return `${name}: ${typeName(prop.type)}`;
 }
 
 export function accessorDefinition(prop) {
@@ -522,6 +545,8 @@ function typeName(type) {
         } else {
             return '' + JSON.stringify(type);
         }
+    } else if (type.type === 'reflection') {
+        return 'object';
     } else {
         return 'missing!: ' + JSON.stringify(type);
     }
@@ -570,6 +595,12 @@ function isFunctionProperty(property) {
     return property && property.type && property.type.type === 'reflection' &&
         property.type.declaration && property.type.declaration.signatures &&
         property.type.declaration.signatures.some(s => s.kindString === 'Call signature');
+}
+
+function isObjectProperty(property) {
+    return property && property.type && property.type.type === 'reflection' &&
+        property.type.declaration && property.type.declaration.kindString === 'Type literal' &&
+        property.type.declaration.children;
 }
 
 const keysMap = {
@@ -630,4 +661,95 @@ export function RenderTree({ type }) {
     return <ul>
         {tree}
     </ul>;
+}
+
+function getReflectionTag(reflection, tag) {
+    const tagValue = reflection.comment?.tags?.find(t => {
+        return t.tag === tag;
+    });
+    if (tagValue) {
+        return tagValue.text.trim();
+    }
+    return null;
+}
+
+function getChildGroup(child) {
+    const declaration =child?.type?.declaration; 
+    const signatures = declaration?.signatures;
+
+    if (signatures) {
+        for(let sig of signatures) {
+            const tagValue = getReflectionTag(sig, 'docgroup');
+            if (tagValue) {
+                return tagValue.trim();
+            }
+        }
+    }
+
+    return '99-default';
+}
+
+function getChildGroupTitle(child) {
+    const declaration =child?.type?.declaration; 
+    const signatures = declaration?.signatures;
+
+    if (signatures) {
+        for(let sig of signatures) {
+            const tagValue = getReflectionTag(sig, 'docgrouptitle');
+            if (tagValue) {
+                return tagValue.trim();
+            }
+        }
+    }
+
+    return null;
+}
+
+function getGroupTitle(group) {
+    for(let child of group.children) {
+        let title = getChildGroupTitle(child.child);
+        if(title) {
+            return title;
+        }
+    }
+
+    return group.group;
+}
+
+function flattenObjectChildren(reflection) {
+    const declaration = reflection.type.declaration;
+    const children = declaration.children.filter(c => isFunctionProperty(c) || isObjectProperty(c));
+
+    const isHiddenNamespace = getReflectionTag(reflection, 'hiddennamespace') !== null;
+    const namespace = isHiddenNamespace ? null : reflection.name;
+
+    return flatMap(children, c => {
+        if (isFunctionProperty(c)) {
+            return {
+                group: getChildGroup(c),
+                namespace: namespace,
+                reflection: reflection,
+                child: c
+            };
+        }
+
+        return flattenObjectChildren(c);
+    });
+}
+
+function calculateObjectMemberGroups(reflection) {
+    const flattened = flattenObjectChildren(reflection);
+    const groups = groupBy(flattened, c => c.group);
+
+    let childGroups = [];
+    for(let group in groups) {
+        childGroups.push({
+            group: group,
+            children: groups[group]
+        });
+    }
+
+    childGroups = sortBy(childGroups, c => c.group);
+
+    return childGroups;
 }

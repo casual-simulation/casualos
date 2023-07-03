@@ -1570,6 +1570,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     });
 
     return {
+        /**
+         * @dochash api
+         * @hiddennamespace
+         */
         api: {
             getBots,
             getBot,
@@ -1604,11 +1608,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             updateBotLinks,
 
             getDateTime,
+
             DateTime,
 
+            /**
+             * @hidden
+             */
             Vector2,
+
+            /**
+             * @hidden
+             */
             Vector3,
+
+            /**
+             * @hidden
+             */
             Quaternion,
+
+            /**
+             * @hidden
+             */
             Rotation,
 
             superShout,
@@ -1643,7 +1663,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             webhook: <WebhookInterface>(<any>webhookFunc),
             sleep,
 
+            /**
+             * @hidden
+             */
             __energyCheck,
+
             clearTimeout,
             clearInterval,
             clearWatchBot,
@@ -2350,6 +2374,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example
      * // Gets all the bots in the inst.
      * let bots = getBots();
+     *
+     * @docgroup 01-data-actions
+     * @docgrouptitle Data Actions
      */
     function getBots(...args: any[]): RuntimeBot[] {
         if (args.length > 0 && typeof args[0] === 'function') {
@@ -2397,6 +2424,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example
      * let firstBot = getBot();
+     *
+     * @docgroup 01-data-actions
      */
     function getBot(...args: any[]): RuntimeBot {
         const bots = getBots(...args);
@@ -2406,7 +2435,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Gets the list of tag values from bots that have the given tag.
      * @param tag The tag.
-     * @param filter THe optional filter to use for the values.
+     * @param filter The optional filter to use for the values.
+     *
+     * @docgroup 01-data-actions
      */
     function getBotTagValues(tag: string, filter?: TagFilter): any[] {
         const values = context.bots
@@ -2428,6 +2459,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot The mod data that should be loaded.
      * @param tags The tags that should be included in the output mod.
      * @returns The mod that was loaded from the data.
+     *
+     * @docgroup 01-data-actions
      */
     function getMod(bot: any, ...tags: (string | RegExp)[]): Mod {
         if (typeof bot === 'string') {
@@ -2481,6 +2514,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the position that the given bot is at in the given dimension.
      * @param bot The bot or bot ID.
      * @param dimension The dimension that the bot's position should be retrieved for.
+     *
+     * @docgroup 01-data-actions
      */
     function getBotPosition(
         bot: RuntimeBot | string,
@@ -2503,6 +2538,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the rotation that the given bot is at in the given dimension.
      * @param bot The bot or bot ID.
      * @param dimension The dimension that the bot's rotation should be retrieved for.
+     *
+     * @docgroup 01-data-actions
      */
     function getBotRotation(
         bot: RuntimeBot | string,
@@ -2821,6 +2858,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Gets the ID from the given bot.
      * @param bot The bot or string.
+     *
+     * @docgroup 01-data-actions
      */
     function getID(bot: Bot | string): string {
         if (typeof bot === 'string') {
@@ -2835,6 +2874,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Gets JSON for the given data.
      * @param data The data.
+     *
+     * @docgroup 01-data-actions
      */
     function getJSON(data: any): string {
         if (hasValue(data?.[ORIGINAL_OBJECT])) {
@@ -2846,6 +2887,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Gets formatted JSON for the given data.
      * @param data The data.
+     *
+     * @docgroup 01-data-actions
      */
     function getFormattedJSON(data: any): string {
         if (hasValue(data?.[ORIGINAL_OBJECT])) {
@@ -2858,6 +2901,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets a snapshot of the data that the bots contain.
      * This is useful for getting all the tags and masks that are attached to the given bots.
      * @param bots The array of bots to get the snapshot for.
+     *
+     * @docgroup 01-data-actions
      */
     function getSnapshot(bots: Bot[] | Bot): BotsState {
         if (!Array.isArray(bots)) {
@@ -2892,6 +2937,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Calculates the difference between the two given snapshots.
      * @param first The first snapshot.
      * @param second The second snapshot.
+     *
+     * @docgroup 01-data-actions
      */
     function diffSnapshots(
         first: BotsState,
@@ -2975,6 +3022,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * This is essentially the opposite of diffSnapshots().
      * @param snapshot The snapshot that the diff should be applied to.
      * @param diff The delta that should be applied to the snapshot.
+     *
+     * @docgroup 01-data-actions
      */
     function applyDiffToSnapshot(
         snapshot: BotsState,
@@ -6554,6 +6603,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Creates a Universally Unique IDentifier (UUID).
+     *
+     * @docgroup 01-data-actions
      */
     function uuid(): string {
         return context.uuid();
@@ -8818,6 +8869,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Creates a tag value that can be used to link to the given bots.
      * @param bots The bots that the link should point to.
+     *
+     * @docgroup 01-data-actions
      */
     function createBotLinkApi(
         ...bots: (Bot | string | (Bot | string)[])[]
@@ -8842,6 +8895,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Gets the list of bot links that are stored in this bot's tags.
      * @param bot The bot to get the links for.
+     *
+     * @docgroup 01-data-actions
      */
     function getBotLinks(bot: Bot): ParsedBotLink[] {
         let links = [] as ParsedBotLink[];
@@ -9427,6 +9482,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return results;
     }
 
+    /**
+     * @hidden
+     */
     function __energyCheck() {
         let current = context.energy;
         current -= 1;
