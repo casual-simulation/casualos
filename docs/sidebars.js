@@ -41,7 +41,7 @@ module.exports = {
                         'math/rotations'
                     ]
                 },
-                'types'
+                'extra-types'
             ]
         },
     ],

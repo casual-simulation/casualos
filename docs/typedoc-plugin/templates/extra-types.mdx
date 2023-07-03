@@ -1,7 +1,7 @@
 ---
 id: {{id}}
-title: Types
-sidebar_label: Types
+title: Extra Types
+sidebar_label: Extra Types
 description: Type definitions that CasualOS uses
 ---
 
@@ -26,4 +26,4 @@ export const toc = [
     ...apiTableOfContents(Doc),
 ];
 
-<ApiContents contents={Doc.contents} />
+<ApiContents contents={Doc.contents} references={Doc.references} />

@@ -4,7 +4,9 @@ import CodeBlock from '@theme/CodeBlock';
 import { sortBy } from 'lodash';
 import { ReflectionBoundary } from './errors';
 import useBaseUrl from '@docusaurus/useBaseUrl';
-import Link from '@docusaurus/Link'
+import Link from '@docusaurus/Link';
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 
 let typeMap = {};
 
@@ -181,28 +183,28 @@ export function apiTableOfContents(doc) {
     return toc;
 }
 
-export function ApiContents({contents}) {
+export function ApiContents({contents, references}) {
     return (
-        <div class="api">
-            {contents.map(c => <ApiReflection key={c.name} reflection={c.reflection} />)}
+        <div className="api">
+            {contents.map(c => <ApiReflection key={c.name} reflection={c.reflection} references={references} />)}
         </div>
     );
 }
 
-function ApiReflection({ reflection }) {
+function ApiReflection({ reflection, references }) {
     return (
         <div>
             <Heading as='h2' id={reflection.name}>{reflection.name}</Heading>
-            <ApiMembers reflection={reflection} />
+            <ApiMembers reflection={reflection}  references={references} />
         </div>
     )
 }
 
-export function ApiMembers({reflection}) {
+export function ApiMembers({reflection, references}) {
     if (reflection.kindString === 'Interface' || reflection.kindString === 'Class') {
-        return <ClassMembers reflection={reflection} />
+        return <ClassMembers reflection={reflection} references={references} />
     } else {
-        return <ObjectMembers reflection={reflection} />
+        return <ObjectMembers reflection={reflection} references={references} />
     }
 }
 
@@ -231,10 +233,17 @@ export function ClassMembers(props) {
     return (
         <ReflectionBoundary reflection={reflection} root={true}>
             <div className="api">
-                {children.map(c => <ClassMember key={c.name} member={c} link={memberLink(reflection, c)}/>)}
+                <ReflectionDiscription reflection={reflection} />
+                {children.map(c => <ClassMember key={c.name} member={c} link={memberLink(reflection, c)} references={props.references}/>)}
             </div>
         </ReflectionBoundary>
     );
+}
+
+export function ReflectionDiscription({ reflection }) {
+    return <div>
+        <ReactMarkdown rehypePlugins={[rehypeRaw]}>{reflection.comment?.shortText}</ReactMarkdown>
+    </div>
 }
 
 export function ClassMember(props) {
@@ -272,7 +281,7 @@ export function ClassPropertyAccessor(props) {
     return (
         <div>
             <Heading as='h3' id={props.link}>
-                <code>{props.member.name}: <TypeLink type={props.member.getSignature[0].type}/></code>
+                <code>{props.member.name}: <TypeLink type={props.member.getSignature[0].type} references={props.references}/></code>
             </Heading>
             <p>{props.member.getSignature[0].comment?.shortText}</p>
             {/* <CodeBlock language="json">{JSON.stringify(props.member, undefined, 2)}</CodeBlock> */}
@@ -284,7 +293,7 @@ export function ClassPropertyMember(props) {
     return (
         <div>
             <Heading as='h3' id={props.link}>
-                <code>{props.member.name}: <TypeLink type={props.member.type}/></code>
+                <code>{props.member.name}: <TypeLink type={props.member.type} references={props.references}/></code>
             </Heading>
             <p>{props.member.comment?.shortText}</p>
             {/* <pre><code>{JSON.stringify(props.member)}</code></pre> */}
@@ -295,7 +304,7 @@ export function ClassPropertyMember(props) {
 export function ClassPropertyConstructor(props) {
     return (
         <div>
-            <FunctionSignature func={props.member} sig={props.member.signatures[0]} link={props.link}/>
+            <FunctionSignature func={props.member} sig={props.member.signatures[0]} link={props.link} references={props.references}/>
         </div>
     )
 }
@@ -318,7 +327,8 @@ export function ObjectMembers(props) {
     return (
         <ReflectionBoundary reflection={reflection} root={true}>
             <div className="api">
-                {children.map(c => <ObjectMember key={c.name} namespace={reflection.name} property={c} link={memberLink(reflection, c)}/>)}
+                <ReflectionDiscription reflection={reflection} />
+                {children.map(c => <ObjectMember key={c.name} namespace={reflection.name} property={c} link={memberLink(reflection, c)} references={props.references}/>)}
             </div>
         </ReflectionBoundary>
     )
@@ -328,7 +338,7 @@ export function ObjectMember(props) {
     let detail;
     if (isFunctionProperty(props.property)) {
         // detail = <>{props.property.name}</>
-        detail = FunctionSignature({ name: props.namespace + '.' + props.property.name, func: props.property, sig: props.property.type.declaration.signatures[0], link: props.link });
+        detail = FunctionSignature({ name: props.namespace + '.' + props.property.name, func: props.property, sig: props.property.type.declaration.signatures[0], link: props.link, references:props.references });
     } else if (props.property.kindString === 'Property') {
         detail = ObjectProperty(props);
     // } else if(props.member.kindString === 'Constructor') {
@@ -354,7 +364,7 @@ export function ObjectProperty(props) {
     return (
         <div>
             <Heading as='h3' id={props.link}>
-                <code>{props.property.name}: <TypeLink type={props.property.type}/></code>
+                <code>{props.property.name}: <TypeLink type={props.property.type} references={props.references}/></code>
             </Heading>
             <p>{props.property.comment?.shortText}</p>
             <pre><code>{JSON.stringify(props.property, undefined, 2)}</code></pre>
@@ -362,17 +372,17 @@ export function ObjectProperty(props) {
     )
 }
 
-export function FunctionSignature({func, sig, link, name}) {
+export function FunctionSignature({func, sig, link, name, references}) {
     const params = (sig.parameters || []);
     return (
         <div>
             <Heading as='h3' id={link}>
-                <FunctionDefinition func={func} sig={sig} name={name}/>
+                <FunctionDefinition func={func} sig={sig} name={name} references={references}/>
             </Heading>
-            <p>{sig.comment?.shortText}</p>
+            <FunctionDescription sig={sig} />
             {params.length > 0 ? (
                 <div>
-                    {params.map((p, i) => <FunctionParameter key={p.name} param={p} index={i} />)}
+                    {params.map((p, i) => <FunctionParameter key={p.name} param={p} index={i} references={references} />)}
                 </div>
             ) : ''}
             <MemberExamples member={sig} />
@@ -380,10 +390,14 @@ export function FunctionSignature({func, sig, link, name}) {
     );
 }
 
-export function FunctionDefinition({ func, sig, name }) {
+export function FunctionDescription({ sig }) {
+    return <ReactMarkdown rehypePlugins={[rehypeRaw]}>{sig.comment?.shortText}</ReactMarkdown>
+}
+
+export function FunctionDefinition({ func, sig, name, references }) {
     const params = sig.parameters || [];
     return (
-        <code>{(func.flags.isStatic ? 'static ' : '') + (name || sig.name)}({params.map((p, i) => <span key={p.name}>{i > 0 ? ', ' : ''}{p.name}: <TypeLink type={p.type}/></span>)}): <TypeLink type={sig.type}/></code>
+        <code>{(func.flags.isStatic ? 'static ' : '') + (name || sig.name)}({params.map((p, i) => <span key={p.name}>{i > 0 ? ', ' : ''}{p.name}: <TypeLink type={p.type} references={references}/></span>)}): <TypeLink type={sig.type} references={references}/></code>
     );
 }
 
@@ -392,9 +406,9 @@ export function functionDefinition(func) {
     return `${func.name}(${params.map((p, i) => p.name).join(', ')}): ${typeName(func.type)}`;
 }
 
-export function FunctionParameter({ param, index }) {
+export function FunctionParameter({ param, index, references }) {
     return (
-        <p>The <strong>{indexName(index)} parameter</strong> is a <TypeLink type={param.type}/> and {parameterDescription(param)}</p>
+        <p>The <strong>{indexName(index)} parameter</strong> is a <TypeLink type={param.type} references={references}/> and {parameterDescription(param)}</p>
     );
 }
 
@@ -453,24 +467,34 @@ function parameterDescription(param) {
     return comment;
 }
 
-function TypeLink({ type }) {
+function TypeLink({ type, references }) {
     if (type.type === 'intrinsic') {
         return <span>{type.name}</span>
     } else if (type.name) {
-        let href = `#${type.name.toLowerCase()}`;
-        const page = typeMap[type.name];
-        if (page) {
-            href = useBaseUrl(page) + href;
+        let href = `#${type.name}`;
+        const hash = references?.[type.id];
+        if (hash) {
+            href = useBaseUrl(hash) + href;
         }
         return <Link href={href}>{type.name}</Link>
     } else if (type.type === 'union') {
         return <span>{type.types.map((t, i) => 
             <React.Fragment key={i}>
                 {(i > 0 ? ' | ' : '')}
-                <TypeLink type={t} />
+                <TypeLink type={t} references={references} />
             </React.Fragment>)}</span>
     } else if (type.type === 'array') {
-        return <><TypeLink type={type.elementType}/>[]</>
+        return <><TypeLink type={type.elementType} references={references}/>[]</>
+    } else if (type.type === 'literal') {
+        if (typeof type.value === 'string') {
+            return <span>"{type.value}"</span>
+        } else if (typeof type.value === 'number') {
+            return <span>{type.value}</span>
+        } else if (typeof type.value === 'boolean') {
+            return <span>{type.value ? 'true' : 'false'}</span>
+        } else {
+            return '' + JSON.stringify(type);
+        }
     } else if(type.type === 'reflection') {
         return '' + JSON.stringify(type);
         // return <>Dynamic</>
@@ -488,6 +512,16 @@ function typeName(type) {
         return type.types.map(t => typeName(t)).join(' | ');
     } else if (type.type === 'array') {
         return `${typeName(type.elementType)}[]`;
+    } else if (type.type === 'literal') {
+        if (typeof type.value === 'string') {
+            return `"${type.value}"`
+        } else if (typeof type.value === 'number') {
+            return String(type.value)
+        } else if (typeof type.value === 'boolean') {
+            return type.value ? 'true' : 'false'
+        } else {
+            return '' + JSON.stringify(type);
+        }
     } else {
         return 'missing!: ' + JSON.stringify(type);
     }

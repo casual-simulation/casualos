@@ -26,17 +26,25 @@ export function loadContent() {
     let allUsedTypes = new Set<Reflection>();
     let typesWithPages = new Set<Reflection>();
 
+    let allReferences = {} as {
+        [id: number]: string
+    };
+
     let pages = new Map<string, {
         hash: string,
         pageTitle: string,
         pageDescription: string,
         pageSidebarLabel: string,
         contents: {
+            id: number,
             order: number,
             name: string,
             reflection: any,
             comment: CommentType
-        }[]
+        }[],
+        references: {
+            [id: number]: string
+        }
     }>();
 
     const allowedKinds = new Set<ReflectionKind>([
@@ -53,7 +61,8 @@ export function loadContent() {
                 pageTitle: null,
                 pageDescription: null,
                 pageSidebarLabel: null,
-                contents: []
+                contents: [],
+                references: allReferences
             };
             pages.set(hash, page);
         }
@@ -80,13 +89,20 @@ export function loadContent() {
                     page.pageSidebarLabel = getReflectionTag(child, 'docsidebar');
                 }
 
-                page.contents.push({
-                    order,
-                    name: child.name,
-                    reflection: app.serializer.toObject(child),
-                    comment: getReflectionComment(child)
-                });
+                let childVisible = getReflectionTag(child, 'docvisible') === null;
+
+                if (childVisible) {
+                    page.contents.push({
+                        id: child.id,
+                        order,
+                        name: child.name,
+                        reflection: app.serializer.toObject(child),
+                        comment: getReflectionComment(child),
+                    });
+                }
                 typesWithPages.add(child);
+
+                allReferences[child.id] = hash;
             }
         } else if ('type' in child) {
             if (child.type === 'reference') {
@@ -103,12 +119,13 @@ export function loadContent() {
 
     for (let type of allUsedTypes) {
         if (!typesWithPages.has(type) && allowedKinds.has(type.kind)) {
-            const page = getPage('types');
+            const page = getPage('extra-types');
             page.contents.push({
+                id: type.id,
                 order: 0,
                 name: type.name,
                 reflection: app.serializer.toObject(type),
-                comment: getReflectionComment(type)
+                comment: getReflectionComment(type),
             });
         }
     }

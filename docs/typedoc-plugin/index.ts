@@ -7,7 +7,7 @@ import { sortBy } from 'lodash';
 import { writeFile, mkdir, rmdir, readFile } from 'fs/promises';
 import { render } from 'mustache';
 import Template from './templates/generic.mdx';
-import { renderToString } from 'react-dom/server';
+// import { renderToString } from 'react-dom/server';
 import { renderDoc } from './doc';
 
 

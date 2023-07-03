@@ -23,7 +23,9 @@
     "webpack-virtual-modules": "0.4.6",
     "typescript": "^4.4.4",
     "vue": "3.3.4",
-    "mustache": "4.2.0"
+    "mustache": "4.2.0",
+    "react-markdown": "8.0.7",
+    "rehype-raw": "6.1.1"
   },
   "browserslist": {
     "production": [
