@@ -850,13 +850,7 @@ export class AuthController {
                 };
             }
 
-            await this._store.saveSession({
-                ...session,
-                nextSessionId: newSessionId,
-                revokeTimeMs: now,
-            });
-
-            await this._store.saveSession(newSession);
+            await this._store.replaceSession(session, newSession, now);
 
             return {
                 success: true,

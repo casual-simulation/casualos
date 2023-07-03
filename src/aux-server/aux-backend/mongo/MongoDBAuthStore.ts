@@ -338,6 +338,22 @@ export class MongoDBAuthStore implements AuthStore {
         );
     }
 
+    async replaceSession(
+        session: AuthSession,
+        newSession: AuthSession,
+        revokeTimeMs: number
+    ): Promise<void> {
+        await this.saveSession({
+            ...session,
+            revokeTimeMs: revokeTimeMs,
+            nextSessionId: newSession.sessionId,
+        });
+        await this.saveSession({
+            ...newSession,
+            previousSessionId: session.sessionId,
+        });
+    }
+
     async listSessions(
         userId: string,
         expireTimeMs: number
