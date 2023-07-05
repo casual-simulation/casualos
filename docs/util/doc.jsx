@@ -249,7 +249,7 @@ export function ClassMembers(props) {
 
 export function ReflectionDiscription({ reflection }) {
     return <div>
-        <ReactMarkdown rehypePlugins={[remarkTagLinks, rehypeRaw]}>{reflection.comment?.shortText}</ReactMarkdown>
+        <CommentMarkdown comment={reflection.comment} />
     </div>
 }
 
@@ -443,7 +443,27 @@ export function FunctionSignature({func, sig, link, name, references}) {
 }
 
 export function FunctionDescription({ sig }) {
-    return <ReactMarkdown remarkPlugins={[remarkTagLinks]} rehypePlugins={[rehypeRaw]}>{sig.comment?.shortText}</ReactMarkdown>
+    return <CommentMarkdown comment={sig.comment} />
+}
+
+export function CommentMarkdown({ comment }) {
+    return <Markdown>{getCommentText(comment)}</Markdown>
+}
+
+export function Markdown({ children, remarkPlugins, rehypePlugins }) {
+    return <ReactMarkdown remarkPlugins={[remarkTagLinks, ...(remarkPlugins || [])]} rehypePlugins={[rehypeRaw, ...(rehypePlugins || [])]}>{children}</ReactMarkdown>
+}
+
+function getCommentText(comment) {
+    let text = '';
+    if (comment) {
+        text += comment.shortText;
+
+        if (comment.text) {
+            text += '\n\n' + comment.text;
+        }
+    }
+    return text;
 }
 
 export function FunctionDefinition({ func, sig, name, references }) {
@@ -461,7 +481,12 @@ export function functionDefinition(func, name = func.name) {
 export function FunctionParameter({ param, index, references }) {
     let detail;
     if (param.flags.isRest && param.type.elementType) {
-        detail = <p><strong>Each parameter</strong> is a <TypeLink type={param.type.elementType} references={references}/> and are <ParameterDescription param={param} isRest={true}/></p>
+        if(index === 0) {
+
+            detail = <p><strong>Each parameter</strong> is a <TypeLink type={param.type.elementType} references={references}/> and are <ParameterDescription param={param} isRest={true}/></p>
+        } else {
+            detail = <p><strong>Each other parameter</strong> is a <TypeLink type={param.type.elementType} references={references}/> and are <ParameterDescription param={param} isRest={true}/></p>
+        }
     } else {
         detail = <p>The <strong>{indexName(index)} parameter</strong> is{param.flags.isOptional ? ' optional and is' : ''} a <TypeLink type={param.type} references={references}/> and <ParameterDescription param={param}/></p>
     }
@@ -509,11 +534,11 @@ export function accessorDefinition(prop) {
 }
 
 function ParameterDescription({ param, isRest }) {
-    return <ReactMarkdown remarkPlugins={[remarkTagLinks, unwrapFirstParagraph]} rehypePlugins={[rehypeRaw]}>{parameterDescription(param, isRest)}</ReactMarkdown>
+    return <Markdown remarkPlugins={[unwrapFirstParagraph]}>{parameterDescription(param, isRest)}</Markdown>
 }
 
 function parameterDescription(param, isRest) {
-    let comment = param.comment?.shortText;
+    let comment = getCommentText(param.comment);
 
     if (!comment) {
         return '';

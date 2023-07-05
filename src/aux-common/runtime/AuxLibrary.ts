@@ -1577,6 +1577,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         api: {
             _create,
 
+            _getBots,
             getBots,
             getBot,
             getBotTagValues,
@@ -2381,22 +2382,37 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets a list of all the bots.
+     * Gets an array of bots that match all of the given filter(s). The returned array is sorted alphabetically by the [`#id`](tags:id) tag.
      *
-     * @example
-     * // Gets all the bots in the inst.
+     * @param filters If no filters are specified, then all bots in the inst are returned. If multiple filters are specified, then only the bots that match all of the filters are returned.
+     *
+     * @example Gets all the bots in the inst.
      * let bots = getBots();
+     *
+     * @example Find all bots with the "test" tag
+     * let bots = getBots(byTag("#test"));
+     *
+     * @example Find all bots with #name set to "bob" and in the #people dimension
+     * let bots = getBots(byTag("#name", "bob"), inDimension("people"));
      *
      * @docgroup 01-data-actions
      * @docgrouptitle Data Actions
+     * @docname getBots
      */
-    function getBots(...args: any[]): RuntimeBot[] {
-        if (args.length > 0 && typeof args[0] === 'function') {
+    function _getBots(...filters: BotFilterFunction[]): RuntimeBot[] {
+        return null;
+    }
+
+    /**
+     * @hidden
+     */
+    function getBots(...filters: any[]): RuntimeBot[] {
+        if (filters.length > 0 && typeof filters[0] === 'function') {
             const filtered = context.bots.filter((b) =>
-                args.every((f) => f(b))
+                filters.every((f) => f(b))
             );
 
-            const sortFuncs = args
+            const sortFuncs = filters
                 .filter((f) => typeof f.sort === 'function')
                 .map((f) => f.sort);
             const sorted =
@@ -2407,7 +2423,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             return sorted;
         }
 
-        let tag: string = args[0];
+        let tag: string = filters[0];
         if (typeof tag === 'undefined') {
             return context.bots.slice();
         } else if (!tag) {
@@ -8553,19 +8569,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Removes tags from the given list of bots.
-     * @param bot The bot, bot ID, or list of bots that should have their matching tags removed.
-     * @param tagSection The tag section which should be removed from the bot(s). If given a string, then all the tags
-     *                   starting with the given name will be removed. If given a RegExp, then all the tags matching the regex will be removed.
+     * Removes all the tags from the given bot that match the given tag section.
      *
-     * @example
-     * // Remove tags named starting with "abc" from the `this` bot.
-     * removeTags(this, "abc");
+     * @param bot the bot or list of bots that should have the tags removed.
+     * @param tagSection the string or regex that specifies which tags to remove. If given a string, then all the tags that start with the given string will be removed. If given a regex, then all the tags which match the regex will be removed.
      *
-     * @example
-     * // Remove tags named "hello" using a case-insensitive regex from the `this` bot.
-     * removeTags(this, /^hello$/gi);
+     * @example Remove tags named starting with "abc" from this bot.
+     * removeTags(thisBot, "abc");
      *
+     * @example Remove tags named "hello" using a case-insensitive regex from this bot.
+     * removeTags(thisBot, /^hello$/gi);
+     *
+     * @docgroup 01-data-actions
      */
     function removeTags(bot: Bot | Bot[], tagSection: string | RegExp): void {
         if (typeof bot === 'object' && Array.isArray(bot)) {
@@ -8603,10 +8618,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Renames the given original tag to the given new tag using the given bot or list of bots.
-     * @param bot The bot or list of bots that the tag should be renamed on.
-     * @param originalTag The original tag to rename.
-     * @param newTag The new tag name.
+     * Renames the given original tag on the given bot or list of bots to the given new tag. If the original tag does not exist on the bot, then no changes will take place. If the new tag already exists on the bot, then it will be overwritten with the contents of the original tag.
+     *
+     * @param bot the bot or list of bots that should have the tag renamed.
+     * @param originalTag the name of the tag that should be renamed.
+     * @param newTag the new name that the tag should have.
+     *
+     * @example Rename the "auxColor" tag to "color"
+     * renameTag(thisBot, "auxColor", "color");
      */
     function renameTag(
         bot: Bot | Bot[],
@@ -8628,12 +8647,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Applies the given mods to the given bot.
-     * @param bot The bot.
-     * @param diffs The mods to apply.
+     *
+     * @param bot the bot thatthe mods should be applied to.
+     * @param mods the mods that should be applied to the bot. If two mods have the same tag, then the mod that is last in the list will win.
+     *
+     * @example Set the "test" tag and "name" tag on a bot
+     * applyMod(bot, {
+     *    test: true,
+     *    name: "bob"
+     * });
+     *
+     * @docgroup 01-data-actions
      */
-    function applyMod(bot: any, ...diffs: Mod[]): void {
+    function applyMod(bot: any, ...mods: Mod[]): void {
         let appliedDiffs: BotTags[] = [];
-        for (let diff of diffs) {
+        for (let diff of mods) {
             if (!diff) {
                 continue;
             }
@@ -8653,13 +8681,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * subrtacts the given diff from the given bot.
-     * @param bot The bot.
-     * @param diff The diff to apply.
+     * Removes the tags contained in the given mod(s) from the given bot or mod.
+     *
+     * @param bot The the bot or mod that the tags should be removed from.
+     * @param mods the bots or mods that contain the tags which should be removed from the original bot.
+     *
+     * @example Remove a mod from this bot
+     * const mod = {
+     *     color: 'red',
+     *     name: 'bob'
+     * };
+     * subtractMods(this, mod);
+     *
+     * @example Remove multiple mods from this bot
+     * subtractMods(this, {
+     *     color: 'red'
+     * }, {
+     *     name: 'bob'
+     * });
+     *
+     * @docgroup 01-data-actions
      */
-    function subtractMods(bot: any, ...diffs: Mod[]): void {
+    function subtractMods(bot: any, ...mods: Mod[]): void {
         let subtractedDiffs: BotTags[] = [];
-        for (let diff of diffs) {
+        for (let diff of mods) {
             if (!diff) {
                 continue;
             }
