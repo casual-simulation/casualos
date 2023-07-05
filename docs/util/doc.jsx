@@ -7,6 +7,8 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 import Link from '@docusaurus/Link';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
+import remarkTagLinks from './remarkTagLinks';
+import unwrapFirstParagraph from './remarkUnwrapFirstParagraph';
 
 let typeMap = {};
 
@@ -137,16 +139,20 @@ export function objectTableOfContents(reflection) {
     return toc;
 }
 
-function objectMemberTableOfContents({ reflection, child, group, namespace }) {
-    const name = namespace ? namespace + '.' + child.name : child.name;
+function objectMemberTableOfContents({ reflection, child, group, name, namespace }) {
+    const displayName = namespace ? namespace + '.' + name : name;
 
     let definition;
-    if (isFunctionProperty(child)) {
+    if (isSimpleFunctionProperty(child)) {
         const declaration = child.type.declaration;
         const signatures = declaration.signatures;
-        definition = functionDefinition(signatures[0], name);
+        const sig = getPreferredSignature(signatures) ?? signatures[0];
+        definition = functionDefinition(sig, displayName);
+    } else if (isInterpretableFunctionProperty(child)) {
+        const sig = getInterpretableFunctionSignature(child);
+        definition = functionDefinition(sig, displayName);
     } else {
-        definition = propertyDefinition(member, name);
+        definition = propertyDefinition(child, displayName);
     }
 
     definition = `<code>${definition}</code>`;
@@ -243,7 +249,7 @@ export function ClassMembers(props) {
 
 export function ReflectionDiscription({ reflection }) {
     return <div>
-        <ReactMarkdown rehypePlugins={[rehypeRaw]}>{reflection.comment?.shortText}</ReactMarkdown>
+        <ReactMarkdown rehypePlugins={[remarkTagLinks, rehypeRaw]}>{reflection.comment?.shortText}</ReactMarkdown>
     </div>
 }
 
@@ -348,17 +354,36 @@ export function GroupChildren({ group, references }) {
     return <div>
         <Heading as="h3" id={group.group}>{title}</Heading>
         {children.map(c => {
-            return <ObjectMember key={c.child.id} namespace={c.namespace} property={c.child} link={memberLink(c.reflection, c.child)} references={references}/>
+            return <ObjectMember key={c.child.id} namespace={c.namespace} name={c.name} property={c.child} link={memberLink(c.reflection, c.child)} references={references}/>
         })}
     </div>
 }
 
 export function ObjectMember(props) {
     let detail;
-    if (isFunctionProperty(props.property)) {
+    if (isSimpleFunctionProperty(props.property)) {
         // detail = <>{props.property.name}</>
-        const name = props.namespace ? props.namespace + '.' + props.property.name : props.property.name;
-        detail = FunctionSignature({ name: name, func: props.property, sig: props.property.type.declaration.signatures[0], link: props.link, references:props.references });
+        const name = props.namespace ? props.namespace + '.' + props.name : props.name;
+        const declaration = props.property.type.declaration;
+        detail = FunctionSignature({
+            name: name,
+            func: props.property,
+            sig: getPreferredSignature(declaration.signatures) ?? declaration.signatures[0],
+            link: props.link,
+            references:props.references
+        });
+    } else if (isInterpretableFunctionProperty(props.property)) {
+        const name = props.namespace ? props.namespace + '.' + props.name : props.name;
+        const sig = getInterpretableFunctionSignature(props.property);
+        console.log(name, sig, props.property);
+        detail = FunctionSignature({
+            name: name,
+            func: props.property,
+            sig: sig,
+            link: props.link,
+            references:props.references
+        });
+        // detail = <>This is special{props.property.name}</>
     } else if(isObjectProperty(props.property)) {
         detail = <>This is really fun! {props.property.name}</>
         // detail = ObjectMembers({ reflection: props.property, references: props.references });
@@ -396,7 +421,11 @@ export function ObjectProperty(props) {
 }
 
 export function FunctionSignature({func, sig, link, name, references}) {
+    if(!sig) {
+        console.log(name, func);
+    }
     const params = (sig.parameters || []);
+    // console.log
     return (
         <div>
             <Heading as='h3' id={link}>
@@ -414,7 +443,7 @@ export function FunctionSignature({func, sig, link, name, references}) {
 }
 
 export function FunctionDescription({ sig }) {
-    return <ReactMarkdown rehypePlugins={[rehypeRaw]}>{sig.comment?.shortText}</ReactMarkdown>
+    return <ReactMarkdown remarkPlugins={[remarkTagLinks]} rehypePlugins={[rehypeRaw]}>{sig.comment?.shortText}</ReactMarkdown>
 }
 
 export function FunctionDefinition({ func, sig, name, references }) {
@@ -430,9 +459,14 @@ export function functionDefinition(func, name = func.name) {
 }
 
 export function FunctionParameter({ param, index, references }) {
-    return (
-        <p>The <strong>{indexName(index)} parameter</strong> is a <TypeLink type={param.type} references={references}/> and {parameterDescription(param)}</p>
-    );
+    let detail;
+    if (param.flags.isRest && param.type.elementType) {
+        detail = <p><strong>Each parameter</strong> is a <TypeLink type={param.type.elementType} references={references}/> and are <ParameterDescription param={param} isRest={true}/></p>
+    } else {
+        detail = <p>The <strong>{indexName(index)} parameter</strong> is a <TypeLink type={param.type} references={references}/> and <ParameterDescription param={param}/></p>
+    }
+
+    return detail;
 }
 
 export function MemberExamples({ member }) {
@@ -474,7 +508,11 @@ export function accessorDefinition(prop) {
     return `${prop.name}: ${typeName(prop.getSignature[0].type)}`;
 }
 
-function parameterDescription(param) {
+function ParameterDescription({ param, isRest }) {
+    return <ReactMarkdown remarkPlugins={[remarkTagLinks, unwrapFirstParagraph]} rehypePlugins={[rehypeRaw]}>{parameterDescription(param, isRest)}</ReactMarkdown>
+}
+
+function parameterDescription(param, isRest) {
     let comment = param.comment?.shortText;
 
     if (!comment) {
@@ -484,7 +522,7 @@ function parameterDescription(param) {
     // lowercase first char
     comment = comment.slice(0, 1).toLowerCase() + comment.slice(1);
 
-    if (comment.startsWith('the')) {
+    if (comment.startsWith('the') && !isRest) {
         comment = 'is ' + comment;
     }
     return comment;
@@ -592,9 +630,22 @@ export function getProperty(obj, prop) {
 }
 
 function isFunctionProperty(property) {
-    return property && property.type && property.type.type === 'reflection' &&
-        property.type.declaration && property.type.declaration.signatures &&
-        property.type.declaration.signatures.some(s => s.kindString === 'Call signature');
+    return isSimpleFunctionProperty(property) || isInterpretableFunctionProperty(property);
+}
+
+function isSimpleFunctionProperty(property) {
+    return property && isSimpleFunctionPropertyType(property.type);
+}
+
+function isSimpleFunctionPropertyType(type) {
+    return type && type.type === 'reflection' &&
+        type.declaration && type.declaration.signatures &&
+        type.declaration.signatures.some(s => s.kindString === 'Call signature');
+}
+
+function isInterpretableFunctionProperty(property) {
+    return property && property.type && property.type.type === 'intersection' &&
+        property.type.types.some(t => isSimpleFunctionPropertyType(t));
 }
 
 function isObjectProperty(property) {
@@ -673,10 +724,86 @@ function getReflectionTag(reflection, tag) {
     return null;
 }
 
-function getChildGroup(child) {
-    const declaration =child?.type?.declaration; 
-    const signatures = declaration?.signatures;
+function getReflectionName(reflection) {
+    const tagValue = getReflectionTag(reflection, 'docname');
+    if (tagValue) {
+        return tagValue;
+    }
+    return reflection.name;
+}
 
+function getNameFromSignatures(signatures) {
+    if (signatures) {
+        for(let sig of signatures) {
+            const tagValue = getReflectionTag(sig, 'docname');
+            if (tagValue) {
+                return tagValue.trim();
+            }
+        }
+    }
+
+    return null;
+}
+
+function getChildGroup(child) {
+    if (isSimpleFunctionProperty(child)) {
+        const declaration =child?.type?.declaration; 
+        const signatures = declaration?.signatures;
+
+        let group = getDocGroupFromSignatures(signatures);
+        if (group) {
+            return group;
+        }
+    } else if (isInterpretableFunctionProperty(child)) {
+        const type = child.type;
+        const types = type.types;
+
+        for (let t of types) {
+            if (isSimpleFunctionPropertyType(t)) {
+                const declaration = t.declaration; 
+                const signatures = declaration.signatures;
+        
+                let group = getDocGroupFromSignatures(signatures);
+                if (group) {
+                    return group;
+                }
+            }
+        }
+    }
+
+    return '99-default';
+}
+
+function getChildName(child) {
+    if (isSimpleFunctionProperty(child)) {
+        const declaration =child?.type?.declaration; 
+        const signatures = declaration?.signatures;
+
+        let group = getNameFromSignatures(signatures);
+        if (group) {
+            return group;
+        }
+    } else if (isInterpretableFunctionProperty(child)) {
+        const type = child.type;
+        const types = type.types;
+
+        for (let t of types) {
+            if (isSimpleFunctionPropertyType(t)) {
+                const declaration = t.declaration; 
+                const signatures = declaration.signatures;
+        
+                let group = getNameFromSignatures(signatures);
+                if (group) {
+                    return group;
+                }
+            }
+        }
+    }
+
+    return getReflectionName(child);
+}
+
+function getDocGroupFromSignatures(signatures) {
     if (signatures) {
         for(let sig of signatures) {
             const tagValue = getReflectionTag(sig, 'docgroup');
@@ -686,7 +813,42 @@ function getChildGroup(child) {
         }
     }
 
-    return '99-default';
+    return null;
+}
+
+function getPreferredSignature(signatures) {
+    for(let sig of signatures) {
+        const tagValue = getReflectionTag(sig, 'docgroup');
+        if (tagValue) {
+            return sig;
+        }
+    }
+
+    return null;
+}
+
+function getInterpretableFunctionSignature(property) {
+    const type = property.type;
+    const types = type.types;
+
+    let firstSignature = null;
+    for (let t of types) {
+        if (isSimpleFunctionPropertyType(t)) {
+            const declaration = t.declaration; 
+            const signatures = declaration.signatures;
+    
+            if (!firstSignature) {
+                firstSignature = signatures[0];
+            }
+
+            let sig = getPreferredSignature(signatures);
+            if (sig) {
+                return sig;
+            }
+        }
+    }
+
+    return firstSignature;
 }
 
 function getChildGroupTitle(child) {
@@ -727,6 +889,7 @@ function flattenObjectChildren(reflection) {
         if (isFunctionProperty(c)) {
             return {
                 group: getChildGroup(c),
+                name: getChildName(c),
                 namespace: namespace,
                 reflection: reflection,
                 child: c

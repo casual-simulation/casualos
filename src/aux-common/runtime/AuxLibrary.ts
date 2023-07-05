@@ -1575,6 +1575,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
          * @hiddennamespace
          */
         api: {
+            _create,
+
             getBots,
             getBot,
             getBotTagValues,
@@ -1633,10 +1635,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             superShout,
             priorityShout: createInterpretableFunction(priorityShout),
+
+            _shout,
             shout: tagAsInterpretableFunction(
                 interpretableShoutProxy,
                 shoutProxy
             ),
+
+            _whisper,
             whisper: createInterpretableFunction(whisper),
 
             byTag,
@@ -1989,6 +1995,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 reject,
             },
 
+            /**
+             * @hidden
+             */
             adminSpace: {
                 unlock: unlockAdminSpace,
                 setPassword: setAdminSpacePassword,
@@ -6422,6 +6431,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example
      * // Send a toast to all sessions for the username "bob"
      * remote(os.toast("Hello, Bob!"), { username: "bob" });
+     *
+     * @docgroup 10-event-actions
      */
     function remote(
         event: BotAction,
@@ -6459,6 +6470,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param remoteId The ID of the other remote or remotes to whisper to.
      * @param name The name of the event.
      * @param arg The optional argument to include in the whisper.
+     *
+     * @docgroup 10-event-actions
      */
     function remoteWhisper(
         remoteId: string | string[],
@@ -6476,6 +6489,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @param name The name of the event.
      * @param arg The optional argument to include in the whisper.
+     *
+     * @docgroup 10-event-actions
      */
     function remoteShout(
         name: string,
@@ -6965,6 +6980,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Performs the given action.
      * @param action The action to perform.
+     *
+     * @docgroup 10-event-actions
+     * @docgrouptitle Event Actions
      */
     function perform(action: any): any {
         const event: BotAction = action;
@@ -7021,6 +7039,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Rejects the given action.
      * @param action The action to reject.
+     *
+     * @docgroup 10-event-actions
      */
     function reject(action: any): RejectAction {
         const original = getOriginalObject(action);
@@ -7065,6 +7085,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Reverts back to the original animation when done playing.
      * @param bot The bot.
      * @param animation The animation to play.
+     *
+     * @docgroup 20-experimental
+     * @docgrouptitle Experimental Actions
      */
     function localFormAnimation(
         bot: Bot | string,
@@ -7079,6 +7102,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param dimension The dimension that the bot should be tweened in.
      * @param position The position that the bot should be tweened to.
      * @param options The options that should be used for the tween.
+     *
+     * @docgroup 20-experimental
      */
     function localPositionTween(
         bot: Bot | string,
@@ -7103,7 +7128,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot The bot or bot ID to tween.
      * @param dimension The dimension that the bot should be tweened in.
      * @param rotation The rotation that the bot should be tweened to.
-     * @param options The options that should be used for the tween.
+     * @param options The options that should be used for the tween.\
+     *
+     * @docgroup 20-experimental
      */
     function localRotationTween(
         bot: Bot | string,
@@ -7128,6 +7155,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param bot The bot.
      * @param dimension The dimension to get the position of.
      * @param anchorPoint The anchor point.
+     *
+     * @docgroup 20-experimental
      */
     function getAnchorPointPosition(
         bot: Bot,
@@ -7147,6 +7176,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Starts a new audio recording.
+     *
+     * @docgroup 20-experimental
      */
     function beginAudioRecording(
         options?: Omit<BeginAudioRecordingAction, 'type' | 'taskId'>
@@ -7159,6 +7190,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Finishes an audio recording.
      * Returns a promise that resolves with the recorded blob.
+     *
+     * @docgroup 20-experimental
      */
     function endAudioRecording(): Promise<Blob> {
         const task = context.createTask();
@@ -7170,6 +7203,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Starts a new recording.
      * @param options The options for the recording.
      * @returns A promise that resolves when the recording has started.
+     *
+     * @docgroup 20-experimental
      */
     function beginRecording(
         options: RecordingOptions = { audio: true, video: true, screen: false }
@@ -7182,6 +7217,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Finishes a recording.
      * Returns a promise that resolves with the recorded data.
+     *
+     * @docgroup 20-experimental
      */
     function endRecording(): Promise<Recording> {
         const task = context.createTask();
@@ -7219,6 +7256,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Returns a promise that resolves when the text has been spoken.
      * @param text The text that should be spoken.
      * @param options The options that should be used.
+     *
+     * @docgroup 20-experimental
      */
     function speakText(
         text: string,
@@ -7247,6 +7286,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Gets the list of synthetic voices that are supported by the system.
      * Returns a promise that resolves with the voices.
+     *
+     * @docgroup 20-experimental
      */
     function getVoices(): Promise<SyntheticVoice[]> {
         const task = context.createTask();
@@ -8633,23 +8674,57 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Creates a new bot and returns it.
-     * @param parent The bot that should be the parent of the new bot.
-     * @param mods The mods which specify the new bot's tag values. If given a mod with no tags, then an error will be thrown.
+     * Creates a new bot or combination of bots with the given mods. Also triggers [`@onCreate`](tags:@onCreate) on all the created bots.
+     * By default, bots are created with a unique [`#id`](tags:id), [`#creator`](tags:creator) set to the current `bot.id`, and [`#space`](tags:space) set to `shared`.
+     * Bots must be created with at least one tag. If `create()` tries to make a bot with zero tags then an error will be thrown.
+     *
+     * If [`#creator`](tags:creator) references a non-existent bot or a bot with a different [`#space`](tags:space) than the created bot, then [`#creator`](tags:creator) will be set to `null`.
+     *
+     * @param mods the mods that should be applied to the new bot(s).
+     * If no parameters are specified, then the new bot will have its [`#creator`](tags:creator) set to `bot.id` and [`#space`](tags:space) set to `shared`.
+     * If an array of mods is used for a parameter, then one bot will be created for _each unique combination of mods_.
+     *
      * @returns The bot(s) that were created.
      *
-     * @example
-     * // Create a red bot without a parent.
-     * let redBot = create(null, { "color": "red" });
+     * @example Create a red bot
+     * let redBot = create({
+     *     color: "red"
+     * });
      *
-     * @example
-     * // Create a red bot and a blue bot with `this` as the parent.
-     * let [redBot, blueBot] = create(this, [
-     *    { "color": "red" },
-     *    { "color": "blue" }
-     * ]);
+     * @example Create a parent and a child bot
+     * let myParentBot = create({
+     *   creator: null,
+     *    label: "Parent"
+     * });
+     * let myChildBot = create({
+     *    creator: getID(myParentBot),
+     *    label: "Child"
+     * });
      *
+     * @example Create a red bot in the tempLocal  space
+     * let myBot = create({ space: "tempLocal", color: "red" });
+     *
+     * @example Create a bot from multiple mods
+     * // myBot is placed in the "myDimension" dimension and is colored green
+     * let myBot = create({ myDimension: true }, {
+     *     color: "green"
+     * });
+     *
+     * @example Create a red bot and a blue bot
+     * let [myRedBot, myBlueBot] = create({ creator: null}, [
+     *     {
+     *        color: "red"
+     *     },
+     *     {
+     *       color: "blue"
+     *     }
+     * });
+     *
+     * @docgroup 01-data-actions
+     * @docname create
      */
+    function _create(...mods: Mod[]): any {}
+
     function create(botId: string, ...mods: Mod[]) {
         return createBase(botId, () => context.uuid(), ...mods);
     }
@@ -8986,6 +9061,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Shouts the given event to every bot in every loaded simulation.
      * @param eventName The name of the event to shout.
      * @param arg The argument to shout. This gets passed as the `that` variable to the other scripts.
+     *
+     * @docgroup 10-event-actions
      */
     function superShout(eventName: string, arg?: any): SuperShoutAction {
         const event = calcSuperShout(trimEvent(eventName), arg);
@@ -8997,6 +9074,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Returns the result that was produced or undefined if no result was produced.
      * @param eventNames The names of the events to shout.
      * @param arg The argument to shout.
+     *
+     * @docgroup 10-event-actions
      */
     function* priorityShout(eventNames: string[], arg?: any) {
         for (let name of eventNames) {
@@ -9011,25 +9090,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Asks every bot in the inst to run the given action.
-     * In effect, this is like shouting to a bunch of people in a room.
+     * Sends a shout to all bots that are [`#listening`](tags:listening) and have
+     * a listen tag for the specified name. Optionally includes a custom that argument.
+     * Also triggers [`@onListen`](tags:@onListen) and [`@onAnyListen`](tags:@onAnyListen).
      *
-     * @param name The event name.
-     * @param arg The optional argument to include in the shout.
+     * @param name the name of the shout. e.g. Using `onClick` for the name will trigger all [@onClick](tags:@onClick) listeners.
+     * @param arg the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
      * @returns Returns a list which contains the values returned from each script that was run for the shout.
      *
-     * @example
-     * // Tell every bot to reset themselves.
-     * shout("reset()");
+     * @example Send a @reset event to all bots
+     * shout("reset");
      *
-     * @example
-     * // Ask every bot for its name.
-     * const names = shout("getName()");
+     * @example Send a @hello event with your name
+     * shout("hello", "Bob");
      *
-     * @example
-     * // Tell every bot say "Hi" to you.
-     * shout("sayHi()", "My Name");
+     * @docgroup 10-event-actions
+     * @docname shout
      */
+    function _shout(name: string, arg?: any): any {}
+
     function* shout(name: string, arg?: any) {
         if (!hasValue(name) || typeof name !== 'string') {
             throw new Error('shout() name must be a string.');
@@ -9038,26 +9117,31 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Asks the given bots to run the given action.
-     * In effect, this is like whispering to a specific set of people in a room.
+     * Sends a whisper to all bots that are [`#listening`](tags:listening) and have
+     * a listen tag for the specified name. Optionally includes a custom that argument.
+     * Also triggers [`@onListen`](tags:@onListen) and [`@onAnyListen`](tags:@onAnyListen).
      *
-     * @param bot The bot(s) to send the event to.
-     * @param eventName The name of the event to send.
-     * @param arg The optional argument to include.
+     * @param bot the bot, array of bots, bot [`#id`](tags:id), or array of bot [`#id`](tags:id) that the whisper should be sent to.
+     * @param eventName the name of the whisper. e.g. Using `onClick` for the name will trigger the [`@onClick`](tags:@onClick) listener for the specified bots.
+     * @param arg the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
      * @returns Returns a list which contains the values returned from each script that was run for the shout.
      *
-     * @example
-     * // Tell all the red bots to reset themselves.
-     * whisper(getBots("#color", "red"), "reset()");
+     * @example Send a @reset event to all bots named "Bob"
+     * let bots = getBots("#name", "Bob");
+     * whisper(bots, "reset");
      *
-     * @example
-     * // Ask all the tall bots for their names.
-     * const names = whisper(getBots("scaleZ", height => height >= 2), "getName()");
+     * @example Send a @setColor event to ourself
+     * whisper(this, "setColor", "red");
      *
-     * @example
-     * // Tell every friendly bot to say "Hi" to you.
-     * whisper(getBots("friendly", true), "sayHi()", "My Name");
+     * @docgroup 10-event-actions
+     * @docname whisper
      */
+    function _whisper(
+        bot: (Bot | string)[] | Bot | string,
+        eventName: string,
+        arg?: any
+    ): any {}
+
     function* whisper(
         bot: (Bot | string)[] | Bot | string,
         eventName: string,
