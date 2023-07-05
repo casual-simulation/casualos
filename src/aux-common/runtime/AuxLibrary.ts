@@ -1603,7 +1603,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             applyMod,
             subtractMods,
 
+            _destroy,
             destroy: createInterpretableFunction(destroy),
+
+            _changeState,
             changeState: createInterpretableFunction(changeState),
             getLink: createBotLinkApi,
             getBotLinks,
@@ -8840,6 +8843,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Removes the given bot, list of bots, or bot by #id and triggers @onDestroy for each of the destroyed bots.
+     *
+     * Note that only destroyable bots will be destroyed. Bots that have [`#destroyable`](tags:destroyable) set to `false` will not be destroyed.
+     *
+     * Also note that all bots that have [`#creator`](tags:creator) set to the [`#id`](tags:id) of a destroyed bot will also be destroyed (unless they are not destroyable). This happens recursively until there are no more bots to destroy.
+     *
+     * @param bot The bot, bot ID, or list of bots to destroy.
+     *
+     * @example Destroy a the bot with the name "bob"
+     * destroy(getBot("#name", "bob"));
+     *
+     * @example Destroy all bots that are colored red
+     * destroy(getBots("#color", "red"));
+     *
+     * @example Destroy a bot by its ID
+     * // Destroy the bot with the #id: "config"
+     * destroy("config");
+     *
+     * @docgroup 01-data-actions
+     * @docname destroy
+     */
+    function _destroy(bot: string | Bot | string[] | Bot[]): void {}
+
+    /**
      * Destroys the given bot, bot ID, or list of bots.
      * @param bot The bot, bot ID, or list of bots to destroy.
      */
@@ -8915,6 +8942,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Changes the state that the given bot occupies in the given group. If the state was changed, then the [`@[groupName][stateName]OnExit`](tags:@[groupName][stateName]OnExit) and [`@[groupName][stateName]OnEnter`](tags:@[groupName][stateName]OnExit) whispers are sent to the bot.
+     *
+     * @param bot the bot whose state should be changed.
+     * @param stateName the value that should be set on the bot.
+     * @param groupName the name of the tag that should be changed on the bot. If not specified, then the `#state` tag will be used.
+     *
+     * @example Change the #state of the bot to "Running"
+     * // Triggers @stateRunningOnEnter
+     * changeState(bot, "Running");
+     *
+     * @example Change the #playbackState of the bot to "Playing"
+     * // Triggers @playbackStatePlayingOnEnter
+     * changeState(bot, "Playing", "playbackState");
+     *
+     * @docgroup 01-data-actions
+     * @docname changeState
+     */
+    function _changeState(
+        bot: Bot,
+        stateName: string,
+        groupName?: string
+    ): void {}
+
+    /**
      * Changes the state that the given bot is in.
      * @param bot The bot to change.
      * @param stateName The state that the bot should move to.
@@ -8942,10 +8993,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Creates a tag value that can be used to link to the given bots.
+     * Creates and returns a bot link that references the given bots. The link can then be stored in a tag to save it. Useful for creating bot links for an arbitrary number of bots.
      * @param bots The bots that the link should point to.
      *
+     * @example Create a link to this bot
+     * let link = getLink(thisBot);
+     *
+     * @examples Toast a link to this bot
+     * toast(getLink(thisBot));
+     *
      * @docgroup 01-data-actions
+     * @docname getLink
      */
     function createBotLinkApi(
         ...bots: (Bot | string | (Bot | string)[])[]
