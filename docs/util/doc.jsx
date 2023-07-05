@@ -449,7 +449,7 @@ export function FunctionDescription({ sig }) {
 export function FunctionDefinition({ func, sig, name, references }) {
     const params = sig.parameters || [];
     return (
-        <code>{(func.flags.isStatic ? 'static ' : '') + (name || sig.name)}({params.map((p, i) => <span key={p.name}>{i > 0 ? ', ' : ''}{p.name}: <TypeLink type={p.type} references={references}/></span>)}): <TypeLink type={sig.type} references={references}/></code>
+        <code>{(func.flags.isStatic ? 'static ' : '') + (name || sig.name)}({params.map((p, i) => <span key={p.name}>{i > 0 ? ', ' : ''}{p.name}{p.flags.isOptional ? '?' : ''}: <TypeLink type={p.type} references={references}/></span>)}): <TypeLink type={sig.type} references={references}/></code>
     );
 }
 
@@ -463,7 +463,7 @@ export function FunctionParameter({ param, index, references }) {
     if (param.flags.isRest && param.type.elementType) {
         detail = <p><strong>Each parameter</strong> is a <TypeLink type={param.type.elementType} references={references}/> and are <ParameterDescription param={param} isRest={true}/></p>
     } else {
-        detail = <p>The <strong>{indexName(index)} parameter</strong> is a <TypeLink type={param.type} references={references}/> and <ParameterDescription param={param}/></p>
+        detail = <p>The <strong>{indexName(index)} parameter</strong> is{param.flags.isOptional ? ' optional and is' : ''} a <TypeLink type={param.type} references={references}/> and <ParameterDescription param={param}/></p>
     }
 
     return detail;
