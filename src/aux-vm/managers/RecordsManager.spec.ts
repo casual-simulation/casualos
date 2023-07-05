@@ -875,7 +875,54 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/records/data?recordName=testRecord&address=myAddress',
-                    { validateStatus: expect.any(Function) },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                        data: {
+                            abc: 'def',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should not include authorization if the user is not logged in', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        address: 'myAddress',
+                        data: {
+                            abc: 'def',
+                        },
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+
+                records.handleEvents([
+                    getRecordData('testRecord', 'myAddress', false, {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data?recordName=testRecord&address=myAddress',
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {},
+                    },
                 ]);
 
                 await waitAsync();
@@ -916,7 +963,12 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/records/data?recordName=testRecord&address=myAddress&instances=myInst',
-                    { validateStatus: expect.any(Function) },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
                 ]);
 
                 await waitAsync();
@@ -961,7 +1013,12 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:9999/api/v2/records/data?recordName=testRecord&address=myAddress',
-                    { validateStatus: expect.any(Function) },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
                 ]);
 
                 await waitAsync();
@@ -1002,7 +1059,12 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/records/manual/data?recordName=testRecord&address=myAddress',
-                    { validateStatus: expect.any(Function) },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
                 ]);
 
                 await waitAsync();
@@ -1049,7 +1111,12 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:9999/api/v2/records/manual/data?recordName=testRecord&address=myAddress',
-                    { validateStatus: expect.any(Function) },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
                 ]);
 
                 await waitAsync();
@@ -1149,7 +1216,55 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&address=myAddress',
-                    { validateStatus: expect.any(Function) },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                    }),
+                ]);
+            });
+
+            it('should not include the Authorization header if the user is not logged in', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        items: {
+                            address: 'myAddress',
+                            data: {
+                                abc: 'def',
+                            },
+                        },
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+
+                records.handleEvents([
+                    listDataRecord('testRecord', 'myAddress', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&address=myAddress',
+                    { validateStatus: expect.any(Function), headers: {} },
                 ]);
 
                 await waitAsync();
@@ -1193,7 +1308,12 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/records/data/list?recordName=testRecord&address=myAddress&instances=myInst',
-                    { validateStatus: expect.any(Function) },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
                 ]);
 
                 await waitAsync();
@@ -1241,7 +1361,12 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:9999/api/v2/records/data/list?recordName=testRecord&address=myAddress',
-                    { validateStatus: expect.any(Function) },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
                 ]);
 
                 await waitAsync();
@@ -1284,7 +1409,12 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/records/data/list?recordName=testRecord',
-                    { validateStatus: expect.any(Function) },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
                 ]);
 
                 await waitAsync();
@@ -3990,7 +4120,50 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/records/events/count?recordName=testRecord&eventName=myAddress',
-                    { validateStatus: expect.any(Function) },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                        count: 10,
+                    }),
+                ]);
+            });
+
+            it('should not include the Authorization header if the user is not logged in', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        recordName: 'testRecord',
+                        eventName: 'testEvent',
+                        count: 10,
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+
+                records.handleEvents([
+                    getEventCount('testRecord', 'myAddress', {}, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/records/events/count?recordName=testRecord&eventName=myAddress',
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {},
+                    },
                 ]);
 
                 await waitAsync();
@@ -4027,7 +4200,12 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:3002/api/v2/records/events/count?recordName=testRecord&eventName=myAddress&instances=myInst',
-                    { validateStatus: expect.any(Function) },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
                 ]);
 
                 await waitAsync();
@@ -4092,7 +4270,7 @@ describe('RecordsManager', () => {
 
                 expect(getLastGet()).toEqual([
                     'http://localhost:9999/api/v2/records/events/count?recordName=testRecord&eventName=myAddress',
-                    { validateStatus: expect.any(Function) },
+                    { validateStatus: expect.any(Function), headers: {} },
                 ]);
 
                 await waitAsync();

@@ -245,19 +245,8 @@ export class RecordsManager {
             return;
         }
         try {
-            const auth = this._getAuthFromEvent(event.options);
-
-            if (!auth) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_supported',
-                            errorMessage:
-                                'Records are not supported on this inst.',
-                        } as GetDataResult)
-                    );
-                }
+            const info = await this._resolveInfoForEvent(event);
+            if (info.error) {
                 return;
             }
 
@@ -270,7 +259,7 @@ export class RecordsManager {
             if (hasValue(event.taskId)) {
                 const result: AxiosResponse<GetDataResult> = await axios.get(
                     await this._publishUrl(
-                        auth,
+                        info.auth,
                         !event.requiresApproval
                             ? '/api/v2/records/data'
                             : '/api/v2/records/manual/data',
@@ -282,6 +271,7 @@ export class RecordsManager {
                     ),
                     {
                         ...this._axiosOptions,
+                        headers: info.headers,
                     }
                 );
 
@@ -304,21 +294,12 @@ export class RecordsManager {
             return;
         }
         try {
-            const auth = this._getAuthFromEvent(event.options);
-
-            if (!auth) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_supported',
-                            errorMessage:
-                                'Records are not supported on this inst.',
-                        } as ListDataResult)
-                    );
-                }
+            const info = await this._resolveInfoForEvent(event);
+            if (info.error) {
                 return;
             }
+            const auth = info.auth;
+
             if (event.requiresApproval) {
                 if (hasValue(event.taskId)) {
                     this._helper.transaction(
@@ -347,6 +328,7 @@ export class RecordsManager {
                     }),
                     {
                         ...this._axiosOptions,
+                        headers: info.headers,
                     }
                 );
 
@@ -700,21 +682,12 @@ export class RecordsManager {
 
     private async _getEventCount(event: GetEventCountAction) {
         try {
-            const auth = this._getAuthFromEvent(event.options);
-
-            if (!auth) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_supported',
-                            errorMessage:
-                                'Records are not supported on this inst.',
-                        } as GetDataResult)
-                    );
-                }
+            const info = await this._resolveInfoForEvent(event);
+            if (info.error) {
                 return;
             }
+
+            const auth = info.auth;
 
             if (hasValue(event.taskId)) {
                 let instances: string[] = undefined;
@@ -731,7 +704,7 @@ export class RecordsManager {
                             instances,
                         }
                     ),
-                    { ...this._axiosOptions }
+                    { ...this._axiosOptions, headers: info.headers }
                 );
 
                 this._helper.transaction(
@@ -1200,10 +1173,13 @@ export class RecordsManager {
     private async _resolveInfoForEvent(
         event:
             | RecordFileAction
+            | GetRecordDataAction
+            | ListRecordDataAction
             | EraseFileAction
             | RecordDataAction
             | EraseRecordDataAction
             | RecordEventAction
+            | GetEventCountAction
             | GrantRecordMarkerPermissionAction
             | RevokeRecordMarkerPermissionAction
             | GrantInstAdminPermissionAction
