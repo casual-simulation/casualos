@@ -240,7 +240,6 @@ export function SignatureReflection({ reflection, references }) {
     const name = getChildName(reflection);
     return (
         <div>
-            <Heading as='h2' id={name}>{name}</Heading>
             <FunctionSignature func={reflection} sig={reflection} name={name} link={name} references={references} />
         </div>
     )
