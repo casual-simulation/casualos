@@ -169,7 +169,7 @@ export function apiTableOfContents(doc) {
     let toc = [];
 
     for(let c of doc.contents) {
-        if(c.reflection.kindString === 'Interface' || c.reflection.kindString === 'Class') {
+        if (c.reflection.kindString === 'Interface' || c.reflection.kindString === 'Class') {
             toc.push({
                 value: c.reflection.name,
                 id: c.reflection.name,
@@ -177,6 +177,14 @@ export function apiTableOfContents(doc) {
             });
 
             toc.push(...classTableOfContents(c.reflection));
+        } else if (c.reflection.kindString === 'Call signature') {
+            const name = getChildName(c.reflection);
+            console.log(name);
+            toc.push({
+                value: functionDefinition(c.reflection, name),
+                id: name,
+                level: 2
+            });
         } else {
             toc.push({
                 value: c.reflection.name,
@@ -200,20 +208,42 @@ export function ApiContents({contents, references}) {
 }
 
 function ApiReflection({ reflection, references }) {
+
+    if (reflection.kindString === 'Interface' || reflection.kindString === 'Class') {
+        return <ClassReflection reflection={reflection} references={references} />
+    } else if (reflection.kindString === 'Call signature') {
+        return <SignatureReflection reflection={reflection} references={references} />
+    } else {
+        return <ObjectReflection reflection={reflection} references={references} />
+    }
+}
+
+export function ClassReflection({ reflection, references }) {
     return (
         <div>
             <Heading as='h2' id={reflection.name}>{reflection.name}</Heading>
-            <ApiMembers reflection={reflection}  references={references} />
+            <ClassMembers reflection={reflection}  references={references} />
         </div>
     )
 }
 
-export function ApiMembers({reflection, references}) {
-    if (reflection.kindString === 'Interface' || reflection.kindString === 'Class') {
-        return <ClassMembers reflection={reflection} references={references} />
-    } else {
-        return <ObjectMembers reflection={reflection} references={references} />
-    }
+export function ObjectReflection({ reflection, references }) {
+    return (
+        <div>
+            <Heading as='h2' id={reflection.name}>{reflection.name}</Heading>
+            <ObjectMembers reflection={reflection}  references={references} />
+        </div>
+    )
+}
+
+export function SignatureReflection({ reflection, references }) {
+    const name = getChildName(reflection);
+    return (
+        <div>
+            <Heading as='h2' id={name}>{name}</Heading>
+            <FunctionSignature func={reflection} sig={reflection} name={name} link={name} references={references} />
+        </div>
+    )
 }
 
 export function ClassDescription(props) {
