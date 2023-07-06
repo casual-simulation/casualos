@@ -10870,6 +10870,60 @@ interface Os {
     getFile(urlOrRecordFileResult: string | RecordFileSuccess): Promise<any>;
 
     /**
+     * Gets the data stored in the given public file.
+     * Only works for files that have the `publicRead` marker.
+     * If the file is not public, then this operation will fail.
+     * @param result The successful result of a os.recordFile() call.
+     * @param endpoint The endpoint that should be queried. Optional.
+     */
+    getPublicFile(result: RecordFileSuccess): Promise<any>;
+
+    /**
+     * Gets the data stored in the given public file.
+     * Only works for files that have the `publicRead` marker.
+     * If the file is not public, then this operation will fail.
+     * @param url The URL that the public file is stored at.
+     */
+    getPublicFile(url: string): Promise<any>;
+
+    /**
+     * Gets the data stored in the given public file.
+     * Only works for files that have the `publicRead` marker.
+     * If the file is not public, then this operation will fail.
+     * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     */
+    getPublicFile(
+        urlOrRecordFileResult: string | RecordFileSuccess
+    ): Promise<string>;
+
+    /**
+     * Gets the data stored in the given private file.
+     * @param result The successful result of a os.recordFile() call.
+     * @param endpoint The endpoint that should be queried. Optional.
+     */
+    getPrivateFile(
+        result: RecordFileSuccess,
+        endpoint?: string
+    ): Promise<any>;
+
+    /**
+     * Gets the data stored in the given private file.
+     * @param url The URL that the public file is stored at.
+     * @param endpoint The endpoint that should be queried. Optional.
+     */
+    getPrivateFile(url: string, endpoint?: string): Promise<any>;
+
+    /**
+     * Gets the data stored in the given private file.
+     * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     * @param endpoint The endpoint that should be queried. Optional.
+     */
+    getPrivateFile(
+        urlOrRecordFileResult: string | RecordFileSuccess,
+        endpoint?: string
+    ): Promise<string>;
+
+    /**
      * Deletes the specified file using the given record key.
      * @param recordKey The key that should be used to delete the file.
      * @param result The successful result of a os.recordFile() call.

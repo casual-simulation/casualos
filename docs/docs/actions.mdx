@@ -2388,7 +2388,7 @@ Works the same as <ActionLink action='os.getData(recordKeyOrName, address, endpo
 ### `os.recordFile(recordKey, fileData, options?, endpoint?)`
 
 Stores the given <GlossaryRef term='file-record'>file data</GlossaryRef> in the given <GlossaryRef term='record'>record</GlossaryRef> using the given options for the file.
-The file can later be retrieved by using <ActionLink action='os.getFile(urlOrRecordFileResult)' />.
+The file can later be retrieved by using <ActionLink action='os.getFile(urlOrRecordFileResult, endpoint?)' />.
 
 Returns a promise that resolves with an object that contains the URL that the file was stored at (if successful) or information about the error that occurred.
 
@@ -2584,9 +2584,44 @@ if (result.success) {
 }
 ```
 
-### `os.getFile(urlOrRecordFileResult)`
+### `os.getFile(urlOrRecordFileResult, endpoint?)`
 
 Downloads the <GlossaryRef term='file-record'>file</GlossaryRef> at the given URL or at the URL that was specified in the given <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> result.
+
+Returns a promise that resolves with the file data.
+
+The **first parameter** is the URL that the file is stored at. It can also be the result of a <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> call.
+
+The **second parameter** is optional and is the records endpoint that should be queried.
+
+#### Examples
+
+```typescript title='Get a file that was uploaded'
+// Upload the file
+const recordKeyResult = await os.getPublicRecordKey('myRecord');
+if (!recordKeyResult.success) {
+    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+    return;
+}
+const result = await os.recordFile(recordKeyResult.recordKey, getBots("color", "red"), {
+    description: 'my bots'
+});
+
+if (result.success) {
+    tags.uploadUrl = result.url;
+    os.toast("Success! Uploaded to " + result.url);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+
+// Download the file later
+const fileData = await os.getFile(tags.uploadUrl);
+```
+
+### `os.getPublicFile(urlOrRecordFileResult)`
+
+Downloads the <GlossaryRef term='file-record'>file</GlossaryRef> at the given URL or at the URL that was specified in the given <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> result.
+Throws an error if the file is not a public file.
 
 Returns a promise that resolves with the file data.
 
@@ -2613,7 +2648,43 @@ if (result.success) {
 }
 
 // Download the file later
-const fileData = await os.getFile(tags.uploadUrl);
+const fileData = await os.getPublicFile(tags.uploadUrl);
+```
+
+### `os.getPrivateFile(urlOrRecordFileResult, endpoint?)`
+
+Downloads the <GlossaryRef term='file-record'>file</GlossaryRef> at the given URL or at the URL that was specified in the given <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> result.
+Works with both public and private files.
+
+Returns a promise that resolves with the file data.
+
+The **first parameter** is the URL that the file is stored at. It can also be the result of a <ActionLink action='os.recordFile(recordKey, fileData, options?)' /> call.
+
+The **second parameter** is optional and is the records endpoint that should be queried.
+
+#### Examples
+
+```typescript title='Get a file that was uploaded'
+// Upload the file
+const recordKeyResult = await os.getPublicRecordKey('myRecord');
+if (!recordKeyResult.success) {
+    os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+    return;
+}
+const result = await os.recordFile(recordKeyResult.recordKey, getBots("color", "red"), {
+    description: 'my bots',
+    markers: ['secret']
+});
+
+if (result.success) {
+    tags.uploadUrl = result.url;
+    os.toast("Success! Uploaded to " + result.url);
+} else {
+    os.toast("Failed " + result.errorMessage);
+}
+
+// Download the file later
+const fileData = await os.getPrivateFile(tags.uploadUrl);
 ```
 
 ### `os.recordEvent(recordKey, eventName, endpoint?)`

@@ -1,5 +1,20 @@
 # CasualOS Changelog
 
+## V3.1.36
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added `os.getPublicFile()` and `os.getPrivateFile()` functions as a way to tell CasualOS whether the file is expected to be public or private.
+    -   Using `os.getPrivateFile()` is quicker than using `os.getFile()` for private files, but it is slower than using `os.getFile()` for public files.
+    -   `os.getFile()` is optimized for retrieving public files, but will fallback to trying to retrieve private files if the first fails.
+    -   `os.getPublicFile()` is optimized for retrieving public files and will fail if the file is not public.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was not possible to retrieve private data and file records using `os.getData()` and `os.getFile()`.
+
 ## V3.1.35
 
 #### Date: 6/30/2023

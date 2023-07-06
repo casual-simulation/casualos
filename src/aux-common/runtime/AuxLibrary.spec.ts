@@ -224,6 +224,7 @@ import {
     revokeInstRole,
     InstUpdate,
     getCurrentInstUpdate,
+    getFile,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -6128,6 +6129,145 @@ describe('AuxLibrary', () => {
                 await waitAsync();
 
                 expect(result).toEqual('data');
+            });
+
+            it('should emit a get_file event if the webhook fails', async () => {
+                let result: any;
+                const action = library.api.os.getFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                action.then((data) => (result = data));
+
+                context.rejectTask(
+                    context.tasks.size,
+                    {
+                        response: {
+                            status: 403,
+                        },
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                const expected = getFile('fileUrl', {}, 2);
+
+                expect(context.actions.slice(1)).toEqual([expected]);
+
+                context.resolveTask(2, 'Hello, world!', false);
+
+                await waitAsync();
+
+                expect(result).toEqual('Hello, world!');
+            });
+        });
+
+        describe('os.getPublicFile()', () => {
+            it('should emit a Webhook', () => {
+                const action: any = library.api.os.getPublicFile('fileUrl');
+                const expected = webhook(
+                    {
+                        method: 'GET',
+                        url: 'fileUrl',
+                        responseShout: undefined,
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if given a null url', () => {
+                expect(() => {
+                    library.api.os.getPublicFile(null);
+                }).toThrow();
+            });
+
+            it('should support record file results', () => {
+                const action: any = library.api.os.getPublicFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                const expected = webhook(
+                    {
+                        method: 'GET',
+                        url: 'fileUrl',
+                        responseShout: undefined,
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return the webhook result data', async () => {
+                let result: any;
+                const action = library.api.os.getPublicFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                action.then((data) => (result = data));
+
+                context.resolveTask(
+                    context.tasks.size,
+                    {
+                        data: 'data',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual('data');
+            });
+        });
+
+        describe('os.getPrivateFile()', () => {
+            it('should emit a get_file event', () => {
+                const action: any = library.api.os.getPrivateFile('fileUrl');
+                const expected = getFile('fileUrl', {}, context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if given a null url', () => {
+                expect(() => {
+                    library.api.os.getPrivateFile(null);
+                }).toThrow();
+            });
+
+            it('should support record file results', () => {
+                const action: any = library.api.os.getPrivateFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                const expected = getFile('fileUrl', {}, context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return the result', async () => {
+                let result: any;
+                const action = library.api.os.getPrivateFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                action.then((data) => (result = data));
+
+                context.resolveTask(
+                    context.tasks.size,
+                    {
+                        data: 'data',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual({
+                    data: 'data',
+                });
             });
         });
 
