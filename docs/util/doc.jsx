@@ -9,6 +9,7 @@ import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkTagLinks from './remarkTagLinks';
 import unwrapFirstParagraph from './remarkUnwrapFirstParagraph';
+import { getByKind } from './walk';
 
 let typeMap = {};
 
@@ -673,71 +674,31 @@ function isInterpretableFunctionProperty(property) {
         property.type.types.some(t => isSimpleFunctionPropertyType(t));
 }
 
+function isFunctionSignature(signature) {
+    return signature && signature.kindString === 'Call signature';
+}
+
 function isObjectProperty(property) {
     return property && property.type && property.type.type === 'reflection' &&
         property.type.declaration && property.type.declaration.kindString === 'Type literal' &&
         property.type.declaration.children;
 }
 
-const keysMap = {
-    'Property': ['type'],
-    'reflection': ['declaration'],
-    'Type literal': ['children', 'signatures'],
-    'Call signature': ['parameters', 'comment', 'type']
-}
+// export function RenderTree({ type }) {
+//     let tree = [];
 
-export function walk(obj, callback, parent = null) {
-    walkSingle(obj, (value, parent, key) => {
-        callback(value, parent, key);
-        walk(value, callback, value); 
-    });
-}
+//     walkSingle(type, (value, parent) => {
+//         console.log('value', value);
+//         tree.push(<li key={value.id ?? Math.random()}>
+//             {value.name}
+//             <RenderTree type={value} />
+//         </li>);
+//     });
 
-export function walkSingle(obj, callback, parent = null) {
-    let keys = keysMap[obj.kindString ?? obj.type] || [];
-    for(let key of keys) {
-        let value = obj[key];
-        if (Array.isArray(value)) {
-            for (let v of value) {
-                if (v) {
-                    callback(v, parent, key);
-                }
-            }
-        } else if (value) {
-            callback(value, parent, key);
-        }
-    }
-}
-
-export function getTypeReferences(type) {
-    return getByFilter(type, v => v.type === 'reference');
-}
-
-export function getByFilter(type, filter) {
-    let result = [];
-    walk(type, (value, parent, key) => {
-        if (filter(value, parent, key)) {
-            result.push(value);
-        }
-    });
-    return result;
-}
-
-export function RenderTree({ type }) {
-    let tree = [];
-
-    walkSingle(type, (value, parent) => {
-        console.log('value', value);
-        tree.push(<li key={value.id ?? Math.random()}>
-            {value.name}
-            <RenderTree type={value} />
-        </li>);
-    });
-
-    return <ul>
-        {tree}
-    </ul>;
-}
+//     return <ul>
+//         {tree}
+//     </ul>;
+// }
 
 function getReflectionTag(reflection, tag) {
     const tagValue = reflection.comment?.tags?.find(t => {
@@ -794,12 +755,19 @@ function getChildGroup(child) {
                 }
             }
         }
+    } else if (isFunctionSignature(child)) {
+        let group = getDocGroupFromSignatures([child]);
+        if (group) {
+            return group;
+        }
     }
 
     return '99-default';
 }
 
 function getChildName(child) {
+
+    // console.log('sig', child);
     if (isSimpleFunctionProperty(child)) {
         const declaration =child?.type?.declaration; 
         const signatures = declaration?.signatures;
@@ -822,6 +790,11 @@ function getChildName(child) {
                     return group;
                 }
             }
+        }
+    } else if (isFunctionSignature(child)) {
+        let group = getNameFromSignatures([child]);
+        if (group) {
+            return group;
         }
     }
 
@@ -877,15 +850,13 @@ function getInterpretableFunctionSignature(property) {
 }
 
 function getChildGroupTitle(child) {
-    const declaration =child?.type?.declaration; 
-    const signatures = declaration?.signatures;
+    const signatures = getByKind(child, 'Call signature');
 
-    if (signatures) {
-        for(let sig of signatures) {
-            const tagValue = getReflectionTag(sig, 'docgrouptitle');
-            if (tagValue) {
-                return tagValue.trim();
-            }
+    console.log('signatures', child, signatures);
+    for(let sig of signatures) {
+        const tagValue = getReflectionTag(sig, 'docgrouptitle');
+        if (tagValue) {
+            return tagValue.trim();
         }
     }
 
@@ -904,8 +875,19 @@ function getGroupTitle(group) {
 }
 
 function flattenObjectChildren(reflection) {
+    if (reflection.kindString === 'Call signature') {
+        if (isFunctionSignature(reflection) || isFunctionProperty(reflection) || isObjectProperty(reflection)) {
+            return [{
+                group: getChildGroup(reflection),
+                name: getChildName(reflection),
+                reflection: reflection,
+                child: reflection
+            }];
+        }
+        return [];
+    }
     const declaration = reflection.type.declaration;
-    const children = declaration.children.filter(c => isFunctionProperty(c) || isObjectProperty(c));
+    const children = declaration.children.filter(c => isFunctionSignature(c) || isFunctionProperty(c) || isObjectProperty(c));
 
     const isHiddenNamespace = getReflectionTag(reflection, 'hiddennamespace') !== null;
     const namespace = isHiddenNamespace ? null : reflection.name;

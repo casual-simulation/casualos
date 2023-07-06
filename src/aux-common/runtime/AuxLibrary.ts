@@ -1572,10 +1572,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     });
 
     return {
-        /**
-         * @dochash api
-         * @hiddennamespace
-         */
         api: {
             _create,
 
@@ -2399,6 +2395,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Find all bots with #name set to "bob" and in the #people dimension
      * let bots = getBots(byTag("#name", "bob"), inDimension("people"));
      *
+     * @dochash actions/os
      * @docgroup 01-data-actions
      * @docgrouptitle Data Actions
      * @docname getBots

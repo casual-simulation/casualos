@@ -30,7 +30,14 @@ module.exports = {
                 'tags',
                 'listen-tags',
                 'variables',
-                'actions',
+                // 'actions',
+                {
+                    type: 'category',
+                    label: 'Actions',
+                    items: [
+                        'actions/os'
+                    ]
+                },
                 'glossary',
                 'ab-1',
                 {
