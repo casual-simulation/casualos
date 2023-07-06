@@ -259,6 +259,7 @@ import {
     eraseRecordData,
     recordFile as calcRecordFile,
     BeginAudioRecordingAction,
+    getFile as calcGetFile,
     eraseFile as calcEraseFile,
     meetCommand as calcMeetCommand,
     MeetCommandAction,
@@ -425,6 +426,7 @@ import {
     constructInitializationUpdate,
     mergeInstUpdates as calcMergeInstUpdates,
 } from '../partitions/PartitionUtils';
+import type { AxiosResponse, AxiosError } from 'axios';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -1845,6 +1847,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 recordFile,
                 getFile,
+                getPublicFile,
+                getPrivateFile,
                 eraseFile,
 
                 recordEvent,
@@ -4827,19 +4831,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Gets the data stored in the given file.
      * @param result The successful result of a os.recordFile() call.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    function getFile(result: RecordFileApiSuccess): Promise<any>;
+    function getFile(
+        result: RecordFileApiSuccess,
+        endpoint?: string
+    ): Promise<any>;
     /**
      * Gets the data stored in the given file.
      * @param url The URL that the file is stored at.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
-    function getFile(url: string): Promise<any>;
+    function getFile(url: string, endpoint?: string): Promise<any>;
     /**
      * Gets the data stored in the given file.
      * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     * @param endpoint The records endpoint that should be queried. Optional.
      */
     function getFile(
-        urlOrRecordFileResult: string | RecordFileApiSuccess
+        urlOrRecordFileResult: string | RecordFileApiSuccess,
+        endpoint?: string
     ): Promise<any> {
         if (!hasValue(urlOrRecordFileResult)) {
             throw new Error(
@@ -4847,6 +4858,121 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             );
         }
 
+        let url = getFileUrl(urlOrRecordFileResult);
+        let promise = webGet(url);
+        let action: any = (promise as any)[ORIGINAL_OBJECT];
+
+        let final = promise.then(
+            (result) => {
+                return result.data;
+            },
+            (err) => {
+                const response = err.response as AxiosResponse;
+                if (
+                    response &&
+                    response.status < 500 &&
+                    response.status >= 400
+                ) {
+                    let options: RecordActionOptions = {};
+                    if (hasValue(endpoint)) {
+                        options.endpoint = endpoint;
+                    }
+                    return getPrivateFileFromUrl(url, options);
+                } else {
+                    throw err;
+                }
+            }
+        );
+        (final as any)[ORIGINAL_OBJECT] = action;
+        return final;
+    }
+
+    /**
+     * Gets the data stored in the given public file.
+     * Only works for files that have the `publicRead` marker.
+     * If the file is not public, then this operation will fail.
+     * @param result The successful result of a os.recordFile() call.
+     * @param endpoint The endpoint that should be queried. Optional.
+     */
+    function getPublicFile(result: RecordFileApiSuccess): Promise<any>;
+
+    /**
+     * Gets the data stored in the given public file.
+     * Only works for files that have the `publicRead` marker.
+     * If the file is not public, then this operation will fail.
+     * @param url The URL that the public file is stored at.
+     */
+    function getPublicFile(url: string): Promise<any>;
+
+    /**
+     * Gets the data stored in the given public file.
+     * Only works for files that have the `publicRead` marker.
+     * If the file is not public, then this operation will fail.
+     * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     */
+    function getPublicFile(
+        urlOrRecordFileResult: string | RecordFileApiSuccess
+    ): Promise<string> {
+        if (!hasValue(urlOrRecordFileResult)) {
+            throw new Error(
+                'A url or successful os.recordFile() result must be provided.'
+            );
+        }
+
+        let url = getFileUrl(urlOrRecordFileResult);
+        let promise = webGet(url);
+        let action: any = (promise as any)[ORIGINAL_OBJECT];
+        let final = promise.then((result) => {
+            return result.data;
+        });
+        (final as any)[ORIGINAL_OBJECT] = action;
+        return final;
+    }
+
+    /**
+     * Gets the data stored in the given private file.
+     * @param result The successful result of a os.recordFile() call.
+     * @param endpoint The endpoint that should be queried. Optional.
+     */
+    function getPrivateFile(
+        result: RecordFileApiSuccess,
+        endpoint?: string
+    ): Promise<any>;
+
+    /**
+     * Gets the data stored in the given private file.
+     * @param url The URL that the public file is stored at.
+     * @param endpoint The endpoint that should be queried. Optional.
+     */
+    function getPrivateFile(url: string, endpoint?: string): Promise<any>;
+
+    /**
+     * Gets the data stored in the given private file.
+     * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     * @param endpoint The endpoint that should be queried. Optional.
+     */
+    function getPrivateFile(
+        urlOrRecordFileResult: string | RecordFileApiSuccess,
+        endpoint?: string
+    ): Promise<string> {
+        if (!hasValue(urlOrRecordFileResult)) {
+            throw new Error(
+                'A url or successful os.recordFile() result must be provided.'
+            );
+        }
+
+        let url = getFileUrl(urlOrRecordFileResult);
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
+
+        return getPrivateFileFromUrl(url, options);
+    }
+
+    function getFileUrl(
+        urlOrRecordFileResult: string | RecordFileApiSuccess
+    ): string {
         let url: string;
         if (typeof urlOrRecordFileResult === 'string') {
             url = urlOrRecordFileResult;
@@ -4859,14 +4985,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             url = urlOrRecordFileResult.url;
         }
 
-        let promise = webGet(url);
-        let action: any = (promise as any)[ORIGINAL_OBJECT];
+        return url;
+    }
 
-        let final = promise.then((result) => {
-            return result.data;
-        });
-        (final as any)[ORIGINAL_OBJECT] = action;
-        return final;
+    function getPrivateFileFromUrl(
+        url: string,
+        options: RecordActionOptions
+    ): Promise<any> {
+        const task = context.createTask();
+        const event = calcGetFile(url, options, task.taskId);
+        return addAsyncAction(task, event);
     }
 
     /**

@@ -29,6 +29,8 @@ import {
     grantInstRole,
     revokeUserRole,
     revokeInstRole,
+    getFile,
+    asyncError,
 } from '@casual-simulation/aux-common';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -937,6 +939,9 @@ describe('RecordsManager', () => {
                         },
                     }),
                 ]);
+
+                // should also not try to authenticate
+                expect(authMock.authenticate).not.toBeCalled();
             });
 
             it('should include the inst', async () => {
@@ -3497,6 +3502,227 @@ describe('RecordsManager', () => {
                             '7b8478283c88551efc6a8e64248cf6b44aa8be4d06e412eb9e4f66a1771bea50',
                     }),
                 ]);
+            });
+        });
+
+        describe('get_file', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should make a GET request to /api/v2/records/file', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        requestUrl: 'https://example.com/file',
+                        requestMethod: 'GET',
+                        requestHeaders: {
+                            test: 'abc',
+                        },
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                    data: 'Hello, world!',
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([getFile('myFileUrl', {}, 1)]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'get',
+                        'http://localhost:3002/api/v2/records/file?fileUrl=myFileUrl',
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'GET',
+                        'https://example.com/file',
+                        undefined,
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([asyncResult(1, 'Hello, world!')]);
+                expect(authMock.isAuthenticated).not.toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should include the inst', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        requestUrl: 'https://example.com/file',
+                        requestMethod: 'GET',
+                        requestHeaders: {
+                            test: 'abc',
+                        },
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                    data: 'Hello, world!',
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.id = 'myInst';
+
+                records.handleEvents([getFile('myFileUrl', {}, 1)]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'get',
+                        'http://localhost:3002/api/v2/records/file?fileUrl=myFileUrl&instances=myInst',
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'GET',
+                        'https://example.com/file',
+                        undefined,
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([asyncResult(1, 'Hello, world!')]);
+                expect(authMock.isAuthenticated).not.toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should support custom endpoints', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        requestUrl: 'https://example.com/file',
+                        requestMethod: 'GET',
+                        requestHeaders: {
+                            test: 'abc',
+                        },
+                    },
+                });
+                setNextResponse({
+                    status: 200,
+                    data: 'Hello, world!',
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    getFile(
+                        'myFileUrl',
+                        {
+                            endpoint: 'http://localhost:9999',
+                        },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'get',
+                        'http://localhost:9999/api/v2/records/file?fileUrl=myFileUrl',
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {},
+                        },
+                    ],
+                    [
+                        'GET',
+                        'https://example.com/file',
+                        undefined,
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                test: 'abc',
+                            },
+                        },
+                    ],
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([asyncResult(1, 'Hello, world!')]);
+                expect(authMock.isAuthenticated).not.toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).not.toBeCalled();
+            });
+
+            it('should not attempt to login if not authenticated', async () => {
+                setResponse({
+                    data: {
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage: 'The user is not logged in.',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+
+                records.handleEvents([getFile('myFileUrl', {}, 1)]);
+
+                await waitAsync();
+
+                expect(getRequests()).toEqual([
+                    [
+                        'get',
+                        'http://localhost:3002/api/v2/records/file?fileUrl=myFileUrl',
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {},
+                        },
+                    ],
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncError(1, {
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage: 'The user is not logged in.',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).not.toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
             });
         });
 

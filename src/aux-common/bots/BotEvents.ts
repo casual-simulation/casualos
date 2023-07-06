@@ -226,6 +226,7 @@ export type AsyncActions =
     | ListRecordDataAction
     | EraseRecordDataAction
     | RecordFileAction
+    | GetFileAction
     | EraseFileAction
     | RecordEventAction
     | GetEventCountAction
@@ -3744,6 +3745,18 @@ export interface RecordFileAction extends RecordsAction {
      * The options for the action.
      */
     options: RecordFileActionOptions;
+}
+
+/**
+ * Defines an event that requests a file from a record.
+ */
+export interface GetFileAction extends RecordsAction {
+    type: 'get_file';
+
+    /**
+     * The URL that the file is stored at.
+     */
+    fileUrl: string;
 }
 
 /**
@@ -7854,6 +7867,26 @@ export function recordFile(
         data,
         description,
         mimeType,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetFileAction.
+ * @param recordKey The key that should be used to access the record.
+ * @param fileUrl The URL that the file was stored at.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function getFile(
+    fileUrl: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): GetFileAction {
+    return {
+        type: 'get_file',
+        fileUrl,
         options,
         taskId,
     };
