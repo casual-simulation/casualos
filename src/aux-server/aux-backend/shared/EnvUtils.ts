@@ -12,6 +12,8 @@ export function loadEnvFile(file: string) {
     const json = readFileSync(file, { encoding: 'utf-8' });
     const parsed = tryParseJson(json);
 
+    const temp = {} as any;
+
     if (parsed.success) {
         for (let key in parsed.value) {
             console.log(
@@ -20,12 +22,26 @@ export function loadEnvFile(file: string) {
             );
             const value = parsed.value[key];
             if (value === null || value === undefined || value === '') {
-                delete process.env[key];
+                delete temp[key];
             } else if (typeof value === 'object') {
-                process.env[key] = JSON.stringify(value);
+                if (typeof temp[key] === 'object') {
+                    temp[key] = merge(temp[key], value);
+                } else {
+                    temp[key] = value;
+                }
             } else {
-                process.env[key] = String(value);
+                temp[key] = String(value);
             }
+        }
+    }
+
+    for (let key in temp) {
+        if (temp[key] === null || temp[key] === undefined || temp[key] === '') {
+            delete process.env[key];
+        } else if (typeof temp[key] === 'object') {
+            process.env[key] = JSON.stringify(temp[key]);
+        } else {
+            process.env[key] = String(temp[key]);
         }
     }
 }
