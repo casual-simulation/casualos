@@ -1,5 +1,21 @@
 # CasualOS Changelog
 
+## V3.1.36
+
+#### Date: 7/7/2023
+
+### :rocket: Improvements
+
+-   Added `os.getPublicFile()` and `os.getPrivateFile()` functions as a way to tell CasualOS whether the file is expected to be public or private.
+    -   Using `os.getPrivateFile()` is quicker than using `os.getFile()` for private files, but it is slower than using `os.getFile()` for public files.
+    -   `os.getFile()` is optimized for retrieving public files, but will fallback to trying to retrieve private files if the first fails.
+    -   `os.getPublicFile()` is optimized for retrieving public files and will fail if the file is not public.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was not possible to retrieve private data and file records using `os.getData()` and `os.getFile()`.
+-   Fixed an issue where it was impossible to manage an existing subscription.
+
 ## V3.1.35
 
 #### Date: 6/30/2023
@@ -10,6 +26,7 @@
     -   This means that we now ship one docker image for both the aux server and auth server instead of two.
     -   The aux server still runs on port 3000, while the auth server runs on port 3002 (by default).
     -   The auth serverless backend has also been merged with the serverless apiary backends, so only one AWS CloudFormation deployment is needed to have a fully functioning deployment.
+-   Added the `skybox` form.
 
 ### :bug: Bug Fixes
 
