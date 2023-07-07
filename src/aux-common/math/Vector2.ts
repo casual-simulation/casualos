@@ -7,6 +7,7 @@ import { UNCOPIABLE } from '@casual-simulation/js-interpreter/InterpreterUtils';
  * @docTitle Vectors
  * @docSidebar Vectors
  * @docDescription Vectors help represent positions and directions.
+ * @docname Vector2
  */
 export class Vector2 {
     /**

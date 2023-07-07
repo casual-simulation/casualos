@@ -25,6 +25,7 @@
  * @docTitle Rotations
  * @docSidebar Rotations
  * @docDescription Rotations help represent orientation.
+ * @docname Quaternion
  */
 export class Quaternion {
     /**

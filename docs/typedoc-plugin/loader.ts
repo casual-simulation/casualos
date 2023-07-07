@@ -75,7 +75,7 @@ class CommentSerializer extends SerializerComponent<Comment> {
     }
 
     private _replaceReferences(str: string) {
-        let regex = /\{@link ([\w-@]+)\}/g;
+        let regex = /\{@link ([\w-\@\.]+)\}/g;
         return str.replace(regex, (match, id) => {
             const type = getByDocId(this._project, id);
 
@@ -96,7 +96,7 @@ class CommentSerializer extends SerializerComponent<Comment> {
     }
 
     private _replaceTags(str: string) {
-        let regex = /\{@tag ([\w-]+)\}/g;
+        let regex = /\{@tag ([\w-\.]+)\}/g;
         return str.replace(regex, (match, tag) => {
             return `[\`#${tag}\`](tags:${tag})`;
         });
@@ -106,7 +106,7 @@ class CommentSerializer extends SerializerComponent<Comment> {
         if (type.kindString === 'Call signature') {
             const name = getReflectionTag(type, 'docname') ?? id;
             const sig = type as SignatureReflection;
-            const params = sig.parameters.map(p => `${p.flags.isRest ? '...' : ''}${p.name}`).join(',');
+            const params = sig.parameters.map(p => `${p.flags.isRest ? '...' : ''}${p.name}`).join(', ');
             return `${name}(${params})`;
         } else {
             return id;
@@ -126,8 +126,8 @@ export function loadContent() {
     let allUsedTypes = new Set<Reflection>();
     let typesWithPages = new Set<Reflection>();
 
-    let allReferences = {} as {
-        [id: string]: string
+    let references = {} as {
+        [id: string | number]: string
     };
 
     let pages = new Map<string, {
@@ -143,7 +143,7 @@ export function loadContent() {
             comment: CommentType
         }[],
         references: {
-            [id: number]: string
+            [id: string]: string
         }
     }>();
 
@@ -162,7 +162,7 @@ export function loadContent() {
                 pageDescription: null,
                 pageSidebarLabel: null,
                 contents: [],
-                references: allReferences
+                references: references
             };
             pages.set(hash, page);
         }
@@ -205,7 +205,8 @@ export function loadContent() {
                 typesWithPages.add(child);
 
                 if (docId) {
-                    allReferences[docId] = hash;
+                    references[docId] = hash;
+                    references[`id-${child.id}`] = docId;
                 }
             }
         } else if ('type' in child) {
@@ -235,7 +236,7 @@ export function loadContent() {
     }
 
     for(let [id, hash] of commentSerializer.references) {
-        allReferences[id] = hash;
+        references[id] = hash;
     }
 
     for(let page of pages.values()) {

@@ -189,7 +189,7 @@ export function apiTableOfContents(doc) {
             const id = getChildId(c.reflection);
             console.log(id);
             toc.push({
-                value: functionDefinition(c.reflection, name),
+                value: `<code>${functionDefinition(c.reflection, name)}</code>`,
                 id: id,
                 level: 3
             });
@@ -232,7 +232,7 @@ export function ClassReflection({ reflection, references }) {
     return (
         <div>
             <Heading as='h2' id={reflection.name}>{reflection.name}</Heading>
-            <ClassMembers reflection={reflection}  references={references} />
+            <ClassMembers reflection={reflection} references={references} />
         </div>
     )
 }
@@ -360,7 +360,7 @@ export function ClassPropertyConstructor(props) {
 export function ClassPropertyMethod(props) {
     return (
         <div>
-            <FunctionSignature func={props.member} sig={props.member.signatures[0]} link={props.link}/>
+            <FunctionSignature func={props.member} sig={props.member.signatures[0]} link={props.link} references={props.references} />
             {/* <CodeBlock language="json">{JSON.stringify(props.member, undefined, 2)}</CodeBlock> */}
         </div>
     )
@@ -606,9 +606,13 @@ function TypeLink({ type, references }) {
         return <span>{type.name}</span>
     } else if (type.name) {
         let href = `#${type.name}`;
-        const hash = references?.[type.id];
-        if (hash) {
-            href = useBaseUrl(hash) + href;
+        console.log(type.id, references);
+        const docId = type.id ? references?.[`id-${type.id}`] : null;
+        if (docId)  {
+            const hash = references?.[docId];
+            if (hash) {
+                href = useBaseUrl(hash) + `#${docId}`;
+            }
         }
         return <Link href={href}>{type.name}</Link>
     } else if (type.type === 'union') {

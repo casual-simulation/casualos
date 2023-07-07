@@ -10,6 +10,7 @@ import { Vector3 } from './Vector3';
  * @docTitle Rotations
  * @docSidebar Rotations
  * @docDescription Rotations help represent orientation.
+ * @docname Rotation
  */
 export class Rotation {
     private _q: Quaternion;
@@ -300,7 +301,7 @@ export class Rotation {
     }
 
     /**
-     * Rotates the given Vector3 by this quaternion and returns a new vector containing the result.
+     * Rotates the given {@link Vector3} by this quaternion and returns a new vector containing the result.
      * @param vector The 3D vector that should be rotated.
      *
      * @example Apply a rotation to a Vector3 object.
@@ -345,7 +346,7 @@ export class Rotation {
     }
 
     /**
-     * Rotates the given Vector2 by this quaternion and returns a new vector containing the result.
+     * Rotates the given {@link Vector2} by this quaternion and returns a new vector containing the result.
      * Note that rotations around any other axis than (0, 0, 1) or (0, 0, -1) can produce results that contain a Z component.
      * @param vector The 2D vector that should be rotated.
      *
@@ -459,6 +460,7 @@ export class Rotation {
  * @docTitle Rotations
  * @docSidebar Rotations
  * @docDescription Rotations help represent orientation.
+ * @docname FromToRotation
  */
 export interface FromToRotation {
     /**
@@ -480,6 +482,7 @@ export interface FromToRotation {
  * @docTitle Rotations
  * @docSidebar Rotations
  * @docDescription Rotations help represent orientation.
+ * @docname AxisAndAngle
  */
 export interface AxisAndAngle {
     /**
@@ -501,6 +504,7 @@ export interface AxisAndAngle {
  * @docTitle Rotations
  * @docSidebar Rotations
  * @docDescription Rotations help represent orientation.
+ * @docname EulerAnglesRotation
  */
 export interface EulerAnglesRotation {
     euler: {
@@ -541,6 +545,7 @@ export interface EulerAnglesRotation {
  * @docTitle Rotations
  * @docSidebar Rotations
  * @docDescription Rotations help represent orientation.
+ * @docname SequenceRotation
  */
 export interface SequenceRotation {
     /**
@@ -557,6 +562,7 @@ export interface SequenceRotation {
  * @docTitle Rotations
  * @docSidebar Rotations
  * @docDescription Rotations help represent orientation.
+ * @docname QuaternionRotation
  */
 export interface QuaternionRotation {
     quaternion: { x: number; y: number; z: number; w: number };
@@ -570,6 +576,7 @@ export interface QuaternionRotation {
  * @docTitle Rotations
  * @docSidebar Rotations
  * @docDescription Rotations help represent orientation.
+ * @docname LookRotation
  */
 export interface LookRotation {
     /**

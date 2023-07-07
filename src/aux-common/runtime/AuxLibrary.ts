@@ -2091,6 +2091,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             },
 
             web: {
+                _webGet,
+                _webPost,
+                _webHook,
                 get: makeMockableFunction(webGet, 'web.get'),
                 post: makeMockableFunction(webPost, 'web.post'),
                 hook: makeMockableFunction(webhook, 'web.hook'),
@@ -2622,11 +2625,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the position that the given bot is at in the given dimension.
-     * @param bot The bot or bot ID.
-     * @param dimension The dimension that the bot's position should be retrieved for.
+     * Gets the 3D position of the given bot in the given dimension.
+     * @param bot the bot or bot ID whose position should be retrieved.
+     * @param dimension the dimension that the position should be retrieved for.
      *
+     * @example Get the position of this bot in the #home dimension
+     * let position = getBotPosition(thisBot, "home");
+     *
+     * @dochash actions/data
      * @docgroup 01-data-actions
+     * @docname getBotPosition
      */
     function getBotPosition(
         bot: RuntimeBot | string,
@@ -2646,11 +2654,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the rotation that the given bot is at in the given dimension.
-     * @param bot The bot or bot ID.
-     * @param dimension The dimension that the bot's rotation should be retrieved for.
+     * Gets the 3D rotation of the given bot in the given dimension.
+     * @param bot the bot or bot ID whose rotation should be retrieved.
+     * @param dimension the dimension that the rotation should be retrieved for.
      *
+     * @example Get the rotation of this bot in the #home dimension
+     * let rotation = getBotRotation(thisBot, "home");
+     *
+     * @dochash actions/data
      * @docgroup 01-data-actions
+     * @docname getBotRotation
      */
     function getBotRotation(
         bot: RuntimeBot | string,
@@ -3069,10 +3082,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Calculates the difference between the two given snapshots.
-     * @param first The first snapshot.
-     * @param second The second snapshot.
+     * The returned value is such that if you were to apply the changes (using {@link applyDiffToSnapshot}) it represents to the first snapshot you would end up with the second snapshot.
+     * @param first the snapshot that should be used as the baseline for the diff.
+     * @param second the snapshot that should be used as the target for the diff.
      *
+     * @example Calculate the diff between two snapshots
+     * const first = getSnapshot([thisBot]);
+     * thisBot.tags.color = 'red';
+     * const second = getSnapshot([thisBot]);
+     * const diff = diffSnapshots(first, second);
+     *
+     * console.log(diff);
+     *
+     * @dochash actions/data
      * @docgroup 01-data-actions
+     * @docname diffSnapshots
      */
     function diffSnapshots(
         first: BotsState,
@@ -3152,12 +3176,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Applies the given delta to the given snapshot and returns the result.
-     * This is essentially the opposite of diffSnapshots().
-     * @param snapshot The snapshot that the diff should be applied to.
-     * @param diff The delta that should be applied to the snapshot.
+     * Applies the given difference to the given snapshot and returns a new snapshot that represents the result.
      *
+     * @param snapshot the snapshot that the delta should be applied to. This is also called the baseline snapshot.
+     * @param diff the delta that should be applied to the snapshot. You can create a delta from two snapshots by using the {@link diffSnapshots} function.
+     *
+     * @dochash actions/data
      * @docgroup 01-data-actions
+     * @docname applyDiffToSnapshot
      */
     function applyDiffToSnapshot(
         snapshot: BotsState,
@@ -6751,6 +6777,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Sends a HTTP GET request for the given URL using the given options.
+     *
+     * @param url the URL that the request should be sent to.
+     * @param options the options for the request.
+     *
+     * @example Send a HTTP GET request for https://example.com and toast the result.
+     * const response = await web.get('https://example.com');
+     * os.toast(response);
+     *
+     * @dochash actions/web
+     * @doctitle Web Actions
+     * @docsidebar Web Actions
+     * @docdescription Web actions allow you to send HTTP requests to other servers.
+     * @docgroup 01-web-actions
+     * @docname web.get
+     */
+    function _webGet(
+        url: string,
+        options?: WebhookOptions
+    ): Promise<WebhookResult> {
+        return null;
+    }
+
+    /**
      * Sends an HTTP GET request for the given URL using the given options.
      * @param url The URL to request.
      * @param options The options to use.
@@ -6764,6 +6814,31 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             method: 'GET',
             url,
         });
+    }
+
+    /**
+     * Sends a HTTP POST request to the URL with the given data and using the given options.
+     *
+     * @param url the URL that the request should be sent to.
+     * @param data the data that should be included in the request.
+     * @param options the options for the request.
+     *
+     * @example Send a HTTP POST request to https://example.com and toast the result.
+     * const response = await web.post('https://example.com', {
+     *      some: 'data'
+     * });
+     * os.toast(response);
+     *
+     * @dochash actions/web
+     * @docgroup 01-web-actions
+     * @docname web.post
+     */
+    function _webPost(
+        url: string,
+        data?: any,
+        options?: WebhookOptions
+    ): Promise<WebhookResult> {
+        return null;
     }
 
     /**
@@ -6809,6 +6884,35 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         } else {
             return func as any;
         }
+    }
+
+    /**
+     * Sends a HTTP request using the given options.
+     *
+     * @param options the options for the request.
+     *
+     * @example Send a HTTP GET request to https://example.com and toast the result.
+     * const response = await web.hook({
+     *    method: 'GET',
+     *    url: 'https://example.com',
+     * });
+     * os.toast(response);
+     *
+     * @example Send a HTTP PUT request to https://example.com with some data.
+     * web.hook({
+     *    method: 'PUT',
+     *    url: 'https://example.com',
+     *    data: {
+     *      some: 'data'
+     *    }
+     * });
+     *
+     * @dochash actions/web
+     * @docgroup 01-web-actions
+     * @docname web.hook
+     */
+    function _webHook(options: WebhookOptions): Promise<WebhookResult> {
+        return null;
     }
 
     /**
@@ -6866,9 +6970,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Creates a Universally Unique IDentifier (UUID).
+     * Creates a [Universally Unique IDentifier (UUID)](https://en.wikipedia.org/wiki/Universally_unique_identifier).
+     * Useful for generating a random identifier that is guaranteed to be unique
      *
+     * @example Generate a new UUID and toast it
+     * const id = uuid();
+     * os.toast(id);
+     *
+     * @dochash actions/data
      * @docgroup 01-data-actions
+     * @docname uuid
      */
     function uuid(): string {
         return context.uuid();
@@ -9319,8 +9430,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the list of bot links that are stored in this bot's tags.
+     * Gets the list of bot links that are stored in tags on the specified bot.
+     *
+     * This function can be useful if you want to discover what tags are linking to bots and get those bot IDs.
+     *
      * @param bot The bot to get the links for.
+     *
+     * @example Get the list of bot links on this bot
+     * let botLinks = getBotLinks(thisBot);
      *
      * @dochash actions/data
      * @docgroup 01-data-actions

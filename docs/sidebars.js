@@ -36,7 +36,8 @@ module.exports = {
                     label: 'Actions',
                     items: [
                         'actions/data',
-                        'actions/mod-actions'
+                        'actions/mod-actions',
+                        'actions/web'
                     ]
                 },
                 'glossary',

@@ -9,6 +9,7 @@ import { Vector2 } from './Vector2';
  * @docTitle Vectors
  * @docSidebar Vectors
  * @docDescription Vectors help represent positions and directions.
+ * @docname Vector3
  */
 export class Vector3 {
     /**
