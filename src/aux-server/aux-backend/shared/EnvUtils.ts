@@ -1,6 +1,7 @@
 import { tryParseJson } from '@casual-simulation/aux-records';
 import { readFileSync, readdirSync } from 'fs';
 import path from 'path';
+import { merge } from 'lodash';
 
 declare const DEVELOPMENT: boolean;
 
