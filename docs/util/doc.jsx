@@ -187,7 +187,6 @@ export function apiTableOfContents(doc) {
         } else if (c.reflection.kindString === 'Call signature') {
             const name = getChildName(c.reflection);
             const id = getChildId(c.reflection);
-            console.log(id);
             toc.push({
                 value: `<code>${functionDefinition(c.reflection, name)}</code>`,
                 id: id,
@@ -605,13 +604,22 @@ function TypeLink({ type, references }) {
     if (type.type === 'intrinsic') {
         return <span>{type.name}</span>
     } else if (type.name) {
+        if (type.name === 'Promise' && type.qualifiedName === 'Promise' && type.typeArguments && type.typeArguments.length === 1) {
+            return <>Promise&lt;<TypeLink type={type.typeArguments[0]} references={references}/>&gt;</>
+        }
+
         let href = `#${type.name}`;
-        console.log(type.id, references);
         const docId = type.id ? references?.[`id-${type.id}`] : null;
         if (docId)  {
             const hash = references?.[docId];
             if (hash) {
                 href = useBaseUrl(hash) + `#${docId}`;
+            }
+        } else {
+            if (!type.id) {
+                console.log('Missing reference for', type, 'it is likely that the type is not exported from the entry');
+            } else {
+                console.log('Missing reference for', type.id, type.name, type, 'it is likely that the type does not have a @docid or @docname comment');
             }
         }
         return <Link href={href}>{type.name}</Link>
@@ -645,6 +653,9 @@ function typeName(type) {
     if (type.type === 'intrinsic') {
         return type.name;
     } else if (type.name) {
+        if (type.name === 'Promise' && type.qualifiedName === 'Promise' && type.typeArguments && type.typeArguments.length === 1) {
+            return `Promise&lt;${typeName(type.typeArguments[0])}&gt;`
+        }
         return type.name;
     } else if (type.type === 'union') {
         return `(${type.types.map(t => typeName(t)).join(' | ')})`;
@@ -912,7 +923,6 @@ function getInterpretableFunctionSignature(property) {
 function getChildGroupTitle(child) {
     const signatures = getByKind(child, 'Call signature');
 
-    console.log('signatures', child, signatures);
     for(let sig of signatures) {
         const tagValue = getReflectionTag(sig, 'docgrouptitle');
         if (tagValue) {
