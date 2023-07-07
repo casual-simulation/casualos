@@ -630,6 +630,9 @@ const MAX_RETRY_COUNT = 10;
 
 /**
  * Defines a set of options for a webhook.
+ *
+ * @dochash extra-types
+ * @docname WebhookOptions
  */
 export interface WebhookOptions {
     /**

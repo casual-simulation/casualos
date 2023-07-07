@@ -212,11 +212,9 @@ export function loadContent() {
         } else if ('type' in child) {
             if (child.type === 'reference') {
                 const referenceType = child as ReferenceType;
-                if (referenceType.reflection) {
-                    let resolvedReferences = resolveTypeReferences([referenceType]);
-                    for (let ref of resolvedReferences) {
-                        allUsedTypes.add(ref);
-                    }
+                let resolvedReferences = resolveTypeReferences([referenceType]);
+                for (let ref of resolvedReferences) {
+                    allUsedTypes.add(ref);
                 }
             }
         }
@@ -296,6 +294,9 @@ function getReflectionTag(reflection: Reflection, tag: string): string {
     return null;
 }
 
+const builtinTypes = new Set([
+    'Uint8Array',
+]);
 
 function resolveTypeReferences(typeReferences: ReferenceType[]): Set<Reflection> {
     let result: Set<Reflection> = new Set();
@@ -303,15 +304,15 @@ function resolveTypeReferences(typeReferences: ReferenceType[]): Set<Reflection>
         let referencedType = ref.reflection;
         if (referencedType) {
             result.add(referencedType);
-        } else if(ref.name !== 'Promise') {
+        } else if (ref.name !== 'Promise' && !builtinTypes.has(ref.name)) {
             console.warn(`[docusarus-plugin-typedoc] Unable to resolve type reference: ${ref.name}`);
         }
 
-        if (ref.typeArguments && ref.typeArguments.length > 0) {
-            for (let inner of resolveTypeReferences(ref.typeArguments.filter(t => t.type === 'reference') as ReferenceType[])) {
-                result.add(inner);
-            }
-        }
+        // if (ref.typeArguments && ref.typeArguments.length > 0) {
+        //     for (let inner of resolveTypeReferences(ref.typeArguments.filter(t => t.type === 'reference') as ReferenceType[])) {
+        //         result.add(inner);
+        //     }
+        // }
     }
     return result;
 }
@@ -321,10 +322,12 @@ const keysMap = {
     'reflection': ['declaration'],
     'Type literal': ['children', 'signatures'],
     'Call signature': ['parameters', 'comment', 'type'],
+    'Parameter': ['type'],
     'Class': ['children'],
     'Constructor': ['signatures'],
     'Function': ['signatures'],
     'Project': ['children'],
+    'reference': ['typeArguments'],
 };
 
 type WalkType = Reflection | Type | Comment;
