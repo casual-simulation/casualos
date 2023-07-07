@@ -2633,7 +2633,7 @@ export class RecordsHttpServer {
             let body = tryParseJson(request.body);
             if (body.success) {
                 const schema = z.object({
-                    subscriptionId: z.string(),
+                    subscriptionId: z.string().optional(),
                     expectedPrice: z
                         .object({
                             currency: z.string(),
@@ -2641,7 +2641,7 @@ export class RecordsHttpServer {
                             interval: z.enum(['month', 'year', 'week', 'day']),
                             intervalLength: z.number(),
                         })
-                        .required(),
+                        .optional(),
                 });
 
                 const parseResult = schema.safeParse(body.value);
