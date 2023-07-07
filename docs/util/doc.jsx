@@ -9,7 +9,8 @@ import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkTagLinks from './remarkTagLinks';
 import unwrapFirstParagraph from './remarkUnwrapFirstParagraph';
-import { getByKind } from './walk';
+import { getByKind, getCommentTags } from './walk';
+import { ref } from 'vue';
 
 let typeMap = {};
 
@@ -166,7 +167,13 @@ function objectMemberTableOfContents({ reflection, child, group, name, namespace
 }
 
 export function apiTableOfContents(doc) {
-    let toc = [];
+    let toc = [
+        {
+            value: doc.pageTitle,
+            id: '',
+            level: 2
+        }
+    ];
 
     for(let c of doc.contents) {
         if (c.reflection.kindString === 'Interface' || c.reflection.kindString === 'Class') {
@@ -179,11 +186,12 @@ export function apiTableOfContents(doc) {
             toc.push(...classTableOfContents(c.reflection));
         } else if (c.reflection.kindString === 'Call signature') {
             const name = getChildName(c.reflection);
-            console.log(name);
+            const id = getChildId(c.reflection);
+            console.log(id);
             toc.push({
                 value: functionDefinition(c.reflection, name),
-                id: name,
-                level: 2
+                id: id,
+                level: 3
             });
         } else {
             toc.push({
@@ -199,10 +207,12 @@ export function apiTableOfContents(doc) {
     return toc;
 }
 
-export function ApiContents({contents, references}) {
+export function ApiContents({doc}) {
+    const contents = doc.contents;
+    const references = doc.references;
     return (
         <div className="api">
-            {contents.map(c => <ApiReflection key={c.name} reflection={c.reflection} references={references} />)}
+            {contents.map(c => <ApiReflection key={c.id} reflection={c.reflection} references={references} />)}
         </div>
     );
 }
@@ -238,9 +248,10 @@ export function ObjectReflection({ reflection, references }) {
 
 export function SignatureReflection({ reflection, references }) {
     const name = getChildName(reflection);
+    const id = getChildId(reflection);
     return (
         <div>
-            <FunctionSignature func={reflection} sig={reflection} name={name} link={name} references={references} />
+            <FunctionSignature func={reflection} sig={reflection} name={name} link={id} references={references} />
         </div>
     )
 }
@@ -270,16 +281,16 @@ export function ClassMembers(props) {
     return (
         <ReflectionBoundary reflection={reflection} root={true}>
             <div className="api">
-                <ReflectionDiscription reflection={reflection} />
+                <ReflectionDiscription reflection={reflection} references={props.references} />
                 {children.map(c => <ClassMember key={c.name} member={c} link={memberLink(reflection, c)} references={props.references}/>)}
             </div>
         </ReflectionBoundary>
     );
 }
 
-export function ReflectionDiscription({ reflection }) {
+export function ReflectionDiscription({ reflection, references }) {
     return <div>
-        <CommentMarkdown comment={reflection.comment} />
+        <CommentMarkdown comment={reflection.comment} references={references} />
     </div>
 }
 
@@ -369,7 +380,7 @@ export function ObjectMembers(props) {
     return (
         <ReflectionBoundary reflection={reflection} root={true}>
             <div className="api">
-                <ReflectionDiscription reflection={reflection} />
+                <ReflectionDiscription reflection={reflection} references={props.references} />
                 {childGroups.map(c => <GroupChildren key={c.group} group={c} references={props.references}/>)}
             </div>
         </ReflectionBoundary>
@@ -461,7 +472,7 @@ export function FunctionSignature({func, sig, link, name, references}) {
             <Heading as='h3' id={link}>
                 <FunctionDefinition func={func} sig={sig} name={name} references={references}/>
             </Heading>
-            <FunctionDescription sig={sig} />
+            <FunctionDescription sig={sig} references={references} />
             {params.length > 0 ? (
                 <div>
                     {params.map((p, i) => <FunctionParameter key={p.name} param={p} index={i} references={references} />)}
@@ -472,16 +483,24 @@ export function FunctionSignature({func, sig, link, name, references}) {
     );
 }
 
-export function FunctionDescription({ sig }) {
-    return <CommentMarkdown comment={sig.comment} />
+export function FunctionDescription({ sig, references }) {
+    return <CommentMarkdown comment={sig.comment} references={references} />
 }
 
-export function CommentMarkdown({ comment }) {
-    return <Markdown>{getCommentText(comment)}</Markdown>
+export function CommentMarkdown({ comment, references }) {
+    return <Markdown references={references}>{getCommentText(comment)}</Markdown>
 }
 
-export function Markdown({ children, remarkPlugins, rehypePlugins }) {
-    return <ReactMarkdown remarkPlugins={[remarkTagLinks, ...(remarkPlugins || [])]} rehypePlugins={[rehypeRaw, ...(rehypePlugins || [])]}>{children}</ReactMarkdown>
+export function Markdown({ children, remarkPlugins, rehypePlugins, references }) {
+    return <ReactMarkdown remarkPlugins={[
+        [remarkTagLinks, {
+            references
+        }],
+        ...(remarkPlugins || [])
+    ]} rehypePlugins={[
+        rehypeRaw, 
+        ...(rehypePlugins || [])
+    ]}>{children}</ReactMarkdown>
 }
 
 function getCommentText(comment) {
@@ -499,26 +518,25 @@ function getCommentText(comment) {
 export function FunctionDefinition({ func, sig, name, references }) {
     const params = sig.parameters || [];
     return (
-        <code>{(func.flags.isStatic ? 'static ' : '') + (name || sig.name)}({params.map((p, i) => <span key={p.name}>{i > 0 ? ', ' : ''}{p.name}{p.flags.isOptional ? '?' : ''}: <TypeLink type={p.type} references={references}/></span>)}): <TypeLink type={sig.type} references={references}/></code>
+        <code>{(func.flags.isStatic ? 'static ' : '') + (name || sig.name)}({params.map((p, i) => <span key={p.name}>{i > 0 ? ', ' : ''}{p.flags.isRest ? '...' : ''}{p.name}{p.flags.isOptional ? '?' : ''}: <TypeLink type={p.type} references={references}/></span>)}): <TypeLink type={sig.type} references={references}/></code>
     );
 }
 
 export function functionDefinition(func, name = func.name) {
     const params = func.parameters || [];
-    return `${name}(${params.map((p, i) => p.name).join(', ')}): ${typeName(func.type)}`;
+    return `${name}(${params.map((p, i) => (p.flags.isRest ? '...' : '') + p.name).join(', ')}): ${typeName(func.type)}`;
 }
 
 export function FunctionParameter({ param, index, references }) {
     let detail;
     if (param.flags.isRest && param.type.elementType) {
         if(index === 0) {
-
-            detail = <p><strong>Each parameter</strong> is a <TypeLink type={param.type.elementType} references={references}/> and are <ParameterDescription param={param} isRest={true}/></p>
+            detail = <p><strong>Each parameter</strong> is a <TypeLink type={param.type.elementType} references={references}/> and are <ParameterDescription param={param} isRest={true} references={references}/></p>
         } else {
-            detail = <p><strong>Each other parameter</strong> is a <TypeLink type={param.type.elementType} references={references}/> and are <ParameterDescription param={param} isRest={true}/></p>
+            detail = <p><strong>Each other parameter</strong> is a <TypeLink type={param.type.elementType} references={references}/> and are <ParameterDescription param={param} isRest={true} references={references}/></p>
         }
     } else {
-        detail = <p>The <strong>{indexName(index)} parameter</strong> is{param.flags.isOptional ? ' optional and is' : ''} a <TypeLink type={param.type} references={references}/> and <ParameterDescription param={param}/></p>
+        detail = <p>The <strong>{indexName(index)} parameter</strong> is{param.flags.isOptional ? ' optional and is' : ''} a <TypeLink type={param.type} references={references}/> and <ParameterDescription param={param} references={references}/></p>
     }
 
     return detail;
@@ -563,8 +581,8 @@ export function accessorDefinition(prop) {
     return `${prop.name}: ${typeName(prop.getSignature[0].type)}`;
 }
 
-function ParameterDescription({ param, isRest }) {
-    return <Markdown remarkPlugins={[unwrapFirstParagraph]}>{parameterDescription(param, isRest)}</Markdown>
+function ParameterDescription({ param, isRest, references }) {
+    return <Markdown remarkPlugins={[unwrapFirstParagraph]} references={references}>{parameterDescription(param, isRest)}</Markdown>
 }
 
 function parameterDescription(param, isRest) {
@@ -594,11 +612,11 @@ function TypeLink({ type, references }) {
         }
         return <Link href={href}>{type.name}</Link>
     } else if (type.type === 'union') {
-        return <span>{type.types.map((t, i) => 
+        return <span>({type.types.map((t, i) => 
             <React.Fragment key={i}>
                 {(i > 0 ? ' | ' : '')}
                 <TypeLink type={t} references={references} />
-            </React.Fragment>)}</span>
+            </React.Fragment>)})</span>
     } else if (type.type === 'array') {
         return <><TypeLink type={type.elementType} references={references}/>[]</>
     } else if (type.type === 'literal') {
@@ -625,7 +643,7 @@ function typeName(type) {
     } else if (type.name) {
         return type.name;
     } else if (type.type === 'union') {
-        return type.types.map(t => typeName(t)).join(' | ');
+        return `(${type.types.map(t => typeName(t)).join(' | ')})`;
     } else if (type.type === 'array') {
         return `${typeName(type.elementType)}[]`;
     } else if (type.type === 'literal') {
@@ -828,6 +846,15 @@ function getChildName(child) {
     }
 
     return getReflectionName(child);
+}
+
+function getChildId(child) {
+    const docId = getCommentTags(child, 'docid');
+    if (docId.length > 0) {
+        return docId[0].text.trim();
+    }
+
+    return getChildName(child);
 }
 
 function getDocGroupFromSignatures(signatures) {

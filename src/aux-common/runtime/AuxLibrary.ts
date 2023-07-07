@@ -1573,10 +1573,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     return {
         api: {
-            _create,
-
             _getBots,
+            __getBots,
             getBots,
+            _getBot,
+            __getBot,
             getBot,
             getBotTagValues,
             getMod,
@@ -1602,6 +1603,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             applyMod,
             subtractMods,
 
+            _create,
             _destroy,
             destroy: createInterpretableFunction(destroy),
 
@@ -1609,6 +1611,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             changeState: createInterpretableFunction(changeState),
             getLink: createBotLinkApi,
             getBotLinks,
+
+            _updateBotLinks,
             updateBotLinks,
 
             getDateTime,
@@ -2382,7 +2386,35 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets an array of bots that match all of the given filter(s). The returned array is sorted alphabetically by the [`#id`](tags:id) tag.
+     * Gets an array of bots that match the given tag and value. The returned array is sorted alphabetically by the {@tag id} tag.
+     *
+     * @param tag the name of the tag. Bots that have this tag will be included as long as they also match the second parameter.
+     * @param value the value the tag should match. If not specified, then all bots with the tag will be included. If specified, then only bots that have the same tag and value will be included. If you specify a function as the value, then it will be used to match tag values.
+     *
+     * @example Find all the bots with #name set to "bob"
+     * let bots = getBots("#name", "bob");
+     *
+     * @example Find all bots with a #height larger than 2
+     * let bots = getBots("#height", height => height > 2);
+     *
+     * @example Find all bots with the #test tag
+     * let bots = getBots("#test");
+     *
+     * @dochash actions/data
+     * @doctitle Data Actions
+     * @docsidebar Data Actions
+     * @docdescription The Data Actions are used to get and set data on bots.
+     * @docgroup 01-data-actions
+     * @docgrouptitle Data Actions
+     * @docname getBots
+     * @docid getbots-tag
+     */
+    function __getBots(tag: string, value?: any): RuntimeBot[] {
+        return null;
+    }
+
+    /**
+     * Gets an array of bots that match all of the given filter(s). The returned array is sorted alphabetically by the {@tag id} tag.
      *
      * @param filters If no filters are specified, then all bots in the inst are returned. If multiple filters are specified, then only the bots that match all of the filters are returned.
      *
@@ -2395,10 +2427,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Find all bots with #name set to "bob" and in the #people dimension
      * let bots = getBots(byTag("#name", "bob"), inDimension("people"));
      *
-     * @dochash actions/os
+     * @dochash actions/data
      * @docgroup 01-data-actions
-     * @docgrouptitle Data Actions
      * @docname getBots
+     * @docid getbots-filters
      */
     function _getBots(...filters: BotFilterFunction[]): RuntimeBot[] {
         return null;
@@ -2448,24 +2480,72 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the first bot ordered by ID.
-     * @returns The bot with the first ID when sorted alphebetically.
+     * Get the first bot that matches all of the given filter(s).
+     * If multiple bots match the given filter(s), then bots are sorted alphabetically by the [#id](tags:id) tag and the first one is returned.
+     * If no bots match the given filter(s), then `undefined` is returned.
      *
-     * @example
-     * let firstBot = getBot();
+     * @param filters If no filters are specified, then all bots in the inst are returned. If multiple filters are specified, then only the bots that match all of the filters are returned.
      *
+     * @example Find a bot with the #test tag
+     * let foundBot = getBot(byTag("#test"));
+     *
+     * @example Find a bot with #name set to "bob" and in the #people dimension
+     * let foundBot = getBot(byTag("#name", "bob"), inDimension("people"));
+     *
+     * @dochash actions/data
      * @docgroup 01-data-actions
+     * @docid getbot-filters
+     * @docname getBot
      */
+    function _getBot(...filters: BotFilterFunction[]): RuntimeBot {
+        return null;
+    }
+
+    /**
+     * Gets the first bot that matches the given tag and value.
+     * If multiple bots match the given tag and value, then bots are sorted alphabetically by the [#id](tags:id) tag and the first one is returned.
+     * If no bots match the given tag and value, then `undefined` is returned.
+     * @param tag the name of the tag to search for.
+     * @param value the value the tag should match. If not specified, then the first bot with the tag will be returned. If specified, then the first bot that has the same tag and value will be returned. If you specify a function as the value, then it will be used to match tag values.
+     *
+     * @example Find the first bot with #name set to "bob"
+     * let foundBot = getBot("#name", "bob");
+     *
+     * @example Find the first bot with a #height larger than 2
+     * let foundBot = getBot("#height", height => height > 2);
+     *
+     * @example Find the first bot with the #test tag
+     * let foundBot = getBot("#test");
+     *
+     * @dochash actions/data
+     * @docgroup 01-data-actions
+     * @docid getbot-tag
+     * @docname getBot
+     */
+    function __getBot(tag: string, value?: any): RuntimeBot {
+        return null;
+    }
+
     function getBot(...args: any[]): RuntimeBot {
         const bots = getBots(...args);
         return bots.first();
     }
 
     /**
-     * Gets the list of tag values from bots that have the given tag.
-     * @param tag The tag.
-     * @param filter The optional filter to use for the values.
+     * Gets a list of all the values in the inst for the given tag. Optionally accepts a filter for the tag values.
      *
+     * @param tag the name of the tag to search for.
+     * @param filter the filter that the tag values should match. If not specified, then all the tag values are included. If it is a function, then it will be used to match values. Otherwise, only tags that match the value will be included.
+     *
+     * @example Find the number of bots named bob and print it
+     * const numberOfBobs = getBotTagValues("#name", "bob").length;
+     * os.toast(numberOfBobs);
+     *
+     * @example Find all the bot ages above 10
+     * const agesOver10 = getBotTagValues("#age", age => age > 10);
+     *
+     * @dochash actions/data
+     * @docname getBotTagValues
      * @docgroup 01-data-actions
      */
     function getBotTagValues(tag: string, filter?: TagFilter): any[] {
@@ -2489,7 +2569,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param tags The tags that should be included in the output mod.
      * @returns The mod that was loaded from the data.
      *
-     * @docgroup 01-data-actions
+     * @dochash actions/mod-actions
+     * @docgroup 01-mod-actions
+     * @docname getMod
      */
     function getMod(bot: any, ...tags: (string | RegExp)[]): Mod {
         if (typeof bot === 'string') {
@@ -2885,10 +2967,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the ID from the given bot.
-     * @param bot The bot or string.
+     * Gets the {@tag id} of the given bot.
+     * @param bot the bot whose ID should be retrieved. If given a bot ID, then it will be returned. If given null or something that is not a bot, then null will be returned.
      *
+     * @example Get the ID of the current bot
+     * let id = getID(thisBot);
+     *
+     * @example Get the ID of a bot with #name set to "bob"
+     * let id = getID(getBot("#name", "bob"));
+     *
+     * @dochash actions/data
      * @docgroup 01-data-actions
+     * @docname getID
      */
     function getID(bot: Bot | string): string {
         if (typeof bot === 'string') {
@@ -2901,10 +2991,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets JSON for the given data.
-     * @param data The data.
+     * Gets the [JSON](https://en.wikipedia.org/wiki/JSON) representation of the given data.
+     * @param data the data that should be [cloned](https://en.wikipedia.org/wiki/Serialization) into the JSON format. If given a bot, then the returned JSON will be able to be able to be converted back into a mod via {@link getMod}.
      *
+     * @example Store a copy of a bot in a tag
+     * let bob = getBot("#name", "bob");
+     * tags.savedBot = getJSON(bob);
+     *
+     * @dochash actions/data
      * @docgroup 01-data-actions
+     * @docname getJSON
      */
     function getJSON(data: any): string {
         if (hasValue(data?.[ORIGINAL_OBJECT])) {
@@ -2914,10 +3010,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets formatted JSON for the given data.
-     * @param data The data.
+     * Gets the [JSON](https://en.wikipedia.org/wiki/JSON) representation of the given data formatted in a human-readable manner.
      *
+     * @param data the data that should be [cloned](https://en.wikipedia.org/wiki/Serialization) into the JSON format. If given a bot, then the returned JSON will be able to be able to be converted back into a mod via {@link getMod}.
+     *
+     * @example Sort a nicely formatted copy of a bot in a tag
+     * let bob = getBot("#name", "bob");
+     * tags.savedBot = getFormattedJSON(bob);
+     *
+     * @dochash actions/data
      * @docgroup 01-data-actions
+     * @docname getFormattedJSON
      */
     function getFormattedJSON(data: any): string {
         if (hasValue(data?.[ORIGINAL_OBJECT])) {
@@ -2927,11 +3030,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets a snapshot of the data that the bots contain.
-     * This is useful for getting all the tags and masks that are attached to the given bots.
-     * @param bots The array of bots to get the snapshot for.
+     * Gets a snapshot of the given bots. Snapshots are like mods (see {@link getMod}) except they contain multiple bots and include the ID, space, tags, and tag masks of the bots.
      *
+     * @param bots the bot or list of bots that a snapshot should be created out of.
+     *
+     * @dochash actions/data
      * @docgroup 01-data-actions
+     * @docname getSnapshot
      */
     function getSnapshot(bots: Bot[] | Bot): BotsState {
         if (!Array.isArray(bots)) {
@@ -8705,7 +8810,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Remove tags named "hello" using a case-insensitive regex from this bot.
      * removeTags(thisBot, /^hello$/gi);
      *
+     * @dochash actions/data
      * @docgroup 01-data-actions
+     * @docname removeTags
      */
     function removeTags(bot: Bot | Bot[], tagSection: string | RegExp): void {
         if (typeof bot === 'object' && Array.isArray(bot)) {
@@ -8751,6 +8858,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @example Rename the "auxColor" tag to "color"
      * renameTag(thisBot, "auxColor", "color");
+     *
+     * @dochash actions/data
+     * @docgroup 01-data-actions
+     * @docname renameTag
      */
     function renameTag(
         bot: Bot | Bot[],
@@ -8782,7 +8893,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *    name: "bob"
      * });
      *
-     * @docgroup 01-data-actions
+     * @dochash actions/mod-actions
+     * @doctitle Mod Actions
+     * @docsidebar Mod Actions
+     * @docgroup 01-mod-actions
+     * @docname applyMod
      */
     function applyMod(bot: any, ...mods: Mod[]): void {
         let appliedDiffs: BotTags[] = [];
@@ -8825,7 +8940,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     name: 'bob'
      * });
      *
-     * @docgroup 01-data-actions
+     * @dochash actions/mod-actions
+     * @docgroup 01-mod-actions
+     * @docname subtractMods
      */
     function subtractMods(bot: any, ...mods: Mod[]): void {
         let subtractedDiffs: BotTags[] = [];
@@ -8848,13 +8965,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Creates a new bot or combination of bots with the given mods. Also triggers [`@onCreate`](tags:@onCreate) on all the created bots.
-     * By default, bots are created with a unique [`#id`](tags:id), [`#creator`](tags:creator) set to the current `bot.id`, and [`#space`](tags:space) set to `shared`.
+     * By default, bots are created with a unique {@tag id}, {@tag creator} set to the current `bot.id`, and {@tag space} set to `shared`.
      * Bots must be created with at least one tag. If `create()` tries to make a bot with zero tags then an error will be thrown.
      *
-     * If [`#creator`](tags:creator) references a non-existent bot or a bot with a different [`#space`](tags:space) than the created bot, then [`#creator`](tags:creator) will be set to `null`.
+     * If {@tag creator} references a non-existent bot or a bot with a different {@tag space} than the created bot, then {@tag creator} will be set to `null`.
      *
      * @param mods the mods that should be applied to the new bot(s).
-     * If no parameters are specified, then the new bot will have its [`#creator`](tags:creator) set to `bot.id` and [`#space`](tags:space) set to `shared`.
+     * If no parameters are specified, then the new bot will have its {@tag creator} set to `bot.id` and {@tag space} set to `shared`.
      * If an array of mods is used for a parameter, then one bot will be created for _each unique combination of mods_.
      *
      * @returns The bot(s) that were created.
@@ -8893,10 +9010,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     }
      * });
      *
+     * @dochash actions/data
      * @docgroup 01-data-actions
      * @docname create
      */
-    function _create(...mods: Mod[]): any {}
+    function _create(...mods: Mod[]): RuntimeBot | RuntimeBot[] {
+        return null;
+    }
 
     function create(botId: string, ...mods: Mod[]) {
         return createBase(botId, () => context.uuid(), ...mods);
@@ -9015,9 +9135,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Removes the given bot, list of bots, or bot by #id and triggers @onDestroy for each of the destroyed bots.
      *
-     * Note that only destroyable bots will be destroyed. Bots that have [`#destroyable`](tags:destroyable) set to `false` will not be destroyed.
+     * Note that only destroyable bots will be destroyed. Bots that have {@tag destroyable} set to `false` will not be destroyed.
      *
-     * Also note that all bots that have [`#creator`](tags:creator) set to the [`#id`](tags:id) of a destroyed bot will also be destroyed (unless they are not destroyable). This happens recursively until there are no more bots to destroy.
+     * Also note that all bots that have {@tag creator} set to the {@tag id} of a destroyed bot will also be destroyed (unless they are not destroyable). This happens recursively until there are no more bots to destroy.
      *
      * @param bot The bot, bot ID, or list of bots to destroy.
      *
@@ -9031,6 +9151,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * // Destroy the bot with the #id: "config"
      * destroy("config");
      *
+     * @dochash actions/data
      * @docgroup 01-data-actions
      * @docname destroy
      */
@@ -9126,6 +9247,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * // Triggers @playbackStatePlayingOnEnter
      * changeState(bot, "Playing", "playbackState");
      *
+     * @dochash actions/data
      * @docgroup 01-data-actions
      * @docname changeState
      */
@@ -9172,6 +9294,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @examples Toast a link to this bot
      * toast(getLink(thisBot));
      *
+     * @dochash actions/data
      * @docgroup 01-data-actions
      * @docname getLink
      */
@@ -9199,7 +9322,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the list of bot links that are stored in this bot's tags.
      * @param bot The bot to get the links for.
      *
+     * @dochash actions/data
      * @docgroup 01-data-actions
+     * @docname getBotLinks
      */
     function getBotLinks(bot: Bot): ParsedBotLink[] {
         let links = [] as ParsedBotLink[];
@@ -9218,11 +9343,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Updates all the links in the given bot using the given ID map.
-     * Useful if you know that the links in the given bot are outdated and you know which IDs map to the new IDs.
-     * @param bot The bot to update.
-     * @param idMap The map of old IDs to new IDs that should be used.
+     * Updates the links in the given bot to point to the new Bot IDs specified in the given ID map.
+     *
+     * This function is useful if you know that the links in the given bot are outdated and you know which IDs map to the new IDs.
+     *
+     *
+     * @param bot The bot whose links should be updated.
+     * @param idMap the map of old bot IDs to the new IDs that should replace them. Each property should be an old ID and each value should be a new ID.
+     *
+     * @example Change all references to "botA" to "botB" on this bot
+     * updateBotLinks(thisBot, {
+     *    "botA": "botB"
+     * });
+     *
+     * @dochash actions/data
+     * @docgroup 01-data-actions
+     * @docname updateBotLinks
      */
+    function _updateBotLinks(bot: Bot, idMap: object): void {}
+
     function updateBotLinks(
         bot: Bot,
         idMap: Map<string, string | Bot> | { [id: string]: string | Bot }
@@ -9318,9 +9457,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sends a shout to all bots that are [`#listening`](tags:listening) and have
+     * Sends a shout to all bots that are {@tag listening} and have
      * a listen tag for the specified name. Optionally includes a custom that argument.
-     * Also triggers [`@onListen`](tags:@onListen) and [`@onAnyListen`](tags:@onAnyListen).
+     * Also triggers {@tag @onListen} and {@tag @onAnyListen}.
      *
      * @param name the name of the shout. e.g. Using `onClick` for the name will trigger all [@onClick](tags:@onClick) listeners.
      * @param arg the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
@@ -9345,11 +9484,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sends a whisper to all bots that are [`#listening`](tags:listening) and have
+     * Sends a whisper to all bots that are {@tag listening} and have
      * a listen tag for the specified name. Optionally includes a custom that argument.
-     * Also triggers [`@onListen`](tags:@onListen) and [`@onAnyListen`](tags:@onAnyListen).
+     * Also triggers {@tag @onListen} and {@tag @onAnyListen}.
      *
-     * @param bot the bot, array of bots, bot [`#id`](tags:id), or array of bot [`#id`](tags:id) that the whisper should be sent to.
+     * @param bot the bot, array of bots, bot {@tag id}, or array of bot {@tag id} that the whisper should be sent to.
      * @param eventName the name of the whisper. e.g. Using `onClick` for the name will trigger the [`@onClick`](tags:@onClick) listener for the specified bots.
      * @param arg the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
      * @returns Returns a list which contains the values returned from each script that was run for the shout.

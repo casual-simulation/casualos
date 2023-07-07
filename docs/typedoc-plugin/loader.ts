@@ -3,8 +3,10 @@
 // module.exports = function pluginTypedoc(context: any, options: any) {
 
 import { sortBy } from 'lodash';
-import { ReferenceType, Reflection, ReflectionKind, Type, TypeKind, Comment } from 'typedoc';
+import { ReferenceType, Reflection, ReflectionKind, Type, TypeKind, Comment, SerializerComponent, Serializer, Application, ProjectReflection, SignatureReflection } from 'typedoc';
 import { getProject } from './api';
+import { ModelToObject } from 'typedoc/dist/lib/serialization/schema';
+import { CallSignatureDeclaration, Declaration } from 'typescript';
 
 export type CommentType = {
     shortText: string;
@@ -17,17 +19,115 @@ export type CommentType = {
     }[];
 };
 
+class CommentSerializer extends SerializerComponent<Comment> {
+    private _app: Application;
+    private _project: ProjectReflection;
+
+    references: Map<string, string>;
+
+    get priority() {
+        return 100;
+    }
+
+    constructor(app: Application, project: ProjectReflection, serializer: Serializer) {
+        super(serializer);
+        this._app = app;
+        this._project = project;
+        this.references = new Map();
+    }
+
+    supports(item: Comment) {
+        return item instanceof Comment;
+    }
+
+    toObject(item: Comment, obj: Partial<ModelToObject<Comment>>) {
+        if (item.shortText) {
+            obj.shortText = this._serializeLinks(item.shortText);
+        }
+        if (item.text) {
+            obj.text = this._serializeLinks(item.text);
+        }
+        if (item.returns) {
+            obj.returns = this._serializeLinks(item.returns);
+        }
+        if (item.tags) {
+            obj.tags = item.tags.map(t => ({
+                tag: t.tagName,
+                paramName: t.paramName,
+                text: t.text ? this._serializeLinks(t.text) : ''
+            }));
+        }
+
+        return obj;
+    }
+
+    serializeGroup(instance: any) {
+        return instance instanceof Comment;
+    }
+
+    /**
+     * Renders all "{{@link }}" tags to markdown links in the given text.
+     * @param str 
+     * @returns 
+     */
+    private _serializeLinks(str: string) {
+        return this._replaceTags(this._replaceReferences(str));
+    }
+
+    private _replaceReferences(str: string) {
+        let regex = /\{@link ([\w-@]+)\}/g;
+        return str.replace(regex, (match, id) => {
+            const type = getByDocId(this._project, id);
+
+            if (type) {
+                const hash = getReflectionHash(type);
+                if (hash) {
+                    this.references.set(id, hash);
+                    return `[\`${this._renderType(type, id)}\`](ref:${id})`;
+                } else {
+                    console.warn(`Type is not included in documentation: ${id}`);
+                    return this._renderType(type, id);
+                }
+            } else {
+                console.warn(`Unable to find type for link: ${id}`);
+                return id;
+            }
+        });
+    }
+
+    private _replaceTags(str: string) {
+        let regex = /\{@tag ([\w-]+)\}/g;
+        return str.replace(regex, (match, tag) => {
+            return `[\`#${tag}\`](tags:${tag})`;
+        });
+    }
+
+    private _renderType(type: Reflection, id: string): string {
+        if (type.kindString === 'Call signature') {
+            const name = getReflectionTag(type, 'docname') ?? id;
+            const sig = type as SignatureReflection;
+            const params = sig.parameters.map(p => `${p.flags.isRest ? '...' : ''}${p.name}`).join(',');
+            return `${name}(${params})`;
+        } else {
+            return id;
+        }
+    }
+}
+
 export function loadContent() {
     const { app, project } = getProject();
     if (!project) {
         console.warn('[docusarus-plugin-typedoc] Unable to load TypeDoc project!');
     }
 
+    let commentSerializer = new CommentSerializer(app, project, app.serializer);
+    app.serializer.addSerializer(commentSerializer);
+
     let allUsedTypes = new Set<Reflection>();
     let typesWithPages = new Set<Reflection>();
 
     let allReferences = {} as {
-        [id: number]: string
+        [id: string]: string
     };
 
     let pages = new Map<string, {
@@ -89,20 +189,24 @@ export function loadContent() {
                     page.pageSidebarLabel = getReflectionTag(child, 'docsidebar');
                 }
 
+                const docId = getReflectionTag(child, 'docid') ?? getReflectionTag(child, 'docname');
+
                 let childVisible = getReflectionTag(child, 'docvisible') === null;
 
                 if (childVisible) {
                     page.contents.push({
                         id: child.id,
                         order,
-                        name: child.name,
+                        name: docId ?? child.name,
                         reflection: app.serializer.toObject(child),
                         comment: getReflectionComment(child),
                     });
                 }
                 typesWithPages.add(child);
 
-                allReferences[child.id] = hash;
+                if (docId) {
+                    allReferences[docId] = hash;
+                }
             }
         } else if ('type' in child) {
             if (child.type === 'reference') {
@@ -128,6 +232,10 @@ export function loadContent() {
                 comment: getReflectionComment(type),
             });
         }
+    }
+
+    for(let [id, hash] of commentSerializer.references) {
+        allReferences[id] = hash;
     }
 
     for(let page of pages.values()) {
@@ -218,7 +326,7 @@ const keysMap = {
     'Project': ['children'],
 };
 
-type WalkType = Reflection | Type;
+type WalkType = Reflection | Type | Comment;
 
 function walk(obj: WalkType, callback: (value: WalkType, parent: WalkType, key: string) => void, parent: WalkType = null) {
     walkSingle(obj, (value, parent, key) => {
@@ -228,7 +336,7 @@ function walk(obj: WalkType, callback: (value: WalkType, parent: WalkType, key: 
 }
 
 function walkSingle(obj: WalkType, callback: (value: WalkType, parent: WalkType, key: string) => void, parent: WalkType = null) {
-    let type = 'kind' in obj ? obj.kindString : obj.type;
+    let type = 'kind' in obj ? obj.kindString : 'type' in obj ? obj.type : 'comment';
     let keys = (keysMap as any)[type] || [];
     for(let key of keys) {
         let value = (obj as any)[key];
@@ -256,6 +364,23 @@ function getByFilter(type: WalkType, filter: (value: WalkType, parent: WalkType,
         }
     });
     return result;
+}
+
+function getByDocId(type: WalkType, docId: string): Reflection {
+    let matches = getByFilter(type, t => {
+        if ('kind' in t) {
+            const id = getReflectionTag(t, 'docid') ?? getReflectionTag(t, 'docname');
+            if (id) {
+                return id === docId;
+            }
+        }
+        return false;
+    });
+
+    if (matches.length > 0) {
+        return matches[0] as Reflection;
+    }
+    return null;
 }
 
 function isFunctionProperty(property: any) {

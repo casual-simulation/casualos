@@ -37,6 +37,17 @@ export function getTypeReferences(type) {
     return getByFilter(type, v => v.type === 'reference');
 }
 
+export function getCommentTags(type, tag) {
+    let result = [];
+    walk(type, (value, parent, key) => {
+        if (key === 'comment') {
+            result.push(...value.tags.filter(v => v.tag === tag));
+        }
+    });
+
+    return result;
+}
+
 export function getByFilter(type, filter) {
     let result = [];
     if (filter(type)) {

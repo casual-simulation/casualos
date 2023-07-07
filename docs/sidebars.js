@@ -35,7 +35,8 @@ module.exports = {
                     type: 'category',
                     label: 'Actions',
                     items: [
-                        'actions/os'
+                        'actions/data',
+                        'actions/mod-actions'
                     ]
                 },
                 'glossary',
