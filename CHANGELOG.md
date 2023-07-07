@@ -14,6 +14,7 @@
 ### :bug: Bug Fixes
 
 -   Fixed an issue where it was not possible to retrieve private data and file records using `os.getData()` and `os.getFile()`.
+-   Fixed an issue where it was impossible to manage an existing subscription.
 
 ## V3.1.35
 
