@@ -55,6 +55,7 @@ module.exports = {
                     type: 'category',
                     label: 'Types',
                     items: [
+                        'types/core',
                         'types/web',
                         'types/animation',
                     ]

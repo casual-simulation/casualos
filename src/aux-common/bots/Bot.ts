@@ -53,10 +53,30 @@ export const REPLACE_BOT_SYMBOL = Symbol('replace_bot');
  * are calculated values and raw is the original tag values.
  *
  * i.e. tags will evaluate formulas while raw will return the formula scripts themselves.
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @doctitle Core Types
+ * @docsidebar Core
+ * @docdescription Documentation for core types that are used throughout CasualOS.
+ * @docid RuntimeBot
+ * @docname Bot
  */
 export interface RuntimeBot {
+    /**
+     * The ID of the bot.
+     */
     id: string;
+
+    /**
+     * The link to the bot.
+     */
     link: string;
+
+    /**
+     * The space that the bot is in.
+     * Defaults to `"shared"`
+     */
     space?: BotSpace;
 
     /**
@@ -108,32 +128,44 @@ export interface RuntimeBot {
 
     /**
      * A function that can clear all the changes from the runtime bot.
+     *
+     * @hidden
      */
     [CLEAR_CHANGES_SYMBOL]: () => void;
 
     /**
      * A function that can set a tag mask on the bot.
+     *
+     * @hidden
      */
     [SET_TAG_MASK_SYMBOL]: (tag: string, value: any, space?: string) => void;
 
     /**
      * A function that can be used to get the tag masks for a bot.
+     *
+     * @hidden
      */
     [GET_TAG_MASKS_SYMBOL]: () => BotTagMasks;
 
     /**
      * A function that can clear the tag masks from the bot.
      * @param space The space that the masks should be cleared from. If not specified then all tag masks in all spaces will be cleared.
+     *
+     * @hidden
      */
     [CLEAR_TAG_MASKS_SYMBOL]: (space?: string) => any;
 
     /**
      * A function that can manipulate a tag using the given edit operations.
+     *
+     * @hidden
      */
     [EDIT_TAG_SYMBOL]: (tag: string, ops: TagEditOp[]) => any;
 
     /**
      * A function that can manipulate a tag mask using the given edit operations.
+     *
+     * @hidden
      */
     [EDIT_TAG_MASK_SYMBOL]: (
         tag: string,
@@ -143,6 +175,8 @@ export interface RuntimeBot {
 
     /**
      * A function that can cause all tags to be fowarded to the given bot.
+     *
+     * @hidden
      */
     [REPLACE_BOT_SYMBOL]: (bot: RuntimeBot) => void;
 
@@ -217,6 +251,9 @@ export interface PrecalculatedTags {
 
 /**
  * Defines an interface for a bot.
+ *
+ * @docid Bot
+ * @docrename RuntimeBot
  */
 export interface Bot {
     /**
@@ -364,6 +401,10 @@ export type PortalType =
     | 'system'
     | string;
 
+/**
+ * @docid ScriptTags
+ * @docrename BotTags
+ */
 export interface ScriptTags extends PrecalculatedTags {
     toJSON(): any;
 }
@@ -395,116 +436,314 @@ export interface BotTagMasks {
     [space: string]: BotTags;
 }
 
+/**
+ * Defines an interface that represents a set of tags and their related values.
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname Tags
+ * @docid BotTags
+ */
 export interface BotTags {
     // Normal bot tags
+    /**
+     * @hidden
+     */
     ['color']?: unknown;
+
+    /**
+     * @hidden
+     */
     ['draggable']?: unknown;
+    /**
+     * @hidden
+     */
     ['draggableMode']?: unknown;
+    /**
+     * @hidden
+     */
     ['destroyable']?: unknown;
+    /**
+     * @hidden
+     */
     ['editable']?: unknown;
+    /**
+     * @hidden
+     */
     ['strokeColor']?: unknown;
+    /**
+     * @hidden
+     */
     ['strokeWidth']?: unknown;
+    /**
+     * @hidden
+     */
     ['scale']?: number;
+    /**
+     * @hidden
+     */
     ['scaleX']?: number;
+    /**
+     * @hidden
+     */
     ['scaleY']?: number;
+    /**
+     * @hidden
+     */
     ['scaleZ']?: number;
+    /**
+     * @hidden
+     */
     ['scaleMode']?: BotScaleMode | null | string;
+    /**
+     * @hidden
+     */
     ['lineTo']?: unknown;
+    /**
+     * @hidden
+     */
     ['lineWidth']?: number;
+    /**
+     * @hidden
+     */
     ['lineStyle']?: unknown;
+    /**
+     * @hidden
+     */
     ['lineColor']?: unknown;
+    /**
+     * @hidden
+     */
     ['label']?: unknown;
+    /**
+     * @hidden
+     */
     ['labelColor']?: unknown;
+    /**
+     * @hidden
+     */
     ['labelSize']?: unknown;
+    /**
+     * @hidden
+     */
     ['labelSizeMode']?: 'auto' | null;
+    /**
+     * @hidden
+     */
     ['labelPosition']?: BotLabelAnchor | null | string;
+    /**
+     * @hidden
+     */
     ['labelAlignment']?: BotLabelAlignment | null | string;
+    /**
+     * @hidden
+     */
     ['labelFontAddress']?: BotLabelFontAddress;
+    /**
+     * @hidden
+     */
     ['listening']?: unknown;
+    /**
+     * @hidden
+     */
     ['form']?: BotShape;
+    /**
+     * @hidden
+     */
     ['formAnimation']?: string;
+    /**
+     * @hidden
+     */
     ['formAddress']?: string;
+    /**
+     * @hidden
+     */
     ['formOpacity']?: unknown;
+    /**
+     * @hidden
+     */
     ['orientationMode']?: string;
+    /**
+     * @hidden
+     */
     ['anchorPoint']?: string;
+    /**
+     * @hidden
+     */
     ['creator']?: string;
+    /**
+     * @hidden
+     */
     ['progressBar']?: unknown;
+    /**
+     * @hidden
+     */
     ['progressBarColor']?: unknown;
+    /**
+     * @hidden
+     */
     ['progressBarBackgroundColor']?: unknown;
+    /**
+     * @hidden
+     */
     ['progressBarPosition']?: unknown;
+    /**
+     * @hidden
+     */
     ['pointable']?: unknown;
+    /**
+     * @hidden
+     */
     ['focusable']?: unknown;
 
     // User tags
+    /**
+     * @hidden
+     */
     ['auxPlayerActive']?: boolean;
+    /**
+     * @hidden
+     */
     ['gridPortal']?: string | boolean;
+    /**
+     * @hidden
+     */
     ['sheetPortal']?: string | boolean;
+    /**
+     * @hidden
+     */
     ['inst']?: string | string[];
+    /**
+     * @hidden
+     */
     ['miniGridPortal']?: string;
+    /**
+     * @hidden
+     */
     ['menuPortal']?: string;
+    /**
+     * @hidden
+     */
     ['leftWristPortal']?: string;
+    /**
+     * @hidden
+     */
     ['rightWristPortal']?: string;
+    /**
+     * @hidden
+     */
     ['editingBot']?: string;
+    /**
+     * @hidden
+     */
     cursorStartIndex?: number;
+    /**
+     * @hidden
+     */
     cursorEndIndex?: number;
+    /**
+     * @hidden
+     */
     ['pixelWidth']?: number;
+    /**
+     * @hidden
+     */
     ['pixelHeight']?: number;
 
-    // Admin channel task tags
-    ['auxRunningTasks']?: boolean;
-    ['auxFinishedTasks']?: boolean;
-    ['taskOutput']?: unknown;
-    ['taskError']?: unknown;
-    ['taskTime']?: unknown;
-    ['taskShell']?: string;
-    ['taskBackup']?: boolean;
-    ['taskBackupType']?: BackupType;
-    ['taskBackupUrl']?: string;
-
     // Context related tags
+    /**
+     * @hidden
+     */
     ['portalColor']?: string;
+    /**
+     * @hidden
+     */
     ['portalLocked']?: unknown;
+    /**
+     * @hidden
+     */
     ['portalGridScale']?: number;
+    /**
+     * @hidden
+     */
     ['portalSurfaceScale']?: number;
+    /**
+     * @hidden
+     */
     ['portalCameraRotationX']?: number;
+    /**
+     * @hidden
+     */
     ['portalCameraRotationY']?: number;
+    /**
+     * @hidden
+     */
     ['portalCameraZoom']?: number;
+    /**
+     * @hidden
+     */
     ['portalPannable']?: number | null;
+    /**
+     * @hidden
+     */
     [`portalPannableMinX`]?: number | null;
+    /**
+     * @hidden
+     */
     [`portalPannableMaxX`]?: number | null;
+    /**
+     * @hidden
+     */
     [`portalPannableMinY`]?: number | null;
+    /**
+     * @hidden
+     */
     [`portalPannableMaxY`]?: number | null;
+    /**
+     * @hidden
+     */
     ['portalZoomable']?: number | null;
+    /**
+     * @hidden
+     */
     [`portalZoomableMin`]?: number | null;
+    /**
+     * @hidden
+     */
     [`portalZoomableMax`]?: number | null;
+    /**
+     * @hidden
+     */
     ['portalRotatable']?: number | null;
+    /**
+     * @hidden
+     */
     ['portalShowFocusPoint']?: boolean | null;
+    /**
+     * @hidden
+     */
     ['portalDisableCanvasTransparency']?: boolean;
+    /**
+     * @hidden
+     */
     ['miniPortalHeight']?: unknown;
+    /**
+     * @hidden
+     */
     ['miniPortalResizable']?: boolean;
+    /**
+     * @hidden
+     */
     ['wristPortalHeight']?: number;
+    /**
+     * @hidden
+     */
     ['wristPortalWidth']?: number;
 
-    // Stripe tags
-    ['stripeCharges']?: boolean;
-    ['stripeSuccessfulCharges']?: boolean;
-    ['stripeFailedCharges']?: boolean;
-    ['stripeCharge']?: string;
-    ['stripeChargeReceiptUrl']?: string;
-    ['stripeChargeReceiptNumber']?: string;
-    ['stripeChargeDescription']?: string;
-    ['stripeOutcomeNetworkStatus']?: string;
-    ['stripeOutcomeReason']?: string;
-    ['stripeOutcomeRiskLevel']?: string;
-    ['stripeOutcomeRiskScore']?: number;
-    ['stripeOutcomeRule']?: string | string[];
-    ['stripeOutcomeSellerMessage']?: string;
-    ['stripeOutcomeType']?: string;
-    ['stripeErrors']?: boolean;
-    ['stripeError']?: string;
-    ['stripeErrorType']?: string;
-
-    [key: string]: any;
+    /**
+     * The tags that are on the bot.
+     */
+    [tag: string]: any;
 }
 
 /**

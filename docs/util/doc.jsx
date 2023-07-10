@@ -38,6 +38,13 @@ function groupMembers(children) {
     let properties = [];
     let constructors = [];
     let methods = [];
+    if (!children) {
+        return {
+            properties,
+            constructors,
+            methods
+        };
+    }
 
     for(let c of children) {
         if (c.flags.isPrivate) {
@@ -176,9 +183,11 @@ export function apiTableOfContents(doc) {
 
     for(let c of doc.contents) {
         if (c.reflection.kindString === 'Interface' || c.reflection.kindString === 'Class') {
+            const name = getChildName(c.reflection);
+            const id = getChildId(c.reflection);
             toc.push({
-                value: c.reflection.name,
-                id: c.reflection.name,
+                value: name,
+                id: id,
                 level: 2
             });
 
@@ -258,9 +267,11 @@ export function UnionTypeMember({ type, references }) {
 }
 
 export function ClassReflection({ reflection, references }) {
+    const name = getChildName(reflection);
+    const id = getChildId(reflection);
     return (
         <div>
-            <Heading as='h2' id={reflection.name}>{reflection.name}</Heading>
+            <Heading as='h2' id={id}>{name}</Heading>
             <ClassMembers reflection={reflection} references={references} />
             <MemberExamples member={reflection} />
         </div>
@@ -377,6 +388,10 @@ export function ClassPropertyMember(props) {
         extraDetail = <CodeBlock language='typescript'>{prop.typeText}</CodeBlock>
     } else {
         typeDetail = <TypeLink type={props.member.type} references={props.references}/>
+    }
+
+    if (!extraDetail && prop.typeText && prop.typeReference) {
+        extraDetail = <CodeBlock language='typescript'>{prop.typeText}</CodeBlock>
     }
 
     return (
@@ -908,6 +923,10 @@ function getChildName(child) {
 }
 
 function getChildId(child) {
+    const id = getReflectionTag(child, 'docid');
+    if (id) {
+        return id;
+    }
     const docId = getCommentTags(child, 'docid');
     if (docId.length > 0) {
         return docId[0].text.trim();

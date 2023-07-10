@@ -3,7 +3,7 @@
 // module.exports = function pluginTypedoc(context: any, options: any) {
 
 import { sortBy } from 'lodash';
-import { ReferenceType, Reflection, ReflectionKind, Type, TypeKind, Comment, SerializerComponent, Serializer, Application, ProjectReflection, SignatureReflection, DeclarationReflection, ReflectionType, IntrinsicType } from 'typedoc';
+import { ReferenceType, Reflection, ReflectionKind, Type, TypeKind, Comment, SerializerComponent, Serializer, Application, ProjectReflection, SignatureReflection, DeclarationReflection, ReflectionType, IntrinsicType, ContainerReflection } from 'typedoc';
 import { getProject } from './api';
 import { ModelToObject } from 'typedoc/dist/lib/serialization/schema';
 import { CallSignatureDeclaration, Declaration } from 'typescript';
@@ -141,29 +141,28 @@ class IncludeSourceSerializer extends SerializerComponent<Reflection> {
     supports(item: Reflection): boolean {
         return item instanceof DeclarationReflection &&
             item.kindString === 'Property' &&
-            item.type?.type === 'reflection' &&
+            this._getType(item.type) !== null &&
             getReflectionTag(item, 'docsource') !== null;
     }
 
     toObject(item: DeclarationReflection, obj?: Partial<ModelToObject<DeclarationReflection>>): Partial<ModelToObject<DeclarationReflection>> {
         const file = this._morph.createSourceFile('temp.ts', undefined, { overwrite: true });
-        const name = getReflectionTag(item, 'docsource') ?? item.name;
-        let type = item.type as ReflectionType;
+        let type = this._getType(item.type);
+        const name = getReflectionTag(item, 'docsource') || type.name;
 
         const interfaceDeclaration = file.addInterface({
             name: name
         });
 
-        if (type.declaration.indexSignature) {
-
+        if (type.indexSignature) {
             interfaceDeclaration.addIndexSignature({
-                keyName: type.declaration.indexSignature.parameters[0].name,
-                keyType: this._getTypeString(type.declaration.indexSignature.parameters[0].type),
-                returnType: this._getTypeString(type.declaration.indexSignature.type)
+                keyName: type.indexSignature.parameters[0].name,
+                keyType: this._getTypeString(type.indexSignature.parameters[0].type),
+                returnType: this._getTypeString(type.indexSignature.type)
             });
         }
-        if (type.declaration.children) {
-            for (let property of type.declaration.children) {
+        if (type.children) {
+            for (let property of type.children) {
                 interfaceDeclaration.addProperty({
                     name: property.name,
                     type: this._getTypeString(property.type)
@@ -198,6 +197,96 @@ class IncludeSourceSerializer extends SerializerComponent<Reflection> {
             return 'any';
         }
     }
+
+    private _getType(type: Type): DeclarationReflection {
+        if (type.type === 'reference') {
+            const ref = type as ReferenceType;
+            const reflection = ref.reflection;
+            if (reflection instanceof DeclarationReflection) {
+                return reflection;
+            }
+        } else if (type.type === 'reflection') {
+            const ref = type as ReflectionType;
+            return ref.declaration;
+        }
+        return null;
+    }
+}
+
+class RenameTypeSerializer extends SerializerComponent<ReferenceType> {
+    private _app: Application;
+    private _project: ProjectReflection;
+
+    map: Map<string, string>;
+
+    get priority() {
+        return 101;
+    }
+
+    constructor(map: Map<string, string>, app: Application, project: ProjectReflection, serializer: Serializer) {
+        super(serializer);
+        this._app = app;
+        this._project = project;
+        this.map = map;
+    }
+
+    serializeGroup(instance: unknown): boolean {
+        return instance instanceof Type;
+    }
+
+    supports(item: ReferenceType): boolean {
+        const ref = item.reflection;
+
+        if (!ref) {
+            return false;
+        }
+
+        return item instanceof ReferenceType;
+    }
+
+    toObject(item: ReferenceType, obj?: Partial<ModelToObject<ReferenceType>>): Partial<ModelToObject<ReferenceType>> {
+        if (item.reflection) {
+            obj.id = item.reflection.id;
+        }
+
+        const name = getReflectionTag(item.reflection, 'docname') ?? item.name;
+
+        obj.name = name;
+        obj.type = item.type;
+        obj.package = item.package;
+        obj.qualifiedName = item.qualifiedName;
+        obj.typeArguments = this.owner.toObject(item.typeArguments);
+
+        const ref = resolveType(this.map, item, this._project);
+        if (ref === item) {
+            return obj;
+        }
+
+        const finalRef = ref.reflection;
+        obj.id = finalRef.id;
+        obj.name = getReflectionTag(finalRef, 'docname') ?? finalRef.name;
+
+        return obj;
+    }
+}
+
+function resolveType(renamedTypes: Map<string, string>, item: ReferenceType, project: ProjectReflection): ReferenceType {
+    const ref = item.reflection;
+
+    if (!ref) {
+        return item;
+    }
+    const docId = getDocId(ref);
+    const finalId = renamedTypes.get(docId);
+
+    if (finalId) {
+        const finalRef = getByDocId(project, finalId);
+        if (finalRef) {
+            const name = getReflectionTag(finalRef, 'docname') ?? finalRef.name;
+            return ReferenceType.createResolvedReference(name, finalRef, project);
+        }
+    }
+    return item;
 }
 
 export function loadContent() {
@@ -218,19 +307,21 @@ export function loadContent() {
         [id: string | number]: string
     };
 
+    let renamedTypes = new Map<string, string>();
+
     let pages = new Map<string, {
         hash: string,
         pageTitle: string,
         pageDescription: string,
         pageSidebarLabel: string,
-        contents: {
+        contents: (() => ({
             id: number,
             order: number,
             name: string,
             reflection: any,
             group: string,
             comment: CommentType
-        }[],
+        }))[],
         references: {
             [id: string]: string
         }
@@ -278,19 +369,19 @@ export function loadContent() {
                     page.pageSidebarLabel = getReflectionTag(child, 'docsidebar');
                 }
 
-                const docId = getReflectionTag(child, 'docid') ?? getReflectionTag(child, 'docname');
+                const docId = getDocId(child);
 
                 let childVisible = getReflectionTag(child, 'docvisible') === null;
 
                 if (childVisible) {
-                    page.contents.push({
+                    page.contents.push(() => ({
                         id: child.id,
                         order,
                         name: docId ?? child.name,
                         reflection: app.serializer.toObject(child),
                         comment: getReflectionComment(child),
                         group: getReflectionTag(child, 'docgroup')
-                    });
+                    }));
                 }
                 typesWithPages.add(child);
 
@@ -298,6 +389,13 @@ export function loadContent() {
                     references[docId] = hash;
                     references[`id-${child.id}`] = docId;
                 }
+            }
+
+            let rename = getReflectionTag(child, 'docrename');
+
+            if (rename) {
+                console.log('Renaming', getDocId(child), 'to', rename);
+                renamedTypes.set(getDocId(child), rename);
             }
         } else if ('type' in child) {
             if (child.type === 'reference') {
@@ -313,22 +411,34 @@ export function loadContent() {
     for (let type of allUsedTypes) {
         if (!typesWithPages.has(type) && allowedKinds.has(type.kind)) {
             const page = getPage('extra-types');
-            page.contents.push({
+            page.contents.push(() => ({
                 id: type.id,
                 order: 0,
                 name: type.name,
                 reflection: app.serializer.toObject(type),
                 comment: getReflectionComment(type),
                 group: null
-            });
+            }));
         }
     }
+
+    app.serializer.addSerializer(new RenameTypeSerializer(
+        renamedTypes,
+        app,
+        project,
+        app.serializer
+    ));
 
     for(let [id, hash] of commentSerializer.references) {
         references[id] = hash;
     }
 
-    for(let page of pages.values()) {
+    const finalPages = [...pages.values()].map(p => ({
+        ...p,
+        contents: p.contents.map(c => c())
+    }));
+
+    for(let page of finalPages) {
         page.contents = sortBy(page.contents, c => c.group, c => c.order, c => c.name);
     }
 
@@ -342,7 +452,7 @@ export function loadContent() {
 
     return {
         pages: [
-            ...pages.values()
+            ...finalPages
         ],
         types: types
     };
@@ -431,6 +541,9 @@ function walk(obj: WalkType, callback: (value: WalkType, parent: WalkType, key: 
 }
 
 function walkSingle(obj: WalkType, callback: (value: WalkType, parent: WalkType, key: string) => void, parent: WalkType = null) {
+    // if (!obj) {
+    //     return;
+    // }
     let type = 'kind' in obj ? obj.kindString : 'type' in obj ? obj.type : 'comment';
     let keys = (keysMap as any)[type] || [];
     for(let key of keys) {
@@ -476,6 +589,10 @@ function getByDocId(type: WalkType, docId: string): Reflection {
         return matches[0] as Reflection;
     }
     return null;
+}
+
+function getDocId(type: Reflection) {
+    return getReflectionTag(type, 'docid') ?? getReflectionTag(type, 'docname');
 }
 
 function isFunctionProperty(property: any) {
