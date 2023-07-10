@@ -684,6 +684,9 @@ export interface WebhookOptions {
  * Defines a set of options for {@link animateTag-byTag}.
  *
  * @dochash types/animation
+ * @doctitle Animation Types
+ * @docsidebar Animation
+ * @docdescription These types are used for animating tags.
  * @docname AnimateTagOptions
  */
 export interface AnimateTagFunctionOptions {
@@ -2973,13 +2976,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the value of the given tag stored in the given bot.
-     * @param bot The bot.
-     * @param tag The tag.
+     * Gets the given tag value from the given bot.
+     * @param bot the bot that the tag should be retrieved from.
+     * @param tag the tag that should be retrieved.
      *
-     * @example
-     * // Get the "color" tag from the `this` bot.
-     * let color = getTag(this, "color");
+     * @example Get the "color" tag from this bot.
+     * let color = getTag(thisBot, "color");
+     *
+     * @dochash actions/data
+     * @docgroup 02-data-actions
+     * @docname getTag
      */
     function getTag(bot: Bot, ...tags: string[]): any {
         let current: any = bot;
@@ -7420,8 +7426,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Cancels the animations that are running on the given bot(s).
-     * @param bot The bot or list of bots that should cancel their animations.
-     * @param tag The tag or list of tags that the animations should be canceld for. If omitted then all tags will be canceled.
+     * If a tag is specified then only animations for the given tag will be canceled.
+     *
+     * @param bot the bot, bot ID, or list of bots that should cancel their animations.
+     * @param tag the tag or list of tags that the animations should be canceled for.
+     *
+     * @dochash actions/utility
+     * @docgroup 01-utility-actions
+     * @docname clearAnimations
      */
     function clearAnimations(
         bot: RuntimeBot | (RuntimeBot | string)[] | string,
@@ -8906,14 +8918,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sets the value of the given tag stored in the given bot.
-     * @param bot The bot.
-     * @param tag The tag to set.
-     * @param value The value to set.
+     * Sets the given tag to the given value on the given bot, list of bots, or mod.
+     * @param bot the bot, list of bots, or mod that the tag should be set on.
+     * @param tag the tag that should be changed.
+     * @param value the value that should be placed into the tag(s).
      *
-     * @example
-     * // Set a bot's color to "green".
+     * @example Set a bot's color to "green".
      * setTag(this, "color", "green");
+     *
+     * @dochash actions/data
+     * @docgroup 02-data-actions
+     * @docname setTag
      */
     function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
         tag = trimTag(tag);
@@ -8940,15 +8955,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sets the value of the given tag mask in the given bot.
-     * @param bot The bot.
-     * @param tag The tag to set.
-     * @param value The value to set.
-     * @param space The space that the tag mask should be placed in. If not specified, then the tempLocal space will be used.
+     * Sets the given tag mask to the given value on the given bot or list of bots. If a space is specified, then the tag mask will be set inside that space.
+     * @param bot the bot or list of bots that the tag mask should be set on.
+     * @param tag the tag that should be changed.
+     * @param value the value that should be placed into the tag(s).
+     * @param space the space that the tag mask should exist in. If omitted, then the tag mask will be created in the `tempLocal` space.
      *
-     * @example
-     * // Set a bot's color to "green".
+     * @example Set a bot's color to "green".
      * setTagMask(this, "color", "green")
+     *
+     * @example Set a bot's #color to green in the local space.
+     * setTagMask(this, "#color", "green", "local");
+     *
+     * @dochash actions/data
+     * @docgroup 02-data-actions
+     * @docname setTagMask
      */
     function setTagMask(
         bot: RuntimeBot | RuntimeBot[],
@@ -8972,9 +8993,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Clears the tag masks from the given bot.
-     * @param bot The bot or bots that the tag masks should be cleared from.
-     * @param space The space that the tag masks should be cleared from. If not specified, then all spaces will be cleared.
+     * Clears the tag masks on the given bot or list of bots. If a space is specified, then only the tag masks in that space will be deleted.
+     *
+     * @param bot the bot or list of bots that the tag mask should be set on.
+     * @param space the space that the tag mask should exist in. If omitted, then the tag masks in all spaces will be deleted.
+     *
+     * @dochash actions/data
+     * @docgroup 02-data-actions
+     * @docname clearTagMasks
      */
     function clearTagMasks(
         bot: RuntimeBot | RuntimeBot[],
@@ -8990,12 +9016,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Inserts the given text into the given tag at the given index.
+     * Inserts the given text into the tag at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.
      * Returns the resulting raw tag value.
-     * @param bot The bot that should be edited.
+     * @param bot the bot that should be edited.
      * @param tag The tag that should be edited.
-     * @param index The index that the text should be inserted at.
-     * @param text The text that should be inserted.
+     * @param index the zero-based index that the text should be inserted at.
+     * @param text the string of text that should be inserted.
+     *
+     * @example Add some text to the end of a tag.
+     * insertTagText(thisBot, "myTag", tags.myTag.length, "xyz");
+     *
+     * @example Add some text to the beginning of a tag.
+     * insertTagText(thisBot, "myTag", 0, "abc");
+     *
+     * @dochash actions/data
+     * @docgroup 02-data-actions
+     * @docname insertTagText
      */
     function insertTagText(
         bot: RuntimeBot,
@@ -9013,13 +9049,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Inserts the given text into the given tag and space at the given index.
-     * Returns the resulting raw tag mask value.
+     * Inserts the given text into the tag mask at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.
+     * If a space is specified, then only the tag mask in that space will be changed.
+     *
      * @param bot The bot that should be edited.
      * @param tag The tag that should be edited.
-     * @param index The index that the text should be inserted at.
-     * @param text The text that should be inserted.
-     * @param space The space that the tag exists in. If not specified then the tempLocal space will be used.
+     * @param index the zero-based index that the text should be inserted at.
+     * @param text the string of text that should be inserted.
+     * @param space the space that the tag mask is in. If omitted, then the tempLocal space will be used.
+     *
+     * @example Add some text to the end of a tag mask.
+     * insertTagMaskText(thisBot, "myTag", tags.myTag.length, "xyz");
+     *
+     * @example Add some text to the beginning of a tag mask that is in the local space.
+     * insertTagMaskText(thisBot, "myTag", 0, "abc", "local");
+     *
+     * @dochash actions/data
+     * @docgroup 02-data-actions
+     * @docname insertTagMaskText
      */
     function insertTagMaskText(
         bot: RuntimeBot,
@@ -9038,12 +9085,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Deletes the specified number of characters from the given tag.
+     * Deletes the specified number of characters from the given tag at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.
      * Returns the resulting raw tag value.
+     *
      * @param bot The bot that should be edited.
      * @param tag The tag that should be edited.
-     * @param index The index that the text should be deleted at.
-     * @param count The number of characters to delete.
+     * @param index the zero-based index that the text should start to be deleted at.
+     * @param count the number of characters that should be deleted.
+     *
+     * @example Delete the last two characters from a tag.
+     * deleteTagText(bot, "myTag", tags.myTag.length - 2, 2);
+     *
+     * @example Delete the first 3 characters from a tag.
+     * deleteTagText(bot, "myTag", 0, 3);
+     *
+     * @dochash actions/data
+     * @docgroup 02-data-actions
+     * @docname deleteTagText
      */
     function deleteTagText(
         bot: RuntimeBot,
@@ -9064,13 +9122,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Deletes the specified number of characters from the given tag mask.
-     * Returns the resulting raw tag mask value.
+     * Deletes the specified number of characters from the given tag mask at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.
+     * If a space is specified, then only the tag mask in that space will be changed.
+     *
+     * Returns the resulting raw tag value.
+     *
      * @param bot The bot that should be edited.
      * @param tag The tag that should be edited.
-     * @param index The index that the text should be deleted at.
-     * @param count The number of characters to delete.
-     * @param space The space that the tag mask exists in. If not specified then the tempLocal space will be used.
+     * @param index the zero-based index that the text should start to be deleted at.
+     * @param count the number of characters that should be deleted.
+     * @param space the space that the tag mask is in. If omitted, then the `tempLocal` space will be used.
+     *
+     * @example Delete the last two characters from a tag mask.
+     * deleteTagMaskText(bot, "myTag", tags.myTag.length - 2, 2);
+     *
+     * @example Delete the first 3 characters from a tag mask in the local space.
+     * deleteTagMaskText(bot, "myTag", 0, 3, "local");
+     *
+     * @dochash actions/data
+     * @docgroup 02-data-actions
+     * @docname deleteTagMaskText
      */
     function deleteTagMaskText(
         bot: RuntimeBot,

@@ -50,6 +50,14 @@ module.exports = {
                         'math/vectors',
                         'math/rotations'
                     ]
+                },
+                {
+                    type: 'category',
+                    label: 'Types',
+                    items: [
+                        'types/web',
+                        'types/animation',
+                    ]
                 }
             ]
         },

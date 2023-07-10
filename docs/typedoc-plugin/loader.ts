@@ -228,6 +228,7 @@ export function loadContent() {
             order: number,
             name: string,
             reflection: any,
+            group: string,
             comment: CommentType
         }[],
         references: {
@@ -288,6 +289,7 @@ export function loadContent() {
                         name: docId ?? child.name,
                         reflection: app.serializer.toObject(child),
                         comment: getReflectionComment(child),
+                        group: getReflectionTag(child, 'docgroup')
                     });
                 }
                 typesWithPages.add(child);
@@ -317,6 +319,7 @@ export function loadContent() {
                 name: type.name,
                 reflection: app.serializer.toObject(type),
                 comment: getReflectionComment(type),
+                group: null
             });
         }
     }
@@ -326,7 +329,7 @@ export function loadContent() {
     }
 
     for(let page of pages.values()) {
-        page.contents = sortBy(page.contents, c => c.order, c => c.name);
+        page.contents = sortBy(page.contents, c => c.group, c => c.order, c => c.name);
     }
 
     let types = [];

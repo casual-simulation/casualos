@@ -216,7 +216,6 @@ export function ApiContents({doc}) {
 }
 
 function ApiReflection({ reflection, references }) {
-
     if (reflection.kindString === 'Interface' || reflection.kindString === 'Class') {
         return <ClassReflection reflection={reflection} references={references} />
     } else if (reflection.kindString === 'Call signature') {
