@@ -2569,6 +2569,10 @@ export interface LocalFormAnimationAction {
 
 export type TweenType = 'position' | 'rotation';
 
+/**
+ * The possible easing types.
+ * @dochash types/animation
+ */
 export type EaseType =
     | 'linear'
     | 'quadratic'
@@ -2580,10 +2584,32 @@ export type EaseType =
     | 'circular'
     | 'elastic';
 
+/**
+ * The possible easing modes.
+ * @dochash types/animation
+ */
 export type EaseMode = 'in' | 'out' | 'inout';
 
+/**
+ * Defines an interface that represents easing types.
+ *
+ * @example Create an object that represents "quadratic" "inout" easing
+ * let easing = {
+ *    type: "quadratic",
+ *    mode: "inout"
+ * };
+ *
+ * @dochash types/animation
+ */
 export interface Easing {
+    /**
+     * The type of easing to use.
+     */
     type: EaseType;
+
+    /**
+     * The mode of easing to use.
+     */
     mode: EaseMode;
 }
 

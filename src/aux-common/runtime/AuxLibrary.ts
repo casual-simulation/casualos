@@ -631,7 +631,7 @@ const MAX_RETRY_COUNT = 10;
 /**
  * Defines a set of options for a webhook.
  *
- * @dochash extra-types
+ * @dochash types/web
  * @docname WebhookOptions
  */
 export interface WebhookOptions {
@@ -647,6 +647,8 @@ export interface WebhookOptions {
 
     /**
      * The headers to include in the request.
+     *
+     * @docsource Headers
      */
     headers?: {
         [key: string]: string;
@@ -679,7 +681,10 @@ export interface WebhookOptions {
 }
 
 /**
- * Defines a set of options for animateTag().
+ * Defines a set of options for {@link animateTag-byTag}.
+ *
+ * @dochash types/animation
+ * @docname AnimateTagOptions
  */
 export interface AnimateTagFunctionOptions {
     /**
@@ -1114,6 +1119,9 @@ export interface WebhookInterface extends MaskableFunction {
 
 /**
  * Defines an interface that represents the result of a webhook.
+ *
+ * @dochash types/web
+ * @docname WebhookResult
  */
 export interface WebhookResult {
     /**
@@ -1130,6 +1138,8 @@ export interface WebhookResult {
     /**
      * The HTTP Headers that were included in the response.
      * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers for more information.
+     *
+     * @docsource Headers
      */
     headers: {
         [name: string]: string;
@@ -1671,6 +1681,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             remoteWhisper,
             remoteShout,
             uuid,
+
+            _animateTag,
+            __animateTag,
             animateTag,
             clearAnimations,
 
@@ -6995,6 +7008,176 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function sleep(time: number): Promise<void> {
         let sleepy = new Promise<void>((resolve) => setTimeout(resolve, time));
         return sleepy;
+    }
+
+    /**
+     * Animates the tag on the given bot based on the specified parameters.
+     * Returns a promise that resolves when the animation is finished and throws an error when the animation is canceled.
+     * This is useful for gradually changing a tag on a bot over time. For example, moving a bot from point A to point B without teleporting it.
+     *
+     * {@link animateTag-byTag} is fully integrated with tag masks. This lets you animate tag values in the `tempLocal`, `local`, `player`, and `shared` spaces.
+     *
+     * @param bot the bot, bot ID, or list of bots that the tag should be animated on.
+     * @param tag the tag that should be animated.
+     * @param options the options that should be used to animate the tag. If null is used, then any active animations for the tag on these bots will be canceled.
+     *
+     * @example Animate the #count tag from 0 to 1 over 5 seconds.
+     * await animateTag(bot, "count", {
+     *     fromValue: 0,
+     *     toValue: 1,
+     *     duration: 5
+     * });
+     * os.toast("Animation finished!");
+     *
+     * @example Run 2 animations in sequence.
+     * await animateTag(bot, "homeX", {
+     *     fromValue: 0,
+     *     toValue: 5,
+     *     duration: 2
+     * });
+     *
+     * await animateTag(bot, "homeY", {
+     *     fromValue: 0,
+     *     toValue: 5,
+     *     duration: 2
+     * });
+     *
+     * @example Run an animation while the #loop tag is true.
+     * while(tags.loop) {
+     *     await animateTag(bot, "homeX", {
+     *         fromValue: 0,
+     *         toValue: 5,
+     *         duration: 2
+     *     });
+     * }
+     *
+     * @example Run an animation with a "bouncy" easing mode.
+     * await animateTag(bot, "homeX", {
+     *     fromValue: 0,
+     *     toValue: 5,
+     *     duration: 2,
+     *     easing: {
+     *         type: "elastic",
+     *         mode: "out"
+     *     }
+     * });
+     *
+     * @example Run an animation with a custom easing function that causes the animation to progress in 10 distinct steps.
+     * await animateTag(bot, "homeX", {
+     *     fromValue: 0,
+     *     toValue: 5,
+     *     duration: 2,
+     *     easing: (k) => {
+     *         return Math.floor(k * 10) / 10;
+     *     }
+     * });
+     *
+     * @example Run an animation that starts in 1 second.
+     * await animateTag(bot, "homeX", {
+     *     fromValue: 0,
+     *     toValue: 5,
+     *     duration: 2,
+     *     startTime: os.localTime + 1000,
+     * });
+     *
+     * @example Animate a tag in tempShared space.
+     * await animateTag(bot, "homeX", {
+     *     fromValue: 0,
+     *     toValue: 5,
+     *     duration: 2,
+     *     tagMaskSpace: 'tempShared'
+     * });
+     *
+     * @example Cancel animations on the #homeX tag.
+     * animateTag(bot, "homeX", {
+     *     fromValue: 0,
+     *     toValue: 5,
+     *     duration: 2
+     * }).then(() => {
+     *     os.toast("Animation Finished!");
+     * }).catch(() => {
+     *     os.toast("Animation Canceled!");
+     * });
+     *
+     * await os.sleep(500);
+     *
+     * animateTag(bot, "homeX", null);
+     *
+     * @dochash actions/utility
+     * @doctitle Utility Actions
+     * @docsidebar Utility Actions
+     * @docdescription Utility actions make it easy to perform various tasks.
+     * @docgroup 01-utility-actions
+     *
+     * @docname animateTag
+     * @docid animateTag-byTag
+     */
+    function _animateTag(
+        bot: RuntimeBot | string | (RuntimeBot | string)[],
+        tag: string,
+        options: AnimateTagFunctionOptions
+    ): Promise<void> {
+        return null;
+    }
+
+    /**
+     * Animates multiple tags on the given bot based on the specified parameters.
+     *
+     * This works similarly to {@link animateTag-byTag} but instead of providing a tag name, you instead provide an object for the fromValue and toValue options which contains the tags that should be animated.
+     *
+     * Returns a promise that resolves when the animation is finished and throws an error when the animation is canceled. This is useful for gradually changing a set of tags on a bot over time. For example, moving a bot from point A to point B without teleporting it.
+     *
+     * Unlike calling {@link animateTag-byTag} multiple times, animations started with this function are grouped together. This means that canceling one animation in the group will also cancel the others.
+     *
+     * This function is fully integrated with tag masks. This lets you animate tag values in the tempLocal, local, player, and shared spaces.
+     *
+     * @param bot the bot, bot ID, or list of bots that the tag should be animated on.
+     * @param tag the tag that should be animated.
+     * @param options the options that should be used to animate the tag. If null is used, then any active animations for the tag on these bots will be canceled.
+     *
+     * @example Animate the #count tag from 0 to 1 over 5 seconds.
+     * await animateTag(bot, {
+     *     fromValue: {
+     *         homeX: 0,
+     *         homeY: 0,
+     *     },
+     *     toValue: {
+     *         homeX: 1,
+     *         homeY: 1
+     *     },
+     *     duration: 5
+     * });
+     *
+     * os.toast("Animation finished!");
+     *
+     * @example Animate tags in tempShared space.
+     * await animateTag(bot, {
+     *     fromValue: {
+     *         homeX: 0,
+     *         homeY: 0,
+     *     },
+     *     toValue: {
+     *         homeX: 5,
+     *         homeY: 5
+     *     },
+     *     duration: 2,
+     *     tagMaskSpace: 'tempShared'
+     * });
+     *
+     * @dochash actions/utility
+     * @doctitle Utility Actions
+     * @docsidebar Utility Actions
+     * @docdescription Utility actions make it easy to perform various tasks.
+     * @docgroup 01-utility-actions
+     *
+     * @docname animateTag
+     * @docid animateTag-byOptions
+     */
+    function __animateTag(
+        bot: RuntimeBot | string | (RuntimeBot | string)[],
+        options: AnimateTagFunctionOptions
+    ): Promise<void> {
+        return null;
     }
 
     /**

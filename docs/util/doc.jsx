@@ -10,7 +10,6 @@ import rehypeRaw from 'rehype-raw';
 import remarkTagLinks from './remarkTagLinks';
 import unwrapFirstParagraph from './remarkUnwrapFirstParagraph';
 import { getByKind, getCommentTags } from './walk';
-import { ref } from 'vue';
 
 let typeMap = {};
 
@@ -222,9 +221,41 @@ function ApiReflection({ reflection, references }) {
         return <ClassReflection reflection={reflection} references={references} />
     } else if (reflection.kindString === 'Call signature') {
         return <SignatureReflection reflection={reflection} references={references} />
+    } else if(reflection.kindString === 'Type alias') {
+        return <TypeAliasReflection reflection={reflection} references={references} />
     } else {
         return <ObjectReflection reflection={reflection} references={references} />
     }
+}
+
+export function TypeAliasReflection({ reflection, references }) {
+    return (
+        <div>
+            <Heading as='h2' id={reflection.name}>{reflection.name}</Heading>
+            <ReflectionDiscription reflection={reflection} references={references} />
+            <TypeAliasMembers reflection={reflection} references={references} />
+            <MemberExamples member={reflection} />
+        </div>
+    )
+}
+
+export function TypeAliasMembers({ reflection, references }) {
+    let detail = '';
+
+    if (reflection.type.type === 'union') {
+        detail = <UnionTypeMembers type={reflection.type} references={references} />
+    }
+    return detail;
+}
+
+export function UnionTypeMembers({ type, references }) {
+    return <ul>
+        {type.types.map((t, i) => <UnionTypeMember key={i} type={t} references={references} />)}
+    </ul>
+}
+
+export function UnionTypeMember({ type, references }) {
+    return <li><code><TypeLink type={type} references={references}/></code></li>
 }
 
 export function ClassReflection({ reflection, references }) {
@@ -232,6 +263,7 @@ export function ClassReflection({ reflection, references }) {
         <div>
             <Heading as='h2' id={reflection.name}>{reflection.name}</Heading>
             <ClassMembers reflection={reflection} references={references} />
+            <MemberExamples member={reflection} />
         </div>
     )
 }
@@ -337,12 +369,24 @@ export function ClassPropertyAccessor(props) {
 }
 
 export function ClassPropertyMember(props) {
+    let prop = props.member;
+    let typeDetail;
+    let extraDetail = '';
+
+    if (prop.type.type === 'reflection' && prop.typeText && prop.typeReference) {
+        typeDetail = <>{prop.typeReference}</>
+        extraDetail = <CodeBlock language='typescript'>{prop.typeText}</CodeBlock>
+    } else {
+        typeDetail = <TypeLink type={props.member.type} references={props.references}/>
+    }
+
     return (
         <div>
             <Heading as='h3' id={props.link}>
-                <code>{props.member.name}: <TypeLink type={props.member.type} references={props.references}/></code>
+                <code>{props.member.name}: {typeDetail}</code>
             </Heading>
             <p>{props.member.comment?.shortText}</p>
+            {extraDetail}
             {/* <pre><code>{JSON.stringify(props.member)}</code></pre> */}
         </div>
     )
@@ -642,7 +686,8 @@ function TypeLink({ type, references }) {
             return '' + JSON.stringify(type);
         }
     } else if(type.type === 'reflection') {
-        return '' + JSON.stringify(type);
+        return 'object';
+        // return '' + JSON.stringify(type);
         // return <>Dynamic</>
     } else {
         return '' + JSON.stringify(type);
@@ -954,6 +999,8 @@ function flattenObjectChildren(reflection) {
                 child: reflection
             }];
         }
+        return [];
+    } else if (reflection.kindString === 'Type alias') {
         return [];
     }
     const declaration = reflection.type.declaration;

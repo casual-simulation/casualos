@@ -3,10 +3,11 @@
 // module.exports = function pluginTypedoc(context: any, options: any) {
 
 import { sortBy } from 'lodash';
-import { ReferenceType, Reflection, ReflectionKind, Type, TypeKind, Comment, SerializerComponent, Serializer, Application, ProjectReflection, SignatureReflection } from 'typedoc';
+import { ReferenceType, Reflection, ReflectionKind, Type, TypeKind, Comment, SerializerComponent, Serializer, Application, ProjectReflection, SignatureReflection, DeclarationReflection, ReflectionType, IntrinsicType } from 'typedoc';
 import { getProject } from './api';
 import { ModelToObject } from 'typedoc/dist/lib/serialization/schema';
 import { CallSignatureDeclaration, Declaration } from 'typescript';
+import { Project, StructureKind } from 'ts-morph';
 
 export type CommentType = {
     shortText: string;
@@ -114,6 +115,91 @@ class CommentSerializer extends SerializerComponent<Comment> {
     }
 }
 
+class IncludeSourceSerializer extends SerializerComponent<Reflection> {
+    private _app: Application;
+    private _project: ProjectReflection;
+    private _morph: Project;
+
+    references: Map<string, string>;
+
+    get priority() {
+        return 101;
+    }
+
+    constructor(app: Application, project: ProjectReflection, serializer: Serializer) {
+        super(serializer);
+        this._app = app;
+        this._project = project;
+        this._morph = new Project();
+        this.references = new Map();
+    }
+
+    serializeGroup(instance: unknown): boolean {
+        return instance instanceof Reflection;
+    }
+
+    supports(item: Reflection): boolean {
+        return item instanceof DeclarationReflection &&
+            item.kindString === 'Property' &&
+            item.type?.type === 'reflection' &&
+            getReflectionTag(item, 'docsource') !== null;
+    }
+
+    toObject(item: DeclarationReflection, obj?: Partial<ModelToObject<DeclarationReflection>>): Partial<ModelToObject<DeclarationReflection>> {
+        const file = this._morph.createSourceFile('temp.ts', undefined, { overwrite: true });
+        const name = getReflectionTag(item, 'docsource') ?? item.name;
+        let type = item.type as ReflectionType;
+
+        const interfaceDeclaration = file.addInterface({
+            name: name
+        });
+
+        if (type.declaration.indexSignature) {
+
+            interfaceDeclaration.addIndexSignature({
+                keyName: type.declaration.indexSignature.parameters[0].name,
+                keyType: this._getTypeString(type.declaration.indexSignature.parameters[0].type),
+                returnType: this._getTypeString(type.declaration.indexSignature.type)
+            });
+        }
+        if (type.declaration.children) {
+            for (let property of type.declaration.children) {
+                interfaceDeclaration.addProperty({
+                    name: property.name,
+                    type: this._getTypeString(property.type)
+                });
+            }
+        }
+
+        const source = interfaceDeclaration.getText();
+
+        obj.id = item.id;
+        obj.name = item.name;
+        obj.kind = item.kind;
+        obj.kindString = item.kindString;
+        obj.type = this.owner.toObject(item.type);
+        obj.defaultValue = item.defaultValue;
+        obj.flags = item.flags;
+        obj.comment = this.owner.toObject(item.comment);
+        obj.children = this.owner.toObject(item.children);
+        obj.typeParameter = this.owner.toObject(item.typeParameters);
+        (obj as any).typeText = source;
+        (obj as any).typeReference = name;
+
+        return obj;
+    }
+
+    private _getTypeString(type: Type) {
+        if (type.type === 'intrinsic') {
+            return (type as IntrinsicType).name;
+        } else if(type.type === 'array') {
+            return 'any[]';
+        } else {
+            return 'any';
+        }
+    }
+}
+
 export function loadContent() {
     const { app, project } = getProject();
     if (!project) {
@@ -121,7 +207,9 @@ export function loadContent() {
     }
 
     let commentSerializer = new CommentSerializer(app, project, app.serializer);
+    let sourceSerializer = new IncludeSourceSerializer(app, project, app.serializer);
     app.serializer.addSerializer(commentSerializer);
+    app.serializer.addSerializer(sourceSerializer);
 
     let allUsedTypes = new Set<Reflection>();
     let typesWithPages = new Set<Reflection>();

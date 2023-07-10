@@ -37,7 +37,8 @@ module.exports = {
                     items: [
                         'actions/data',
                         'actions/mod-actions',
-                        'actions/web'
+                        'actions/web',
+                        'actions/utility'
                     ]
                 },
                 'glossary',
@@ -49,8 +50,7 @@ module.exports = {
                         'math/vectors',
                         'math/rotations'
                     ]
-                },
-                'extra-types'
+                }
             ]
         },
     ],
