@@ -4,7 +4,7 @@ import { Vector2 } from './Vector2';
 
 /**
  * Defines a class that represents a 3D point in space.
- * @docHash math/vectors
+ * @docHash types/math/vectors
  * @docOrder 1
  * @docTitle Vectors
  * @docSidebar Vectors

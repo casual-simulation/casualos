@@ -504,7 +504,14 @@ export interface AuxLibrary {
     typeDefinitions?: string;
 }
 
-type TagFilter =
+/**
+ * Defines the possible values that can be used as a tag filter.
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname TagFilter
+ */
+export type TagFilter =
     | ((value: any) => boolean)
     | string
     | number
@@ -515,8 +522,12 @@ type TagFilter =
 /**
  * Defines a type that represents a mod.
  * That is, a set of tags that can be applied to another bot.
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname Mod
  */
-type Mod = BotTags | Bot;
+export type Mod = BotTags | Bot;
 
 /**
  * An interface that is used to say which user/device/session an event should be sent to.
@@ -632,6 +643,9 @@ const MAX_RETRY_COUNT = 10;
  * Defines a set of options for a webhook.
  *
  * @dochash types/web
+ * @doctitle Web Types
+ * @docsidebar Web
+ * @docdescription These types are used for web requests.
  * @docname WebhookOptions
  */
 export interface WebhookOptions {
@@ -729,6 +743,20 @@ export interface AnimateTagFunctionOptions {
     tagMaskSpace?: BotSpace | false;
 }
 
+/**
+ * Defines a bot filter function.
+ *
+ * Common bot filters are {@link byTag}
+ *
+ * @dochash types/core
+ * @docgroup 01-core
+ * @docname BotFilter
+ */
+export type BotFilter = ((bot: Bot) => boolean) | null;
+
+/**
+ * Defines a bot filter function.
+ */
 export interface BotFilterFunction {
     (bot: Bot): boolean;
     sort?: (bot: Bot) => any;
@@ -1656,6 +1684,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             Rotation,
 
             superShout,
+
+            _priorityShout,
             priorityShout: createInterpretableFunction(priorityShout),
 
             _shout,
@@ -2454,7 +2484,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docname getBots
      * @docid getbots-filters
      */
-    function _getBots(...filters: BotFilterFunction[]): RuntimeBot[] {
+    function _getBots(...filters: BotFilter[]): RuntimeBot[] {
         return null;
     }
 
@@ -2519,7 +2549,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docid getbot-filters
      * @docname getBot
      */
-    function _getBot(...filters: BotFilterFunction[]): RuntimeBot {
+    function _getBot(...filters: BotFilter[]): RuntimeBot {
         return null;
     }
 
@@ -2701,23 +2731,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Creates a filter function that checks whether bots have the given tag and value.
-     * @param tag The tag to check.
-     * @param filter The value or filter that the tag should match.
+     * Creates a bot filter that includes bots that have the given tag that matches the given value.
      *
-     * @example
-     * // Find all the bots with a "name" of "bob".
-     * let bobs = getBots(byTag("name", "bob"));
+     * @param tag the name of the tag. Bots that have this tag will be included as long as they also match the second parameter.
+     * @param filter the value that the tag should match. If not specified, then all bots with the tag will be included. If specified, then only bots that have the same tag value will be included. If you specify a function as the value, then it will be used to match tag values.
      *
-     * @example
-     * // Find all bots with a height larger than 2.
-     * let bots = getBots(byTag("height", height => height > 2));
+     * @example Find all the bots with #name set to "bob".
+     * let bots = getBots(byTag("#name", "bob"));
      *
-     * @example
-     * // Find all the bots with the "test" tag.
-     * let bots = getBots(byTag("test"));
+     * @example Find all bots with a height larger than 2.
+     * let bots = getBots(byTag("#height", height => height > 2));
+     *
+     * @example Find all bots with the "test" tag.
+     * let bots = getBots(byTag("#test"));
+     *
+     * @dochash actions/bot-filters
+     * @doctitle Bot Filters
+     * @docsidebar Bot Filters
+     * @docdescription Bot Filters are functions that are useful for filtering bots.
+     * @docgroup 01-filters
+     * @docname byTag
      */
-    function byTag(tag: string, filter?: TagFilter): BotFilterFunction {
+    function byTag(tag: string, filter?: TagFilter): BotFilter {
         tag = trimTag(tag);
         if (filter && typeof filter === 'function') {
             return (bot) => {
@@ -2773,14 +2808,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Creates a filter function that checks whether bots have the given ID.
-     * @param id The ID to check for.
+     * Creates a bot filter that includes the bot with the given ID.
+     * @param id the ID of the bot.
      *
-     * @example
-     * // Find all the bots with the ID "bob".
-     * let bobs = getBots(byId("bob"));
+     * @example Find the bot with the ID '123'
+     * let bot = getBot(byID("123"));
+     *
+     * @dochash actions/bot-filters
+     * @docgroup 01-filters
+     * @docname byID
      */
-    function byID(id: string): IDRecordFilter {
+    function byID(id: string): BotFilter {
         let filter: IDRecordFilter = ((bot: Bot) => {
             return bot.id === id;
         }) as any;
@@ -2799,51 +2837,62 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Creates a filter function that checks whether bots match the given mod.
-     * @param mod The mod that bots should be checked against.
+     * Creates a bot filter that includes bots that match the given mod.
      *
-     * @example
-     * // Find all the bots with a height set to 1 and color set to "red".
-     * let bots = getBots(byMod({
-     *      "color": "red",
-     *      height: 1
+     * @param mod the bot or mod that the other bots should match.
+     *
+     * @example Find all the bots with #height set to 1 and #color set to red.
+     * const bots = getBots(byMod({
+     *     height: 1,
+     *     color: "red"
      * }));
+     *
+     * @dochash actions/bot-filters
+     * @docgroup 01-filters
+     * @docname byMod
      */
-    function byMod(mod: Mod): BotFilterFunction {
+    function byMod(mod: Mod): BotFilter {
         let tags = isBot(mod) ? mod.tags : mod;
         let filters = Object.keys(tags).map((k) => byTag(k, tags[k]));
         return (bot) => filters.every((f) => f(bot));
     }
 
     /**
-     * Creates a filter function that checks whether bots are in the given dimension.
-     * @param dimension The dimension to check.
+     * Creates a bot filter that includes bots that are in the given dimension. That is, they have the given tag set to true.
+     *
+     * > This function behaves exactly like {@link byTag} with the `value` parameter set to `true`.
+     *
+     * @param dimension the name of the dimension.
      * @returns A function that returns true if the given bot is in the dimension and false if it is not.
      *
-     * @example
-     * // Find all the bots in the "test" dimension.
+     * @example Find all the bots in the "test" dimension.
      * let bots = getBots(inDimension("test"));
+     *
+     * @dochash actions/bot-filters
+     * @docgroup 01-filters
+     * @docname inDimension
      */
-    function inDimension(dimension: string): BotFilterFunction {
+    function inDimension(dimension: string): BotFilter {
         return byTag(dimension, true);
     }
 
     /**
-     * Creates a filter function that checks whether bots are at the given position in the given dimension.
-     * @param dimension The dimension that the bots should be in.
-     * @param x The X position in the dimension that the bots should be at.
-     * @param y The Y position in the dimension that the bots should be at.
-     * @returns A function that returns true if the given bot is at the given position and false if it is not.
+     * Creates a bot filter that includes bots that are in the given dimension and at the given X and Y position.
      *
-     * @example
-     * // Find all the bots at (1, 2) in the "test" dimension.
+     * When this filter is used with {@link getBots-filters}, the returned bots are sorted in the same order that they are stacked. This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).
+     *
+     * @param dimension the name of the dimension.
+     * @param x the X position. That is, the left-right position of the bots in the dimension.
+     * @param y the Y position. That is, the forward-backward position of the bots in the dimension.
+     *
+     * @example Find all the bots at (1, 2) in the "test" dimension.
      * let bots = getBots(atPosition("test", 1, 2));
+     *
+     * @dochash actions/bot-filters
+     * @docgroup 01-filters
+     * @docname atPosition
      */
-    function atPosition(
-        dimension: string,
-        x: number,
-        y: number
-    ): BotFilterFunction {
+    function atPosition(dimension: string, x: number, y: number): BotFilter {
         const inCtx = inDimension(dimension);
         const atX = byTag(`${dimension}X`, (bx) => areClose(bx, x));
         const atY = byTag(`${dimension}Y`, (by) => areClose(by, y));
@@ -2853,17 +2902,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Creates a filter function that checks whether bots are in the same stack as the given bot.
-     * @param bot The bot that other bots should be checked against.
-     * @param dimension The dimension that other bots should be checked in.
-     * @returns A function that returns true if the given bot is in the same stack as the original bot.
+     * Creates a bot filter that includes bots in the same stack as the given bot. The given bot will always be included by this filter as long the given bot is in the given dimension.
      *
-     * @example
-     * // Find all bots in the same stack as `this` in the "test" dimension.
+     * When this filter is used with {@link getBots-filters}, the returned bots are sorted in the same order that they are stacked. This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).
+     *
+     * @param bot the bot that other bots should be in the same stack with.
+     * @param dimension the name of the dimension.
+     *
+     * @example Find all bots in the same stack as thisBot in the "test" dimension.
      * let bots = getBots(inStack(this, "test"));
      *
+     * @dochash actions/bot-filters
+     * @docgroup 01-filters
+     * @docname inStack
      */
-    function inStack(bot: Bot, dimension: string): BotFilterFunction {
+    function inStack(bot: Bot, dimension: string): BotFilter {
         return atPosition(
             dimension,
             getTag(bot, `${dimension}X`),
@@ -2872,21 +2925,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Creates a function that filters bots by whether they are neighboring the given bot.
-     * @param bot The bot that other bots should be checked against.
-     * @param dimension The dimension that other bots should be checked in.
-     * @param direction The neighboring direction to check. If not specified, then bots from all directions will be included.
-     * @returns A function that returns true if the given bot is next to the original bot.
+     * Creates a bot filter that includes bots which are neighboring the given bot. Optionally takes a direction that the neighboring bots must be in.
      *
-     * @example
-     * // Find all bots in front of `this` bot in the "test" dimension.
-     * let bots = getBots(neighboring(this, "test", "front"));
+     * @param bot the bot that the other bots need to be neighboring.
+     * @param dimension the dimension that the other bots need to be in.
+     * @param direction the neighboring direction to check. If not specified, then all of the supported directions will be checked. Currently, the supported directions are front, right, back, and left. If an unsupported direction is specified, then no bots will be included.
+     *
+     * @example Find all bots in front of this bot in the test dimension.
+     * const bots = getBots(neighboring(this, "test", "front"));
+     *
+     * @example Find all bots around this bot in the test dimension.
+     * const bots = getBots(neighboring(this, "test"));
+     *
+     * @dochash actions/bot-filters
+     * @docgroup 01-filters
+     * @docname neighboring
      */
     function neighboring(
         bot: Bot,
         dimension: string,
         direction?: 'front' | 'left' | 'right' | 'back'
-    ): BotFilterFunction {
+    ): BotFilter {
         if (!hasValue(direction)) {
             return either(
                 neighboring(bot, dimension, 'front'),
@@ -2915,10 +2974,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Creates a function that filters bots by whether they are in the given space.
-     * @param space The space that the bots should be in.
+     * Creates a bot filter that includes bots in the given space. That is, they have {@tag space} set to the given value.
+     *
+     * > This function behaves exactly like `byTag("space", getID(bot))`.
+     *
+     * @param space the space that the bots are in.
+     *
+     * @example Find all bots in the tempLocal space.
+     * let bots = getBots(bySpace("tempLocal"));
+     *
+     * @dochash actions/bot-filters
+     * @docgroup 01-filters
+     * @docname bySpace
      */
-    function bySpace(space: string): SpaceFilter {
+    function bySpace(space: string): BotFilter {
         let func = byTag(BOT_SPACE_TAG, space) as SpaceFilter;
         func.recordFilter = true;
         func.space = space;
@@ -2933,45 +3002,59 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Creates a filter function that checks whether bots were created by the given bot.
-     * @param bot The bot to determine weather the bots have been created by it or not.
-     * @returns A function that returns true if the bot was created by the given bot.
+     * Creates a bot filter that includes bots created by the given bot.
+     * That is, they have {@tag creator} set to the {@tag id} of the given bot.
      *
-     * @example
-     * // Find all the bots created by the yellow bot.
-     * let bots = getBots(byCreator(getBot('color','yellow')));
+     * > This function behaves exactly like `byTag("creator", getID(bot))`.
+     *
+     * @param bot the bot that created the other bots.
+     *
+     * @example Find all the bots created by this bot.
+     * let bots = getBots(byCreator(thisBot));
+     *
+     * @dochash actions/bot-filters
+     * @docgroup 01-filters
+     * @docname byCreator
      */
-    function byCreator(bot: Bot | string): BotFilterFunction {
+    function byCreator(bot: Bot | string): BotFilter {
         const id = getID(bot);
         return byTag('creator', id);
     }
 
     /**
-     * Creates a function that filters bots by whether they match any of the given filters.
-     * @param filters The filter functions that a bot should be tested against.
+     * Creates a bot filter that includes bots which match any (i.e. one or more) of the given filters.
      *
-     * @example
-     * // Find all bots with the name "bob" or height 2.
-     * let bots = getBots(
-     *   either(
-     *     byTag("name", "bob"),
-     *     byTag("height", height => height === 2)
-     *   )
+     * @param filters the filters that should be used.
+     *
+     * @example Find all bots with the #name bob or a #height of 2
+     * const bots = getBots(
+     *     either(
+     *         byTag("#name", "bob"),
+     *         byTag("height", 2)
+     *     )
      * );
+     *
+     * @dochash actions/bot-filters
+     * @docgroup 01-filters
+     * @docname either
      */
-    function either(...filters: BotFilterFunction[]): BotFilterFunction {
+    function either(...filters: BotFilter[]): BotFilter {
         return (bot) => filters.some((f) => f(bot));
     }
 
     /**
-     * Creates a function that negates the result of the given function.
-     * @param filter The function whose results should be negated.
+     * Creates a function that includes bots which _do not_ match the given filter.
      *
-     * @example
-     * // Find all bots that are not in the "test" dimension.
-     * let bots = getBots(not(inDimension("test")));
+     * @param filter the bot filter whose results should be negated.
+     *
+     * @example Find all bots that are not in the test dimension
+     * const bots = getBots(not(inDimension("test")));
+     *
+     * @dochash actions/bot-filters
+     * @docgroup 01-filters
+     * @docname not
      */
-    function not(filter: BotFilterFunction): BotFilterFunction {
+    function not(filter: BotFilter): BotFilter {
         return (bot) => !filter(bot);
     }
 
@@ -6713,33 +6796,55 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sends the given operation to all the devices that matches the given selector.
-     * In effect, this allows users to send each other events directly without having to edit tags.
+     * Sends the given action to another remote.
      *
-     * Note that currently, devices will only accept events sent from the inst.
+     * In CasualOS, all actions are messages which are placed in a queue and processed one at at time.
      *
-     * @param event The event that should be executed in the remote session(s).
-     * @param selector The selector that indicates where the event should be sent. The event will be sent to all sessions that match the selector.
-     *                 For example, specifying a username means that the event will be sent to every active session that the user has open.
-     *                 If a selector is not specified, then the event is sent to the inst.
+     * For example, the {@link os.toast} action queues a message which, when processed, will show a toast message.
+     * However, before any action is performed, it is run through the {@tag @onAnyAction} listener which can decide whether to reject an action using {@link action.reject}.
+     * This lets you write rules for what actions each player is allowed to take.
+     *
+     * There are a couple special cases. First, when you send/receive an action from someone else (i.e. they sent an action to you using the {@link remote} function), it won't run by default.
+     * Instead it is wrapped as a device action and sent to {@tag @onAnyAction} for processing. This lets you decide whether to allow players to send messages to each other and what the effect of those messages are.
+     * If you want to perform the action, you can use {@link action.perform} on the inner device action to queue it for execution.
+     *
+     * @param action the action to send.
+     * @param selector the object specifing which remote to send the action to.
+     * If not specified, then the action is sent to the server.
+     * If specified, then the action is sent to all remotes that match the given values.
+     * If given a string, then the action is sent to the remote with the matching ID.
+     *
      * @param allowBatching Whether to allow batching this remote event with other remote events. This will preserve ordering between remote events but may not preserve ordering
      *                      with respect to other events. Defaults to true.
      *
-     * @example
-     * // Send a toast to all sessions for the username "bob"
-     * remote(os.toast("Hello, Bob!"), { username: "bob" });
+     * @example Send a toast message to another remote.
+     * // Get the configBot ID of the other remote.
+     * const otherRemoteId = 'otherRemoteId';
      *
-     * @docgroup 10-event-actions
+     * // Create a toast action
+     * const toastAction = os.toast('My message!');
+     *
+     * // Send the action to the other remote
+     * // The toastAction will not be performed locally because
+     * // it is being sent to another remote.
+     * remote(toastAction, otherRemoteId);
+     *
+     * @dochash actions/event
+     * @docgroup 01-event-actions
+     * @docname remote
+     *
+     * // TODO: Enable documentation for the remote function
+     * @hidden
      */
     function remote(
-        event: BotAction,
+        action: BotAction,
         selector?: SessionSelector | string | (SessionSelector | string)[],
         allowBatching?: boolean
     ): RemoteAction | RemoteAction[] {
-        if (!event) {
+        if (!action) {
             return;
         }
-        const original = getOriginalObject(event);
+        const original = getOriginalObject(action);
         let actions = [];
         let selectors = Array.isArray(selector) ? selector : [selector];
         for (let s of selectors) {
@@ -6759,16 +6864,36 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sends the given shout to the given remote or list of remotes.
-     * The other remotes will recieve an onRemoteWhisper event for this whisper.
+     * Sends a {@tag @onRemoteData} shout to the remote with the given ID or remotes if given a list of IDs. This is useful for sending arbitrary messages to specific remotes.
      *
      * In effect, this allows remotes to communicate with each other by sending arbitrary events.
      *
-     * @param remoteId The ID of the other remote or remotes to whisper to.
-     * @param name The name of the event.
-     * @param arg The optional argument to include in the whisper.
+     * @param remoteId the remote ID or list of remote IDs that the shout should be sent to.
+     * @param name the name of the event that is being sent. This is useful for telling the difference between different messages.
+     * @param arg the that argument to send with the shout. You do not need to specify this parameter if you do not want to.
      *
-     * @docgroup 10-event-actions
+     * @example Send a "custom" message to another remote.
+     * const otherRemoteId = "otherRemoteId";
+     *
+     * // The other remote will receive a @onRemoteData with
+     * // that.name === "custom" and that.that === "Hello"
+     * sendRemoteData(otherRemoteId, "custom", "Hello");
+     *
+     * @example Send a message to all other remotes.
+     * const remotes = await os.remotes();
+     * const remoteId = getID(configBot);
+     * const otherRemotes = remotes.filter(id => id !== remoteId);
+     *
+     * // All other remotes will receive a @onRemoteData with
+     * // that.name === "custom" and that.that === "Hello"
+     * sendRemoteData(otherRemotes, "custom", "Hello");
+     *
+     * @dochash actions/event
+     * @docgroup 01-event-actions
+     * @docname sendRemoteData
+     *
+     * // TODO: Enable documentation for the remoteWhisper function
+     * @hidden
      */
     function remoteWhisper(
         remoteId: string | string[],
@@ -7537,10 +7662,33 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Performs the given action.
-     * @param action The action to perform.
+     * This function can be used to perform actions that you have stored as data without having to find out which function to call. You can find a list of action types [here](https://github.com/casual-simulation/casualos/blob/develop/src/aux-common/bots/BotEvents.ts#L40).
      *
-     * @docgroup 10-event-actions
-     * @docgrouptitle Event Actions
+     * @param action the action that should be performed.
+     *
+     * @example Perform a toast action
+     * action.perform({
+     *     type: 'show_toast',
+     *     message: 'Hello, world!',
+     *     duration: 2000
+     * });
+     *
+     * @example Perform an add bot action
+     * action.perform({
+     *     type: 'add_bot',
+     *     id: 'bot_id',
+     *     bot: {
+     *         id: 'bot_id',
+     *         tags: {
+     *             home: true,
+     *             label: 'Hello, World!'
+     *         }
+     *     }
+     * });
+     *
+     * @dochash actions/event
+     * @docgroup 01-event-actions
+     * @docname action.perform
      */
     function perform(action: any): any {
         const event: BotAction = action;
@@ -7595,10 +7743,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Rejects the given action.
-     * @param action The action to reject.
+     * Prevents a previous action from being performed.
      *
-     * @docgroup 10-event-actions
+     * This is especially useful when used in a {@tag @onAnyAction} listener since it lets you reject actions before they are performed.
+     *
+     * @param action the action that should be prevented/rejected.
+     *
+     * @example Prevent a toast message from being performed.
+     * const toastAction = os.toast("my message");
+     * action.reject(toastAction);
+     *
+     * @dochash actions/event
+     * @docgroup 01-event-actions
+     * @docname action.reject
      */
     function reject(action: any): RejectAction {
         const original = getOriginalObject(action);
@@ -9799,15 +9956,48 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shouts the given event to every bot in every loaded simulation.
-     * @param eventName The name of the event to shout.
-     * @param arg The argument to shout. This gets passed as the `that` variable to the other scripts.
+     * Sends a shout to all of the other instances that are loaded.
      *
-     * @docgroup 10-event-actions
+     * @param eventName the name of the shout. e.g. Using onClick for the name will trigger all the {@tag @onClick} listeners.
+     * @param arg the optional `that` argument to include with the shout.
+     *
+     * @example Send a hello super shout to all the loaded instances.
+     * superShout("hello");
+     *
+     * @dochash actions/event
+     * @docgroup 01-event-actions
+     * @docname superShout
      */
     function superShout(eventName: string, arg?: any): SuperShoutAction {
         const event = calcSuperShout(trimEvent(eventName), arg);
         return addAction(event);
+    }
+
+    /**
+     * Shouts to all bots that are {@tag listening} and have a listen tag for the specified events until one of the bots returns a value.
+     * Optionally includes a custom that argument.
+     * Also triggers {@tag @onListen} and {@tag @onAnyListen} for the bots that the shout was sent to.
+     *
+     * This function is useful when you want to shout but only want one bot to process the shout.
+     *
+     * @param eventNames the array of event names that should be shouted. e.g. Using onClick for the name will trigger the {@tag @onClick} listener until a bot returns a value.
+     * @param arg the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
+     *
+     * @example Shout to the first bot that handles @onClick
+     * priorityShout(['onClick']);
+     *
+     * @example Shout to the first bot that handles @myTest or @mySecondTest
+     * priorityShout(['myTest', 'mySecondTest']);
+     *
+     * @example Priority shout with a color
+     * priorityShout(['myTest', 'mySecondTest'], "blue");
+     *
+     * @dochash actions/event
+     * @docgroup 01-event-actions
+     * @docname priorityShout
+     */
+    function _priorityShout(eventNames: string[], arg?: any): any {
+        return null;
     }
 
     /**
@@ -9845,7 +10035,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Send a @hello event with your name
      * shout("hello", "Bob");
      *
-     * @docgroup 10-event-actions
+     * @dochash actions/event
+     * @doctitle Event Actions
+     * @docsidebar Event
+     * @docdescription Event actions are used to send events to bots.
+     * @docgroup 01-event-actions
      * @docname shout
      */
     function _shout(name: string, arg?: any): any {}
@@ -9874,7 +10068,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Send a @setColor event to ourself
      * whisper(this, "setColor", "red");
      *
-     * @docgroup 10-event-actions
+     * @dochash actions/event
+     * @docgroup 01-event-actions
      * @docname whisper
      */
     function _whisper(

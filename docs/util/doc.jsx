@@ -200,6 +200,14 @@ export function apiTableOfContents(doc) {
                 id: id,
                 level: 3
             });
+        } else if(c.reflection.kindString === 'Type alias') {
+            const name = getChildName(c.reflection);
+            const id = getChildId(c.reflection);
+            toc.push({
+                value: name,
+                id: id,
+                level: 2
+            });
         } else {
             toc.push({
                 value: c.reflection.name,
@@ -237,29 +245,34 @@ function ApiReflection({ reflection, references }) {
 }
 
 export function TypeAliasReflection({ reflection, references }) {
+    const name = getChildName(reflection);
+    const id = getChildId(reflection);
     return (
         <div>
-            <Heading as='h2' id={reflection.name}>{reflection.name}</Heading>
+            <Heading as='h2' id={id}>{name}</Heading>
             <ReflectionDiscription reflection={reflection} references={references} />
-            <TypeAliasMembers reflection={reflection} references={references} />
+            <TypeAliasMembers reflection={reflection} name={name} references={references} />
             <MemberExamples member={reflection} />
         </div>
     )
 }
 
-export function TypeAliasMembers({ reflection, references }) {
+export function TypeAliasMembers({ reflection, name, references }) {
     let detail = '';
 
     if (reflection.type.type === 'union') {
-        detail = <UnionTypeMembers type={reflection.type} references={references} />
+        detail = <UnionTypeMembers type={reflection.type} name={name} references={references} />
     }
     return detail;
 }
 
-export function UnionTypeMembers({ type, references }) {
-    return <ul>
-        {type.types.map((t, i) => <UnionTypeMember key={i} type={t} references={references} />)}
-    </ul>
+export function UnionTypeMembers({ type, name, references }) {
+    return <div>
+        <p>A {name} can be one of the following values:</p>
+        <ul>
+            {type.types.map((t, i) => <UnionTypeMember key={i} type={t} references={references} />)}
+        </ul>
+    </div>
 }
 
 export function UnionTypeMember({ type, references }) {
@@ -316,17 +329,28 @@ export function ClassMembers(props) {
         throw new Error('Unable to find ' + props.name + '!');
     }
 
-    const children = sortMembers(reflection.children);
+    const children = sortMembers(reflection.children ?? []);
 
     // console.log(children);
     return (
         <ReflectionBoundary reflection={reflection} root={true}>
             <div className="api">
                 <ReflectionDiscription reflection={reflection} references={props.references} />
+                {reflection.indexSignature ? <IndexSignature reflection={reflection} index={reflection.indexSignature} references={props.references} /> : ''}
                 {children.map(c => <ClassMember key={c.name} member={c} link={memberLink(reflection, c)} references={props.references}/>)}
             </div>
         </ReflectionBoundary>
     );
+}
+
+export function IndexSignature({ reflection, index, references }) {
+    const param = index.parameters[0];
+    return <div>
+        <Heading as='h3' id={`${reflection.name}-_index`}>Index Signature</Heading>
+        <ReflectionDiscription reflection={index} references={references} />
+        <pre><code>[{param.name}: <TypeLink type={param.type} references={references} />]: <TypeLink type={index.type} references={references} /></code></pre>
+        <MemberExamples member={index} />
+    </div>
 }
 
 export function ReflectionDiscription({ reflection, references }) {
@@ -658,12 +682,14 @@ function parameterDescription(param, isRest) {
     return comment;
 }
 
-function TypeLink({ type, references }) {
+function TypeLink({ type, references, isInUnionOrArray }) {
     if (type.type === 'intrinsic') {
         return <span>{type.name}</span>
     } else if (type.name) {
         if (type.name === 'Promise' && type.qualifiedName === 'Promise' && type.typeArguments && type.typeArguments.length === 1) {
             return <>Promise&lt;<TypeLink type={type.typeArguments[0]} references={references}/>&gt;</>
+        } else if (type.name === 'Partial' && type.qualifiedName === 'Partial' && type.typeArguments && type.typeArguments.length === 1) {
+            return <><a href="https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype">Partial</a>&lt;<TypeLink type={type.typeArguments[0]} references={references}/>&gt;</>
         }
 
         let href = `#${type.name}`;
@@ -685,10 +711,10 @@ function TypeLink({ type, references }) {
         return <span>({type.types.map((t, i) => 
             <React.Fragment key={i}>
                 {(i > 0 ? ' | ' : '')}
-                <TypeLink type={t} references={references} />
+                <TypeLink type={t} references={references} isInUnionOrArray={true} />
             </React.Fragment>)})</span>
     } else if (type.type === 'array') {
-        return <><TypeLink type={type.elementType} references={references}/>[]</>
+        return <><TypeLink type={type.elementType} references={references} isInUnionOrArray={true}/>[]</>
     } else if (type.type === 'literal') {
         if (typeof type.value === 'string') {
             return <span>"{type.value}"</span>
@@ -696,10 +722,23 @@ function TypeLink({ type, references }) {
             return <span>{type.value}</span>
         } else if (typeof type.value === 'boolean') {
             return <span>{type.value ? 'true' : 'false'}</span>
+        } else if (typeof type.value === 'undefined') {
+            return <span>undefined</span>
+        } else if(type.value === null) {
+            return <span>null</span>
         } else {
             return '' + JSON.stringify(type);
         }
-    } else if(type.type === 'reflection') {
+    } else if (type.type === 'reflection') {
+        const declaration = type.declaration;
+        if (declaration.kindString === 'Type literal') {
+            if (declaration.signatures && !declaration.children) {
+                // arrow function type literal
+                const sig = getPreferredSignature(declaration.signatures) ?? declaration.signatures[0];
+                const params = sig.parameters || [];
+                return <><span>{isInUnionOrArray ? '(':''}({params.map((p, i) => <span key={i}>{i > 0 ? ',' : ''}{p.name}: <TypeLink type={p.type} references={references}/></span>)}) =&gt; <TypeLink type={sig.type} references={references}/>{isInUnionOrArray ? ')':''}</span></>
+            }
+        }
         return 'object';
         // return '' + JSON.stringify(type);
         // return <>Dynamic</>

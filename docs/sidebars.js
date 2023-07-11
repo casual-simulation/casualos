@@ -30,25 +30,16 @@ module.exports = {
                 'tags',
                 'listen-tags',
                 'variables',
-                // 'actions',
                 {
                     type: 'category',
                     label: 'Actions',
                     items: [
                         'actions/data',
+                        'actions/bot-filters',
                         'actions/mod-actions',
                         'actions/web',
-                        'actions/utility'
-                    ]
-                },
-                'glossary',
-                'ab-1',
-                {
-                    type: 'category',
-                    label: 'Math',
-                    items: [
-                        'math/vectors',
-                        'math/rotations'
+                        'actions/utility',
+                        'actions/event'
                     ]
                 },
                 {
@@ -58,8 +49,19 @@ module.exports = {
                         'types/core',
                         'types/web',
                         'types/animation',
+                        {
+                            type: 'category',
+                            label: 'Math',
+                            items: [
+                                'types/math/vectors',
+                                'types/math/rotations'
+                            ]
+                        },
                     ]
-                }
+                },
+                'glossary',
+                'ab-1',
+                
             ]
         },
     ],

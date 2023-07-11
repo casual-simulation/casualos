@@ -5,7 +5,7 @@ import { Vector3 } from './Vector3';
 /**
  * Defines a class that can represent geometric rotations.
  *
- * @docHash math/rotations
+ * @docHash types/math/rotations
  * @docOrder 0
  * @docTitle Rotations
  * @docSidebar Rotations
@@ -455,7 +455,7 @@ export class Rotation {
  * Defines an interface that represents a from/to rotation.
  * That is, a rotation that is able to rotate a vector from the given vector direction to the given vector direction.
  *
- * @docHash math/rotations
+ * @docHash types/math/rotations
  * @docOrder 3
  * @docTitle Rotations
  * @docSidebar Rotations
@@ -477,7 +477,7 @@ export interface FromToRotation {
 /**
  * Defines an interface that represents an Axis and Angle pair.
  *
- * @docHash math/rotations
+ * @docHash types/math/rotations
  * @docOrder 2
  * @docTitle Rotations
  * @docSidebar Rotations
@@ -499,7 +499,7 @@ export interface AxisAndAngle {
 /**
  * Defines an interface that represents an Euler Angles rotation.
  *
- * @docHash math/rotations
+ * @docHash types/math/rotations
  * @docOrder 4
  * @docTitle Rotations
  * @docSidebar Rotations
@@ -540,7 +540,7 @@ export interface EulerAnglesRotation {
 /**
  * Defines an interface that represents a sequence of rotations.
  *
- * @docHash math/rotations
+ * @docHash types/math/rotations
  * @docOrder 5
  * @docTitle Rotations
  * @docSidebar Rotations
@@ -557,7 +557,7 @@ export interface SequenceRotation {
 /**
  * Defines an interface that represents a rotation constructed from a Quaternion.
  *
- * @docHash math/rotations
+ * @docHash types/math/rotations
  * @docOrder 6
  * @docTitle Rotations
  * @docSidebar Rotations
@@ -571,7 +571,7 @@ export interface QuaternionRotation {
 /**
  * Defines an interface that represents a rotation transforms (0, 1, 0) and (0, 0, 1) to look along the given direction and upwards axes.
  *
- * @docHash math/rotations
+ * @docHash types/math/rotations
  * @docOrder 7
  * @docTitle Rotations
  * @docSidebar Rotations

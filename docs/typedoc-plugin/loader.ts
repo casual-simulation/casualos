@@ -97,8 +97,11 @@ class CommentSerializer extends SerializerComponent<Comment> {
     }
 
     private _replaceTags(str: string) {
-        let regex = /\{@tag ([\w-\.]+)\}/g;
+        let regex = /\{@tag ([\@\w-\.]+)\}/g;
         return str.replace(regex, (match, tag) => {
+            if(tag.startsWith('@')) {
+                return `[\`${tag}\`](tags:${tag})`;
+            }
             return `[\`#${tag}\`](tags:${tag})`;
         });
     }
