@@ -333,6 +333,12 @@ export interface ValidatePublicRecordKeyFailure {
 
 /**
  * Defines an interface that represents the result of a "create public record key" operation.
+ *
+ * @dochash types/records
+ * @doctitle Records Types
+ * @docsidebar Records
+ * @docdescription Types that are used for records actions.
+ * @docname CreatePublicRecordKeyResult
  */
 export type CreatePublicRecordKeyResult =
     | CreatePublicRecordKeySuccess
@@ -340,6 +346,9 @@ export type CreatePublicRecordKeyResult =
 
 /**
  * Defines an interface that represents a successful "create public record key" result.
+ *
+ * @dochash types/records
+ * @docname CreatePublicRecordKeySuccess
  */
 export interface CreatePublicRecordKeySuccess {
     /**
@@ -360,6 +369,9 @@ export interface CreatePublicRecordKeySuccess {
 
 /**
  * Defines an interface that represents a failed "create public record key" result.
+ *
+ * @dochash types/records
+ * @docname CreatePublicRecordKeyFailure
  */
 export interface CreatePublicRecordKeyFailure {
     /**

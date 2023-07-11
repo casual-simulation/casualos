@@ -406,6 +406,7 @@ import {
     GrantRoleResult,
     RevokeRoleResult,
 } from '@casual-simulation/aux-records';
+import type { AvailablePermissions } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
 import * as hooks from 'preact/hooks';
@@ -1795,44 +1796,87 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 closeImageClassifier,
 
                 /**
-                 * Gets the local device time in Miliseconds since January 1st 1970 UTC-0.
+                 * Gets the device-local time as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch). This is what your device's clock thinks the current time is.
+                 *
+                 * @example Toast the number of miliseconds since the Unix Epoch
+                 * os.toast(os.localTime);
+                 *
+                 * @dochash actions/time
+                 * @doctitle Time Actions
+                 * @docsidebar Time
+                 * @docdescription Time actions make working with time across devices easy.
+                 * @docgroup 01-time
+                 * @docname os.localTime
                  */
                 get localTime() {
                     return Date.now();
                 },
 
                 /**
-                 * Gets the current agreed upon inst time in miliseconds since January 1st 1970 UTC-0.
+                 * Gets the shared time that has been agreed upon between devices in the inst as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch).
+                 * This is what your device's clock thinks the inst clock says.
+                 *
+                 * If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+                 *
+                 * @example Toast the current shared time
+                 * os.toast(os.agreedUponTime);
+                 *
+                 * @dochash actions/time
+                 * @docgroup 01-time
+                 * @docname os.agreedUponTime
                  */
                 get agreedUponTime() {
                     return Date.now() + context.instTimeOffset;
                 },
 
                 /**
-                 * Gets the calculated latency (in miliseconds) between this device and the inst server.
+                 * Gets the average latency between this device's clock and the inst clock in miliseconds. Lower values tend to indicate a good connection while higher values tend to indicate a bad connection.
+                 *
+                 * If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+                 *
+                 * @dochash actions/time
+                 * @docgroup 01-time
+                 * @docname os.instLatency
                  */
                 get instLatency() {
                     return context.instLatency;
                 },
 
                 /**
-                 * Gets the calculated time offset between this device and the inst server in miliseconds.
+                 * Gets the calculated time offset between the inst clock and the local clock. This value is equivalent to `os.agreedUponTime - os.localTime`.
+                 *
+                 * If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+                 *
+                 * @dochash actions/time
+                 * @docgroup 01-time
+                 * @docname os.instTimeOffset
                  */
                 get instTimeOffset() {
                     return context.instTimeOffset;
                 },
 
                 /**
-                 * Gets the maximum spread between time offset samples in miliseconds.
-                 * Useful for determining how closely the agreedUponTime matches the server time.
+                 * Gets the spread between calculated time offsets. Higher values indicate that {@link os.agreedUponTime} is less accurate. Lower values indicate that {@link os.agreedUponTime} is more accurate.
+                 *
+                 * If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+                 *
+                 * @dochash actions/time
+                 * @docgroup 01-time
+                 * @docname os.instTimeOffsetSpread
                  */
                 get instTimeOffsetSpread() {
                     return context.instTimeOffsetSpread;
                 },
 
                 /**
-                 * Gets the current agreed upon time plus an offset that attempts to ensure that
-                 * changes/events will have been synchronized between all connected devices by the moment that this time occurrs.
+                 * Gets the shared time that has been agreed upon between devices but with an additional 50ms offset added.
+                 * This offset attempts to ensure that changes/events will be recieved by all connected devices by the time it occurs, thereby making synchronized actions easier to perform.
+                 *
+                 * If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.
+                 *
+                 * @dochash actions/time
+                 * @docgroup 01-time
+                 * @docname os.deadReckoningTime
                  */
                 get deadReckoningTime() {
                     return (
@@ -2879,7 +2923,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Creates a bot filter that includes bots that are in the given dimension and at the given X and Y position.
      *
-     * When this filter is used with {@link getBots-filters}, the returned bots are sorted in the same order that they are stacked. This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).
+     * When this filter is used with {@link getbots-filters}, the returned bots are sorted in the same order that they are stacked. This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).
      *
      * @param dimension the name of the dimension.
      * @param x the X position. That is, the left-right position of the bots in the dimension.
@@ -2904,7 +2948,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Creates a bot filter that includes bots in the same stack as the given bot. The given bot will always be included by this filter as long the given bot is in the given dimension.
      *
-     * When this filter is used with {@link getBots-filters}, the returned bots are sorted in the same order that they are stacked. This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).
+     * When this filter is used with {@link getbots-filters}, the returned bots are sorted in the same order that they are stacked. This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).
      *
      * @param bot the bot that other bots should be in the same stack with.
      * @param dimension the name of the dimension.
@@ -4600,7 +4644,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Requests an Auth Bot for the current session.
+     * Requests that an "authentication" bot be added to the inst for the current browser tab.
+     * Auth bots are useful for discovering general information about the logged in user and are typically associated with a [https://publicos.link](https://publicos.link) user account.
+     *
+     * Returns a promise that resolves with a bot that contains information about the signed in user session.
+     * Resolves with `null` if the user was unable to sign in.
+     *
+     * On success, the `authBot` global variable will reference the bot that was returned by the promise.
+     *
+     * See [Auth Bot Tags](page:tags#auth-bot-tags) for more information.
+     *
+     * @example Request an auth bot for the user
+     * await os.requestAuthBot();
+     * os.toast("Logged in!");
+     *
+     * @dochash actions/records
+     * @doctitle Records Actions
+     * @docsidebar Records
+     * @docdescription Records are a way to store permenent data in CasualOS.
+     * @docgroup 01-records
+     * @docname os.requestAuthBot
      */
     async function requestAuthBot(): Promise<Bot> {
         const data = await requestAuthData();
@@ -4645,8 +4708,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets an access key for the given public record.
-     * @param name The name of the record.
+     * Requests an [access key](glossary:record-key) for the [public record](glossary:record) with the given name.
+     * Returns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.
+     *
+     * @param name the name of the record to get the key for.
+     *
+     * @example Request an access key for a public record.
+     * const result = await os.getPublicRecordKey('myPublicRecord');
+     *
+     * if (result.success) {
+     *     os.toast(result.recordKey);
+     * } else {
+     *     os.toast('Failed ' + result.errorMessage);
+     * }
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.getPublicRecordKey
      */
     function getPublicRecordKey(
         name: string
@@ -4657,8 +4735,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets a subjectless access key for the given public record.
-     * @param name The name of the record.
+     * Requests an subjectless [access key](glossary:record-key) for the [public record](glossary:record) with the given name.
+     * Returns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.
+     *
+     * This function works similarly to {@link getPublicRecordKey}, except that it does not require the user to be signed in when the resulting key is used.
+     * Usage of subjectless keys should therefore be limited, since they do not record who is using the key and therefore make moderation more difficult.
+     *
+     * @param name the name of the record.
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.getSubjectlessPublicRecordKey
      */
     function getSubjectlessPublicRecordKey(
         name: string
@@ -4670,23 +4757,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Grants the given marker the given permission in the given record.
-     * @param recordName The name of the record.
-     * @param marker The marker.
-     * @param permission The permission to grant.
-     * @param options The options.
+     *
+     * See [Record Security](page:learn/records/security) for more information.
+     *
+     * @param recordName the name of the record.
+     * @param marker the marker that the permission should be added to.
+     * @param permission the permission that should be added.
+     * @param options the options for the operation.
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.grantRecordMarkerPermission
      */
     function grantRecordMarkerPermission(
         recordName: string,
         marker: string,
-        permission: object,
-        options: RecordActionOptions = {}
+        permission: AvailablePermissions,
+        options?: RecordActionOptions
     ): Promise<GrantMarkerPermissionResponse> {
         const task = context.createTask();
         const event = calcGrantRecordMarkerPermission(
             recordName,
             marker,
             permission,
-            options,
+            options ?? {},
             task.taskId
         );
         return addAsyncAction(task, event);
@@ -4694,23 +4788,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Revokes the given permission from the given marker in the given record.
-     * @param recordName The name of the record.
-     * @param marker The name of the marker.
-     * @param permission The permission that should be revoked.
-     * @param options The options.
+     *
+     * See [Record Security](page:learn/records/security) for more information.
+     *
+     * @param recordName the name of the record.
+     * @param marker the name of the marker that the permission should be removed from.
+     * @param permission the permission that should be removed.
+     * @param options the options for the operation.
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.revokeRecordMarkerPermission
      */
     function revokeRecordMarkerPermission(
         recordName: string,
         marker: string,
-        permission: object,
-        options: RecordActionOptions = {}
+        permission: AvailablePermissions,
+        options?: RecordActionOptions
     ): Promise<RevokeMarkerPermissionResult> {
         const task = context.createTask();
         const event = calcRevokeRecordMarkerPermission(
             recordName,
             marker,
             permission,
-            options,
+            options ?? {},
             task.taskId
         );
         return addAsyncAction(task, event);
@@ -4721,17 +4822,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * When called, the user will be prompted to accept/deny the request.
      *
-     * @param recordName The name of the record.
-     * @param options The options.
+     * See [Record Security](page:learn/records/security) for more information.
+     *
+     * @param recordName the name of the record.
+     * @param options the options for the operation.
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.grantInstAdminPermission
      */
     function grantInstAdminPermission(
         recordName: string,
-        options: RecordActionOptions = {}
+        options?: RecordActionOptions
     ): Promise<GrantRoleResult> {
         const task = context.createTask();
         const event = calcGrantInstAdminPermission(
             recordName,
-            options,
+            options ?? {},
             task.taskId
         );
         return addAsyncAction(task, event);
@@ -4739,18 +4846,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Grants the given user the given role in the given record for the specified time.
-     * @param recordName The name of the record.
-     * @param role The role that should be granted.
-     * @param userId The ID of the user that should be granted the role.
-     * @param expireTimeMs The time that the role grant expires. If null, then the role will not expire.
-     * @param options The options.
+     *
+     * See [Record Security](page:learn/records/security) for more information.
+     *
+     * @param recordName the name of the record.
+     * @param role the role that should be granted to the user.
+     * @param userId the ID of the user that should be granted the role.
+     * @param expireTimeMs the time that the role grant expires. If `null`, then the role will not expire.
+     * @param options the options for the operation.
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.grantUserRole
      */
     function grantUserRole(
         recordName: string,
         role: string,
         userId: string,
         expireTimeMs: number = null,
-        options: RecordActionOptions = {}
+        options?: RecordActionOptions
     ): Promise<GrantRoleResult> {
         const task = context.createTask();
         const event = calcGrantUserRole(
@@ -4758,7 +4872,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             role,
             userId,
             expireTimeMs,
-            options,
+            options ?? {},
             task.taskId
         );
         return addAsyncAction(task, event);
@@ -4766,35 +4880,49 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Revokes the given role from the given user in the given record.
-     * @param recordName The name of the record.
-     * @param role The role that should be revoked.
-     * @param userId The ID of the user.
-     * @param options The options.
+     *
+     * See [Record Security](page:learn/records/security) for more information.
+     *
+     * @param recordName the name of the record.
+     * @param role the role that should be revoked from the user.
+     * @param userId the ID of the user.
+     * @param options the options for the operation.
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.revokeUserRole
      */
     function revokeUserRole(
         recordName: string,
         role: string,
         userId: string,
-        options: RecordActionOptions = {}
+        options?: RecordActionOptions
     ): Promise<RevokeRoleResult> {
         const task = context.createTask();
         const event = calcRevokeUserRole(
             recordName,
             role,
             userId,
-            options,
+            options ?? {},
             task.taskId
         );
         return addAsyncAction(task, event);
     }
 
     /**
-     * Grants the given user the given role in the given record for the specified time.
-     * @param recordName The name of the record.
-     * @param role The role that should be granted.
-     * @param inst The inst that should be granted the role.
-     * @param expireTimeMs The time that the role grant expires. If null, then the role will not expire.
-     * @param options The options.
+     * Grants the given inst the given role in the given record for the specified time.
+     *
+     * See [Record Security](page:learn/records/security) for more information.
+     *
+     * @param recordName the name of the record.
+     * @param role the role that should be granted.
+     * @param inst the inst that should be granted the role.
+     * @param expireTimeMs the time that the role grant expires. If null, then the role will not expire.
+     * @param options the options for the operation.
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.grantInstRole
      */
     function grantInstRole(
         recordName: string,
@@ -4816,43 +4944,84 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Revokes the given role from the given user in the given record.
+     * Revokes the given role from the given inst in the given record.
+     *
+     * See [Record Security](page:learn/records/security) for more information.
+     *
      * @param recordName The name of the record.
-     * @param role The role that should be revoked.
-     * @param inst The inst.
-     * @param options The options.
+     * @param role the role that should be revoked from the inst.
+     * @param inst the inst that the role should be revoked from.
+     * @param options the options for the operation.
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.revokeInstRole
      */
     function revokeInstRole(
         recordName: string,
         role: string,
         inst: string,
-        options: RecordActionOptions = {}
+        options?: RecordActionOptions
     ): Promise<RevokeRoleResult> {
         const task = context.createTask();
         const event = calcRevokeInstRole(
             recordName,
             role,
             inst,
-            options,
+            options ?? {},
             task.taskId
         );
         return addAsyncAction(task, event);
     }
 
     /**
-     * Determines if the given value is a record key.
-     * @param key The value to check.
+     * Determines if the given value represents a [record key](glossary:record-key).
+     *
+     * Returns `true` if the value is a record key and `false` if the value is not a record key.
+     *
+     * @param key the value to test to see if it is a record key.
+     *
+     * @example Determine if a value is a record key.
+     * const isRecordKey = os.isRecordKey(tags.myRecordKey);
+     * os.toast(tags.myRecordKey ' is ' + (isRecordKey ? 'a' : 'not a') + ' record key.');
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.isRecordKey
      */
     function isRecordKey(key: unknown): boolean {
         return calcIsRecordKey(key);
     }
 
     /**
-     * Records the given data to the given address inside the record for the given record key or record name.
-     * @param recordKeyOrRecordName The record key or record name that should be used to access the record.
-     * @param address The address that the data should be stored at inside the record.
-     * @param data The data that should be stored.
-     * @param endpointOrOptions The options that should be used. Optional.
+     * Stores the given [data](glossary:data-record) in the given [record](glossary:record) at the given address.
+     * If data already exists at the given address, it will be overwritten.
+     *
+     * Returns a promise that resolves with an object that indicates if the request was successful.
+     * @param recordKeyOrRecordName the key that should be used to access the record. You can request a record key by using {@link os.getPublicRecordKey}.
+     * @param address the address that the data should be stored at.
+     * @param data the data that should be stored. This can be any value that can be serialized to JSON.
+     * Must be less than 300KB in size.
+     * If you need to store data larger than 300KB, you can use {@link os.recordFile}.
+     * @param endpointOrOptions the options that should be used to record the data.
+     *
+     * @example Publish some data to a record
+     * const recordKeyResult = await os.getPublicRecordKey('myRecord');
+     * if (!recordKeyResult.success) {
+     *     os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+     *     return;
+     * }
+     * const result = await os.recordData(recordKeyResult.recordKey, 'myAddress', 'myData');
+     *
+     * if (result.success) {
+     *     os.toast("Success!");
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.recordData
      */
     function recordData(
         recordKeyOrRecordName: string,
@@ -4937,10 +5106,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the data stored in the given record at the given address.
-     * @param recordKeyOrName The record that the data should be retrieved from.
-     * @param address The address that the data is stored at.
-     * @param endpoint The records endpoint that should be queried. Optional.
+     * Gets the data stored at the given address in the given record.
+     * Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
+     *
+     *
+     * @param recordKeyOrName the record name or a record key. This indicates the record that the data should be retrieved from.
+     * Note that you don't need a record key in order to retrieve public data from a record. Using a record name will work just fine.
+     * @param address the address that the data should be retrieved from.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be recorded to.
+     * If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
+     *
+     * @example Get some data from a record
+     * const result = await os.getData('myRecord', 'myAddress');
+     *
+     * if (result.success) {
+     *     os.toast(result.data);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.getData
      */
     function getData(
         recordKeyOrName: string,
@@ -4995,10 +5182,50 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Lists the data stored in the given record starting with the given address.
-     * @param recordKeyOrName The record that the data should be retrieved from.
-     * @param startingAddress The address that the list should start with.
-     * @param endpoint The records endpoint that should be queried. Optional.
+     * Gets a partial list of [data](glossary:data-record) that is stored in the given record.
+     * Optionally accepts the address before the first item that should be included in the list.
+     * Returns a promise that resolves with an object that contains the items (if successful) or information about the error that occurred.
+     *
+     * On [publicos.link](https://publicos.link), the returned list is limited to 25 items.
+     *
+     * @param recordKeyOrName the record name or a record key. This indicates the record that the data should be retrieved from.
+     * Note that you don't need a record key in order to retrieve public data from a record. Using a record name will work just fine.
+     * @param startingAddress the address after which items will be included in the list.
+     * Since items are ordered within the record by address, this can be used as way to iterate through all the data items in a record.
+     * If omitted, then the list will start with the first item.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
+     *
+     * @example Get a list of data items in a record
+     * const result = await os.listData('myRecord');
+     * if (result.success) {
+     *     os.toast(result.items);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @example List all the items in a record
+     * let lastAddress;
+     * let items = [];
+     * while(true) {
+     *     const result = await os.listData('myRecord', lastAddress);
+     *     if (result.success) {
+     *         console.log(result.items);
+     *         items.push(...result.items);
+     *         if (result.items.length > 0) {
+     *             lastAddress = result.items[result.items.length - 1].address;
+     *         } else {
+     *             // result.items is empty, so we can break out of the loop
+     *             break;
+     *         }
+     *     } else {
+     *         os.toast("Failed " + result.errorMessage);
+     *         break;
+     *     }
+     * }
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.listData
      */
     function listData(
         recordKeyOrName: string,
@@ -5023,10 +5250,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Erases the data stored in the given record at the given address.
-     * @param recordKeyOrName The record key or record name that should be used to access the record.
-     * @param address The address that the data should be erased from.
-     * @param endpoint The records endpoint that should be queried. Optional.
+     * Erases the [data](glossary:data-record) stored at the given address in the given [record](glossary:record).
+     * Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
+     * @param recordKeyOrName the record key or record name that should be used to access the record. You can request a record key by using {@link os.getPublicRecordKey}.
+     * @param address the address that the data is stored at.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be recorded to.
+     * If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
+     *
+     * @example Erase some data from a record
+     * const recordKeyResult = await os.getPublicRecordKey('myRecord');
+     * if (!recordKeyResult.success) {
+     *     os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+     *     return;
+     * }
+     * const result = await os.eraseData(recordKeyResult.recordKey, 'myAddress');
+     *
+     * if (result.success) {
+     *     os.toast("Success!");
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.eraseData
      */
     function eraseData(
         recordKeyOrName: string,

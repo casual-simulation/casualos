@@ -17,11 +17,21 @@ export default function remarkTagLinks(options = {}) {
                 const ref = node.url.slice('ref:'.length);
                 const hash = references[ref];
                 node.url = useBaseUrl(hash) + '#' + ref;
+            } else if (node.url.startsWith('glossary:')) {
+                const term = node.url.slice('glossary:'.length);
+                node.url = useBaseUrl('glossary') + '#' + formatAnchorId(term);
+            } else if (node.url.startsWith('page:')) {
+                const [page, hash] = node.url.slice('page:'.length).split('#');
+                node.url = useBaseUrl(page) + '#' + hash;
             }
         });
     };
 }
 
 function formatTagHash(tag) {
-    return '#' + tag.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()
+    return '#' + formatAnchorId(tag);
+}
+
+function formatAnchorId(id) {
+    return id.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()
 }

@@ -39,7 +39,9 @@ module.exports = {
                         'actions/mod-actions',
                         'actions/web',
                         'actions/utility',
-                        'actions/event'
+                        'actions/event',
+                        'actions/time',
+                        'actions/records'
                     ]
                 },
                 {
@@ -57,6 +59,8 @@ module.exports = {
                                 'types/math/rotations'
                             ]
                         },
+                        'types/records',
+                        'types/permissions',
                     ]
                 },
                 'glossary',

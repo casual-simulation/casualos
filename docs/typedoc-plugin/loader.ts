@@ -352,6 +352,9 @@ export function loadContent() {
         return page;
     };
     walk(project, (child, parent, key) => {
+        if((child as any).name === 'agreedUponTime') {
+            console.log('Found agreedUponTime', (child as any).comment, child);
+        }
         if ('kind' in child) {
             // Reflection
             let hash = getReflectionHash(child);
@@ -532,6 +535,7 @@ const keysMap = {
     'Function': ['signatures'],
     'Project': ['children'],
     'reference': ['typeArguments'],
+    'Accessor': ['getSignature', 'setSignature'],
 };
 
 type WalkType = Reflection | Type | Comment;

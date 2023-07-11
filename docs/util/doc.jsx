@@ -292,10 +292,22 @@ export function ClassReflection({ reflection, references }) {
 }
 
 export function ObjectReflection({ reflection, references }) {
+    const name = getChildName(reflection);
+    const id = getChildId(reflection);
+
+    let nameElement;
+
+    if(reflection.kindString === 'Get signature' || reflection.kindString === 'Set signature') {
+        nameElement = <code>{name}</code>
+    } else {
+        nameElement = name;
+    }
+
     return (
         <div>
-            <Heading as='h2' id={reflection.name}>{reflection.name}</Heading>
+            <Heading as='h2' id={id}>{nameElement}</Heading>
             <ObjectMembers reflection={reflection}  references={references} />
+            <MemberExamples member={reflection} />
         </div>
     )
 }
@@ -1057,7 +1069,7 @@ function flattenObjectChildren(reflection) {
             }];
         }
         return [];
-    } else if (reflection.kindString === 'Type alias') {
+    } else if (reflection.kindString === 'Type alias' || reflection.kindString === 'Get signature' || reflection.kindString === 'Set signature') {
         return [];
     }
     const declaration = reflection.type.declaration;

@@ -3598,6 +3598,8 @@ export const APPROVED_SYMBOL = Symbol('approved');
 
 /**
  * Defines an interface that represents the base for options for a records action.
+ *
+ * @dochash types/records
  */
 export interface RecordActionOptions {
     /**
@@ -3619,13 +3621,19 @@ export interface RecordsAction extends AsyncAction {
 /**
  * Defines a type that represents a policy that indicates which users are allowed to affect a record.
  *
- * True indicates that any user can edit the record.
- * An array of strings indicates the list of users that are allowed to edit the record.
+ * - `true` indicates that any user can edit the record.
+ * - An array of strings indicates the list of users that are allowed to edit the record.
+ *
+ * @dochash types/records
+ * @docname RecordUserPolicyType
  */
 export type RecordUserPolicyType = true | string[];
 
 /**
  * The options for data record actions.
+ *
+ * @dochash types/records
+ * @docName DataRecordOptions
  */
 export interface DataRecordOptions extends RecordActionOptions {
     /**
