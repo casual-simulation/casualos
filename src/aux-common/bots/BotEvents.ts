@@ -764,74 +764,102 @@ export interface HideHtmlAction extends Action {
 }
 
 /**
- * Options for the os.tweenTo(), os.moveTo(), and os.focusOn() actions.
+ * Options for {@link os.focusOn-bot}, and {@link os.focusOn-position} actions.
+ *
+ * @dochash types/os
+ * @docname FocusOnOptions
  */
 export interface FocusOnOptions {
     /*
      * The zoom value to use.
+     * For the bot and miniGridPortals, possible values are between `0` and `80`. `1` is the default.
+     * For the map portal, this is the scale that the focused point should appear at.
+     * For example, 24000 would indicate that the scale is 1:24,000.
+     * If no value is specified, then the zoom will remain at its current value.
      */
     zoom?: number;
 
     /*
-     * The rotation value to use. These are the spherical coordinates that determine where the camera should orbit around the target point.
+     * The rotation value to use in radians.
+     * These are the polar coordinates that determine where
+     * the camera should orbit around the target point.
      */
-    rotation?: {
-        x: number;
-        y: number;
-
-        /**
-         * Whether to normalize the rotation values to between 0 and 2*PI.
-         * Defaults to true. Setting this to false can be useful for rotating around a bot multiple times.
-         */
-        normalize?: boolean;
-    };
+    rotation?: FocusOnRotation;
 
     /**
-     * The duration in seconds that the tween should take.
+     * The duration in seconds that the animation should take.
+     * Defaults to 1.
      */
     duration?: number;
 
     /**
-     * The type of easing to use.
-     * If not specified then "linear" "inout" will be used.
+     * The options for easing.
+     * Can be an "easing type" or an object that specifies the type and mode.
+     * If an easing type is specified, then "inout" mode is used.
+     * If omitted, then "quadratic" "inout" is used.
      */
     easing?: EaseType | Easing;
 
     /**
      * The tag that should be focused.
+     * Only supported in the system portal.
      */
     tag?: string;
 
     /**
-     * The space of the tag that should be focused.
+     * The tag space that should be focused.
+     * Only supported in the system portal, sheet portal, and tag portals.
      */
     space?: string;
 
     /**
-     * The line number that should be focued.
+     * The line number that should be selected in the editor.
+     * Only supported in the system portal, sheet portal, and tag portals.
      */
     lineNumber?: number;
 
     /**
-     * The column number that should be focused.
+     * The column number that should be selected in the editor.
+     * Only supported in the system portal, sheet portal, and tag portals.
      */
     columnNumber?: number;
 
     /**
      * The index of the first character that should be selected.
+     * Only supported in the system portal, sheet portal, and tag portals.
      */
     startIndex?: number;
 
     /**
      * The index of the last character that should be selected.
+     * Only supported in the system portal, sheet portal, and tag portals.
      */
     endIndex?: number;
 
     /**
-     * The portal that the bot is in.
-     * If not specified, then the bot will be focused in all portals.
+     * The portal that the bot should be focused in.
+     * If not specified, then the bot will be focused in all the portals it is in. (bot, mini and menu)
+     * Useful if a bot is in two portals but you only want to focus it in one portal.
      */
     portal?: PortalType;
+}
+
+/**
+ * Defines an interface that represents a rotation in polar coordinates for use with {@link os.focusOn-bot}.
+ *
+ * @dochash types/os
+ * @docname FocusOnRotation
+ */
+export interface FocusOnRotation {
+    x: number;
+    y: number;
+
+    /**
+     * Whether to normalize the rotation. Normalized rotations are clamped to between 0 and Math.PI*2.
+     * You can set this to false to allow using angles more than Math.PI*2. This would allow the camera to rotate around an object multiple times.
+     * Defaults to true.
+     */
+    normalize?: boolean;
 }
 
 /**

@@ -1828,6 +1828,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 setClipboard,
                 tweenTo,
                 moveTo,
+                _focusOn_bot,
+                _focusOn_position,
                 focusOn,
                 _showChat_placeholder,
                 _showChat_options,
@@ -3670,14 +3672,113 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Moves the camera to view the given bot.
-     * Returns a promise that resolves when the bot is focused.
-     * @param botOrPosition The bot, bot ID, or position to view. If null, then any active camera animation will be canceled.
-     * @param options The options to use for moving the camera.
+     * Focuses on the given bot. For bots in the bot or miniGridPortals, this animates the camera such that the portal focus point is placed on the given bot or position.
+     * For input bots in menu portal, this gives keyboard focus to them.
+     *
+     * Returns a promise which resolves when the bot has been focused.
+     * For the bot and miniGridPortals this is when the animation finishes and rejects if the user takes control of the camera during the animation. For menu bots this is when the input field is focused and rejects if the bot is not a input bot.
+     *
+     * @param botOrPosition the bot, or bot ID that should be focused. If null, then the current focus animation will be canceled.
+     * @param options the additional options to use for the focus operation. This can be used to change how the camera moves or to specify which portal the bot should be focused in.
+     *
+     * @example Move the player's view to show a bot named bob.
+     * await os.focusOn(getBot("#name", "bob"));
+     *
+     * @example Move the player's view to show this bot from the top.
+     * await os.focusOn(thisBot, {
+     *     rotation: {
+     *         x: 0,
+     *         y: 0
+     *     }
+     * });
+     *
+     * @example Move the player's view to show this bot with a particular zoom value.
+     * await os.focusOn(thisBot, {
+     *     zoom: 15
+     * });
+     *
+     * @example Focus on this bot in the menu portal
+     * await os.focusOn(thisBot, {
+     *     portal: 'menu'
+     * });
+     *
+     * @example Rotate the camera around the focus point 3 times.
+     * await os.focusOn(thisBot, {
+     *     rotation: {
+     *         y: (Math.PI * 2) * 3,
+     *         normalize: false
+     *     }
+     * });
+     *
+     * @example Focus the onClick tag in the systemPortal
+     * await os.focusOn(thisBot, {
+     *     tag: 'onClick',
+     *     portal: 'system'
+     * });
+     *
+     * @example Focus line 2 in the onClick tag in the sheetPortal
+     * await os.focusOn(thisBot, {
+     *     tag: 'onClick',
+     *     lineNumber: 2,
+     *     portal: 'sheet'
+     * });
+     *
+     * @example Focus index 9 through 15 in the onClick tag in the tagPortal
+     * await os.focusOn(thisBot, {
+     *     tag: 'onClick',
+     *     startIndex: 9,
+     *     endIndex: 15,
+     *     portal: 'tag'
+     * });
+     *
+     * @dochash actions/os
+     * @docname os.focusOn
+     * @docid os.focusOn-bot
      */
+    function _focusOn_bot(
+        bot: Bot | string,
+        options?: FocusOnOptions
+    ): Promise<void> {
+        return null;
+    }
+
+    /**
+     * Focuses on the given position.
+     *
+     * Returns a promise which resolves when the position has been focused.
+     *
+     * @param botOrPosition the position that should be focused. If null, then the current focus animation will be canceled.
+     * @param options the additional options to use for the focus operation. This can be used to change how the camera moves or to specify which portal the bot should be focused in.
+     *
+     * @example Move the player's view to a specific position.
+     * await os.focusOn({
+     *     x: 15,
+     *     y: 9.5
+     * });
+     *
+     * @example Focus on Buckingham Palace in the map portal
+     * await os.focusOn({
+     *     x: -0.141329,
+     *     y: 51.501541
+     * }, {
+     *     portal: 'map',
+     *     zoom: 10000
+     * });
+     *
+     * @dochash actions/os
+     * @docname os.focusOn
+     * @docid os.focusOn-position
+     */
+    function _focusOn_position(
+        position: { x: number; y: number; z?: number },
+        options?: FocusOnOptions
+    ): Promise<void> {
+        return null;
+    }
+
     function focusOn(
         botOrPosition: Bot | string | { x: number; y: number; z?: number },
-        options: FocusOnOptions = {}
+        options?: FocusOnOptions
     ): Promise<void> {
         const task = context.createTask();
         const finalOptions: FocusOnOptions = {
