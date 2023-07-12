@@ -329,6 +329,7 @@ import {
     revokeInstRole as calcRevokeInstRole,
     RecordFileActionOptions,
     getCurrentInstUpdate as calcGetCurrentInstUpdate,
+    Geolocation,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -1244,6 +1245,12 @@ export interface RecordFileApiFailure {
     existingFileUrl?: string;
 }
 
+/**
+ * Defines an interface that contains options for a snap grid for {@link os.addDropGrid}.
+ *
+ * @dochash types/os
+ * @docname SnapGridTarget
+ */
 export interface SnapGridTarget {
     /**
      * The 3D position that the grid should appear at.
@@ -1763,6 +1770,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             // TODO: Remove deprecated functions
             webhook: <WebhookInterface>(<any>webhookFunc),
+
+            /**
+             * @hidden
+             */
             sleep,
 
             /**
@@ -1780,6 +1791,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             html,
 
+            /**
+             * Gets the config bot (formerly known as the player bot).
+             * This is the bot that represents the player's browser tab.
+             *
+             * It is `tempLocal` and is used to configure various portals.
+             *
+             * @example Get the config bot and set a username on it.
+             * configBot.tags.username = "bob";
+             *
+             * @example Open the sheetPortal to "testDimension".
+             * configBot.tags.sheetPortal = "testDimension";
+             *
+             * @dochash actions/os
+             * @doctitle OS Actions
+             * @docsidebar OS
+             * @docdescription OS actions are used to interact with the player's current session.
+             * @docname configBot
+             */
+            get _configBot(): RuntimeBot {
+                return null;
+            },
+
             os: {
                 [UNCOPIABLE]: true,
 
@@ -1796,6 +1829,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 tweenTo,
                 moveTo,
                 focusOn,
+                _showChat_placeholder,
+                _showChat_options,
                 showChat,
                 hideChat,
                 run,
@@ -3608,8 +3643,80 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shows the chat bar.
-     * @param placeholderOrOptions The placeholder text or options. (optional)
+     * Shows the "chat bar" at the top of the screen in CasualOS, optionally using the given text as the placeholder.
+     * Typing in the chat bar will send {@tag @onChatTyping} shouts and pressing Enter will send a {@tag @onChat} shout and clear the chat bar.
+     *
+     * @param placeholder the text that the chat bar should show as the placeholder.
+     *
+     * @example Show the chat bar.
+     * os.showChat();
+     *
+     * @example Show the chat bar with some placeholder text.
+     * os.showChat("hello");
+     *
+     * @dochash actions/os
+     * @docname os.showChat
+     * @docid showChat-placeholder
+     */
+    function _showChat_placeholder(placeholder?: string) {}
+
+    /**
+     * Shows the "chat bar" at the top of the screen in CasualOS, optionally using the given text as the placeholder.
+     * Typing in the chat bar will send {@tag @onChatTyping} shouts and pressing Enter will send a {@tag @onChat} shout and clear the chat bar.
+     *
+     * @param options the options that the chat bar should use.
+     *
+     * @example Show the chat bar with a placeholder.
+     * os.showChat({
+     *     placeholder: "hello"
+     * });
+     *
+     * @example Show the chat bar with some prefilled text.
+     * os.showChat({
+     *     prefill: "this is prefilled"
+     * });
+     *
+     * @example Show the chat bar with some prefilled text and a placeholder.
+     * os.showChat({
+     *     prefill: "this is prefilled",
+     *     placeholder: "hello"
+     * });
+     *
+     * @example Show the chat bar with a custom placeholder color.
+     * os.showChat({
+     *     placeholder: "hello",
+     *     placeholderColor: '#44a471'
+     * });
+     *
+     * @example Show the chat bar with a custom background color.
+     * os.showChat({
+     *     placeholder: "hello",
+     *     backgroundColor: '#f1abe2'
+     * });
+     *
+     * @example Show the chat bar with a custom foreground color.
+     * os.showChat({
+     *     placeholder: "hello",
+     *     foregroundColor: '#531234'
+     * });
+     *
+     * @dochash actions/os
+     * @docname os.showChat
+     * @docid showChat-options
+     */
+    function _showChat_options(options?: ShowChatOptions) {}
+
+    /**
+     * Shows the "chat bar" at the top of the screen in CasualOS, optionally using the given text as the placeholder.
+     * Typing in the chat bar will send {@tag @onChatTyping} shouts and pressing Enter will send a {@tag @onChat} shout and clear the chat bar.
+     *
+     * @param placeholderOrOptions the text that the chat bar should show as the placeholder.
+     *
+     * @example Show the chat bar.
+     * os.showChat();
+     *
+     * @example Show the chat bar with some placeholder text.
+     * os.showChat("hello");
      */
     function showChat(
         placeholderOrOptions?: string | ShowChatOptions
@@ -3624,15 +3731,39 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Hides the run bar.
+     * Hides the "chat bar" at the top of the screen in CasualOS.
+     *
+     * @example Hide the chat bar.
+     * os.hideChat();
+     *
+     * @dochash actions/os
+     * @docname os.hideChat
      */
     function hideChat(): ShowChatBarAction {
         return addAction(calcHideChat());
     }
 
     /**
-     * Enqueues the given script to execute after this script is done running.
+     * Runs the given script.
+     * The script will be executed in a separate environment with no `bot`, `tags`, `this`, `thisBot`, `data`, and `that` variables.
+     * This means that you need to use the {@link getbot-filters} or {@link getbots-filters} functions to read bot data.
+     *
+     * Returns a promise that resolves with the returned script value after it has been executed.
+     *
      * @param script The script that should be executed.
+     *
+     * @example Run a script that says "hello".
+     * os.run("os.toast('hello');");
+     *
+     * @example Run a script from the #script tag on the current bot.
+     * os.run(tags.script);
+     *
+     * @example Run a script and toast the result.
+     * const result = await os.run("return 594 + 391");
+     * os.toast(result);
+     *
+     * @dochash actions/os
+     * @docname os.run
      */
     function run(script: string) {
         const task = context.createTask();
@@ -3778,10 +3909,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Downloads the given data.
-     * @param data The data to download. Objects will be formatted as JSON before downloading.
-     * @param filename The name of the file that the data should be downloaded as.
-     * @param mimeType The MIME type that should be used. If not specified then it will be inferred from the filename.
+     * Downloads the given data with the given filename and [MIME Type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types).
+     *
+     * @param data the data that should be downloaded. This can be a string, object, or binary data in the form of an [ArrayBuffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer) or [Blob](https://developer.mozilla.org/en-us/docs/Web/API/Blob).
+     * @param filename the name of the file that should be downloaded.
+     * @param mimeType the [MIME Type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) that the downloaded file should have. If not provided, then it will be inferred from the provided filename.
+     *
+     * @example Download a text file named "test.txt" that contains "abc".
+     * os.download("abc", "test.txt");
+     *
+     * @dochash actions/os
+     * @docname os.download
      */
     function downloadData(
         data: string | object | ArrayBuffer | Blob,
@@ -3834,9 +3972,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Downloads the given list of bots.
-     * @param bots The bots that should be downloaded.
-     * @param filename The name of the file that the bots should be downloaded as.
+     * Downloads the given array of bots as a `.aux` or a `.pdf` file with the given filename. Useful for quickly backing up a set of bots.
+     *
+     * The downloaded bots will be stored in the Version 1 format of the [AUX File Format](glossary:aux), which is well suited for most scenarios.
+     * For scenarios where you want conflict-free initialization of a shared inst, you should use {@link os.downloadBotsAsInitialzationUpdate}.
+     *
+     * @param bots the array of bots that should be downloaded.
+     * @param filename the name of the file that the bots should be stored in. If the filename ends with `.pdf`, then a PDF file will be downloaded with the bots as embedded data. Otherwise, `.aux` will automatically be added to the end of the filename.
+     *
+     * @example Download all the bots in the "abc" dimension as "abcBots.aux".
+     * os.downloadBots(getBots(inDimension("abc")), "abcBots");
+     *
+     * @example Download the current bot as "currentBot.aux".
+     * os.downloadBots([bot], "currentBot");
+     *
+     * @example Download all bots as "myServer.pdf".
+     * os.downloadBots(getBots(), "myServer.pdf");
+     *
+     * @dochash actions/os
+     * @docname os.downloadBots
      */
     function downloadBots(bots: Bot[], filename: string): DownloadAction {
         let state: BotsState = {};
@@ -3864,9 +4018,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Downloads the given list of bots.
-     * @param bots The bots that should be downloaded.
-     * @param filename The name of the file that the bots should be downloaded as.
+     * Downloads the given array of bots as a `.aux` or a `.pdf` file with the given filename.
+     *
+     * The downloaded bots will be stored in the Version 2 format of the [AUX File Format](glossary:aux), which is better suited towards scenarios which require conflict-free initialization of a shared inst from the AUX file.
+     * For an archive of the current state, you should use {@link os.downloadBots} which is better for scenarios which require direct access to the bot data.
+     *
+     * @param bots the array of bots that should be downloaded.
+     * @param filename the name of the file that the bots should be stored in. If the filename ends with `.pdf`, then a PDF file will be downloaded with the bots as embedded data. Otherwise, `.aux` will automatically be added to the end of the filename.
+     *
+     * @example Download all the bots in the "abc" dimension as "abcBots.aux".
+     * os.downloadBotsAsInitialzationUpdate(getBots(inDimension("abc")), "abcBots");
+     *
+     * @example Download the current bot as "currentBot.aux".
+     * os.downloadBotsAsInitialzationUpdate([bot], "currentBot");
+     *
+     * @example Download all bots as "myServer.pdf".
+     * os.downloadBotsAsInitialzationUpdate(getBots(), "myServer.pdf");
+     *
+     * @dochash actions/os
+     * @docname os.downloadBotsAsInitialzationUpdate
      */
     function downloadBotsAsInitialzationUpdate(
         bots: Bot[],
@@ -3899,7 +4069,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Downloads all the shared bots in the inst.
+     * Downloads all of the shared bots into a `.aux` file on the player's computer. The file will have the same name as the inst.
+     *
+     * Note that this function is almost exactly the same as {@link os.downloadBots}. The only difference is that all bots in the shared space are included and the file is named for you automatically.
+     *
+     * @example Download the entire inst.
+     * os.downloadInst();
+     *
+     * @dochash actions/os
+     * @docname os.downloadInst
      */
     function downloadServer(): DownloadAction {
         return downloadBots(
@@ -4161,11 +4339,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Replaces the bot that the user is beginning to drag.
-     * Only works from inside a onDrag() or onAnyBotDrag() listen tag.
-     * @param bot The bot or mod that should be dragged instead of the original.
+     * Replaces the bot that the user is dragging with the given bot.
+     *
+     * If called when the user is not dragging anything, then the given bot or mod will be dragged using the current input method. When in VR, the current input method is the most recently used VR controller. Otherwise it is the mouse/touchscreen.
+     *
+     * @param bot the bot that should be dragged. If given a bot while dragging, then that bot's {@tag @onDrag} will be skippped but {@tag @onDrop} will be called. If given a bot when not dragging, then that bot's {@tag @onDrag} and {@tag @onDrop} will be called.
+     *
+     * @example Drag a clone of this bot.
+     * let clone = create(thisBot);
+     * os.replaceDragBot(clone);
+     *
+     * @dochash actions/os
+     * @docname os.replaceDragBot
      */
-    function replaceDragBot(bot: Mod): ReplaceDragBotAction {
+    function replaceDragBot(bot: RuntimeBot): ReplaceDragBotAction {
         const event = calcReplaceDragBot(context.unwrapBot(bot));
         return addAction(event);
     }
@@ -4415,6 +4602,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *   processingServer: 'cookies_checkout'
      * });
      *
+     * @hidden
      */
     function checkout(options: StartCheckoutOptions): StartCheckoutAction {
         const event = calcCheckout(options);
@@ -4534,17 +4722,96 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Adds the given list of snap targets to the current drag operation.
-     * @param targets The list of targets to add.
+     * Specifies a list of snap targets that can be used to position the currently dragged bot.
+     *
+     * If called when the user is not dragging anything, then this function does nothing.
+     *
+     * @param targets The list of snap targets to add.
+     *
+     * @example Snap the dragged bot to the grid.
+     * os.addDropSnap("grid");
+     *
+     * @example Snap the dragged bot to other bot faces.
+     * os.addDropSnap("face");
+     *
+     * @example Snap the dragged bot to a point.
+     * os.addDropSnap({
+     *     position: {
+     *         x: 0,
+     *         y: 0,
+     *         z: 3,
+     *     },
+     *     distance: 1
+     * });
+     *
+     * @example Snap the dragged bot to the global X axis.
+     * os.addDropSnap({
+     *     direction: {
+     *         x: 1,
+     *         y: 0,
+     *         z: 0,
+     *     },
+     *     origin: {
+     *         x: 0,
+     *         y: 0,
+     *         z: 0
+     *     },
+     *     distance: 2
+     * });
+     *
+     * @example Snap the dragged bot to the center or bot faces.
+     * os.addDropSnap({
+     *     position: {
+     *         x: 0,
+     *         y: 0,
+     *         z: 0,
+     *     },
+     *     distance: 1
+     * }, "face");
+     *
+     * @dochash actions/os
+     * @docname os.addDropSnap
      */
     function addDropSnap(...targets: SnapTarget[]): AddDropSnapTargetsAction {
         return addAction(calcAddDropSnap(null, targets));
     }
 
     /**
-     * Adds the given list of snap targets for when the specified bot is being dropped on.
-     * @param bot The bot.
-     * @param targets The targets that should be enabled when the bot is being dropped on.
+     * Specifies a list of snap targets that can be used to position the currently dragged bot when it is being dropped on the given bot. This function is useful for making some bots act like a "selector" or mask for drop areas.
+     *
+     * If called when the user is not dragging anything, then this function does nothing.
+     *
+     * @param bot the bot which, when the dragged bot is being dropped onto it (as indicated by {@tag @onDropEnter}/{@tag @onDropExit}), the specified snap targets will take effect.
+     * @param targets the snap targets that should be enabled when the bot is being dropped on.
+     *
+     * @example Snap the dragged bot to the grid when it is being dropped on this bot.
+     * os.addBotDropSnap(thisBot, "grid");
+     *
+     * @example Snap the dragged bot to this bot's faces.
+     * os.addBotDropSnap(thisBot, "face");
+     *
+     * @example Snap the dragged bot to a point when it is being dropped on this bot.
+     * os.addBotDropSnap(thisBot, {
+     *     position: {
+     *         x: 0,
+     *         y: 0,
+     *         z: 3,
+     *     },
+     *     distance: 1
+     * });
+     *
+     * @example Snap the dragged bot to the center or bot faces when it is being dropped on this bot.
+     * os.addBotDropSnap(thisBot, {
+     *     position: {
+     *         x: 0,
+     *         y: 0,
+     *         z: 0,
+     *     },
+     *     distance: 1
+     * }, "face");
+     *
+     * @dochash actions/os
+     * @docname os.addBotDropSnap
      */
     function addBotDropSnap(
         bot: RuntimeBot | string,
@@ -4554,8 +4821,60 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Adds the given list of grids to the current drag operation.
-     * @param targets The list of grids to add.
+     * Specifies a list of grids that can be used to position the currently dragged bot.
+     *
+     * If called when the user is not dragging anything, then this function does nothing.
+     *
+     * @param targets the list of grids to add.
+     *
+     * @example Add a grid for the portal that the bot currently exists in.
+     * os.addDropGrid({});
+     *
+     * @example Add a grid with a 60 degree X rotation.
+     * os.addDropGrid({
+     *     position: { x: 0, y: 0, z: 0 },
+     *     rotation: { x: 60 * (Math.PI / 180), y: 0, z: 0 },
+     * });
+     *
+     * @example Add a grid for a specific portal bot.
+     * os.addDropGrid({
+     *     portalBot: getBot(byTag('form', 'portal'), byTag('formAddress', 'myDimension')),
+     * });
+     *
+     * @example Add a grid with a custom size.
+     * os.addDropGrid({
+     *     position: { x: 0, y: 0, z: 3 },
+     *     bounds: { x: 20, y: 10 }
+     * });
+     *
+     * @example Add a grid that the user can see.
+     * os.addDropGrid({
+     *     position: { x: 0, y: 0, z: 3 },
+     *     showGrid: true
+     * });
+     *
+     * @example Add multiple grids with custom priorities
+     * os.addDropGrid({
+     *     position: { x: 0, y: 0, z: 3 },
+     *     bounds: { x: 10, y: 10 },
+     *     showGrid: true,
+     *     priority: 10
+     * }, {
+     *     position: { x: 0, y: 0, z: 0 },
+     *     bounds: { x: 20, y: 20 },
+     *     showGrid: true,
+     *     priority: 20
+     * });
+     *
+     * @example Add a spherical grid that the user can see.
+     * os.addDropGrid({
+     *     type: "sphere",
+     *     position: { x: 0, y: 0, z: 3 },
+     *     showGrid: true
+     * });
+     *
+     * @dochash actions/os
+     * @docname os.addDropGrid
      */
     function addDropGrid(
         ...targets: SnapGridTarget[]
@@ -4564,9 +4883,58 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Adds the given list of grids to the current drag operation for when the specified bot is being dropped on.
-     * @param bot The bot.
-     * @param targets The list of grids to add.
+     * Specifies a list of grids that can be used to position the currently dragged bot when it is being dropped on the given bot.
+     *
+     * If called when the user is not dragging anything, then this function does nothing.
+     *
+     * @param bot the bot which, when the dragged bot is being dropped onto it (as indicated by {@tag @onDropEnter}/{@tag @onDropExit}), the specified snap targets will take effect.
+     * @param targets the list of grids to add.
+     *
+     * @example Add a grid for the portal that the bot currently exists in when it is being dropped on this bot.
+     * os.addDropGrid(thisBot, {});
+     *
+     * @example Add a grid with a 60 degree X rotation when it is being dropped on this bot.
+     * os.addBotDropGrid(thisBot, {
+     *     position: { x: 0, y: 0, z: 0 },
+     *     rotation: { x: 60 * (Math.PI / 180), y: 0, z: 0 },
+     * });
+     *
+     * @example Add a grid for a specific portal bot when it is being dropped on this bot.
+     * os.addBotDropGrid(thisBot, {
+     *     portalBot: getBot(byTag('form', 'portal'), byTag('formAddress', 'myDimension')),
+     * });
+     *
+     * @example Add a grid with a custom size when it is being dropped on this bot.
+     * os.addBotDropGrid(thisBot, {
+     *     position: { x: 0, y: 0, z: 3 },
+     *     bounds: { x: 20, y: 10 }
+     * });
+     *
+     * @example Add a grid that the user can see when it is being dropped on this bot.
+     * os.addBotDropGrid(thisBot, {
+     *     position: { x: 0, y: 0, z: 3 },
+     *     showGrid: true
+     * });
+     *
+     * @example Add multiple grids with custom priorities when it is being dropped on this bot.
+     * os.addBotDropGrid(thisBot, {
+     *     position: { x: 0, y: 0, z: 3 },
+     *     bounds: { x: 10, y: 10 },
+     *     showGrid: true,
+     *     priority: 10
+     * }, {
+     *     position: { x: 0, y: 0, z: 0 },
+     *     bounds: { x: 20, y: 20 },
+     *     showGrid: true,
+     *     priority: 20
+     * });
+     *
+     * @example Add a spherical grid that the user can see.
+     * os.addBotDropGrid(thisBot, {
+     *     type: "sphere",
+     *     position: { x: 0, y: 0, z: 3 },
+     *     showGrid: true
+     * });
      */
     function addBotDropGrid(
         bot: Bot | string,
@@ -4594,25 +4962,53 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Enables custom dragging for the current drag operation.
-     * This will disable the built-in logic that moves the bot(s) and
-     * enables the "onDragging" and "onAnyBotDragging" listen tags.
+     * Enables "custom dragging" for the current bot drag operation.
+     *
+     * Custom dragging tells CasualOS to not move the bot to the dragged position. Instead, it will calculate where the bot would be dragged and send that information in the {@tag @onDragging} and {@tag @onAnyBotDragging} listeners.
+     *
+     * This is useful for custom bot dragging behavior like choosing to scale or rotate a bot instead of moving it.
+     *
+     * @example Enable custom dragging for the current drag operation
+     * os.enableCustomDragging();
+     *
+     * @dochash actions/os
+     * @docname os.enableCustomDragging
      */
     function enableCustomDragging(): EnableCustomDraggingAction {
         return addAction(calcEnableCustomDragging());
     }
 
     /**
-     * Logs the given data.
-     * @param args The data that should be logged.
+     * Logs the given data to the developer console.
+     *
+     * @param args the data that should be logged.
+     *
+     * @example Log "Hello, World!" to the browser developer console.
+     * os.log("Hello, World!");
+     *
+     * @dochash actions/os
+     * @docname os.log
      */
     function log(...args: any[]) {
         console.log(...args);
     }
 
     /**
-     * Gets the geolocation of the device.
+     * Gets the geographic location that the current device is at in the world.
+     *
      * Returns a promise that resolves with the location.
+     *
+     * @example Get the current geolocation.
+     * const location = await os.getGeolocation();
+     *
+     * if (location.success) {
+     *     os.toast(`You are at (${location.latitude}, ${location.longitude})`);
+     * } else {
+     *     os.toast(location.errorMessage);
+     * }
+     *
+     * @dochash actions/os
+     * @docname os.getGeolocation
      */
     function getGeolocation(): Promise<Geolocation> {
         const task = context.createTask();
@@ -5932,8 +6328,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Converts the given geolocation to a what3words (https://what3words.com/) address.
+     * Converts the given geolocation to a [what3words](https://what3words.com/) address. Returns a promise that resolves with the 3 word address.
      * @param location The latitude and longitude that should be converted to a 3 word address.
+     *
+     * @example Get the current geolocation as a 3 word address
+     * const location = await os.getGeolocation();
+     *
+     * if (location.success) {
+     *     const address = await os.convertGeolocationToWhat3Words(location);
+     *     os.toast(address);
+     * } else {
+     *     os.tost("Could not get geolocation");
+     * }
+     *
+     * @example Get the location of the Amway Grand as a 3 word address
+     * const address = await os.convertGeolocationToWhat3Words({
+     *     latitude: 42.966824756903755,
+     *     longitude: -85.67309821404483,
+     * });
+     * os.toast(address);
+     *
+     * @dochash actions/os
+     * @docname os.convertGeolocationToWhat3Words
      */
     function convertGeolocationToWhat3Words(
         location: ConvertGeolocationToWhat3WordsOptions
@@ -7607,8 +8023,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sleeps for time in ms.
-     * @param time The Time to sleep in ms. 1 second is 1000 ms.
+     * Waits the amount of time provided, in [miliseconds](https://en.wikipedia.org/wiki/Millisecond).
+     *
+     * Returns a promise that resolves when the time has been waited.
+     *
+     * @param time the Time to wait in ms. 1 second is 1000 ms.
+     *
+     * @example Wait 2 seconds before proceeding.
+     * os.toast("Stop!");
+     * await os.sleep(2000);
+     * os.toast("Hammer Time!");
+     *
+     * @dochash actions/os
+     * @docname os.sleep
      */
     function sleep(time: number): Promise<void> {
         let sleepy = new Promise<void>((resolve) => setTimeout(resolve, time));

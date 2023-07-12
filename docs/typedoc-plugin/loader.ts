@@ -305,6 +305,7 @@ export function loadContent() {
 
     let allUsedTypes = new Set<Reflection>();
     let typesWithPages = new Set<Reflection>();
+    let usedIds = new Set<string>();
 
     let references = {} as {
         [id: string | number]: string
@@ -373,6 +374,13 @@ export function loadContent() {
                 }
 
                 const docId = getDocId(child);
+
+                if(docId) {
+                    if (usedIds.has(docId)) {
+                        return;
+                    }
+                    usedIds.add(docId);
+                }
 
                 let childVisible = getReflectionTag(child, 'docvisible') === null;
 

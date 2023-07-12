@@ -41,7 +41,8 @@ module.exports = {
                         'actions/utility',
                         'actions/event',
                         'actions/time',
-                        'actions/records'
+                        'actions/records',
+                        'actions/os'
                     ]
                 },
                 {
@@ -49,6 +50,7 @@ module.exports = {
                     label: 'Types',
                     items: [
                         'types/core',
+                        'types/os',
                         'types/web',
                         'types/animation',
                         {

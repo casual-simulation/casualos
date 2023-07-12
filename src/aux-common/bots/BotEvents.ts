@@ -2350,6 +2350,9 @@ export interface ShowChatBarAction {
 
 /**
  * Defines the possible options for showing the chat bar.
+ *
+ * @dochash types/os
+ * @docname ShowChatOptions
  */
 export interface ShowChatOptions {
     /**
@@ -3109,10 +3112,17 @@ export interface AddDropSnapTargetsAction extends AddDropSnapAction {
 /**
  * Defines an interface that represents a snap point.
  * That is, a point in 3D space with an associated snap distance.
+ *
+ * @dochash types/os
+ * @docgroup 10-snap
+ * @docorder 1
+ * @docname SnapPoint
  */
 export interface SnapPoint {
     /**
      * The 3D position for the point.
+     *
+     * @docsource Vector3
      */
     position: { x: number; y: number; z: number };
 
@@ -3125,15 +3135,24 @@ export interface SnapPoint {
 /**
  * Defines an interface that represents a snap axis.
  * That is, a ray in 3D space with an associated snap distance.
+ *
+ * @dochash types/os
+ * @docgroup 10-snap
+ * @docorder 2
+ * @docname SnapAxis
  */
 export interface SnapAxis {
     /**
      * The 3D direction that the axis ray travels along.
+     *
+     * @docsource Vector3
      */
     direction: { x: number; y: number; z: number };
 
     /**
      * The 3D position that the ray starts at.
+     *
+     * @docsource Vector3
      */
     origin: { x: number; y: number; z: number };
 
@@ -3145,10 +3164,15 @@ export interface SnapAxis {
 
 /**
  * The list of possible snap targets.
- * - "ground" means that the dragged bot should snap to the ground plane. This option is overriden by "grid".
- * - "grid" means that the dragged bot should snap to grid tiles.
- * - "face" means that the dragged bot should snap to other bot faces.
- * - "bots" means that the dragged bot will snap to other bots.
+ * - `"ground"` means that the dragged bot should snap to the ground plane. This option is overriden by "grid".
+ * - `"grid"` means that the dragged bot should snap to grid tiles.
+ * - `"face"` means that the dragged bot should snap to other bot faces.
+ * - `"bots"` means that the dragged bot will snap to other bots.
+ *
+ * @dochash types/os
+ * @docgroup 10-snap
+ * @docorder 0
+ * @docname SnapTarget
  */
 export type SnapTarget =
     | 'ground'
@@ -3401,6 +3425,27 @@ export interface GetGeolocationAction extends AsyncAction {
     type: 'get_geolocation';
 }
 
+/**
+ * Defines the possible geolocation results.
+ *
+ * @dochash types/os
+ * @doctitle OS Types
+ * @docsidebar OS
+ * @docdescription Defines the types that are used by OS actions.
+ * @docgroup 01-geo
+ * @docorder 0
+ * @docname Geolocation
+ */
+export type Geolocation = SuccessfulGeolocation | UnsuccessfulGeolocation;
+
+/**
+ * Defines an interface that represents a successful geolocation result.
+ *
+ * @dochash types/os
+ * @docgroup 01-geo
+ * @docorder 1
+ * @docname SuccessfulGeolocation
+ */
 export interface SuccessfulGeolocation {
     success: true;
 
@@ -3450,6 +3495,14 @@ export interface SuccessfulGeolocation {
     timestamp: number;
 }
 
+/**
+ * Defines an interface that represents an unsuccessful geolocation result.
+ *
+ * @dochash types/os
+ * @docgroup 01-geo
+ * @docorder 2
+ * @docname UnsuccessfulGeolocation
+ */
 export interface UnsuccessfulGeolocation {
     success: false;
 
@@ -3467,11 +3520,6 @@ export interface UnsuccessfulGeolocation {
      */
     errorMessage?: string;
 }
-
-/**
- * Defines an interface that represents a geolocation result.
- */
-export type Geolocation = SuccessfulGeolocation | UnsuccessfulGeolocation;
 
 /**
  * Defines an interface that contains recorded data.
@@ -3881,6 +3929,11 @@ export interface GetRecordsActionResult {
 
 /**
  * Defines an interface that represents options for converting a geolocation to a what3words address.
+ *
+ * @dochash types/os
+ * @docgroup 01-geo
+ * @docorder 3
+ * @docname ConvertGeolocationToWhat3WordsOptions
  */
 export interface ConvertGeolocationToWhat3WordsOptions {
     /**

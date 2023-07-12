@@ -13,8 +13,22 @@ export {
     RecordFileApiResult,
     RecordFileApiSuccess,
     RecordFileApiFailure,
+    SnapGridTarget,
 } from '../../../src/aux-common/runtime/AuxLibrary';
-export { EaseType, EaseMode, Easing, RecordActionOptions } from '../../../src/aux-common/bots/BotEvents';
+export { 
+    EaseType,
+    EaseMode,
+    Easing,
+    RecordActionOptions,
+    Geolocation,
+    SuccessfulGeolocation,
+    UnsuccessfulGeolocation,
+    ConvertGeolocationToWhat3WordsOptions,
+    SnapAxis,
+    SnapPoint,
+    SnapTarget,
+    ShowChatOptions,
+} from '../../../src/aux-common/bots/BotEvents';
 export { RuntimeBot, Bot, BotTags, BotSpace, ScriptTags, CompiledBotListeners, BotTagMasks, RuntimeBotVars, RuntimeBotLinks, CompiledBotListener, BotsState, PartialBotsState, ParsedBotLink } from '../../../src/aux-common/bots/Bot';
 
 export {

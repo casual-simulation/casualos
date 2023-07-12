@@ -208,10 +208,20 @@ export function apiTableOfContents(doc) {
                 id: id,
                 level: 2
             });
-        } else {
+        } else if(c.reflection.kindString === 'Get signature' || c.reflection.kindString === 'Set signature') {
+            const name = getChildName(c.reflection);
+            const id = getChildId(c.reflection);
             toc.push({
-                value: c.reflection.name,
-                id: c.reflection.name,
+                value: `<code>${functionDefinition(c.reflection, name)}</code>`,
+                id: id,
+                level: 3
+            });
+        } else {
+            const name = getChildName(c.reflection);
+            const id = getChildId(c.reflection);
+            toc.push({
+                value: name,
+                id: id,
                 level: 2
             });
 
@@ -235,7 +245,7 @@ export function ApiContents({doc}) {
 function ApiReflection({ reflection, references }) {
     if (reflection.kindString === 'Interface' || reflection.kindString === 'Class') {
         return <ClassReflection reflection={reflection} references={references} />
-    } else if (reflection.kindString === 'Call signature') {
+    } else if (reflection.kindString === 'Call signature' || reflection.kindString === 'Get signature' || reflection.kindString === 'Set signature') {
         return <SignatureReflection reflection={reflection} references={references} />
     } else if(reflection.kindString === 'Type alias') {
         return <TypeAliasReflection reflection={reflection} references={references} />
@@ -295,17 +305,9 @@ export function ObjectReflection({ reflection, references }) {
     const name = getChildName(reflection);
     const id = getChildId(reflection);
 
-    let nameElement;
-
-    if(reflection.kindString === 'Get signature' || reflection.kindString === 'Set signature') {
-        nameElement = <code>{name}</code>
-    } else {
-        nameElement = name;
-    }
-
     return (
         <div>
-            <Heading as='h2' id={id}>{nameElement}</Heading>
+            <Heading as='h2' id={id}>{name}</Heading>
             <ObjectMembers reflection={reflection}  references={references} />
             <MemberExamples member={reflection} />
         </div>
@@ -433,7 +435,7 @@ export function ClassPropertyMember(props) {
     return (
         <div>
             <Heading as='h3' id={props.link}>
-                <code>{props.member.name}: {typeDetail}</code>
+                <code>{props.member.name}{props.member.flags.isOptional ? '?' : ''}: {typeDetail}</code>
             </Heading>
             <p>{props.member.comment?.shortText}</p>
             {extraDetail}
@@ -610,14 +612,26 @@ function getCommentText(comment) {
 
 export function FunctionDefinition({ func, sig, name, references }) {
     const params = sig.parameters || [];
+
+    let paramsDetail = '';
+
+    if (func.kindString !== 'Get signature') {
+        paramsDetail = <>({params.map((p, i) => <span key={p.name}>{i > 0 ? ', ' : ''}{p.flags.isRest ? '...' : ''}{p.name}{p.flags.isOptional ? '?' : ''}: <TypeLink type={p.type} references={references}/></span>)})</>;
+    }
+
     return (
-        <code>{(func.flags.isStatic ? 'static ' : '') + (name || sig.name)}({params.map((p, i) => <span key={p.name}>{i > 0 ? ', ' : ''}{p.flags.isRest ? '...' : ''}{p.name}{p.flags.isOptional ? '?' : ''}: <TypeLink type={p.type} references={references}/></span>)}): <TypeLink type={sig.type} references={references}/></code>
+        <code>{(func.flags.isStatic ? 'static ' : '') + (name || sig.name)}{paramsDetail}: <TypeLink type={sig.type} references={references}/></code>
     );
 }
 
 export function functionDefinition(func, name = func.name) {
     const params = func.parameters || [];
-    return `${name}(${params.map((p, i) => (p.flags.isRest ? '...' : '') + p.name).join(', ')}): ${typeName(func.type)}`;
+    let paramsDetail = '';
+
+    if (func.kindString !== 'Get signature') {
+        paramsDetail = `(${params.map((p, i) => (p.flags.isRest ? '...' : '') + p.name).join(', ')})`;
+    }
+    return `${name}${paramsDetail}: ${typeName(func.type)}`;
 }
 
 export function FunctionParameter({ param, index, references }) {
@@ -667,7 +681,13 @@ export function indexName(index) {
 }
 
 export function propertyDefinition(prop, name = prop.name) {
-    return `${name}: ${typeName(prop.type)}`;
+    let type;
+    if (prop.typeReference) {
+        type = prop.typeReference;
+    } else {
+        type = typeName(prop.type);
+    }
+    return `${name}${prop.flags.isOptional ? '?' : ''}: ${type}`;
 }
 
 export function accessorDefinition(prop) {
