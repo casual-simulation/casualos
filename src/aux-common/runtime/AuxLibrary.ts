@@ -3451,9 +3451,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     // Actions
 
     /**
-     * Shows a toast message to the user.
-     * @param message The message to show.
-     * @param duration The number of seconds the message should be on the screen. (Defaults to 2)
+     * Shows a temporary "toast" notification to the player at the bottom of the screen with the given message.
+     * Optionally accepts a duration parameter which is the number of seconds that the message should be on the screen.
+     *
+     * @param message the text that the toast message should show.
+     * @param duration the number of seconds that the message should be on the screen. (Default is 2)
+     *
+     * @example Show a "Hello!" toast message.
+     * os.toast("Hello!");
+     *
+     * @example Show the player a code for 5 seconds.
+     * os.toast("this is the code", 5);
+     *
+     * @dochash actions/os
+     * @docname os.toast
      */
     function toast(
         message: string | number | boolean | object | Array<any> | null,
@@ -3465,11 +3476,32 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shows a tooltip message to the user.
-     * @param message The message to show.
-     * @param pixelX The X coordinate that the tooltip should be shown at. If null, then the current pointer position will be used.
-     * @param pixelY The Y coordinate that the tooltip should be shown at. If null, then the current pointer position will be used.
-     * @param duration The duration that the tooltip should be shown in seconds.
+     * Shows a temporary "tooltip" message on the screen. Optionally placed at the specified position and shown for the given duration.
+     * Returns a promise that resolves with the ID of the new tooltip.
+     *
+     * If a position is not specified, then a position just below the current mouse position will be used.
+     * If on mobile, then the last touch position will be used or the center of the screen if the user has not touched the screen.
+     * Additionally, if a position is not specified then the tooltip will be automatically hidden if the user moves the mouse significantly away from the position that the mouse was at when the tooltip was shown.
+     *
+     * @param message the text that the tooltip message should show.
+     * @param pixelX the horizontal pixel position that the tooltip should be shown at on the screen. If not specified then the current mouse position will be used.
+     * @param pixelY the vertical position that the tooltip should be shown at on the screen. If not specified then a position just below the current mouse position will be used.
+     * @param duration the number of seconds that the toast should be shown for before automatically being hidden. (Default is 2)
+     *
+     * @example Show a "Hello!" tip message.
+     * os.tip("Hello!");
+     *
+     * @example Show a tip at the center of the screen.
+     * os.tip("This is in the center of the screen.", gridPortalBot.tags.pixelWidth / 2, gridPortalBot.tags.pixelHeight / 2);
+     *
+     * @example Show a tip near the mouse cursor for 5 seconds.
+     * os.tip("5 second tip.", null, null, 5);
+     *
+     * @example Show a tip and record its ID in a tag mask.
+     * masks.tipID = await os.tip("Hello!");
+     *
+     * @dochash actions/os
+     * @docname os.tip
      */
     function tip(
         message: string | number | boolean | object | Array<any> | null,
@@ -3489,10 +3521,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Hides the given list of tips.
-     * If no tip IDs are provided, then all tips will be hidden.
-     * @param tipIds
-     * @returns
+     * Hides the tooltips that have the specified IDs. If no arguments are specified, then all tooltips will be hidden.
+     * Returns a promise that resolves when the tooltips have been hidden.
+     *
+     * @param tipIds the tooltip ID or array of tooltip IDs that should be hidden.
+     *
+     * @example Show and hide a tooltip message.
+     * const id = await os.tip("Hello!");
+     * await os.sleep(1000);
+     * await os.hideTips(id);
+     *
+     * @dochash actions/os
+     * @docname os.hideTips
      */
     function hideTips(tipIds?: number | number[]): Promise<void> {
         const ids =
@@ -3534,15 +3574,42 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shows some HTML to the user.
-     * @param html The HTML to show.
+     * Shows some HTML to the player in a popup modal. This can be useful for loading a separate webpage or providing some formatted text.
+     *
+     * @param html the HTML that should be shown to the user.
+     *
+     * @example Show a header with some text.
+     * os.showHtml(`
+     *   <h1>This is some text!</h1>
+     * `);
+     *
+     * @example Show a YouTube video.
+     * os.showHtml(`
+     *   <iframe
+     *       width="560"
+     *       height="315"
+     *       src="https://www.youtube.com/embed/BHACKCNDMW8"
+     *       frameborder="0"
+     *       allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+     *       allowfullscreen>
+     *   </iframe>
+     * `);
+     *
+     * @dochash actions/os
+     * @docname os.showHtml
      */
     function showHtml(html: string): ShowHtmlAction {
         return addAction(htmlMessage(html));
     }
 
     /**
-     * Hides the HTML from the user.
+     * Closes the HTML popup modal.
+     *
+     * @example Hide the HTML popup.
+     * os.hideHtml();
+     *
+     * @dochash actions/os
+     * @docname os.hideHtml
      */
     function hideHtml(): HideHtmlAction {
         return addAction(hideHtmlMessage());
@@ -4674,8 +4741,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shares some information via the device's social sharing functionality.
-     * @param options The options.
+     * Shares the given URL or text via the device's social share capabilities. Returns a Promise that resolves when sharing has succeeded or failed.
+     *
+     * @param options the options for sharing.
+     *
+     * @example Share a URL.
+     * os.share({
+     *     url: 'https://example.com'
+     * });
+     *
+     * @example Share some text.
+     * os.share({
+     *     text: 'abcdefghijklmnopqrstuvwxyz'
+     * });
+     *
+     * @dochash actions/os
+     * @docname os.share
      */
     function share(options: ShareOptions): Promise<void> {
         const task = context.createTask();
@@ -4684,8 +4765,34 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Closes the circle wipe transition effect.
-     * @param options The options that should be used for the effect.
+     * Causes a circular wipe animation to close around the screen.
+     * This can be used to cover the grid portal while transitioning between scenes.
+     * Returns a promise that resolves when the animation has finished running.
+     * The promise will throw an exception if {@link os.openCircleWipe} is called while the animation is running.
+     *
+     * @param options the options that should be used for the effect.
+     *
+     * @example Hide the grid portal with a circular wipe animation.
+     * await os.closeCircleWipe();
+     * os.toast("Hidden!");
+     *
+     * @example Hide the grid portal and show it after an additional second.
+     * await os.closeCircleWipe();
+     * await os.sleep(1000);
+     * await os.openCircleWipe();
+     *
+     * @example Use a custom color for the circle wipe.
+     * await os.closeCircleWipe({
+     *     color: '#63f1aa'
+     * });
+     *
+     * @example Make the circle wipe take 5 seconds to complete.
+     * await os.closeCircleWipe({
+     *     duration: 5
+     * });
+     *
+     * @dochash actions/os
+     * @docname os.closeCircleWipe
      */
     function closeCircleWipe(
         options?: Partial<OpenCircleWipeOptions>
@@ -4703,8 +4810,34 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Opens the circle wipe transition effect.
-     * @param options The options that should be used for the effect.
+     * Causes the circular wipe animation to open around the screen.
+     * This can be used to reveal the grid portal after transitioning between screens.
+     * Returns a promise that resolves when the animation has finished running.
+     * The promise will throw an exception if {@link os.closeCircleWipe} is called while the animation is running.
+     *
+     * @param options the options that should be used for the effect.
+     *
+     * @example Reveal the grid portal with a circular wipe animation.
+     * await os.openCircleWipe();
+     * os.toast("Revealed!");
+     *
+     * @example Hide the grid portal and show it after an additional second.
+     * await os.closeCircleWipe();
+     * await os.sleep(1000);
+     * await os.openCircleWipe();
+     *
+     * @example Use a custom color for the circle wipe.
+     * await os.openCircleWipe({
+     *     color: '#63f1aa'
+     * });
+     *
+     * @example Make the circle wipe take 5 seconds to complete.
+     * await os.openCircleWipe({
+     *     duration: 5
+     * });
+     *
+     * @dochash actions/os
+     * @docname os.openCircleWipe
      */
     function openCircleWipe(
         options?: Partial<OpenCircleWipeOptions>

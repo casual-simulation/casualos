@@ -28,6 +28,7 @@ export {
     SnapPoint,
     SnapTarget,
     ShowChatOptions,
+    ShareOptions,
 } from '../../../src/aux-common/bots/BotEvents';
 export { RuntimeBot, Bot, BotTags, BotSpace, ScriptTags, CompiledBotListeners, BotTagMasks, RuntimeBotVars, RuntimeBotLinks, CompiledBotListener, BotsState, PartialBotsState, ParsedBotLink } from '../../../src/aux-common/bots/Bot';
 

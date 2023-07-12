@@ -2789,6 +2789,9 @@ export interface ExitFullscreenAction {
 
 /**
  * Defines the options that a share action can have.
+ *
+ * @dochash types/os
+ * @docname ShareOptions
  */
 export interface ShareOptions {
     /**
