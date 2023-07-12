@@ -40,7 +40,7 @@ import {
     RecordFileResult,
     IssueMeetTokenResult,
     isRecordKey,
-    GrantMarkerPermissionResponse,
+    GrantMarkerPermissionResult,
     RevokeMarkerPermissionResult,
     GrantRoleResult,
     RevokeRoleResult,

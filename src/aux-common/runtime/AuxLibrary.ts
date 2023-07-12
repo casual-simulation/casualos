@@ -401,7 +401,7 @@ import {
     ListDataResult,
     AddCountResult,
     GetCountResult,
-    GrantMarkerPermissionResponse,
+    GrantMarkerPermissionResult,
     RevokeMarkerPermissionResult,
     GrantRoleResult,
     RevokeRoleResult,
@@ -1178,8 +1178,24 @@ export interface WebhookResult {
     };
 }
 
+/**
+ * Defines the possible results of a "record file" request.
+ *
+ * @dochash types/records/files
+ * @docgroup 01-create
+ * @docorder 1
+ * @docname RecordFileResult
+ */
 export type RecordFileApiResult = RecordFileApiSuccess | RecordFileApiFailure;
 
+/**
+ * Defines an interface that represents a successful "record file" request.
+ *
+ * @dochash types/records/files
+ * @docgroup 01-create
+ * @docorder 2
+ * @docname RecordFileSuccess
+ */
 export interface RecordFileApiSuccess {
     success: true;
 
@@ -1195,13 +1211,37 @@ export interface RecordFileApiSuccess {
     sha256Hash: string;
 }
 
+/**
+ * Defines an interface that represents a failed "record file" request.
+ *
+ * @dochash types/records/files
+ * @doctitle File Types
+ * @docsidebar Files
+ * @docdescription File types are used for uploading and downloading files.
+ * @docgroup 01-create
+ * @docorder 3
+ * @docname RecordFileFailure
+ */
 export interface RecordFileApiFailure {
     success: false;
+
+    /**
+     * The error code that describes why the request failed.
+     */
     errorCode:
         | RecordFileFailure['errorCode']
         | 'file_already_exists'
         | 'invalid_file_data';
+
+    /**
+     * The error message that describes why the request failed.
+     */
     errorMessage: string;
+
+    /**
+     * The URL that the file is available at if it has already been uploaded.
+     */
+    existingFileUrl?: string;
 }
 
 export interface SnapGridTarget {
@@ -4738,7 +4778,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Requests an subjectless [access key](glossary:record-key) for the [public record](glossary:record) with the given name.
      * Returns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.
      *
-     * This function works similarly to {@link getPublicRecordKey}, except that it does not require the user to be signed in when the resulting key is used.
+     * This function works similarly to {@link os.getPublicRecordKey}, except that it does not require the user to be signed in when the resulting key is used.
      * Usage of subjectless keys should therefore be limited, since they do not record who is using the key and therefore make moderation more difficult.
      *
      * @param name the name of the record.
@@ -4774,7 +4814,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         marker: string,
         permission: AvailablePermissions,
         options?: RecordActionOptions
-    ): Promise<GrantMarkerPermissionResponse> {
+    ): Promise<GrantMarkerPermissionResult> {
         const task = context.createTask();
         const event = calcGrantRecordMarkerPermission(
             recordName,
@@ -5027,7 +5067,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         recordKeyOrRecordName: string,
         address: string,
         data: any,
-        endpointOrOptions?: string | (DataRecordOptions & { marker?: string })
+        endpointOrOptions?: string | DataRecordOptions
     ) {
         return baseRecordData(
             recordKeyOrRecordName,
@@ -5039,19 +5079,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Records the given data to the given address inside the record for the given record key or record name.
-     * Requires manual approval in order to read, write, or erase this data.
+     * Stores the given [manual approval data](glossary:manual-approval-data-record) in the given record at the given address. If data already exists at the given address, it will be overwritten.
      *
-     * @param recordKey The record key or record name that should be used to access the record.
-     * @param address The address that the data should be stored at inside the record.
-     * @param data The data that should be stored.
-     * @param endpointOrOptions The options that should be used. Optional.
+     * Returns a promise that resolves with an object that indicates if the request was successful.
+     *
+     * Works the same as {@link os.recordData} except that manual approval data records require the user to allow the operation manually.
+     *
+     * @param recordKeyOrRecordName the key that should be used to access the record. You can request a record key by using {@link os.getPublicRecordKey}.
+     * @param address the address that the data should be stored at.
+     * @param data the data that should be stored. This can be any value that can be serialized to JSON.
+     * Must be less than 300KB in size.
+     * If you need to store data larger than 300KB, you can use {@link os.recordFile}.
+     * @param endpointOrOptions the options that should be used to record the data.
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.recordManualApprovalData
      */
     function recordManualApprovalData(
         recordKeyOrRecordName: string,
         address: string,
         data: any,
-        endpointOrOptions?: string | (DataRecordOptions & { marker?: string })
+        endpointOrOptions?: string | DataRecordOptions
     ) {
         return baseRecordData(
             recordKeyOrRecordName,
@@ -5074,9 +5123,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         address: string,
         data: any,
         requiresApproval: boolean,
-        endpointOrOptions:
-            | string
-            | (DataRecordOptions & { marker?: string }) = null
+        endpointOrOptions: string | DataRecordOptions = null
     ): Promise<RecordDataResult> {
         const task = context.createTask();
         let options: DataRecordOptions = {};
@@ -5138,10 +5185,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the data stored in the given record at the given address.
-     * @param recordKeyOrName The record that the data should be retrieved from.
-     * @param address The address that the data is stored at.
-     * @param endpoint The records endpoint that should be queried. Optional.
+     * Gets the [manual approval data](glossary:manual-approval-data-record) stored at the given address in the given record.
+     *
+     * Works the same as {@link os.getData} except that manual approval data records require the user to allow the operation manually.
+     *
+     * @param recordKeyOrName the record name or a record key. This indicates the record that the data should be retrieved from.
+     * Note that you don't need a record key in order to retrieve public data from a record. Using a record name will work just fine.
+     * @param address the address that the data should be retrieved from.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be recorded to.
+     * If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.getManualApprovalData
      */
     function getManualApprovalData(
         recordKeyOrName: string,
@@ -5284,11 +5340,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Erases the data stored in the given record at the given address.
+     * Erases the [manual approval data](glossary:manual-approval-data-record) stored at the given address in the given record. Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.
      *
-     * @param recordKeyOrName The record key or name that should be used to access the record.
-     * @param address The address that the data should be erased from.
-     * @param endpoint The records endpoint that should be queried. Optional.
+     * Works the same as {@link os.eraseData} except that manual approval data records require the user to allow the operation manually.
+     *
+     * @param recordKeyOrName the record key or record name that should be used to access the record. You can request a record key by using {@link os.getPublicRecordKey}.
+     * @param address the address that the data is stored at.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be recorded to.
+     * If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.eraseManualApprovalData
      */
     function eraseManualApprovalData(
         recordKeyOrName: string,
@@ -5338,11 +5401,84 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Records the given data as a file.
-     * @param recordKeyOrName The record that the file should be recorded in.
-     * @param data The data that should be recorded.
+     * Stores the given [file data](glossary:file-record) in the given record using the given options for the file. The file can later be retrieved by using os.getFile(urlOrRecordFileResult).
+     *
+     * Returns a promise that resolves with an object that contains the URL that the file was stored at (if successful) or information about the error that occurred.
+     *
+     * @param recordKeyOrName the record key or record name that should be used to access the record. You can request a record key by using {@link os.getPublicRecordKey}.
+     * @param data the data that should be stored in the record. This can be a string, an object, a blob, or an ArrayBuffer.
      * @param options The options that should be used to record the file.
-     * @param endpoint The records endpoint that should be queried. Optional.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
+     *
+     * @example Upload a file
+     * const files = await os.showUploadFiles();
+     *
+     * if (files.length <= 0) {
+     *     return;
+     * }
+     *
+     * const file = files[0];
+     * const result = await os.recordFile(tags.recordKey, file);
+     *
+     * if (result.success) {
+     *     tags.uploadUrl = result.url;
+     *     os.toast("Success! Uploaded to " + result.url);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @example Upload a string to a file record
+     * const recordKeyResult = await os.getPublicRecordKey('myRecord');
+     * if (!recordKeyResult.success) {
+     *     os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+     *     return;
+     * }
+     * const result = await os.recordFile(recordKeyResult.recordKey, 'my file data');
+     *
+     * if (result.success) {
+     *     tags.uploadUrl = result.url;
+     *     os.toast("Success! Uploaded to " + result.url);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @example Upload red bots to a file record
+     * const recordKeyResult = await os.getPublicRecordKey('myRecord');
+     * if (!recordKeyResult.success) {
+     *     os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+     *     return;
+     * }
+     * const result = await os.recordFile(recordKeyResult.recordKey, getBots("color", "red"), {
+     *     description: 'my bots'
+     * });
+     *
+     * if (result.success) {
+     *     tags.uploadUrl = result.url;
+     *     os.toast("Success! Uploaded to " + result.url);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @example Upload a file to a custom endpoint
+     * const files = await os.showUploadFiles();
+     *
+     * if (files.length <= 0) {
+     *     return;
+     * }
+     *
+     * const file = files[0];
+     * const result = await os.recordFile(tags.recordKey, file, undefined, 'https://myendpoint.com');
+     *
+     * if (result.success) {
+     *     tags.uploadUrl = result.url;
+     *     os.toast("Success! Uploaded to " + result.url);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.recordFile
      */
     function recordFile(
         recordKeyOrName: string,
@@ -5403,9 +5539,36 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function getFile(url: string, endpoint?: string): Promise<any>;
     /**
-     * Gets the data stored in the given file.
-     * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
-     * @param endpoint The records endpoint that should be queried. Optional.
+     * Downloads the [file](glossary:file-record) at the given URL or at the URL that was specified in the given {@link os.recordFile} result.
+     *
+     * Returns a promise that resolves with the file data.
+     *
+     * @param urlOrRecordFileResult the URL that the file is stored at. It can also be the result of a {@link os.recordFile} call.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint. Only used for private files.
+     *
+     * @example Get a file that was uploaded
+     * const recordKeyResult = await os.getPublicRecordKey('myRecord');
+     * if (!recordKeyResult.success) {
+     *     os.toast("Failed to get a record key! " + recordKeyResult.errorMessage);
+     *     return;
+     * }
+     * const result = await os.recordFile(recordKeyResult.recordKey, getBots("color", "red"), {
+     *     description: 'my bots'
+     * });
+     *
+     * if (result.success) {
+     *     tags.uploadUrl = result.url;
+     *     os.toast("Success! Uploaded to " + result.url);
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * // Download the file later
+     * const fileData = await os.getFile(tags.uploadUrl);
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.getFile
      */
     function getFile(
         urlOrRecordFileResult: string | RecordFileApiSuccess,
@@ -5464,10 +5627,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getPublicFile(url: string): Promise<any>;
 
     /**
-     * Gets the data stored in the given public file.
+     * Gets the data stored in the given public [file](glossary:file-record).
      * Only works for files that have the `publicRead` marker.
      * If the file is not public, then this operation will fail.
-     * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     *
+     * Returns a promise that resolves with the file data.
+     *
+     * @param urlOrRecordFileResult the URL that the file is stored at. It can also be the result of a {@link os.recordFile} call.
+     *
+     * @example Get a public file
+     * let fileUrl = 'ENTER_FILE_URL_HERE';
+     * const fileData = await os.getFile(fileUrl);
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.getPublicFile
      */
     function getPublicFile(
         urlOrRecordFileResult: string | RecordFileApiSuccess
@@ -5506,9 +5680,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function getPrivateFile(url: string, endpoint?: string): Promise<any>;
 
     /**
-     * Gets the data stored in the given private file.
-     * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
-     * @param endpoint The endpoint that should be queried. Optional.
+     * Gets the data stored in the given private [file](glossary:file-record).
+     *
+     * Returns a promise that resolves with the file data.
+     *
+     * @param urlOrRecordFileResult the URL that the file is stored at. It can also be the result of a {@link os.recordFile} call.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
+     *
+     * @example Get a private file
+     * const fileUrl = 'ENTER_FILE_URL_HERE';
+     * const result = await os.getPrivateFile(fileUrl);
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.getPrivateFile
      */
     function getPrivateFile(
         urlOrRecordFileResult: string | RecordFileApiSuccess,
@@ -5579,10 +5764,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         endpoint?: string
     ): Promise<EraseFileResult>;
     /**
-     * Deletes the specified file using the given record key.
-     * @param recordKeyOrName The record key or record name that should be used to delete the file.
-     * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
-     * @param endpoint The records endpoint that should be queried. Optional.
+     * Erases the [file](glossary:file-record) at the given URL or at the URL that was specified in the given {@link os.recordFile} result.
+     *
+     * Returns a promise that resolves with an object that indicates if the file was deleted or if an error occurred.
+     *
+     * @param recordKeyOrName the record key or record name that should be used to access the record. You can request a record key by using {@link os.getPublicRecordKey}.
+     * @param urlOrRecordFileResult the URL that the file is stored at. It can also be the result of a {@link os.recordFile} call.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
+     *
+     * @example Delete a file
+     * const result = await os.eraseFile(tags.recordKey, fileUrl);
+     *
+     * if (result.success) {
+     *     os.toast("Success!");
+     * } else {
+     *     os.toast("Failed " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.eraseFile
      */
     function eraseFile(
         recordKeyOrName: string,
@@ -5624,10 +5825,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Records that the given event occurred.
-     * @param recordKeyOrName The record key or record name that should be used to record the event.
-     * @param eventName The name of the event.
-     * @param endpoint The records endpoint that should be queried. Optional.
+     * Records that the given [event](glossary:event-record) occurred in the given record.
+     *
+     * Returns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful.
+     *
+     * @param recordKeyOrName the record key or record name that should be used to record the event.
+     * @param eventName the name of the event whose count should be incremented.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
+     *
+     * @example Record that a click event happened
+     * await os.recordEvent(myRecordKey, 'click');
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.recordEvent
      */
     function recordEvent(
         recordKeyOrName: string,
@@ -5663,10 +5874,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the number of times that the given event has been recorded.
-     * @param recordNameOrKey The name of the record.
-     * @param eventName The name of the event.
-     * @param endpoint The records endpoint that should be queried. Optional.
+     * Gets the number of times that the given [event](glossary:event-record) has been recorded in the given record.
+     *
+     * Returns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful.
+     *
+     * @param recordNameOrKey the name of the record that the event count should be retrieved from. It can also be a record key.
+     * @param eventName the name of the event whose count should be retrieved.
+     * @param endpoint the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
+     *
+     * @example Get the number of times the click event has happened
+     * const result = await os.countEvents(myRecord, 'click');
+     *
+     * if (result.success) {
+     *     os.toast(result.count);
+     * } else {
+     *     os.toast('Failed to get count ' + result.errorMessage);
+     * }
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.countEvents
      */
     function countEvents(
         recordNameOrKey: string,

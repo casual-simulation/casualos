@@ -3329,7 +3329,7 @@ export interface RecordActionOptions {
     endpoint?: string;
 }
 
-export type GrantMarkerPermissionResponse =
+export type GrantMarkerPermissionResult =
     | GrantMarkerPermissionSuccess
     | GrantMarkerPermissionFailure;
 
@@ -10664,7 +10664,7 @@ interface Os {
         marker: string,
         permission: object,
         options?: RecordActionOptions
-    ): Promise<GrantMarkerPermissionResponse>;
+    ): Promise<GrantMarkerPermissionResult>;
 
     /**
      * Revokes the given permission from the given marker in the given record.

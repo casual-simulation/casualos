@@ -537,7 +537,12 @@ export class DataRecordsController {
 /**
  * The possible results of a record data request.
  *
- * @dochash types/records
+ * @dochash types/records/data
+ * @doctitle Data Types
+ * @docsidebar Data
+ * @docdescription Data records are used to store key/value pairs of data.
+ * @docgroup 01-create
+ * @order 0
  * @docname RecordDataResult
  */
 export type RecordDataResult = RecordDataSuccess | RecordDataFailure;
@@ -545,7 +550,9 @@ export type RecordDataResult = RecordDataSuccess | RecordDataFailure;
 /**
  * Defines an interface that represents a successful "record data" result.
  *
- * @dochash types/records
+ * @dochash types/records/data
+ * @docgroup 01-create
+ * @order 1
  * @docname RecordDataSuccess
  */
 export interface RecordDataSuccess {
@@ -564,7 +571,9 @@ export interface RecordDataSuccess {
 /**
  * Defines an interface that represents a failed "record data" result.
  *
- * @dochash types/records
+ * @dochash types/records/data
+ * @docgroup 01-create
+ * @order 2
  * @docname RecordDataFailure
  */
 export interface RecordDataFailure {
@@ -593,7 +602,9 @@ export interface RecordDataFailure {
 /**
  * The possible results of a get data request.
  *
- * @dochash types/records
+ * @dochash types/records/data
+ * @docgroup 02-get
+ * @order 0
  * @docname GetDataResult
  */
 export type GetDataResult = GetDataSuccess | GetDataFailure;
@@ -601,7 +612,9 @@ export type GetDataResult = GetDataSuccess | GetDataFailure;
 /**
  * Defines an interface that represents a successful "get data" result.
  *
- * @dochash types/records
+ * @dochash types/records/data
+ * @docgroup 02-get
+ * @order 1
  * @docname GetDataSuccess
  */
 export interface GetDataSuccess {
@@ -646,7 +659,9 @@ export interface GetDataSuccess {
 /**
  * Defines an interface that repeesents a failed "get data" result.
  *
- * @dochash types/records
+ * @dochash types/records/data
+ * @docgroup 02-get
+ * @order 3
  * @docname GetDataFailure
  */
 export interface GetDataFailure {
@@ -669,7 +684,9 @@ export interface GetDataFailure {
 /**
  * The possible results of an erase data request.
  *
- * @dochash types/records
+ * @dochash types/records/data
+ * @docgroup 03-erase
+ * @order 0
  * @docname EraseDataResult
  */
 export type EraseDataResult = EraseDataSuccess | EraseDataFailure;
@@ -677,7 +694,9 @@ export type EraseDataResult = EraseDataSuccess | EraseDataFailure;
 /**
  * Defines an interface that represents a successful result for an erase data request.
  *
- * @dochash types/records
+ * @dochash types/records/data
+ * @docgroup 03-erase
+ * @order 1
  * @docname EraseDataSuccess
  */
 export interface EraseDataSuccess {
@@ -697,7 +716,9 @@ export interface EraseDataSuccess {
 /**
  * Defines an interface that represents a failed result for an erase data request.
  *
- * @dochash types/records
+ * @dochash types/records/data
+ * @docgroup 03-erase
+ * @order 2
  * @docname EraseDataFailure
  */
 export interface EraseDataFailure {
@@ -723,7 +744,9 @@ export interface EraseDataFailure {
 /**
  * The possible results of a list data request.
  *
- * @dochash types/records
+ * @dochash types/records/data
+ * @docgroup 04-list
+ * @order 0
  * @docname ListDataResult
  */
 export type ListDataResult = ListDataSuccess | ListDataFailure;
@@ -731,7 +754,9 @@ export type ListDataResult = ListDataSuccess | ListDataFailure;
 /**
  * Defines an interface that represents a successful result for a list data request.
  *
- * @dochash types/records
+ * @dochash types/records/data
+ * @docgroup 04-list
+ * @order 1
  * @docname ListDataSuccess
  */
 export interface ListDataSuccess {
@@ -755,7 +780,9 @@ export interface ListDataSuccess {
 /**
  * Defines an interface that represents a failed result for a list data request.
  *
- * @dochash types/records
+ * @dochash types/records/data
+ * @docgroup 04-list
+ * @order 2
  * @docname ListDataFailure
  */
 export interface ListDataFailure {

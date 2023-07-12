@@ -59,7 +59,19 @@ module.exports = {
                                 'types/math/rotations'
                             ]
                         },
-                        'types/records',
+                        {
+                            type: 'category',
+                            label: 'Records',
+                            items: [
+                                'types/records/key',
+                                'types/records/data',
+                                'types/records/files',
+                                'types/records/events',
+                                'types/records/roles',
+                                'types/records/policies',
+                                'types/records/extra'
+                            ]
+                        },
                         'types/permissions',
                     ]
                 },

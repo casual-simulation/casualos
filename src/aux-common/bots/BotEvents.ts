@@ -3599,7 +3599,11 @@ export const APPROVED_SYMBOL = Symbol('approved');
 /**
  * Defines an interface that represents the base for options for a records action.
  *
- * @dochash types/records
+ * @dochash types/records/extra
+ * @doctitle Extra Record Types
+ * @docsidebar Extra
+ * @docdescription Extra types that are used for records.
+ * @docname RecordActionOptions
  */
 export interface RecordActionOptions {
     /**
@@ -3650,6 +3654,11 @@ export interface DataRecordOptions extends RecordActionOptions {
      * The markers that should be applied to the record.
      */
     markers?: string[];
+
+    /**
+     * The marker that should be applied to the record.
+     */
+    marker?: string;
 }
 
 /**
