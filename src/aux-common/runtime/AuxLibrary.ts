@@ -1301,120 +1301,386 @@ export interface SnapGridTarget {
     type?: 'grid' | 'sphere';
 }
 
+/**
+ * The possible results for a "join room" request.
+ *
+ * @dochash types/os
+ * @docname JoinRoomResult
+ */
 export type JoinRoomResult = JoinRoomSuccess | JoinRoomFailure;
 
+/**
+ * Defines an interface that represents a successful "join room" request.
+ *
+ * @dochash types/os
+ * @docname JoinRoomSuccess
+ */
 export interface JoinRoomSuccess {
     success: true;
+    /**
+     * The name of the room that was joined.
+     */
     roomName: string;
 }
 
+/**
+ * Defines an interface that represents a failed "join room" request.
+ *
+ * @dochash types/os
+ * @docname JoinRoomFailure
+ */
 export interface JoinRoomFailure {
     success: false;
+
+    /**
+     * The name of the room that was attempted to be joined.
+     */
     roomName: string;
+
+    /**
+     * The error code that describes why the request failed.
+     */
     errorCode: string;
+
+    /**
+     * The error message that describes why the request failed.
+     */
     errorMessage: string;
 }
 
+/**
+ * The possible results for a "leave room" request.
+ *
+ * @dochash types/os
+ * @docname LeaveRoomResult
+ */
 export type LeaveRoomResult = LeaveRoomSuccess | LeaveRoomFailure;
 
+/**
+ * Defines an interface that represents a successful "leave room" request.
+ *
+ * @dochash types/os
+ * @docname LeaveRoomSuccess
+ */
 export interface LeaveRoomSuccess {
     success: true;
+
+    /**
+     * The name of the room that was left.
+     */
     roomName: string;
 }
 
+/**
+ * Defines an interface that represents a failed "leave room" request.
+ *
+ * @dochash types/os
+ * @docname LeaveRoomFailure
+ */
 export interface LeaveRoomFailure {
     success: false;
+
+    /**
+     * The name of the room that was attempted to be left.
+     */
     roomName: string;
+    /**
+     * The error code that describes why the request failed.
+     */
     errorCode: string;
+
+    /**
+     * The error message that describes why the request failed.
+     */
     errorMessage: string;
 }
 
+/**
+ * The possible results for a "set room options" request.
+ *
+ * @dochash types/os
+ * @docname SetRoomOptionsResult
+ */
 export type SetRoomOptionsResult =
     | SetRoomOptionsSuccess
     | SetRoomOptionsFailure;
 
+/**
+ * Defines an interface that represents a successful "set room options" request.
+ *
+ * @dochash types/os
+ * @docname SetRoomOptionsSuccess
+ */
 export interface SetRoomOptionsSuccess {
     success: true;
+    /**
+     * The name of the room that the options were set on.
+     */
     roomName: true;
 }
 
+/**
+ * Defines an interface that represents a failed "set room options" request.
+ */
 export interface SetRoomOptionsFailure {
     success: false;
+
+    /**
+     * The name of the room that the options were attempted to be set on.
+     */
     roomName: string;
+
+    /**
+     * The error code that describes why the request failed.
+     */
     errorCode: string;
+
+    /**
+     * The error message that describes why the request failed.
+     */
     errorMessage: string;
 }
 
+/**
+ * The possible results for a "get room options" request.
+ *
+ * @dochash types/os
+ * @docname GetRoomOptionsResult
+ */
 export type GetRoomOptionsResult =
     | GetRoomOptionsSuccess
     | GetRoomOptionsFailure;
 
+/**
+ * Defines an interface that represents a successful "get room options" request.
+ *
+ * @dochash types/os
+ * @docname GetRoomOptionsSuccess
+ */
 export interface GetRoomOptionsSuccess {
     success: true;
+    /**
+     * The name of the room that the options were retrieved from.
+     */
     roomName: string;
+
+    /**
+     * The options that were retrieved.
+     */
     options: RoomOptions;
 }
 
+/**
+ * Defines an interface that represents a failed "get room options" request.
+ *
+ * @dochash types/os
+ * @docname GetRoomOptionsFailure
+ */
 export interface GetRoomOptionsFailure {
     success: false;
+
+    /**
+     * The error code that describes why the request failed.
+     */
     errorCode: string;
+
+    /**
+     * The error message that describes why the request failed.
+     */
     errorMessage: string;
 }
 
+/**
+ * The possible results for a "get room track options" request.
+ *
+ * @dochash types/os
+ * @docname GetRoomTrackOptionsResult
+ */
 export type GetRoomTrackOptionsResult =
     | GetRoomTrackOptionsSuccess
     | GetRoomTrackOptionsFailure;
 
+/**
+ * Defines an interface that represents a successful "get room track options" request.
+ *
+ * @dochash types/os
+ * @docname GetRoomTrackOptionsSuccess
+ */
 export interface GetRoomTrackOptionsSuccess {
     success: true;
+    /**
+     * The name of the room that the options were retrieved from.
+     */
     roomName: string;
+
+    /**
+     * The address of the track that the options were retrieved from.
+     */
     address: string;
+
+    /**
+     * The options that were retrieved.
+     */
     options: RoomTrackOptions;
 }
 
+/**
+ * Defines an interface that represents a failed "get room track options" request.
+ *
+ * @dochash types/os
+ * @docname GetRoomTrackOptionsFailure
+ */
 export interface GetRoomTrackOptionsFailure {
     success: false;
+
+    /**
+     * The error code that describes why the request failed.
+     */
     errorCode: string;
+
+    /**
+     * The error message that describes why the request failed.
+     */
     errorMessage: string;
+
+    /**
+     * The name of the room that the options were attempted to be retrieved from.
+     */
     roomName: string;
+
+    /**
+     * The address of the track that the options were attempted to be retrieved from.
+     */
     address: string;
 }
 
+/**
+ * The possible results for a "set room track options" request.
+ *
+ * @dochash types/os
+ * @docname SetRoomTrackOptionsResult
+ */
 export type SetRoomTrackOptionsResult =
     | SetRoomTrackOptionsSuccess
     | SetRoomTrackOptionsFailure;
 
+/**
+ * Defines an interface that represents a successful "set room track options" request.
+ *
+ * @dochash types/os
+ * @docname SetRoomTrackOptionsSuccess
+ */
 export interface SetRoomTrackOptionsSuccess {
     success: true;
+
+    /**
+     * The name of the room that the options were set on.
+     */
     roomName: string;
+
+    /**
+     * The address of the track that the options were set on.
+     */
     address: string;
+
+    /**
+     * The options that were set.
+     */
     options: RoomTrackOptions;
 }
 
+/**
+ * Defines an interface that represents a failed "set room track options" request.
+ *
+ * @dochash types/os
+ * @docname SetRoomTrackOptionsFailure
+ */
 export interface SetRoomTrackOptionsFailure {
     success: false;
+
+    /**
+     * The error code that describes why the request failed.
+     */
     errorCode: string;
+
+    /**
+     * The error message that describes why the request failed.
+     */
     errorMessage: string;
+
+    /**
+     * The name of the room that the options were attempted to be set on.
+     */
     roomName: string;
+
+    /**
+     * The address of the track that the options were attempted to be set on.
+     */
     address: string;
 }
 
+/**
+ * The possible results for a "get room remote options" request.
+ *
+ * @dochash types/os
+ * @docname GetRoomRemoteOptionsResult
+ */
 export type GetRoomRemoteOptionsResult =
     | GetRoomRemoteOptionsSuccess
     | GetRoomRemoteOptionsFailure;
 
+/**
+ * Defines an interface that represents a successful "get room remote options" request.
+ *
+ * @dochash types/os
+ * @docname GetRoomRemoteOptionsSuccess
+ */
 export interface GetRoomRemoteOptionsSuccess {
     success: true;
+
+    /**
+     * The name of the room that the options were retrieved from.
+     */
     roomName: string;
+
+    /**
+     * The ID of the remote that the options were retrieved from.
+     */
     remoteId: string;
+
+    /**
+     * The options that were retrieved.
+     */
     options: RoomRemoteOptions;
 }
 
+/**
+ * Defines an interface that represents a failed "get room remote options" request.
+ *
+ * @dochash types/os
+ * @docname GetRoomRemoteOptionsFailure
+ */
 export interface GetRoomRemoteOptionsFailure {
     success: false;
+
+    /**
+     * The error code that describes why the request failed.
+     */
     errorCode: string;
+
+    /**
+     * The error message that describes why the request failed.
+     */
     errorMessage: string;
+
+    /**
+     * The name of the room that the options were attempted to be retrieved from.
+     */
     roomName: string;
+
+    /**
+     * The ID of the remote that the options were attempted to be retrieved from.
+     */
     remoteId: string;
 }
 
@@ -1526,6 +1792,9 @@ export interface RecordFileOptions {
 
 /**
  * Defines an interface that represents the result of a raycast operation.
+ *
+ * @dochash types/os
+ * @docname RaycastResult
  */
 export interface RaycastResult {
     /**
@@ -1585,7 +1854,10 @@ export interface BotIntersection {
 }
 
 /**
- * Defines an interface that represents a ray.
+ * Defines an interface that represents a ray. That is, a line that has a start position and a direction, but no end.
+ *
+ * @dochash types/os
+ * @docname RaycastRay
  */
 export interface RaycastRay {
     /**
@@ -1597,6 +1869,29 @@ export interface RaycastRay {
      * The direction that the ray travels in.
      */
     direction: Vector3;
+}
+
+/**
+ * Defines an interface that represents a file that was uploaded.
+ *
+ * @dochash types/os
+ * @docname UploadedFile
+ */
+export interface UploadedFile {
+    /**
+     * The name of the file that was uploaded.
+     */
+    name: string;
+
+    /**
+     * The size of the file in bytes.
+     */
+    size: number;
+
+    /**
+     * The data that the file contains.
+     */
+    data: string | ArrayBuffer;
 }
 
 const DEAD_RECKONING_OFFSET = 50;
@@ -1808,6 +2103,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
              * @docsidebar OS
              * @docdescription OS actions are used to interact with the player's current session.
              * @docname configBot
+             * @docgroup 01-os
              */
             get _configBot(): RuntimeBot {
                 return null;
@@ -1980,6 +2276,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 getPortalDimension,
                 getDimensionalDepth,
                 showInputForTag,
+                _showInput: showInput,
                 showInput: makeMockableFunction(showInput, 'os.showInput'),
                 showConfirm,
                 goToDimension,
@@ -3502,8 +3799,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Show a tip and record its ID in a tag mask.
      * masks.tipID = await os.tip("Hello!");
      *
-     * @dochash actions/os
+     * @dochash actions/portals
      * @docname os.tip
+     * @docgroup 10-tip
      */
     function tip(
         message: string | number | boolean | object | Array<any> | null,
@@ -3533,8 +3831,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * await os.sleep(1000);
      * await os.hideTips(id);
      *
-     * @dochash actions/os
+     * @dochash actions/portals
      * @docname os.hideTips
+     * @docgroup 10-tip
      */
     function hideTips(tipIds?: number | number[]): Promise<void> {
         const ids =
@@ -3549,9 +3848,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shows a QR Code that contains a link to a inst and dimension.
-     * @param inst The inst that should be joined. Defaults to the current inst.
-     * @param dimension The dimension that should be joined. Defaults to the current dimension.
+     * Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) with a link to join the given inst and dimension.
+     * If the inst and dimension are omitted, then the current inst and dimension will be used.
+     *
+     * @param inst the inst that the code should be shown for. Defaults to the current inst.
+     * @param dimension the dimension that the code should be shown for. Defaults to the current dimension.
+     *
+     * @example Show a join QR Code for the current inst.
+     * os.showJoinCode();
+     *
+     * @example Show a join QR Code for a inst and dimension.
+     * os.showJoinCode("inst", "dimension");
+     *
+     * @dochash actions/barcodes
+     * @docname os.showJoinCode
+     * @docgroup 10-qr-code
      */
     function showJoinCode(
         inst?: string,
@@ -3561,8 +3872,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Requests that AUX enters fullscreen mode.
-     * Depending on the web browser, this may ask the player for permission.
+     * Attempts to enter fullscreen mode. Depending on which web browser the player is using, this might ask for permission to go fullscreen.
+     *
+     * Note that iPhones currently don't support fullscreen mode.
+     *
+     * @example Enter fullscreen mode.
+     * os.requestFullscreenMode();
+     *
+     * @dochash actions/portals
+     * @docname os.requestFullscreenMode
+     * @docgroup 10-fullscreen
      */
     function requestFullscreenMode(): RequestFullscreenAction {
         return addAction(requestFullscreen());
@@ -3570,6 +3889,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Exits fullscreen mode.
+     *
+     * @example Exit fullscreen mode.
+     * os.exitFullscreenMode();
+     *
+     * @dochash actions/portals
+     * @docname os.exitFullscreenMode
+     * @docgroup 10-fullscreen
      */
     function exitFullscreenMode(): ExitFullscreenAction {
         return addAction(exitFullscreen());
@@ -3599,6 +3925,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @dochash actions/os
      * @docname os.showHtml
+     * @docgroup 10-html
      */
     function showHtml(html: string): ShowHtmlAction {
         return addAction(htmlMessage(html));
@@ -3612,14 +3939,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @dochash actions/os
      * @docname os.hideHtml
+     * @docgroup 10-html
      */
     function hideHtml(): HideHtmlAction {
         return addAction(hideHtmlMessage());
     }
 
     /**
-     * Sets the text stored in the player's clipboard.
-     * @param text The text to set to the clipboard.
+     * Copies the given text to the player's clipboard. On Chrome and Firefox, this will act like a `Ctrl+C`/`Cmd+C`.
+     * On Safari and all iOS browsers this will open a popup which prompts the player to copy the text.
+     *
+     * @param text the text that should be copied to the player's clipboard.
+     *
+     * @example Copy "hello" to the player's clipboard.
+     * os.setClipboard("hello");
+     *
+     * @dochash actions/os
+     * @docname os.setClipboard
      */
     function setClipboard(text: string): SetClipboardAction {
         return addAction(calcSetClipboard(text));
@@ -3731,7 +4067,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     portal: 'tag'
      * });
      *
-     * @dochash actions/os
+     * @dochash actions/portals
      * @docname os.focusOn
      * @docid os.focusOn-bot
      */
@@ -3765,7 +4101,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     zoom: 10000
      * });
      *
-     * @dochash actions/os
+     * @dochash actions/portals
      * @docname os.focusOn
      * @docid os.focusOn-position
      */
@@ -3825,6 +4161,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @dochash actions/os
      * @docname os.showChat
      * @docid showChat-placeholder
+     * @docgroup 10-chat
      */
     function _showChat_placeholder(placeholder?: string) {}
 
@@ -3871,6 +4208,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @dochash actions/os
      * @docname os.showChat
      * @docid showChat-options
+     * @docgroup 10-chat
      */
     function _showChat_options(options?: ShowChatOptions) {}
 
@@ -3906,6 +4244,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @dochash actions/os
      * @docname os.hideChat
+     * @docgroup 10-chat
      */
     function hideChat(): ShowChatBarAction {
         return addAction(calcHideChat());
@@ -3940,7 +4279,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets information about the version of AUX that is running.
+     * Gets information about the version of CasualOS.
+     *
+     * @example Get the current version and popup a message with it.
+     * const info = os.version();
+     * os.toast(info.version);
+     *
+     * @example Check whether the current inst is for playing AUXes.
+     * const info = os.version();
+     * const isPlayer = info.playerMode === "player";
+     * os.toast('Is Player: ' + isPlayer);
+     *
+     * @dochash actions/os
+     * @docname os.version
+     * @docgroup 10-os-info
      */
     function version(): AuxVersion {
         return context.version;
@@ -3948,6 +4300,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Gets information about the device that the player is using.
+     *
+     * @example Get the device info and popup a message with it.
+     * const info = os.device();
+     * os.toast(info);
+     *
+     * @dochash actions/os
+     * @docname os.device
+     * @docgroup 10-os-info
      */
     function device(): AuxDevice {
         if (context.device) {
@@ -3962,7 +4322,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets whether this device has enabled collaborative features.
+     * Gets whether the current session was loaded with collaborative features enabled.
+     *
+     * When `true`, CasualOS will attempt to sync the `shared` (including `tempShared` and `remoteTempShared`) spaces with other players.
+     * When `false`, CasualOS will treat all the shared spaces like they are all `tempLocal`.
+     *
+     * @example Toast whether the current session is collaborative.
+     * const isCollaborative = os.isCollaborative();
+     * os.toast(isCollaborative ? "We are collaborative!" : "We are not collaborative!");
+     *
+     * @dochash actions/os
+     * @docname os.isCollaborative
+     * @docgroup 10-os-info
      */
     function isCollaborative(): boolean {
         if (context.device) {
@@ -3984,56 +4355,150 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Enables Augmented Reality features.
+     * Enables augmented reality on the device.
+     * You can check for device support by calling {@link os.arSupported}.
+     *
+     * If enabled successfully, the {@tag @onEnterAR} shout is sent to all bots.
+     *
      * @param options the options that should be used for the AR session.
+     *
+     * @example Enable AR.
+     * os.enableAR();
+     *
+     * @example Enable AR running at half the resolution of normal.
+     * os.enableAR({
+     *     frameBufferScaleFactor: 0.5
+     * });
+     *
+     * @dochash actions/xr
+     * @docname os.enableAR
+     * @docgroup 11-ar
      */
     function enableAR(options?: EnableXROptions): EnableARAction {
         return addAction(calcEnableAR(options));
     }
 
     /**
-     * Disables Augmented Reality features.
+     * Disables augmented reality on the device.
+     *
+     * When disabled, {@tag @onExitAR} shout is sent to all bots.
+     *
+     * @example Disable AR.
+     * os.disableAR();
+     *
+     * @dochash actions/xr
+     * @docname os.disableAR
+     * @docgroup 11-ar
      */
     function disableAR(): EnableARAction {
         return addAction(calcDisableAR());
     }
 
     /**
-     * Gets wether this device supported AR or not.
+     * Gets whether this device supports AR or not.
+     *
+     * Returns a promise that resolves with a boolean indicating wether or not augmented reality is supported by the device.
+     *
+     * @example Check if AR is supported:
+     * const supported = await os.arSupported();
+     *
+     * @dochash actions/xr
+     * @doctitle XR Actions
+     * @docsidebar XR
+     * @docdescription Actions for enabling and disabling XR (AR & VR) features.
+     * @docname os.arSupported
+     * @docgroup 11-ar
      */
-    function arSupported() {
+    function arSupported(): Promise<boolean> {
         const task = context.createTask();
         const event = calcARSupported(task.taskId);
         return addAsyncAction(task, event);
     }
 
     /**
-     * Enables Virtual Reality features.
-     * * @param options the options that should be used for the VR session.
+     * Enables virtual reality on the device.
+     * You can check for device support by calling {@link os.vrSupported}.
+     *
+     * If enabled successfully, the {@tag @onEnterVR} shout is sent to all bots.
+     *
+     * @param options the options that should be used for the VR session.
+     *
+     * @example Enable VR.
+     * os.enableVR();
+     *
+     * @example Enable VR running at half the resolution of normal.
+     * os.enableVR({
+     *     frameBufferScaleFactor: 0.5
+     * });
+     *
+     * @dochash actions/xr
+     * @docname os.enableVR
+     * @docgroup 11-vr
      */
     function enableVR(options?: EnableXROptions): EnableVRAction {
         return addAction(calcEnableVR(options));
     }
 
     /**
-     * Disables Virtual Reality features.
+     * Disables virtual reality on the device.
+     *
+     * When disabled, {@tag @onExitVR} shout is sent to all bots.
+     *
+     * @example Disable VR.
+     * os.disableVR();
+     *
+     * @dochash actions/xr
+     * @docname os.disableVR
+     * @docgroup 11-vr
      */
     function disableVR(): EnableVRAction {
         return addAction(calcDisableVR());
     }
 
     /**
-     * Gets wether this device supported VR or not.
+     * Gets whether this device supports VR or not.
+     *
+     * Returns a promise that resolves with a boolean indicating wether or not virtual reality is supported by the device.
+     *
+     * @example Check if VR is supported:
+     * const supported = await os.vrSupported();
+     *
+     * @dochash actions/xr
+     * @docname os.vrSupported
+     * @docgroup 11-vr
      */
-    function vrSupported() {
+    function vrSupported(): Promise<boolean> {
         const task = context.createTask();
         const event = calcVRSupported(task.taskId);
         return addAsyncAction(task, event);
     }
 
     /**
-     * Enables Point-of-View mode.
-     * @param
+     * Enables Point-of-View mode on the device.
+     * Useful for getting a "ground level" view in the grid portal.
+     * This will move the camera to the given position, set the camera type to `perspective`, and change the camera controls so that dragging the screen causes the camera to look around.
+     *
+     * It is not possible to manually move the camera in this mode, however it is still possible to use {@link os.focusOn-bot} to move the camera.
+     *
+     * @param center the position that the camera should be placed at. If not specified, then the camera will be placed at `(0, 0, 0)`.
+     * @param imu whether the imuPortal should be used to control the camera rotation while in Point-of-View mode.
+     *
+     * @example Enable POV mode.
+     * os.enablePointOfView();
+     *
+     * @example Enable POV mode at `(5, 0, 3)`.
+     * os.enablePointOfView({
+     *     x: 5,
+     *     y: 0,
+     *     z: 3
+     * });
+     *
+     * @example Enable POV mode with the IMU.
+     * os.enablePointOfView(undefined, true);
+     *
+     * @dochash actions/portals
+     * @docname os.enablePointOfView
+     * @docgroup 10-pov
      */
     function enablePointOfView(
         center: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 },
@@ -4043,7 +4508,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Disables Point-of-View mode.
+     * Disables Point-of-View mode on the device. This will return the camera to its original position, set the camera type back to what it was before, and change the camera controls to the defaults.
+     *
+     * @example Disable POV mode.
+     * os.disablePointOfView();
+     *
+     * @dochash actions/portals
+     * @docname os.disablePointOfView
+     * @docgroup 10-pov
      */
     function disablePointOfView(): EnablePOVAction {
         return addAction(disablePOV());
@@ -4051,6 +4523,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Requests a wake lock that will keep the device screen awake.
+     * This will ask the user for permission to keep the screen awake.
+     * Returns a promise that resolves once the wake lock has been granted. If the wake lock is denied, then an error will be thrown.
+     *
+     * Useful for a kiosk mode where the screen is always supposed to be on.
+     *
+     * @example Request a wake lock from the user.
+     * await os.requestWakeLock();
+     *
+     * @dochash actions/os
+     * @docname os.requestWakeLock
+     * @docgroup 10-wake-lock
      */
     function requestWakeLock(): Promise<void> {
         const task = context.createTask();
@@ -4059,7 +4542,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Disables the wake lock.
+     * Disables the wake lock that was previously enabled. Returns a promise that resolves once the wake lock has been disabled.
+     *
+     * @example Disable the wake lock
+     * await os.disableWakeLock();
+     *
+     * @dochash actions/os
+     * @docname os.disableWakeLock
+     * @docgroup 10-wake-lock
      */
     function disableWakeLock(): Promise<void> {
         const task = context.createTask();
@@ -4068,7 +4558,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Retrieves the current wake lock configuration.
+     * Retrieves the current wake lock state. Returns a promise that resolves with an object that contains information about the current wake lock state.
+     *
+     * @example Get the current wake lock state
+     * const configuration = await os.getWakeLockConfiguration();
+     *
+     * if (configuration.enabled) {
+     *     os.toast('Wake lock is enabled!');
+     * } else {
+     *     os.toast('Wake lock is disabled.');
+     * }
+     *
+     * @dochash actions/os
+     * @docname os.getWakeLockConfiguration
+     * @docgroup 10-wake-lock
      */
     function getWakeLockConfiguration(): Promise<WakeLockConfiguration> {
         const task = context.createTask();
@@ -4086,8 +4589,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Download a text file named "test.txt" that contains "abc".
      * os.download("abc", "test.txt");
      *
-     * @dochash actions/os
+     * @dochash actions/files
+     * @doctitle File Actions
+     * @docsidebar Files
+     * @docdescription Actions for uploading and downloading files.
      * @docname os.download
+     * @docgroup 10-download
      */
     function downloadData(
         data: string | object | ArrayBuffer | Blob,
@@ -4157,8 +4664,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Download all bots as "myServer.pdf".
      * os.downloadBots(getBots(), "myServer.pdf");
      *
-     * @dochash actions/os
+     * @dochash actions/files
      * @docname os.downloadBots
+     * @docgroup 10-download
      */
     function downloadBots(bots: Bot[], filename: string): DownloadAction {
         let state: BotsState = {};
@@ -4203,8 +4711,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Download all bots as "myServer.pdf".
      * os.downloadBotsAsInitialzationUpdate(getBots(), "myServer.pdf");
      *
-     * @dochash actions/os
+     * @dochash actions/files
      * @docname os.downloadBotsAsInitialzationUpdate
+     * @docgroup 10-download
      */
     function downloadBotsAsInitialzationUpdate(
         bots: Bot[],
@@ -4244,8 +4753,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Download the entire inst.
      * os.downloadInst();
      *
-     * @dochash actions/os
+     * @dochash actions/files
      * @docname os.downloadInst
+     * @docgroup 10-download
      */
     function downloadServer(): DownloadAction {
         return downloadBots(
@@ -4255,24 +4765,53 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shows the "Upload AUX File" dialog.
+     * Shows the "Upload AUX File" dialog which lets the user select a .aux file to upload to the inst.
+     *
+     * @example Show the "Upload AUX File" dialog.
+     * os.showUploadAuxFile();
+     *
+     * @dochash actions/files
+     * @docname os.showUploadAuxFile
+     * @docgroup 10-upload
      */
     function showUploadAuxFile(): ShowUploadAuxFileAction {
         return addAction(calcShowUploadAuxFile());
     }
 
     /**
-     * Shows the "Upload File" dialog.
+     * Shows the "Upload Files" dialog which lets the user select some files to upload to the inst.
+     * Returns a promise that resolves with the list of files that were uploaded.
+     *
+     * @example Show the "Upload Files" dialog.
+     * const files = await os.showUploadFiles();
+     * os.toast("You uploaded " + files.length + " file(s)!");
+     *
+     * @dochash actions/files
+     * @docname os.showUploadFiles
+     * @docgroup 10-upload
      */
-    function showUploadFiles() {
+    function showUploadFiles(): Promise<UploadedFile[]> {
         const task = context.createTask();
         const action = calcShowUploadFiles(task.taskId);
         return addAsyncAction(task, action);
     }
 
     /**
-     * Opens the QR Code Scanner.
-     * @param camera The camera that should be used.
+     * Opens the [QR Code](https://en.wikipedia.org/wiki/QR_code) scanner.
+     * While open, each scanned QR Code will send a {@tag @onQRCodeScanned} shout.
+     * Optionally accepts which camera to use for scanning. (front/back)
+     *
+     * @param camera a string specifing which camera to use. Defaults to 'rear'. If the given camera type is not available, then the default camera will be used. Possible values are `"rear"` and "`front`".
+     *
+     * @example Open the QR Code scanner.
+     * os.openQRCodeScanner();
+     *
+     * @example Open the QR Code scanner for the front-facing camera.
+     * os.openQRCodeScanner("front");
+     *
+     * @dochash actions/barcodes
+     * @docname os.openQRCodeScanner
+     * @docgroup 10-qr-code-scanner
      */
     function openQRCodeScanner(camera?: CameraType): OpenQRCodeScannerAction {
         const event = calcOpenQRCodeScanner(true, camera);
@@ -4280,7 +4819,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Closes the QR Code Scanner.
+     * Closes the QR Code scanner.
+     *
+     * @example Close the QR Code scanner.
+     * os.closeQRCodeScanner();
+     *
+     * @dochash actions/barcodes
+     * @docname os.closeQRCodeScanner
+     * @docgroup 10-qr-code-scanner
      */
     function closeQRCodeScanner(): OpenQRCodeScannerAction {
         const event = calcOpenQRCodeScanner(false);
@@ -4288,8 +4834,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shows the given QR Code.
-     * @param code The code to show.
+     * Shows a [QR Code](https://en.wikipedia.org/wiki/QR_code) for the given data.
+     *
+     * @param code the text or data that the generated QR Code should represent.
+     *
+     * @example Show a QR Code that contains the data "hello".
+     * os.showQRCode("hello");
+     *
+     * @example Show a QR Code that links to https://example.com
+     * os.showQRCode("https://example.com")
+     *
+     * @dochash actions/barcodes
+     * @docname os.showQRCode
+     * @docgroup 10-qr-code
      */
     function showQRCode(code: string): ShowQRCodeAction {
         const event = calcShowQRCode(true, code);
@@ -4297,7 +4854,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Hides the QR Code.
+     * Closes the QR Code popup modal.
+     *
+     * @example Hides the QR Code popup modal.
+     * os.hideQRCode();
+     *
+     * @dochash actions/barcodes
+     * @docname os.hideQRCode
+     * @docgroup 10-qr-code
      */
     function hideQRCode(): ShowQRCodeAction {
         const event = calcShowQRCode(false);
@@ -4305,8 +4869,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Opens the barcode scanner.
-     * @param camera The camera that should be used.
+     * Opens the [Barcode](https://en.wikipedia.org/wiki/Barcode) scanner.
+     * While open, each scanned Barcode will send a {@tag @onBarcodeScanned} shout. Optionally accepts which camera to use for scanning. (front/back)
+     *
+     * @param camera a string specifing which camera to use. Defaults to 'rear'. If the given camera type is not available, then the default camera will be used. Possible values are `"rear"` and "`front`".
+     *
+     * @example Open the Barcode scanner.
+     * os.openBarcodeScanner();
+     *
+     * @example Open the Barcode scanner for the front-facing camera.
+     * os.openBarcodeScanner("front");
+     *
+     * @dochash actions/barcodes
+     * @docname os.openBarcodeScanner
+     * @docgroup 10-barcode-scanner
      */
     function openBarcodeScanner(camera?: CameraType): OpenBarcodeScannerAction {
         const event = calcOpenBarcodeScanner(true, camera);
@@ -4315,6 +4891,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Closes the barcode scanner.
+     *
+     * @example Close the Barcode scanner.
+     * os.closeBarcodeScanner();
+     *
+     * @dochash actions/barcodes
+     * @docname os.closeBarcodeScanner
+     * @docgroup 10-barcode-scanner
      */
     function closeBarcodeScanner(): OpenBarcodeScannerAction {
         const event = calcOpenBarcodeScanner(false);
@@ -4322,9 +4905,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shows the given barcode.
-     * @param code The code that should be shown.
-     * @param format The format that the barcode should be shown in.
+     * Shows a [Barcode](https://en.wikipedia.org/wiki/Barcode) for the given data.
+     * Optionally accepts the format that the barcode should be displayed in.
+     *
+     * @param code the text or data that the generated Barcode should represent.
+     * @param format the format that the barcode should be displayed in. Defaults to `"code128"`
+     *
+     * @example Show a Barcode that contains the data "hello".
+     * os.showBarcode("hello");
+     *
+     * @example Show a UPC Barcode that contains the data "123456".
+     * os.showBarcode("123456", 'upc');
+     *
+     * @dochash actions/barcodes
+     * @docname os.showBarcode
+     * @docgroup 10-barcode
+     * @docorder 0
      */
     function showBarcode(
         code: string,
@@ -4335,7 +4931,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Hides the barcode.
+     * Closes the Barcode popup modal.
+     *
+     * @example Hides the Barcode popup modal.
+     * os.hideBarcode();
+     *
+     * @dochash actions/barcodes
+     * @doctitle Barcode Actions
+     * @docsidebar Barcodes
+     * @docdescription Actions for scanning and displaying QR Codes and Barcodes.
+     * @docname os.hideBarcode
+     * @docgroup 10-barcode
      */
     function hideBarcode(): ShowBarcodeAction {
         const event = calcShowBarcode(false);
@@ -4343,9 +4949,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shows an image classifier for the given ML Model.
-     * Returns a promise that resolves when the image classifier has been opened.
-     * @param options The options for the classifier.
+     * Opens the [image classifier](glossary:image-classification) with the given options. Returns a promise that resolves once the image classifier has been opened.
+     *
+     * Sends the {@tag @onImageClassifierOpened} shout once opened and the {@tag @onImageClassified} shout every time an image has been classified.
+     *
+     * @param options the options that should be used for the image classifier.
+     *
+     * @example Open the image classifier.
+     * await os.openImageClassifier({
+     *     modelUrl: 'MY_MODEL_URL'
+     * });
+     *
+     * @example Open the image classifier with a specific camera.
+     * await os.openImageClassifier({
+     *     modelUrl: 'MY_MODEL_URL',
+     *     cameraType: 'front'
+     * });
+     *
+     * @dochash actions/image-classification
+     * @doctitle Image Classification Actions
+     * @docsidebar Image Classification
+     * @docdescription Actions for classifying images using AI.
+     * @docname os.openImageClassifier
+     * @docgroup 10-image-classifier
+     * @docorder 0
      */
     function openImageClassifier(
         options: ImageClassifierOptions
@@ -4356,8 +4983,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Hides the image classifier.
-     * Returns a promise that resolves when the image classifier has been hidden.
+     * Closes the image classifier.
+     * Returns a promise that resolves once the image classifier has been closed.
+     *
+     * Also sends the {@tag @onImageClassifierClosed} shout once closed.
+     *
+     * @example Close the image classifier.
+     * await os.closeImageClassifier();
+     *
+     * @dochash actions/image-classification
+     * @docname os.closeImageClassifier
+     * @docgroup 10-image-classifier
      */
     function closeImageClassifier(): Promise<void> {
         const task = context.createTask();
@@ -4366,8 +5002,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Loads the instance with the given ID.
-     * @param id The ID of the inst to load.
+     * Loads the given inst into the current browser tab. When the inst is loaded, the {@tag @onInstJoined} shout will be triggered.
+     *
+     * Note that separate instances cannot interact directly. They must instead interact via super shouts
+     *
+     * @param id the ID of the inst to load.
+     *
+     * @example Load the "fun" inst.
+     * os.loadInst("fun");
+     *
+     * @dochash actions/os
+     * @docname os.loadInst
+     * @docgroup 10-load-inst
      */
     function loadServer(id: string): LoadServerAction {
         const event = loadSimulation(id);
@@ -4375,8 +5021,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Unloads the instance with the given ID.
-     * @param id The ID of the instance to unload.
+     * Unloads the given inst from the current browser tab. When the inst is unloaded, the {@tag @onInstLeave} shout will be triggered.
+     *
+     * @param id the name of the inst to unload.
+     *
+     * @example Unload the "fun" inst.
+     * os.unloadInst("fun");
+     *
+     * @dochash actions/os
+     * @docname os.unloadInst
+     * @docgroup 10-load-inst
      */
     function unloadServer(id: string): UnloadServerAction {
         const event = unloadSimulation(id);
@@ -4384,10 +5038,36 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Imports the AUX from the given URL or JSON
-     * @param urlOrJSON The URL or JSON to load.
-     *                  If given JSON, then it will be imported as if it was a .aux file.
+     * Imports an AUX file from the given string.
+     *
+     * If the string contains JSON, then the JSON will be imported as if it was a .aux file. If the string is a [URL](https://en.wikipedia.org/wiki/URL), then it will be downloaded and imported.
+     *
+     * This is useful to quickly download a AUX file and load it into the current inst from a site such as https://gist.github.com/.
+     *
+     * @param urlOrJSON the URL or JSON to load.
+     *                  If given JSON, then it will be imported as if it was a `.aux` file.
      *                  If given a URL, then it will be downloaded and then imported.
+     *
+     * @example Import an AUX file from a file.
+     * const path = '/drives/myFile.aux';
+     * os.importAUX(path);
+     *
+     * @example Import an AUX file from JSON.
+     * os.importAUX(`{
+     *     "version": 1,
+     *     "state": {
+     *         "079847e4-6a58-423d-9a86-8d4ef8be5970": {
+     *             "id": "079847e4-6a58-423d-9a86-8d4ef8be5970",
+     *             "tags": {
+     *                 "color": "red"
+     *             }
+     *         }
+     *     }
+     * }`);
+     *
+     * @dochash actions/files
+     * @docname os.importAUX
+     * @docgroup 10-upload
      */
     function importAUX(urlOrJSON: string): Promise<void> {
         try {
@@ -4413,8 +5093,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Parses the given JSON or PDF data and returns the list of bots that were contained in it.
-     * @param jsonOrPdf The JSON or PDF data to parse.
+     * Parses a list of bot mods from the given string of data.
+     * The data can be JSON or the contents of a PDF file.
+     * Returns an array of mods where each mod has the structure of a bot (i.e. it has `id` and `tags` properties).
+     * Returns `null` if the data is not valid JSON or PDF.
+     *
+     * @param jsonOrPdf the JSON data or the contents of the PDF file that should parsed.
+     *
+     * @example Parse the list of bots in an @onFileUpload
+     * let bots = os.parseBotsFromData(that.file.data);
+     *
+     * @dochash actions/files
+     * @docname os.parseBotsFromData
+     * @docgroup 10-download
      */
     function parseBotsFromData(jsonOrPdf: string | ArrayBuffer): Bot[] {
         let data: any;
@@ -4517,7 +5208,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * let clone = create(thisBot);
      * os.replaceDragBot(clone);
      *
-     * @dochash actions/os
+     * @dochash actions/portals
      * @docname os.replaceDragBot
      */
     function replaceDragBot(bot: RuntimeBot): ReplaceDragBotAction {
@@ -4526,8 +5217,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Derermines whether the player is in the given dimension.
-     * @param dimension The dimension.
+     * Gets whether the given dimension is loaded into the {@tag gridPortal} portal.
+     *
+     * @param dimension the dimension to check for.
+     *
+     * @example Show a toast if the player is viewing the abc dimension.
+     * if (os.isInDimension("abc")) {
+     *     os.toast("In the dimension!");
+     * }
+     *
+     * @dochash actions/portals
+     * @docname os.isInDimension
+     * @docgroup 10-config-values
      */
     function isInDimension(dimension: string): boolean {
         return (
@@ -4537,7 +5238,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the dimension that the player is currently viewing.
+     * Gets the dimension that is loaded into the {@tag gridPortal} portal.
+     *
+     * > This function behaves exactly like {@link os.getPortalDimension} when given "gridPortal".
+     *
+     * @example Show a message of the dimension that is currently in the #gridPortal portal.
+     * const dimension = os.getCurrentDimension();
+     * os.toast(dimension);
+     *
+     * @dochash actions/portals
+     * @doctitle Portal Actions
+     * @docsidebar Portals
+     * @docdescription Actions for working with portals.
+     * @docname os.getCurrentDimension
+     * @docgroup 10-config-values
      */
     function getCurrentDimension(): string {
         const user = context.playerBot;
@@ -4552,7 +5266,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the instance that the player is currently in.
+     * Gets the inst that is loaded.
+     *
+     * @example Show a message of the current inst.
+     * const inst = os.getCurrentInst();
+     * os.toast(inst);
+     *
+     * @dochash actions/portals
+     * @docname os.getCurrentInst
+     * @docgroup 10-config-values
      */
     function getCurrentServer(): string {
         const user = context.playerBot;
@@ -4567,7 +5289,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the name of the dimension that is used for the current user's miniGridPortal.
+     * Gets the dimension that is loaded into the #miniGridPortal portal.
+     *
+     * > This function behaves exactly like {@link os.getPortalDimension} when given "miniGridPortal".
+     *
+     * @example Show a message of the dimension that is currently in the #miniGridPortal portal.
+     * const dimension = os.getMiniPortalDimension();
+     * os.toast(dimension);
+     *
+     * @dochash actions/portals
+     * @docname os.getMiniPortalDimension
+     * @docgroup 10-config-values
      */
     function getMiniPortalDimension(): string {
         const user = context.playerBot;
@@ -4583,7 +5315,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the name of the dimension that is used for the current user's menu.
+     * Gets the dimension that is loaded into the {@tag menuPortal} portal.
+     *
+     * > This function behaves exactly like {@link os.getPortalDimension} when given "menuPortal".
+     *
+     * @example Show a message of the dimension that is currently in the #menuPortal portal.
+     * const dimension = os.getMenuDimension();
+     * os.toast(dimension);
+     *
+     * @dochash actions/portals
+     * @docname os.getMenuDimension
+     * @docgroup 10-config-values
      */
     function getMenuDimension(): string {
         const user = context.playerBot;
@@ -4599,9 +5341,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the dimension that is loaded into the given portal for the player.
-     * If no dimension is loaded, then null is returned.
-     * @param portal The portal type.
+     * Gets the dimension that is loaded into the given portal.
+     * If no dimension is loaded, then `null` is returned.
+     *
+     * @param portal the portal that the dimension should be retrieved for
+     *
+     * @example Get the dimension that is currently showing in the #gridPortal.
+     * const dimension = os.getPortalDimension('grid');
+     *
+     * @example Get the dimension that is currently showing in the #miniGridPortal.
+     * const dimension = os.getPortalDimension('miniGrid');
+     *
+     * @dochash actions/portals
+     * @docname os.getPortalDimension
+     * @docgroup 10-config-values
      */
     function getPortalDimension(portal: PortalType): string {
         const user = context.playerBot;
@@ -4622,9 +5375,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Gets the distance that the player bot is from the given dimension.
      *
-     * Returns 0 if the player bot is in the dimension, 1 if the dimension is in a portal, and -1 if neither are true.
+     * Returns `0` if the player bot is in the dimension, `1` if the dimension is in a portal, and `-1` if neither are true.
      *
      * @param dimension The dimension to check for.
+     *
+     * @example Get the distance to the "fun" dimension.
+     * const distance = os.getDimensionalDepth("fun");
+     * if (distance === 0) {
+     *     os.toast("Player is in the fun dimension");
+     * } else if(distance === 1) {
+     *     os.toast("Player is viewing the fun dimension");
+     * } else {
+     *     os.toast("Player cannot access the fun dimension");
+     * }
+     *
+     * @dochash actions/portals
+     * @docname os.getDimensionalDepth
+     * @docgroup 10-config-values
      */
     function getDimensionalDepth(dimension: string): number {
         const bot = context.playerBot;
@@ -4640,26 +5407,36 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shows an input box to edit the given bot and tag.
+     * Shows an input modal for the given bot and tag with the given options.
+     * When shown, the player will be able to change the value stored in the given tag.
+     * Triggers the {@tag @onSaveInput} whisper when the modal is closed with saving and the {@tag @onCloseInput} whisper when the modal is closed without saving.
      *
-     * @param bot The bot or bot ID that should be edited.
-     * @param tag The tag which should be edited on the bot.
-     * @param options The options that indicate how the input box should be customized.
+     * @param bot the bot or bot ID that the input should be shown for.
+     * @param tag the tag that should be edited on the bot.
+     * @param options the possible cusomization options for the input modal.
      *
-     * @example
-     * // Show an input box for `this` bot's label.
-     * os.showInputForTag(this, "label", {
-     *            title: "Change the label",
-     *            type: "text"
+     * @example Show a basic text input modal for the #name tag on this bot.
+     * os.showInputForTag(this, "name");
+     *
+     * @example Show a text input modal with a placeholder for the #name tag.
+     * os.showInputForTag(this, "name", {
+     *     placeholder: 'Enter a name'
      * });
      *
-     * @example
-     * // Show a color picker for the bot's color.
+     * @example Show a input modal with a custom title.
+     * os.showInputForTag(this, "name", {
+     *     title: 'Edit name'
+     * });
+     *
+     * @example Show a color input modal with a custom title.
      * os.showInputForTag(this, "color", {
-     *            title: "Change the color",
-     *            type: "color",
-     *            subtype: "advanced"
+     *     type: 'color',
+     *     title: 'Enter a custom color'
      * });
+     *
+     * @dochash actions/portals
+     * @docname os.showInputForTag
+     * @docgroup 10-showInput
      */
     function showInputForTag(
         bot: Bot | string,
@@ -4672,17 +5449,168 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shows an input box. Returns a promise that resolves with the new value.
+     * Shows an input modal with the given value and options. When shown, the player will be able to change the value.
      *
-     * @param currentValue The value that the input box should be prefilled with.
-     * @param options The options that indicate how the input box should be customized.
+     * Returns a Promise that resolves with the final value when the user is finished editing.
+     * This function is similar to {@link os.showInputForTag} except it doesn't require a bot and a tag.
      *
-     * @example
-     * // Show an input box.
-     * const result = await os.showInput({
-     *    title: "Change the label",
-     *    type: "text"
+     * @param currentValue the value that should be shown in the input modal.
+     * @param options the options that indicate how the input box should be customized.
+     *
+     * @example Show a basic text input modal and displays a toast message with the input value.
+     * const value = await os.showInput();
+     * os.toast(value);
+     *
+     * @example Show a text input modal with a placeholder.
+     * const name = await os.showInput(null, {
+     *     placeholder: 'Enter a name'
      * });
+     * os.toast(name);
+     *
+     * @example Show a input modal with a custom title.
+     * const name = await os.showInput('My Name', {
+     *     title: 'Edit name'
+     * });
+     * os.toast(name);
+     *
+     * @example Show a color input modal with a custom title.
+     * const color = await os.showInput('green', {
+     *     type: 'color',
+     *     title: 'Enter a custom color'
+     * });
+     * os.toast(color);
+     *
+     * @example Show an input for entering secrets (like passwords).
+     * const secret = await os.showInput('', {
+     *     type: 'secret',
+     *     title: 'Enter a secret key'
+     * });
+     * os.toast(secret);
+     *
+     * @example Show an input for entering dates.
+     * const date = await os.showInput('', {
+     *     type: 'date',
+     *     title: 'Enter a date'
+     * });
+     * os.toast(date);
+     *
+     * @example Show an input with a list of options.
+     * // Null means nothing is selected
+     * // To pre-select an item, pass in the index of the item you want selected.
+     * const selectedItem = await os.showInput(null, {
+     *     title: 'Select your favorite superhero',
+     *     type: 'list',
+     *     placeholder: 'Superhero',
+     *     items: [
+     *         {
+     *             label: 'Superman',
+     *             value: 1
+     *         },
+     *         {
+     *             label: 'Iron Man',
+     *             value: 2
+     *         },
+     *         {
+     *             label: 'Batman',
+     *             value: 3
+     *         },
+     *         {
+     *             label: 'Wonder Woman',
+     *             value: 4
+     *         }
+     *     ]
+     * });
+     * os.toast(selectedItem);
+     *
+     * @example Show an input with a list of checkboxes.
+     * // Empty array means nothing is selected.
+     * // To pre-select items, pass in an array with the indexes of the items you want selected.
+     * const selectedItems = await os.showInput([], {
+     *     title: 'Check your favorite superheroes',
+     *     type: 'list',
+     *     subtype: 'checkbox',
+     *     items: [
+     *         {
+     *             label: 'Superman',
+     *             value: 1
+     *         },
+     *         {
+     *             label: 'Iron Man',
+     *             value: 2
+     *         },
+     *         {
+     *             label: 'Batman',
+     *             value: 3
+     *         },
+     *         {
+     *             label: 'Wonder Woman',
+     *             value: 4
+     *         }
+     *     ]
+     * });
+     * os.toast(selectedItems);
+     *
+     * @example Show an input with a dropdown of checkboxes.
+     * // Empty array means nothing is selected.
+     * // To pre-select items, pass in an array with the indexes of the items you want selected.
+     * const selectedItems = await os.showInput([], {
+     *     title: 'Select your favorite superheroes',
+     *     type: 'list',
+     *     subtype: 'multiSelect',
+     *     placeholder: 'Superhero',
+     *     items: [
+     *         {
+     *             label: 'Superman',
+     *             value: 1
+     *         },
+     *         {
+     *             label: 'Iron Man',
+     *             value: 2
+     *         },
+     *         {
+     *             label: 'Batman',
+     *             value: 3
+     *         },
+     *         {
+     *             label: 'Wonder Woman',
+     *             value: 4
+     *         }
+     *     ]
+     * });
+     * os.toast(selectedItems);
+     *
+     * @example Show an input with a list of radio buttons.
+     * // Null means nothing is selected.
+     * // To pre-select an item, pass in the index of the item you want selected.
+     * const selectedItem = await os.showInput(null, {
+     *     title: 'Check your favorite superheroe',
+     *     type: 'list',
+     *     subtype: 'radio',
+     *     placeholder: 'Superhero',
+     *     items: [
+     *         {
+     *             label: 'Superman',
+     *             value: 1
+     *         },
+     *         {
+     *             label: 'Iron Man',
+     *             value: 2
+     *         },
+     *         {
+     *             label: 'Batman',
+     *             value: 3
+     *         },
+     *         {
+     *             label: 'Wonder Woman',
+     *             value: 4
+     *         }
+     *     ]
+     * });
+     * os.toast(selectedItem);
+     *
+     * @dochash actions/portals
+     * @docname os.showInput
+     * @docgroup 10-showInput
      */
     function showInput(
         currentValue?: any,
@@ -4694,8 +5622,33 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Shows a confirmation dialog. Returns a promise that resolves with true if the "Confirm" button is clicked and false if the "Cancel" button is clicked or the dialog is closed.
-     * @param options The options that indicate how the confirmation dialog shold be customized.
+     * Shows a confirmation dialog using the given options. Confirmation dialogs are useful for giving users the ability to quickly confirm or cancel an action.
+     *
+     * Returns a promise that resolves with `true` if the user clicked the "Confirm" button and `false` if they closed the dialog or clicked the "Cancel" button.
+     *
+     * @param options the options that should be used for the confirmation dialog.
+     *
+     * @example Show a confirmation dialog
+     * let confirmed = await os.showConfirm({
+     *     title: 'Confirm',
+     *     content: 'Please confirm the action.'
+     * });
+     *
+     * os.toast('Confirmed: ' + (confirmed ? 'Yes' : 'No'));
+     *
+     * @example Show a confirmation dialog with custom button text
+     * let confirmed = await os.showConfirm({
+     *     title: 'Confirm',
+     *     content: 'Are you sure?',
+     *     confirmText: 'Yes',
+     *     cancelText: 'No'
+     * });
+     *
+     * os.toast('Confirmed: ' + (confirmed ? 'Yes' : 'No'));
+     *
+     * @dochash actions/portals
+     * @docname os.showConfirm
+     * @docgroup 10-showInput
      */
     function showConfirm(options: ShowConfirmOptions): Promise<boolean> {
         if (!options) {
@@ -4709,12 +5662,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Redirects the user to the given dimension.
-     * @param dimension The dimension to go to.
+     * Loads the given dimension into the {@tag gridPortal} portal. Triggers the {@tag @onPortalChanged} shout for the gridPortal.
+     * @param dimension the dimension that should be loaded.
      *
-     * @example
-     * // Send the player to the "welcome" dimension.
-     * os.goToDimension("welcome");
+     * @example Load the abc dimension.
+     * os.goToDimension("abc");
+     *
+     * @dochash actions/portals
+     * @docname os.goToDimension
+     * @docgroup 10-go-to
      */
     function goToDimension(dimension: string): GoToDimensionAction {
         const event = calcGoToDimension(dimension);
@@ -4722,12 +5678,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Redirects the user to the given URL.
-     * @param url The URL to go to.
+     * Redirects the current tab to the given URL. Useful for sending the player to another webpage or ambient experience.
      *
-     * @example
-     * // Send the player to wikipedia.
-     * os.goToURL("https://wikipedia.org");
+     * @param url the [URL](https://en.wikipedia.org/wiki/URL) that the player should be sent to. Usually this is a website like `https://example.com`.
+     *
+     * @example Send the player to https://example.com.
+     * os.goToURL("https://example.com");
+     *
+     * @dochash actions/portals
+     * @docname os.goToURL
+     * @docgroup 10-go-to
      */
     function goToURL(url: string): GoToURLAction {
         const event = calcGoToURL(url);
@@ -4735,12 +5695,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Redirects the user to the given URL.
-     * @param url The URL to go to.
+     * Opens a new tab with the given URL. Useful for opening another webpage without redirecting the current tab.
      *
-     * @example
-     * // Open wikipedia in a new tab.
-     * os.openURL("https://wikipedia.org");
+     * @param url the [URL](https://en.wikipedia.org/wiki/URL) that the player should be sent to. Usually this is a website like `https://example.com`.
+     *
+     * @example Open https://example.com in a new tab.
+     * os.openURL("https://example.com");
+     *
+     * @dochash actions/portals
+     * @docname os.openURL
+     * @docgroup 10-go-to
      */
     function openURL(url: string): OpenURLAction {
         const event = calcOpenURL(url);
@@ -4750,6 +5714,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     /**
      * Instructs CasualOS to open the built-in developer console.
      * The dev console provides easy access to error messages and debug logs for formulas and actions.
+     *
+     * @example Open the developer console.
+     * os.openDevConsole();
+     *
+     * @dochash actions/os
+     * @docname os.openDevConsole
+     * @docgroup 12-dev
      */
     function openDevConsole(): OpenConsoleAction {
         const event = openConsole();
@@ -4778,12 +5749,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Play given url's audio.
-     * Returns a promise that resolves once the sound starts playing.
+     * Loads and plays the audio (MP3, WAV, etc.) from the given URL.
      *
-     * @example
-     * // Play a cow "moo"
-     * os.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+     * Returns a promise that resolves with the ID of the sound when the sound starts playing. The sound ID can then be used with {@link os.cancelSound} to stop the sound.
+     *
+     * @param url the [URL](https://en.wikipedia.org/wiki/URL) of the audio/music/sound clip that should be played.
+     *
+     * @example Play a MP3 file from another website.
+     * os.playSound("https://www.testsounds.com/track06.mp3");
+     *
+     * @dochash actions/audio
+     * @doctitle Audio Actions
+     * @docsidebar Audio
+     * @docdescription Actions for working with audio and sound files.
+     * @docname os.playSound
+     * @docgroup 10-sound
      */
     function playSound(url: string) {
         const task = context.createTask();
@@ -4792,13 +5772,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Preloads the audio for the given URL.
-     * Returns a promise that resolves when the audio has finished loading.
-     * @param url The URl to preload.
+     * Loads the audio from the given URL without playing it. Returns a promise that resolves once the sound has been loaded.
      *
-     * @example
-     * // Preload a cow "moo"
-     * os.bufferSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+     * This is useful for pre-loading a sound so that there will be no delay when playing it with {@link os.playSound}.
+     *
+     * @param url the [URL](https://en.wikipedia.org/wiki/URL) of the audio/music/sound clip that should be loaded.
+     *
+     * @example Pre-load a MP3 file from another website.
+     * os.bufferSound("https://www.testsounds.com/track06.mp3");
+     *
+     * @dochash actions/audio
+     * @docname os.bufferSound
+     * @docgroup 10-sound
      */
     function bufferSound(url: string) {
         const task = context.createTask();
@@ -4807,14 +5792,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Cancels the sound with the given ID.
-     * Returns a promise that resolves when the audio has been canceled.
-     * @param soundId The ID of the sound that is being canceled.
+     * Cancels the sound with the given ID. Returns a promise that resolves once the sound has been canceled.
      *
-     * @example
-     * // Play and cancel a sound
-     * const id = await os.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+     * @param soundId the ID of the sound that was returned from {@link os.playSound}.
+     *
+     * @example Cancel a sound that is playing.
+     * const id = await os.playSound("https://www.testsounds.com/track06.mp3");
      * os.cancelSound(id);
+     *
+     * @dochash actions/audio
+     * @docname os.cancelSound
+     * @docgroup 10-sound
      */
     function cancelSound(soundId: number | string | object) {
         const task = context.createTask();
@@ -4827,8 +5815,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Determines whether the player has the given bot in their miniGridPortal.
-     * @param bots The bot or bots to check.
+     * Determines if the given bot is in the dimension that is currently loaded into the {@tag miniGridPortal} portal.
+     *
+     * @param bots the bot or bots that should be checked.
+     *
+     * @example Show a message if a bot named "bob" is in the miniGridPortal.
+     * const bob = getBot("#name", "bob");
+     * if (os.hasBotInMiniPortal(bob)) {
+     *     os.toast("bob is in the miniGridPortal!");
+     * }
+     *
+     * @dochash actions/portals
+     * @docname os.hasBotInMiniPortal
+     * @docgroup 10-config-values
      */
     function hasBotInMiniPortal(bots: Bot | Bot[]): boolean {
         if (!Array.isArray(bots)) {
@@ -4892,8 +5891,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     duration: 5
      * });
      *
-     * @dochash actions/os
+     * @dochash actions/portals
      * @docname os.closeCircleWipe
+     * @docgroup 10-circle-wipe
      */
     function closeCircleWipe(
         options?: Partial<OpenCircleWipeOptions>
@@ -4937,8 +5937,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     duration: 5
      * });
      *
-     * @dochash actions/os
+     * @dochash actions/portals
      * @docname os.openCircleWipe
+     * @docgroup 10-circle-wipe
      */
     function openCircleWipe(
         options?: Partial<OpenCircleWipeOptions>
@@ -5003,7 +6004,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     distance: 1
      * }, "face");
      *
-     * @dochash actions/os
+     * @dochash actions/portals
      * @docname os.addDropSnap
      */
     function addDropSnap(...targets: SnapTarget[]): AddDropSnapTargetsAction {
@@ -5044,7 +6045,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     distance: 1
      * }, "face");
      *
-     * @dochash actions/os
+     * @dochash actions/portals
      * @docname os.addBotDropSnap
      */
     function addBotDropSnap(
@@ -5107,7 +6108,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     showGrid: true
      * });
      *
-     * @dochash actions/os
+     * @dochash actions/portals
      * @docname os.addDropGrid
      */
     function addDropGrid(
@@ -5169,6 +6170,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     position: { x: 0, y: 0, z: 3 },
      *     showGrid: true
      * });
+     *
+     * @dochash actions/portals
+     * @docname os.addBotDropGrid
      */
     function addBotDropGrid(
         bot: Bot | string,
@@ -5205,7 +6209,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @example Enable custom dragging for the current drag operation
      * os.enableCustomDragging();
      *
-     * @dochash actions/os
+     * @dochash actions/portals
      * @docname os.enableCustomDragging
      */
     function enableCustomDragging(): EnableCustomDraggingAction {
@@ -5243,6 +6247,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @dochash actions/os
      * @docname os.getGeolocation
+     * @docgroup 10-geolocation
      */
     function getGeolocation(): Promise<Geolocation> {
         const task = context.createTask();
@@ -6584,6 +7589,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @dochash actions/os
      * @docname os.convertGeolocationToWhat3Words
+     * @docgroup 10-geolocation
      */
     function convertGeolocationToWhat3Words(
         location: ConvertGeolocationToWhat3WordsOptions
@@ -6594,9 +7600,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Casts a 3D ray into the specified portal from the camera and returns information about the bots that were hit.
-     * @param portal The portal that should be tested.
-     * @param viewportCoordinates The 2D camera viewport coordinates that the ray should be sent from.
+     * Finds the list of bots that are in the given portal and are intersected by a ray starting at the portal camera and traveling along a path emanating from the given viewport position.
+     * Returns a promise that resolves with information about the intersected bots.
+     *
+     * @param portal the portal that should be tested.
+     * @param viewportCoordinates the 2D viewport position that the ray should start at.
+     * Viewport positions locate a specific point on the image that the camera produces.
+     * `(X: 0, Y: 0)` represents the center of the camera while `(X: -1, Y: -1)` represents the lower left corner and `(X: 1, Y: 1)` represents the upper right corner.
+     *
+     * @example Find the bots that are in the center of the screen
+     * const result = await os.raycastFromCamera("grid", new Vector2(0, 0));
+     * os.toast('Found Bots: ' + result.botIntersections.map(b => b.id).join(', '));
+     *
+     * @example Find the bots that are on the left-center edge of the screen
+     * const result = await os.raycastFromCamera("grid", new Vector2(-1, 0));
+     * os.toast('Found Bots: ' + result.botIntersections.map(b => b.id).join(', '));
+     *
+     * @dochash actions/portals
+     * @docname os.raycastFromCamera
+     * @docgroup 10-raycast
      */
     function raycastFromCamera(
         portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
@@ -6612,10 +7634,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Casts a 3D ray into the specified portal using the given origin and direction and returns information about the bots that were hit.
-     * @param portal The portal that should be tested.
-     * @param origin The 3D point that the ray should start at.
-     * @param direction The 3D direction that the ray should travel in.
+     * Finds the list of bots that are in the given portal and are intersected by a ray starting at the given origin position and traveling in the given direction.
+     * Returns a promise that resolves with information about the intersected bots.
+     *
+     * @param portal the name of the portal that should be tested.
+     * @param origin the 3D position that the ray should start at.
+     * @param direction the 3D direction that the ray should travel along.
+     *
+     * @example Find the bots that are directly to the right of `(0,0,0)` in the grid portal
+     * const result = await os.raycast("grid", new Vector3(0, 0, 0), new Vector3(1, 0, 0));
+     * os.toast('Found Bots: ' + result.botIntersections.map(b => b.id).join(', '));
+     *
+     * @example Find the bots that the mouse pointer is pointing at in the grid portal
+     * const result = await os.raycast("grid", os.getPointerPosition("mouse"), os.getPointerDirection("mouse"));
+     * os.toast('Found Bots: ' + result.botIntersections.map(b => b.id).join(', '));
+     *
+     * @dochash actions/portals
+     * @docname os.raycast
+     * @docgroup 10-raycast
      */
     function raycast(
         portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
@@ -6642,9 +7678,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Calculates the 3D ray that would be projected into the given portal based on the specified camera viewport coordinates.
-     * @param portal The portal that the ray should be projected into.
-     * @param viewportCoordinates The 2D camera viewport coordinates that the ray should be sent from.
+     * Calculates the ray that starts at the given portal camera and travels along the path emanating from the given viewport position.
+     * Returns a promise that resolves with information about the calculated ray.
+     *
+     * @param portal the name of the portal that should be tested.
+     * @param viewportCoordinates the 2D viewport position that the ray should start at.
+     * Viewport positions locate a specific point on the image that the camera produces.
+     * `(X: 0, Y: 0)` represents the center of the camera while `(X: -1, Y: -1)` represents the lower left corner and `(X: 1, Y: 1)` represents the upper right corner.
+     *
+     * @example Find the ray that passes through the center of the screen
+     * const ray = await os.calculateRayFromCamera("grid", new Vector2(0, 0));
+     * os.toast('Calculated ray: ' + ray);
+     *
+     * @example Find the ray that passes through the left-center edge of the screen
+     * const ray = await os.raycastFromCamera("grid", new Vector2(-1, 0));
+     * os.toast('Calculated ray: ' + ray);
+     *
+     * @dochash actions/portals
+     * @docname os.calculateRayFromCamera
+     * @docgroup 10-raycast
      */
     function calculateRayFromCamera(
         portal: 'grid' | 'miniGrid' | 'map' | 'miniMap',
@@ -6670,10 +7722,45 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Starts the given animation on the given bot(s).
-     * @param botOrBots The bot or list of bots that the animation should be started on.
-     * @param nameOrIndex The name of the animation.
-     * @param options The options for the animation.
+     * Starts the given animation on the given bot or list of bots using the given options. Returns a promise that resolves once the animation(s) have been started.
+     *
+     * Triggers the {@tag @onFormAnimationStarted} and {@tag @onAnyFormAnimationStarted} listeners once the animation has started.
+     *
+     * @param botOrBots the bot or list of bots that the animation should be started on.
+     * @param nameOrIndex the name of the animation that should be started. Additionally, it can be the index number of the animation that should be played.
+     * @param options the options that should be used to play the animation.
+     *
+     * @example Start the "Run" animation on this bot
+     * await os.startFormAnimation(thisBot, "Run");
+     *
+     * @example Start the "Run" animation on every bot in the home dimension
+     * await os.startFormAnimation(getBots(inDimension("home")), "Run");
+     *
+     * @example Start an animation that loops 5 times
+     * await os.startFormAnimation(thisBot, "Run", {
+     *     loop: {
+     *         mode: 'repeat',
+     *         count: 5
+     *     }
+     * });
+     *
+     * @example Start an animation which starts playing 5 seconds in the future
+     * await os.startFormAnimation(thisBot, "Run", {
+     *     startTime: os.localTime + 5000
+     * });
+     *
+     * @example Start an animation which plays at half its normal speed
+     * await os.startFormAnimation(thisBot, "Run", {
+     *     timeScale: 0.5
+     * });
+     *
+     * @dochash actions/animations
+     * @doctitle Animation Actions
+     * @docsidebar Animations
+     * @docdescription Actions for playing animations on bots.
+     * @docname os.startFormAnimation
+     * @docgroup 10-animations
+     * @docorder 0
      */
     function startFormAnimation(
         botOrBots: Bot | string | (Bot | string)[],
@@ -6696,10 +7783,32 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Stops the animation on the given bot(s).
-     * Returns a promise that resolves when the animations have been stopped.
-     * @param botOrBots The bot or list of bots that the animation(s) should be stopped on.
-     * @param options The options that should be used.
+     * Stops the animations that are running on the given bot or list of bots using the given options. Returns a promise that resolves once the animations have been stopped.
+     *
+     * This function only works for animations that have been started by {@link os.startFormAnimation}.
+     *
+     * Triggers the {@tag @onFormAnimationStopped} and {@tag @onAnyFormAnimationStopped} listeners once the animation has stopped.
+     *
+     * @param botOrBots the bot or list of bots whose animations should be stopped.
+     * @param options the options that should be used for stopping the animations.
+     *
+     * @example Stop the animations on this bot
+     * await os.stopFormAnimation(thisBot);
+     *
+     * @example Slowly stop the animations on this bot
+     * await os.stopFormAnimation(thisBot, {
+     *     fadeDuration: 1000 // Take 1 second to stop the animation
+     * });
+     *
+     * @example Stop the current animation 5 seconds in the future
+     * await os.stopFormAnimation(thisBot, {
+     *     stopTime: os.localTime + 5000
+     * });
+     *
+     * @dochash actions/animations
+     * @docname os.stopFormAnimation
+     * @docgroup 10-animations
+     * @docorder 1
      */
     function stopFormAnimation(
         botOrBots: Bot | string | (Bot | string)[],
@@ -6716,8 +7825,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the list of animations that are included in the given the form or bot.
-     * @param botOrAddress The bot, bot ID, or address that the animations should be retrieved from.
+     * Retrieves the list of animations that are available on the given bot or GLTF mesh address.
+     * Returns a promise that resolves with the list of available animations.
+     *
+     * @param botOrAddress the bot or address that the animation list should be retrieved from
+     *
+     * @example Get the list of animations on this bot
+     * const animations = await os.listFormAnimations(thisBot);
+     *
+     * @example Get the list of animations for a specific address
+     * const animations = await os.listFormAnimations('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf');
+     *
+     * @dochash actions/animations
+     * @docname os.listFormAnimations
+     * @docgroup 10-animations
+     * @docorder 2
      */
     function listFormAnimations(
         botOrAddress: Bot | string
@@ -7749,7 +8871,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Gets the number of remotes that are viewing the current inst.
-     * @param inst The instance to get the statistics for. If omitted, then the current instance is used.
+     * Optionally takes a parameter which is the inst that the number of remotes should be retrieved for.
+     * If omitted, then the current inst will be checked. Returns a promise that resolves with the number of active remotes.
+     *
+     * @param inst the name of the inst that the number of remotes should be retrieved for. If not specified, then the current inst current inst will be used.
+     *
+     * @example Get the number of remotes in the current inst.
+     * const numberOfRemotes = await os.remoteCount();
+     * os.toast("Number of Remotes: " + numberOfRemotes);
+     *
+     * @example Get the number of remotes in the `test` inst.
+     * const numberOfRemotes = await os.remoteCount('test');
+     * os.toast("Number of Remotes: " + numberOfRemotes);
+     *
+     * @dochash actions/os
+     * @docname os.remoteCount
+     * @docgroup 10-remotes
      */
     function serverRemoteCount(inst?: string): Promise<number> {
         const task = context.createTask(true, true);
@@ -7764,7 +8901,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the total number of remotes that are connected to the server.
+     * Gets the number of devices that are connected to the server. Returns a promise that resolves with the number of active devices.
+     *
+     * @example Get the number of devices on the server.
+     * const numberOfDevices = await os.totalRemoteCount();
+     * os.toast("Number of Devices: " + numberOfDevices);
+     *
+     * @dochash actions/os
+     * @docname os.totalRemoteCount
+     * @docgroup 10-remotes
      */
     function totalRemoteCount(): Promise<number> {
         const task = context.createTask(true, true);
@@ -7778,7 +8923,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the list of instances that are on the server.
+     * Gets the list of instances that are stored on the server. Returns a promise that resolves with the list of inst names.
+     *
+     * @example Get the list of instances on the server.
+     * const instances = await os.instances();
+     * os.toast("Instances " + instances.join(','));
+     *
+     * @dochash actions/os
+     * @docname os.instances
+     * @docgroup 10-remotes
      */
     function servers(): Promise<string[]> {
         const task = context.createTask(true, true);
@@ -7792,7 +8945,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the list of instances that are on the server.
+     * Gets the list of instances that are stored on the server along with the last time that they were updated. Returns a promise that resolves with the list of instances.
+     *
+     * The resolved list is sorted by the most recently updated first and the least recently updated last.
+     *
+     * @example Get the list of instances on the server along with their status.
+     * const instances = await os.instStatuses();
+     * os.toast("Instances " + getJSON(instances));
+     *
+     * @dochash actions/os
+     * @docname os.instStatuses
+     * @docgroup 10-remotes
      */
     function serverStatuses(): Promise<
         {
@@ -7811,7 +8974,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the list of remote IDs that are connected to the instance.
+     * Gets the list of remote IDs that are connected to the current inst. Returns a promise that resolves with the list of remote IDs.
+     *
+     * The resolved list will always have at least one value that represents the current remote.
+     *
+     * @example Get the list of remote IDs.
+     * const remotes = await os.remotes();
+     * os.toast("Remotes " + remotes.join(','));
+     *
+     * @dochash actions/os
+     * @docname os.remotes
+     * @docgroup 10-remotes
      */
     function remotes(): Promise<string[]> {
         const task = context.createTask(true, true);
@@ -7825,7 +8998,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the list of updates that have been applied to this inst.
+     * Gets the list of updates that have occurred in the shared space. Returns a promise that resolves with the list of updates.
+     *
+     * Useful when combined with {@link os.getInstStateFromUpdates} to track the history of an inst over time.
+     *
+     * @example Get a list of updates to shared space
+     * const updates = await os.listInstUpdates();
+     *
+     * @dochash actions/os
+     * @docname os.listInstUpdates
+     * @docgroup 10-updates
      */
     function listInstUpdates(): Promise<InstUpdate[]> {
         const task = context.createTask(true, true);
@@ -7839,8 +9021,43 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the inst state that was produced by the given set of updates.
-     * @param updates The updates.
+     * Calculates the inst state from the given list of updates. Returns a promise that resolves with the bot state that the updates produce.
+     *
+     * Useful for tracking the history of an inst over time.
+     *
+     * @param updates The updates that the state should be calculated from.
+     *
+     * @example Get the last 5 inst states in the shared space
+     * const updates = await os.listInstUpdates();
+     *
+     * let states = [];
+     * for(let i = 5; i >= 0; i--) {
+     *     const state = await os.getInstStateFromUpdates(updates.slice(0, updates.length - i));
+     *     states.push(state);
+     * }
+     *
+     * console.log('States: ', states);
+     *
+     * @example Calculate the last deltas from shared space updates
+     * const updates = await os.listInstUpdates();
+     *
+     * let lastState;
+     * let deltas = [];
+     * for(let i = 5; i >= 0; i--) {
+     *     const state = await os.getInstStateFromUpdates(updates.slice(0, updates.length - i));
+     *
+     *     if (lastState) {
+     *         const delta = diffSnapshots(lastState, state);
+     *         deltas.push(delta);
+     *     }
+     *
+     *     lastState = state;
+     * }
+     * console.log('Deltas: ', deltas);
+     *
+     * @dochash actions/os
+     * @docname os.getInstStateFromUpdates
+     * @docgroup 10-updates
      */
     function getInstStateFromUpdates(
         updates: InstUpdate[]
@@ -7856,10 +9073,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Creates an inst update that, when applied, ensures that the given bots have been created on the inst.
-     * Inst updates have special properties in that they can be applied multiple times and they will only create one set of bots.
-     * This is valuable for situations where you want to ensure that all players observe the same state.
-     * @param bots The bots.
+     * Creates an inst update that, when applied, ensures the given bots are created on this inst. Returns a promise that resolves with the inst update.
+     *
+     * Note that you can apply the same update multiple times and you will end up with only one version of the bots saved in the update. Additionally, future changes to the bots will be preserved even if the update is applied again.
+     *
+     * This feature makes inst updates useful when you want to ensure that an experience starts in an initial state but also able to change over time.
+     *
+     * Unlike {@link os.getCurrentInstUpdate}, this function creates an update that is not linked to this inst. This means that applying the update to the inst it was created in will create duplicate bots.
+     *
+     * @param bots the list of bots that should be included in the update.
+     *
+     * @example Create an update with this bot and save it to a tag
+     * const update = await os.createInitializationUpdate([thisBot]);
+     * tags.savedUpdate = update;
+     *
+     * @example Create an update with all the bots in the home dimension
+     * const update = await os.createInitializationUpdate(getBots(inDimension('home')));
+     * tags.savedUpdate = update;
+     *
+     * @dochash actions/os
+     * @docname os.createInitializationUpdate
+     * @docgroup 10-updates
      */
     function createInitializationUpdate(
         bots: RuntimeBot[]
@@ -7878,10 +9112,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Applies the given updates to the inst.
-     * Inst updates have special properties in that they can be applied multiple times and they will only create one set of bots.
-     * This is valuable for situations where you want to ensure that all players observe the same state.
-     * @param updates The updates that should be applied to the inst.
+     * Applies the given updates to the current inst. Returns a promise that resolves once the updates have been applied.
+     *
+     * Note that you can call this function with the same update multiple times and you will end up with only one version of the bots saved in the update. Additionally, future changes to the bots will be preserved even if the update is applied again.
+     *
+     * This feature makes inst updates useful when you want to ensure that an experience starts in an initial state but also able to change over time.
+     *
+     * @param updates the list of updates that should be applied to this inst.
+     *
+     * @example Apply an update that was saved to a tag
+     * await os.applyUpdatesToInst([ tags.savedUpdate ]);
+     *
+     * @dochash actions/os
+     * @docname os.applyUpdatesToInst
+     * @docgroup 10-updates
      */
     function applyUpdatesToInst(updates: InstUpdate[]): Promise<void> {
         const task = context.createTask(true, true);
@@ -7895,10 +9139,34 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the current inst update.
+     * Retrieves an inst update that represents the current local shared state of the inst. Returns a promise that resolves with the update.
      *
-     * This function is somewhat equivalent to calling os.listInstUpdates() followed by os.mergeInstUpdates(), but it uses the locally available state instead of fetching from the server.
-     * This makes it more efficient as well as usable even when the server is not available.
+     * Note that the inst update only contains bots and tag masks from the `shared` space. Useful for saving the current shared state of the inst so that it can be restored later or transferred to another inst.
+     *
+     * Unlike {@link os.createInitializationUpdate}, this function creates an update that is linked to this inst. This means that applying the update to the inst it was created in will not create duplicate bots. It is still possible to apply the update to other insts, but it may create duplicate bots depending on the history of the other inst.
+     *
+     * @example Save the current inst state to a local bot
+     * const update = await os.getCurrentInstUpdate();
+     * create({
+     *     space: 'local',
+     *     backup: true,
+     *     timestamp: update.timestamp,
+     *     update: update
+     * });
+     *
+     * @example Restore from a local bot
+     * const savedUpdates = getBots(bySpace('local'), byTag('backup', true));
+     * savedUpdates.sort((a, b) => b.timestamp - a.timestamp);
+     *
+     * if (savedUpdates.length > 0) {
+     *     const update = savedUpdates[0].tags.update;
+     *     await os.applyUpdatesToInst([update]);
+     *     os.toast("Restored!");
+     * }
+     *
+     * @dochash actions/os
+     * @docname os.getCurrentInstUpdate
+     * @docgroup 10-updates
      */
     function getCurrentInstUpdate(): Promise<InstUpdate> {
         const task = context.createTask(true, true);
@@ -7912,8 +9180,14 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Merges the given instance updates into a single update.
-     * @param updates The list of updates to merge.
+     * Merges the given updates into a single update. Returns the merged update.
+     *
+     * This function is useful for compressing a list of updates into a single update that can be applied to an inst.
+     *
+     * @param updates the list of updates that should be merged.
+     *
+     * @example Merge a list of updates
+     * const merged = os.mergeInstUpdates(updates);
      */
     function mergeInstUpdates(updates: InstUpdate[]): InstUpdate {
         return calcMergeInstUpdates(updates);
@@ -9026,8 +10300,32 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Starts a new audio recording.
+     * Returns a promise that resolves when recording has started.
+     * The returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone.
      *
-     * @docgroup 20-experimental
+     * Triggers {@tag @onBeginAudioRecording} once recording has started and continuously triggers {@tag @onAudioChunk} if stream is set to true.
+     *
+     * @param options the options that determines how the audio should be recorded.
+     *
+     * @example Record some audio for 10 seconds and download the file.
+     * await os.beginAudioRecording();
+     * await os.sleep(10000);
+     * const data = await os.endAudioRecording();
+     *
+     * os.download(data);
+     *
+     * @example Stream some raw audio data for 10 seconds.
+     * await os.beginAudioRecording({
+     *     stream: true,
+     *     mimeType: 'audio/x-raw'
+     * });
+     * // @onAudioChunk will be called whenever a new sample is available.
+     * await os.sleep(10000);
+     * await os.endAudioRecording();
+     *
+     * @dochash actions/audio
+     * @docname os.beginAudioRecording
+     * @docgroup 11-audio-recording
      */
     function beginAudioRecording(
         options?: Omit<BeginAudioRecordingAction, 'type' | 'taskId'>
@@ -9038,10 +10336,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Finishes an audio recording.
-     * Returns a promise that resolves with the recorded blob.
+     * Stops the audio recording that is in progress.
+     * Returns a promise that resolves with the recorded data.
+     * If the recording was started with stream: true, then the recorded data will be null.
      *
-     * @docgroup 20-experimental
+     * Triggers {@tag @onEndAudioRecording} once recording has finished.
+     *
+     * @example Record some audio for 10 seconds and download the file.
+     * await os.beginAudioRecording();
+     * await os.sleep(10000);
+     * const data = await os.endAudioRecording();
+     *
+     * os.download(data);
+     *
+     * @dochash actions/audio
+     * @docname os.endAudioRecording
+     * @docgroup 11-audio-recording
      */
     function endAudioRecording(): Promise<Blob> {
         const task = context.createTask();
@@ -9077,11 +10387,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sends commands to the Jitsi Meet API.
-     * See https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#commands for a list of commands.
+     * Send a [command](https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe-commands) to the Jitsi Meet API. The commands are only valid if the meet portal is fully loaded (see {@tag @onMeetLoaded}).
+     *
      * Returns a promise that resolves when the command has been executed.
-     * @param command The command to execute.
-     * @param args The args for the command (if any).
+     *
+     * @param command the command to execute.
+     * @param args The arguments for the command (if any).
+     *
+     * @example Change user's meet display name
+     * os.meetCommand('displayName', 'ABC123');
+     *
+     * @example Close the meet.
+     * os.meetCommand('hangup')
+     *
+     * @dochash actions/os
+     * @docname os.meetCommand
+     * @docgroup 12-meet
      */
     function meetCommand(command: string, ...args: any): Promise<void> {
         const task = context.createTask();
@@ -9090,10 +10411,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Executes the given function from the Jitsi Meet API and returns a promise with the result.
-     * See https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe/#functions for a list of functions.
-     * @param functionName The name of the function to execute.
-     * @param args The arguments to provide to the function.
+     * Executes the given [function](https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-iframe-functions) on the Jitsi Meet API and returns a promise that resolves with the result. The functions are only valid if the meet portal is fully loaded (see @onMeetLoaded).
+     *
+     * @param functionName the name of the function to execute.
+     * @param args the arguments to provide to the function.
+     *
+     * @example Get a list of all the participants.
+     * const participants = await os.meetFunction('getParticipantsInfo')
+     *
+     * @example Get a list of available breakout rooms.
+     * const rooms = await os.meetFunction('listBreakoutRooms');
+     *
+     * @dochash actions/os
+     * @docname os.meetFunction
+     * @docgroup 12-meet
      */
     function meetFunction(functionName: string, ...args: any[]): Promise<any> {
         const task = context.createTask();
@@ -11234,15 +12565,35 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets whether the player is in the sheet dimension.
+     * Gets whether the player is viewing the sheetPortal
+     *
+     * @example Show a toast if the player is viewing the sheet.
+     * if (os.inSheet()) {
+     *     os.toast("You are in the sheet!");
+     * }
+     *
+     * @dochash actions/portals
+     * @docname os.inSheet
+     * @docgroup 10-config-values
      */
     function inSheet(): boolean {
         return getPortalDimension('sheet') !== null;
     }
 
     /**
-     * Gets the 3D position of the player's camera.
-     * @param portal The portal that the camera position should be retrieved for.
+     * Gets the 3D position that the player's camera is at in the given portal.
+     *
+     * @param portal the portal that the camera position should be retrieved for.
+     *
+     * @example Get the position of the camera in the grid portal.
+     * const position = os.getCameraPosition('grid');
+     *
+     * @example Get the position of the camera in the miniGridPortal.
+     * const position = os.getCameraPosition("mini");
+     *
+     * @dochash actions/portals
+     * @docname os.getCameraPosition
+     * @docgroup 10-positions
      */
     function getCameraPosition(portal: 'grid' | 'miniGrid' = 'grid'): Vector3 {
         const bot = context.global[`${portal}PortalBot`];
@@ -11258,8 +12609,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the 3D rotation of the player's camera.
-     * @param portal The portal that the camera rotation should be retrieved for.
+     * Gets the 3D rotation that the player's camera is at in the given portal.
+     *
+     * @param portal the portal that the camera rotation should be retrieved for.
+     *
+     * @example Get the rotation of the player in the grid portal.
+     * const rotation = os.getCameraRotation('grid');
+     *
+     * @example Get the rotation of the player in the miniGridPortal.
+     * const rotation = os.getCameraRotation("mini");
+     *
+     * @dochash actions/portals
+     * @docname os.getCameraRotation
+     * @docgroup 10-positions
      */
     function getCameraRotation(portal: 'grid' | 'miniGrid' = 'grid'): {
         x: number;
@@ -11283,8 +12645,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the 3D point that the player's camera is focusing on.
-     * @param portal The portal that the camera focus point should be retrieved for.
+     * Gets the 3D position that the player's camera is focusing on in the given portal.
+     *
+     * This is the same point that is highlighted when {@tag portalShowFocusPoint} is enabled for a portal.
+     *
+     * @param portal the portal that the camera focus point should be retrieved for.
+     *
+     * @example Get the focus point of the player in the grid portal.
+     * const focusPoint = os.getFocusPoint('grid');
+     *
+     * @example Get the focus point of the player in the miniGridPortal.
+     * const focusPoint = os.getFocusPoint("mini");
+     *
+     * @dochash actions/portals
+     * @docname os.getFocusPoint
+     * @docgroup 10-positions
      */
     function getFocusPoint(portal: 'grid' | 'miniGrid' = 'grid'): Vector3 {
         const bot = context.global[`${portal}PortalBot`];
@@ -11300,8 +12675,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the 3D position of the player's pointer.
-     * @param pointer The position of the pointer to retrieve.
+     * Gets the position that the given pointer is at.
+     * @param pointer the pointer that the position should be retrieved for.
+     *
+     * @example Get the position of the mouse pointer.
+     * const position = os.getPointerPosition("mouse");
+     *
+     * @example Get the position of the left pointer.
+     * const position = os.getPointerPosition("left");
+     *
+     * @dochash actions/portals
+     * @docname os.getPointerPosition
+     * @docgroup 10-positions
      */
     function getPointerPosition(
         pointer: 'mouse' | 'left' | 'right' = 'mouse'
@@ -11319,8 +12704,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the 3D rotation of the player's pointer.
-     * @param pointer The rotation of the pointer to retrieve.
+     * Gets the rotation (in euler angles) that the given pointer is at.
+     * @param pointer the pointer that the rotation should be retrieved for.
+     *
+     * @example Get the rotation of the mouse pointer.
+     * const rotation = os.getPointerRotation("mouse");
+     *
+     * @example Get the rotation of the left pointer.
+     * const rotation = os.getPointerRotation("left");
+     *
+     * @dochash actions/portals
+     * @docname os.getPointerRotation
+     * @docgroup 10-positions
      */
     function getPointerRotation(
         pointer: 'mouse' | 'left' | 'right' = 'mouse'
@@ -11342,8 +12737,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the 3D direction that the given pointer is pointing in.
-     * @param pointer The pointer to get the direction of.
+     * Gets the direction that the given pointer is pointed in.
+     *
+     * Can be combined with {@link math.intersectPlane} to find where on the ground the pointer is pointing.
+     *
+     * @param pointer the pointer that the direction should be retrieved for.
+     *
+     * @example Get the direction of the mouse pointer.
+     * const direction = os.getPointerDirection("mouse");
+     *
+     * @example Get the direction of the left pointer.
+     * const direction = os.getPointerDirection("left");
+     *
+     * @example Find where the mouse is pointing on the ground.
+     * const position = os.getPointerPosition();
+     * const direction = os.getPointerDirection();
+     * const groundPosition = math.intersectPlane(position, direction);
+     *
+     * @dochash actions/portals
+     * @docname os.getPointerDirection
+     * @docgroup 10-positions
      */
     function getPointerDirection(
         pointer: 'mouse' | 'left' | 'right' = 'mouse'
@@ -11356,9 +12769,47 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the input state of the given button on the given controller.
+     * Gets the state of the given button on the given controller.
+     *
      * @param controller The name of the controller that should be checked.
-     * @param button The name of the button on the controller.
+     * Possible values are:
+     *
+     * -    `mousePointer` - The mouse.
+     * -    `leftPointer` - The left controller.
+     * -    `rightPointer` - The right controller.
+     * -    `keyboard` - The keyboard.
+     * -    `touch` - The touchscreen.
+     *
+     * @param button the name of the button that you want to get the state of.
+     * Possible values are:
+     *
+     * -    `left` - The left mouse button. Only available on the mouse pointer. On mobile devices this will also be the state of the first touch.
+     * -    `right` - The right mouse button. Only available on the mouse pointer.
+     * -    `middle` - The middle mouse button. Only available on the mouse pointer.
+     * -    `primary` - The primary controller button. Only available on the left and right pointers.
+     * -    `squeeze` - The squeeze controller button. Only available on the left and right pointers.
+     * -    `Any` Key - The button for the given key. Only available on the keyboard.
+     * -    `0` - The first touch. Only available on the touchscreen.
+     * -    `1` - The second touch. Only available on the touchscreen.
+     * -    `2` - The third touch. Only available on the touchscreen.
+     * -    `3` - The fourth touch. Only available on the touchscreen.
+     * -    `5` - The fifth touch. Only available on the touchscreen.
+     *
+     * @example Send a toast if the left mouse button is clicked.
+     * const state = os.getInputState("mousePointer", "left");
+     * if (state) {
+     *     os.toast("Left mouse button is down!");
+     * }
+     *
+     * @example Send a toast if the shift key is down.
+     * const state = os.getInputState("keyboard", "Shift");
+     * if (state) {
+     *     os.toast("Shift is down!");
+     * }
+     *
+     * @dochash actions/portals
+     * @docname os.getInputState
+     * @docgroup 10-input
      */
     function getInputState(
         controller: string,
@@ -11373,7 +12824,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the list of inputs that are currently available.
+     * Gets the list of supported inputs. The returned strings can be used for the controller property in {@link os.getInputState} calls.
+     *
+     * @example Get a list of inputs and toast them.
+     * const state = os.getInputList();
+     * os.toast(state);
+     *
+     * @dochash actions/portals
+     * @docname os.getInputList
+     * @docgroup 10-input
      */
     function getInputList(): string[] {
         const user = context.playerBot;
@@ -11386,7 +12845,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Gets permission from user to access audio and/or video streams from the device.
-     * @param options The options.
+     *
+     * Returns a promise that resolves if the user grants the specified media permission(s).
+     * If the user blocks permission or has previously blocked permission or any other problem occurs, an error will be thrown.
+     *
+     * @param options The options that should be used for requesting media permissions. At least one of `audio` or `video` must be set to `true`.
+     *
+     * @example Get permission for the device's microphone.
+     * try {
+     *     await os.getMediaPermission({ audio: true });
+     * } catch (e) {
+     *     console.error('Could not get permission for microphone:', e);
+     * }
+     *
+     * @example Get permission for the device's microphone and camera.
+     * try {
+     *     await os.getMediaPermission({ audio: true, video: true });
+     * } catch (e) {
+     *     console.error('Could not get permission for microphone and/or camera:', e);
+     * }
+     *
+     * @dochash actions/os
+     * @docname os.getMediaPermission
      */
     function getMediaPermission(options: MediaPermssionOptions) {
         const task = context.createTask();
@@ -11395,8 +12875,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the current average frame rate for the 3D portals in seconds.
-     * @returns A promise that resolves with the number of frames over the last second.
+     * Gets the number of frames that have occurred over the last second.
+     * Returns a promise that resolves with the number of frames that have ocurred in the last second.
+     *
+     * @example Get the current frames per second.
+     * let fps = await os.getAverageFrameRate();
+     *
+     * @example Create a basic FPS counter.
+     * setInterval(async () => {
+     *     masks.label = await os.getAverageFrameRate();
+     * }, 1000);
+     *
+     * @dochash actions/os
+     * @docname os.getAverageFrameRate
      */
     function getAverageFrameRate(): Promise<number> {
         const task = context.createTask();
@@ -11405,38 +12896,116 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Attempts to join the given meeting room.
-     * @param roomName The name of the meeting room to join.
-     * @param options The options for the meeting.
+     * Attempts to join the given meeting room using the given options.
+     * Returns a promise that resolves with an object that indicates whether the operation was successful.
+     *
+     * Triggers the {@tag @onRoomJoined} listener once the room has been successfully joined.
+     *
+     * Additionally, the following listeners will be triggered when the relevent events occur in the chat room:
+     * -    {@tag @onRoomTrackSubscribed}
+     * -    {@tag @onRoomTrackUnsubscribed}
+     * -    {@tag @onRoomStreamLost}
+     * -    {@tag @onRoomStreaming}
+     * -    {@tag @onRoomSpeakersChanged}
+     * -    {@tag @onRoomRemoteJoined}
+     * -    {@tag @onRoomRemoteLeave}
+     * -    {@tag @onRoomOptionsChanged}
+     *
+     * @param roomName the name of the room that should be joined. Any valid string can be used as a room name. Additionally, rooms are shared across instances.
+     * @param options the additional options for joining the room.
+     *
+     * @example Join the "myChat" room
+     * const result = await os.joinRoom("myChat");
+     * if (result.success) {
+     *     os.toast("Joined the room!");
+     * } else {
+     *     os.toast("Failed to join the room: " + result.errorMessage);
+     * }
+     *
+     * @example Join a room with the video stream disabled
+     * const result = await os.joinRoom("myChat", {
+     *     video: false
+     * });
+     * if (result.success) {
+     *     os.toast("Joined the room!");
+     * } else {
+     *     os.toast("Failed to join the room: " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/rooms
+     * @doctitle Room Actions
+     * @docsidebar Rooms
+     * @docdescription Room actions are actions that make it easy to create your own custom multimedia chat rooms.
+     * @docname os.joinRoom
      */
     function joinRoom(
         roomName: string,
-        options: JoinRoomActionOptions = {}
+        options?: JoinRoomActionOptions
     ): Promise<JoinRoomResult> {
         const task = context.createTask();
-        const event = calcJoinRoom(roomName, options, task.taskId);
+        const event = calcJoinRoom(roomName, options ?? {}, task.taskId);
         return addAsyncAction(task, event);
     }
 
     /**
-     * Attempts to leave the given meeting room.
-     * @param roomName THe name of the meeting room to leave.
-     * @param options The options.
+     * Attempts to exit the given room using the given options. Returns a promise that resolves with an object which indicates whether the operation was successful.
+     *
+     * Triggers the {@tag @onRoomLeave} listener once the room has been left.
+     *
+     * @param roomName the name of the room that should be exited.
+     * @param options the additional options for leaving the room.
+     *
+     * @example Leave the "myChat" room
+     * const result = await os.leaveRoom("myChat");
+     * if (result.success) {
+     *     os.toast("Left the room!");
+     * } else {
+     *     os.toast("Failed to leave the room: " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/rooms
+     * @docname os.leaveRoom
      */
     function leaveRoom(
         roomName: string,
-        options: RecordActionOptions = {}
+        options?: RecordActionOptions
     ): Promise<LeaveRoomResult> {
         const task = context.createTask();
-        const event = calcLeaveRoom(roomName, options, task.taskId);
+        const event = calcLeaveRoom(roomName, options ?? {}, task.taskId);
         return addAsyncAction(task, event);
     }
 
     /**
-     * Attempts to set the options for the given meeting room.
-     * Useful for enabling/disabling video, audio, and screensharing.
-     * @param roomName The name of the room.
-     * @param options The options to set. Omitted properties remain unchanged.
+     * Attempts to set the options for the given chat room.
+     * Useful for enabling/disabling video, audio, and screensharing. Returns a promise that resolves with an object indicating if the operation was successful and what the current state of the room is.
+     *
+     * Triggers the {@tag @onRoomOptionsChanged} and {@tag @onRoomTrackSubscribed}/{@tag @onRoomTrackUnsubscribed} listeners as needed for the specified changes.
+     *
+     * @param roomName the name of the room that the options should be changed in.
+     * @param options the options to set. Omitted properties remain unchanged.
+     *
+     * @example Start screensharing
+     * const result = await os.setRoomOptions("myChat", {
+     *     screen: true
+     * });
+     * if (result.success) {
+     *     os.toast("Screensharing started!");
+     * } else {
+     *     os.toast("Failed to start screensharing: " + result.errorMessage);
+     * }
+     *
+     * @example Mute the microphone
+     * const result = await os.setRoomOptions("myChat", {
+     *     audio: false
+     * });
+     * if (result.success) {
+     *     os.toast("Microphone muted!");
+     * } else {
+     *     os.toast("Failed to mute microphone: " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/rooms
+     * @docname os.setRoomOptions
      */
     function setRoomOptions(
         roomName: string,
@@ -11448,9 +13017,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the options for the given meeting room.
-     * Returns a promise that resolves with the options.
+     * Attempts to get the current options for the given chat room. Useful for determining the current state of the local video (camera), audio (microphone), and screen streams. Returns a promise that resolves with an object that contains the information.
+     *
      * @param roomName The name of the room that the options should be retrieved for.
+     *
+     * @example Get the current options for a room
+     * const result = await os.getRoomOptions("myChat");
+     * if (result.success) {
+     *     os.toast("Room options: " + JSON.stringify(result.options));
+     * } else {
+     *     os.toast("Failed to get the options: " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/rooms
+     * @docname os.getRoomOptions
      */
     function getRoomOptions(roomName: string): Promise<GetRoomOptionsResult> {
         const task = context.createTask();
@@ -11459,9 +13039,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the options for the track with the given address in the given room.
-     * @param roomName The name of the room.
-     * @param address The address of the track that the options should be retrieved for.
+     * Attempts to get the current options for the specified audio/video track in the specified room.
+     * Returns a promise that resolves with an object that contains the information.
+     *
+     * This function is useful for getting basic information about a track, like the video aspect ratio or if it is sourced from a camera or the screen.
+     *
+     * @param roomName the name of the room.
+     * @param address the address of the audio/video track. Track addresses can be obtained via the {@tag @onRoomTrackSubscribed} listener.
+     *
+     * @example Get the options for a track
+     * const result = await os.getRoomTrackOptions("myChat", "myTrack");
+     * if (result.success) {
+     *     os.toast("Track options: " + JSON.stringify(result.options));
+     * } else {
+     *     os.toast("Failed to get the options: " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/rooms
+     * @docname os.getRoomTrackOptions
      */
     function getRoomTrackOptions(
         roomName: string,
@@ -11473,10 +13068,36 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sets the options for the track with the given address in the given room.
-     * @param roomName The name of the room.
-     * @param address The address of the track that the options should be retrieved for.
-     * @param options The options that should be set for the track.
+     * Attempts to set the current options for the specified audio/video track in the specified room. Returns a promise that resolves with an object that indicates whether the operation was successful.
+     *
+     * This function is useful for locally muting a track or setting the video quality you want it to stream at.
+     *
+     * @param roomName the name of the room.
+     * @param address the address of the audio/video track. Track addresses can be obtained via the {@tag @onRoomTrackSubscribed} listener.
+     * @param options the options that should be set for the track.
+     *
+     * @example Stop streaming a track
+     * const result = await os.setRoomTrackOptions("myChat", "myTrack", {
+     *     muted: true
+     * });
+     * if (result.success) {
+     *     os.toast("Track muted!");
+     * } else {
+     *     os.toast("Failed to mute the track: " + result.errorMessage);
+     * }
+     *
+     * @example Set the video quality on a track
+     * const result = await os.setRoomTrackOptions("myChat", "myTrack", {
+     *     videoQuality: 'low'
+     * });
+     * if (result.success) {
+     *     os.toast("Track video quality changed!");
+     * } else {
+     *     os.toast("Failed to set video quality on the track: " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/rooms
+     * @docname os.setRoomTrackOptions
      */
     function setRoomTrackOptions(
         roomName: string,
@@ -11494,9 +13115,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the options for the specified remote user in the specified room.
-     * @param roomName The name of the room.
-     * @param remoteId The ID of the remote user.
+     * Attempts to get the current options for the specified remote user in the specified room. Returns a promise that resolves with an object that contains information about the remote user.
+     *
+     * This function is useful for determining if the user is streaming audio or video and how good their network connection is.
+     *
+     * @param roomName the name of the room.
+     * @param remoteId the ID of the remote user whose options should be retrieved. Remote IDs can be obtained via the {@tag @onRoomRemoteJoined} listener.
+     *
+     * @example Get the options for a remote user
+     * const result = await os.getRoomRemoteOptions("myChat", "myRemote");
+     * if (result.success) {
+     *     os.toast("Remote options: " + JSON.stringify(result.options));
+     * } else {
+     *     os.toast("Failed to get the options: " + result.errorMessage);
+     * }
+     *
+     * @dochash actions/rooms
+     * @docname os.getRoomRemoteOptions
      */
     function getRoomRemoteOptions(
         roomName: string,

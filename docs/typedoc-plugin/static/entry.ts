@@ -14,6 +14,37 @@ export {
     RecordFileApiSuccess,
     RecordFileApiFailure,
     SnapGridTarget,
+    UploadedFile,
+    RaycastResult,
+    RaycastRay,
+
+    JoinRoomResult,
+    JoinRoomSuccess,
+    JoinRoomFailure,
+
+    LeaveRoomResult,
+    LeaveRoomSuccess,
+    LeaveRoomFailure,
+
+    GetRoomOptionsResult,
+    GetRoomOptionsSuccess,
+    GetRoomOptionsFailure,
+
+    SetRoomOptionsResult,
+    SetRoomOptionsSuccess,
+    SetRoomOptionsFailure,
+
+    GetRoomTrackOptionsResult,
+    GetRoomTrackOptionsSuccess,
+    GetRoomTrackOptionsFailure,
+
+    SetRoomTrackOptionsResult,
+    SetRoomTrackOptionsSuccess,
+    SetRoomTrackOptionsFailure,
+
+    GetRoomRemoteOptionsResult,
+    GetRoomRemoteOptionsSuccess,
+    GetRoomRemoteOptionsFailure,
 } from '../../../src/aux-common/runtime/AuxLibrary';
 export { 
     EaseType,
@@ -31,8 +62,49 @@ export {
     ShareOptions,
     FocusOnOptions,
     FocusOnRotation,
+
+    CameraType,
+    BarcodeFormat,
+    ImageClassifierOptions,
+    ShowInputOptions,
+    ShowConfirmOptions,
+
+    MediaPermssionOptions,
+    EnableXROptions,
+    StartFormAnimationOptions,
+    StopFormAnimationOptions,
+    FormAnimationData,
+
+    JoinRoomActionOptions,
+    RoomJoinOptions,
+    RoomOptions,
+    RoomTrackOptions,
+    RoomRemoteOptions,
+    SetRoomTrackOptions,
 } from '../../../src/aux-common/bots/BotEvents';
-export { RuntimeBot, Bot, BotTags, BotSpace, ScriptTags, CompiledBotListeners, BotTagMasks, RuntimeBotVars, RuntimeBotLinks, CompiledBotListener, BotsState, PartialBotsState, ParsedBotLink } from '../../../src/aux-common/bots/Bot';
+export { 
+    RuntimeBot,
+    Bot,
+    BotTags,
+    BotSpace,
+    ScriptTags,
+    CompiledBotListeners,
+    BotTagMasks,
+    RuntimeBotVars,
+    RuntimeBotLinks,
+    CompiledBotListener,
+    BotsState,
+    PartialBotsState,
+    ParsedBotLink,
+    PortalType,
+} from '../../../src/aux-common/bots/Bot';
+export { 
+    AuxVersion
+} from '../../../src/aux-common/runtime/AuxVersion';
+export { 
+    AuxDevice
+} from '../../../src/aux-common/runtime/AuxDevice';
+export { InstUpdate } from '../../../src/aux-common/bots/StoredAux';
 
 export {
     CreatePublicRecordKeyResult,

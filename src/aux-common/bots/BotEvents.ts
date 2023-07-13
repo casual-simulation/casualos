@@ -899,6 +899,9 @@ export interface CancelAnimationAction extends AsyncAction {
 
 /**
  * The possible camera types.
+ *
+ * @dochash types/os
+ * @docname CameraType
  */
 export type CameraType = 'front' | 'rear';
 
@@ -977,6 +980,9 @@ export interface ShowQRCodeAction extends Action {
 
 /**
  * The list of possible barcode formats.
+ *
+ * @dochash types/os
+ * @docname BarcodeFormat
  */
 export type BarcodeFormat =
     | 'code128'
@@ -1014,14 +1020,24 @@ export interface ShowBarcodeAction extends Action {
 /**
  * An event that is used to show or hide an image classifier on screen.
  */
-export interface OpenImageClassifierAction extends AsyncAction {
+export interface OpenImageClassifierAction
+    extends AsyncAction,
+        ImageClassifierOptions {
     type: 'show_image_classifier';
 
     /**
      * Whether the image classifier should be visible.
      */
     open: boolean;
+}
 
+/**
+ * Defines an interface that represents a set of options for {@link os.openImageClassifier}.
+ *
+ * @dochash types/os
+ * @docname ImageClassifierOptions
+ */
+export interface ImageClassifierOptions {
     /**
      * The URL that the model should be loaded from.
      */
@@ -1044,11 +1060,6 @@ export interface OpenImageClassifierAction extends AsyncAction {
      */
     cameraType?: CameraType;
 }
-
-export type ImageClassifierOptions = Pick<
-    OpenImageClassifierAction,
-    'modelUrl' | 'modelJsonUrl' | 'modelMetadataUrl' | 'cameraType'
->;
 
 /**
  * An event that is used to load a simulation.
@@ -1411,6 +1422,9 @@ export interface ShowConfirmAction extends AsyncAction {
 
 /**
  * Defines an interface that represents the options that can be used for a confirmation dialog.
+ *
+ * @dochash types/os
+ * @docname ShowConfirmOptions
  */
 export interface ShowConfirmOptions {
     /**
@@ -1538,6 +1552,9 @@ export interface DownloadAction extends Action {
 
 /**
  * Defines an interface for options that a show input event can use.
+ *
+ * @dochash types/os
+ * @docname ShowInputOptions
  */
 export interface ShowInputOptions {
     /**
@@ -2701,6 +2718,9 @@ export interface LocalRotationTweenAction extends LocalTweenAction {
 
 /**
  * Defines an interface that represents the options that an EnableARAction or EnableVRAction can have.
+ *
+ * @dochash types/os
+ * @docname EnableXROptions
  */
 export interface EnableXROptions {
     /**
@@ -4140,6 +4160,12 @@ export interface RevokeRoleAction extends RecordsAction {
     inst?: string;
 }
 
+/**
+ * Defines an interface that represents options for requesting media permissions.
+ *
+ * @dochash types/os
+ * @docname MediaPermissionOptions
+ */
 export interface MediaPermssionOptions {
     /**
      * Should include audio permission.
@@ -4168,6 +4194,10 @@ export interface GetAverageFrameRateAction extends AsyncAction {
     type: 'get_average_frame_rate';
 }
 
+/**
+ * @docid JoinRoomActionOptions
+ * @docrename RoomJoinOptions
+ */
 export type JoinRoomActionOptions = RecordActionOptions &
     Partial<RoomJoinOptions>;
 
@@ -4219,6 +4249,9 @@ export interface SetRoomOptionsAction extends AsyncAction {
 
 /**
  * Defines a set of options that the local user can have for a room.
+ *
+ * @dochash types/os
+ * @docname RoomOptions
  */
 export interface RoomOptions {
     /**
@@ -4239,6 +4272,9 @@ export interface RoomOptions {
 
 /**
  * Defines a set of options that the local usr can specify when joining a room.
+ *
+ * @dochash types/os
+ * @docname RoomJoinOptions
  */
 export interface RoomJoinOptions extends RoomOptions {
     /**
@@ -4320,6 +4356,12 @@ export interface SetRoomTrackOptionsAction extends AsyncAction {
     options: SetRoomTrackOptions;
 }
 
+/**
+ * Defines an interface that represents the set of options that can be set on a room video/audio track.
+ *
+ * @dochash types/os
+ * @docname SetRoomTrackOptions
+ */
 export interface SetRoomTrackOptions {
     /**
      * Whether to mute the track locally.
@@ -4333,6 +4375,12 @@ export interface SetRoomTrackOptions {
     videoQuality?: TrackVideoQuality;
 }
 
+/**
+ * Defines an interface that represents the options that a audio/video track has.
+ *
+ * @dochash types/os
+ * @docname RoomTrackOptions
+ */
 export interface RoomTrackOptions {
     /**
      * Whether the track is being sourced from a remote user.
@@ -4381,6 +4429,13 @@ export type TrackSource =
     | 'microphone'
     | 'screen_share'
     | 'screen_share_audio';
+
+/**
+ * Defines the possible qualities that a track can stream at.
+ *
+ * @dochash types/os
+ * @docname TrackVideoQuality
+ */
 export type TrackVideoQuality = 'high' | 'medium' | 'low' | 'off';
 
 /**
@@ -4402,6 +4457,9 @@ export interface GetRoomRemoteOptionsAction extends AsyncAction {
 
 /**
  * Defines an interface that contains options for a remote room user.
+ *
+ * @dochash types/os
+ * @docname RoomRemoteOptions
  */
 export interface RoomRemoteOptions {
     /**
@@ -4501,6 +4559,9 @@ export interface BufferFormAddressGLTFAction extends AsyncAction {
 
 /**
  * Defines an interface that contains a bunch of options for starting an animation.
+ *
+ * @dochash types/os
+ * @docname StartFormAnimationOptions
  */
 export interface StartFormAnimationOptions {
     /**
@@ -4586,6 +4647,9 @@ export interface StartFormAnimationAction
 
 /**
  * Defines an interface that contains a bunch of options for stopping an animation.
+ *
+ * @dochash types/os
+ * @docname StopFormAnimationOptions
  */
 export interface StopFormAnimationOptions {
     /**
@@ -4628,6 +4692,9 @@ export interface ListFormAnimationsAction extends AsyncAction {
 
 /**
  * Defines an interface that contains animation information.
+ *
+ * @dochash types/os
+ * @docname FormAnimationData
  */
 export interface FormAnimationData {
     /**

@@ -1,5 +1,7 @@
 /**
  * Contains information about the version of AUX that is running.
+ * @dochash types/os
+ * @docname CasualOSVersion
  */
 export interface AuxVersion {
     /**
@@ -34,7 +36,7 @@ export interface AuxVersion {
 
     /**
      * Gets the player mode of this CasualOS version.
-     * 
+     *
      * - "player" indicates that the instance has been configured for experiencing AUXes.
      * - "builder" indicates that the instance has been configured for building AUXes.
      */

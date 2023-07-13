@@ -42,7 +42,13 @@ module.exports = {
                         'actions/event',
                         'actions/time',
                         'actions/records',
-                        'actions/os'
+                        'actions/os',
+                        'actions/barcodes',
+                        'actions/files',
+                        'actions/portals',
+                        'actions/audio',
+                        'actions/animations',
+                        'actions/rooms',
                     ]
                 },
                 {

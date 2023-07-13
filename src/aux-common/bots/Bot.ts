@@ -470,6 +470,9 @@ export const DEFAULT_RECORD_SPACE: RecordSpace = 'tempRestricted';
 
 /**
  * The possible portal types.
+ *
+ * @dochash types/core
+ * @docname PortalType
  */
 export type PortalType =
     | 'grid'
