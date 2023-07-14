@@ -1,0 +1,2132 @@
+---
+id: listen-tags
+title: Listen Tags
+sidebar_label: Listen Tags
+description: Listen tags are tags that can receive shouts and whispers from other bots and actoins that happen from the user.
+---
+
+import { 
+  Badges,
+  Badge,
+  ReadOnlyBadge,
+  VideoBadge,
+  PossibleValuesTable,
+  PossibleValueCode,
+  PossibleValue,
+  LabelAnchorValues,
+  AnyColorValues,
+  Alert,
+  TagLink,
+  NormalCode,
+  ConfigBotBadge,
+  ActionLink,
+} from './components.mdx';
+
+Listen tags are tags that can receive shouts and whispers from other bots and actions that happen from the user.
+To create a listen tag, you make a normal tag and enter a "@" as the first character of the tag's value.
+
+Each listen tag has some predefined variables that can be used. You can read about those [here](./variables.mdx).
+
+## Whisper Tags
+
+Whispers are shouts that are sent to specific bots instead of all bots.
+
+### `@onCreate`
+
+A whisper that is sent to a bot when it is first created.
+
+### `@onDestroy`
+
+A whisper that is sent to a bot when it is being destroyed.
+
+### `@onModDrop`
+
+A whisper that is sent to a bot that a mod was dropped on.
+If a custom `@onModDrop` is not specified, then the mod will be applied automatically.
+If a custom `@onModDrop` is specified, then the mod needs to be applied manually via <ActionLink action='applyMod(bot, ...mods)'/>.
+
+#### Arguments:
+```typescript
+interface Mod {
+  [tag: string]: any;
+}
+
+let that: {
+  mod: Mod
+};
+```
+
+### `@onModDropEnter`
+
+A whisper that is sent to the bot that a mod started to be dragged onto.
+
+#### Arguments:
+```typescript
+let that: {
+  mod: Mod,
+  dimension: string
+};
+```
+
+### `@onModDropExit`
+
+A whisper that is sent to the bot that a mod was just dragged off of.
+
+#### Arguments:
+```typescript
+let that: {
+  mod: Mod,
+  dimension: string
+};
+```
+
+### `@onClick`
+
+A whisper that is sent to the bot that was clicked.
+
+#### Arguments:
+```typescript
+let that: {
+  face: 'left' | 'right' | 'front' | 'back' | 'top' | 'bottom',
+  dimension: string,
+  uv: Vector2
+};
+```
+
+### `@onKeyClick`
+
+A whisper that is sent to the bot when a key is clicked on it.
+
+This event will only be available for bots that have their <TagLink tag='form'/> set to `keyboard`.
+
+#### Arguments:
+```typescript
+let that: {
+  key: string
+};
+```
+
+### `@onPointerEnter`
+
+A whisper that is sent to a bot when the mouse cursor starts to hover over it.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onPointerExit`
+
+A whisper that is sent to a bot when the mouse cursor stops hovering over it.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onPointerDown`
+
+A whipser that is sent to a bot when the user starts clicking it.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onPointerUp`
+
+A whisper that is sent to a bot when the user stops clicking it.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onDrag`
+
+A whisper that is sent whenever a bot is starting to be dragged.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  face: 'left' | 'right' | 'front' | 'back' | 'top' | 'bottom',
+  from: {
+    x: number,
+    y: number,
+    dimension: string
+  },
+  uv: Vector2
+};
+```
+
+### `@onDragging`
+
+A whisper that is sent whenever a bot would be moved while dragging.
+Note that this whisper is only sent for drag operations that have called <ActionLink action='os.enableCustomDragging()'/>.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  to: {
+    x: number,
+    y: number,
+    bot: Bot,
+    dimension: string
+  },
+  from: {
+    x: number,
+    y: number,
+    dimension: string
+  }
+};
+```
+
+### `@onDrop`
+
+A whisper that is sent whenever a bot has been dropped after being dragged.
+The whisper is sent to both the bot that was dropped and the bot that was dropped on.
+
+#### Arguments
+```typescript
+let that: {
+  bot: Bot,
+  to: {
+    bot: Bot,
+    x: number,
+    y: number,
+    dimension: string
+  },
+  from: {
+    x: number,
+    y: number,
+    dimension: string
+  }
+};
+```
+
+### `@onDropEnter`
+
+A whisper that is sent to both bots when a bot is dragged onto another bot.
+
+#### Arguments
+```typescript
+let that: {
+  dragBot: Bot,
+  to: {
+    bot: Bot,
+    x: number,
+    y: number,
+    dimension: string
+  },
+  from: {
+    x: number,
+    y: number,
+    dimension: string
+  }
+};
+```
+
+### `@onDropExit`
+
+A whisper that is sent to both bots when a bot is dragged off of another bot.
+
+#### Arguments
+```typescript
+let that: {
+  dragBot: Bot,
+  to: {
+    bot: Bot,
+    x: number,
+    y: number,
+    dimension: string
+  },
+  from: {
+    x: number,
+    y: number,
+    dimension: string
+  }
+};
+```
+
+### `@onSaveInput`
+
+A whisper that is sent when the input box for a bot has been changed by the user.
+
+#### Arguments:
+```typescript
+let that = null;
+```
+
+### `@onCloseInput`
+
+A whisper that is sent when the input box for a bot has been closed by the user.
+
+#### Arguments:
+```typescript
+let that = null;
+```
+
+### `@onListen`
+
+A whisper that is sent whenever this bot receives a whisper or shout.
+
+#### Arguments:
+```typescript
+let that: {
+  name: string,
+  that: any,
+  targets: Bot[],
+  listeners: Bot[],
+  responses: any[]
+};
+```
+
+### `@onMaxLODEnter`
+
+A whisper that is sent whenever a bot enters its maximum Level-Of-Detail.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onMinLODEnter`
+
+A whisper that is sent whenever a bot enters its minimum Level-Of-Detail.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onMaxLODExit`
+
+A whisper that is sent whenever a bot exits its maximum Level-Of-Detail.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onMinLODExit`
+
+A whisper that is sent whenever a bot exits its minimum Level-Of-Detail.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onFocusEnter`
+
+A whisper that is sent whenever a bot starts being focused by the player.
+
+Focus is when the bot is in the center of the screen.
+
+Only sent if <TagLink tag='focusable'/> is true.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onFocusExit`
+
+A whisper that is sent whenever a bot stops being focused by the player.
+
+Focus is when the bot is in the center of the screen.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onInputTyping`
+
+A whisper that is sent whenever the player is typing in the menu bot's input box.
+Only sent for bots that are in a menu and have <TagLink tag='form'/> set to `input`.
+
+#### Arguments:
+```typescript
+let that: {
+  text: string
+};
+```
+
+### `@onSubmit`
+
+A whisper that is sent whenever the player submits the text in the menu bot's input box.
+This can happen by pressing enter while there is text in the box or by clicking the send button on the right side of the box.
+
+Only sent for bots that are in a menu and have <TagLink tag='form'/> set to `input`.
+
+#### Arguments:
+```typescript
+let that: {
+  text: string
+};
+```
+
+### `@onSetupApp`
+
+A whisper that is sent when a [custom app](./actions.mdx#app-actions) has been setup.
+Called when <ActionLink action='os.registerApp(appId, bot)'/> has completed its work.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The HTML document that has been setup for the app
+     * See https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument
+     */
+    document: Document
+};
+```
+
+### `@onBotAdded`
+
+A whisper that is sent when the bot is added to the local inst.
+
+Unlike <TagLink tag='@onCreate'/>, this listen tag is triggered whenever the bot as been added to the current device's inst, even if the bot has already been created.
+An example of this happening is when you first load an inst. Even though all the bots have already been created, they still need to be added to the inst in order for you to interact with them.
+
+Note that this listen tag is triggered after executing scripts have finished running. This means that if a script creates multiple bots, `@onBotAdded` will be triggered after all the bots have been created.
+This is in contrast to <TagLink tag='@onCreate'/> which is triggered immediately after the bot has been created.
+
+Also note that this listen tag can be triggered before <TagLink tag='@onInstJoined'/>. This means that it is possible for bots in other spaces to not be available when this listener is triggered.
+
+There is no `that` argument for this listen tag.
+
+### `@onBotChanged`
+
+A whisper that is sent when a tag on the bot is updated.
+
+This listen tag is triggered whenever the bot has been updated in the current device's inst, even if the bot was not updated locally.
+An example of this happening is when another player changes a tag in the sheet portal. Even though the change was made on their device, it will show up on the current device.
+
+Note that this listen tag is triggered after executing scripts have finished running. This means that if a script updates the same tag multiple times, `@onBotChanged` will still only be triggered once.
+This is in contrast to <TagLink tag='@onCreate'/> which is triggered immediately after the bot has been created.
+
+Also note that this listen tag can be triggered before <TagLink tag='@onInstJoined'/>. This means that it is possible for bots in other spaces to not be available when this listener is triggered.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The list of tags that were changed on the bot.
+     */
+    tags: string[]
+};
+```
+
+### `@[groupName][stateName]OnEnter`
+
+A whisper that is sent whenever the `[groupName]` tag is set to `[stateName]` via the <ActionLink action='changeState(bot, stateName, groupName?)'/> function.
+
+#### Arguments:
+```typescript
+let that: {
+  /**
+   * The stateName that the bot is coming from.
+   */
+  from: string,
+
+  /**
+   * The stateName that the bot is going to.
+   */
+  to: string,
+};
+```
+
+### `@[groupName][stateName]OnExit`
+
+A whisper that is sent whenever the `[groupName]` tag is changed from `[stateName]` via the <ActionLink action='changeState(bot, stateName, groupName?)'/> function.
+
+#### Arguments:
+```typescript
+let that: {
+  /**
+   * The stateName that the bot is coming from.
+   */
+  from: string,
+
+  /**
+   * The stateName that the bot is going to.
+   */
+  to: string,
+};
+```
+
+### `@onFormAnimationStarted`
+
+A whisper that is sent whenever an animation is started via the <ActionLink action='os.startFormAnimation(botOrBots, nameOrIndex, options?)'/> function.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The animation that was started.
+     */
+    animation: string | number;
+};
+```
+
+### `@onFormAnimationStopped`
+
+A whisper that is sent whenever an animation is stopped via the <ActionLink action='os.stopFormAnimation(botOrBots, options?)'/> function.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The animation that was stopped.
+     */
+    animation: string | number;
+};
+```
+
+### `@onFormAnimationLooped`
+
+A whisper that is sent whenever an animation finishes and starts to repeat based on the loop rules given to <ActionLink action='os.startFormAnimation(botOrBots, nameOrIndex, options?)'/> in the options.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The animation that was looped.
+     */
+    animation: string | number;
+
+    /**
+     * The number of loops that have been completed.
+     */
+    loopCount: number;
+};
+```
+
+### `@onFormAnimationFinished`
+
+A whisper that is sent whenever an animation that was started by <ActionLink action='os.startFormAnimation(botOrBots, nameOrIndex, options?)'/> stops.
+This whisper is sent both for when the animation is manually stopped (by calling <ActionLink action='os.stopFormAnimation(botOrBots, options?)'/>) and also when it stops because it shouldn't repeat.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The animation that finished.
+     */
+    animation: string | number;
+};
+```
+
+## Shout Tags
+
+Shouts are events which are sent to all bots.
+
+### `@onAnyCreate`
+
+A shout that is sent to all bots when a bot is created. Sent immediately after <TagLink tag='@onCreate'/> is sent.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot
+};
+```
+
+### `@onAnyBotClicked`
+
+A shout that is sent to all bots when a bot is clicked.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  face: 'left' | 'right' | 'front' | 'back' | 'top' | 'bottom',
+  dimension: string,
+  uv: Vector2
+};
+```
+
+### `@onAnyBotPointerEnter`
+
+A shout that is sent to all bots when the mouse cursor starts to hover over a bot.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onAnyBotPointerExit`
+
+A shout that is sent to all bots when the mouse cursor stops hovering over a bot.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string1
+};
+```
+
+### `@onAnyBotPointerDown`
+
+A shout that is sent all bots when the user starts clicking a bot.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onAnyBotPointerUp`
+
+A shout that is sent to all bots when the user stops clicking a bot.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onChat`
+
+A shout that is sent to all bots when the player sends a chat message.
+Chat messages can be sent when the player presses the Enter key while writing a message or by clicking/tapping the "Send Message" button to the right of the chat bar.
+
+#### Arguments:
+```typescript
+let that: {
+  message: string
+};
+```
+
+### `@onChatTyping`
+
+A shout that is sent to all bots when the player changes the text in the chat bar.
+Only triggered when the chat bar is visible.
+
+#### Arguments:
+```typescript
+let that: {
+  message: string
+};
+```
+
+### `@onFileUpload`
+
+A shout that is sent to all bots when the user drags a file into the window.
+
+#### Arguments:
+```typescript
+let that: {
+  file: {
+    // The name of the file. Includes the file extension.
+    name: string;
+
+    // The size of the file in bytes.
+    size: number;
+
+    // The data in the file.
+    // If the file is a text file, the data will be a string.
+    // If the file is not a text file, then the data will be an ArrayBuffer.
+    //
+    // Text files have one of the following extensions:
+    // .txt
+    // .json
+    // .md
+    // .aux
+    // .html
+    // .js
+    // .ts
+    // All the other file extensions map to an ArrayBuffer
+    data: string | ArrayBuffer;
+
+    // The MIME type of the file.
+    // See https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types for more information.
+    mimeType: string;
+  }
+};
+```
+
+### `@onGridClick`
+
+A shout that is sent to all bots when the user clicks on empty space.
+
+#### Arguments:
+```typescript
+let that: {
+  position: {
+    x: number,
+    y: number
+  },
+  dimension: string
+};
+```
+
+### `@onGridDown`
+
+A shout that is sent to all bots when the user starts clicking on empty space.
+
+#### Arguments:
+```typescript
+let that: {
+  position: {
+    x: number,
+    y: number
+  },
+  dimension: string
+};
+```
+
+### `@onGridUp`
+
+A shout that is sent to all bots when the user stops clicking on empty space.
+
+#### Arguments:
+```typescript
+let that: {
+  position: {
+    x: number,
+    y: number
+  },
+  dimension: string
+};
+```
+
+### `@onPortalChanged`
+
+A shout that is sent to all bots when a portal changes on the config bot.
+
+#### Arguments:
+```typescript
+let that: {
+  portal: string;
+  dimension: string;
+};
+```
+
+### `@onBarcodeScanned`
+
+A shout that is sent to all bots when the player scans a barcode.
+
+#### Arguments:
+```typescript
+let that: string;
+```
+
+### `@onBarcodeScannerOpened`
+
+A shout that is sent to all bots when the barcode scanner is opened.
+
+### `@onBarcodeScannerClosed`
+
+A shout that is sent to all bots when the barcode scanner is closed.
+
+### `@onQRCodeScanned`
+
+A shout that is sent to all bots when a QR Code is scanned.
+
+#### Arguments:
+```typescript
+let that: string;
+```
+
+### `@onQRCodeScannerOpened`
+
+A shout that is sent to all bots when the QR Code Scanner is opened.
+
+### `@onQRCodeScannerClosed`
+
+A shout that is sent to all bots when the QR Code Scanner is closed.
+
+### `@onImageClassified`
+
+A shout that is sent to all bots when an image has been classified.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The model that the classifier is currently operating on.
+     */
+    model: {
+        /**
+         * The modelUrl that was provided to open the classifier.
+         */
+        modelUrl?: string;
+
+        /**
+         * The modelJsonUrl that was provided to open the classifier.
+         */
+        modelJsonUrl?: string;
+
+        /**
+         * The modelMetadataUrl that was provided to open the classifier.
+         */
+        modelMetadataUrl?: string;
+
+        /**
+         * The cameraType that was provided to open the classifier.
+         */
+        cameraType?: string;
+
+        /**
+         * The names of the categories that the loaded model contains.
+         */
+        classLabels: string[];
+    };
+
+    /**
+     * The list of probablities that was produced by the classifier.
+     */
+    prediction: {
+        /**
+         * The name of the class name.
+         */
+        className: string;
+
+        /**
+         * The probability (between 0 and 1) that the image belongs to this category.
+         * All of the probabilities added together will equal (or be really close to) 1.
+         */
+        probability: number;
+    }[];
+};
+```
+
+### `@onImageClassifierOpened`
+
+A shout that is sent to all bots when the image classifier is opened.
+
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The modelUrl that was provided to open the classifier.
+     */
+    modelUrl?: string;
+
+    /**
+     * The modelJsonUrl that was provided to open the classifier.
+     */
+    modelJsonUrl?: string;
+
+    /**
+     * The modelMetadataUrl that was provided to open the classifier.
+     */
+    modelMetadataUrl?: string;
+
+    /**
+     * The cameraType that was provided to open the classifier.
+     */
+    cameraType?: string;
+
+    /**
+     * The names of the categories that the loaded model contains.
+     */
+    classLabels: string[];
+};
+```
+
+### `@onImageClassifierClosed`
+
+A shout that is sent to all bots when the image classifier is closed.
+
+### `@onTapCode`
+
+A shout that is sent to all bots whenever a 4-digit tap code is entered.
+
+#### Arguments:
+```typescript
+let that: string;
+```
+
+### `@onKeyDown`
+
+A shout that is sent to all bots whenever the user starts pressing a key.
+
+#### Arguments:
+```typescript
+let that: {
+  /**
+   * The list of keys that were pressed.
+   */
+  keys: string[]
+};
+```
+
+### `@onKeyUp`
+
+A shout that is sent to all bots whenever the user stops pressing a key.
+
+#### Arguments:
+```typescript
+let that: {
+  /**
+   * The list of keys that were released.
+   */
+  keys: string[]
+};
+```
+
+### `@onKeyRepeat`
+
+A shout that is sent to all bots whenever the user holds down a key and it automatically fires "repeated key event".
+(This is like when you hold down the "a" key and then the computer starts continually typing "a" characters until you stop holding the key)
+
+#### Arguments:
+```typescript
+let that: {
+  /**
+   * The list of keys that were held.
+   */
+  keys: string[]
+};
+```
+
+### `@onInstJoined`
+
+A shout that is sent when a inst is loaded.
+An inst is considered loaded once all the bots in each space have been added (See <TagLink tag='@onBotAdded'/>).
+
+Sent to every inst that is loaded.
+
+#### Arguments:
+```typescript
+let that: {
+  inst: string
+};
+```
+
+### `@onInstLeave`
+
+A shout that is sent when a inst is unloaded.
+Sent to every inst that is loaded.
+
+#### Arguments:
+```typescript
+let that: {
+  inst: string
+};
+```
+
+### `@onInstStreaming`
+
+A shout that is sent when a inst is connected and fully synced.
+
+Note that this can occur multiple times throughout the lifetime of a session because the player can lose and regain its connection to the inst.
+
+Sent to every inst that is loaded.
+
+#### Arguments:
+```typescript
+let that: {
+  inst: string
+};
+```
+
+### `@onInstStreamLost`
+
+A shout that is sent when a inst has been temporarily disconnected from the server.
+
+Note that this can occur multiple times throughout the lifetime of a session because the player can lose and regain its connection to the inst.
+
+Sent to every inst that is loaded.
+
+#### Arguments:
+```typescript
+let that: {
+  inst: string
+};
+```
+
+### `@onCheckout`
+
+A shout that is sent when the user submits their credit card info to purchase something.
+
+#### Arguments:
+```typescript
+let that: {
+  token: string, 
+  productId: string, 
+  user: { 
+    username: string, 
+    device: string, 
+    token: string
+  }
+};
+```
+
+### `@onPaste`
+
+A shout that is sent when some text is pasted into the server.
+
+This happens by pressing <kbd>Ctrl</kbd>+<kbd>V</kbd> or <kbd>Cmd</kbd>+<kbd>V</kbd> while something is in your clipboard.
+
+#### Arguments:
+```typescript
+let that: {
+  text: string;
+};
+```
+
+### `@onPaymentSuccessful`
+
+A shout that is sent when payment has been approved for a checkout.
+
+#### Arguments:
+```typescript
+let that: {
+  /**
+   * The bot that was created for the transaction.
+   */
+  bot: Bot,
+  charge: any,
+  extra: any
+};
+```
+
+### `@onPaymentFailed`
+
+A shout that is sent when payment has been rejected for a checkout.
+
+#### Arguments:
+```typescript
+let that: {
+  /**
+   * The bot that was created for the transaction.
+   */
+  bot: Bot,
+  error: any,
+  extra: any
+};
+```
+
+### `@onAnyBotDrag`
+
+A shout that is sent whenever a bot starts to be dragged.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  face: 'left' | 'right' | 'front' | 'back' | 'top' | 'bottom',
+  from: {
+    x: number,
+    y: number,
+    dimension: string
+  },
+  uv: Vector2
+};
+```
+
+### `@onAnyBotDragging`
+
+A shout that is sent whenever a bot would be moved while dragging.
+Note that this whisper is only sent for drag operations that have called <ActionLink action='os.enableCustomDragging()'/>.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  to: {
+    bot: Bot,
+    x: number,
+    y: number,
+    dimension: string
+  },
+  from: {
+    x: number,
+    y: number,
+    dimension: string
+  }
+};
+```
+
+### `@onAnyBotDrop`
+
+A shout that is sent whenever a bot is dropped after being dragged.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  to: {
+    bot: Bot,
+    x: number,
+    y: number,
+    dimension: string
+  },
+  from: {
+    x: number,
+    y: number,
+    dimension: string
+  }
+};
+```
+
+### `@onAnyBotDropEnter`
+
+A shout that is sent whenever a bot is dragged onto another bot.
+
+#### Arguments:
+```typescript
+let that: {
+  dragBot: Bot,
+  to: {
+    bot: Bot,
+    x: number,
+    y: number,
+    dimension: string
+  },
+  from: {
+    x: number,
+    y: number,
+    dimension: string
+  }
+};
+```
+
+### `@onAnyBotDropExit`
+
+A shout that is sent whenever a bot is dragged off of another bot.
+
+#### Arguments:
+```typescript
+let that: {
+  dragBot: Bot,
+  to: {
+    bot: Bot,
+    x: number,
+    y: number,
+    dimension: string
+  },
+  from: {
+    x: number,
+    y: number,
+    dimension: string
+  }
+};
+```
+
+### `@onAnyListen`
+
+A shout that is sent whenever a whisper or shout is issued.
+
+#### Arguments:
+```typescript
+let that: {
+  name: string,
+  that: any,
+  targets: Bot[],
+  listeners: Bot[],
+  responses: any[]
+};
+```
+
+### `@onAnyMaxLODEnter`
+
+A shout that is sent whenever a bot enters its maximum Level-Of-Detail.
+
+Only sent for bots that have one of <TagLink tag='@onMaxLODEnter'/>,  <TagLink tag='@onMaxLODExit'/>, <TagLink tag='@onMinLODEnter'/>, <TagLink tag='@onMinLODExit'/>, <TagLink tag='maxLODThreshold'/> or <TagLink tag='minLODThreshold'/> specified.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onAnyMinLODEnter`
+
+A shout that is sent whenever a bot enters its minimum Level-Of-Detail.
+
+Only sent for bots that have one of <TagLink tag='@onMaxLODEnter'/>, <TagLink tag='@onMaxLODExit'/>, <TagLink tag='@onMinLODEnter'/>, <TagLink tag='@onMinLODExit'/>, <TagLink tag='maxLODThreshold'/> or <TagLink tag='minLODThreshold'/> specified.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onAnyMaxLODExit`
+
+A shout that is sent whenever a bot exits its maximum Level-Of-Detail.
+
+Only sent for bots that have one of <TagLink tag='@onMaxLODEnter'/>, <TagLink tag='@onMaxLODExit'/>, <TagLink tag='@onMinLODEnter'/>, <TagLink tag='@onMinLODExit'/>, <TagLink tag='maxLODThreshold'/> or <TagLink tag='minLODThreshold'/> specified.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onAnyMinLODExit`
+
+A shout that is sent whenever a bot exits its minimum Level-Of-Detail.
+
+Only sent for bots that have one of <TagLink tag='@onMaxLODEnter'/>, <TagLink tag='@onMaxLODExit'/>, <TagLink tag='@onMinLODEnter'/>, <TagLink tag='@onMinLODExit'/>, <TagLink tag='maxLODThreshold'/> or <TagLink tag='minLODThreshold'/> specified.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onAnyFocusEnter`
+
+A shout that is sent whenever a bot starts being focused by the player.
+
+Focus is when the bot is in the center of the screen.
+
+Only sent if <TagLink tag='focusable'/> is true.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onAnyFocusExit`
+
+A shout that is sent whenever a bot stops being focused by the player.
+
+Focus is when the bot is in the center of the screen.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  dimension: string
+};
+```
+
+### `@onBeginAudioRecording`
+
+A shout that is sent whenever audio recording starts.
+
+There are no arguments with this listener.
+
+### `@onAudioChunk`
+
+A shout that is sent whenever a piece of audio is prepared for streaming.
+Only called when <ActionLink action='os.beginAudioRecording(options?)'/> is called with `stream` set to `true`.
+
+#### Arguments:
+```typescript
+let that: Blob;
+```
+
+### `@onEndAudioRecording`
+
+A shout that is sent whenever audio recording stops.
+If the data was streamed, `that` is `null`. Otherwise, `that` is a `Blob` object that contains the recorded data.
+
+#### Arguments:
+```typescript
+let that: Blob;
+```
+
+### `@onEnterAR`
+
+A shout that is sent whenever the device enters augmented reality mode.  
+You can enter AR by calling <ActionLink action='os.enableAR(options?)'/>.
+
+There are no arguments with this listener.
+
+### `@onExitAR`
+
+A shout that is sent whenever the device exits augmented reality mode.  
+You can exit AR by calling <ActionLink action='os.disableAR()'/>.
+
+There are no arguments with this listener.
+
+### `@onEnterVR`
+
+A shout that is sent whenever the device enters virtual reality mode.  
+You can exit VR by calling <ActionLink action='os.enterVR(options?)'/>.
+
+There are no arguments with this listener.
+
+### `@onExitVR`
+
+A shout that is sent whenever the device exits virtual reality mode.  
+You can exit VR by calling <ActionLink action='os.disableVR()'/>.
+
+There are no arguments with this listener.
+
+### `@onWebhook`
+
+A shout that is sent whenever a webhook is received.
+If data is returned, the first result will be used as the HTTP response.
+
+#### Arguments:
+```typescript
+let that: {
+  method: string,
+  url: string,
+  data: any,
+  headers: any
+};
+```
+
+#### Return Value:
+
+If an object is returned, it is expected to have the following form:
+
+```typescript
+let response: {
+    headers?: {
+        [key: string]: any
+    },
+    status?: number,
+    data: any,
+}
+```
+
+The `headers` property is an object that specifies the [HTTP headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers) that should be set on the response.
+Each property is a header name and the value is the value set on the header.
+
+The `status` property is the numerical [status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status) that should be set on the response. If omitted, then status code 200 will be used.
+
+The `data` property is the data that should be included in the response body.
+
+#### Examples:
+
+1. Return an arbitrary string of data.
+```typescript
+return 'hello from webhook!';
+```
+
+2. Return a response with a custom header.
+```typescript
+return {
+    headers: {
+        'Content-Type': 'text/plain',
+        MyCustomHeader: 'custom value'
+    },
+    data: 'hello from webhook!'
+};
+```
+
+### `@onAnyAction`
+
+A shout that is sent whenever an action happens.
+
+#### Arguments:
+```typescript
+let that: {
+  action: any
+};
+```
+
+### `@onSerialData`
+
+A shout that is sent whenever a stream data is received.
+
+#### Arguments:
+```typescript
+let that: {
+  data: any
+};
+```
+
+### `@onSheetTagClick`
+
+A shout that is sent when a tag name is clicked in the sheet portal.
+
+#### Arguments:
+```typescript
+let that: {
+    tag: string;
+};
+```
+
+### `@onSheetBotClick`
+
+A shout that is sent when a Bot is clicked in the sheet portal.
+
+#### Arguments:
+```typescript
+let that: {
+    bot: Bot;
+};
+```
+
+### `@onSheetBotIDClick`
+
+A shout that is sent when a Bot ID is clicked in the sheet portal.
+
+#### Arguments:
+```typescript
+let that: {
+    bot: Bot;
+};
+```
+
+### `@onMeetLoaded`
+
+A shout that is sent when the meet portal finishes loading.
+Note that when this shout is sent, the user may not actually be in the meeting. They simply be in the meeting waiting area and not actually in the meeting.
+If you want notification when the user has become a participant in a meeting, use <TagLink tag='@onMeetEntered'/>.
+
+It is safe to run <ActionLink action='os.meetCommand(command, ...args)'/> after this shout has been received.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that the meet is loaded for.
+     */
+    roomName: string;
+}
+```
+
+### `@onMeetLeave`
+
+A shout that is sent when the meet portal is closed.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that was left.
+     */
+    roomName: string;
+}
+```
+
+### `@onMeetEntered`
+
+A shout that is sent when the user enters a meet portal meeting.
+Unlike <TagLink tag='@onMeetLoaded'/>, this listener is triggered only when the user becomes an active participant in a meeting. That is, after they've clicked the "join" button to enter the meeting.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that the user joined.
+     * Note that this may be different from the meetPortal since a meeting can contain several breakout rooms.
+     */
+    roomName: string;
+
+    /**
+     * The ID of the participant that was created for the user.
+     */
+    participantId: string;
+
+    /**
+     * Whether the room that the user has joined is a breakout room.
+     */
+    isBreakoutRoom: boolean;
+};
+```
+
+### `@onMeetExited`
+
+A shout that is sent when the user exits a meet portal meeting.
+Unlike <TagLink tag='@onMeetLeave'/>, this listener may be triggered if the user exits a breakout room and re-enters the main meeting room.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that the user exited.
+     */
+    roomName: string;
+};
+```
+
+### `@onMeetRecordingLinkAvailable`
+
+A shout that is sent when a meeting recording link is available.
+
+#### Arguments:
+
+```typescript
+let that: {
+    /**
+     * The link to the meeting recording.
+     */
+    link: string;
+
+    /**
+     * The number of seconds until the meeting recording is deleted.
+     */
+    timeToLive: number;
+};
+```
+
+
+### `@onRemoteData`
+
+A shout that is sent whenever a message is received from another remote device.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the message.
+     */
+    name: string,
+
+    /**
+     * The argument that was included in the message.
+     */
+    that: any,
+
+    /**
+     * The ID of the remote device that sent the message.
+     */
+    remoteId: string
+};
+```
+
+#### Examples:
+
+1. Show a toast when a "custom" message is received.
+```typescript
+if (that.name === "custom") {
+    os.toast("Got message from " + that.remoteId + " with " + that.that);
+}
+```
+
+2. Send a message back to the remote that sent the message.
+```typescript
+if (that.name === "hello") {
+    sendRemoteData(that.remoteId, "hi");
+}
+```
+
+### `@onRemoteJoined`
+
+A shout that is run on every other remote device when it joins the current server.
+
+Since this shout is run on every device, you should be careful about performing duplicate actions.
+When in doubt, elect a remote to perform all actions that should only be executed once.
+See example 2 below.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The ID of the remote that joined the server.
+     */
+    remoteId: string
+};
+```
+
+#### Examples:
+
+1. Show a toast when a remote joins.
+```typescript
+os.toast("Remote joined: " + that.remoteId);
+```
+
+### `@onRemoteLeave`
+
+A shout that is run on every other remote device when it leaves the current server.
+
+Since this shout is run on every device, you should be careful about performing duplicate actions.
+When in doubt, elect a remote to perform all actions that should only be executed once.
+See example 2 below.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The ID of the remote that left the server.
+     */
+    remoteId: string
+};
+```
+
+#### Examples:
+
+1. Show a toast when a player leaves.
+```typescript
+os.toast("Remote joined: " + that.remoteId);
+```
+
+### `@onAnyBotsAdded`
+
+A shout that is sent when a list of bots is added to the current server.
+
+Unlike <TagLink tag='@onAnyCreate'/>, this listen tag is triggered whenever the bots have been added to the current device's server, even if the bots have already been created.
+An example of this happening is when you first load a server. Even though all the bots have already been created, they still need to be added to the server in order for you to interact with them.
+
+Note that this listen tag is triggered after executing scripts have finished running. This means that if a script updates the same tag multiple times, `@onAnyBotsAdded` will still only be triggered once.
+This is in contrast to <TagLink tag='@onCreate'/> which is triggered immediately after the bot has been created.
+
+Also note that this listen tag can be triggered before <TagLink tag='@onInstJoined'/>. This means that it is possible for bots in other spaces to not be available when this listener is triggered.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The array of bots that were added to the server.
+     */
+    bots: Bot[];
+};
+```
+
+### `@onAnyBotsRemoved`
+
+A shout that is sent when a list of bots is removed from the current server.
+
+Unlike <TagLink tag='@onDestroy'/>, this listen tag is triggered whenever the bots have been removed from the current device's server, even if the bots were not destroyed.
+An example of this happening is when another player disconnects. Even though their config bots were not destroyed, they still need to be removed from the server.
+
+Note that this listen tag is triggered after executing scripts have finished running. This means that if a script updates the same tag multiple times, `@onAnyBotsRemoved` will still only be triggered once.
+This is in contrast to <TagLink tag='@onCreate'/> which is triggered immediately after the bot has been created.
+
+Also note that this listen tag can be triggered before <TagLink tag='@onInstJoined'/>. This means that it is possible for bots in other spaces to not be available when this listener is triggered.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The array of bot IDs that were removed from the server.
+     */
+    botIDs: string[];
+};
+```
+
+### `@onAnyBotsChanged`
+
+A shout that is sent when one or more tags are changed on a list of bots in the current server.
+
+This listen tag is triggered whenever the bots have been updated in the current device's server, even if the bots were not updated locally.
+An example of this happening is when another player changes a tag in the sheet portal. Even though the change was made on their device, it will show up on the current device.
+
+Note that this listen tag is triggered after executing scripts have finished running. This means that if a script updates the same tag multiple times, `@onAnyBotsChanged` will still only be triggered once.
+This is in contrast to <TagLink tag='@onCreate'/> which is triggered immediately after the bot has been created.
+
+Also note that this listen tag can be triggered before <TagLink tag='@onInstJoined'/>. This means that it is possible for bots in other spaces to not be available when this listener is triggered.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The bot that was updated.
+     */
+    bot: Bot,
+
+    /**
+     * The list of tags that were changed on the bot.
+     */
+    tags: string[]
+}[];
+```
+
+### `@onError`
+
+A shout that is sent when an unhandled error occurs in a listen tag.
+Errors can occur for many reasons, but common ones include data being unexpectedly missing (e.g. "Cannot read property xyz of undefined") or invalid usage (e.g. "xyz is not a function").
+
+Note that errors which occur in a `@onError` listen tag will not trigger further `onError` calls.
+To view those errors, open the developer tools console.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The bot that the error originated from.
+     */
+    bot: Bot,
+
+    /**
+     * The tag that the error originated from.
+     */
+    tag: string,
+
+    /**
+     * The error that occurred.
+     */
+    error: Error
+}
+```
+
+### `@onRoomJoined`
+
+A shout that is sent whenever a multimedia chat room is joined by using <ActionLink action='os.joinRoom(roomName, options?)'/>.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that was joined.
+     */
+    roomName: string;
+
+    /**
+     * The options that the room was joined with.
+     */
+    options: {
+        /**
+         * Whether the video will stream when the room is joined.
+         */
+        video: boolean;
+
+        /**
+         * Whether the audio will stream when the room is joined.
+         */
+        audio: boolean;
+    
+        /**
+         * Whether the screen will stream when the room is joined..
+         */
+        screen?: boolean;
+    };
+};
+```
+
+### `@onRoomLeave`
+
+A shout that is sent whenever a multimedia chat room is exited by using <ActionLink action='os.leaveRoom(roomName, options?)'/>.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that was left.
+     */
+    roomName: string;
+};
+```
+
+### `@onRoomStreaming`
+
+A shout that is sent whenever the user becomes connected to a multimedia chat room. Work similarly to <TagLink tag='@onInstStreaming'/> except that it is only sent for chat rooms.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that started streaming.
+     */
+    roomName: string;
+};
+```
+
+### `@onRoomStreamLost`
+
+A shout that is sent whenever the user becomes disconnected from a multimedia chat room. Work similarly to <TagLink tag='@onInstStreamLost'/> except that it is only sent for chat rooms.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that lost connection.
+     */
+    roomName: string;
+};
+```
+
+### `@onRoomTrackSubscribed`
+
+A shout that is sent whenever a media track is discovered inside a multimedia chat room.
+Media tracks represent streams of data like video from a camera or audio from a microphone.
+
+This shout will be triggered for each media track that is published by each user in the room, including the tracks published by the local user.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that the track was discovered in.
+     */
+    roomName: string;
+
+    /**
+     * Whether the track is streaming from a remote user.
+     */
+    isRemote: boolean;
+
+    /**
+     * The ID of the remote user that is publishing the track.
+     * This is equal to the ID of the configBot of the user that published this track.
+     */
+    remoteId: string;
+
+    /**
+     * Whether this track is locally muted.
+     */
+    muted: boolean;
+
+    /**
+     * Whether this track represents audio or video data.
+     */
+    kind: 'audio' | 'video';
+
+    /**
+     * The type of source of data for this track.
+     */
+    source: 'camera' | 'microphone' | 'screen_share' | 'screen_share_audio' | 'unknown';
+
+    /**
+     * The dimensions of the video stream.
+     * Only included for video tracks.
+     */
+    dimensions?: {
+        width: number;
+        height: number
+    };
+
+    /**
+     * The aspect ratio of the video stream.
+     * Only included for video tracks.
+     */
+    aspectRatio?: number;
+
+    /**
+     * The quality of video that is streaming to this local user.
+     * Only included for video tracks.
+     */
+    videoQuality?: 'high' | 'medium' | 'low' | 'off';
+};
+```
+
+### `@onRoomTrackUnsubscribed`
+
+A shout that is sent whenever a media track is removed from inside a multimedia chat room.
+This can happen if a track is muted by the user that is publishing it or if the user exits the room.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room that the track was discovered in.
+     */
+    roomName: string;
+
+    /**
+     * Whether the track is streaming from a remote user.
+     */
+    isRemote: boolean;
+
+    /**
+     * The ID of the remote user that is publishing the track.
+     * This is equal to the ID of the configBot of the user that published this track.
+     */
+    remoteId: string;
+
+    /**
+     * Whether this track is locally muted.
+     */
+    muted: boolean;
+
+    /**
+     * Whether this track represents audio or video data.
+     */
+    kind: 'audio' | 'video';
+
+    /**
+     * The type of source of data for this track.
+     */
+    source: 'camera' | 'microphone' | 'screen_share' | 'screen_share_audio' | 'unknown';
+
+    /**
+     * The dimensions of the video stream.
+     * Only included for video tracks.
+     */
+    dimensions?: {
+        width: number;
+        height: number
+    };
+
+    /**
+     * The aspect ratio of the video stream.
+     * Only included for video tracks.
+     */
+    aspectRatio?: number;
+
+    /**
+     * The quality of video that is streaming to this local user.
+     * Only included for video tracks.
+     */
+    videoQuality?: 'high' | 'medium' | 'low' | 'off';
+};
+```
+
+### `@onRoomSpeakersChanged`
+
+A shout that is sent whenever one or more users begin/end speaking.
+Useful for providing speaking indicators or moving the active speakers to a prominent position.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+
+    /**
+     * The array of remote IDs that are currently talkling.
+     */
+    speakerIds: string[];
+};
+```
+
+### `@onRoomRemoteJoined`
+
+A shout that is sent whenever a remote user joins a multimedia chat room that the local user is participating in.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+
+    /**
+     * The ID of the remote user that joined the room.
+     */
+    remoteId: string;
+};
+```
+
+### `@onRoomRemoteLeave`
+
+A shout that is sent whenever a remote user leaves a multimedia chat room that the local user is participating in.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+
+    /**
+     * The ID of the remote user that joined the room.
+     */
+    remoteId: string;
+};
+```
+
+### `@onRoomOptionsChanged`
+
+A shout that is sent whenever the local room options have been changed. Useful for detecting if the user's camera feed or microphone has been muted/unmuted.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The name of the room.
+     */
+    roomName: string;
+
+    /**
+     * The options that are currently set on the room.
+     */
+    options: {
+        /**
+         * Whether to stream video.
+         */
+        video: boolean;
+
+        /**
+         * Whether to stream audio.
+         */
+        audio: boolean;
+
+        /**
+         * Whether to stream the screen.
+         */
+        screen: boolean;
+    };
+};
+```
+
+### `@onAnyFormAnimationStarted`
+
+A shout that is sent to all bots whenever an animation is started via the <ActionLink action='os.startFormAnimation(botOrBots, nameOrIndex, options?)'/> function.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The bot that the animation was started on.
+     */
+    bot: Bot;
+
+    /**
+     * The animation that was started.
+     */
+    animation: string | number;
+};
+```
+
+### `@onAnyFormAnimationStopped`
+
+A shout that is sent to all bots whenever an animation is stopped via the <ActionLink action='os.stopFormAnimation(botOrBots, options?)'/> function.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The bot that the animation was stopped on.
+     */
+    bot: Bot;
+
+    /**
+     * The animation that was stopped.
+     */
+    animation: string | number;
+};
+```
+
+### `@onAnyFormAnimationLooped`
+
+A shout that is sent to all bots whenever an animation finishes and starts to repeat based on the loop rules given to <ActionLink action='os.startFormAnimation(botOrBots, nameOrIndex, options?)'/> in the options.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The bot that the animation was looped on.
+     */
+    bot: Bot;
+
+    /**
+     * The animation that was looped.
+     */
+    animation: string | number;
+
+    /**
+     * The number of loops that have been completed.
+     */
+    loopCount: number;
+};
+```
+
+### `@onAnyFormAnimationFinished`
+
+A shout that is sent to all bots whenever an animation that was started by <ActionLink action='os.startFormAnimation(botOrBots, nameOrIndex, options?)'/> stops.
+This shout is sent both for when the animation is manually stopped (by calling <ActionLink action='os.stopFormAnimation(botOrBots, options?)'/>) and also when it stops because it shouldn't repeat.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The bot that the animation was finished on.
+     */
+    bot: Bot;
+
+    /**
+     * The animation that finished.
+     */
+    animation: string | number;
+};
+```
+
+### `@onDocumentAvailable`
+
+A shout that is sent to all bots when the [Document](https://developer.mozilla.org/en-US/docs/Web/API/Document) object is made available to scripts.
+
+#### Arguments:
+```typescript
+let that: null;
+```
+
+### `@onSpaceMaxSizeReached`
+
+A shout that is sent to all bots when a space rejects persistent storage of one or more bot changes due to exceeding the storage limits of the space.
+
+There are a several consequences to this:
+
+-   Some bot/tag changes were not persistently stored in the space.
+-   Those same bot/tag changes will still be available on the machine that the change was created on, as long as the browser tab has not been reloaded.
+-   Future changes to that space may or may not be persisted, depending on whether the individual changes would cause the space to exceed its storage limit. As a result, large changes are more likely to be rejected than small changes.
+
+As such, if this shout occurs in an inst that you are working in, it is highly recommended to make a manual backup so that you don't loose any data.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The space that rejected some changes due to storage limits.
+     * Generally, this is the "shared" space.
+     */
+    space: string;
+
+    /**
+     * The storage limit for the space. Represented in bytes.
+     */
+    maxSizeInBytes: number;
+
+    /**
+     * The number of bytes that the storage limit would need to be in order to accept the changes.
+     */
+    neededSizeInBytes: number;
+};
+```
+
+### `@onSpaceRateLimitExceeded`
+
+A shout that is sent to all bots when a space rejects a change because it would exceed the rate limit for the space.
+
+Rate limits are used to prevent too many changes at one time from overloading the system, and they only apply to the `shared` space.
+
+#### Arguments:
+```typescript
+let that: {
+    /**
+     * The space that rejected some changes/messages due to rate limits.
+     */
+    space: string;
+}
+```

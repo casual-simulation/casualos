@@ -1,0 +1,48 @@
+---
+id: vectors
+title: Vectors
+sidebar_label: Vectors
+description: Vectors help represent positions and directions.
+---
+
+import { ClassMembers, classTableOfContents, setLinkMap } from '@site/util/doc.jsx'
+import './typeLinkMap';
+import Vector2 from '@api/Vector2';
+import Vector3 from '@api/Vector3';
+import Heading from '@theme/Heading';
+
+export const toc = [
+    { value: 'Introduction', id: 'introduction', level: 2 }, 
+    { value: 'Vector2', id: 'vector2', level: 2 }, 
+    ...classTableOfContents(Vector2), 
+    { value: 'Vector3', id: 'vector3', level: 2 },
+    ...classTableOfContents(Vector3),
+];
+
+<Heading as='h2' id='introduction'>Introduction</Heading>
+
+In CasualOS, Vectors are useful objects that represent 2D/3D positions and directions.
+They are called vectors because in Math it is common to call an ordered list of numbers a "vector".
+
+Additionally, they are useful because we can use vectors to represent X, Y, and Z positions and perform common operations on them like adding them together or finding the distance between them.
+When saved to tags, vectors are stored as [vector tags](/tags#vector-tags).
+
+There are two classes that provide vector functionality:
+
+-   [`Vector2`](#vector2) provides 2D vectors.
+-   [`Vector3`](#vector3) provides 3D vectors.
+
+
+<Heading as='h2' id='vector2'>Vector2</Heading>
+
+`Vector2` is a class that is able to represent 2D positions and directions.
+It has two properties: `x`, and `y` which contain their respective coordinates.
+
+<ClassMembers reflection={Vector2} />
+
+<Heading as='h2' id='vector3'>Vector3</Heading>
+
+`Vector3` is a class that is able to represent 3D positions and directions.
+It has three properties: `x`, `y`, and `z` which contain their respective coordinates.
+ 
+<ClassMembers reflection={Vector3} />

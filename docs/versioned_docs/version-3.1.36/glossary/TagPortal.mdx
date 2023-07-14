@@ -1,0 +1,23 @@
+import { GlossaryRef } from './index';
+import { TagLink, VariableLink } from '../components.mdx'
+
+The tagPortal is a <GlossaryRef term="portal">portal</GlossaryRef> that is used to view and edit a single tag on a single bot.
+
+The tagPortal can be opened by setting the <TagLink tag='tagPortal'/> tag on the <VariableLink name='configBot'/> to a string matching the following format: `{botID}.{tagName}`.
+Where `{botID}` is replaced with the ID of the <GlossaryRef term='bot'/> and `{tagName}` is replaced by the name of the tag that should be shown in the portal.
+
+Portals are places where humans can interface with [bots](#bot).
+Portals utilize [dimensions](#dimension) to allow interacting with and visualizing subsets of bots.
+
+A list of built-in portals is available on the [`configBot` documentation](./tags#config-bot-tags).
+
+#### See Also
+
+- <TagLink tag="tagPortal"/>
+- <TagLink tag="tagPortalSpace"/>
+- <TagLink tag='tagPortalAnchorPoint'/>
+- <TagLink tag='tagPortalStyle'/>
+- <TagLink tag='tagPortalShowButton'/>
+- <TagLink tag='tagPortalButtonIcon'/>
+- <TagLink tag='tagPortalButtonHint'/>
+- <VariableLink name="tagPortalBot"/>
