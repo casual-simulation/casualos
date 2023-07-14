@@ -4618,32 +4618,65 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Converts the given array of bytes into a base64 string.
-     * @param bytes The bytes that should be converted into base64.
+     * Formats the given bytes into a string that contains the [Base64](https://en.wikipedia.org/wiki/Base64) representation of the given data.
+     * Returns the Base64 string.
+     *
+     * @param bytes the bytes that should be formatted into Base64.
+     *
+     * @example Format a byte array into Base64
+     * os.toast(bytes.toBase64String(new Uint8Array([ 255, 254, 253 ])));
+     *
+     * @dochash actions/bytes
+     * @doctitle Bytes Actions
+     * @docsidebar Bytes
+     * @docdescription Bytes actions are functions that make it easier to work with arrays of bytes and transform them into different formats.
+     * @dochash actions/bytes
+     * @docname bytes.toBase64String
      */
     function toBase64String(bytes: Uint8Array): string {
         return fromByteArray(bytes);
     }
 
     /**
-     * Converts the given base64 formatted string into an array of bytes.
-     * @param base64 The base64 that should be converted to bytes.
+     * Converts the given [Base64](https://en.wikipedia.org/wiki/Base64) string into a byte array that contains the data represented by the string.
+     * Returns the new Uint8Array array.
+     * @param base64 the Base64 formatted string that should be converted to a Uint8Array byte array.
+     *
+     * @example Convert a Base64 string into bytes
+     * const data = bytes.fromBase64String('aGVsbG8='); // "hello" encoded in Base64
+     *
+     * @dochash actions/bytes
+     * @docname bytes.fromBase64String
      */
     function fromBase64String(base64: string): Uint8Array {
         return toByteArray(base64);
     }
 
     /**
-     * Converts the given array of bytes into a hexadecimal string.
-     * @param bytes The bytes that should be converted into hex.
+     * Formats the given bytes into a string that contains the [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) representation of the given data.
+     * Returns the hex string.
+     *
+     * @param bytes the bytes that should be formatted into hexadecimal.
+     *
+     * @example Format a byte array into hexadecimal
+     * os.toast(bytes.toHexString(new Uint8Array([ 255, 254, 253 ]))); // fffefd in bytes
+     *
+     * @dochash actions/bytes
+     * @docname bytes.toHexString
      */
     function toHexString(bytes: Uint8Array): string {
         return utilToHexString(bytes);
     }
 
     /**
-     * Converts the given hexadecimal string into an array of bytes.
-     * @param hex The hexadecimal string.
+     * Converts the given [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string into a byte array that contains the data represented by the string. Returns the new Uint8Array array.
+     * @param hex the hexadecimal string that should be converted to a byte array.
+     *
+     * @example Convert a hex string into bytes
+     * const data = bytes.fromHexString('fffefd'); // 255, 254, 253 in hex
+     *
+     * @dochash actions/bytes
+     * @docname bytes.fromHexString
      */
     function fromHexString(hex: string): Uint8Array {
         return utilFromHexString(hex);
