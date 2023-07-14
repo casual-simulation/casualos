@@ -1,0 +1,29 @@
+---
+id: extra-types
+title: Extra Types
+sidebar_label: Extra Types
+description: Type definitions that CasualOS uses
+---
+
+import Doc from '@site/docs/api-info/extra-types.json'
+import { 
+    objectTableOfContents,
+    ObjectMembers,
+    classTableOfContents,
+    setLinkMap,
+    DebugObject,
+    getReturnType,
+    getProperty,
+    RenderTree,
+    getTypeReferences,
+    ApiContents,
+    apiTableOfContents
+} from '@site/util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />

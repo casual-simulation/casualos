@@ -1,4 +1,5 @@
 import useBaseUrl from '@docusaurus/useBaseUrl';
+import Info from '@site/docs/api-info/extra-types.json';
 
 export const PossibleValuesTable = ({children}) => (
   <table>
@@ -101,13 +102,43 @@ export const ListenTagLink = ({tag}) => (
   </a>
 );
 
-export const ActionLink = ({action, children}) => (
+export const TypeLink = ({type, children}) => {
+    let c = <NormalCode>{children ?? type}</NormalCode>;
+    const hash = Info.references[type];
+    if (!hash) {
+        console.warn('No hash for type', action);
+        return c;
+    }
+    const url = useBaseUrl(hash) + '#' + type;
+    return <a href={url}>{c}</a>;
+}
+
+export const ActionLink = ({action, children}) => {
+    let id = null;
+    let parametersStart = action.indexOf('(');
+    if (parametersStart >= 0) {
+        id = action.substring(0, parametersStart);
+    } else {
+        id = action;
+        action += '()';
+    }
+    let c = <NormalCode>{children ?? action}</NormalCode>;
+    const hash = Info.references[id];
+    if (!hash) {
+        console.warn('No hash for action', action);
+        return c;
+    }
+    const url = useBaseUrl(hash) + '#' + id;
+    return <a href={url}>{c}</a>;
+}
+
+<!-- (
   <a href={useBaseUrl('actions') + '#' + action.replace(/[\.\(\)\,\?]/g, '').replace(/\s/g, '-').toLowerCase()}>
   {children ? children : (
       <NormalCode>{action}</NormalCode>
   )}
   </a>
-);
+); -->
 
 export const NormalCode = ({children}) => (
   React.createElement('code', {}, ...children)

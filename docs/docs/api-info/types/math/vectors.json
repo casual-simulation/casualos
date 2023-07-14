@@ -1,0 +1,3368 @@
+{
+    "hash": "types/math/vectors",
+    "pageTitle": "Vectors",
+    "pageDescription": "Vectors help represent positions and directions.",
+    "pageSidebarLabel": "Vectors",
+    "contents": [
+        {
+            "id": 3042,
+            "order": 0,
+            "name": "Vector2",
+            "reflection": {
+                "id": 3042,
+                "name": "Vector2",
+                "kind": 128,
+                "kindString": "Class",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines a class that represents a 2D point in space.",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "types/math/vectors"
+                        },
+                        {
+                            "tag": "docorder",
+                            "paramName": "",
+                            "text": "0"
+                        },
+                        {
+                            "tag": "doctitle",
+                            "paramName": "",
+                            "text": "Vectors"
+                        },
+                        {
+                            "tag": "docsidebar",
+                            "paramName": "",
+                            "text": "Vectors"
+                        },
+                        {
+                            "tag": "docdescription",
+                            "paramName": "",
+                            "text": "Vectors help represent positions and directions."
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "Vector2\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 3065,
+                        "name": "constructor",
+                        "kind": 512,
+                        "kindString": "Constructor",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 36,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3066,
+                                "name": "new Vector2",
+                                "kind": 16384,
+                                "kindString": "Constructor signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Constructs a new 2D vector with the given X and Y values.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Create a new Vector2 object with the position (2, 3).\nlet myVector = new Vector2(2, 3);\n\nos.toast(`X: ${myVector.x}, Y: ${myVector.y}`);\n"
+                                        },
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Move this bot to (10, 15) in the home dimension.\ntags.homePosition = new Vector2(10, 15);\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3067,
+                                        "name": "x",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The X value of the vector.",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        },
+                                        "defaultValue": "0"
+                                    },
+                                    {
+                                        "id": 3068,
+                                        "name": "y",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The Y value of the vector.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        },
+                                        "defaultValue": "0"
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3042,
+                                    "name": "Vector2"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3069,
+                        "name": "x",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The X value of this vector.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 16,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    },
+                    {
+                        "id": 3070,
+                        "name": "y",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The Y value of this vector.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 21,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    },
+                    {
+                        "id": 3071,
+                        "name": "add",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 169,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3072,
+                                "name": "add",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Adds this vector with the other vector and returns the result.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Add two vectors together.\nconst first = new Vector2(1, 2);\nconst second = new Vector2(3, 4);\nconst added = first.add(second);\n\nos.toast(added); // Prints (4, 6)\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3073,
+                                        "name": "other",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The other vector to add with this vector.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3042,
+                                            "name": "Vector2"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3042,
+                                    "name": "Vector2"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3083,
+                        "name": "dot",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 244,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3084,
+                                "name": "dot",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Calculates the dot product of this vector compared to the given other vector.\nReturns a number that is positive if the vectors point in the same direction,\nnegative if they point in opposite directions, and zero if they are perpendicular.\nFor normalized vectors, this value is clamped to 1 and -1.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Determine how two vectors are pointing towards/away from the same direction.\nconst first = new Vector2(1, 2);\nconst second = new Vector2(3, 4);\n\nconst dot = first.dot(second);\nif (dot < 0) {\n    os.toast(\"Vectors are pointing away from each other!\");\n} else if (dot === 0) {\n    os.toast(\"Vectors 90 degrees away from each other!\");\n} else {\n    os.toast(\"Vectors are pointing towards from each other!\");\n}\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3085,
+                                        "name": "other",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The other vector to calculate the dot product with.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3042,
+                                            "name": "Vector2"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3096,
+                        "name": "equals",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 330,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3097,
+                                "name": "equals",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Determines if this vector equals the other vector.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Determine if two vectors represent the same value.\nconst first = new Vector2(1, 2);\nconst second = new Vector2(3, 4);\nconst third = new Vector2(1, 2);\n\nos.toast(`first == second: ${first.equals(second)}; first == third: ${first.equals(third)}`)\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3098,
+                                        "name": "other",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The other vector.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3042,
+                                            "name": "Vector2"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "boolean"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3086,
+                        "name": "length",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 257,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3087,
+                                "name": "length",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Calculates the length of this vector and returns the result.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Get the length of the vector.\nconst myVector = new Vector2(1, 2);\nconst length = myVector.length();\n\nos.toast(`Vector is ${length} units long`);\n"
+                                        }
+                                    ]
+                                },
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3080,
+                        "name": "multiply",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 220,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3081,
+                                "name": "multiply",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Multiplies this vector by the given other vector and returns the result.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Multiply two vectors together.\nconst first = new Vector2(1, 2);\nconst second = new Vector2(3, 4);\nconst multiplied = first.multiply(second);\n\nos.toast(multiplied); // Prints (3, 8)\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3082,
+                                        "name": "other",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The other vector to multiply with this vector.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3042,
+                                            "name": "Vector2"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3042,
+                                    "name": "Vector2"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3077,
+                        "name": "multiplyScalar",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 205,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3078,
+                                "name": "multiplyScalar",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Multiplies each component of this vector by the given value and returns the result.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Scale a vector by 10.\nconst myVector = new Vector2(1, 1);\nconst scaled = myVector.multiplyScalar(10);\nos.toast(scaled); // Prints (10, 10)\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3079,
+                                        "name": "scale",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The scale that should be applied to this vector.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3042,
+                                    "name": "Vector2"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3092,
+                        "name": "negate",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 302,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3093,
+                                "name": "negate",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Negates each component of this vector and returns a new vector that contains the result.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Negate a vector.\nconst myVector = new Vector2(1, 2);\nconst negated = myVector.negate();\n\nos.toast(`Vector: ${myVector}, Negated: ${negated}`);\n"
+                                        }
+                                    ]
+                                },
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3042,
+                                    "name": "Vector2"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3090,
+                        "name": "normalize",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 288,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3091,
+                                "name": "normalize",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Calculates the normalized version of this vector and returns it.\nA normalized vector is a vector whose length equals 1.",
+                                    "text": "Normalizing a vector preserves its directionality while making the length (i.e. scale) of it 1.\n",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Normalize a vector.\nconst myVector = new Vector2(1, 2);\nconst normalized = myVector.normalize();\n\nos.toast(`Vector: ${myVector}, Normalized: ${normalized}`);\n"
+                                        }
+                                    ]
+                                },
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3042,
+                                    "name": "Vector2"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3088,
+                        "name": "squareLength",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 272,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3089,
+                                "name": "squareLength",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Calculates the square length of this vector and returns the result.\nThis is equivalent to length^2, but it is faster to calculate than length because it doesn't require\ncalculating a square root.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Get the square length of the vector.\nconst myVector = new Vector2(1, 2);\nconst length = myVector.squareLength();\n\nos.toast(`Vector is ${length}^2 units long`);\n"
+                                        }
+                                    ]
+                                },
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3074,
+                        "name": "subtract",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 192,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3075,
+                                "name": "subtract",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Subtracts the other vector from this vector and returns the result.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Subtract two vectors.\nconst first = new Vector2(1, 2);\nconst second = new Vector2(3, 4);\nconst subtracted = first.subtract(second);\nos.toast(subtracted);\n"
+                                        },
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Find the direction from one vector to another.\nconst first = new Vector2(1, 2);\nconst second = new Vector2(3, 4);\n\nconst directionFromFirstToSecond = second.subtract(first);\nconst directionFromSecondToFirst = first.subtract(second);\n\nos.toast(`first -> second = ${directionFromFirstToSecond}; second -> first = ${directionFromSecondToFirst}`);\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3076,
+                                        "name": "other",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The other vector that should be subtracted from this vector.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3042,
+                                            "name": "Vector2"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3042,
+                                    "name": "Vector2"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3094,
+                        "name": "toString",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 315,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3095,
+                                "name": "toString",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Converts this vector to a human-readable string representation.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Get a string of a vector.\nconst myVector = new Vector2(1, 2);\nconst vectorString = myVector.toString();\n\nos.toast('My Vector: ' + vectorString);\n"
+                                        }
+                                    ]
+                                },
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3047,
+                        "name": "angleBetween",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {
+                            "isStatic": true
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 78,
+                                "character": 11
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3048,
+                                "name": "angleBetween",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Calculates the angle between the two given vectors and returns the result in radians.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Find the angle between two vectors.\nconst first = new Vector2(\n    Math.cos(Math.PI / 3),\n    Math.sin(Math.PI / 3)\n); // 60 degrees\nconst second = new Vector2(\n    Math.cos(Math.PI / 2),\n    Math.sin(Math.PI / 2)\n); // 90 degrees\n\nconst angle = Vector2.angleBetween(first, second);\nos.toast(angle);\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3049,
+                                        "name": "first",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The first vector that should be used for comparision.",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3042,
+                                            "name": "Vector2"
+                                        }
+                                    },
+                                    {
+                                        "id": 3050,
+                                        "name": "second",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The second vector that should be used for comparision.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3042,
+                                            "name": "Vector2"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3043,
+                        "name": "createNormalized",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {
+                            "isStatic": true
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 55,
+                                "character": 11
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3044,
+                                "name": "createNormalized",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Creates a 2D vector with the given X and Y values that is normalized immediately upon creation.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Create a normalized vector\nconst vector = Vector2.createNormalized(1, 2);\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3045,
+                                        "name": "x",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The X value of the vector.",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    },
+                                    {
+                                        "id": 3046,
+                                        "name": "y",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The Y value of the vector.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3042,
+                                    "name": "Vector2"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3051,
+                        "name": "distanceBetween",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {
+                            "isStatic": true
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 97,
+                                "character": 11
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3052,
+                                "name": "distanceBetween",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Calculates the distance between the two given vectors and returns the result.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Find the distance between two vectors.\nconst first = new Vector2(5, 10);\nconst second = new Vector2(9, 2);\nconst distance = Vector2.distanceBetween(first, second);\n\nos.toast(`Distance: ${distance}`);\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3053,
+                                        "name": "first",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The first vector that should be used for comparision.",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3042,
+                                            "name": "Vector2"
+                                        }
+                                    },
+                                    {
+                                        "id": 3054,
+                                        "name": "second",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The second vector that should be used for comparision.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3042,
+                                            "name": "Vector2"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3060,
+                        "name": "interpolateDirection",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {
+                            "isStatic": true
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 150,
+                                "character": 11
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3061,
+                                "name": "interpolateDirection",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Constructs a new vector that is the directional linear interpolation between the given start and end positions.\nThe degree that the result is interpolated is determined by the given amount parameter.",
+                                    "text": "This function works similarly to interpolatePosition(), except the result is always a normalized vector.\n",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Find the direction that points halfway between the two vectors.\nconst start = new Vector2(5, 10);\nconst finish = new Vector2(9, 2);\nconst halfway = Vector2.interpolatePosition(start, finish, 0.5);\n\nos.toast(halfway);\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3062,
+                                        "name": "start",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The start position.",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3042,
+                                            "name": "Vector2"
+                                        }
+                                    },
+                                    {
+                                        "id": 3063,
+                                        "name": "finish",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The end position.",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3042,
+                                            "name": "Vector2"
+                                        }
+                                    },
+                                    {
+                                        "id": 3064,
+                                        "name": "amount",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The amount that the resulting position should be interpolated between the start and end positions.  Values near 0 indicate rotations close to the first and values near 1 indicate rotations close to the second.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3042,
+                                    "name": "Vector2"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3055,
+                        "name": "interpolatePosition",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {
+                            "isStatic": true
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector2.ts",
+                                "line": 123,
+                                "character": 11
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3056,
+                                "name": "interpolatePosition",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Constructs a new vector that is the linear interpolation between the given start and end positions.\nThe degree that the result is interpolated is determined by the given amount parameter.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Find the position that is halfway between two vectors.\nconst start = new Vector2(5, 10);\nconst finish = new Vector2(9, 2);\nconst halfway = Vector2.interpolatePosition(start, finish, 0.5);\n\nos.toast(halfway);\n"
+                                        },
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Find the position that is 1/4 between two vectors.\nconst start = new Vector2(5, 10);\nconst finish = new Vector2(9, 2);\nconst halfway = Vector2.interpolatePosition(start, finish, 0.25);\n\nos.toast(halfway);\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3057,
+                                        "name": "start",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The start position.",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3042,
+                                            "name": "Vector2"
+                                        }
+                                    },
+                                    {
+                                        "id": 3058,
+                                        "name": "finish",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The end position.",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3042,
+                                            "name": "Vector2"
+                                        }
+                                    },
+                                    {
+                                        "id": 3059,
+                                        "name": "amount",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The amount that the resulting position should be interpolated between the start and end positions.  Values near 0 indicate rotations close to the first and values near 1 indicate rotations close to the second.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3042,
+                                    "name": "Vector2"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Constructors",
+                        "kind": 512,
+                        "children": [
+                            3065
+                        ]
+                    },
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            3069,
+                            3070
+                        ]
+                    },
+                    {
+                        "title": "Methods",
+                        "kind": 2048,
+                        "children": [
+                            3071,
+                            3083,
+                            3096,
+                            3086,
+                            3080,
+                            3077,
+                            3092,
+                            3090,
+                            3088,
+                            3074,
+                            3094,
+                            3047,
+                            3043,
+                            3051,
+                            3060,
+                            3055
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/math/Vector2.ts",
+                        "line": 12,
+                        "character": 13
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines a class that represents a 2D point in space.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "types/math/vectors"
+                    },
+                    {
+                        "tagName": "docorder",
+                        "paramName": "",
+                        "text": "0"
+                    },
+                    {
+                        "tagName": "doctitle",
+                        "paramName": "",
+                        "text": "Vectors"
+                    },
+                    {
+                        "tagName": "docsidebar",
+                        "paramName": "",
+                        "text": "Vectors"
+                    },
+                    {
+                        "tagName": "docdescription",
+                        "paramName": "",
+                        "text": "Vectors help represent positions and directions."
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "Vector2\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 3099,
+            "order": 1,
+            "name": "Vector3",
+            "reflection": {
+                "id": 3099,
+                "name": "Vector3",
+                "kind": 128,
+                "kindString": "Class",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines a class that represents a 3D point in space.",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "types/math/vectors"
+                        },
+                        {
+                            "tag": "docorder",
+                            "paramName": "",
+                            "text": "1"
+                        },
+                        {
+                            "tag": "doctitle",
+                            "paramName": "",
+                            "text": "Vectors"
+                        },
+                        {
+                            "tag": "docsidebar",
+                            "paramName": "",
+                            "text": "Vectors"
+                        },
+                        {
+                            "tag": "docdescription",
+                            "paramName": "",
+                            "text": "Vectors help represent positions and directions."
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "Vector3\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 3123,
+                        "name": "constructor",
+                        "kind": 512,
+                        "kindString": "Constructor",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 65,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3124,
+                                "name": "new Vector3",
+                                "kind": 16384,
+                                "kindString": "Constructor signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Constructs a new 3D vector with the given X and Y values.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Create a new Vector3 object with the position (2, 3, 4).\nlet myVector = new Vector3(2, 3, 4);\n\nos.toast(`X: ${myVector.x}, Y: ${myVector.y}, Z: ${myVector.z}`);\n"
+                                        },
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Move this bot to (1, 2, 3) in the home dimension.\ntags.homePosition = new Vector3(1, 2, 3);\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3125,
+                                        "name": "x",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The X value of the vector.",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        },
+                                        "defaultValue": "0"
+                                    },
+                                    {
+                                        "id": 3126,
+                                        "name": "y",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The Y value of the vector.",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        },
+                                        "defaultValue": "0"
+                                    },
+                                    {
+                                        "id": 3127,
+                                        "name": "z",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The Z value of the vector.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        },
+                                        "defaultValue": "0"
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3099,
+                                    "name": "Vector3"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3128,
+                        "name": "x",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The X value of this vector.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 18,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    },
+                    {
+                        "id": 3129,
+                        "name": "y",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The Y value of this vector.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 23,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    },
+                    {
+                        "id": 3130,
+                        "name": "z",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The Z value of this vector.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 28,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    },
+                    {
+                        "id": 3131,
+                        "name": "xy",
+                        "kind": 262144,
+                        "kindString": "Accessor",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 33,
+                                "character": 8
+                            }
+                        ],
+                        "getSignature": [
+                            {
+                                "id": 3132,
+                                "name": "xy",
+                                "kind": 524288,
+                                "kindString": "Get signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Gets a new Vector2 that contains this vector's X and Y components.",
+                                    "tags": []
+                                },
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3042,
+                                    "name": "Vector2"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3133,
+                        "name": "xz",
+                        "kind": 262144,
+                        "kindString": "Accessor",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 40,
+                                "character": 8
+                            }
+                        ],
+                        "getSignature": [
+                            {
+                                "id": 3134,
+                                "name": "xz",
+                                "kind": 524288,
+                                "kindString": "Get signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Gets a new Vector2 that contains this vector's X and Z components.",
+                                    "tags": []
+                                },
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3042,
+                                    "name": "Vector2"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3135,
+                        "name": "yz",
+                        "kind": 262144,
+                        "kindString": "Accessor",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 47,
+                                "character": 8
+                            }
+                        ],
+                        "getSignature": [
+                            {
+                                "id": 3136,
+                                "name": "yz",
+                                "kind": 524288,
+                                "kindString": "Get signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Gets a new Vector2 that contains this vector's Y and Z components.",
+                                    "tags": []
+                                },
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3042,
+                                    "name": "Vector2"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3137,
+                        "name": "add",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 208,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3138,
+                                "name": "add",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Adds this vector with the other vector and returns the result.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Add two vectors together.\nconst first = new Vector3(1, 2, 3);\nconst second = new Vector3(3, 4, 5);\nconst added = first.add(second);\n\nos.toast(added); // Prints (4, 6, 8)\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3139,
+                                        "name": "other",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The other vector to add with this vector.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3099,
+                                            "name": "Vector3"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3099,
+                                    "name": "Vector3"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3152,
+                        "name": "cross",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 312,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3153,
+                                "name": "cross",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Calculates the cross product of this vector with the given other vector.\nReturns a new vector that is perpendicular to both vectors.\nNote that the order of the vectors greatly matters. For example, (1, 0, 0).cross(0, 1, 0) === (0, 0, 1) but (0, 1, 0).cross(1, 0, 0) === (0, 0, -1).",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Calculate a vector that is perpendicular to two vectors.\nconst first = new Vector3(1, 0, 0);\nconst second = new Vector3(0, 1, 0);\n\nconst result = first.cross(second);\nos.toast(`Result: ${result}`); // Prints (0, 0, 1)\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3154,
+                                        "name": "other",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The other vector to calculate the cross product with.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3099,
+                                            "name": "Vector3"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3099,
+                                    "name": "Vector3"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3149,
+                        "name": "dot",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 295,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3150,
+                                "name": "dot",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Calculates the dot product of this vector compared to the given other vector.\nReturns a number that is positive if the vectors point in the same direction,\nnegative if they point in opposite directions, and zero if they are perpendicular.\nFor normalized vectors, this value is clamped to 1 and -1.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Determine how two vectors are pointing towards/away from the same direction.\nconst first = new Vector3(1, 2, 3);\nconst second = new Vector3(3, 4, 5);\n\nconst dot = first.dot(second);\nif (dot < 0) {\n    os.toast(\"Vectors are pointing away from each other!\");\n} else if (dot === 0) {\n    os.toast(\"Vectors 90 degrees away from each other!\");\n} else {\n    os.toast(\"Vectors are pointing towards from each other!\");\n}\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3151,
+                                        "name": "other",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The other vector to calculate the dot product with.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3099,
+                                            "name": "Vector3"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3165,
+                        "name": "equals",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 405,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3166,
+                                "name": "equals",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Determines if this vector equals the other vector.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Determine if two vectors represent the same value.\nconst first = new Vector3(1, 2, 3);\nconst second = new Vector3(3, 4, 5);\nconst third = new Vector3(1, 2, 3);\n\nos.toast(`first == second: ${first.equals(second)}; first == third: ${first.equals(third)}`)\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3167,
+                                        "name": "other",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The other value to compare to.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3099,
+                                            "name": "Vector3"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "boolean"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3155,
+                        "name": "length",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 329,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3156,
+                                "name": "length",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Calculates the length of this vector and returns the result.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Get the length of the vector.\nconst myVector = new Vector3(1, 2, 3);\nconst length = myVector.length();\n\nos.toast(`Vector is ${length} units long`);\n"
+                                        }
+                                    ]
+                                },
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3146,
+                        "name": "multiply",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 267,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3147,
+                                "name": "multiply",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Multiplies this vector by the given other vector and returns the result.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Multiply two vectors together.\nconst first = new Vector3(1, 2, 3);\nconst second = new Vector3(3, 4, 5);\nconst multiplied = first.multiply(second);\n\nos.toast(multiplied); // Prints (3, 8, 15)\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3148,
+                                        "name": "other",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The other vector to multiply with this vector.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3099,
+                                            "name": "Vector3"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3099,
+                                    "name": "Vector3"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3143,
+                        "name": "multiplyScalar",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 252,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3144,
+                                "name": "multiplyScalar",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Multiplies each component of this vector by the given value and returns the result.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Scale a vector by 10.\nconst myVector = new Vector3(1, 1, 1);\nconst scaled = myVector.multiplyScalar(10);\nos.toast(scaled); // Prints (10, 10, 10)\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3145,
+                                        "name": "scale",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The scale that should be applied to this vector.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3099,
+                                    "name": "Vector3"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3161,
+                        "name": "negate",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 377,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3162,
+                                "name": "negate",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Negates each component of this vector and returns a new vector that contains the result.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Negate a vector.\nconst myVector = new Vector3(1, 2, 3);\nconst negated = myVector.negate();\n\nos.toast(`Vector: ${myVector}, Negated: ${negated}`);\n"
+                                        }
+                                    ]
+                                },
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3099,
+                                    "name": "Vector3"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3159,
+                        "name": "normalize",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 360,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3160,
+                                "name": "normalize",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Calculates the normalized version of this vector and returns it.\nA normalized vector is a vector whose length equals 1.",
+                                    "text": "Normalizing a vector preserves its directionality while making the length (i.e. scale) of it 1.\n",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Normalize a vector.\nconst myVector = new Vector3(1, 2, 3);\nconst normalized = myVector.normalize();\n\nos.toast(`Vector: ${myVector}, Normalized: ${normalized}`);\n"
+                                        }
+                                    ]
+                                },
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3099,
+                                    "name": "Vector3"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3157,
+                        "name": "squareLength",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 344,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3158,
+                                "name": "squareLength",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Calculates the square length of this vector and returns the result.\nThis is equivalent to length^2, but it is faster to calculate than length because it doesn't require\ncalculating a square root.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Get the square length of the vector.\nconst myVector = new Vector3(1, 2, 3);\nconst length = myVector.squareLength();\n\nos.toast(`Vector is ${length}^2 units long`);\n"
+                                        }
+                                    ]
+                                },
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3140,
+                        "name": "subtract",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 235,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3141,
+                                "name": "subtract",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Subtracts the other vector from this vector and returns the result.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Subtract two vectors.\nconst first = new Vector3(1, 2, 3);\nconst second = new Vector3(3, 4, 5);\nconst subtracted = first.subtract(second);\nos.toast(subtracted);\n"
+                                        },
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Find the direction from one vector to another.\nconst first = new Vector3(1, 2, 3);\nconst second = new Vector3(3, 4, 5);\n\nconst directionFromFirstToSecond = second.subtract(first);\nconst directionFromSecondToFirst = first.subtract(second);\n\nos.toast(`first -> second = ${directionFromFirstToSecond}; second -> first = ${directionFromSecondToFirst}`);\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3142,
+                                        "name": "other",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The other vector that should be subtracted from this vector.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3099,
+                                            "name": "Vector3"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3099,
+                                    "name": "Vector3"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3163,
+                        "name": "toString",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 390,
+                                "character": 4
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3164,
+                                "name": "toString",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Converts this vector to a human-readable string representation.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Get a string of a vector.\nconst myVector = new Vector3(1, 2, 3);\nconst vectorString = myVector.toString();\n\nos.toast('My Vector: ' + vectorString);\n"
+                                        }
+                                    ]
+                                },
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3105,
+                        "name": "angleBetween",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {
+                            "isStatic": true
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 111,
+                                "character": 11
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3106,
+                                "name": "angleBetween",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Calculates the angle between the two given vectors and returns the result in radians.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Find the angle between two vectors.\nconst first = new Vector3(\n    Math.cos(Math.PI / 3),\n    Math.sin(Math.PI / 3),\n    0,\n); // 60 degrees\nconst second = new Vector3(\n    Math.cos(Math.PI / 2),\n    Math.sin(Math.PI / 2),\n    0\n); // 90 degrees\n\nconst angle = Vector3.angleBetween(first, second);\nos.toast(angle);\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3107,
+                                        "name": "first",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The first vector that should be used for comparision.",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3099,
+                                            "name": "Vector3"
+                                        }
+                                    },
+                                    {
+                                        "id": 3108,
+                                        "name": "second",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The second vector that should be used for comparision.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3099,
+                                            "name": "Vector3"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3100,
+                        "name": "createNormalized",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {
+                            "isStatic": true
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 86,
+                                "character": 11
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3101,
+                                "name": "createNormalized",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Creates a 3D vector with the given X and Y values that is normalized immediately upon creation.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Create a normalized vector\nconst vector = Vector3.createNormalized(1, 2, 3);\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3102,
+                                        "name": "x",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The X value of the vector.",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    },
+                                    {
+                                        "id": 3103,
+                                        "name": "y",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The Y value of the vector.",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    },
+                                    {
+                                        "id": 3104,
+                                        "name": "z",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The Z value of the vector.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3099,
+                                    "name": "Vector3"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3109,
+                        "name": "distanceBetween",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {
+                            "isStatic": true
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 136,
+                                "character": 11
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3110,
+                                "name": "distanceBetween",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Calculates the distance between the two given vectors and returns the result.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Find the distance between two vectors.\nconst first = new Vector3(5, 10, 3);\nconst second = new Vector3(9, 2, 6);\nconst distance = Vector3.distanceBetween(first, second);\n\nos.toast(`Distance: ${distance}`);\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3111,
+                                        "name": "first",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The first vector that should be used for comparision.",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3099,
+                                            "name": "Vector3"
+                                        }
+                                    },
+                                    {
+                                        "id": 3112,
+                                        "name": "second",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The second vector that should be used for comparision.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3099,
+                                            "name": "Vector3"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3118,
+                        "name": "interpolateDirection",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {
+                            "isStatic": true
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 189,
+                                "character": 11
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3119,
+                                "name": "interpolateDirection",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Constructs a new vector that is the directional linear interpolation between the given start and end positions.\nThe degree that the result is interpolated is determined by the given amount parameter.",
+                                    "text": "This function works similarly to interpolatePosition(), except the result is always a normalized vector.\n",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Find the direction that points halfway between the two vectors.\nconst start = new Vector3(5, 10, 16);\nconst finish = new Vector3(9, 2, 6);\nconst halfway = Vector3.interpolatePosition(start, finish, 0.5);\n\nos.toast(halfway);\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3120,
+                                        "name": "start",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The start position.",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3099,
+                                            "name": "Vector3"
+                                        }
+                                    },
+                                    {
+                                        "id": 3121,
+                                        "name": "finish",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The end position.",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3099,
+                                            "name": "Vector3"
+                                        }
+                                    },
+                                    {
+                                        "id": 3122,
+                                        "name": "amount",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The amount that the resulting position should be interpolated between the start and end positions.  Values near 0 indicate rotations close to the first and values near 1 indicate rotations close to the second.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3099,
+                                    "name": "Vector3"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 3113,
+                        "name": "interpolatePosition",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {
+                            "isStatic": true
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/math/Vector3.ts",
+                                "line": 162,
+                                "character": 11
+                            }
+                        ],
+                        "signatures": [
+                            {
+                                "id": 3114,
+                                "name": "interpolatePosition",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Constructs a new vector that is the linear interpolation between the given start and end positions.\nThe degree that the result is interpolated is determined by the given amount parameter.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Find the position that is halfway between two vectors.\nconst start = new Vector3(5, 10, 15);\nconst finish = new Vector3(9, 2, 6);\nconst halfway = Vector3.interpolatePosition(start, finish, 0.5);\n\nos.toast(halfway);\n"
+                                        },
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Find the position that is 1/4 between two vectors.\nconst start = new Vector3(5, 10, 15);\nconst finish = new Vector3(9, 2, 6);\nconst halfway = Vector3.interpolatePosition(start, finish, 0.25);\n\nos.toast(halfway);\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 3115,
+                                        "name": "start",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The start position.",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3099,
+                                            "name": "Vector3"
+                                        }
+                                    },
+                                    {
+                                        "id": 3116,
+                                        "name": "finish",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The end position.",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "id": 3099,
+                                            "name": "Vector3"
+                                        }
+                                    },
+                                    {
+                                        "id": 3117,
+                                        "name": "amount",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The amount that the resulting position should be interpolated between the start and end positions.  Values near 0 indicate rotations close to the first and values near 1 indicate rotations close to the second.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "id": 3099,
+                                    "name": "Vector3"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Constructors",
+                        "kind": 512,
+                        "children": [
+                            3123
+                        ]
+                    },
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            3128,
+                            3129,
+                            3130
+                        ]
+                    },
+                    {
+                        "title": "Accessors",
+                        "kind": 262144,
+                        "children": [
+                            3131,
+                            3133,
+                            3135
+                        ]
+                    },
+                    {
+                        "title": "Methods",
+                        "kind": 2048,
+                        "children": [
+                            3137,
+                            3152,
+                            3149,
+                            3165,
+                            3155,
+                            3146,
+                            3143,
+                            3161,
+                            3159,
+                            3157,
+                            3140,
+                            3163,
+                            3105,
+                            3100,
+                            3109,
+                            3118,
+                            3113
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/math/Vector3.ts",
+                        "line": 14,
+                        "character": 13
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines a class that represents a 3D point in space.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "types/math/vectors"
+                    },
+                    {
+                        "tagName": "docorder",
+                        "paramName": "",
+                        "text": "1"
+                    },
+                    {
+                        "tagName": "doctitle",
+                        "paramName": "",
+                        "text": "Vectors"
+                    },
+                    {
+                        "tagName": "docsidebar",
+                        "paramName": "",
+                        "text": "Vectors"
+                    },
+                    {
+                        "tagName": "docdescription",
+                        "paramName": "",
+                        "text": "Vectors help represent positions and directions."
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "Vector3\n"
+                    }
+                ]
+            },
+            "group": null
+        }
+    ],
+    "references": {
+        "Quaternion": "types/math/rotations",
+        "id-3176": "Quaternion",
+        "Rotation": "types/math/rotations",
+        "id-3208": "Rotation",
+        "Vector2": "types/math/vectors",
+        "id-3042": "Vector2",
+        "Vector3": "types/math/vectors",
+        "id-3099": "Vector3",
+        "AddCountFailure": "types/records/events",
+        "id-2989": "AddCountFailure",
+        "AddCountSuccess": "types/records/events",
+        "id-2984": "AddCountSuccess",
+        "AnimateTagOptions": "types/animation",
+        "id-2103": "AnimateTagOptions",
+        "AttachDebuggerOptions": "types/debuggers/common",
+        "id-2478": "AttachDebuggerOptions",
+        "CasualOSDevice": "types/os",
+        "id-2808": "CasualOSDevice",
+        "CasualOSVersion": "types/os",
+        "id-2800": "CasualOSVersion",
+        "AxisAndAngle": "types/math/rotations",
+        "id-3254": "AxisAndAngle",
+        "BotTagMasks": "types/core",
+        "id-2777": "BotTagMasks",
+        "BotTags": "types/core",
+        "id-2692": "BotTags",
+        "BotState": "types/core",
+        "id-2790": "BotState",
+        "CompiledBotListeners": "types/core",
+        "id-2771": "CompiledBotListeners",
+        "ConvertGeolocationToWhat3WordsOptions": "types/os",
+        "id-2513": "ConvertGeolocationToWhat3WordsOptions",
+        "CreatePublicRecordKeyFailure": "types/records/key",
+        "id-2822": "CreatePublicRecordKeyFailure",
+        "CreatePublicRecordKeySuccess": "types/records/key",
+        "id-2818": "CreatePublicRecordKeySuccess",
+        "DebuggerCallFrame": "types/debuggers/common",
+        "id-2431": "DebuggerCallFrame",
+        "DebuggerFunctionLocation": "types/debuggers/common",
+        "id-2466": "DebuggerFunctionLocation",
+        "DebuggerPause": "types/debuggers/common",
+        "id-2460": "DebuggerPause",
+        "DebuggerTagMaskUpdate": "types/debuggers/common",
+        "id-2439": "DebuggerTagMaskUpdate",
+        "DebuggerTagUpdate": "types/debuggers/common",
+        "id-2445": "DebuggerTagUpdate",
+        "DebuggerVariable": "types/debuggers/common",
+        "id-2472": "DebuggerVariable",
+        "EnableXROptions": "types/os",
+        "id-2587": "EnableXROptions",
+        "EraseDataFailure": "types/records/data",
+        "id-2957": "EraseDataFailure",
+        "EraseDataSuccess": "types/records/data",
+        "id-2953": "EraseDataSuccess",
+        "EraseFileFailure": "types/records/files",
+        "id-2979": "EraseFileFailure",
+        "EraseFileSuccess": "types/records/files",
+        "id-2975": "EraseFileSuccess",
+        "EulerAnglesRotation": "types/math/rotations",
+        "id-3257": "EulerAnglesRotation",
+        "FocusOnOptions": "types/os",
+        "id-2547": "FocusOnOptions",
+        "FocusOnRotation": "types/os",
+        "id-2559": "FocusOnRotation",
+        "FormAnimationData": "types/os",
+        "id-2605": "FormAnimationData",
+        "FromToRotation": "types/math/rotations",
+        "id-3251": "FromToRotation",
+        "GetCountFailure": "types/records/events",
+        "id-3000": "GetCountFailure",
+        "GetCountSuccess": "types/records/events",
+        "id-2994": "GetCountSuccess",
+        "GetDataFailure": "types/records/data",
+        "id-2948": "GetDataFailure",
+        "GetDataSuccess": "types/records/data",
+        "id-2939": "GetDataSuccess",
+        "GetRoomOptionsFailure": "types/os",
+        "id-2193": "GetRoomOptionsFailure",
+        "GetRoomOptionsSuccess": "types/os",
+        "id-2189": "GetRoomOptionsSuccess",
+        "GetRoomRemoteOptionsFailure": "types/os",
+        "id-2236": "GetRoomRemoteOptionsFailure",
+        "GetRoomRemoteOptionsSuccess": "types/os",
+        "id-2231": "GetRoomRemoteOptionsSuccess",
+        "GetRoomTrackOptionsFailure": "types/os",
+        "id-2212": "GetRoomTrackOptionsFailure",
+        "GetRoomTrackOptionsSuccess": "types/os",
+        "id-2207": "GetRoomTrackOptionsSuccess",
+        "GrantMarkerPermissionFailure": "types/records/policies",
+        "id-3028": "GrantMarkerPermissionFailure",
+        "GrantMarkerPermissionSuccess": "types/records/policies",
+        "id-3026": "GrantMarkerPermissionSuccess",
+        "GrantRoleFailure": "types/records/roles",
+        "id-3014": "GrantRoleFailure",
+        "GrantRoleSuccess": "types/records/roles",
+        "id-3012": "GrantRoleSuccess",
+        "ImageClassifierOptions": "types/os",
+        "id-2565": "ImageClassifierOptions",
+        "InstUpdate": "types/os",
+        "id-2813": "InstUpdate",
+        "JoinRoomFailure": "types/os",
+        "id-2174": "JoinRoomFailure",
+        "JoinRoomSuccess": "types/os",
+        "id-2171": "JoinRoomSuccess",
+        "LeaveRoomFailure": "types/os",
+        "id-2183": "LeaveRoomFailure",
+        "LeaveRoomSuccess": "types/os",
+        "id-2180": "LeaveRoomSuccess",
+        "ListDataFailure": "types/records/data",
+        "id-2970": "ListDataFailure",
+        "ListDataSuccess": "types/records/data",
+        "id-2962": "ListDataSuccess",
+        "LookRotation": "types/math/rotations",
+        "id-3274": "LookRotation",
+        "MediaPermissionOptions": "types/os",
+        "id-2584": "MediaPermissionOptions",
+        "Debugger": "types/debuggers/debugger",
+        "id-2243": "Debugger",
+        "NormalDebuggerOptions": "types/debuggers/common",
+        "id-2450": "NormalDebuggerOptions",
+        "ParsedBotLink": "types/core",
+        "id-2796": "ParsedBotLink",
+        "PartialBotState": "types/core",
+        "id-2793": "PartialBotState",
+        "PausableDebugger": "types/debuggers/pausable-debugger",
+        "id-2299": "PausableDebugger",
+        "PausableDebuggerOptions": "types/debuggers/common",
+        "id-2455": "PausableDebuggerOptions",
+        "PauseTrigger": "types/debuggers/common",
+        "id-2418": "PauseTrigger",
+        "PauseTriggerOptions": "types/debuggers/common",
+        "id-2426": "PauseTriggerOptions",
+        "PossiblePauseTriggerLocation": "types/debuggers/common",
+        "id-2413": "PossiblePauseTriggerLocation",
+        "PseudoRandomNumberGenerator": "types/core",
+        "id-2480": "PseudoRandomNumberGenerator",
+        "QuaternionRotation": "types/math/rotations",
+        "id-3267": "QuaternionRotation",
+        "RaycastRay": "types/os",
+        "id-2167": "RaycastRay",
+        "RaycastResult": "types/os",
+        "id-2164": "RaycastResult",
+        "RecordActionOptions": "types/records/extra",
+        "id-2496": "RecordActionOptions",
+        "RecordDataFailure": "types/records/data",
+        "id-2934": "RecordDataFailure",
+        "RecordDataSuccess": "types/records/data",
+        "id-2930": "RecordDataSuccess",
+        "RecordFileFailure": "types/records/files",
+        "id-2134": "RecordFileFailure",
+        "RecordFileSuccess": "types/records/files",
+        "id-2130": "RecordFileSuccess",
+        "RevokeMarkerPermissionFailure": "types/records/policies",
+        "id-3035": "RevokeMarkerPermissionFailure",
+        "RevokeMarkerPermissionSuccess": "types/records/policies",
+        "id-3033": "RevokeMarkerPermissionSuccess",
+        "RevokeRoleFailure": "types/records/roles",
+        "id-3021": "RevokeRoleFailure",
+        "RevokeRoleSuccess": "types/records/roles",
+        "id-3019": "RevokeRoleSuccess",
+        "RoomJoinOptions": "types/os",
+        "id-2610": "RoomJoinOptions",
+        "RoomOptions": "types/os",
+        "id-2619": "RoomOptions",
+        "RoomRemoteOptions": "types/os",
+        "id-2635": "RoomRemoteOptions",
+        "RoomTrackOptions": "types/os",
+        "id-2623": "RoomTrackOptions",
+        "RuntimeBot": "types/core",
+        "id-2644": "RuntimeBot",
+        "RuntimeBotLinks": "types/core",
+        "id-2783": "RuntimeBotLinks",
+        "RuntimeBotVars": "types/core",
+        "id-2780": "RuntimeBotVars",
+        "SequenceRotation": "types/math/rotations",
+        "id-3265": "SequenceRotation",
+        "SetRoomOptionsSuccess": "types/os",
+        "id-2198": "SetRoomOptionsSuccess",
+        "SetRoomTrackOptions": "types/os",
+        "id-2641": "SetRoomTrackOptions",
+        "SetRoomTrackOptionsFailure": "types/os",
+        "id-2224": "SetRoomTrackOptionsFailure",
+        "SetRoomTrackOptionsSuccess": "types/os",
+        "id-2219": "SetRoomTrackOptionsSuccess",
+        "ShareOptions": "types/os",
+        "id-2543": "ShareOptions",
+        "ShowChatOptions": "types/os",
+        "id-2537": "ShowChatOptions",
+        "ShowConfirmOptions": "types/os",
+        "id-2579": "ShowConfirmOptions",
+        "ShowInputOptions": "types/os",
+        "id-2570": "ShowInputOptions",
+        "SnapAxis": "types/os",
+        "id-2517": "SnapAxis",
+        "SnapGridTarget": "types/os",
+        "id-2139": "SnapGridTarget",
+        "SnapPoint": "types/os",
+        "id-2529": "SnapPoint",
+        "StartFormAnimationOptions": "types/os",
+        "id-2589": "StartFormAnimationOptions",
+        "StopFormAnimationOptions": "types/os",
+        "id-2602": "StopFormAnimationOptions",
+        "SuccessfulGeolocation": "types/os",
+        "id-2499": "SuccessfulGeolocation",
+        "UnsuccessfulGeolocation": "types/os",
+        "id-2509": "UnsuccessfulGeolocation",
+        "UpdateEventRecordFailure": "types/records/events",
+        "id-3007": "UpdateEventRecordFailure",
+        "UpdateEventRecordSuccess": "types/records/events",
+        "id-3005": "UpdateEventRecordSuccess",
+        "UploadedFile": "types/os",
+        "id-2160": "UploadedFile",
+        "WebhookOptions": "types/web",
+        "id-2084": "WebhookOptions",
+        "WebhookResult": "types/web",
+        "id-2096": "WebhookResult",
+        "AddCountResult": "types/records/events",
+        "id-2983": "AddCountResult",
+        "AvailablePermissions": "types/permissions",
+        "id-2827": "AvailablePermissions",
+        "BarcodeFormat": "types/os",
+        "id-2564": "BarcodeFormat",
+        "BotFilter": "types/core",
+        "id-2118": "BotFilter",
+        "BotSpace": "types/core",
+        "id-2767": "BotSpace",
+        "CameraType": "types/os",
+        "id-2563": "CameraType",
+        "CreatePublicRecordKeyResult": "types/records/key",
+        "id-2817": "CreatePublicRecordKeyResult",
+        "EraseDataResult": "types/records/data",
+        "id-2952": "EraseDataResult",
+        "EraseFileResult": "types/records/files",
+        "id-2974": "EraseFileResult",
+        "Geolocation": "types/os",
+        "id-2498": "Geolocation",
+        "GetCountResult": "types/records/events",
+        "id-2993": "GetCountResult",
+        "GetDataResult": "types/records/data",
+        "id-2938": "GetDataResult",
+        "GetRoomOptionsResult": "types/os",
+        "id-2188": "GetRoomOptionsResult",
+        "GetRoomRemoteOptionsResult": "types/os",
+        "id-2230": "GetRoomRemoteOptionsResult",
+        "GetRoomTrackOptionsResult": "types/os",
+        "id-2206": "GetRoomTrackOptionsResult",
+        "GrantMarkerPermissionResult": "types/records/policies",
+        "id-3025": "GrantMarkerPermissionResult",
+        "GrantRoleResult": "types/records/roles",
+        "id-3011": "GrantRoleResult",
+        "JoinRoomResult": "types/os",
+        "id-2170": "JoinRoomResult",
+        "LeaveRoomResult": "types/os",
+        "id-2179": "LeaveRoomResult",
+        "ListDataResult": "types/records/data",
+        "id-2961": "ListDataResult",
+        "Mod": "types/core",
+        "id-2113": "Mod",
+        "PortalType": "types/core",
+        "id-2799": "PortalType",
+        "PossiblePauseTriggerStates": "types/debuggers/common",
+        "id-2417": "PossiblePauseTriggerStates",
+        "RecordDataResult": "types/records/data",
+        "id-2929": "RecordDataResult",
+        "RecordFileResult": "types/records/files",
+        "id-2129": "RecordFileResult",
+        "RevokeMarkerPermissionResult": "types/records/policies",
+        "id-3032": "RevokeMarkerPermissionResult",
+        "RevokeRoleResult": "types/records/roles",
+        "id-3018": "RevokeRoleResult",
+        "SetRoomOptionsResult": "types/os",
+        "id-2197": "SetRoomOptionsResult",
+        "SetRoomTrackOptionsResult": "types/os",
+        "id-2218": "SetRoomTrackOptionsResult",
+        "SnapTarget": "types/os",
+        "id-2536": "SnapTarget",
+        "TagFilter": "types/core",
+        "id-2114": "TagFilter",
+        "UpdateEventRecordResult": "types/records/events",
+        "id-3004": "UpdateEventRecordResult",
+        "animateTag-byOptions": "actions/utility",
+        "id-364": "animateTag-byOptions",
+        "getbot-tag": "actions/data",
+        "id-33": "getbot-tag",
+        "getbots-tag": "actions/data",
+        "id-17": "getbots-tag",
+        "animateTag-byTag": "actions/utility",
+        "id-358": "animateTag-byTag",
+        "changeState": "actions/data",
+        "id-177": "changeState",
+        "create": "actions/data",
+        "id-162": "create",
+        "destroy": "actions/data",
+        "id-166": "destroy",
+        "getbot-filters": "actions/data",
+        "id-26": "getbot-filters",
+        "getbots-filters": "actions/data",
+        "id-10": "getbots-filters",
+        "priorityShout": "actions/event",
+        "id-225": "priorityShout",
+        "shout": "actions/event",
+        "id-237": "shout",
+        "updateBotLinks": "actions/data",
+        "id-198": "updateBotLinks",
+        "whisper": "actions/event",
+        "id-263": "whisper",
+        "action.perform": "actions/event",
+        "id-1589": "action.perform",
+        "action.reject": "actions/event",
+        "id-1593": "action.reject",
+        "applyDiffToSnapshot": "actions/data",
+        "id-83": "applyDiffToSnapshot",
+        "applyMod": "actions/mods",
+        "id-152": "applyMod",
+        "assert": "actions/debuggers",
+        "id-407": "assert",
+        "assertEqual": "actions/debuggers",
+        "id-412": "assertEqual",
+        "atPosition": "actions/bot-filters",
+        "id-293": "atPosition",
+        "byCreator": "actions/bot-filters",
+        "id-314": "byCreator",
+        "byID": "actions/bot-filters",
+        "id-281": "byID",
+        "byMod": "actions/bot-filters",
+        "id-285": "byMod",
+        "bySpace": "actions/bot-filters",
+        "id-310": "bySpace",
+        "byTag": "actions/bot-filters",
+        "id-276": "byTag",
+        "bytes.fromBase64String": "actions/bytes",
+        "id-1817": "bytes.fromBase64String",
+        "bytes.fromHexString": "actions/bytes",
+        "id-1825": "bytes.fromHexString",
+        "bytes.toBase64String": "actions/bytes",
+        "id-1813": "bytes.toBase64String",
+        "bytes.toHexString": "actions/bytes",
+        "id-1821": "bytes.toHexString",
+        "clearAnimations": "actions/utility",
+        "id-378": "clearAnimations",
+        "clearTagMasks": "actions/data",
+        "id-106": "clearTagMasks",
+        "crypto.hash-raw": "actions/crypto",
+        "id-1831": "crypto.hash-raw",
+        "crypto.hash-string": "actions/crypto",
+        "id-1837": "crypto.hash-string",
+        "crypto.hmac-raw": "actions/crypto",
+        "id-1868": "crypto.hmac-raw",
+        "crypto.hmac-string": "actions/crypto",
+        "id-1861": "crypto.hmac-string",
+        "crypto.asymmetric.decrypt": "actions/crypto",
+        "id-1926": "crypto.asymmetric.decrypt",
+        "crypto.asymmetric.encrypt": "actions/crypto",
+        "id-1921": "crypto.asymmetric.encrypt",
+        "crypto.asymmetric.isEncrypted": "actions/crypto",
+        "id-1932": "crypto.asymmetric.isEncrypted",
+        "crypto.asymmetric.isKeypair": "actions/crypto",
+        "id-1917": "crypto.asymmetric.isKeypair",
+        "crypto.asymmetric.keypair": "actions/crypto",
+        "id-1913": "crypto.asymmetric.keypair",
+        "crypto.encrypt": "actions/crypto",
+        "id-1897": "crypto.encrypt",
+        "crypto.hmacSha256": "actions/crypto",
+        "id-1887": "crypto.hmacSha256",
+        "crypto.hmacSha512": "actions/crypto",
+        "id-1892": "crypto.hmacSha512",
+        "crypto.isEncrypted": "actions/crypto",
+        "id-1907": "crypto.isEncrypted",
+        "crypto.keypair": "actions/crypto",
+        "id-1936": "crypto.keypair",
+        "crypto.sha256": "actions/crypto",
+        "id-1853": "crypto.sha256",
+        "crypto.sha512": "actions/crypto",
+        "id-1857": "crypto.sha512",
+        "crypto.sign": "actions/crypto",
+        "id-1940": "crypto.sign",
+        "deleteTagMaskText": "actions/data",
+        "id-133": "deleteTagMaskText",
+        "deleteTagText": "actions/data",
+        "id-126": "deleteTagText",
+        "diffSnapshots": "actions/data",
+        "id-78": "diffSnapshots",
+        "either": "actions/bot-filters",
+        "id-318": "either",
+        "os.beginAudioRecording": "actions/audio",
+        "id-1647": "os.beginAudioRecording",
+        "os.endAudioRecording": "actions/audio",
+        "id-1651": "os.endAudioRecording",
+        "getBotLinks": "actions/data",
+        "id-194": "getBotLinks",
+        "getBotPosition": "actions/data",
+        "id-52": "getBotPosition",
+        "getBotRotation": "actions/data",
+        "id-57": "getBotRotation",
+        "getBotTagValues": "actions/data",
+        "id-42": "getBotTagValues",
+        "getFormattedJSON": "actions/data",
+        "id-70": "getFormattedJSON",
+        "getID": "actions/data",
+        "id-62": "getID",
+        "getJSON": "actions/data",
+        "id-66": "getJSON",
+        "getLink": "actions/data",
+        "id-190": "getLink",
+        "getMod": "actions/mods",
+        "id-47": "getMod",
+        "getSnapshot": "actions/data",
+        "id-74": "getSnapshot",
+        "getTag": "actions/data",
+        "id-88": "getTag",
+        "inDimension": "actions/bot-filters",
+        "id-289": "inDimension",
+        "inStack": "actions/bot-filters",
+        "id-299": "inStack",
+        "insertTagMaskText": "actions/data",
+        "id-118": "insertTagMaskText",
+        "insertTagText": "actions/data",
+        "id-111": "insertTagText",
+        "math.abs": "actions/math",
+        "id-1687": "math.abs",
+        "math.addVectors": "actions/math",
+        "id-1757": "math.addVectors",
+        "math.areClose": "actions/math",
+        "id-1788": "math.areClose",
+        "math.avg": "actions/math",
+        "id-1679": "math.avg",
+        "math.degreesToRadians": "actions/math",
+        "id-1713": "math.degreesToRadians",
+        "math.getAnchorPointOffset": "actions/math",
+        "id-1753": "math.getAnchorPointOffset",
+        "math.getForwardDirection": "actions/math",
+        "id-1721": "math.getForwardDirection",
+        "math.getSeededRandomNumberGenerator": "actions/math",
+        "id-1695": "math.getSeededRandomNumberGenerator",
+        "math.intersectPlane": "actions/math",
+        "id-1730": "math.intersectPlane",
+        "math.negateVector": "actions/math",
+        "id-1767": "math.negateVector",
+        "math.normalizeVector": "actions/math",
+        "id-1772": "math.normalizeVector",
+        "math.radiansToDegrees": "actions/math",
+        "id-1717": "math.radiansToDegrees",
+        "math.random": "actions/math",
+        "id-1708": "math.random",
+        "math.randomInt": "actions/math",
+        "id-1703": "math.randomInt",
+        "math.scaleVector": "actions/math",
+        "id-1782": "math.scaleVector",
+        "math.setRandomSeed": "actions/math",
+        "id-1699": "math.setRandomSeed",
+        "math.sqrt": "actions/math",
+        "id-1683": "math.sqrt",
+        "math.stdDev": "actions/math",
+        "id-1691": "math.stdDev",
+        "math.subtractVectors": "actions/math",
+        "id-1762": "math.subtractVectors",
+        "math.sum": "actions/math",
+        "id-1675": "math.sum",
+        "math.vectorLength": "actions/math",
+        "id-1777": "math.vectorLength",
+        "neighboring": "actions/bot-filters",
+        "id-304": "neighboring",
+        "not": "actions/bot-filters",
+        "id-325": "not",
+        "os.attachDebugger": "actions/debuggers",
+        "id-1287": "os.attachDebugger",
+        "os.createDebugger-normal": "actions/debuggers",
+        "id-1276": "os.createDebugger-normal",
+        "os.createDebugger-pausable": "actions/debuggers",
+        "id-1280": "os.createDebugger-pausable",
+        "os.focusOn-bot": "actions/portals",
+        "id-480": "os.focusOn-bot",
+        "os.focusOn-position": "actions/portals",
+        "id-485": "os.focusOn-position",
+        "os.getExecutingDebugger": "actions/debuggers",
+        "id-1284": "os.getExecutingDebugger",
+        "showChat-options": "actions/os",
+        "id-507": "showChat-options",
+        "showChat-placeholder": "actions/os",
+        "id-503": "showChat-placeholder",
+        "os.showInput": "actions/portals",
+        "id-712": "os.showInput",
+        "os.addBotDropGrid": "actions/portals",
+        "id-786": "os.addBotDropGrid",
+        "os.addBotDropSnap": "actions/portals",
+        "id-777": "os.addBotDropSnap",
+        "os.addDropGrid": "actions/portals",
+        "id-782": "os.addDropGrid",
+        "os.addDropSnap": "actions/portals",
+        "id-773": "os.addDropSnap",
+        "os.applyUpdatesToInst": "actions/os",
+        "id-1230": "os.applyUpdatesToInst",
+        "os.arSupported": "actions/xr",
+        "id-548": "os.arSupported",
+        "os.bufferSound": "actions/audio",
+        "id-749": "os.bufferSound",
+        "os.calculateRayFromCamera": "actions/portals",
+        "id-1178": "os.calculateRayFromCamera",
+        "os.cancelSound": "actions/audio",
+        "id-753": "os.cancelSound",
+        "os.closeBarcodeScanner": "actions/barcodes",
+        "id-621": "os.closeBarcodeScanner",
+        "os.closeCircleWipe": "actions/portals",
+        "id-765": "os.closeCircleWipe",
+        "os.closeImageClassifier": "actions/image-classification",
+        "id-636": "os.closeImageClassifier",
+        "os.closeQRCodeScanner": "actions/barcodes",
+        "id-607": "os.closeQRCodeScanner",
+        "os.convertGeolocationToWhat3Words": "actions/os",
+        "id-1163": "os.convertGeolocationToWhat3Words",
+        "os.countEvents": "actions/records",
+        "id-1157": "os.countEvents",
+        "os.createInitializationUpdate": "actions/os",
+        "id-1226": "os.createInitializationUpdate",
+        "os.device": "actions/os",
+        "id-525": "os.device",
+        "os.disableAR": "actions/xr",
+        "id-538": "os.disableAR",
+        "os.disablePointOfView": "actions/portals",
+        "id-563": "os.disablePointOfView",
+        "os.disableVR": "actions/xr",
+        "id-545": "os.disableVR",
+        "os.disableWakeLock": "actions/os",
+        "id-569": "os.disableWakeLock",
+        "os.download": "actions/files",
+        "id-575": "os.download",
+        "os.downloadBots": "actions/files",
+        "id-581": "os.downloadBots",
+        "os.downloadBotsAsInitialzationUpdate": "actions/files",
+        "id-586": "os.downloadBotsAsInitialzationUpdate",
+        "os.downloadInst": "actions/files",
+        "id-594": "os.downloadInst",
+        "os.enableAR": "actions/xr",
+        "id-534": "os.enableAR",
+        "os.enableCustomDragging": "actions/portals",
+        "id-791": "os.enableCustomDragging",
+        "os.enablePointOfView": "actions/portals",
+        "id-554": "os.enablePointOfView",
+        "os.enableVR": "actions/xr",
+        "id-541": "os.enableVR",
+        "os.eraseData": "actions/records",
+        "id-1100": "os.eraseData",
+        "os.eraseManualApprovalData": "actions/records",
+        "id-1106": "os.eraseManualApprovalData",
+        "os.exitFullscreenMode": "actions/portals",
+        "id-451": "os.exitFullscreenMode",
+        "os.getAverageFrameRate": "actions/os",
+        "id-848": "os.getAverageFrameRate",
+        "os.getCameraPosition": "actions/portals",
+        "id-804": "os.getCameraPosition",
+        "os.getCameraRotation": "actions/portals",
+        "id-808": "os.getCameraRotation",
+        "os.getCurrentDimension": "actions/portals",
+        "id-683": "os.getCurrentDimension",
+        "os.getCurrentInst": "actions/portals",
+        "id-689": "os.getCurrentInst",
+        "os.getCurrentInstUpdate": "actions/os",
+        "id-1234": "os.getCurrentInstUpdate",
+        "os.getData": "actions/records",
+        "id-1082": "os.getData",
+        "os.getDimensionalDepth": "actions/portals",
+        "id-702": "os.getDimensionalDepth",
+        "os.getFocusPoint": "actions/portals",
+        "id-816": "os.getFocusPoint",
+        "os.getGeolocation": "actions/os",
+        "id-798": "os.getGeolocation",
+        "os.getInputList": "actions/portals",
+        "id-841": "os.getInputList",
+        "os.getInputState": "actions/portals",
+        "id-836": "os.getInputState",
+        "os.getInstStateFromUpdates": "actions/os",
+        "id-1222": "os.getInstStateFromUpdates",
+        "os.getManualApprovalData": "actions/records",
+        "id-1088": "os.getManualApprovalData",
+        "os.getMediaPermission": "actions/os",
+        "id-844": "os.getMediaPermission",
+        "os.getMenuDimension": "actions/portals",
+        "id-692": "os.getMenuDimension",
+        "os.getMiniPortalDimension": "actions/portals",
+        "id-695": "os.getMiniPortalDimension",
+        "os.getPointerDirection": "actions/portals",
+        "id-832": "os.getPointerDirection",
+        "os.getPointerPosition": "actions/portals",
+        "id-820": "os.getPointerPosition",
+        "os.getPointerRotation": "actions/portals",
+        "id-824": "os.getPointerRotation",
+        "os.getPortalDimension": "actions/portals",
+        "id-698": "os.getPortalDimension",
+        "os.getPublicRecordKey": "actions/records",
+        "id-1007": "os.getPublicRecordKey",
+        "os.getRoomOptions": "actions/rooms",
+        "id-866": "os.getRoomOptions",
+        "os.getRoomRemoteOptions": "actions/rooms",
+        "id-881": "os.getRoomRemoteOptions",
+        "os.getRoomTrackOptions": "actions/rooms",
+        "id-870": "os.getRoomTrackOptions",
+        "os.getSubjectlessPublicRecordKey": "actions/records",
+        "id-1011": "os.getSubjectlessPublicRecordKey",
+        "os.getWakeLockConfiguration": "actions/os",
+        "id-572": "os.getWakeLockConfiguration",
+        "os.goToDimension": "actions/portals",
+        "id-726": "os.goToDimension",
+        "os.goToURL": "actions/portals",
+        "id-730": "os.goToURL",
+        "os.grantInstAdminPermission": "actions/records",
+        "id-1029": "os.grantInstAdminPermission",
+        "os.grantInstRole": "actions/records",
+        "id-1049": "os.grantInstRole",
+        "os.grantRecordMarkerPermission": "actions/records",
+        "id-1015": "os.grantRecordMarkerPermission",
+        "os.grantUserRole": "actions/records",
+        "id-1034": "os.grantUserRole",
+        "os.hasBotInMiniPortal": "actions/portals",
+        "id-757": "os.hasBotInMiniPortal",
+        "os.hideBarcode": "actions/barcodes",
+        "id-629": "os.hideBarcode",
+        "os.hideChat": "actions/os",
+        "id-515": "os.hideChat",
+        "os.hideHtml": "actions/os",
+        "id-458": "os.hideHtml",
+        "os.hideQRCode": "actions/barcodes",
+        "id-614": "os.hideQRCode",
+        "os.hideTips": "actions/portals",
+        "id-439": "os.hideTips",
+        "os.importAUX": "actions/files",
+        "id-667": "os.importAUX",
+        "os.inSheet": "actions/portals",
+        "id-801": "os.inSheet",
+        "os.instStatuses": "actions/os",
+        "id-1251": "os.instStatuses",
+        "os.instances": "actions/os",
+        "id-1241": "os.instances",
+        "os.isCollaborative": "actions/os",
+        "id-528": "os.isCollaborative",
+        "os.isInDimension": "actions/portals",
+        "id-679": "os.isInDimension",
+        "os.isRecordKey": "actions/records",
+        "id-1064": "os.isRecordKey",
+        "os.joinRoom": "actions/rooms",
+        "id-851": "os.joinRoom",
+        "os.leaveRoom": "actions/rooms",
+        "id-856": "os.leaveRoom",
+        "os.listData": "actions/records",
+        "id-1094": "os.listData",
+        "os.listFormAnimations": "actions/animations",
+        "id-1198": "os.listFormAnimations",
+        "os.listInstUpdates": "actions/os",
+        "id-1219": "os.listInstUpdates",
+        "os.loadInst": "actions/os",
+        "id-659": "os.loadInst",
+        "os.log": "actions/os",
+        "id-794": "os.log",
+        "os.meetCommand": "actions/os",
+        "id-1264": "os.meetCommand",
+        "os.meetFunction": "actions/os",
+        "id-1269": "os.meetFunction",
+        "os.openBarcodeScanner": "actions/barcodes",
+        "id-617": "os.openBarcodeScanner",
+        "os.openCircleWipe": "actions/portals",
+        "id-769": "os.openCircleWipe",
+        "os.openDevConsole": "actions/os",
+        "id-738": "os.openDevConsole",
+        "os.openImageClassifier": "actions/image-classification",
+        "id-632": "os.openImageClassifier",
+        "os.openQRCodeScanner": "actions/barcodes",
+        "id-603": "os.openQRCodeScanner",
+        "os.openURL": "actions/portals",
+        "id-734": "os.openURL",
+        "os.parseBotsFromData": "actions/files",
+        "id-671": "os.parseBotsFromData",
+        "os.playSound": "actions/audio",
+        "id-745": "os.playSound",
+        "os.raycast": "actions/portals",
+        "id-1172": "os.raycast",
+        "os.raycastFromCamera": "actions/portals",
+        "id-1167": "os.raycastFromCamera",
+        "os.recordData": "actions/records",
+        "id-1068": "os.recordData",
+        "os.recordEvent": "actions/records",
+        "id-1151": "os.recordEvent",
+        "os.recordFile": "actions/records",
+        "id-1112": "os.recordFile",
+        "os.recordManualApprovalData": "actions/records",
+        "id-1075": "os.recordManualApprovalData",
+        "os.remoteCount": "actions/os",
+        "id-1244": "os.remoteCount",
+        "os.remotes": "actions/os",
+        "id-1216": "os.remotes",
+        "os.replaceDragBot": "actions/portals",
+        "id-675": "os.replaceDragBot",
+        "os.requestAuthBot": "actions/records",
+        "id-1004": "os.requestAuthBot",
+        "os.requestFullscreenMode": "actions/portals",
+        "id-448": "os.requestFullscreenMode",
+        "os.requestWakeLock": "actions/os",
+        "id-566": "os.requestWakeLock",
+        "os.revokeInstRole": "actions/records",
+        "id-1057": "os.revokeInstRole",
+        "os.revokeRecordMarkerPermission": "actions/records",
+        "id-1022": "os.revokeRecordMarkerPermission",
+        "os.revokeUserRole": "actions/records",
+        "id-1042": "os.revokeUserRole",
+        "os.run": "actions/os",
+        "id-518": "os.run",
+        "os.setClipboard": "actions/os",
+        "id-461": "os.setClipboard",
+        "os.setRoomOptions": "actions/rooms",
+        "id-861": "os.setRoomOptions",
+        "os.setRoomTrackOptions": "actions/rooms",
+        "id-875": "os.setRoomTrackOptions",
+        "os.share": "actions/os",
+        "id-761": "os.share",
+        "os.showBarcode": "actions/barcodes",
+        "id-624": "os.showBarcode",
+        "os.showConfirm": "actions/portals",
+        "id-722": "os.showConfirm",
+        "os.showHtml": "actions/os",
+        "id-454": "os.showHtml",
+        "os.showInputForTag": "actions/portals",
+        "id-706": "os.showInputForTag",
+        "os.showJoinCode": "actions/barcodes",
+        "id-443": "os.showJoinCode",
+        "os.showQRCode": "actions/barcodes",
+        "id-610": "os.showQRCode",
+        "os.showUploadAuxFile": "actions/files",
+        "id-597": "os.showUploadAuxFile",
+        "os.showUploadFiles": "actions/files",
+        "id-600": "os.showUploadFiles",
+        "os.sleep": "actions/os",
+        "id-423": "os.sleep",
+        "os.startFormAnimation": "actions/animations",
+        "id-1187": "os.startFormAnimation",
+        "os.stopFormAnimation": "actions/animations",
+        "id-1193": "os.stopFormAnimation",
+        "os.tip": "actions/portals",
+        "id-432": "os.tip",
+        "os.toast": "actions/os",
+        "id-427": "os.toast",
+        "os.totalRemoteCount": "actions/os",
+        "id-1248": "os.totalRemoteCount",
+        "os.unloadInst": "actions/os",
+        "id-663": "os.unloadInst",
+        "os.version": "actions/os",
+        "id-522": "os.version",
+        "os.vrSupported": "actions/xr",
+        "id-551": "os.vrSupported",
+        "os.agreedUponTime": "actions/time",
+        "id-640": "os.agreedUponTime",
+        "os.deadReckoningTime": "actions/time",
+        "id-648": "os.deadReckoningTime",
+        "os.instLatency": "actions/time",
+        "id-642": "os.instLatency",
+        "os.instTimeOffset": "actions/time",
+        "id-644": "os.instTimeOffset",
+        "os.instTimeOffsetSpread": "actions/time",
+        "id-646": "os.instTimeOffsetSpread",
+        "os.localTime": "actions/time",
+        "id-638": "os.localTime",
+        "removeTags": "actions/data",
+        "id-141": "removeTags",
+        "renameTag": "actions/data",
+        "id-146": "renameTag",
+        "setTag": "actions/data",
+        "id-93": "setTag",
+        "setTagMask": "actions/data",
+        "id-99": "setTagMask",
+        "subtractMods": "actions/mods",
+        "id-157": "subtractMods",
+        "superShout": "actions/event",
+        "id-220": "superShout",
+        "uuid": "actions/data",
+        "id-355": "uuid",
+        "web.get": "actions/web",
+        "id-1983": "web.get",
+        "web.hook": "actions/web",
+        "id-1994": "web.hook",
+        "web.post": "actions/web",
+        "id-1988": "web.post",
+        "configBot": "actions/os",
+        "id-418": "configBot"
+    }
+}

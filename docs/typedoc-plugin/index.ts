@@ -13,7 +13,7 @@ import { renderDoc } from './doc';
 
 const basePath = path.resolve(__dirname, '..', '..');
 const templatesPath = path.resolve(basePath, 'typedoc-plugin', 'templates');
-const jsonDist = path.resolve(basePath, 'static', 'api');
+const jsonDist = path.resolve(basePath, 'docs', 'api-info');
 
 async function start() {
     const content = loadContent();
