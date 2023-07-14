@@ -437,10 +437,13 @@ export function ClassPropertyMember(props) {
         extraDetail = <CodeBlock language='typescript'>{prop.typeText}</CodeBlock>
     }
 
+    const name = getChildName(prop);
+    const id = getChildId(prop);
+
     return (
         <div>
             <Heading as='h3' id={props.link}>
-                <code>{props.member.name}{props.member.flags.isOptional ? '?' : ''}: {typeDetail}</code>
+                <code>{name}{props.member.flags.isOptional ? '?' : ''}: {typeDetail}</code>
             </Heading>
             <p>{props.member.comment?.shortText}</p>
             {extraDetail}
@@ -469,17 +472,21 @@ export function ClassPropertyReferences({ prop, references }) {
 }
 
 export function ClassPropertyConstructor(props) {
+    const name = getChildName(props.member);
+
     return (
         <div>
-            <FunctionSignature func={props.member} sig={props.member.signatures[0]} link={props.link} references={props.references}/>
+            <FunctionSignature func={props.member} name={name} sig={props.member.signatures[0]} link={props.link} references={props.references}/>
         </div>
     )
 }
 
 export function ClassPropertyMethod(props) {
+    const name = getChildName(props.member);
+
     return (
         <div>
-            <FunctionSignature func={props.member} sig={props.member.signatures[0]} link={props.link} references={props.references} />
+            <FunctionSignature func={props.member} name={name} sig={props.member.signatures[0]} link={props.link} references={props.references} />
             {/* <CodeBlock language="json">{JSON.stringify(props.member, undefined, 2)}</CodeBlock> */}
         </div>
     )
@@ -984,7 +991,12 @@ function getChildGroup(child) {
 function getChildName(child) {
 
     // console.log('sig', child);
-    if (isSimpleFunctionProperty(child)) {
+    if (child.kindString === 'Method') {
+        let group = getNameFromSignatures(child.signatures);
+        if (group) {
+            return group;
+        }
+    } else if (isSimpleFunctionProperty(child)) {
         const declaration =child?.type?.declaration; 
         const signatures = declaration?.signatures;
 

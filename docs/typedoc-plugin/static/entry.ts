@@ -62,6 +62,8 @@ export {
     DebuggerFunctionLocation,
     DebuggerVariable,
     AttachDebuggerOptions,
+
+    PseudoRandomNumberGenerator,
 } from '../../../src/aux-common/runtime/AuxLibrary';
 export { 
     EaseType,

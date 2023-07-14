@@ -1031,6 +1031,9 @@ export type BotOrientationMode =
 
 /**
  * Defines the possible bot anchor points.
+ *
+ * @dochash types/core
+ * @docname BotAnchorPoint
  */
 export type BotAnchorPoint =
     | 'top'

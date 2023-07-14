@@ -49,7 +49,8 @@ module.exports = {
                         'actions/audio',
                         'actions/animations',
                         'actions/rooms',
-                        'actions/debuggers'
+                        'actions/math',
+                        'actions/debuggers',
                     ]
                 },
                 {

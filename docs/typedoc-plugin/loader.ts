@@ -668,6 +668,7 @@ const keysMap = {
     'Class': ['children'],
     'Constructor': ['signatures'],
     'Function': ['signatures'],
+    'Method': ['signatures'],
     'Project': ['children'],
     'reference': ['typeArguments'],
     'Accessor': ['getSignature', 'setSignature'],

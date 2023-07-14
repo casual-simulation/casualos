@@ -912,24 +912,112 @@ export interface DebuggerBase {
     getPortalBots(): Map<string, Bot>;
 
     /**
-     * Gets the list of actions that have been performed by bots in this debugger.
+     * Gets the list of action objects that have been performed by bots in the current debugger.
+     * Action objects are used by CasualOS to represent changes to bots or external effects that should be performed.
+     * Examples of this are {@link create}, {@link os.toast} and {@link os.enableVR}.
+     *
+     * @example Get the list of bot changes and actions that have been performed in a debugger
+     * const debug = await os.createDebugger();
+     * debug.create({
+     *     test: '@os.toast("Hello")'
+     * });
+     * debug.shout("test");
+     *
+     * const actions = debug.getAllActions();
+     *
+     * assertEqual(actions, [
+     *     {
+     *         type: 'add_bot',
+     *         id: 'uuid-1',
+     *         bot: {
+     *             id: 'uuid-1',
+     *             tags: {
+     *                 test: '@os.toast("Hello")'
+     *             }
+     *         }
+     *     },
+     *     {
+     *         type: 'show_toast',
+     *         message: 'Hello',
+     *         duration: 2000
+     *     }
+     * ]);
      */
     getAllActions(): BotAction[];
 
     /**
-     * Gets the list of common actions that have been performed by bots in this debugger.
-     * Common actions are actions that don't directly change bots or bot tags.
+     * Gets the list of common action objects that have been performed by bots in the current debugger. Action objects are used by CasualOS to represent changes to bots or external effects that should be performed.
+     * Common actions are actions that do not immediately change bots or bot tags or masks.
+     *
+     * Examples of common actions are {@link os.toast} and {@link os.enableVR}.
+     *
+     * @example Get the list of actions that have been performed in a debugger
+     * const debug = await os.createDebugger();
+     * debug.create({
+     *     test: '@os.toast("Hello")'
+     * });
+     * debug.shout("test");
+     *
+     * const actions = debug.getCommonActions();
+     *
+     * assertEqual(actions, [
+     *     {
+     *         type: 'show_toast',
+     *         message: 'Hello',
+     *         duration: 2000
+     *     }
+     * ]);
      */
     getCommonActions(): BotAction[];
 
     /**
-     * Gets the list of bot actions that have been performed by bots in this debugger.
-     * Bot actions are actions that directly create/destroy/update bots or bot tags.
+     * Gets the list of bot actions that have been performed by bots in the current debugger.
+     * Action objects are used by CasualOS to represent changes to bots or external effects that should be performed.
+     * Bot actions are actions that immediately change bots or bot tags or masks.
+     *
+     * Examples of bot actions are {@link create}, {@link destroy} or {@link setTagMask}.
+     *
+     * @example Get the list of bot changes that have been performed in a debugger
+     * const debug = await os.createDebugger();
+     * debug.create({
+     *     test: '@os.toast("Hello")'
+     * });
+     * debug.shout("test");
+     *
+     * const actions = debug.getBotActions();
+     *
+     * assertEqual(actions, [
+     *     {
+     *         type: 'add_bot',
+     *         id: 'uuid-1',
+     *         bot: {
+     *             id: 'uuid-1',
+     *             tags: {
+     *                 test: '@os.toast("Hello")'
+     *             }
+     *         }
+     *     },
+     * ]);
      */
     getBotActions(): BotAction[];
 
     /**
-     * Gets the list of errors that occurred while bots were executing scripts in this debugger.
+     * Gets the list of errors that have occurred in the current debugger. Errors occur when an exceptional event happens in a script and prevents the rest of the script from executing.
+     *
+     * Debuggers capture these errors and let you inspect them afterwards.
+     *
+     * @example Get the list of errors that have happened in a debugger
+     * const debug = await os.createDebugger();
+     * debug.create({
+     *     test: '@throw new Error("My Error")'
+     * });
+     * debug.shout("test");
+     *
+     * const errors = debug.getErrors();
+     *
+     * assertEqual(errors.length, 1);
+     * assertEqual(errors[0].error, new Error("My Error"));
+     * assertEqual(errors[0].tag, "test");
      */
     getErrors(): any[];
 
@@ -946,127 +1034,130 @@ export interface DebuggerBase {
     onAfterAction(handler: (action: BotAction) => void): void;
 
     /**
-     * Registers the given handler to be called before a user action is executed in this debugger.
-     * User actions are like actions, but they are only triggered from the CasualOS frontend.
-     * Generally, this includes things like input events (clicks), but it can also happen automatically.
-     * @param listener The handler that should be called.
+     * Registers the given handler function to be called before a user action is performed in the debugger.
+     *
+     * User actions are like normal actions, except they are generated by the CasualOS frontend.
+     * Generally, this only happens for built-in shouts and whispers.
+     * Additionally, these actions can only be automatically created for debuggers that are attached using {@link os.attachDebugger}.
+     *
+     * @param listener the function that should be called before a user action is performed.
+     *
+     * @example Listen for tag updates in a debugger
+     * const debug = await os.createDebugger({
+     *     pausable: true
+     * });
+     *
+     * // Register a listener that gets called whenever a user action is about to be performed.
+     * debug.onBeforeUserAction(update => {
+     *     console.log('user action', update);
+     * });
+     *
+     * // Because the debugger is pausable, the create() function returns a promise
+     * // because it calls @onCreate which could cause a pause trigger to be hit.
+     * const debuggerBot = await debug.create({
+     *     home: true,
+     * });
+     *
+     * // Attach the debugger to the front end
+     * await os.attachDebugger(debug);
+     *
+     * @docname onBeforeUserAction
+     * @docid debug.onBeforeUserAction
      */
     onBeforeUserAction(listener: (action: BotAction) => void): void;
 
     /**
-     * Registers the given handler to be called after a bot script enqueues a bot action to be executed.
-     * @param listener The listener that should be executed.
+     * Registers the given handler function to be called by the debugger whenever a script enqueues an action.
+     * This occurrs for common actions like {@link os.toast} and {@link os.showInput}.
+     *
+     * Every action that is enqueued ends up being performed.
+     *
+     * @param listener the function that should be called whenever an action is scheduled to be performed.
+     *
+     * @example Listen for actions to be enqueued in a debugger
+     * const debug = await os.createDebugger({
+     *     pausable: true
+     * });
+     *
+     * // Register a listener that gets called whenever an action is scheduled to be performed.
+     * debug.onScriptActionEnqueued(action => {
+     *     console.log('action enqueued', action);
+     * });
+     *
+     * // Because the debugger is pausable, the create() function returns a promise
+     * // because it calls @onCreate which could cause a pause trigger to be hit.
+     * const debuggerBot = await debug.create({
+     *     test: '@let abc = 123; os.toast(abc);'
+     * });
+     *
+     * // Send a shout. Just like the create() function above, we recieve a promise that we can await.
+     * await debug.shout('test');
      */
     onScriptActionEnqueued(listener: (action: BotAction) => void): void;
 
     /**
-     * Registers the given handler to be called after a bot script changes a tag value.
-     * @param listener The listener that should be executed.
+     * Registers the given handler function to be called after any tag is updated in the debugger.
+     *
+     * @param listener the function that should be called when a tag is updated.
+     *
+     * @example Listen for tag updates in a debugger
+     * const debug = await os.createDebugger({
+     *     pausable: true
+     * });
+     *
+     * // Register a listener that gets called whenever a tag is updated.
+     * debug.onAfterScriptUpdatedTag(update => {
+     *     console.log('tag updated', update);
+     * });
+     *
+     * // Because the debugger is pausable, the create() function returns a promise
+     * // because it calls @onCreate which could cause a pause trigger to be hit.
+     * const debuggerBot = await debug.create({
+     *     test: '@tags.message = "hello, world";'
+     * });
+     *
+     * // Send a shout. Just like the create() function above, we recieve a promise that we can await.
+     * await debug.shout('test');
      */
     onAfterScriptUpdatedTag(
         listener: (update: DebuggerTagUpdate) => void
     ): void;
 
     /**
-     * Registers the given handler to be called after a bot script changes a tag mask value.
-     * @param listener The listener that should be executed.
+     * Registers the given handler function to be called after any tag mask is updated in the debugger.
+     *
+     * @param listener the function that should be called when a tag mask is updated.
+     *
+     * @example Listen for tag mask updates in a debugger
+     * const debug = await os.createDebugger({
+     *     pausable: true
+     * });
+     *
+     * // Register a listener that gets called whenever a tag mask is updated.
+     * debug.onAfterScriptUpdatedTagMask(update => {
+     *     console.log('tag mask updated', update);
+     * });
+     *
+     * // Because the debugger is pausable, the create() function returns a promise
+     * // because it calls @onCreate which could cause a pause trigger to be hit.
+     * const debuggerBot = await debug.create({
+     *     test: '@masks.message = "hello, world";'
+     * });
+     *
+     * // Send a shout. Just like the create() function above, we recieve a promise that we can await.
+     * await debug.shout('test');
      */
     onAfterScriptUpdatedTagMask(
         listener: (update: DebuggerTagMaskUpdate) => void
     ): void;
 
     /**
-     * Gets the current call stack for the interpreter.
-     * Only supported on pausable debuggers.
-     */
-    getCallStack(): DebuggerCallFrame[];
-
-    /**
-     * Performs the given actions as if they were user actions.
-     * Returns a promise that resolves with an array that contains the result for each action in order.
-     * If the action was a shout action, then the results for that shout are also included.
-     * @param actions The actions that should be performed.
+     * Performs the given actions in order as if they were user actions.
+     *
+     * This function works similarly to {@link action.perform} except that actions performed with it will also call handlers registered with {@link debug.onBeforeUserAction}.
+     * @param actions the actions that should be performed.
      */
     performUserAction(...actions: BotAction[]): Promise<(any[] | null)[]>;
-
-    /**
-     * Registers the given handler to react to when this debugger pauses by hitting a trigger.
-     * @param handler The handler that should be called when the debugger pauses.
-     */
-    onPause(handler: (pause: DebuggerPause) => void): void;
-
-    /**
-     * Registers or updates a pause trigger with this debugger.
-     * Pause triggers can be used to tell the debugger when you want it to stop execution.
-     * You specify the bot, tag, line and column numbers and the debugger will stop before/after it executes the code at that location.
-     * @param botOrIdOrTrigger The bot, bot ID, or trigger that should be registered or updated.
-     * @param tag The tag that the trigger should be registered in. Required if a bot or bot ID is specified.
-     * @param options The options that go with this pause trigger. Required if a bot or bot ID is specified.
-     */
-    setPauseTrigger(
-        botOrIdOrTrigger: Bot | string | PauseTrigger,
-        tag?: string,
-        options?: PauseTriggerOptions
-    ): PauseTrigger;
-    /**
-     * Registers a new pause trigger with this debugger.
-     * Pause triggers can be used to tell the debugger when you want it to stop execution.
-     * You specify the bot, tag, line and column numbers and the debugger will stop before/after it executes the code at that location.
-     * @param botOrId The bot, or bot ID that the trigger should be placed in.
-     * @param tag The tag that the trigger should be placed in.
-     * @param options The options that go with this pause trigger.
-     */
-    setPauseTrigger(
-        botOrId: Bot | string,
-        tag: string,
-        options: PauseTriggerOptions
-    ): PauseTrigger;
-
-    /**
-     * Registers or updates the given pause trigger with this debugger.
-     * @param trigger The trigger that should be registered or updated.
-     */
-    setPauseTrigger(trigger: PauseTrigger): PauseTrigger;
-
-    /**
-     * Removes the given pause trigger from the debugger.
-     * @param triggerOrId The trigger or trigger ID that should be removed from the debugger.
-     */
-    removePauseTrigger(triggerOrId: string | PauseTrigger): void;
-
-    /**
-     * Disables the given pause trigger.
-     * Disabled pause triggers will continue to be listed with listPauseTriggers(), but will not cause a pause to happen while they are disabled.
-     * @param triggerOrId The trigger or trigger ID that should be disabled.
-     */
-    disablePauseTrigger(triggerOrId: string | PauseTrigger): void;
-
-    /**
-     * Enables the given pause trigger
-     * @param triggerOrId The trigger or trigger ID that should be enabled.
-     */
-    enablePauseTrigger(triggerOrId: string | PauseTrigger): void;
-
-    /**
-     * Gets the list of pause triggers that have been registered with this debugger.
-     */
-    listPauseTriggers(): PauseTrigger[];
-
-    /**
-     * Gets a list of common trigger locations for the specified listener on the specified bot.
-     * @param botOrId The bot or bot ID.
-     * @param tag The name of the tag that the trigger locations should be listed for.
-     */
-    listCommonPauseTriggers(
-        botOrId: Bot | string,
-        tag: string
-    ): PossiblePauseTriggerLocation[];
-
-    /**
-     * Resumes the debugger execution from the given pause.
-     * @param pause The pause state that execution should be resumed from.
-     */
-    resume(pause: DebuggerPause): void;
 
     // /**
     //  * Produces HTML from the given HTML strings and expressions.
@@ -1174,6 +1265,278 @@ export interface NormalDebugger extends DebuggerBase {}
  * @docreferenceactions ^\w+$
  */
 export interface PausableDebugger extends DebuggerBase {
+    /**
+     * Registers the given function to be called whenever the debugger is paused by hitting a pause trigger.
+     *
+     * @param handler the function that should be called when the debugger is paused.
+     *
+     * @example Listen for pauses on a debugger
+     * const debug = await os.createDebugger({
+     *     pausable: true
+     * });
+     *
+     * debug.onPause(pause => {
+     *     console.log('pause happened!', pause);
+     * });
+     *
+     * @docname onPause
+     * @docid debug.onPause
+     */
+    onPause(handler: (pause: DebuggerPause) => void): void;
+
+    /**
+     * Registers or updates a pause trigger with a debugger. Returns the newly created trigger.
+     *
+     * Pause triggers can be used to tell the debugger where you want it to temporarily stop execution. You specify the bot, tag, line and column numbers, and the debugger will stop before it executes the code at that location.
+     * Additionally, the debugger will call all handlers that have been registered with {@link debug.onPause}.
+     *
+     * @param trigger The trigger that should be registered or updated.
+     *
+     * @docname setPauseTrigger
+     * @docid debug.setPauseTrigger-trigger
+     */
+    _setPauseTrigger_trigger(trigger: PauseTrigger): PauseTrigger;
+
+    /**
+     * Registers or updates a pause trigger with this debugger.
+     * Pause triggers can be used to tell the debugger when you want it to stop execution.
+     * You specify the bot, tag, line and column numbers and the debugger will stop before/after it executes the code at that location.
+     * @param botOrIdOrTrigger the bot, or bot ID that should be registered.
+     * @param tag the name of the tag that the trigger should be set on.
+     * @param options The options that go with this pause trigger.
+     * 
+     * @example Set a pause trigger on a script
+     * const debug = await os.createDebugger({
+     *     pausable: true
+     * });
+     * 
+     * const b = await debug.create({
+     *     test: '@os.toast("Hello, World!")'
+     * });
+     * 
+     * const trigger = debug.setPauseTrigger(b, 'test', {
+     *     lineNumber: 1,
+     *     columnNumber: 1
+     * });
+     * 
+     * @example Update a pause trigger on a script
+     * const debug = await os.createDebugger({
+     *     pausable: true
+     * });
+     * 
+     * const b = await debug.create({
+     *     test: '@os.toast("Hello, World!")'
+     * });
+     * 
+     * let trigger = debug.setPauseTrigger(b, 'test', {
+     *     lineNumber: 1,
+     *     columnNumber: 1
+     * });
+     * 
+     * trigger = debug.setPauseTrigger({
+     *     ...trigger,
+     *     states: ['before', 'after']
+     * });
+
+     * @docname setPauseTrigger
+     * @docid debug.setPauseTrigger-botOrId
+     */
+    _setPauseTrigger_botOrId(
+        botOrIdOrTrigger: Bot | string,
+        tag?: string,
+        options?: PauseTriggerOptions
+    ): PauseTrigger;
+
+    /**
+     * Removes the given pause trigger from the debugger.
+     * @param triggerOrId the trigger or trigger ID that should be removed from the debugger.
+     *
+     * @example Remove a pause trigger
+     * const debug = await os.createDebugger({
+     *     pausable: true
+     * });
+     *
+     * const b = await debug.create({
+     *     test: '@os.toast("Hello, World!")'
+     * });
+     *
+     * const trigger = debug.setPauseTrigger(b, 'test', {
+     *     lineNumber: 1,
+     *     columnNumber: 1
+     * });
+     *
+     * debug.removePauseTrigger(trigger);
+     */
+    removePauseTrigger(triggerOrId: string | PauseTrigger): void;
+
+    /**
+     * Disables the given pause trigger.
+     * Disabled pause triggers will continue to be listed with {@link debug.listPauseTriggers}, but will not cause a pause to happen while they are disabled.
+     *
+     * @param triggerOrId The trigger or trigger ID that should be disabled.
+     *
+     * @example Disable a pause trigger
+     * const debug = await os.createDebugger({
+     *     pausable: true
+     * });
+     *
+     * const b = await debug.create({
+     *     test: '@os.toast("Hello, World!")'
+     * });
+     *
+     * const trigger = debug.setPauseTrigger(b, 'test', {
+     *     lineNumber: 1,
+     *     columnNumber: 1
+     * });
+     *
+     * debug.disablePauseTrigger(trigger);
+     */
+    disablePauseTrigger(triggerOrId: string | PauseTrigger): void;
+
+    /**
+     * Enables the given pause trigger
+     * @param triggerOrId The trigger or trigger ID that should be enabled.
+     *
+     * @example Enable a pause trigger
+     * const debug = await os.createDebugger({
+     *     pausable: true
+     * });
+     *
+     * const b = await debug.create({
+     *     test: '@os.toast("Hello, World!")'
+     * });
+     *
+     * const trigger = debug.setPauseTrigger(b, 'test', {
+     *     lineNumber: 1,
+     *     columnNumber: 1,
+     *     enabled: false
+     * });
+     *
+     * debug.enablePauseTrigger(trigger);
+     */
+    enablePauseTrigger(triggerOrId: string | PauseTrigger): void;
+
+    /**
+     * Gets the list of pause triggers that have been registered with this debugger.
+     *
+     * @example List the triggers that are set on this debugger
+     * const debug = await os.createDebugger({
+     *     pausable: true
+     * });
+     *
+     * const b = await debug.create({
+     *     test: '@os.toast("Hello, World!")'
+     * });
+     *
+     * const trigger = debug.setPauseTrigger(b, 'test', {
+     *     lineNumber: 1,
+     *     columnNumber: 1,
+     *     enabled: false
+     * });
+     *
+     * const triggers = debug.listPauseTriggers();
+     *
+     * @docname listPauseTriggers
+     * @docid debug.listPauseTriggers
+     */
+    listPauseTriggers(): PauseTrigger[];
+
+    /**
+     * Gets a list of common trigger locations for the specified tag on the specified bot. Returns an array containing the list of possible pause trigger locations.
+     *
+     * @param botOrId the bot or bot ID that the locations should be listed for.
+     * @param tag the name of the tag that the locations should be listed for.
+     *
+     * @example List common trigger locations for a script
+     * const debug = await os.createDebugger({
+     *     pausable: true
+     * });
+     *
+     * const b = await debug.create({
+     *     test: '@os.toast("Hello, World!")'
+     * });
+     *
+     * const triggerLocations = debug.listCommonPauseTriggers(b, 'test');
+     *
+     * @example Register a trigger from a common location
+     * const debug = await os.createDebugger({
+     *     pausable: true
+     * });
+     *
+     * const b = await debug.create({
+     *     test: '@os.toast("Hello, World!")'
+     * });
+     *
+     * const triggerLocations = debug.listCommonPauseTriggers(b, 'test');
+     *
+     * const trigger = debug.setPauseTrigger(b, 'test', {
+     *     lineNumber: triggerLocations[0].lineNumber,
+     *     columnNumber: triggerLocations[0].columnNumber,
+     *     states: triggerLocations[0].possibleStates
+     * });
+     */
+    listCommonPauseTriggers(
+        botOrId: Bot | string,
+        tag: string
+    ): PossiblePauseTriggerLocation[];
+
+    /**
+     * Resumes the debugger execution from the given pause.
+     * @param pause the debugger pause that was passed to the handler of {@link debug.onPause}.
+     *
+     * @example Resume execution on a debugger
+     * const debug = await os.createDebugger({
+     *     pausable: true
+     * });
+     *
+     * // Register a listener that gets called whenever a pause happens in this debugger.
+     * debug.onPause(pause => {
+     *     // Get the current stack frame from the pause
+     *     const currentFrame = pause.callStack[pause.callStack.length - 1];
+     *
+     *     // Set the abc variable to 999
+     *     currentFrame.setVariableValue('abc', 999);
+     *
+     *     // Resume execution after the pause.
+     *     debug.resume(pause);
+     * });
+     *
+     * // Because the debugger is pausable, the create() function returns a promise
+     * // because it calls @onCreate which could cause a pause trigger to be hit.
+     * const debuggerBot = await debug.create({
+     *     test: '@let abc = 123; os.toast(abc);'
+     * });
+     *
+     * // Set a pause trigger in the "test" script of the bot we just created
+     * // at line 1 column 16
+     * const trigger = debug.setPauseTrigger(debuggerBot, 'test', {
+     *     lineNumber: 1,
+     *     columnNumber: 16
+     * });
+     *
+     * // Send a shout. Just like the create() function above, we recieve a promise that we can await.
+     * await debug.shout('test');
+     *
+     * // Get the resulting actions from the debugger
+     * // and perform the first one. This should be the os.toast(), but instead of printing 123,
+     * // it should print 999 because we changed the value of abc during the debugger pause.
+     * const actions = debug.getCommonActions();
+     * action.perform(actions[0]);
+     */
+    resume(pause: DebuggerPause): void;
+
+    /**
+     * Gets the current call stack for the debugger. Call stacks are useful for determining program flow and how scripts interact with each other.
+     *
+     * @example Get the call stack from a debugger
+     * const debug = os.createDebugger({
+     *     pausable: true
+     * });
+     *
+     * const callStack = debug.getCallStack();
+     */
+    getCallStack(): DebuggerCallFrame[];
+
     /**
      * Creates a new bot and returns it.
      * @param parent The bot that should be the parent of the new bot.
@@ -1610,6 +1973,9 @@ export interface DebuggerVariable {
 
 /**
  * Defines an interface for a random number generator.
+ *
+ * @dochash types/core
+ * @docname PseudoRandomNumberGenerator
  */
 export interface PseudoRandomNumberGenerator {
     /**
@@ -3327,10 +3693,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Asserts that the given condition is true.
-     * Throws an error if the condition is not true.
-     * @param condition The condition to check.
-     * @param message The message to use in the error if the condition is not true.
+     * Verifies that the given condition is true.
+     * If it is not, then an error is thrown with the given message.
+     * This function is useful for automated testing since tests should ideally throw an error if the test fails.
+     * It can also be useful to make sure that some important code is only run if a precondition is met.
+     *
+     * @param condition the condition that should be verified.
+     * @param message the message that should be included in the error.
+     *
+     * @example Assert that the tag color is "blue"
+     * assert(tags.color === "blue", "The tag color is not blue!");
+     *
+     * @dochash actions/debuggers
+     * @docname assert
      */
     function assert(condition: boolean, message?: string) {
         if (!condition) {
@@ -3350,21 +3725,30 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Asserts that the given values contain the same data.
-     * Throws an error if they are not equal.
+     * Verifies that the given values are equal to each other.
+     * If they are not, then an error is thrown.
+     * This function is useful for automated testing since tests should ideally throw an error if the test fails.
+     * It can also be useful to make sure that some important code is only run if a precondition is met.
+     *
      * @param first The first value to test.
      * @param second The second value to test.
+     *
+     * @example Assert that the tag color is "blue"
+     * assertEqual(tags.color, "blue");
+     *
+     * @example Assert that the bot contains some specific tag values
+     * assertEqual(tags, {
+     *     color: "blue",
+     *     home: true,
+     *     homeX: 0,
+     *     homeY: 0
+     * });
+     *
+     * @dochash actions/debuggers
+     * @docname assertEqual
      */
     function assertEqual(first: any, second: any) {
         expect(first).toEqual(second);
-        // const json = getFormattedJSON(getAssertionValue(first));
-        // const json2 = getFormattedJSON(getAssertionValue(second));
-
-        // if (json !== json2) {
-        //     throw new Error(
-        //         `Assertion failed.\n\nExpected: ${json2}\nReceived: ${json}`
-        //     );
-        // }
     }
 
     /**
@@ -11241,12 +11625,25 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sums the given array of numbers and returns the result.
+     * Calculates the numerical sum of the given values.
+     *
      * If any value in the list is not a number, it will be converted to one.
      * If the given value is not an array, then it will be converted to a number and returned.
      *
-     * @param list The value that should be summed. If it is a list, then the result will be the sum of the items in the list.
-     *             If it is not a list, then the result will be the value converted to a number.
+     * @param list  the list of values that should be summed up. If any value in the list is not a number, it will be converted to one.
+     * If the list is not actually a list, then it will be converted to a number and returned.
+     *
+     * @example Calculate the sum of a list of numbers.
+     * const total = math.sum([92, 123, 21]);
+     *
+     * @example Calculate the total #age of all the bots.
+     * const totalAge = math.sum(getBotTagValues('#age'));
+     *
+     * @dochash actions/math
+     * @doctitle Math Actions
+     * @docsidebar Math
+     * @docdescription Math actions are useful for performing math operations on bots and numbers.
+     * @docname math.sum
      */
     function sum(list: any): number {
         if (!Array.isArray(list)) {
@@ -11266,10 +11663,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Calculates the average of the numbers in the given list and returns the result.
+     * Calculates the arithmetic mean of the given list of values.
+     * That is, the sum of the values divided by the number of values.
+     *
      * @param list The value that should be averaged.
      *             If it is a list, then the result will be sum(list)/list.length.
      *             If it is not a list, then the result will be the value converted to a number.
+     *
+     * @example Calculate the average of a list of numbers.
+     * const average = math.avg([4, 54.2, 31]);
+     *
+     * @example Calculate the average #age of all the bots.
+     * const averageAge = math.avg(getBotTagValues('#age'));
+     *
+     * @dochash actions/math
+     * @docname math.avg
      */
     function avg(list: any): number {
         if (!Array.isArray(list)) {
@@ -11282,25 +11690,46 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Calculates the square root of the given number.
-     * @param value The number.
+     * Calculates the square root of the given value.
+     * @param value the value that the square root should be calculated for.
+     *
+     * @example Calculate the square root of 4.
+     * const rootOf4 = math.sqrt(4);
+     *
+     * @dochash actions/math
+     * @docname math.sqrt
      */
     function sqrt(value: any): number {
         return Math.sqrt(parseFloat(value));
     }
 
     /**
-     * Calculates the absolute value of a number.
-     * @param number The number to get the absolute value of.
+     * Calculates the absolute value of the given number. That is, the number without its sign.
+     * @param number the number that the absolute value should be calculated for.
+     *
+     * @example Calculate the absolute value for the number -42.
+     * const _42 = math.abs(-42);
+     *
+     * @dochash actions/math
+     * @docname math.abs
      */
     function abs(number: any): number {
         return Math.abs(parseFloat(number));
     }
 
     /**
-     * Calculates the standard deviation of the numbers in the given list and returns the result.
+     *Calculates the [standard deviation](https://en.wikipedia.org/wiki/Standard_deviation for the given list of values.
      *
-     * @param list The value that the standard deviation should be calculated for.
+     * @param list the list of values that the standard deviation should be calculated for.
+     *
+     * @example Calculate the standard deviation of a list of numbers.
+     * const standardDeviation = math.stdDev([2, 97, 745]);
+     *
+     * @example Calculate the standard deviation of the #age of all the bots.
+     * const ageDeviation = math.stdDev(getBotTagValues('#age'));
+     *
+     * @dochash actions/math
+     * @docname math.stdDev
      */
     function stdDev(list: any): number {
         if (!Array.isArray(list)) {
@@ -11315,8 +11744,26 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Creates a new random number generator and returns it.
-     * @param seed The value that should be used to seed the random number generator.
+     * Creates a new random number generator from the given seed and returns it.
+     * Because of how random number generators work, generators created with the same seed will return the same sequence of random numbers.
+     *
+     * @param seed the number or string that should be used as the seed value for the random number generator.
+     * If omitted, then a seed will be chosen in a somewhat unpredictable manner.
+     *
+     * @example Create two random number generators with the same seed.
+     * let random1 = math.getSeededRandomNumberGenerator(123);
+     * let random2 = math.getSeededRandomNumberGenerator(123);
+     *
+     * os.toast(random1.randomInt(0, 10) + ' == ' + random2.randomInt(0, 10) + ' == 9');
+     *
+     * @example Create a random number generator and store it for later
+     * let randomNumberGenerator = math.getSeededRandomNumberGenerator(123);
+     *
+     * // Store it in the bot variables so it can be used in other scripts.
+     * bot.vars.randomNumberGenerator = randomNumberGenerator;
+     *
+     * @dochash actions/math
+     * @docname math.getSeededRandomNumberGenerator
      */
     function getSeededRandomNumberGenerator(
         seed?: number | string
@@ -11345,8 +11792,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Sets the seed that should be used for random numbers.
-     * @param seed The seed that should be used. If given null, then the numbers will be unseeded.
+     * Sets the seed that should be used for the random numbers generated with {@link math.randomInt} and {@link math.random}.
+     * @param seed the number or string that should be used as the seed value for the internal random number generator.
+     * If null is provided, then a seed will be chosen in a somewhat unpredictable manner.
+     *
+     * @example Set the random seed for math.random() and math.randomInt().
+     * math.setRandomSeed(123);
+     *
+     * expect(math.randomInt(0, 10)).toBe(9);
+     * expect(math.random()).toBe(0.36078753814001446);
+     *
+     * @example Clear the random seed.
+     * math.setRandomSeed(null);
+     *
+     * @dochash actions/math
+     * @docname math.setRandomSeed
      */
     function setRandomSeed(seed: number | string): void {
         if (!hasValue(seed)) {
@@ -11361,18 +11821,31 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Generates a random integer number between min and max.
+     * Generates a random integer number between the given minimum and maximum values.
      * @param min The smallest allowed value.
      * @param max The largest allowed value.
+     *
+     * @example Generate a random number between 5 and 10.
+     * const number = math.randomInt(5, 10);
+     *
+     * @dochash actions/math
+     * @docname math.randomInt
      */
     function randomInt(min: number = 0, max?: number): number {
         return randomIntBase(min, max, context.pseudoRandomNumberGenerator);
     }
 
     /**
-     * Generates a random number between min and max.
+     * Generates a random number between the given minimum and maximum values.
+     *
      * @param min The smallest allowed value.
      * @param max The largest allowed value.
+     *
+     * @example Generate a random number between 0 and Math.PI.
+     * const number = math.random(0, Math.PI);
+     *
+     * @dochash actions/math
+     * @docname math.random
      */
     function random(min: number = 0, max?: number): number {
         return randomBase(min, max, context.pseudoRandomNumberGenerator);
@@ -11414,16 +11887,34 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Converts the given number of degrees to radians and returns the result.
-     * @param degrees The number of degrees.
+     * Converts the given number of [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) to [radians](https://en.wikipedia.org/wiki/Radian) and returns the result.
+     *
+     * This operation is equivalent to `radians = degrees * (Math.PI / 180)`.
+     *
+     * @param degrees the number of degrees that should be converted to radians.
+     *
+     * @example Get the number of radians for a 90 degree angle
+     * const radians = math.degreesToRadians(90);
+     *
+     * @dochash actions/math
+     * @docname math.degreesToRadians
      */
     function degreesToRadians(degrees: number): number {
         return degrees * DEG_TO_RAD;
     }
 
     /**
-     * Converts the given number of radians to degrees and returns the result.
-     * @param radians The number of radians.
+     * Converts the given number of [radians](https://en.wikipedia.org/wiki/Radian) to [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) and returns the result.
+     *
+     * This operation is equivalent to `degrees = radians * (180 / Math.PI)`.
+     *
+     * @param radians the number of radians that should be converted to degrees.
+     *
+     * @example Get the number of degrees for a Math.PI / 2 angle
+     * const degrees = math.radiansToDegrees(Math.PI / 2);
+     *
+     * @dochash actions/math
+     * @docname math.radiansToDegrees
      */
     function radiansToDegrees(radians: number): number {
         return radians * RAD_TO_DEG;
@@ -11431,7 +11922,18 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Gets the forward direction for the given rotation.
+     *
+     * Useful for finding where a bot would be pointing if it has a custom rotation.
+     *
      * @param pointerRotation The rotation that the pointer has represented in radians.
+     *
+     * @example Get the direction that a pointer is pointing.
+     * const pointerRotation = os.getPointerRotation('mouse');
+     * const pointerDirection = math.getForwardDirection(pointerRotation);
+     * os.toast(pointerDirection);
+     *
+     * @dochash actions/math
+     * @docname math.getForwardDirection
      */
     function getForwardDirection(
         pointerRotation:
@@ -11467,11 +11969,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Finds the point at which the the given ray and ground plane intersect.
-     * @param origin The origin of the ray.
-     * @param direction The direction that the ray is pointing.
-     * @param planeNormal The direction that the face of the plane is pointing.
-     * @param planeOrigin The position that the center of the plane should pass through.
+     * Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the grid portal ground plane.
+     * Returns null if the ray does not intersect the ground plane.
+     *
+     * Useful for calculating where on the ground something is pointing.
+     *
+     * @param origin the 3D point that the ray should start at.
+     * @param direction the direction that the ray is traveling along.
+     * @param planeNormal the normal vector that the plane should use.
+     * For 2D planes, the normal vector is the 3D direction that is perpendicular to the the surface of the plane.
+     * For example, a plane that covers the entire XY surface has a normal vector equal to `➡️0,0,1`, while a plane that covers the YZ surface has a normal vector equal to `➡️1,0,0`.
+     * This parameter defaults to `➡️0,0,1`.
+     * @param planeOrigin the 3D position that the center of the plane should travel through. Defaults to `➡️0,0,0`.
+     *
+     * @example Get the spot on the ground that a pointer is pointing at.
+     * const pointerPosition = os.getPointerPosition('mouse');
+     * const pointerRotation = os.getPointerRotation('mouse');
+     * const pointerDirection = math.getForwardDirection(pointerRotation);
+     * const groundPoint = math.intersectPlane(pointerPosition, pointerDirection);
+     * os.toast(groundPoint);
+     *
+     * @dochash actions/math
+     * @docname math.intersectPlane
      */
     function intersectPlane(
         origin: { x: number; y: number; z: number },
@@ -11507,8 +12026,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the position offset for the given bot anchor point.
-     * @param anchorPoint The anchor point to get the offset for.
+     * Calculates the 3D position offset for the given anchor point and returns it.
+     * This is essentially {@link experiment.getAnchorPointPosition} but without the bot's position/scale applied.
+     *
+     * @param anchorPoint the anchor point that should be calculated. Can be any valid {@tag anchorPoint} value.
+     *
+     * @example Calculate the anchor point offset for "bottom".
+     * const offset = math.getAnchorPointOffset("bottom");
+     * os.toast(offset);
+     *
+     * @dochash actions/math
+     * @docname math.getAnchorPointOffset
      */
     function getAnchorPointOffset(anchorPoint: BotAnchorPoint): Vector3 {
         const value = calculateAnchorPoint(anchorPoint);
@@ -11517,8 +12045,32 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Adds the given vectors together and returns the result.
-     * @param vectors The vectors that should be added together.
+     * Mathematically adds the given vectors to each other and returns the sum result.
+     *
+     * A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+     * For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+     *
+     * @param vectors the vectors that should be added together.
+     *
+     * @example Add two 3D points together.
+     * const result = math.addVectors(
+     *     { x: 1, y: 2, z: 3 },
+     *     { x: 5, y: 6, z: 7 }
+     * );
+     *
+     * os.toast(result); // { x: 6, y: 8, z: 10 }
+     *
+     * @example Add arbitrary numbers together.
+     * const result = math.addVectors(
+     *     { salary: 1000, tax: 50 },
+     *     { salary: 5000, tax: 250 },
+     *     { salary: 750, tax: 37.5 },
+     * );
+     *
+     * os.toast(result); // { salary: 6750, tax: 337.5 }
+     *
+     * @dochash actions/math
+     * @docname math.addVectors
      */
     function addVectors<T>(...vectors: T[]): T {
         if (vectors.length <= 0) {
@@ -11564,8 +12116,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Subtracts the given vectors from each other and returns the result.
-     * @param vectors The vectors that should be subtracted from each other.
+     * Mathematically subtracts the given vectors from each other and returns the result.
+     *
+     * A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+     * For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+     *
+     * @param vectors the vectors that should be subtracted from each other.
+     *
+     * @example Subtract two 3D points from each other.
+     * const result = math.addVectors(
+     *     { x: 5, y: 6, z: 7 },
+     *     { x: 1, y: 2, z: 3 },
+     * );
+     *
+     * os.toast(result); // { x: 4, y: 4, z: 4 }
+     *
+     * @dochash actions/math
+     * @docname math.subtractVectors
      */
     function subtractVectors<T>(...vectors: T[]): T {
         if (vectors.length <= 0) {
@@ -11611,8 +12178,22 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Negates the given vector and returns the result.
-     * @param vector The vector that should be negated.
+     * Mathematically negates the given vector and returns the result.
+     *
+     * A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+     * For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+     *
+     * @param vector the vector that should be negated.
+     *
+     * @example Negate a 3D point.
+     * const result = math.negateVector(
+     *     { x: 5, y: 6, z: 7 }
+     * );
+     *
+     * os.toast(result); // { x: -5, y: -6, z: -7 }
+     *
+     * @dochash actions/math
+     * @docname math.negateVector
      */
     function negateVector<T>(vector: T): T {
         if (!hasValue(vector)) {
@@ -11634,8 +12215,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Normalizes the given vector and returns the result.
-     * @param vector The vector that should be normalized.
+     * Normalizes the given vector. The result is a vector that has the same direction as the given vector but has a length/magnitude of 1.
+     *
+     * Mathemematically, this is the same as finding the {@link math.vectorLength} and dividing each component in the vector by it.
+     *
+     * A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+     * For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+     *
+     * @param vector the vector that should be normalized.
+     *
+     * @example Normalize a 3D point.
+     * const result = math.normalizeVector(
+     *     { x: 1, y: 2, z: 3 }
+     * );
+     *
+     * os.toast(result);
+     * // x: 0.2672612419124244
+     * // y: 0.5345224838248488
+     * // z: 0.8017837257372732
+     *
+     * @dochash actions/math
+     * @docname math.normalizeVector
      */
     function normalizeVector<T>(vector: T): T {
         if (!hasValue(vector)) {
@@ -11663,8 +12263,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Calculates the length of the given vector.
-     * @param vector The vector to calculate the length of.
+     * Calculates the length (i.e. magnitude) of the given vector.
+     *
+     * Mathemematically, this is equivalent to `length = sqrt(sum(components.map(c => c * c)))`. As a consequence, vectors that are normalized always have a length of 1.
+     *
+     * A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+     * For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+     *
+     * @param vector the vector to calculate the length of.
+     *
+     * @example Calculate the length of a 3D point
+     * const result = math.vectorLength(
+     *     { x: 1, y: 2, z: 3 }
+     * );
+     *
+     * os.toast(result); // 3.7416573867739413
+     *
+     * @dochash actions/math
+     * @docname math.vectorLength
      */
     function vectorLength<T>(vector: T): number {
         if (!hasValue(vector)) {
@@ -11682,9 +12298,24 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Multiplies each component of the given vector by the given scale and returns the result.
-     * @param vector The vector that should be scaled.
-     * @param scale The number that the vector should be multiplied by.
+     * Multiplies each property of the given vector by the given scale and returns the result.
+     *
+     * A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.
+     * For example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).
+     *
+     * @param vector the vector that should be scaled.
+     * @param scale the number that the vector should be multiplied by.
+     *
+     * @example Scale a 3D point by 5.
+     * const result = math.scaleVector(
+     *     { x: 5, y: 6, z: 7 },
+     *     5
+     * );
+     *
+     * os.toast(result); // { x: 25, y: 30, z: 35 }
+     *
+     * @dochash actions/math
+     * @docname math.scaleVector
      */
     function scaleVector<T>(vector: T, scale: number): T {
         if (!hasValue(vector)) {
@@ -11706,9 +12337,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Determines if the two given numbers within 2 decimal places of each other.
-     * @param first The first number to check.
-     * @param second The second number to check.
+     * Determines if the given numbers are within 2 decimal places of each other.
+     *
+     * Because [JavaScript numbers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number) have limited precision, some calculations cannot be represented like they can in normal math.
+     * For example, `1/3` is `0.3333...` but in JavaScript `1/3` gives `0.33333333333333331483`.
+     * This inaccuracy can cause problems when many calculations are done, which can cause numbers that appear to be the same to actually be different.
+     *
+     * The solution is to check the difference between two numbers to see if it is below some arbitrary threshold.
+     * In this case, the threshold is `0.005`.
+     *
+     * @param first the first number to check.
+     * @param second the second number to check.
+     *
+     * @example Determine 0.1 + 0.2 is close to 0.3.
+     * const first = 0.1 + 0.2;
+     * const second = 0.3;
+     * const result = math.areClose(first, second);
+     * const areEqual = first === second;
+     * os.toast("Equal: " + areEqual + ", Close: " + result); // Equal: false, Close: true
+     *
+     * @dochash actions/math
+     * @docname math.areClose
      */
     function areClose(first: number, second: number): boolean {
         const maxDelta = 0.005;
