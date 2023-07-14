@@ -45,6 +45,23 @@ export {
     GetRoomRemoteOptionsResult,
     GetRoomRemoteOptionsSuccess,
     GetRoomRemoteOptionsFailure,
+
+    Debugger,
+    NormalDebugger,
+    PausableDebugger,
+    PossiblePauseTriggerLocation,
+    PossiblePauseTriggerStates,
+    PauseTrigger,
+    PauseTriggerOptions,
+    DebuggerCallFrame,
+    DebuggerTagMaskUpdate,
+    DebuggerTagUpdate,
+    NormalDebuggerOptions,
+    PausableDebuggerOptions,
+    DebuggerPause,
+    DebuggerFunctionLocation,
+    DebuggerVariable,
+    AttachDebuggerOptions,
 } from '../../../src/aux-common/runtime/AuxLibrary';
 export { 
     EaseType,

@@ -1,6 +1,7 @@
 import React from 'react';
 import Heading from '@theme/Heading';
 import CodeBlock from '@theme/CodeBlock';
+import Details from '@theme/Details';
 import { flatMap, groupBy, sortBy } from 'lodash';
 import { ReflectionBoundary } from './errors';
 import useBaseUrl from '@docusaurus/useBaseUrl';
@@ -351,6 +352,7 @@ export function ClassMembers(props) {
             <div className="api">
                 <ReflectionDiscription reflection={reflection} references={props.references} />
                 {reflection.indexSignature ? <IndexSignature reflection={reflection} index={reflection.indexSignature} references={props.references} /> : ''}
+                {reflection.references ? <ClassReferences prop={reflection} references={props.references}/> : ''}
                 {children.map(c => <ClassMember key={c.name} member={c} link={memberLink(reflection, c)} references={props.references}/>)}
             </div>
         </ReflectionBoundary>
@@ -421,7 +423,10 @@ export function ClassPropertyMember(props) {
     let typeDetail;
     let extraDetail = '';
 
-    if (prop.type.type === 'reflection' && prop.typeText && prop.typeReference) {
+    if (prop.references) {
+        extraDetail = <ClassPropertyReferences prop={prop} references={props.references} />;
+        typeDetail = <>{prop.typeReference}</>
+    } else if (prop.type.type === 'reflection' && prop.typeText && prop.typeReference) {
         typeDetail = <>{prop.typeReference}</>
         extraDetail = <CodeBlock language='typescript'>{prop.typeText}</CodeBlock>
     } else {
@@ -442,6 +447,25 @@ export function ClassPropertyMember(props) {
             {/* <pre><code>{JSON.stringify(props.member)}</code></pre> */}
         </div>
     )
+}
+
+export function ClassReferences({ prop, references }) {
+    const id = getChildId(prop);
+    return <div>
+        <Heading as='h3' id={`${id}-extra-functions`}>Extra Functions</Heading>
+        <p>The extra functions that are available on this type.</p>
+        <Details>
+            <p>See the following functions for more information:</p>
+            <Markdown children={prop.references} references={references}/>
+        </Details>
+    </div>
+}
+
+export function ClassPropertyReferences({ prop, references }) {
+    return <Details>
+        <p>See the following functions for more information:</p>
+        <Markdown children={prop.references} references={references}/>
+    </Details>
 }
 
 export function ClassPropertyConstructor(props) {

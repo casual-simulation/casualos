@@ -84,10 +84,10 @@ class CommentSerializer extends SerializerComponent<Comment> {
                 const hash = getReflectionHash(type);
                 if (hash) {
                     this.references.set(id, hash);
-                    return `[\`${this._renderType(type, id)}\`](ref:${id})`;
+                    return renderLinkToType(type, id);
                 } else {
                     console.warn(`Type is not included in documentation: ${id}`);
-                    return this._renderType(type, id);
+                    return renderTypeForComment(type, id);
                 }
             } else {
                 console.warn(`Unable to find type for link: ${id}`);
@@ -105,16 +105,20 @@ class CommentSerializer extends SerializerComponent<Comment> {
             return `[\`#${tag}\`](tags:${tag})`;
         });
     }
+}
 
-    private _renderType(type: Reflection, id: string): string {
-        if (type.kindString === 'Call signature') {
-            const name = getReflectionTag(type, 'docname') ?? id;
-            const sig = type as SignatureReflection;
-            const params = sig.parameters.map(p => `${p.flags.isRest ? '...' : ''}${p.name}`).join(', ');
-            return `${name}(${params})`;
-        } else {
-            return id;
-        }
+function renderLinkToType(type: Reflection, id: string) {
+    return `[\`${renderTypeForComment(type, id)}\`](ref:${id})`;
+}
+
+function renderTypeForComment(type: Reflection, id: string): string {
+    if (type.kindString === 'Call signature') {
+        const name = getReflectionTag(type, 'docname') ?? id;
+        const sig = type as SignatureReflection;
+        const params = sig.parameters.map(p => `${p.flags.isRest ? '...' : ''}${p.name}`).join(', ');
+        return `${name}(${params})`;
+    } else {
+        return id;
     }
 }
 
@@ -175,6 +179,31 @@ class IncludeSourceSerializer extends SerializerComponent<Reflection> {
 
         const source = interfaceDeclaration.getText();
 
+        let references = getReflectionTag(item, 'docreferenceactions');
+
+        let referencesContent = '';
+        if (references) {
+            let refs = getByReference(this._project, references);
+            for (let r of refs) {
+                const hash = getReflectionHash(r);
+                const id = getDocId(r);
+                
+                let text;
+                if (hash) {
+                    this.references.set(id, hash);
+                    text = renderLinkToType(r, id);
+                    // const ref = renderTypeForComment(ref, getDocId(ref));
+                } else {
+                    console.warn(`Type is not included in documentation: ${id}`);
+                    text = renderTypeForComment(r, id);
+                }
+
+                if (text) {
+                    referencesContent += `- ${text}\n`;
+                }
+            }
+        }
+
         obj.id = item.id;
         obj.name = item.name;
         obj.kind = item.kind;
@@ -187,6 +216,7 @@ class IncludeSourceSerializer extends SerializerComponent<Reflection> {
         obj.typeParameter = this.owner.toObject(item.typeParameters);
         (obj as any).typeText = source;
         (obj as any).typeReference = name;
+        (obj as any).references = referencesContent;
 
         return obj;
     }
@@ -213,6 +243,87 @@ class IncludeSourceSerializer extends SerializerComponent<Reflection> {
             return ref.declaration;
         }
         return null;
+    }
+}
+
+class ClassReferenceSerializer extends SerializerComponent<Reflection> {
+    private _app: Application;
+    private _project: ProjectReflection;
+
+    references: Map<string, string>;
+
+    get priority() {
+        return 102;
+    }
+
+    constructor(app: Application, project: ProjectReflection, serializer: Serializer) {
+        super(serializer);
+        this._app = app;
+        this._project = project;
+        this.references = new Map();
+    }
+
+    serializeGroup(instance: unknown): boolean {
+        return instance instanceof Reflection;
+    }
+
+    supports(item: Reflection): boolean {
+        return item instanceof DeclarationReflection &&
+            (item.kindString === 'Class' || item.kindString === 'Interface') &&
+            getReflectionTag(item, 'docreferenceactions') !== null;
+    }
+
+    toObject(item: DeclarationReflection, obj?: Partial<ModelToObject<DeclarationReflection>>): Partial<ModelToObject<DeclarationReflection>> {
+        let references = getReflectionTag(item, 'docreferenceactions');
+
+        const childrenIds = new Set<string>(
+            item.children.map(c => c.name)
+        );
+
+        let referencesContent = '';
+        if (references) {
+            let refs = getByReference(this._project, references);
+            for (let r of refs) {
+                if (r.kindString !== 'Call signature') {
+                    continue;
+                }
+
+                const id = getDocId(r);
+                if (childrenIds.has(id)) {
+                    continue;
+                }
+
+                const hash = getReflectionHash(r);
+
+                let text;
+                if (hash) {
+                    this.references.set(id, hash);
+                    text = renderLinkToType(r, id);
+                    // const ref = renderTypeForComment(ref, getDocId(ref));
+                } else {
+                    console.warn(`Type is not included in documentation: ${id}`);
+                    text = renderTypeForComment(r, id);
+                }
+
+                if (text) {
+                    referencesContent += `- ${text}\n`;
+                }
+            }
+        }
+
+        obj.id = item.id;
+        obj.name = item.name;
+        obj.kind = item.kind;
+        obj.kindString = item.kindString;
+        obj.type = this.owner.toObject(item.type);
+        obj.defaultValue = item.defaultValue;
+        obj.flags = item.flags;
+        obj.comment = this.owner.toObject(item.comment);
+        obj.children = this.owner.toObject(item.children);
+        obj.typeParameter = this.owner.toObject(item.typeParameters);
+        (obj as any).references = referencesContent;
+
+        return obj;
     }
 }
 
@@ -300,8 +411,10 @@ export function loadContent() {
 
     let commentSerializer = new CommentSerializer(app, project, app.serializer);
     let sourceSerializer = new IncludeSourceSerializer(app, project, app.serializer);
+    let classRefSerializer = new ClassReferenceSerializer(app, project, app.serializer);
     app.serializer.addSerializer(commentSerializer);
     app.serializer.addSerializer(sourceSerializer);
+    app.serializer.addSerializer(classRefSerializer);
 
     let allUsedTypes = new Set<Reflection>();
     let typesWithPages = new Set<Reflection>();
@@ -443,6 +556,16 @@ export function loadContent() {
     for(let [id, hash] of commentSerializer.references) {
         references[id] = hash;
     }
+    for (let [id, hash] of sourceSerializer.references) {
+        if (!references[id]) {
+            references[id] = hash;
+        }
+    }
+    for (let [id, hash] of classRefSerializer.references) {
+        if (!references[id]) {
+            references[id] = hash;
+        }
+    }
 
     const finalPages = [...pages.values()].map(p => ({
         ...p,
@@ -504,6 +627,13 @@ function getReflectionTag(reflection: Reflection, tag: string): string {
         return tagValue.text.trim();
     }
     return null;
+}
+
+function getReflectionTags(reflection: Reflection, tag: string): string[] {
+    const tags = reflection.comment?.tags.filter(t => {
+        return t.tagName === tag;
+    }) ?? [];
+    return tags.map(t => t.text.trim());
 }
 
 const builtinTypes = new Set([
@@ -601,6 +731,21 @@ function getByDocId(type: WalkType, docId: string): Reflection {
         return matches[0] as Reflection;
     }
     return null;
+}
+
+function getByReference(type: WalkType, ref: string): Reflection[] {
+    let matches = getByFilter(type, t => {
+        if ('kind' in t) {
+            const id = getReflectionTag(t, 'docid') ?? getReflectionTag(t, 'docname');
+            if (id) {
+                let regex = new RegExp(ref, 'g');
+                return regex.test(id);
+            }
+        }
+        return false;
+    });
+
+    return matches as Reflection[];
 }
 
 function getDocId(type: Reflection) {

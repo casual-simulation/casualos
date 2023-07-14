@@ -49,6 +49,7 @@ module.exports = {
                         'actions/audio',
                         'actions/animations',
                         'actions/rooms',
+                        'actions/debuggers'
                     ]
                 },
                 {
@@ -81,6 +82,15 @@ module.exports = {
                             ]
                         },
                         'types/permissions',
+                        {
+                            type: 'category',
+                            label: 'Debuggers',
+                            items: [
+                                'types/debuggers/common',
+                                'types/debuggers/debugger',
+                                'types/debuggers/pausable-debugger',
+                            ]
+                        },
                     ]
                 },
                 'glossary',

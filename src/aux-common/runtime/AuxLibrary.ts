@@ -899,8 +899,449 @@ export interface DebuggerInterface {
     [GET_RUNTIME]: () => AuxRuntime;
 }
 
+export interface DebuggerBase {
+    // /**
+    //  * Gets the config bot from the debugger.
+    //  * May be null.
+    //  */
+    // get configBot(): Bot;
+
+    /**
+     * Gets the list of portal bots in the debugger.
+     */
+    getPortalBots(): Map<string, Bot>;
+
+    /**
+     * Gets the list of actions that have been performed by bots in this debugger.
+     */
+    getAllActions(): BotAction[];
+
+    /**
+     * Gets the list of common actions that have been performed by bots in this debugger.
+     * Common actions are actions that don't directly change bots or bot tags.
+     */
+    getCommonActions(): BotAction[];
+
+    /**
+     * Gets the list of bot actions that have been performed by bots in this debugger.
+     * Bot actions are actions that directly create/destroy/update bots or bot tags.
+     */
+    getBotActions(): BotAction[];
+
+    /**
+     * Gets the list of errors that occurred while bots were executing scripts in this debugger.
+     */
+    getErrors(): any[];
+
+    /**
+     * Registers the given handler to be called before a bot action is executed in this debugger.
+     * @param handler The handler that should be called.
+     */
+    onBeforeAction(handler: (action: BotAction) => void): void;
+
+    /**
+     * Registers the given handler to be called after a bot action is executed in this debugger.
+     * @param handler The handler that should be called.
+     */
+    onAfterAction(handler: (action: BotAction) => void): void;
+
+    /**
+     * Registers the given handler to be called before a user action is executed in this debugger.
+     * User actions are like actions, but they are only triggered from the CasualOS frontend.
+     * Generally, this includes things like input events (clicks), but it can also happen automatically.
+     * @param listener The handler that should be called.
+     */
+    onBeforeUserAction(listener: (action: BotAction) => void): void;
+
+    /**
+     * Registers the given handler to be called after a bot script enqueues a bot action to be executed.
+     * @param listener The listener that should be executed.
+     */
+    onScriptActionEnqueued(listener: (action: BotAction) => void): void;
+
+    /**
+     * Registers the given handler to be called after a bot script changes a tag value.
+     * @param listener The listener that should be executed.
+     */
+    onAfterScriptUpdatedTag(
+        listener: (update: DebuggerTagUpdate) => void
+    ): void;
+
+    /**
+     * Registers the given handler to be called after a bot script changes a tag mask value.
+     * @param listener The listener that should be executed.
+     */
+    onAfterScriptUpdatedTagMask(
+        listener: (update: DebuggerTagMaskUpdate) => void
+    ): void;
+
+    /**
+     * Gets the current call stack for the interpreter.
+     * Only supported on pausable debuggers.
+     */
+    getCallStack(): DebuggerCallFrame[];
+
+    /**
+     * Performs the given actions as if they were user actions.
+     * Returns a promise that resolves with an array that contains the result for each action in order.
+     * If the action was a shout action, then the results for that shout are also included.
+     * @param actions The actions that should be performed.
+     */
+    performUserAction(...actions: BotAction[]): Promise<(any[] | null)[]>;
+
+    /**
+     * Registers the given handler to react to when this debugger pauses by hitting a trigger.
+     * @param handler The handler that should be called when the debugger pauses.
+     */
+    onPause(handler: (pause: DebuggerPause) => void): void;
+
+    /**
+     * Registers or updates a pause trigger with this debugger.
+     * Pause triggers can be used to tell the debugger when you want it to stop execution.
+     * You specify the bot, tag, line and column numbers and the debugger will stop before/after it executes the code at that location.
+     * @param botOrIdOrTrigger The bot, bot ID, or trigger that should be registered or updated.
+     * @param tag The tag that the trigger should be registered in. Required if a bot or bot ID is specified.
+     * @param options The options that go with this pause trigger. Required if a bot or bot ID is specified.
+     */
+    setPauseTrigger(
+        botOrIdOrTrigger: Bot | string | PauseTrigger,
+        tag?: string,
+        options?: PauseTriggerOptions
+    ): PauseTrigger;
+    /**
+     * Registers a new pause trigger with this debugger.
+     * Pause triggers can be used to tell the debugger when you want it to stop execution.
+     * You specify the bot, tag, line and column numbers and the debugger will stop before/after it executes the code at that location.
+     * @param botOrId The bot, or bot ID that the trigger should be placed in.
+     * @param tag The tag that the trigger should be placed in.
+     * @param options The options that go with this pause trigger.
+     */
+    setPauseTrigger(
+        botOrId: Bot | string,
+        tag: string,
+        options: PauseTriggerOptions
+    ): PauseTrigger;
+
+    /**
+     * Registers or updates the given pause trigger with this debugger.
+     * @param trigger The trigger that should be registered or updated.
+     */
+    setPauseTrigger(trigger: PauseTrigger): PauseTrigger;
+
+    /**
+     * Removes the given pause trigger from the debugger.
+     * @param triggerOrId The trigger or trigger ID that should be removed from the debugger.
+     */
+    removePauseTrigger(triggerOrId: string | PauseTrigger): void;
+
+    /**
+     * Disables the given pause trigger.
+     * Disabled pause triggers will continue to be listed with listPauseTriggers(), but will not cause a pause to happen while they are disabled.
+     * @param triggerOrId The trigger or trigger ID that should be disabled.
+     */
+    disablePauseTrigger(triggerOrId: string | PauseTrigger): void;
+
+    /**
+     * Enables the given pause trigger
+     * @param triggerOrId The trigger or trigger ID that should be enabled.
+     */
+    enablePauseTrigger(triggerOrId: string | PauseTrigger): void;
+
+    /**
+     * Gets the list of pause triggers that have been registered with this debugger.
+     */
+    listPauseTriggers(): PauseTrigger[];
+
+    /**
+     * Gets a list of common trigger locations for the specified listener on the specified bot.
+     * @param botOrId The bot or bot ID.
+     * @param tag The name of the tag that the trigger locations should be listed for.
+     */
+    listCommonPauseTriggers(
+        botOrId: Bot | string,
+        tag: string
+    ): PossiblePauseTriggerLocation[];
+
+    /**
+     * Resumes the debugger execution from the given pause.
+     * @param pause The pause state that execution should be resumed from.
+     */
+    resume(pause: DebuggerPause): void;
+
+    // /**
+    //  * Produces HTML from the given HTML strings and expressions.
+    //  * Best used with a tagged template string.
+    //  */
+    // html: object;
+
+    /**
+     * The web actions that are available in this debugger.
+     *
+     * @docreferenceactions ^web\.
+     * @docsource WebActions
+     */
+    web: {};
+
+    /**
+     * The OS actions that are available in this debugger.
+     *
+     * @docreferenceactions ^os\.
+     * @docsource OSActions
+     */
+    os: {};
+
+    // /**
+    //  * Defines a set of functions that relate to common server operations.
+    //  * Typically, these operations are instance-independent.
+    //  */
+    // server: object;
+
+    /**
+     * The action-related actions that are available in this debugger.
+     *
+     * @docreferenceactions ^action\.
+     * @docsource ActionActions
+     */
+    action: {};
+
+    // /**
+    //  * Defines a set of functions that manage admin space.
+    //  */
+    // adminSpace: object;
+
+    // /**
+    //  * Defines a set of functions that relate to common math operations.
+    //  */
+    // math: object;
+
+    // /**
+    //  * Defines a set of functions that are used to create and transform mods.
+    //  */
+    // mod: object;
+
+    // /**
+    //  * Defines a set of functions that are used to transform byte arrays.
+    //  */
+    // bytes: object;
+
+    // // @ts-ignore: Ignore redeclaration
+    // crypto: Crypto;
+
+    // /**
+    //  * Defines a set of experimental functions.
+    //  */
+    // experiment: object;
+
+    // /**
+    //  * Defines a set of performance related functions.
+    //  */
+    // perf: object;
+
+    // /**
+    //  * Defines a set of analytics-related functions.
+    //  */
+    // analytics: object;
+}
+
+/**
+ * Defines the possible types that represent a debugger.
+ *
+ * @dochash types/debuggers
+ * @docname Debugger
+ */
+export type Debugger = NormalDebugger | PausableDebugger;
+
+/**
+ * Defines an interface that represents a debugger.
+ *
+ * @dochash types/debuggers/debugger
+ * @doctitle Debugger
+ * @docsidebar Debugger
+ * @docdescription Defines an interface that represents a debugger.
+ * @docname Debugger
+ * @docreferenceactions ^\w+$
+ */
+export interface NormalDebugger extends DebuggerBase {}
+
+/**
+ * Defines an interface that represents a pausable debugger.
+ *
+ * @dochash types/debuggers/pausable-debugger
+ * @doctitle Pausable Debugger
+ * @docsidebar Pausable Debugger
+ * @docdescription Defines an interface that represents a pausable debugger.
+ * @docname PausableDebugger
+ * @docreferenceactions ^\w+$
+ */
+export interface PausableDebugger extends DebuggerBase {
+    /**
+     * Creates a new bot and returns it.
+     * @param parent The bot that should be the parent of the new bot.
+     * @param mods The mods which specify the new bot's tag values. If given a mod with no tags, then an error will be thrown.
+     * @returns The bot(s) that were created.
+     *
+     * @example Create a red bot without a parent.
+     * let debugger = await os.createDebugger({
+     *     pausable: true
+     * });
+     * let redBot = await debugger.create(null, { "color": "red" });
+     *
+     * @example Create a red bot and a blue bot with `this` as the parent.
+     * let debugger = await os.createDebugger({
+     *     pausable: true
+     * });
+     * let [redBot, blueBot] = await debugger.create(this, [
+     *    { "color": "red" },
+     *    { "color": "blue" }
+     * ]);
+     */
+    create(...mods: Mod[]): Promise<Bot | Bot[]>;
+
+    /**
+     * Destroys the given bot, bot ID, or list of bots.
+     * @param bot The bot, bot ID, or list of bots to destroy.
+     */
+    destroy(bot: Bot | string | Bot[]): Promise<void>;
+
+    /**
+     * Shouts the given events in order until a bot returns a result.
+     * Returns the result that was produced or undefined if no result was produced.
+     * @param eventNames The names of the events to shout.
+     * @param arg The argument to shout.
+     */
+    priorityShout(eventNames: string[], arg?: any): Promise<any>;
+
+    /**
+     * Asks every bot in the inst to run the given action.
+     * In effect, this is like shouting to a bunch of people in a room.
+     *
+     * @param name The event name.
+     * @param arg The optional argument to include in the shout.
+     * @returns Returns a list which contains the values returned from each script that was run for the shout.
+     *
+     * @example Tell every bot to reset themselves.
+     * let debugger = await os.createDebugger({
+     *     pausable: true
+     * });
+     * await debugger.shout("reset()");
+     *
+     * @example Ask every bot for its name.
+     * let debugger = await os.createDebugger({
+     *     pausable: true
+     * });
+     * const names = await debugger.shout("getName()");
+     *
+     * @example Tell every bot say "Hi" to you.
+     * let debugger = await os.createDebugger({
+     *     pausable: true
+     * });
+     * await debugger.shout("sayHi()", "My Name");
+     */
+    shout(name: string, arg?: any): Promise<any[]>;
+
+    /**
+     * Asks the given bots to run the given action.
+     * In effect, this is like whispering to a specific set of people in a room.
+     *
+     * @param bot The bot(s) to send the event to.
+     * @param eventName The name of the event to send.
+     * @param arg The optional argument to include.
+     * @returns Returns a list which contains the values returned from each script that was run for the shout.
+     */
+    whisper(
+        bot: (Bot | string)[] | Bot | string,
+        eventName: string,
+        arg?: any
+    ): Promise<any>;
+
+    /**
+     * Changes the state that the given bot is in.
+     * @param bot The bot to change.
+     * @param stateName The state that the bot should move to.
+     * @param groupName The group of states that the bot's state should change in. (Defaults to "state")
+     */
+    changeState(bot: Bot, stateName: string, groupName?: string): Promise<void>;
+}
+
+/**
+ * Defines an interface for a possible pause trigger location.
+ *
+ * @dochash types/debuggers/common
+ * @docname PossiblePauseTriggerLocation
+ */
+export interface PossiblePauseTriggerLocation {
+    /**
+     * The line number that the trigger would pause the debugger at.
+     */
+    lineNumber: number;
+
+    /**
+     * The column number that the trigger would pause the debugger at.
+     */
+    columnNumber: number;
+
+    /**
+     * The states that are reasonable for this pause trigger to stop at.
+     */
+    possibleStates: PossiblePauseTriggerStates;
+}
+
+/**
+ * The possible states that a pause trigger can be set to.
+ *
+ * @dochash types/debuggers/common
+ * @docname PossiblePauseTriggerStates
+ */
+export type PossiblePauseTriggerStates =
+    | ['before' | 'after']
+    | ['before', 'after'];
+
+/**
+ * Defines an interface for a debugger trace that represents when a tag was updated.
+ *
+ * @dochash types/debuggers/common
+ * @docname DebuggerTagUpdate
+ */
+export interface DebuggerTagUpdate {
+    /**
+     * The ID of the bot that was updated.
+     */
+    botId: string;
+
+    /**
+     * The tag that was updated.
+     */
+    tag: string;
+
+    /**
+     * The old value of the tag.
+     */
+    oldValue: any;
+
+    /**
+     * The new value for the tag.
+     */
+    newValue: any;
+}
+
+/**
+ * Defines an interface for a debugger trace that represents when a tag mask was updated.
+ *
+ * @dochash types/debuggers/common
+ * @docname DebuggerTagMaskUpdate
+ */
+export interface DebuggerTagMaskUpdate extends DebuggerTagUpdate {
+    /**
+     * The space of the tag mask.
+     */
+    space: string;
+}
+
 /**
  * Defines an interface that contains options for attaching a debugger.
+ *
+ * @dochash types/debuggers/common
+ * @docname AttachDebuggerOptions
  */
 export interface AttachDebuggerOptions {
     /**
@@ -911,7 +1352,55 @@ export interface AttachDebuggerOptions {
 }
 
 /**
+ * Defines an interface that contains options for a debugger.
+ */
+export interface CommonDebuggerOptions {
+    /**
+     * Whether to use "real" UUIDs instead of predictable ones.
+     */
+    useRealUUIDs?: boolean;
+
+    /**
+     * Whether to allow scripts to be asynchronous.
+     * If false, then all scripts will be forced to be synchronous.
+     * Defaults to true.
+     */
+    allowAsynchronousScripts?: boolean;
+
+    /**
+     * The data that the configBot should be created from.
+     * Can be a mod or another bot.
+     */
+    configBot?: Bot | BotTags;
+}
+
+/**
+ * Defines an interface that contains options for a normal debugger.
+ * That is, a debugger that is not pausable.
+ *
+ * @dochash types/debuggers/common
+ * @docname NormalDebuggerOptions
+ */
+export interface NormalDebuggerOptions extends CommonDebuggerOptions {
+    pausable?: false;
+}
+
+/**
+ * Defines an interface that contains options for a pausable debugger.
+ * That is, a debugger that is pausable.
+ *
+ * @dochash types/debuggers/common
+ * @docname PausableDebuggerOptions
+ */
+export interface PausableDebuggerOptions extends CommonDebuggerOptions {
+    pausable: true;
+}
+
+/**
  * Defines an interface that contains options for an aux debugger.
+ *
+ * @dochash types/debuggers/common
+ * @docname DebuggerOptions
  */
 export interface AuxDebuggerOptions {
     /**
@@ -940,6 +1429,9 @@ export interface AuxDebuggerOptions {
 
 /**
  * Defines an interface that contains options for a pause trigger.
+ *
+ * @dochash types/debuggers/common
+ * @docname PauseTriggerOptions
  */
 export interface PauseTriggerOptions {
     /**
@@ -967,6 +1459,9 @@ export interface PauseTriggerOptions {
 
 /**
  * Defines an interface that represents a pause trigger.
+ *
+ * @dochash types/debuggers/common
+ * @docname PauseTrigger
  */
 export interface PauseTrigger extends PauseTriggerOptions {
     /**
@@ -987,6 +1482,8 @@ export interface PauseTrigger extends PauseTriggerOptions {
 
 /**
  * Defines an interface that contains information about the current debugger pause state.
+ * @dochash types/debuggers/common
+ * @docname DebuggerPause
  */
 export interface DebuggerPause {
     /**
@@ -1018,6 +1515,9 @@ export interface DebuggerPause {
 
 /**
  * Defines an interface that contains information about a single call stack frame.
+ *
+ * @dochash types/debuggers/common
+ * @docname DebuggerCallFrame
  */
 export interface DebuggerCallFrame {
     /**
@@ -1040,6 +1540,9 @@ export interface DebuggerCallFrame {
 
 /**
  * Defines an interface that represents a location in a debugger.
+ *
+ * @dochash types/debuggers/common
+ * @docname DebuggerFunctionLocation
  */
 export interface DebuggerFunctionLocation {
     /**
@@ -1070,6 +1573,9 @@ export interface DebuggerFunctionLocation {
 
 /**
  * Defines an interface that represents a debugger variable.
+ *
+ * @dochash types/debuggers/common
+ * @docname DebuggerVariable
  */
 export interface DebuggerVariable {
     /**
@@ -2389,6 +2895,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 get vars() {
                     return context.global;
                 },
+
+                _createDebugger_normal,
+                _createDebugger_pausable,
+                _getExecutingDebugger,
+                _attachDebugger,
+                _detachDebugger,
             },
 
             portal: {
@@ -10430,6 +10942,258 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const task = context.createTask();
         const action = calcMeetFunction(functionName, args, task.taskId);
         return addAsyncAction(task, action);
+    }
+
+    /**
+     * Creates a debug environment that can be used to simulate bots in isolation from the rest of the inst.
+     * Returns a promise that resolves with an object that contains all of the action functions.
+     *
+     * One of the special things about debug environments is that the bots in the environment are totally isolated from regular bots.
+     * This means that functions like {@link getbots-filters} can only access bots that have been created in the debugger and actions like {@link os.toast} don't do anything automatically.
+     * This can be useful for automated testing where you want to see what some bots will do without actually letting them do anything.
+     *
+     * Additionally, debuggers can be configured to be pausable (see {@link os.createDebugger-pausable}).
+     * This allows you to set pause triggers (also known as breakpoints) that temporarily stop the debugger at a specific location in a listener and allows you to inspect the current state of the script. Pausable debuggers work like normal debuggers, except that some specific functions return promises instead of a result. This is because those functions can trigger user code that could trigger a pause. When this is possible, the debugger returns a promise to your host code so you can properly handle the pause. (See the examples below for more information)
+     *
+     * The returned object can be used to create/find bots in the debug environment and simulate interactions. The debug environment also contains several functions that make it easy to observe what has happened inside the environment and therefore determine if everything was performed correctly.
+     *
+     * @param options the options that should be used to configure the debugger.
+     *
+     * @example Create a normal debugger and copy this bot into it.
+     * // Note: variables cannot be named "debugger" so we use the name "debug" instead.
+     * const debug = await os.createDebugger();
+     * const debuggerBot = debug.create(thisBot);
+     *
+     * @example Test a script in the debugger
+     * const debug = await os.createDebugger();
+     * const debuggerBot = debug.create({
+     *     test: '@tags.hit = true;'
+     * });
+     * debug.shout('test');
+     *
+     * if (debuggerBot.tags.hit) {
+     *     os.toast('Success!');
+     * } else {
+     *     os.toast('Failed!');
+     * }
+     *
+     * @example Find out what actions a script performs
+     * const debug = await os.createDebugger();
+     * const debuggerBot = debug.create({
+     *     test: '@os.toast("hello!")'
+     * });
+     * debug.shout('test');
+     *
+     * const actions = debug.getCommonActions();
+     * os.toast(actions);
+     *
+     * @example Create a debugger with a custom configBot
+     * const debug = await os.createDebugger({
+     *     configBot: {
+     *         test: '@console.log("Hello, World!");'
+     *     }
+     * });
+     * debug.shout('test');
+     *
+     * @example Mask the web.get() function.
+     * const debug = await os.createDebugger();
+     * let url = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/The_star_formation_region_Messier_17.jpg/1200px-The_star_formation_region_Messier_17.jpg";
+     * const debuggerBot = debug.create({
+     *     url,
+     *     test: '@return await web.get(tags.url)'
+     * });
+     *
+     * debug.web.get.mask(url)
+     *     .returns({
+     *         data: 'test data',
+     *         status: 200
+     *     });
+     *
+     * const [result] = debug.shout('test');
+     *
+     * assertEqual(result, {
+     *     data: 'test data',
+     *     status: 200
+     * });
+     * os.toast("Success!");
+     *
+     * @dochash actions/debuggers
+     * @doctitle Debugger Actions
+     * @docsidebar Debuggers
+     * @docdescription Debugger actions are useful for simulating bots in isolation from the rest of the inst.
+     * @docname os.createDebugger
+     * @docid os.createDebugger-normal
+     */
+    function _createDebugger_normal(
+        options?: NormalDebuggerOptions
+    ): Promise<NormalDebugger> {
+        return null;
+    }
+
+    /**
+     * Creates a pausable debug environment that can be used to simulate bots in isolation from the rest of the inst.
+     * Returns a promise that resolves with an object that contains all of the action functions.
+     *
+     * One of the special things about debug environments is that the bots in the environment are totally isolated from regular bots.
+     * This means that functions like {@link getbots-filters} can only access bots that have been created in the debugger and actions like {@link os.toast} don't do anything automatically.
+     * This can be useful for automated testing where you want to see what some bots will do without actually letting them do anything.
+     *
+     * Pausable debuggers allow you to set pause triggers (also known as breakpoints) that temporarily stop the debugger at a specific location in a listener and allows you to inspect the current state of the script. Pausable debuggers work like normal debuggers, except that some specific functions return promises instead of a result. This is because those functions can trigger user code that could trigger a pause. When this is possible, the debugger returns a promise to your host code so you can properly handle the pause. (See the examples below for more information)
+     *
+     * The returned object can be used to create/find bots in the debug environment and simulate interactions. The debug environment also contains several functions that make it easy to observe what has happened inside the environment and therefore determine if everything was performed correctly.
+     *
+     * @param options the options that should be used to configure the debugger.
+     *
+     * @example Create a pausable debugger
+     * const debug = await os.createDebugger({
+     *     pausable: true
+     * });
+     *
+     * // Register a listener that gets called whenever a pause happens in this debugger.
+     * debug.onPause(pause => {
+     *     // Get the current stack frame from the pause
+     *     const currentFrame = pause.callStack[pause.callStack.length - 1];
+     *
+     *     // Set the abc variable to 999
+     *     currentFrame.setVariableValue('abc', 999);
+     *
+     *     // Resume execution after the pause.
+     *     debug.resume(pause);
+     * });
+     *
+     * // Because the debugger is pausable, the create() function returns a promise
+     * // because it calls @onCreate which could cause a pause trigger to be hit.
+     * const debuggerBot = await debug.create({
+     *     test: '@let abc = 123; os.toast(abc);'
+     * });
+     *
+     * // Set a pause trigger in the "test" script of the bot we just created
+     * // at line 1 column 16
+     * const trigger = debug.setPauseTrigger(debuggerBot, 'test', {
+     *     lineNumber: 1,
+     *     columnNumber: 16
+     * });
+     *
+     * // Send a shout. Just like the create() function above, we recieve a promise that we can await.
+     * await debug.shout('test');
+     *
+     * // Get the resulting actions from the debugger
+     * // and perform the first one. This should be the os.toast(), but instead of printing 123,
+     * // it should print 999 because we changed the value of abc during the debugger pause.
+     * const actions = debug.getCommonActions();
+     * action.perform(actions[0]);
+     *
+     * @dochash actions/debuggers
+     * @docname os.createDebugger
+     * @docid os.createDebugger-pausable
+     */
+    function _createDebugger_pausable(
+        options: PausableDebuggerOptions
+    ): Promise<PausableDebugger> {
+        return null;
+    }
+
+    /**
+     * Gets the debugger that is currently executing the script. Returns null if the script is not running in a debugger.
+     *
+     * @example Get the debugger that this script is running in
+     * const debug = os.getExecutingDebugger();
+     * console.log(debug);
+     *
+     * @dochash actions/debuggers
+     * @docname os.getExecutingDebugger
+     */
+    function _getExecutingDebugger(): Debugger {
+        return null;
+    }
+
+    /**
+     * Attaches the given debugger to the CasualOS frontend. This causes the given debugger to be treated like another inst that has been loaded simultaneously with the current inst. This feature makes it useful for inspecting the bots in a debugger or even for setting up a sandbox that you control.
+     *
+     * Note that because debuggers are entirely separate environments, the debugger gets its own configBot and portal bots. This means that in order for bots to show up in the portals, you need to set the corresponding portal on the debugger's configBot. For portals that are stored in the URL (like the gridPortal), this is done automatically. But for other portals (like the miniGridPortal or the wrist portals), you need to manage this manually.
+     *
+     * Returns a promise that resolves when the debugger has been attached.
+     *
+     * @param debug the debugger that you want to be attached to the runtime.
+     * @param options the options that should be used to attach the debugger.
+     *
+     * @example Create and attach a debugger
+     * const debug = await os.createDebugger();
+     *
+     * // Create a bot in the debugger.
+     * debug.create({
+     *     home: true
+     *     label: 'Test'
+     * });
+     *
+     * // Attach the debugger to CasualOS.
+     * await os.attachDebugger(debug);
+     *
+     * @example Attach a debugger with a tag mapper that renames "home" tags to "testHome"
+     * const debug = await os.createDebugger();
+     *
+     * // Create a bot in the debugger.
+     * debug.create({
+     *     home: true
+     *     label: 'Test'
+     * });
+     *
+     * // Attach the debugger to CasualOS.
+     * // Because we're providing a tag mapper, the frontend won't see the "home" tag in debugger bots,
+     * // instead it will see "testHome" tags.
+     * await os.attachDebugger(debug, {
+     *     tagNameMapper: {
+     *         forward: (tag) => {
+     *             if (tag.startsWith('home')) {
+     *                 return `testHome${tag.slice('home'.length)}`;
+     *             }
+     *
+     *             return tag;
+     *         },
+     *         reverse: (tag) => {
+     *             if (tag.startsWith('testHome')) {
+     *                 return tag.slice('testHome'.length);
+     *             }
+     *
+     *             return tag;
+     *         }
+     *     }
+     * });
+     *
+     * @dochash actions/debuggers
+     * @docname os.attachDebugger
+     */
+    function _attachDebugger(
+        debug: Debugger,
+        options?: AttachDebuggerOptions
+    ): Promise<void> {
+        return null;
+    }
+
+    /**
+     * Detaches the given debugger from the CasualOS frontend. Returns a promise that resolves when the debugger has been detached.
+     *
+     * @param debug the debugger that should be detached.
+     *
+     * @example Detach a debugger
+     * const debug = await os.createDebugger();
+     *
+     * // Create a bot in the debugger.
+     * debug.create({
+     *     home: true
+     *     label: 'Test'
+     * });
+     *
+     * // Attach the debugger to CasualOS.
+     * await os.attachDebugger(debug);
+     *
+     * // Wait for 4 seconds
+     * await os.sleep(4000);
+     *
+     * await os.detachDebugger(debug);
+     */
+    function _detachDebugger(debug: Debugger): Promise<void> {
+        return null;
     }
 
     /**
