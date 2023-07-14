@@ -3092,6 +3092,9 @@ export interface RegisterPrefixAction extends AsyncAction {
 
 /**
  * Defines an interface that contains options for register prefix actions.
+ *
+ * @dochash types/core
+ * @docname RegisterPrefixOptions
  */
 export interface RegisterPrefixOptions {
     /**

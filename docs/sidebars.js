@@ -35,6 +35,7 @@ module.exports = {
                     items: [
                         'actions/audio',
                         'actions/animations',
+                        'actions/app',
                         'actions/barcodes',
                         'actions/bot-filters',
                         'actions/bytes',

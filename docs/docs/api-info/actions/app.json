@@ -1,189 +1,556 @@
 {
-    "hash": "extra-types",
-    "pageTitle": null,
-    "pageDescription": null,
-    "pageSidebarLabel": null,
+    "hash": "actions/app",
+    "pageTitle": "App Actions",
+    "pageDescription": "Actions for working with custom apps.",
+    "pageSidebarLabel": "App",
     "contents": [
         {
-            "id": 2689,
-            "order": 0,
-            "name": "Bot",
+            "id": 900,
+            "order": 9999,
+            "name": "os.compileApp",
             "reflection": {
-                "id": 2689,
-                "name": "Bot",
-                "kind": 256,
-                "kindString": "Interface",
+                "id": 900,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface for a bot.",
+                    "shortText": "Compiles the app with the given ID to display the given content. Each time this function is called, the app will be cleared and will display the specified content.",
+                    "text": "Used in tandem with [`os.registerApp(portalId, bot)`](ref:os.registerApp) to create custom apps.\n",
                     "tags": [
                         {
-                            "tag": "docid",
+                            "tag": "example",
                             "paramName": "",
-                            "text": "Bot"
+                            "text": "Display a header\nos.compileApp('myApp', <h1>Hello World!</h1>);\n"
                         },
                         {
-                            "tag": "docrename",
+                            "tag": "example",
                             "paramName": "",
-                            "text": "RuntimeBot\n"
+                            "text": "Display a button\nos.compileApp('myApp',\n    <button onClick={ () => os.toast(\"You clicked the button!\")}>\n        Click Me!\n    </button>\n);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Display an input box\nos.compileApp('myApp',\n    <input onInput={ (e) => { tags.label = e.target.value } } />\n);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Display a slider input\nos.compileApp('myApp',\n    <input type=\"range\" min=\"0\" max=\"100\" onInput={ (e) => { tags.label = e.target.value } } />\n);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/app"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.compileApp\n"
                         }
                     ]
                 },
-                "children": [
+                "parameters": [
                     {
-                        "id": 2690,
-                        "name": "id",
-                        "kind": 1024,
-                        "kindString": "Property",
+                        "id": 901,
+                        "name": "appId",
+                        "kind": 32768,
+                        "kindString": "Parameter",
                         "flags": {},
                         "comment": {
-                            "shortText": "The ID of the bot.",
+                            "shortText": "the ID of the app.",
                             "tags": []
                         },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-common/bots/Bot.ts",
-                                "line": 339,
-                                "character": 4
-                            }
-                        ],
                         "type": {
                             "type": "intrinsic",
                             "name": "string"
                         }
                     },
                     {
-                        "id": 2694,
-                        "name": "masks",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {
-                            "isOptional": true
-                        },
-                        "comment": {
-                            "shortText": "The set of tag masks that have been applied to the bot.",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-common/bots/Bot.ts",
-                                "line": 359,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "reference",
-                            "id": 2780,
-                            "name": "TagMasks"
-                        }
-                    },
-                    {
-                        "id": 2693,
-                        "name": "signatures",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {
-                            "isOptional": true
-                        },
-                        "comment": {
-                            "shortText": "The set of signatures that the bot contains.",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-common/bots/Bot.ts",
-                                "line": 354,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "reference",
-                            "name": "BotSignatures"
-                        }
-                    },
-                    {
-                        "id": 2691,
-                        "name": "space",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {
-                            "isOptional": true
-                        },
-                        "comment": {
-                            "shortText": "The space the bot lives in.",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-common/bots/Bot.ts",
-                                "line": 344,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "reference",
-                            "id": 2770,
-                            "name": "Space"
-                        }
-                    },
-                    {
-                        "id": 2692,
-                        "name": "tags",
-                        "kind": 1024,
-                        "kindString": "Property",
+                        "id": 902,
+                        "name": "content",
+                        "kind": 32768,
+                        "kindString": "Parameter",
                         "flags": {},
-                        "comment": {
-                            "shortText": "The set of tags that the bot contains.",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-common/bots/Bot.ts",
-                                "line": 349,
-                                "character": 4
-                            }
-                        ],
                         "type": {
-                            "type": "reference",
-                            "id": 2695,
-                            "name": "Tags"
+                            "type": "intrinsic",
+                            "name": "any"
                         }
                     }
                 ],
-                "groups": [
+                "type": {
+                    "type": "reference",
+                    "name": "SetAppOutputAction"
+                }
+            },
+            "comment": {
+                "shortText": "Compiles the app with the given ID to display the given content. Each time this function is called, the app will be cleared and will display the specified content.",
+                "text": "Used in tandem with {@link os.registerApp} to create custom apps.\n",
+                "tags": [
                     {
-                        "title": "Properties",
-                        "kind": 1024,
-                        "children": [
-                            2690,
-                            2694,
-                            2693,
-                            2691,
-                            2692
-                        ]
-                    }
-                ],
-                "sources": [
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Display a header\nos.compileApp('myApp', <h1>Hello World!</h1>);\n"
+                    },
                     {
-                        "fileName": "src/aux-common/bots/Bot.ts",
-                        "line": 335,
-                        "character": 17
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Display a button\nos.compileApp('myApp',\n    <button onClick={ () => os.toast(\"You clicked the button!\")}>\n        Click Me!\n    </button>\n);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Display an input box\nos.compileApp('myApp',\n    <input onInput={ (e) => { tags.label = e.target.value } } />\n);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Display a slider input\nos.compileApp('myApp',\n    <input type=\"range\" min=\"0\" max=\"100\" onInput={ (e) => { tags.label = e.target.value } } />\n);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/app"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.compileApp\n"
                     }
                 ]
             },
+            "group": null
+        },
+        {
+            "id": 1001,
+            "order": 9999,
+            "name": "os.listBuiltinTags",
+            "reflection": {
+                "id": 1001,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets the list of tag names that are built-in to CasualOS.",
+                    "text": "Includes tags like [`#color`](tags:color) and [`#gridPortal`](tags:gridPortal), but not user-defined ones like {@tag [dimension]}.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Get the list of built-in tags\nconst builtinTags = os.listBuiltinTags();\nos.toast(builtinTags);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/app"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.listBuiltinTags\n"
+                        }
+                    ]
+                },
+                "type": {
+                    "type": "array",
+                    "elementType": {
+                        "type": "intrinsic",
+                        "name": "string"
+                    }
+                }
+            },
             "comment": {
-                "shortText": "Defines an interface for a bot.",
+                "shortText": "Gets the list of tag names that are built-in to CasualOS.",
+                "text": "Includes tags like {@tag color} and {@tag gridPortal}, but not user-defined ones like {@tag [dimension]}.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Get the list of built-in tags\nconst builtinTags = os.listBuiltinTags();\nos.toast(builtinTags);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/app"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.listBuiltinTags\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 891,
+            "order": 9999,
+            "name": "os.registerApp",
+            "reflection": {
+                "id": 891,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Registers a app with the given ID, bot, and options. Returns a promise that resolves when the app has been registered. Can be called multiple times with new options to override previous options.",
+                    "text": "Once setup, CasualOS will send a [`@onAppSetup`](tags:@onAppSetup) whisper to the given bot.\nAt this point, you can call [`os.compileApp(appId, content)`](ref:os.compileApp) to set what the app displays.\n\nCasualOS will also define a global variable `{app}Bot` that points to the given bot.\n\nApps work by running the HTML you give it by calling [`os.compileApp(appId, content)`](ref:os.compileApp) with the HTML you want the app to show.\nSince JavaScript does not natively support HTML, we are using a special extension called [JSX](https://reactjs.org/docs/introducing-jsx.html) that adds HTML-like syntax to JavaScript.\n\nAt the most basic, JSX is like writing HTML inside JavaScript:\n\n```typescript\nlet htmlData = <div>\n    <h1>Hello World</h1>\n</div>;\n```\n\nSee this article for more information: [Introducing JSX](https://reactjs.org/docs/introducing-jsx.html)\n\nCasualOS also includes a helper called `html` that can be used to make HTML objects out of a string.\nYou can use it to convert a string into HTML by adding it before a string that uses backticks, like this:\n\n```typescript\nlet htmlData = html`\n    <div>\n        <h1>Hello World</h1>\n    </div>\n`;\n```\n\nJSX is the preferred way to write HTML inside JavaScript since CasualOS can properly detect it and add helpful features like syntax highlighting and error messages.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Setup a basic app\nawait os.registerApp('basicApp', thisBot);\nos.compileApp('basicApp', <h1>Hello World!</h1>);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Setup an app with a button\nawait os.registerApp('buttonApp', thisBot);\n\nos.compileApp('buttonApp',\n    <button onClick={ () => os.toast(\"You clicked the button!\") }>\n        Click Me!\n    </button>\n);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Setup an app with an input box\nawait os.registerApp('inputApp', thisBot);\n\nos.compileApp('inputApp',\n    <input onInput={ (e) => { tags.label = e.target.value } }>\n);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/app"
+                        },
+                        {
+                            "tag": "doctitle",
+                            "paramName": "",
+                            "text": "App Actions"
+                        },
+                        {
+                            "tag": "docsidebar",
+                            "paramName": "",
+                            "text": "App"
+                        },
+                        {
+                            "tag": "docdescription",
+                            "paramName": "",
+                            "text": "Actions for working with custom apps."
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.registerApp\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 892,
+                        "name": "portalId",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the ID that the app should have.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 893,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the bot that should represent the app. This is the bot that recieves the [`@onAppSetup`](tags:@onAppSetup) whisper and should generally be in charge of calling [`os.compileApp(appId, content)`](ref:os.compileApp).\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "reference",
+                                    "id": 2647,
+                                    "name": "Bot"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "intrinsic",
+                            "name": "void"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Registers a app with the given ID, bot, and options. Returns a promise that resolves when the app has been registered. Can be called multiple times with new options to override previous options.",
+                "text": "Once setup, CasualOS will send a {@tag @onAppSetup} whisper to the given bot.\nAt this point, you can call {@link os.compileApp} to set what the app displays.\n\nCasualOS will also define a global variable `{app}Bot` that points to the given bot.\n\nApps work by running the HTML you give it by calling {@link os.compileApp} with the HTML you want the app to show.\nSince JavaScript does not natively support HTML, we are using a special extension called [JSX](https://reactjs.org/docs/introducing-jsx.html) that adds HTML-like syntax to JavaScript.\n\nAt the most basic, JSX is like writing HTML inside JavaScript:\n\n```typescript\nlet htmlData = <div>\n    <h1>Hello World</h1>\n</div>;\n```\n\nSee this article for more information: [Introducing JSX](https://reactjs.org/docs/introducing-jsx.html)\n\nCasualOS also includes a helper called `html` that can be used to make HTML objects out of a string.\nYou can use it to convert a string into HTML by adding it before a string that uses backticks, like this:\n\n```typescript\nlet htmlData = html`\n    <div>\n        <h1>Hello World</h1>\n    </div>\n`;\n```\n\nJSX is the preferred way to write HTML inside JavaScript since CasualOS can properly detect it and add helpful features like syntax highlighting and error messages.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Setup a basic app\nawait os.registerApp('basicApp', thisBot);\nos.compileApp('basicApp', <h1>Hello World!</h1>);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Setup an app with a button\nawait os.registerApp('buttonApp', thisBot);\n\nos.compileApp('buttonApp',\n    <button onClick={ () => os.toast(\"You clicked the button!\") }>\n        Click Me!\n    </button>\n);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Setup an app with an input box\nawait os.registerApp('inputApp', thisBot);\n\nos.compileApp('inputApp',\n    <input onInput={ (e) => { tags.label = e.target.value } }>\n);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/app"
+                    },
+                    {
+                        "tagName": "doctitle",
+                        "paramName": "",
+                        "text": "App Actions"
+                    },
+                    {
+                        "tagName": "docsidebar",
+                        "paramName": "",
+                        "text": "App"
+                    },
+                    {
+                        "tagName": "docdescription",
+                        "paramName": "",
+                        "text": "Actions for working with custom apps."
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.registerApp\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 886,
+            "order": 9999,
+            "name": "os.registerTagPrefix",
+            "reflection": {
+                "id": 886,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Specifies that the given prefix should be used to indicate that the tag contains script content.\nUse this function to specify custom prefixes that function similarly to `@` or `🧬`.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Add 📖 as an script prefix.\nawait os.registerTagPrefix(\"📖\");\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Register some arbitrary text as a prefix.\nawait os.registerTagPrefix(\"myPrefix\");\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Register a prefix as JSX code.\nawait os.registerTagPrefix(\"🔺\", {\n    language: \"jsx\"\n});\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Register a prefix with a name.\nawait os.registerTagPrefix(\"🔺\", {\n    language: \"jsx\"\n    name: 'Triangle'\n});\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/app"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.registerTagPrefix\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 887,
+                        "name": "prefix",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the prefix that should indicate that the rest of the tag value is a script.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 888,
+                        "name": "options",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the options that should be used for the prefix.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2644,
+                            "name": "RegisterPrefixOptions"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "intrinsic",
+                            "name": "void"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Specifies that the given prefix should be used to indicate that the tag contains script content.\nUse this function to specify custom prefixes that function similarly to `@` or `🧬`.",
                 "text": "",
                 "tags": [
                     {
-                        "tagName": "docid",
+                        "tagName": "example",
                         "paramName": "",
-                        "text": "Bot"
+                        "text": "Add 📖 as an script prefix.\nawait os.registerTagPrefix(\"📖\");\n"
                     },
                     {
-                        "tagName": "docrename",
+                        "tagName": "example",
                         "paramName": "",
-                        "text": "RuntimeBot\n"
+                        "text": "Register some arbitrary text as a prefix.\nawait os.registerTagPrefix(\"myPrefix\");\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Register a prefix as JSX code.\nawait os.registerTagPrefix(\"🔺\", {\n    language: \"jsx\"\n});\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Register a prefix with a name.\nawait os.registerTagPrefix(\"🔺\", {\n    language: \"jsx\"\n    name: 'Triangle'\n});\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/app"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.registerTagPrefix\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 896,
+            "order": 9999,
+            "name": "os.unregisterApp",
+            "reflection": {
+                "id": 896,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Unregisters and removes the app with the given ID. Returns a promise that resolves when the app has been removed.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Unregister an app\nawait os.unregisterApp('myApp');\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/app"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.unregisterApp\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 897,
+                        "name": "appId",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the ID of the app.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "intrinsic",
+                            "name": "void"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Unregisters and removes the app with the given ID. Returns a promise that resolves when the app has been removed.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Unregister an app\nawait os.unregisterApp('myApp');\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/app"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.unregisterApp\n"
                     }
                 ]
             },

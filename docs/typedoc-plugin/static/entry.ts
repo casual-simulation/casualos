@@ -100,6 +100,7 @@ export {
     RoomTrackOptions,
     RoomRemoteOptions,
     SetRoomTrackOptions,
+    RegisterPrefixOptions
 } from '../../../src/aux-common/bots/BotEvents';
 export { 
     RuntimeBot,

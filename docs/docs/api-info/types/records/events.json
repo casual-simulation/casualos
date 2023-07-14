@@ -5,11 +5,11 @@
     "pageSidebarLabel": "Events",
     "contents": [
         {
-            "id": 2983,
+            "id": 2986,
             "order": 0,
             "name": "AddCountResult",
             "reflection": {
-                "id": 2983,
+                "id": 2986,
                 "name": "AddCountResult",
                 "kind": 4194304,
                 "kindString": "Type alias",
@@ -66,12 +66,12 @@
                     "types": [
                         {
                             "type": "reference",
-                            "id": 2984,
+                            "id": 2987,
                             "name": "AddCountSuccess"
                         },
                         {
                             "type": "reference",
-                            "id": 2989,
+                            "id": 2992,
                             "name": "AddCountFailure"
                         }
                     ]
@@ -121,11 +121,11 @@
             "group": "01-add"
         },
         {
-            "id": 2989,
+            "id": 2992,
             "order": 2,
             "name": "AddCountFailure",
             "reflection": {
-                "id": 2989,
+                "id": 2992,
                 "name": "AddCountFailure",
                 "kind": 256,
                 "kindString": "Interface",
@@ -157,7 +157,7 @@
                 },
                 "children": [
                     {
-                        "id": 2991,
+                        "id": 2994,
                         "name": "errorCode",
                         "kind": 1024,
                         "kindString": "Property",
@@ -212,7 +212,7 @@
                         }
                     },
                     {
-                        "id": 2992,
+                        "id": 2995,
                         "name": "errorMessage",
                         "kind": 1024,
                         "kindString": "Property",
@@ -234,7 +234,7 @@
                         }
                     },
                     {
-                        "id": 2990,
+                        "id": 2993,
                         "name": "success",
                         "kind": 1024,
                         "kindString": "Property",
@@ -257,9 +257,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2991,
-                            2992,
-                            2990
+                            2994,
+                            2995,
+                            2993
                         ]
                     }
                 ],
@@ -300,11 +300,11 @@
             "group": "01-add"
         },
         {
-            "id": 2984,
+            "id": 2987,
             "order": 1,
             "name": "AddCountSuccess",
             "reflection": {
-                "id": 2984,
+                "id": 2987,
                 "name": "AddCountSuccess",
                 "kind": 256,
                 "kindString": "Interface",
@@ -336,7 +336,7 @@
                 },
                 "children": [
                     {
-                        "id": 2988,
+                        "id": 2991,
                         "name": "countAdded",
                         "kind": 1024,
                         "kindString": "Property",
@@ -358,7 +358,7 @@
                         }
                     },
                     {
-                        "id": 2987,
+                        "id": 2990,
                         "name": "eventName",
                         "kind": 1024,
                         "kindString": "Property",
@@ -380,7 +380,7 @@
                         }
                     },
                     {
-                        "id": 2986,
+                        "id": 2989,
                         "name": "recordName",
                         "kind": 1024,
                         "kindString": "Property",
@@ -402,7 +402,7 @@
                         }
                     },
                     {
-                        "id": 2985,
+                        "id": 2988,
                         "name": "success",
                         "kind": 1024,
                         "kindString": "Property",
@@ -425,10 +425,10 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2988,
-                            2987,
-                            2986,
-                            2985
+                            2991,
+                            2990,
+                            2989,
+                            2988
                         ]
                     }
                 ],
@@ -469,11 +469,11 @@
             "group": "02-add"
         },
         {
-            "id": 2993,
+            "id": 2996,
             "order": 0,
             "name": "GetCountResult",
             "reflection": {
-                "id": 2993,
+                "id": 2996,
                 "name": "GetCountResult",
                 "kind": 4194304,
                 "kindString": "Type alias",
@@ -515,12 +515,12 @@
                     "types": [
                         {
                             "type": "reference",
-                            "id": 2994,
+                            "id": 2997,
                             "name": "GetCountSuccess"
                         },
                         {
                             "type": "reference",
-                            "id": 3000,
+                            "id": 3003,
                             "name": "GetCountFailure"
                         }
                     ]
@@ -555,11 +555,11 @@
             "group": "02-count"
         },
         {
-            "id": 2994,
+            "id": 2997,
             "order": 1,
             "name": "GetCountSuccess",
             "reflection": {
-                "id": 2994,
+                "id": 2997,
                 "name": "GetCountSuccess",
                 "kind": 256,
                 "kindString": "Interface",
@@ -591,7 +591,7 @@
                 },
                 "children": [
                     {
-                        "id": 2996,
+                        "id": 2999,
                         "name": "count",
                         "kind": 1024,
                         "kindString": "Property",
@@ -613,7 +613,7 @@
                         }
                     },
                     {
-                        "id": 2998,
+                        "id": 3001,
                         "name": "eventName",
                         "kind": 1024,
                         "kindString": "Property",
@@ -635,7 +635,7 @@
                         }
                     },
                     {
-                        "id": 2999,
+                        "id": 3002,
                         "name": "markers",
                         "kind": 1024,
                         "kindString": "Property",
@@ -660,7 +660,7 @@
                         }
                     },
                     {
-                        "id": 2997,
+                        "id": 3000,
                         "name": "recordName",
                         "kind": 1024,
                         "kindString": "Property",
@@ -682,7 +682,7 @@
                         }
                     },
                     {
-                        "id": 2995,
+                        "id": 2998,
                         "name": "success",
                         "kind": 1024,
                         "kindString": "Property",
@@ -705,11 +705,11 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2996,
-                            2998,
                             2999,
-                            2997,
-                            2995
+                            3001,
+                            3002,
+                            3000,
+                            2998
                         ]
                     }
                 ],
@@ -750,11 +750,11 @@
             "group": "02-count"
         },
         {
-            "id": 3000,
+            "id": 3003,
             "order": 2,
             "name": "GetCountFailure",
             "reflection": {
-                "id": 3000,
+                "id": 3003,
                 "name": "GetCountFailure",
                 "kind": 256,
                 "kindString": "Interface",
@@ -786,7 +786,7 @@
                 },
                 "children": [
                     {
-                        "id": 3002,
+                        "id": 3005,
                         "name": "errorCode",
                         "kind": 1024,
                         "kindString": "Property",
@@ -841,7 +841,7 @@
                         }
                     },
                     {
-                        "id": 3003,
+                        "id": 3006,
                         "name": "errorMessage",
                         "kind": 1024,
                         "kindString": "Property",
@@ -863,7 +863,7 @@
                         }
                     },
                     {
-                        "id": 3001,
+                        "id": 3004,
                         "name": "success",
                         "kind": 1024,
                         "kindString": "Property",
@@ -886,9 +886,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3002,
-                            3003,
-                            3001
+                            3005,
+                            3006,
+                            3004
                         ]
                     }
                 ],
@@ -929,11 +929,11 @@
             "group": "02-count"
         },
         {
-            "id": 3004,
+            "id": 3007,
             "order": 1,
             "name": "UpdateEventRecordResult",
             "reflection": {
-                "id": 3004,
+                "id": 3007,
                 "name": "UpdateEventRecordResult",
                 "kind": 4194304,
                 "kindString": "Type alias",
@@ -975,12 +975,12 @@
                     "types": [
                         {
                             "type": "reference",
-                            "id": 3005,
+                            "id": 3008,
                             "name": "UpdateEventRecordSuccess"
                         },
                         {
                             "type": "reference",
-                            "id": 3007,
+                            "id": 3010,
                             "name": "UpdateEventRecordFailure"
                         }
                     ]
@@ -1015,11 +1015,11 @@
             "group": "03-update"
         },
         {
-            "id": 3005,
+            "id": 3008,
             "order": 2,
             "name": "UpdateEventRecordSuccess",
             "reflection": {
-                "id": 3005,
+                "id": 3008,
                 "name": "UpdateEventRecordSuccess",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1051,7 +1051,7 @@
                 },
                 "children": [
                     {
-                        "id": 3006,
+                        "id": 3009,
                         "name": "success",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1074,7 +1074,7 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3006
+                            3009
                         ]
                     }
                 ],
@@ -1115,11 +1115,11 @@
             "group": "03-update"
         },
         {
-            "id": 3007,
+            "id": 3010,
             "order": 3,
             "name": "UpdateEventRecordFailure",
             "reflection": {
-                "id": 3007,
+                "id": 3010,
                 "name": "UpdateEventRecordFailure",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1151,7 +1151,7 @@
                 },
                 "children": [
                     {
-                        "id": 3009,
+                        "id": 3012,
                         "name": "errorCode",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1198,7 +1198,7 @@
                         }
                     },
                     {
-                        "id": 3010,
+                        "id": 3013,
                         "name": "errorMessage",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1216,7 +1216,7 @@
                         }
                     },
                     {
-                        "id": 3008,
+                        "id": 3011,
                         "name": "success",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1239,9 +1239,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            3009,
-                            3010,
-                            3008
+                            3012,
+                            3013,
+                            3011
                         ]
                     }
                 ],
@@ -1284,41 +1284,41 @@
     ],
     "references": {
         "Quaternion": "types/math/rotations",
-        "id-3176": "Quaternion",
+        "id-3179": "Quaternion",
         "Rotation": "types/math/rotations",
-        "id-3208": "Rotation",
+        "id-3211": "Rotation",
         "Vector2": "types/math/vectors",
-        "id-3042": "Vector2",
+        "id-3045": "Vector2",
         "Vector3": "types/math/vectors",
-        "id-3099": "Vector3",
+        "id-3102": "Vector3",
         "AddCountFailure": "types/records/events",
-        "id-2989": "AddCountFailure",
+        "id-2992": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-2984": "AddCountSuccess",
+        "id-2987": "AddCountSuccess",
         "AnimateTagOptions": "types/animation",
         "id-2103": "AnimateTagOptions",
         "AttachDebuggerOptions": "types/debuggers/common",
         "id-2478": "AttachDebuggerOptions",
         "CasualOSDevice": "types/os",
-        "id-2808": "CasualOSDevice",
+        "id-2811": "CasualOSDevice",
         "CasualOSVersion": "types/os",
-        "id-2800": "CasualOSVersion",
+        "id-2803": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
-        "id-3254": "AxisAndAngle",
+        "id-3257": "AxisAndAngle",
         "BotTagMasks": "types/core",
-        "id-2777": "BotTagMasks",
+        "id-2780": "BotTagMasks",
         "BotTags": "types/core",
-        "id-2692": "BotTags",
+        "id-2695": "BotTags",
         "BotState": "types/core",
-        "id-2790": "BotState",
+        "id-2793": "BotState",
         "CompiledBotListeners": "types/core",
-        "id-2771": "CompiledBotListeners",
+        "id-2774": "CompiledBotListeners",
         "ConvertGeolocationToWhat3WordsOptions": "types/os",
         "id-2513": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-2822": "CreatePublicRecordKeyFailure",
+        "id-2825": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-2818": "CreatePublicRecordKeySuccess",
+        "id-2821": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
         "id-2431": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
@@ -1334,15 +1334,15 @@
         "EnableXROptions": "types/os",
         "id-2587": "EnableXROptions",
         "EraseDataFailure": "types/records/data",
-        "id-2957": "EraseDataFailure",
+        "id-2960": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-2953": "EraseDataSuccess",
+        "id-2956": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-2979": "EraseFileFailure",
+        "id-2982": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-2975": "EraseFileSuccess",
+        "id-2978": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
-        "id-3257": "EulerAnglesRotation",
+        "id-3260": "EulerAnglesRotation",
         "FocusOnOptions": "types/os",
         "id-2547": "FocusOnOptions",
         "FocusOnRotation": "types/os",
@@ -1350,15 +1350,15 @@
         "FormAnimationData": "types/os",
         "id-2605": "FormAnimationData",
         "FromToRotation": "types/math/rotations",
-        "id-3251": "FromToRotation",
+        "id-3254": "FromToRotation",
         "GetCountFailure": "types/records/events",
-        "id-3000": "GetCountFailure",
+        "id-3003": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-2994": "GetCountSuccess",
+        "id-2997": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-2948": "GetDataFailure",
+        "id-2951": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-2939": "GetDataSuccess",
+        "id-2942": "GetDataSuccess",
         "GetRoomOptionsFailure": "types/os",
         "id-2193": "GetRoomOptionsFailure",
         "GetRoomOptionsSuccess": "types/os",
@@ -1372,17 +1372,17 @@
         "GetRoomTrackOptionsSuccess": "types/os",
         "id-2207": "GetRoomTrackOptionsSuccess",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3028": "GrantMarkerPermissionFailure",
+        "id-3031": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3026": "GrantMarkerPermissionSuccess",
+        "id-3029": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3014": "GrantRoleFailure",
+        "id-3017": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3012": "GrantRoleSuccess",
+        "id-3015": "GrantRoleSuccess",
         "ImageClassifierOptions": "types/os",
         "id-2565": "ImageClassifierOptions",
         "InstUpdate": "types/os",
-        "id-2813": "InstUpdate",
+        "id-2816": "InstUpdate",
         "JoinRoomFailure": "types/os",
         "id-2174": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os",
@@ -1392,11 +1392,11 @@
         "LeaveRoomSuccess": "types/os",
         "id-2180": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-2970": "ListDataFailure",
+        "id-2973": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-2962": "ListDataSuccess",
+        "id-2965": "ListDataSuccess",
         "LookRotation": "types/math/rotations",
-        "id-3274": "LookRotation",
+        "id-3277": "LookRotation",
         "MediaPermissionOptions": "types/os",
         "id-2584": "MediaPermissionOptions",
         "Debugger": "types/debuggers/debugger",
@@ -1404,9 +1404,9 @@
         "NormalDebuggerOptions": "types/debuggers/common",
         "id-2450": "NormalDebuggerOptions",
         "ParsedBotLink": "types/core",
-        "id-2796": "ParsedBotLink",
+        "id-2799": "ParsedBotLink",
         "PartialBotState": "types/core",
-        "id-2793": "PartialBotState",
+        "id-2796": "PartialBotState",
         "PausableDebugger": "types/debuggers/pausable-debugger",
         "id-2299": "PausableDebugger",
         "PausableDebuggerOptions": "types/debuggers/common",
@@ -1420,7 +1420,7 @@
         "PseudoRandomNumberGenerator": "types/core",
         "id-2480": "PseudoRandomNumberGenerator",
         "QuaternionRotation": "types/math/rotations",
-        "id-3267": "QuaternionRotation",
+        "id-3270": "QuaternionRotation",
         "RaycastRay": "types/os",
         "id-2167": "RaycastRay",
         "RaycastResult": "types/os",
@@ -1428,21 +1428,23 @@
         "RecordActionOptions": "types/records/extra",
         "id-2496": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-2934": "RecordDataFailure",
+        "id-2937": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-2930": "RecordDataSuccess",
+        "id-2933": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
         "id-2134": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
         "id-2130": "RecordFileSuccess",
+        "RegisterPrefixOptions": "types/core",
+        "id-2644": "RegisterPrefixOptions",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3035": "RevokeMarkerPermissionFailure",
+        "id-3038": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3033": "RevokeMarkerPermissionSuccess",
+        "id-3036": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3021": "RevokeRoleFailure",
+        "id-3024": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3019": "RevokeRoleSuccess",
+        "id-3022": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os",
         "id-2610": "RoomJoinOptions",
         "RoomOptions": "types/os",
@@ -1452,13 +1454,13 @@
         "RoomTrackOptions": "types/os",
         "id-2623": "RoomTrackOptions",
         "RuntimeBot": "types/core",
-        "id-2644": "RuntimeBot",
+        "id-2647": "RuntimeBot",
         "RuntimeBotLinks": "types/core",
-        "id-2783": "RuntimeBotLinks",
+        "id-2786": "RuntimeBotLinks",
         "RuntimeBotVars": "types/core",
-        "id-2780": "RuntimeBotVars",
+        "id-2783": "RuntimeBotVars",
         "SequenceRotation": "types/math/rotations",
-        "id-3265": "SequenceRotation",
+        "id-3268": "SequenceRotation",
         "SetRoomOptionsSuccess": "types/os",
         "id-2198": "SetRoomOptionsSuccess",
         "SetRoomTrackOptions": "types/os",
@@ -1490,9 +1492,9 @@
         "UnsuccessfulGeolocation": "types/os",
         "id-2509": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3007": "UpdateEventRecordFailure",
+        "id-3010": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3005": "UpdateEventRecordSuccess",
+        "id-3008": "UpdateEventRecordSuccess",
         "UploadedFile": "types/os",
         "id-2160": "UploadedFile",
         "WebhookOptions": "types/web",
@@ -1500,29 +1502,29 @@
         "WebhookResult": "types/web",
         "id-2096": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-2983": "AddCountResult",
+        "id-2986": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-2827": "AvailablePermissions",
+        "id-2830": "AvailablePermissions",
         "BarcodeFormat": "types/os",
         "id-2564": "BarcodeFormat",
         "BotFilter": "types/core",
         "id-2118": "BotFilter",
         "BotSpace": "types/core",
-        "id-2767": "BotSpace",
+        "id-2770": "BotSpace",
         "CameraType": "types/os",
         "id-2563": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-2817": "CreatePublicRecordKeyResult",
+        "id-2820": "CreatePublicRecordKeyResult",
         "EraseDataResult": "types/records/data",
-        "id-2952": "EraseDataResult",
+        "id-2955": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-2974": "EraseFileResult",
+        "id-2977": "EraseFileResult",
         "Geolocation": "types/os",
         "id-2498": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-2993": "GetCountResult",
+        "id-2996": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-2938": "GetDataResult",
+        "id-2941": "GetDataResult",
         "GetRoomOptionsResult": "types/os",
         "id-2188": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os",
@@ -1530,29 +1532,29 @@
         "GetRoomTrackOptionsResult": "types/os",
         "id-2206": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3025": "GrantMarkerPermissionResult",
+        "id-3028": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3011": "GrantRoleResult",
+        "id-3014": "GrantRoleResult",
         "JoinRoomResult": "types/os",
         "id-2170": "JoinRoomResult",
         "LeaveRoomResult": "types/os",
         "id-2179": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-2961": "ListDataResult",
+        "id-2964": "ListDataResult",
         "Mod": "types/core",
         "id-2113": "Mod",
         "PortalType": "types/core",
-        "id-2799": "PortalType",
+        "id-2802": "PortalType",
         "PossiblePauseTriggerStates": "types/debuggers/common",
         "id-2417": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-2929": "RecordDataResult",
+        "id-2932": "RecordDataResult",
         "RecordFileResult": "types/records/files",
         "id-2129": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3032": "RevokeMarkerPermissionResult",
+        "id-3035": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3018": "RevokeRoleResult",
+        "id-3021": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os",
         "id-2197": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os",
@@ -1562,7 +1564,7 @@
         "TagFilter": "types/core",
         "id-2114": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3004": "UpdateEventRecordResult",
+        "id-3007": "UpdateEventRecordResult",
         "animateTag-byOptions": "actions/utility",
         "id-364": "animateTag-byOptions",
         "getbot-tag": "actions/data",
@@ -1791,6 +1793,8 @@
         "id-636": "os.closeImageClassifier",
         "os.closeQRCodeScanner": "actions/barcodes",
         "id-607": "os.closeQRCodeScanner",
+        "os.compileApp": "actions/app",
+        "id-900": "os.compileApp",
         "os.convertGeolocationToWhat3Words": "actions/os",
         "id-1163": "os.convertGeolocationToWhat3Words",
         "os.countEvents": "actions/records",
@@ -1925,6 +1929,8 @@
         "id-851": "os.joinRoom",
         "os.leaveRoom": "actions/rooms",
         "id-856": "os.leaveRoom",
+        "os.listBuiltinTags": "actions/app",
+        "id-1001": "os.listBuiltinTags",
         "os.listData": "actions/records",
         "id-1094": "os.listData",
         "os.listFormAnimations": "actions/animations",
@@ -1967,6 +1973,10 @@
         "id-1112": "os.recordFile",
         "os.recordManualApprovalData": "actions/records",
         "id-1075": "os.recordManualApprovalData",
+        "os.registerApp": "actions/app",
+        "id-891": "os.registerApp",
+        "os.registerTagPrefix": "actions/app",
+        "id-886": "os.registerTagPrefix",
         "os.remoteCount": "actions/os",
         "id-1244": "os.remoteCount",
         "os.remotes": "actions/os",
@@ -2025,6 +2035,8 @@
         "id-1248": "os.totalRemoteCount",
         "os.unloadInst": "actions/os",
         "id-663": "os.unloadInst",
+        "os.unregisterApp": "actions/app",
+        "id-896": "os.unregisterApp",
         "os.version": "actions/os",
         "id-522": "os.version",
         "os.vrSupported": "actions/xr",

@@ -7194,13 +7194,34 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Specifies that the given prefix should be interpreted as code.
-     * @param prefix The prefix that code tags should start with.
-     * @param options The options for the prefix.
+     * Specifies that the given prefix should be used to indicate that the tag contains script content.
+     * Use this function to specify custom prefixes that function similarly to `@` or `🧬`.
+     * @param prefix the prefix that should indicate that the rest of the tag value is a script.
+     * @param options the options that should be used for the prefix.
+     *
+     * @example Add 📖 as an script prefix.
+     * await os.registerTagPrefix("📖");
+     *
+     * @example Register some arbitrary text as a prefix.
+     * await os.registerTagPrefix("myPrefix");
+     *
+     * @example Register a prefix as JSX code.
+     * await os.registerTagPrefix("🔺", {
+     *     language: "jsx"
+     * });
+     *
+     * @example Register a prefix with a name.
+     * await os.registerTagPrefix("🔺", {
+     *     language: "jsx"
+     *     name: 'Triangle'
+     * });
+     *
+     * @dochash actions/app
+     * @docname os.registerTagPrefix
      */
     function registerPrefix(
         prefix: string,
-        options: RegisterPrefixOptions = {}
+        options?: RegisterPrefixOptions
     ): Promise<void> {
         if (typeof prefix !== 'string') {
             throw new Error('A prefix must be provided.');
@@ -7211,7 +7232,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             prefix,
             {
                 language: options?.language || 'javascript',
-                name: options.name,
+                name: options?.name,
             },
             task.taskId
         );
@@ -7219,9 +7240,67 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Registers a custom portal for the given bot with the given options.
-     * @param portalId The ID of the portal.
-     * @param bot The bot that should be used to render the portal.
+     * Registers a app with the given ID, bot, and options. Returns a promise that resolves when the app has been registered. Can be called multiple times with new options to override previous options.
+     *
+     * Once setup, CasualOS will send a {@tag @onAppSetup} whisper to the given bot.
+     * At this point, you can call {@link os.compileApp} to set what the app displays.
+     *
+     * CasualOS will also define a global variable `{app}Bot` that points to the given bot.
+     *
+     * Apps work by running the HTML you give it by calling {@link os.compileApp} with the HTML you want the app to show.
+     * Since JavaScript does not natively support HTML, we are using a special extension called [JSX](https://reactjs.org/docs/introducing-jsx.html) that adds HTML-like syntax to JavaScript.
+     *
+     * At the most basic, JSX is like writing HTML inside JavaScript:
+     *
+     * ```typescript
+     * let htmlData = <div>
+     *     <h1>Hello World</h1>
+     * </div>;
+     * ```
+     *
+     * See this article for more information: [Introducing JSX](https://reactjs.org/docs/introducing-jsx.html)
+     *
+     * CasualOS also includes a helper called `html` that can be used to make HTML objects out of a string.
+     * You can use it to convert a string into HTML by adding it before a string that uses backticks, like this:
+     *
+     * ```typescript
+     * let htmlData = html`
+     *     <div>
+     *         <h1>Hello World</h1>
+     *     </div>
+     * `;
+     * ```
+     *
+     * JSX is the preferred way to write HTML inside JavaScript since CasualOS can properly detect it and add helpful features like syntax highlighting and error messages.
+     *
+     * @param portalId the ID that the app should have.
+     * @param bot the bot that should represent the app. This is the bot that recieves the {@tag @onAppSetup} whisper and should generally be in charge of calling {@link os.compileApp}.
+     *
+     * @example Setup a basic app
+     * await os.registerApp('basicApp', thisBot);
+     * os.compileApp('basicApp', <h1>Hello World!</h1>);
+     *
+     * @example Setup an app with a button
+     * await os.registerApp('buttonApp', thisBot);
+     *
+     * os.compileApp('buttonApp',
+     *     <button onClick={ () => os.toast("You clicked the button!") }>
+     *         Click Me!
+     *     </button>
+     * );
+     *
+     * @example Setup an app with an input box
+     * await os.registerApp('inputApp', thisBot);
+     *
+     * os.compileApp('inputApp',
+     *     <input onInput={ (e) => { tags.label = e.target.value } }>
+     * );
+     *
+     * @dochash actions/app
+     * @doctitle App Actions
+     * @docsidebar App
+     * @docdescription Actions for working with custom apps.
+     * @docname os.registerApp
      */
     function registerApp(portalId: string, bot: Bot | string): Promise<void> {
         const task = context.createTask();
@@ -7230,27 +7309,69 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Unregisters a custom portal for the given bot with the given options.
-     * @param portalId The ID of the portal.
+     * Unregisters and removes the app with the given ID. Returns a promise that resolves when the app has been removed.
+     *
+     * @param appId the ID of the app.
+     *
+     * @example Unregister an app
+     * await os.unregisterApp('myApp');
+     *
+     * @dochash actions/app
+     * @docname os.unregisterApp
      */
-    function unregisterApp(portalId: string): Promise<void> {
+    function unregisterApp(appId: string): Promise<void> {
         const task = context.createTask();
-        const event = unregisterCustomApp(portalId, task.taskId);
+        const event = unregisterCustomApp(appId, task.taskId);
         return addAsyncAction(task, event);
     }
 
     /**
-     * Sets the output of the given portal.
-     * @param portalId The ID of the portal.
-     * @param output The output that the portal should display.
+     * Compiles the app with the given ID to display the given content. Each time this function is called, the app will be cleared and will display the specified content.
+     *
+     * Used in tandem with {@link os.registerApp} to create custom apps.
+     *
+     * @param appId the ID of the app.
+     * @param output the content that the app should display.
+     *
+     * @example Display a header
+     * os.compileApp('myApp', <h1>Hello World!</h1>);
+     *
+     * @example Display a button
+     * os.compileApp('myApp',
+     *     <button onClick={ () => os.toast("You clicked the button!")}>
+     *         Click Me!
+     *     </button>
+     * );
+     *
+     * @example Display an input box
+     * os.compileApp('myApp',
+     *     <input onInput={ (e) => { tags.label = e.target.value } } />
+     * );
+     *
+     * @example Display a slider input
+     * os.compileApp('myApp',
+     *     <input type="range" min="0" max="100" onInput={ (e) => { tags.label = e.target.value } } />
+     * );
+     *
+     * @dochash actions/app
+     * @docname os.compileApp
      */
-    function setAppContent(portalId: string, output: any): SetAppOutputAction {
-        const event = setAppOutput(portalId, output);
+    function setAppContent(appId: string, content: any): SetAppOutputAction {
+        const event = setAppOutput(appId, content);
         return addAction(event);
     }
 
     /**
-     * Gets the list of built-in CasualOS tags.
+     * Gets the list of tag names that are built-in to CasualOS.
+     *
+     * Includes tags like {@tag color} and {@tag gridPortal}, but not user-defined ones like {@tag [dimension]}.
+     *
+     * @example Get the list of built-in tags
+     * const builtinTags = os.listBuiltinTags();
+     * os.toast(builtinTags);
+     *
+     * @dochash actions/app
+     * @docname os.listBuiltinTags
      */
     function listBuiltinTags(): string[] {
         return KNOWN_TAGS.slice();
