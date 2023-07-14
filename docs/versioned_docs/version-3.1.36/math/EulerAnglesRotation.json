@@ -1,0 +1,176 @@
+{
+  "id": 216,
+  "name": "EulerAnglesRotation",
+  "kind": 256,
+  "kindString": "Interface",
+  "flags": {},
+  "comment": {
+    "shortText": "Defines an interface that represents an Euler Angles rotation."
+  },
+  "children": [
+    {
+      "id": 217,
+      "name": "euler",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 482,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "reflection",
+        "declaration": {
+          "id": 218,
+          "name": "__type",
+          "kind": 65536,
+          "kindString": "Type literal",
+          "flags": {},
+          "children": [
+            {
+              "id": 223,
+              "name": "extrinsic",
+              "kind": 1024,
+              "kindString": "Property",
+              "flags": {
+                "isOptional": true
+              },
+              "comment": {
+                "shortText": "Whether the euler angles are extrinsic.\nDefaults to false."
+              },
+              "sources": [
+                {
+                  "fileName": "src/aux-common/math/Rotation.ts",
+                  "line": 508,
+                  "character": 8
+                }
+              ],
+              "type": {
+                "type": "intrinsic",
+                "name": "boolean"
+              }
+            },
+            {
+              "id": 222,
+              "name": "order",
+              "kind": 1024,
+              "kindString": "Property",
+              "flags": {
+                "isOptional": true
+              },
+              "comment": {
+                "shortText": "The order that the rotations should be applied in.\nDefaults to XYZ."
+              },
+              "sources": [
+                {
+                  "fileName": "src/aux-common/math/Rotation.ts",
+                  "line": 502,
+                  "character": 8
+                }
+              ],
+              "type": {
+                "type": "intrinsic",
+                "name": "string"
+              }
+            },
+            {
+              "id": 219,
+              "name": "x",
+              "kind": 1024,
+              "kindString": "Property",
+              "flags": {},
+              "comment": {
+                "shortText": "The amount to rotate around the X axis."
+              },
+              "sources": [
+                {
+                  "fileName": "src/aux-common/math/Rotation.ts",
+                  "line": 486,
+                  "character": 8
+                }
+              ],
+              "type": {
+                "type": "intrinsic",
+                "name": "number"
+              }
+            },
+            {
+              "id": 220,
+              "name": "y",
+              "kind": 1024,
+              "kindString": "Property",
+              "flags": {},
+              "comment": {
+                "shortText": "The amount to rotate around the Y axis."
+              },
+              "sources": [
+                {
+                  "fileName": "src/aux-common/math/Rotation.ts",
+                  "line": 491,
+                  "character": 8
+                }
+              ],
+              "type": {
+                "type": "intrinsic",
+                "name": "number"
+              }
+            },
+            {
+              "id": 221,
+              "name": "z",
+              "kind": 1024,
+              "kindString": "Property",
+              "flags": {},
+              "comment": {
+                "shortText": "The amount to rotate around the Z axis."
+              },
+              "sources": [
+                {
+                  "fileName": "src/aux-common/math/Rotation.ts",
+                  "line": 496,
+                  "character": 8
+                }
+              ],
+              "type": {
+                "type": "intrinsic",
+                "name": "number"
+              }
+            }
+          ],
+          "groups": [
+            {
+              "title": "Properties",
+              "kind": 1024,
+              "children": [
+                223,
+                222,
+                219,
+                220,
+                221
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Properties",
+      "kind": 1024,
+      "children": [
+        217
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "src/aux-common/math/Rotation.ts",
+      "line": 481,
+      "character": 17
+    }
+  ]
+}
