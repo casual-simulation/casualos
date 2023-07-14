@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/casual-apiary",
-    "version": "3.1.35",
+    "version": "3.1.36",
     "description": "Serverless CasualOS",
     "main": "index.js",
     "types": "index.d.ts",
@@ -20,8 +20,8 @@
         "test": "jest --verbose"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^3.1.35",
-        "@casual-simulation/aux-vm": "^3.1.35",
+        "@casual-simulation/aux-common": "^3.1.36",
+        "@casual-simulation/aux-vm": "^3.1.36",
         "@casual-simulation/causal-trees": "^3.1.29",
         "@casual-simulation/fast-json-stable-stringify": "^3.1.11",
         "base64-js": "^1.5.1",
