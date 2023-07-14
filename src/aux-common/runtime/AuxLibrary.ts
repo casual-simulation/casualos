@@ -3406,9 +3406,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             },
 
             crypto: {
+                _hash_raw,
+                _hash_string,
+
                 hash,
                 sha256,
                 sha512,
+
+                _hmac_string,
+                _hmac_raw,
                 hmac,
                 hmacSha256,
                 hmacSha512,
@@ -12412,6 +12418,101 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Calculates the [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.
+     * Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.
+     *
+     * Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.
+     *
+     * Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+     *
+     * @param algorithm a string indicating which algorithm should be used for calculating the hash.
+     * The following algorithms are supported:
+     *
+     * -    `"sha256"` (equivalent to {@link crypto.sha256})
+     * -    `"sha512"` (equivalent to {@link crypto.sha512})
+     * -    `"sha1"` (not recommended unless needed for compatability with external software)
+     *
+     * @param format a string indicating which format the hash should be output as.
+     * The following formats are supported:
+     *
+     * -    `"hex"`  - The output should be a hexadecimal string.
+     * -    `"base64"` - The output should be a Base64 string.
+     *
+     * @param data the pieces of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated before hashing.
+     *
+     * @example Calculate the SHA-256 hex hash of a string
+     * const hash = crypto.hash("sha256", "hex", "hello, world");
+     * os.toast(hash);
+     *
+     * @example Calculate the SHA-256 base64 hash of a string
+     * const hash = crypto.hash("sha256", "base64", "hello, world");
+     * os.toast(hash);
+     *
+     * @example Calculate the SHA-512 hex hash of a string
+     * const hash = crypto.hash("sha512", "hex", "hello, world");
+     * os.toast(hash);
+     *
+     * @example Calculate the SHA-1 hex hash of a string
+     * const hash = crypto.hash("sha1", "hex", "hello, world");
+     * os.toast(hash);
+     *
+     * @dochash actions/crypto
+     * @doctitle Crypto Actions
+     * @docsidebar Crypto
+     * @docdescription Crypto actions are used for general cryptographic operations like hashing, encryption, and decryption.
+     * @docname crypto.hash
+     * @docid crypto.hash-string
+     */
+    function _hash_string(
+        algorithm: 'sha256' | 'sha512' | 'sha1',
+        format: 'hex' | 'base64',
+        ...data: unknown[]
+    ): string {
+        return null;
+    }
+
+    /**
+     * Calculates the [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result as a raw array of bytes.
+     * Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.
+     *
+     * Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.
+     *
+     * Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+     *
+     * @param algorithm a string indicating which algorithm should be used for calculating the hash.
+     * The following algorithms are supported:
+     *
+     * -    `"sha256"` (equivalent to {@link crypto.sha256})
+     * -    `"sha512"` (equivalent to {@link crypto.sha512})
+     * -    `"sha1"` (not recommended unless needed for compatability with external software)
+     *
+     * @param format a string indicating which format the hash should be output as.
+     * The following formats are supported:
+     *
+     * -    `"raw"`  - The output should be a [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array)
+     *
+     * @param data the pieces of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated before hashing.
+     *
+     * @example Calculate the SHA-256 raw hash of a string
+     * const hash = crypto.hash("sha256", "raw", "hello, world");
+     * console.log(hash);
+     *
+     * @dochash actions/crypto
+     * @doctitle Crypto Actions
+     * @docsidebar Crypto
+     * @docdescription Crypto actions are used for general cryptographic operations like hashing, encryption, and decryption.
+     * @docname crypto.hash
+     * @docid crypto.hash-raw
+     */
+    function _hash_raw(
+        algorithm: 'sha256' | 'sha512' | 'sha1',
+        format: 'raw',
+        ...data: unknown[]
+    ): Uint8Array {
+        return null;
+    }
+
+    /**
      * Calculates the cryptographic hash for the given data and returns the result in the specified format.
      * @param algorithm The algorithm that should be used to hash the data.
      * @param format The format that the hash should be returned in.
@@ -12469,6 +12570,102 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         }
 
         return _hash(h, data, format as any);
+    }
+
+    /**
+     * Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.
+     * Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.
+     *
+     * HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.
+     *
+     * Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+     *
+     * @param algorithm a string indicating which algorithm should be used for calculating the hash.
+     * The following algorithms are supported:
+     *
+     * -    `"hmac-sha256"` (equivalent to {@link crypto.hmacSha256})
+     * -    `"hmac-sha512"` (equivalent to {@link crypto.hmacSha512})
+     * -    `"hmac-sha1"` (not recommended unless needed for compatability with external software)
+     *
+     * @param format a string indicating which format the hash should be output as.
+     * The following formats are supported:
+     *
+     * -    `"hex"`  - The output should be a hexadecimal string.
+     * -    `"base64"` - The output should be a Base64 string.
+     *
+     * @param key the secret key that should be used to create the HMAC.
+     *
+     * @param data the pieces of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated before hashing.
+     *
+     * @example Calculate the hexadecimal HMAC-SHA256 of a string with a key
+     * const hash = crypto.hmac("hmac-sha256", "hex", "key", "hello, world");
+     * os.toast(hash);
+     *
+     * @example Calculate the Base64 HMAC-SHA256 of a string with a key
+     * const hash = crypto.hmac("hmac-sha256", "base64", "key", "hello, world");
+     * os.toast(hash);
+     *
+     * @example Calculate the hexadecimal HMAC-SHA512 of a string with a key
+     * const hash = crypto.hmac("hmac-sha512", "hex", "key", "hello, world");
+     * os.toast(hash);
+     *
+     * @example Calculate the hexadecimal HMAC-SHA1 of a string with a key
+     * const hash = crypto.hmac("hmac-sha1", "hex", "key", "hello, world");
+     * os.toast(hash);
+     *
+     * @dochash actions/crypto
+     * @docname crypto.hmac
+     * @docid crypto.hmac-string
+     */
+    function _hmac_string(
+        algorithm: 'sha256' | 'sha512' | 'sha1',
+        format: 'hex' | 'base64',
+        key: string,
+        ...data: unknown[]
+    ): string {
+        return null;
+    }
+
+    /**
+     * Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.
+     * Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.
+     *
+     * HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.
+     *
+     * Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+     *
+     * @param algorithm a string indicating which algorithm should be used for calculating the hash.
+     * The following algorithms are supported:
+     *
+     * -    `"hmac-sha256"` (equivalent to {@link crypto.hmacSha256})
+     * -    `"hmac-sha512"` (equivalent to {@link crypto.hmacSha512})
+     * -    `"hmac-sha1"` (not recommended unless needed for compatability with external software)
+     *
+     * @param format a string indicating which format the hash should be output as.
+     * The following formats are supported:
+     *
+     * -    `"hex"`  - The output should be a hexadecimal string.
+     * -    `"base64"` - The output should be a Base64 string.
+     *
+     * @param key the secret key that should be used to create the HMAC.
+     *
+     * @param data the pieces of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated before hashing.
+     *
+     * @example Calculate the raw HMAC-SHA256 of a string with a key
+     * const hash = crypto.hmac("hmac-sha256", "raw", "key", "hello, world");
+     * console.log(hash);
+     *
+     * @dochash actions/crypto
+     * @docname crypto.hmac
+     * @docid crypto.hmac-raw
+     */
+    function _hmac_raw(
+        algorithm: 'sha256' | 'sha512' | 'sha1',
+        format: 'raw',
+        key: string,
+        ...data: unknown[]
+    ): Uint8Array {
+        return null;
     }
 
     /**
@@ -12550,8 +12747,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Calculates the SHA-256 hash of the given data.
-     * @param data The data that should be hashed.
+     * Calculates the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
+     * Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
+     *
+     * Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.
+     *
+     * Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+     *
+     * @param data a piece of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated before hashing.
+     *
+     * @example Calculate the hash of a string.
+     * const hash = crypto.sha256("hello, world");
+     * os.toast(hash);
+     *
+     * @example Calculate the hash of an object.
+     * const hash = crypto.sha256({
+     *     abc: "def"
+     * });
+     * os.toast(hash);
+     *
+     * @dochash actions/crypto
+     * @docname crypto.sha256
      */
     function sha256(...data: unknown[]): string {
         let sha = hashSha256();
@@ -12559,8 +12775,27 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Calculates the SHA-512 hash of the given data.
-     * @param data The data that should be hashed.
+     * Calculates the [SHA-512](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
+     * Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
+     *
+     * Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.
+     *
+     * Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+     *
+     * @param data a piece of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated before hashing.
+     *
+     * @example Calculate the hash of a string.
+     * const hash = crypto.sha512("hello, world");
+     * os.toast(hash);
+     *
+     * @example Calculate the hash of an object.
+     * const hash = crypto.sha512({
+     *     abc: "def"
+     * });
+     * os.toast(hash);
+     *
+     * @dochash actions/crypto
+     * @docname crypto.sha512
      */
     function sha512(...data: unknown[]): string {
         let sha = hashSha512();
@@ -12568,10 +12803,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Calculates the HMAC SHA-256 hash of the given data.
-     * HMAC is commonly used to verify that a message was created with a specific key.
-     * @param key The key that should be used to sign the message.
-     * @param data The data that should be hashed.
+     * Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
+     * Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
+     *
+     * HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.
+     *
+     * Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+     *
+     * @param key the secret key that should be used to create the HMAC.
+     * @param data the data that should be included in the hash. If multiple pieces of data are included, they will be concatenated before hashing.
+     *
+     * @example Calculate the HMAC of a string with a key.
+     * const hash = crypto.hmacSha256("key", "hello, world");
+     * os.toast(hash);
+     *
+     * @example Calculate the HMAC of an object.
+     * const hash = crypto.hmacSha256("key", {
+     *     abc: "def"
+     * });
+     * os.toast(hash);
+     *
+     * @dochash actions/crypto
+     * @docname crypto.hmacSha256
      */
     function hmacSha256(key: string, ...data: unknown[]): string {
         if (!hasValue(key)) {
@@ -12585,10 +12838,28 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Calculates the HMAC SHA-512 hash of the given data.
-     * HMAC is commonly used to verify that a message was created with a specific key.
-     * @param key The key that should be used to sign the message.
-     * @param data The data that should be hashed.
+     * Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-215](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.
+     * Returns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.
+     *
+     * HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.
+     *
+     * Supports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.
+     *
+     * @param key the secret key that should be used to create the HMAC.
+     * @param data the data that should be included in the hash. If multiple pieces of data are included, they will be concatenated before hashing.
+     *
+     * @example Calculate the HMAC of a string with a key.
+     * const hash = crypto.hmacSha512("key", "hello, world");
+     * os.toast(hash);
+     *
+     * @example Calculate the HMAC of an object.
+     * const hash = crypto.hmacSha512("key", {
+     *     abc: "def"
+     * });
+     * os.toast(hash);
+     *
+     * @dochash actions/crypto
+     * @docname crypto.hmacSha512
      */
     function hmacSha512(key: string, ...data: unknown[]): string {
         if (!hasValue(key)) {
@@ -12602,22 +12873,33 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Encrypts the given data with the given secret and returns the result.
+     * [Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given secret key (also commonly known as a password) and returns the result.
+     *
+     * Use the {@link crypto.decrypt} function to decrypt the data.
+     *
+     * _Always use a strong and unique secret key._
+     * Use a password manager such as LastPass or 1Password to help you create and keep track of them.
      *
      * @description Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to
      * help you create and keep track of them.
      *
-     * Assuming the above, this method will return a string of encrypted data that is confidential (unreadable without the secret),
-     * reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the secret was used to encrypt the data).
+     * Assuming a strong secret, this method will return a string of encrypted data that is confidential (unreadable without the key), reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that this specific key was used to encrypt the data).
      *
-     * As a consequence, encrypting the same data with the same secret will produce different results.
-     * This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
+     * As a consequence, encrypting the same data with the same key will produce different results. This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
      *
-     * Encrypts the given data using an authenticated encryption mechanism
-     * based on XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
+     * Encrypts the given data using an authenticated encryption mechanism based on [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher)
+     * and [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).
+     * Additionally uses [scrypt](https://en.wikipedia.org/wiki/Scrypt) for [password-based key derivation](https://en.wikipedia.org/wiki/Key_derivation_function).
      *
-     * @param secret The secret to use to secure the data.
-     * @param data The data to encrypt.
+     * @param secret the secret that should be used to encrypt the data. Use a strong an unique secret for maximum security.
+     * @param data the string data that should be encrypted.
+     *
+     * @example Encrypt the given data and toast it.
+     * const encrypted = crypto.encrypt("key", "hello, world");
+     * os.toast(encrypted);
+     *
+     * @dochash actions/crypto
+     * @docname crypto.encrypt
      */
     function encrypt(secret: string, data: string): string {
         if (typeof data === 'string') {
@@ -12630,11 +12912,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Decrypts the given data using the given secret and returns the result.
-     * If the data was unable to be decrypted, null will be returned.
+     * [Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given secret key (also commonly known as a password) and returns the result.
      *
-     * @param secret The secret to use to decrypt the data.
-     * @param data The data to decrypt.
+     * Use the {@link crypto.encrypt} function to encrypt the data.
+     *
+     * @param secret the secret that should be used to decrypt the data. This should be the same key that was used to encrypt the data.
+     * @param data the data from {@link crypto.encrypt} that should be decrypted.
+     *
+     * @example Decrypt the given data and toast it.
+     * const decrypted = crypto.decrypt("key", "v1.vWUhsdfiKkxXi9Rt+BBNbcP/TiHZpxUL.iikPvWN6rNncY3j045gM0268MoRi0NNf.IpWYgzXQmjRea4MNLDXB1GmrinWLSSOMw+NfqeE=");
+     * os.toast(decrypted);
      */
     function decrypt(secret: string, data: string): string {
         if (typeof data === 'string') {
@@ -12650,45 +12937,57 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Creates a new keypair that can be used for encrypting and decrypting data.
+     * Creates a keypair that can be used to [encrypt and decrypt](https://en.wikipedia.org/wiki/Encryption) data.
      *
-     * @description Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to
-     * help you create and keep track of them.
+     * Use {@link crypto.asymmetric.encrypt} and {@link crypto.asymmetric.decrypt} to encrypt and decrypt the data.
      *
-     * Keypairs are made up of a private key and a public key.
-     * The public key is a special value that can be used to encrypt data and
-     * the private key is a related value that can be used to decrypt data that was encrypted by the public key.
+     * Always use a strong and unique secret key. Use a password manager such as LastPass or 1Password to help you create and keep track of them.
      *
-     * The private key is called "private" because it is encrypted using the given secret
-     * while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
+     * Keypairs are made up of a private key and a public key The public key is a special value that can be used to encrypt data and the private key is a related value that can be used to decrypt data that was encrypted by the private key.
      *
-     * Note that both the private and public keys are randomly generated, so while the public key is unencrypted, it won't be able to be used by someone else unless
-     * they have access to it.
+     * The private key is called "private" because it is encrypted using the given secret while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
      *
-     * @param secret The secret that should be used to encrypt the private key.
+     * Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless they have access to it.
+     *
+     * @param secret the secret that should be used to encrypt the private key of the keypair.
+     *
+     * @example Create a keypair and toast it.
+     * const keypair = crypto.asymmetric.keypair("my secret");
+     * os.toast(keypair);
+     *
+     * @dochash actions/crypto
+     * @docname crypto.asymmetric.keypair
      */
     function asymmetricKeypair(secret: string): string {
         return realAsymmetricKeypair(secret);
     }
 
     /**
-     * Encrypts the given data with the given keypair and returns the result.
+     * [Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given keypair's public key and returns the result.
      *
-     * @description This method will return a string of encrypted data that is confidential (unreadable without the keypair and secret used to encrypt it),
-     * reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the keypair was used to encrypt the data).
+     * Use the {@link crypto.asymmetric.decrypt} function to decrypt the data.
      *
-     * As a consequence, encrypting the same data with the same keypair will produce different results.
-     * This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
+     * This method will return a string of encrypted data that is confidential (unreadable without the keypair and secret used to encrypt it), reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the keypair was used to encrypt the data).
      *
-     * Encrypts the given data using an asymmetric authenticated encryption mechanism
-     * based on x25519 (A key-exchange mechanism), XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
+     * As a consequence, encrypting the same data with the same keypair will produce different results. This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.
+     *
+     * Encrypts the given data using an asymmetric authenticated encryption mechanism based on x25519 (A key-exchange mechanism), XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).
      *
      * You may notice that this function does not need a secret to decrypt the keypair.
-     * This is because the public key of the keypair is used to encrypt the data.
-     * Due to how asymmetric encryption works, only the encrypted private key will be able to decrypt the data.
+     * This is because the public key of the keypair is used to encrypt the data. Due to how asymmetric encryption works, only the encrypted private key will be able to decrypt the data.
      *
-     * @param keypair The keypair to use to secure the data.
-     * @param data The data to encrypt.
+     * Encrypts the given data using an authenticated encryption mechanism based on [x25519](https://en.wikipedia.org/wiki/Curve25519), [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher) and [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).
+     *
+     * @param keypair the keypair that should be used to encrypt the data.
+     * @param data the string data that should be encrypted.
+     *
+     * @example Encrypt the given data and toast it.
+     * const keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';
+     * const encrypted = crypto.asymmetric.encrypt(keypair, "hello, world");
+     * os.toast(encrypted);
+     *
+     * @dochash actions/crypto
+     * @docname crypto.asymmetric.encrypt
      */
     function asymmetricEncrypt(keypair: string, data: string): string {
         if (typeof data === 'string') {
@@ -12701,12 +13000,23 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Decrypts the given data with the given keypair and secret and returns the result.
-     * If the data was unable to be decrypted, null will be returned.
+     * [Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data with the given keypair and secret and returns the result.
+     * If the data was unable to be decrypted (e.g. if the secret was wrong or the data was tampered with), `null` will be returned.
      *
-     * @param keypair The keypair to use to decrypt the data.
-     * @param secret The secret to use to decrypt the keypair's private key.
-     * @param data The data to decrypt.
+     * Use the {@link crypto.asymmetric.encrypt} function to encrypt the data.
+     *
+     * @param keypair the keypair that should be used to decrypt the data.
+     * @param secret the secret that should be used to decrypt the keypair's private key.
+     * @param data the data that should be decrypted.
+     *
+     * @example Decrypt the given data and toast it.
+     * const keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';
+     * const encrypted = 'vA1.3CC1r0fJP2tPS09C8YrTDQCJmgFczxprNEcMOzY4JD4=.3oiC7nG6N4jblFhBd4usrdid/w4Phwg/.X/9mbZYOGBjRX7YAO4D2zYJvZ3c=';
+     * const decrypted = crypto.asymmetric.decrypt(keypair, 'password', encrypted);
+     * os.toast(decrypted);
+     *
+     * @dochash actions/crypto
+     * @docname crypto.asymmetric.decrypt
      */
     function asymmetricDecrypt(
         keypair: string,
@@ -12726,39 +13036,61 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Creates a new keypair that can be used for signing and verifying data.
+     * Creates a keypair that can be used to [digitially sign](https://en.wikipedia.org/wiki/Digital_signature) and verify data.
      *
-     * @description
-     * Keypairs are made up of a private key and a public key.
-     * The private key is a special value that can be used to create digital signatures and
-     * the public key is a related value that can be used to verify that a digitital signature was created by the private key.
+     * Digital signatures are generally useful for verifying that a piece of data was sent from someone who had access to the keypair.
      *
-     * The private key is called "private" because it is encrypted using the given secret
-     * while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
+     * Use {@link crypto.sign} and {@link crypto.verify} to sign and verify the data.
      *
-     * Note that both the private and public keys are randomly generated, so while the public key is unencrypted, it won't be able to be used by someone else unless
-     * they have access to it.
+     * Keypairs are made up of a private key and a public key. The private key is a special value that can be used to create digital signatures and the public key is a related value that can be used to verify that a digitital signature was created by the private key.
      *
-     * @param secret The secret that should be used to encrypt the private key.
+     * The private key is called "private" because it is encrypted using the given secret while the public key is called "public" because it is not encrypted so anyone can use it if they have access to it.
+     *
+     * Note that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless they have access to it.
+     *
+     * @param secret the secret that should be used to encrypt the private key of the keypair.
+     *
+     * @example Create a keypair and toast it.
+     * const keypair = crypto.keypair("my secret");
+     * os.toast(keypair);
+     *
+     * @dochash actions/crypto
+     * @docname crypto.keypair
      */
     function keypair(secret: string): string {
         return realKeypair(secret);
     }
 
     /**
-     * Creates a digital signature for the given data using the private key from the given keypair.
+     * Calculates the digital signature for the given data using the given keypair and secret (also commonly known as a password).
      *
-     * @description
-     * Digital signatures are used to verifying the authenticity and integrity of data.
+     * Use {@link crypto.keypair} to create a keypair that can be used to create signatures.
      *
-     * This works by leveraging asymetric encryption but in reverse.
-     * If we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that
-     * the data was encrypted (i.e. signed) by the corresponding private key. And since the public key is available to everyone but the private
-     * key is only usable when you have the secret, we can use this to prove that a particular piece of data was signed by whoever knows the secret.
+     * Use {@link crypto.verify} to validate signatures.
      *
-     * @param keypair The keypair that should be used to create the signature.
-     * @param secret The secret that was used when creating the keypair. Used to decrypt the private key.
-     * @param data The data to sign.
+     * Digital signatures are used to verify the authenticity and integrity of data.
+     *
+     * This works by leveraging asymmetric encryption but in reverse.
+     *
+     * If we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that the data was encrypted (i.e. signed) by the corresponding private key.
+     *
+     * And since the public key is available to everyone but the private key is only usable when you have the secret, we can use this to prove that a particular piece of data was signed by whoever knows the secret.
+     *
+     * Note that because of how digital signatures work, signing the same data with the same keypair will produce the same signature.
+     *
+     * @param keypair the keypair that should be used to sign the data.
+     * @param secret the secret that was used to encrypt the private key of the keypair.
+     * @param data the string data that should be signed.
+     *
+     * @example Create a signature for the string "hello".
+     * // Returned from crypto.keypair()
+     * const keypair = "vK1.ugqz8HzhaQhfORc8Coc6WVHTciMrcmfSUuw99KLRJYk=.djEuak1QNkF5MHFzMTBFMXRHamR1ZFhqTmRTV3AycjVyZUsudzFjSWZWVUFQVUdqK3hTM000NUduYUlNQ094SUhCTUEuanYrZEQwNVJFVGo3UzRPSklQQUkxc3U0anZjUmxrTEM2OW1BajkyMkxxdTFZd2sxNzV5QW9Dc3gwU3RENlQ0cmtNTVk4b2Zna2JRVTIrQmp5OUIrTTJsaFI2ajcyb0lJdmdSWkRXRU9lZE09";
+     *
+     * const signature = crypto.sign(keypair, "my secret", "hello");
+     * os.toast(signature);
+     *
+     * @dochash actions/crypto
+     * @docname crypto.sign
      */
     function sign(keypair: string, secret: string, data: string): string {
         if (typeof data === 'string') {
@@ -12771,10 +13103,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Validates that the given signature for the given data was created by the given keypair.
-     * @param keypair The keypair that should be used to validate the signature.
-     * @param signature The signature that was returned by the sign() operation.
-     * @param data The data that was used in the sign() operation.
+     * Validates that the given signature was created by the given keypair for the given data. Returns true if the signature is valid. Returns false otherwise.
+     *
+     * Use {@link crypto.keypair} to create a keypair that can be used to create signatures.
+     *
+     * Use {@link crypto.sign} to create signatures.
+     *
+     * @param keypair the keypair that was used to create the signature.
+     * @param signature the signature that was returned from {@link crypto.sign}.
+     * @param data the data that was used in the call to {@link crypto.sign}.
      */
     function verify(keypair: string, signature: string, data: string): boolean {
         if (typeof data === 'string') {

@@ -50,6 +50,7 @@ module.exports = {
                         'actions/animations',
                         'actions/rooms',
                         'actions/math',
+                        'actions/crypto',
                         'actions/debuggers',
                     ]
                 },

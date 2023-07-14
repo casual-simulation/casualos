@@ -213,3 +213,9 @@ export {
     RevokeMarkerPermissionFailure,
 
 } from '../../../src/aux-records';
+
+export {
+    isEncrypted,
+    isAsymmetricKeypair,
+    isAsymmetricEncrypted,
+} from '../../../src/crypto/Encryption';
