@@ -445,7 +445,7 @@ export function ClassPropertyMember(props) {
             <Heading as='h3' id={props.link}>
                 <code>{name}{props.member.flags.isOptional ? '?' : ''}: {typeDetail}</code>
             </Heading>
-            <p>{props.member.comment?.shortText}</p>
+            <ReflectionDiscription reflection={props.member} references={props.references} />
             {extraDetail}
             {/* <pre><code>{JSON.stringify(props.member)}</code></pre> */}
         </div>
@@ -581,8 +581,8 @@ export function ObjectProperty(props) {
             <Heading as='h3' id={props.link}>
                 <code>{props.property.name}: <TypeLink type={props.property.type} references={props.references}/></code>
             </Heading>
-            <p>{props.property.comment?.shortText}</p>
-            <pre><code>{JSON.stringify(props.property, undefined, 2)}</code></pre>
+            <ReflectionDiscription reflection={props.property} references={props.references} />
+            {/* <pre><code>{JSON.stringify(props.property, undefined, 2)}</code></pre> */}
         </div>
     )
 }

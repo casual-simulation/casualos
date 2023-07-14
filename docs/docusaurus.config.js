@@ -27,6 +27,12 @@ module.exports = {
       },
       items: [
         {
+            type: 'docsVersionDropdown',
+            position: 'left',
+            dropdownItemsAfter: [],
+            dropdownActiveClassDisabled: true,
+        },
+        {
           href: 'https://github.com/casual-simulation/casualos',
           label: 'GitHub',
           position: 'right',
@@ -131,6 +137,17 @@ module.exports = {
           // Please change this to your repo.
           editUrl:
             'https://github.com/casual-simulation/casualos/tree/develop/docs',
+
+          lastVersion: 'current',
+          versions: {
+            'current': {
+                label: 'Current',
+             },
+             '3.1.36': {
+                label: 'v3.1.36',
+                path: '3.1.36'
+             }
+          },
         },
         blog: false, // Disable the blog plugin
         theme: {
@@ -183,6 +200,10 @@ module.exports = {
                 {
                     to: '/learn/scripting', // string
                     from: '/docs/learn/scripting', // string | string[]
+                },
+                {
+                    to: '/actions/data', // string
+                    from: '/actions', // string | string[]
                 },
             ],
         },

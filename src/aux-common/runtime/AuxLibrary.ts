@@ -1704,6 +1704,9 @@ export interface DebuggerTagMaskUpdate extends DebuggerTagUpdate {
  * Defines an interface that contains options for attaching a debugger.
  *
  * @dochash types/debuggers/common
+ * @doctitle Common
+ * @docsidebar Common
+ * @docdescription Defines common interfaces related to debuggers.
  * @docname AttachDebuggerOptions
  */
 export interface AttachDebuggerOptions {
@@ -3774,7 +3777,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @dochash actions/data
      * @doctitle Data Actions
-     * @docsidebar Data Actions
+     * @docsidebar Data
      * @docdescription The Data Actions are used to get and set data on bots.
      * @docgroup 01-data-actions
      * @docgrouptitle Data Actions
@@ -3941,7 +3944,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param tags The tags that should be included in the output mod.
      * @returns The mod that was loaded from the data.
      *
-     * @dochash actions/mod-actions
+     * @dochash actions/mods
      * @docgroup 01-mod-actions
      * @docname getMod
      */
@@ -10268,7 +10271,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @dochash actions/web
      * @doctitle Web Actions
-     * @docsidebar Web Actions
+     * @docsidebar Web
      * @docdescription Web actions allow you to send HTTP requests to other servers.
      * @docgroup 01-web-actions
      * @docname web.get
@@ -10580,7 +10583,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @dochash actions/utility
      * @doctitle Utility Actions
-     * @docsidebar Utility Actions
+     * @docsidebar Utility
      * @docdescription Utility actions make it easy to perform various tasks.
      * @docgroup 01-utility-actions
      *
@@ -10641,7 +10644,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @dochash actions/utility
      * @doctitle Utility Actions
-     * @docsidebar Utility Actions
+     * @docsidebar Utility
      * @docdescription Utility actions make it easy to perform various tasks.
      * @docgroup 01-utility-actions
      *
@@ -13667,9 +13670,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *    name: "bob"
      * });
      *
-     * @dochash actions/mod-actions
+     * @dochash actions/mods
      * @doctitle Mod Actions
-     * @docsidebar Mod Actions
+     * @docsidebar Mods
      * @docgroup 01-mod-actions
      * @docname applyMod
      */
@@ -13714,7 +13717,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     name: 'bob'
      * });
      *
-     * @dochash actions/mod-actions
+     * @dochash actions/mods
      * @docgroup 01-mod-actions
      * @docname subtractMods
      */
@@ -14286,7 +14289,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * @dochash actions/event
      * @doctitle Event Actions
-     * @docsidebar Event
+     * @docsidebar Events
      * @docdescription Event actions are used to send events to bots.
      * @docgroup 01-event-actions
      * @docname shout

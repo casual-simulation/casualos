@@ -29,40 +29,46 @@ module.exports = {
             items: [
                 'tags',
                 'listen-tags',
-                'variables',
                 {
                     type: 'category',
                     label: 'Actions',
                     items: [
-                        'actions/data',
-                        'actions/bot-filters',
-                        'actions/mod-actions',
-                        'actions/web',
-                        'actions/utility',
-                        'actions/event',
-                        'actions/time',
-                        'actions/records',
-                        'actions/os',
-                        'actions/barcodes',
-                        'actions/files',
-                        'actions/portals',
                         'actions/audio',
                         'actions/animations',
-                        'actions/rooms',
-                        'actions/math',
-                        'actions/crypto',
+                        'actions/barcodes',
+                        'actions/bot-filters',
                         'actions/bytes',
+                        'actions/crypto',
+                        'actions/data',
                         'actions/debuggers',
+                        'actions/event',
+                        'actions/files',
+                        'actions/math',
+                        'actions/mods',
+                        'actions/os',
+                        'actions/portals',
+                        'actions/records',
+                        'actions/rooms',
+                        'actions/time',
+                        'actions/utility',
+                        'actions/web',
                     ]
                 },
                 {
                     type: 'category',
                     label: 'Types',
                     items: [
-                        'types/core',
-                        'types/os',
-                        'types/web',
                         'types/animation',
+                        'types/core',
+                        {
+                            type: 'category',
+                            label: 'Debuggers',
+                            items: [
+                                'types/debuggers/common',
+                                'types/debuggers/debugger',
+                                'types/debuggers/pausable-debugger',
+                            ]
+                        },
                         {
                             type: 'category',
                             label: 'Math',
@@ -71,6 +77,8 @@ module.exports = {
                                 'types/math/rotations'
                             ]
                         },
+                        'types/os',
+                        'types/permissions',
                         {
                             type: 'category',
                             label: 'Records',
@@ -84,21 +92,12 @@ module.exports = {
                                 'types/records/extra'
                             ]
                         },
-                        'types/permissions',
-                        {
-                            type: 'category',
-                            label: 'Debuggers',
-                            items: [
-                                'types/debuggers/common',
-                                'types/debuggers/debugger',
-                                'types/debuggers/pausable-debugger',
-                            ]
-                        },
+                        'types/web',
                     ]
                 },
+                'variables',
                 'glossary',
                 'ab-1',
-                
             ]
         },
     ],
