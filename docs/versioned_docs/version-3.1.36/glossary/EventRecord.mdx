@@ -1,0 +1,14 @@
+import { GlossaryRef } from './index';
+import { ActionLink } from '../components.mdx';
+
+A Event Record is a way to track how many times a particular action/event occurred and is stored in a <GlossaryRef term='record'>record</GlossaryRef> and is accessed by a name.
+Every event record starts with a count of 0 and can be incremented by using <ActionLink action='os.recordEvent(recordKey, eventName)'/> and the current count can be accessed with
+<ActionLink action='os.countEvents(recordNameOrKey, eventName)'/>.
+
+Event records are most useful for basic analytics.
+
+#### See Also
+
+-   <GlossaryRef term='record'>Record</GlossaryRef>
+-   <ActionLink action='os.recordEvent(recordKey, eventName)'/>
+-   <ActionLink action='os.countEvents(recordNameOrKey, eventName)'/>

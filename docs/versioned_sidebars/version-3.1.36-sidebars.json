@@ -1,0 +1,40 @@
+{
+  "docs": [
+    {
+      "type": "category",
+      "label": "The Basics",
+      "items": [
+        "learn/pillars",
+        "learn/getting-started",
+        "learn/scripting",
+        {
+          "type": "category",
+          "label": "Records",
+          "items": [
+            "learn/records/security"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "category",
+      "label": "Reference",
+      "items": [
+        "tags",
+        "listen-tags",
+        "variables",
+        "actions",
+        "glossary",
+        "ab-1",
+        {
+          "type": "category",
+          "label": "Math",
+          "items": [
+            "math/vectors",
+            "math/rotations"
+          ]
+        }
+      ]
+    }
+  ]
+}
