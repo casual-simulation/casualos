@@ -1040,8 +1040,8 @@ describe('AuxLibrary', () => {
                 bot1.tags.redY = 2;
                 bot1.tags.redSortOrder = 100;
 
-                expect(typeof filter.sort).toBe('function');
-                expect(filter.sort(bot1)).toBe(100);
+                expect(typeof (filter as any).sort).toBe('function');
+                expect((filter as any).sort(bot1)).toBe(100);
             });
 
             it('should support sorting when the dimension tag starts with a hashtag', () => {
@@ -1052,8 +1052,8 @@ describe('AuxLibrary', () => {
                 bot1.tags.redY = 2;
                 bot1.tags.redSortOrder = 100;
 
-                expect(typeof filter.sort).toBe('function');
-                expect(filter.sort(bot1)).toBe(100);
+                expect(typeof (filter as any).sort).toBe('function');
+                expect((filter as any).sort(bot1)).toBe(100);
             });
 
             it('should return true for bots that are close to the target position', () => {
@@ -1129,8 +1129,8 @@ describe('AuxLibrary', () => {
                 bot2.tags.redY = 2;
                 bot2.tags.redSortOrder = 100;
 
-                expect(typeof filter.sort).toBe('function');
-                expect(filter.sort(bot2)).toEqual(100);
+                expect(typeof (filter as any).sort).toBe('function');
+                expect((filter as any).sort(bot2)).toEqual(100);
             });
 
             it('should support sorting when the dimension tag starts with a hashtag', () => {
@@ -1144,8 +1144,8 @@ describe('AuxLibrary', () => {
                 bot2.tags.redY = 2;
                 bot2.tags.redSortOrder = 100;
 
-                expect(typeof filter.sort).toBe('function');
-                expect(filter.sort(bot2)).toEqual(100);
+                expect(typeof (filter as any).sort).toBe('function');
+                expect((filter as any).sort(bot2)).toEqual(100);
             });
 
             it('should return true for bots that are close to each other', () => {
@@ -1231,8 +1231,8 @@ describe('AuxLibrary', () => {
                     bot2.tags.redY = y;
                     bot2.tags.redSortOrder = 100;
 
-                    expect(typeof filter.sort).toEqual('function');
-                    expect(filter.sort(bot2)).toEqual(100);
+                    expect(typeof (filter as any).sort).toEqual('function');
+                    expect((filter as any).sort(bot2)).toEqual(100);
                 });
             });
 
@@ -1330,7 +1330,7 @@ describe('AuxLibrary', () => {
                 it('should return a function without a sort function', () => {
                     const filter = library.api.neighboring(bot1, 'red');
 
-                    expect(typeof filter.sort).toEqual('undefined');
+                    expect(typeof (filter as any).sort).toEqual('undefined');
                 });
             });
         });
@@ -1424,7 +1424,7 @@ describe('AuxLibrary', () => {
                     (b) => false,
                     (b) => true
                 );
-                expect(typeof filter.sort).toEqual('undefined');
+                expect(typeof (filter as any).sort).toEqual('undefined');
             });
         });
 
@@ -5825,7 +5825,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if no key is provided', async () => {
                 expect(() => {
                     library.api.os.eraseData(null, 'address');
-                }).toThrow('A recordKey must be provided.');
+                }).toThrow('recordKeyOrName must be provided.');
             });
 
             it('should throw an error if no address is provided', async () => {
@@ -5837,7 +5837,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if recordKey is not a string', async () => {
                 expect(() => {
                     library.api.os.eraseData({} as string, 'address');
-                }).toThrow('recordKey must be a string.');
+                }).toThrow('recordKeyOrName must be a string.');
             });
 
             it('should throw an error if address is not a string', async () => {
@@ -5884,7 +5884,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if no key is provided', async () => {
                 expect(() => {
                     library.api.os.eraseManualApprovalData(null, 'address');
-                }).toThrow('A recordKey must be provided.');
+                }).toThrow('recordKeyOrName must be provided.');
             });
 
             it('should throw an error if no address is provided', async () => {
@@ -5899,7 +5899,7 @@ describe('AuxLibrary', () => {
                         {} as string,
                         'address'
                     );
-                }).toThrow('recordKey must be a string.');
+                }).toThrow('recordKeyOrName must be a string.');
             });
 
             it('should throw an error if address is not a string', async () => {
@@ -6039,13 +6039,13 @@ describe('AuxLibrary', () => {
             it('should throw an error if no recordKey is provided', async () => {
                 expect(() => {
                     library.api.os.recordFile(null, 'data');
-                }).toThrow('A recordKey must be provided.');
+                }).toThrow('recordKeyOrName must be provided.');
             });
 
             it('should throw an error if recordKey is not a string', async () => {
                 expect(() => {
                     library.api.os.recordFile({} as string, 'data');
-                }).toThrow('recordKey must be a string.');
+                }).toThrow('recordKeyOrName must be a string.');
             });
 
             it('should convert bots to copiable values', async () => {
@@ -6306,7 +6306,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if no key is provided', async () => {
                 expect(() => {
                     library.api.os.eraseFile(null, 'address');
-                }).toThrow('A recordKey must be provided.');
+                }).toThrow('recordKeyOrName must be provided.');
             });
 
             it('should throw an error if no file URL is provided', async () => {
@@ -6320,7 +6320,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if recordKey is not a string', async () => {
                 expect(() => {
                     library.api.os.eraseData({} as string, 'address');
-                }).toThrow('recordKey must be a string.');
+                }).toThrow('recordKeyOrName must be a string.');
             });
         });
 
@@ -6361,7 +6361,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if no key is provided', async () => {
                 expect(() => {
                     library.api.os.recordEvent(null, 'address');
-                }).toThrow('A recordKey must be provided.');
+                }).toThrow('recordKeyOrName must be provided.');
             });
 
             it('should throw an error if no event name is provided', async () => {
@@ -6373,7 +6373,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if key is not a string', async () => {
                 expect(() => {
                     library.api.os.recordEvent({} as string, 'address');
-                }).toThrow('recordKey must be a string.');
+                }).toThrow('recordKeyOrName must be a string.');
             });
 
             it('should throw an error if event name is not a string', async () => {

@@ -8057,20 +8057,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
     /**
      * Erases the data stored in the given record at the given address.
-     * @param recordKey The key that should be used to access the record.
+     * @param recordKeyOrName The key that should be used to access the record.
      * @param address The address that the data should be erased from.
      * @param endpoint The records endpoint that should be queried. Optional.
      */
     function baseEraseData(
-        recordKey: string,
+        recordKeyOrName: string,
         address: string,
         requiresApproval: boolean,
         endpoint: string = null
     ): Promise<EraseDataResult> {
-        if (!hasValue(recordKey)) {
-            throw new Error('A recordKey must be provided.');
-        } else if (typeof recordKey !== 'string') {
-            throw new Error('recordKey must be a string.');
+        if (!hasValue(recordKeyOrName)) {
+            throw new Error('recordKeyOrName must be provided.');
+        } else if (typeof recordKeyOrName !== 'string') {
+            throw new Error('recordKeyOrName must be a string.');
         }
 
         if (!hasValue(address)) {
@@ -8085,7 +8085,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         const task = context.createTask();
         const event = eraseRecordData(
-            recordKey,
+            recordKeyOrName,
             address,
             requiresApproval,
             options,
