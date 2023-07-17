@@ -498,6 +498,68 @@ describe('DataRecordsController', () => {
             });
         });
 
+        it('should be able to create some data if the record name matches the user ID', async () => {
+            const result = (await manager.recordData(
+                userId,
+                'address',
+                'data',
+                userId,
+                null,
+                null,
+                ['secret']
+            )) as RecordDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.recordName).toBe(userId);
+            expect(result.address).toBe('address');
+
+            await expect(store.getData(userId, 'address')).resolves.toEqual({
+                success: true,
+                data: 'data',
+                publisherId: userId,
+                subjectId: userId,
+                updatePolicy: true,
+                deletePolicy: true,
+                markers: ['secret'],
+            });
+        });
+
+        it('should be update some data if the record name matches the user ID', async () => {
+            await store.setData(
+                userId,
+                'address',
+                123,
+                'testUser',
+                'testUser',
+                null,
+                null,
+                ['secret']
+            );
+
+            const result = (await manager.recordData(
+                userId,
+                'address',
+                'data',
+                userId,
+                null,
+                null
+            )) as RecordDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.recordName).toBe(userId);
+            expect(result.address).toBe('address');
+
+            await expect(store.getData(userId, 'address')).resolves.toEqual({
+                success: true,
+                data: 'data',
+                publisherId: userId,
+                subjectId: userId,
+                updatePolicy: true,
+                deletePolicy: true,
+                markers: ['secret'],
+            });
+        });
+
         it('should reject the request if the user does not have permission to create the data', async () => {
             policiesStore.policies['testRecord'] = {
                 ['secret']: {
@@ -749,6 +811,32 @@ describe('DataRecordsController', () => {
             expect(result.deletePolicy).toBe(true);
         });
 
+        it('should be able to retrieve secret data if the record name matches the user ID', async () => {
+            await store.setData(
+                userId,
+                'address',
+                'data',
+                'testUser',
+                'subjectId',
+                true,
+                true,
+                ['secret']
+            );
+
+            const result = (await manager.getData(
+                userId,
+                'address',
+                userId
+            )) as GetDataSuccess;
+
+            expect(result.success).toBe(true);
+            expect(result.data).toBe('data');
+            expect(result.publisherId).toBe('testUser');
+            expect(result.subjectId).toBe('subjectId');
+            expect(result.updatePolicy).toBe(true);
+            expect(result.deletePolicy).toBe(true);
+        });
+
         it('should be able to retrieve secret data with a record key', async () => {
             await store.setData(
                 'testRecord',
@@ -838,6 +926,40 @@ describe('DataRecordsController', () => {
             expect(result).toEqual({
                 success: true,
                 recordName: 'testRecord',
+                items: [
+                    {
+                        address: 'address/3',
+                        data: 'data3',
+                        markers: ['secret'],
+                    },
+                    {
+                        address: 'address/4',
+                        data: 'data4',
+                        markers: ['secret'],
+                    },
+                ],
+            });
+        });
+
+        it('should be able to list items if the record name matches the user ID', async () => {
+            for (let i = 0; i < 5; i++) {
+                await store.setData(
+                    userId,
+                    'address/' + i,
+                    'data' + i,
+                    'testUser',
+                    'subjectId',
+                    true,
+                    true,
+                    ['secret']
+                );
+            }
+
+            const result = await manager.listData(userId, 'address/2', userId);
+
+            expect(result).toEqual({
+                success: true,
+                recordName: userId,
                 items: [
                     {
                         address: 'address/3',
@@ -1207,6 +1329,33 @@ describe('DataRecordsController', () => {
             expect(storeResult.success).toBe(false);
             expect(storeResult.errorCode).toBe('data_not_found');
         });
+
+        it('should allow if the record name matches the user ID', async () => {
+            await store.setData(
+                userId,
+                'address',
+                'data',
+                'testUser',
+                'subjectId',
+                true,
+                ['different_subjectId'],
+                [PUBLIC_READ_MARKER]
+            );
+
+            const result = (await manager.eraseData(
+                userId,
+                'address',
+                userId
+            )) as EraseDataFailure;
+
+            expect(result.success).toBe(true);
+
+            const storeResult = await store.getData(userId, 'address');
+
+            expect(storeResult.success).toBe(false);
+            expect(storeResult.errorCode).toBe('data_not_found');
+        });
+
         it('should be able to use the admin policy to delete data without a marker', async () => {
             policiesStore.roles['testRecord'] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
