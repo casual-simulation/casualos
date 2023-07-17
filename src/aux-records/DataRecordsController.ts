@@ -497,6 +497,7 @@ export class DataRecordsController {
                 const existingDeletePolicy =
                     existingRecord.deletePolicy ?? true;
                 if (
+                    subjectId !== context.context.recordOwnerId &&
                     subjectId !== authorization.recordKeyOwnerId &&
                     !doesSubjectMatchPolicy(existingDeletePolicy, subjectId)
                 ) {

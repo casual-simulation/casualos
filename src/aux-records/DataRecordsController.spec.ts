@@ -1156,7 +1156,7 @@ describe('DataRecordsController', () => {
             expect(storeResult.subjectId).toBe('subjectId');
         });
 
-        it('should allow the owner of the record to erase the record even if it violates the policy', async () => {
+        it('should allow the owner of the record to erase the record even if it violates the policy when they use a record key', async () => {
             await store.setData(
                 'testRecord',
                 'address',
@@ -1182,6 +1182,31 @@ describe('DataRecordsController', () => {
             expect(storeResult.errorCode).toBe('data_not_found');
         });
 
+        it('should allow the owner of the record to erase the record even if it violates the policy', async () => {
+            await store.setData(
+                'testRecord',
+                'address',
+                'data',
+                'testUser',
+                'subjectId',
+                true,
+                ['different_subjectId'],
+                [PUBLIC_READ_MARKER]
+            );
+
+            const result = (await manager.eraseData(
+                'testRecord',
+                'address',
+                'testUser'
+            )) as EraseDataFailure;
+
+            expect(result.success).toBe(true);
+
+            const storeResult = await store.getData('testRecord', 'address');
+
+            expect(storeResult.success).toBe(false);
+            expect(storeResult.errorCode).toBe('data_not_found');
+        });
         it('should be able to use the admin policy to delete data without a marker', async () => {
             policiesStore.roles['testRecord'] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
