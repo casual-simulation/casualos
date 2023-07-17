@@ -186,7 +186,7 @@ module.exports = {
                     from: '/docs/glossary', // string | string[]
                 },
                 {
-                    to: '/actions', // string
+                    to: '/3.1.36/actions', // string
                     from: '/docs/actions', // string | string[]
                 },
                 {
