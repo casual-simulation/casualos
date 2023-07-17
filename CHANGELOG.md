@@ -1,5 +1,17 @@
 # CasualOS Changelog
 
+## V3.2.0
+
+#### Date: 7/17/2023
+
+### :rocket: Improvements
+
+-   Improved the API reference documentation to be generated from documentation comments in the source code.
+-   Added personal records.
+    -   Personal records are records that have the same name as your `authBot` ID (User ID).
+    -   By default, they are only able to be accessed by your user.
+    -   Additionally, they do not require the creation of a record key to use. It will be automatically created for you once you go to use it.
+
 ## V3.1.36
 
 #### Date: 7/7/2023

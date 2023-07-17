@@ -533,6 +533,14 @@ export class FileRecordsController {
 
 /**
  * Defines an interface that is used for requests to record a file.
+ *
+ * @dochash types/records/files
+ * @doctitle File Types
+ * @docsidebar Files
+ * @docdescription File records are used to store large blobs of data.
+ * @docgroup 01-create
+ * @docorder 0
+ * @docname RecordFileRequest
  */
 export interface RecordFileRequest {
     /**
@@ -573,8 +581,14 @@ export interface RecordFileRequest {
     instances?: string[];
 }
 
+/**
+ * Defines the possible results of a request to record a file.
+ */
 export type RecordFileResult = RecordFileSuccess | RecordFileFailure;
 
+/**
+ * Defines an interface that represents a successful request to record a file.
+ */
 export interface RecordFileSuccess {
     success: true;
 
@@ -606,8 +620,15 @@ export interface RecordFileSuccess {
     markers: string[];
 }
 
+/**
+ * Defines an interface that represents a failed request to record a file.
+ */
 export interface RecordFileFailure {
     success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
         | ServerError
         | NotLoggedInError
@@ -616,6 +637,10 @@ export interface RecordFileFailure {
         | AuthorizeDenied['errorCode']
         | 'invalid_file_data'
         | 'not_supported';
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 
     /**
@@ -624,24 +649,66 @@ export interface RecordFileFailure {
     existingFileUrl?: string;
 }
 
+/**
+ * Defines the possible results of a request to erase a file record.
+ *
+ * @dochash types/records/files
+ * @docgroup 02-erase
+ * @docorder 0
+ * @docname EraseFileResult
+ */
 export type EraseFileResult = EraseFileSuccess | EraseFileFailure;
+
+/**
+ * Defines an interface that represents a successful request to erase a file record.
+ *
+ * @dochash types/records/files
+ * @docgroup 02-erase
+ * @docorder 1
+ * @docname EraseFileSuccess
+ */
 export interface EraseFileSuccess {
     success: true;
+    /**
+     * The name of the record that the file was erased from.
+     */
     recordName: string;
+
+    /**
+     * The name of the file that was erased.
+     */
     fileName: string;
 }
 
+/**
+ * Defines an interface that represents a failed request to erase a file record.
+ *
+ * @dochash types/records/files
+ * @docgroup 02-erase
+ * @docorder 2
+ * @docname EraseFileFailure
+ */
 export interface EraseFileFailure {
     success: false;
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
         | ServerError
         | EraseFileStoreResult['errorCode']
         | NotLoggedInError
         | AuthorizeDenied['errorCode']
         | ValidatePublicRecordKeyFailure['errorCode'];
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 }
 
+/**
+ * Defines the possible results of a request to mark a file record as uploaded.
+ */
 export type FileUploadedResult = FileUploadedSuccess | FileUploadedFailure;
 
 export interface FileUploadedSuccess {
@@ -654,6 +721,9 @@ export interface FileUploadedFailure {
     errorMessage: string;
 }
 
+/**
+ * Defines the possible results of a request to read a file record.
+ */
 export type ReadFileResult = ReadFileSuccess | ReadFileFailure;
 
 export interface ReadFileSuccess {

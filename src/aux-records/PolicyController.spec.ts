@@ -37,6 +37,7 @@ console.log = jest.fn();
 describe('PolicyController', () => {
     let store: MemoryPolicyStore;
     let controller: PolicyController;
+    let recordsStore: MemoryRecordsStore;
 
     let ownerId: string;
     let ownerSessionKey: string;
@@ -53,6 +54,7 @@ describe('PolicyController', () => {
 
         store = services.policyStore;
         controller = services.policies;
+        recordsStore = services.recordsStore;
 
         const owner = await createTestUser(services, 'owner@example.com');
         const user = await createTestUser(services);
@@ -252,6 +254,63 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
+                });
+            });
+
+            it('should allow the request if the record name is the same as the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId: ownerId,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.create',
+                                        grantingPermission: {
+                                            type: 'data.create',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+
+                expect(await recordsStore.getRecordByName(ownerId)).toEqual({
+                    name: ownerId,
+                    ownerId: ownerId,
+                    secretHashes: [],
+                    secretSalt: expect.any(String),
                 });
             });
 
@@ -1372,6 +1431,24 @@ describe('PolicyController', () => {
                 expect(result.allowed).toBe(true);
             });
 
+            it('should allow the request if the record name equals the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    userId: ownerId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result.allowed).toBe(true);
+                expect(await recordsStore.getRecordByName(ownerId)).toEqual({
+                    name: ownerId,
+                    ownerId: ownerId,
+                    secretHashes: [],
+                    secretSalt: expect.any(String),
+                });
+            });
+
             it('should deny the request if the request is coming from an inst and no role has been provided to said inst', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -1635,7 +1712,7 @@ describe('PolicyController', () => {
 
             it('should allow the request if the user is the record owner', async () => {
                 const result = await controller.authorizeRequest({
-                    recordKeyOrRecordName: recordName,
+                    recordKeyOrRecordName: ownerId,
                     action: 'data.update',
                     address: 'myAddress',
                     userId: ownerId,
@@ -1644,7 +1721,7 @@ describe('PolicyController', () => {
 
                 expect(result).toEqual({
                     allowed: true,
-                    recordName,
+                    recordName: ownerId,
                     recordKeyOwnerId: null,
                     authorizerId: ownerId,
                     subject: {
@@ -1670,6 +1747,13 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
+                });
+
+                expect(await recordsStore.getRecordByName(ownerId)).toEqual({
+                    name: ownerId,
+                    ownerId: ownerId,
+                    secretHashes: [],
+                    secretSalt: expect.any(String),
                 });
             });
 
@@ -2773,6 +2857,53 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the record name is the same as the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'data.delete',
+                    address: 'myAddress',
+                    userId: ownerId,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.delete',
+                                        grantingPermission: {
+                                            type: 'data.delete',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+
+                expect(await recordsStore.getRecordByName(ownerId)).toEqual({
+                    name: ownerId,
+                    ownerId: ownerId,
+                    secretHashes: [],
+                    secretSalt: expect.any(String),
+                });
+            });
+
             it('should allow the request if the user has data.delete access to the given resource marker', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set(['developer']),
@@ -3425,7 +3556,7 @@ describe('PolicyController', () => {
                 });
             });
 
-            it('should allow the request if the user has the admin role assigned', async () => {
+            it('should allow the request if the user is the record owner', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
                     action: 'data.list',
@@ -3445,6 +3576,64 @@ describe('PolicyController', () => {
                 expect(result).toEqual({
                     allowed: true,
                     recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the record name matches the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'data.list',
+                    userId: ownerId,
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
                     recordKeyOwnerId: null,
                     authorizerId: ownerId,
                     subject: {
@@ -4719,6 +4908,56 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the record name matches the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'file.create',
+                    userId: ownerId,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'file.create',
+                                        grantingPermission: {
+                                            type: 'file.create',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
             it('should allow the request if the user has file.create and policy.assign access to the given resource marker', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set(['developer']),
@@ -5755,7 +5994,7 @@ describe('PolicyController', () => {
                 });
             });
 
-            it('should allow the request if the user has the admin role assigned', async () => {
+            it('should allow the request if the user is the record owner', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
                     action: 'file.read',
@@ -5768,6 +6007,46 @@ describe('PolicyController', () => {
                 expect(result).toEqual({
                     allowed: true,
                     recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.read',
+                                        grantingPermission: {
+                                            type: 'file.read',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the record name matches the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'file.read',
+                    userId: ownerId,
+                    resourceMarkers: ['secret'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
                     recordKeyOwnerId: null,
                     authorizerId: ownerId,
                     subject: {
@@ -6641,7 +6920,7 @@ describe('PolicyController', () => {
                 });
             });
 
-            it('should allow the request if the user has the admin role assigned', async () => {
+            it('should allow the request if the user is the record owner', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
                     action: 'file.delete',
@@ -6654,6 +6933,46 @@ describe('PolicyController', () => {
                 expect(result).toEqual({
                     allowed: true,
                     recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'file.delete',
+                                        grantingPermission: {
+                                            type: 'file.delete',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the record name matches the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'file.delete',
+                    userId: ownerId,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
                     recordKeyOwnerId: null,
                     authorizerId: ownerId,
                     subject: {
@@ -8026,6 +8345,71 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the record name matches the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'file.update',
+                    userId: ownerId,
+                    existingMarkers: ['secret'],
+                    addedMarkers: ['test'],
+                    fileSizeInBytes: 100,
+                    fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.update',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: 'test',
+                                actions: [
+                                    {
+                                        action: 'file.update',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.update',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
             it('should deny the request if the request is coming from an inst and no role has been provided to said inst', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -8691,6 +9075,18 @@ describe('PolicyController', () => {
                 expect(result.allowed).toBe(true);
             });
 
+            it('should allow the request if the record name matches the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'event.count',
+                    eventName: 'myEvent',
+                    userId: ownerId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result.allowed).toBe(true);
+            });
+
             it('should deny the request if the request is coming from an inst and no role has been provided to said inst', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -8964,6 +9360,46 @@ describe('PolicyController', () => {
                 expect(result).toEqual({
                     allowed: true,
                     recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'event.update',
+                                        grantingPermission: {
+                                            type: 'event.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the record name matches the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'event.update',
+                    eventName: 'myEvent',
+                    userId: ownerId,
+                    existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
                     recordKeyOwnerId: null,
                     authorizerId: ownerId,
                     subject: {
@@ -10092,6 +10528,46 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the record name matches the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'event.increment',
+                    eventName: 'myEvent',
+                    userId: ownerId,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'event.increment',
+                                        grantingPermission: {
+                                            type: 'event.increment',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
             it('should allow the request if the user has event.increment access to the given resource marker', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set(['developer']),
@@ -10730,6 +11206,45 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the record name matches the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'policy.grantPermission',
+                    policy: 'myPolicy',
+                    userId: ownerId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: ACCOUNT_MARKER,
+                                actions: [
+                                    {
+                                        action: 'policy.grantPermission',
+                                        grantingPermission: {
+                                            type: 'policy.grantPermission',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
             it('should allow the request if the user has policy.grantPermission access to the account resource marker', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set(['developer']),
@@ -11218,6 +11733,45 @@ describe('PolicyController', () => {
                 expect(result).toEqual({
                     allowed: true,
                     recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: ACCOUNT_MARKER,
+                                actions: [
+                                    {
+                                        action: 'policy.revokePermission',
+                                        grantingPermission: {
+                                            type: 'policy.revokePermission',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the record name matches the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'policy.revokePermission',
+                    policy: 'myPolicy',
+                    userId: ownerId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
                     recordKeyOwnerId: null,
                     authorizerId: ownerId,
                     subject: {
@@ -11762,6 +12316,45 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the record name matches the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'policy.read',
+                    policy: 'myPolicy',
+                    userId: ownerId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: ACCOUNT_MARKER,
+                                actions: [
+                                    {
+                                        action: 'policy.read',
+                                        grantingPermission: {
+                                            type: 'policy.read',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
             it('should allow the request if the user has policy.read access to the account resource marker', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set(['developer']),
@@ -12247,6 +12840,44 @@ describe('PolicyController', () => {
                 expect(result).toEqual({
                     allowed: true,
                     recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: ACCOUNT_MARKER,
+                                actions: [
+                                    {
+                                        action: 'policy.list',
+                                        grantingPermission: {
+                                            type: 'policy.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the record name matches the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'policy.list',
+                    userId: ownerId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
                     recordKeyOwnerId: null,
                     authorizerId: ownerId,
                     subject: {
@@ -12777,6 +13408,44 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the record name matches the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'role.list',
+                    userId: ownerId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: ACCOUNT_MARKER,
+                                actions: [
+                                    {
+                                        action: 'role.list',
+                                        grantingPermission: {
+                                            type: 'role.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            roles: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
             it('should allow the request if the user has role.list access to the account resource marker', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set(['developer']),
@@ -13249,6 +13918,45 @@ describe('PolicyController', () => {
                 expect(result).toEqual({
                     allowed: true,
                     recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: ACCOUNT_MARKER,
+                                actions: [
+                                    {
+                                        action: 'role.read',
+                                        grantingPermission: {
+                                            type: 'role.read',
+                                            role: ADMIN_ROLE_NAME,
+                                            roles: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the record name matches the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'role.read',
+                    role: 'myRole',
+                    userId: ownerId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
                     recordKeyOwnerId: null,
                     authorizerId: ownerId,
                     subject: {
@@ -13771,6 +14479,48 @@ describe('PolicyController', () => {
                     expect(result).toEqual({
                         allowed: true,
                         recordName,
+                        recordKeyOwnerId: null,
+                        authorizerId: ownerId,
+                        subject: {
+                            userId: ownerId,
+                            role: ADMIN_ROLE_NAME,
+                            subjectPolicy: 'subjectfull',
+                            markers: [
+                                {
+                                    marker: ACCOUNT_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'role.grant',
+                                            grantingPermission: {
+                                                type: 'role.grant',
+                                                role: ADMIN_ROLE_NAME,
+                                                roles: true,
+                                                userIds: true,
+                                                instances: true,
+                                            },
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        instances: [],
+                    });
+                });
+
+                it('should allow the request if the record name matches the user ID', async () => {
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: ownerId,
+                        action: 'role.grant',
+                        role: 'myRole',
+                        userId: ownerId,
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: true,
+                        recordName: ownerId,
                         recordKeyOwnerId: null,
                         authorizerId: ownerId,
                         subject: {
@@ -14477,6 +15227,48 @@ describe('PolicyController', () => {
                     expect(result).toEqual({
                         allowed: true,
                         recordName,
+                        recordKeyOwnerId: null,
+                        authorizerId: ownerId,
+                        subject: {
+                            userId: ownerId,
+                            role: ADMIN_ROLE_NAME,
+                            subjectPolicy: 'subjectfull',
+                            markers: [
+                                {
+                                    marker: ACCOUNT_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'role.revoke',
+                                            grantingPermission: {
+                                                type: 'role.revoke',
+                                                role: ADMIN_ROLE_NAME,
+                                                roles: true,
+                                                userIds: true,
+                                                instances: true,
+                                            },
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        instances: [],
+                    });
+                });
+
+                it('should allow the request if the record name matches the user ID', async () => {
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: ownerId,
+                        action: 'role.revoke',
+                        role: 'myRole',
+                        userId: ownerId,
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: true,
+                        recordName: ownerId,
                         recordKeyOwnerId: null,
                         authorizerId: ownerId,
                         subject: {

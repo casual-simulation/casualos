@@ -1,0 +1,2685 @@
+{
+    "hash": "actions/crypto",
+    "pageTitle": "Crypto Actions",
+    "pageDescription": "Crypto actions are used for general cryptographic operations like hashing, encryption, and decryption.",
+    "pageSidebarLabel": "Crypto",
+    "contents": [
+        {
+            "id": 1926,
+            "order": 9999,
+            "name": "crypto.asymmetric.decrypt",
+            "reflection": {
+                "id": 1926,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data with the given keypair and secret and returns the result.\nIf the data was unable to be decrypted (e.g. if the secret was wrong or the data was tampered with), `null` will be returned.",
+                    "text": "Use the [`crypto.asymmetric.encrypt(keypair, data)`](ref:crypto.asymmetric.encrypt) function to encrypt the data.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Decrypt the given data and toast it.\nconst keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';\nconst encrypted = 'vA1.3CC1r0fJP2tPS09C8YrTDQCJmgFczxprNEcMOzY4JD4=.3oiC7nG6N4jblFhBd4usrdid/w4Phwg/.X/9mbZYOGBjRX7YAO4D2zYJvZ3c=';\nconst decrypted = crypto.asymmetric.decrypt(keypair, 'password', encrypted);\nos.toast(decrypted);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/crypto"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "crypto.asymmetric.decrypt\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1927,
+                        "name": "keypair",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the keypair that should be used to decrypt the data.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1928,
+                        "name": "secret",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the secret that should be used to decrypt the keypair's private key.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1929,
+                        "name": "data",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the data that should be decrypted.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "[Decrypts](https://en.wikipedia.org/wiki/Encryption) the given data with the given keypair and secret and returns the result.\nIf the data was unable to be decrypted (e.g. if the secret was wrong or the data was tampered with), `null` will be returned.",
+                "text": "Use the {@link crypto.asymmetric.encrypt} function to encrypt the data.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Decrypt the given data and toast it.\nconst keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';\nconst encrypted = 'vA1.3CC1r0fJP2tPS09C8YrTDQCJmgFczxprNEcMOzY4JD4=.3oiC7nG6N4jblFhBd4usrdid/w4Phwg/.X/9mbZYOGBjRX7YAO4D2zYJvZ3c=';\nconst decrypted = crypto.asymmetric.decrypt(keypair, 'password', encrypted);\nos.toast(decrypted);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/crypto"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "crypto.asymmetric.decrypt\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1921,
+            "order": 9999,
+            "name": "crypto.asymmetric.encrypt",
+            "reflection": {
+                "id": 1921,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given keypair's public key and returns the result.",
+                    "text": "Use the [`crypto.asymmetric.decrypt(keypair, secret, data)`](ref:crypto.asymmetric.decrypt) function to decrypt the data.\n\nThis method will return a string of encrypted data that is confidential (unreadable without the keypair and secret used to encrypt it), reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the keypair was used to encrypt the data).\n\nAs a consequence, encrypting the same data with the same keypair will produce different results. This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.\n\nEncrypts the given data using an asymmetric authenticated encryption mechanism based on x25519 (A key-exchange mechanism), XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).\n\nYou may notice that this function does not need a secret to decrypt the keypair.\nThis is because the public key of the keypair is used to encrypt the data. Due to how asymmetric encryption works, only the encrypted private key will be able to decrypt the data.\n\nEncrypts the given data using an authenticated encryption mechanism based on [x25519](https://en.wikipedia.org/wiki/Curve25519), [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher) and [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Encrypt the given data and toast it.\nconst keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';\nconst encrypted = crypto.asymmetric.encrypt(keypair, \"hello, world\");\nos.toast(encrypted);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/crypto"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "crypto.asymmetric.encrypt\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1922,
+                        "name": "keypair",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the keypair that should be used to encrypt the data.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1923,
+                        "name": "data",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the string data that should be encrypted.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given keypair's public key and returns the result.",
+                "text": "Use the {@link crypto.asymmetric.decrypt} function to decrypt the data.\n\nThis method will return a string of encrypted data that is confidential (unreadable without the keypair and secret used to encrypt it), reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that the keypair was used to encrypt the data).\n\nAs a consequence, encrypting the same data with the same keypair will produce different results. This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.\n\nEncrypts the given data using an asymmetric authenticated encryption mechanism based on x25519 (A key-exchange mechanism), XSalsa20 (An encryption cipher) and Poly1305 (A message authentication code).\n\nYou may notice that this function does not need a secret to decrypt the keypair.\nThis is because the public key of the keypair is used to encrypt the data. Due to how asymmetric encryption works, only the encrypted private key will be able to decrypt the data.\n\nEncrypts the given data using an authenticated encryption mechanism based on [x25519](https://en.wikipedia.org/wiki/Curve25519), [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher) and [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Encrypt the given data and toast it.\nconst keypair = 'vEK1.UoNnUjLz7FdgjJ52P+f/sNw1VDsKwyX0kI+Bt7ivoF4=.djEuZmFvL0tOa1RJL3ByVm8wZ2QxYTk5clV4OXZUTk0wMnUuUHpZQUM1aVlYOUUra09vZ2hmamdyNll6T0tJS0ZjQjUuMGx2VGR5UmR2dloxUklWam5OODMrN09ibnk0c2MzbjNKYzZtSmFPYzc0ZXJXMlhHQzJsWW1vWGdFdzBRM2xkSg==';\nconst encrypted = crypto.asymmetric.encrypt(keypair, \"hello, world\");\nos.toast(encrypted);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/crypto"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "crypto.asymmetric.encrypt\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1932,
+            "order": 9999,
+            "name": "crypto.asymmetric.isEncrypted",
+            "reflection": {
+                "id": 1932,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Determines if the given value was encrypted using [`crypto.asymmetric.encrypt(keypair, data)`](ref:crypto.asymmetric.encrypt).\nReturns `true` if the data is a keypair and `false` otherwise.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Determine if a value is encrypted with asymmetric encryption.\nconst encrypted = crypto.asymmetric.isEncrypted(\"hello, world\");\nos.toast('Is it encrypted? ' + encrypted);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/crypto"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "crypto.asymmetric.isEncrypted\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1933,
+                        "name": "cyphertext",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the value that should be tested to see if it is encrypted.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "boolean"
+                }
+            },
+            "comment": {
+                "shortText": "Determines if the given value was encrypted using {@link crypto.asymmetric.encrypt}.\nReturns `true` if the data is a keypair and `false` otherwise.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Determine if a value is encrypted with asymmetric encryption.\nconst encrypted = crypto.asymmetric.isEncrypted(\"hello, world\");\nos.toast('Is it encrypted? ' + encrypted);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/crypto"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "crypto.asymmetric.isEncrypted\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1917,
+            "order": 9999,
+            "name": "crypto.asymmetric.isKeypair",
+            "reflection": {
+                "id": 1917,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Determines if the given value is a keypair generated using [`crypto.asymmetric.keypair(secret)`](ref:crypto.asymmetric.keypair).\nReturns true if the data is a keypair and false otherwise.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Determine if a value is a keypair.\nconst encrypted = crypto.asymmetric.isKeypair(\"hello, world\");\nos.toast('Is it a keypair? ' + encrypted);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/crypto"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "crypto.asymmetric.isKeypair\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1918,
+                        "name": "keypair",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the value that should be tested to see if it is a keypair.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "boolean"
+                }
+            },
+            "comment": {
+                "shortText": "Determines if the given value is a keypair generated using {@link crypto.asymmetric.keypair}.\nReturns true if the data is a keypair and false otherwise.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Determine if a value is a keypair.\nconst encrypted = crypto.asymmetric.isKeypair(\"hello, world\");\nos.toast('Is it a keypair? ' + encrypted);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/crypto"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "crypto.asymmetric.isKeypair\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1913,
+            "order": 9999,
+            "name": "crypto.asymmetric.keypair",
+            "reflection": {
+                "id": 1913,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Creates a keypair that can be used to [encrypt and decrypt](https://en.wikipedia.org/wiki/Encryption) data.",
+                    "text": "Use [`crypto.asymmetric.encrypt(keypair, data)`](ref:crypto.asymmetric.encrypt) and [`crypto.asymmetric.decrypt(keypair, secret, data)`](ref:crypto.asymmetric.decrypt) to encrypt and decrypt the data.\n\nAlways use a strong and unique secret key. Use a password manager such as LastPass or 1Password to help you create and keep track of them.\n\nKeypairs are made up of a private key and a public key The public key is a special value that can be used to encrypt data and the private key is a related value that can be used to decrypt data that was encrypted by the private key.\n\nThe private key is called \"private\" because it is encrypted using the given secret while the public key is called \"public\" because it is not encrypted so anyone can use it if they have access to it.\n\nNote that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless they have access to it.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Create a keypair and toast it.\nconst keypair = crypto.asymmetric.keypair(\"my secret\");\nos.toast(keypair);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/crypto"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "crypto.asymmetric.keypair\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1914,
+                        "name": "secret",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the secret that should be used to encrypt the private key of the keypair.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "Creates a keypair that can be used to [encrypt and decrypt](https://en.wikipedia.org/wiki/Encryption) data.",
+                "text": "Use {@link crypto.asymmetric.encrypt} and {@link crypto.asymmetric.decrypt} to encrypt and decrypt the data.\n\nAlways use a strong and unique secret key. Use a password manager such as LastPass or 1Password to help you create and keep track of them.\n\nKeypairs are made up of a private key and a public key The public key is a special value that can be used to encrypt data and the private key is a related value that can be used to decrypt data that was encrypted by the private key.\n\nThe private key is called \"private\" because it is encrypted using the given secret while the public key is called \"public\" because it is not encrypted so anyone can use it if they have access to it.\n\nNote that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless they have access to it.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Create a keypair and toast it.\nconst keypair = crypto.asymmetric.keypair(\"my secret\");\nos.toast(keypair);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/crypto"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "crypto.asymmetric.keypair\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1897,
+            "order": 9999,
+            "name": "crypto.encrypt",
+            "reflection": {
+                "id": 1897,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given secret key (also commonly known as a password) and returns the result.",
+                    "text": "Use the crypto.decrypt function to decrypt the data.\n\n_Always use a strong and unique secret key._\nUse a password manager such as LastPass or 1Password to help you create and keep track of them.\n",
+                    "tags": [
+                        {
+                            "tag": "description",
+                            "paramName": "",
+                            "text": "Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to\nhelp you create and keep track of them.\n\nAssuming a strong secret, this method will return a string of encrypted data that is confidential (unreadable without the key), reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that this specific key was used to encrypt the data).\n\nAs a consequence, encrypting the same data with the same key will produce different results. This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.\n\nEncrypts the given data using an authenticated encryption mechanism based on [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher)\nand [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).\nAdditionally uses [scrypt](https://en.wikipedia.org/wiki/Scrypt) for [password-based key derivation](https://en.wikipedia.org/wiki/Key_derivation_function).\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Encrypt the given data and toast it.\nconst encrypted = crypto.encrypt(\"key\", \"hello, world\");\nos.toast(encrypted);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/crypto"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "crypto.encrypt\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1898,
+                        "name": "secret",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the secret that should be used to encrypt the data. Use a strong an unique secret for maximum security.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1899,
+                        "name": "data",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the string data that should be encrypted.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "[Encrypts](https://en.wikipedia.org/wiki/Encryption) the given data using the given secret key (also commonly known as a password) and returns the result.",
+                "text": "Use the {@link crypto.decrypt} function to decrypt the data.\n\n_Always use a strong and unique secret key._\nUse a password manager such as LastPass or 1Password to help you create and keep track of them.\n",
+                "tags": [
+                    {
+                        "tagName": "description",
+                        "paramName": "",
+                        "text": "Always choose a strong unique secret. Use a password manager such as LastPass or 1Password to\nhelp you create and keep track of them.\n\nAssuming a strong secret, this method will return a string of encrypted data that is confidential (unreadable without the key), reliable (the encrypted data cannot be changed without making it unreadable), and authentic (decryptability proves that this specific key was used to encrypt the data).\n\nAs a consequence, encrypting the same data with the same key will produce different results. This is to ensure that an attacker cannot correlate different pieces of data to potentially deduce the original plaintext.\n\nEncrypts the given data using an authenticated encryption mechanism based on [XSalsa20](https://libsodium.gitbook.io/doc/advanced/stream_ciphers/xsalsa20) (An encryption cipher)\nand [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (A message authentication code).\nAdditionally uses [scrypt](https://en.wikipedia.org/wiki/Scrypt) for [password-based key derivation](https://en.wikipedia.org/wiki/Key_derivation_function).\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Encrypt the given data and toast it.\nconst encrypted = crypto.encrypt(\"key\", \"hello, world\");\nos.toast(encrypted);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/crypto"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "crypto.encrypt\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1831,
+            "order": 9999,
+            "name": "crypto.hash-raw",
+            "reflection": {
+                "id": 1831,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Calculates the [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result as a raw array of bytes.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.",
+                    "text": "Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the SHA-256 raw hash of a string\nconst hash = crypto.hash(\"sha256\", \"raw\", \"hello, world\");\nconsole.log(hash);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/crypto"
+                        },
+                        {
+                            "tag": "doctitle",
+                            "paramName": "",
+                            "text": "Crypto Actions"
+                        },
+                        {
+                            "tag": "docsidebar",
+                            "paramName": "",
+                            "text": "Crypto"
+                        },
+                        {
+                            "tag": "docdescription",
+                            "paramName": "",
+                            "text": "Crypto actions are used for general cryptographic operations like hashing, encryption, and decryption."
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "crypto.hash"
+                        },
+                        {
+                            "tag": "docid",
+                            "paramName": "",
+                            "text": "crypto.hash-raw\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1832,
+                        "name": "algorithm",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "a string indicating which algorithm should be used for calculating the hash.\nThe following algorithms are supported:\n\n-    `\"sha256\"` (equivalent to [`crypto.sha256(...data)`](ref:crypto.sha256))\n-    `\"sha512\"` (equivalent to [`crypto.sha512(...data)`](ref:crypto.sha512))\n-    `\"sha1\"` (not recommended unless needed for compatability with external software)\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "literal",
+                                    "value": "sha256"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "sha512"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "sha1"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 1833,
+                        "name": "format",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "a string indicating which format the hash should be output as.\nThe following formats are supported:\n\n-    `\"raw\"`  - The output should be a [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array)\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "literal",
+                            "value": "raw"
+                        }
+                    },
+                    {
+                        "id": 1834,
+                        "name": "data",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isRest": true
+                        },
+                        "comment": {
+                            "shortText": "the pieces of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated before hashing.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "intrinsic",
+                                "name": "unknown"
+                            }
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "qualifiedName": "Uint8Array",
+                    "package": "typescript",
+                    "name": "Uint8Array"
+                }
+            },
+            "comment": {
+                "shortText": "Calculates the [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result as a raw array of bytes.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.",
+                "text": "Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the SHA-256 raw hash of a string\nconst hash = crypto.hash(\"sha256\", \"raw\", \"hello, world\");\nconsole.log(hash);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/crypto"
+                    },
+                    {
+                        "tagName": "doctitle",
+                        "paramName": "",
+                        "text": "Crypto Actions"
+                    },
+                    {
+                        "tagName": "docsidebar",
+                        "paramName": "",
+                        "text": "Crypto"
+                    },
+                    {
+                        "tagName": "docdescription",
+                        "paramName": "",
+                        "text": "Crypto actions are used for general cryptographic operations like hashing, encryption, and decryption."
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "crypto.hash"
+                    },
+                    {
+                        "tagName": "docid",
+                        "paramName": "",
+                        "text": "crypto.hash-raw\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1837,
+            "order": 9999,
+            "name": "crypto.hash-string",
+            "reflection": {
+                "id": 1837,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Calculates the [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.",
+                    "text": "Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the SHA-256 hex hash of a string\nconst hash = crypto.hash(\"sha256\", \"hex\", \"hello, world\");\nos.toast(hash);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the SHA-256 base64 hash of a string\nconst hash = crypto.hash(\"sha256\", \"base64\", \"hello, world\");\nos.toast(hash);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the SHA-512 hex hash of a string\nconst hash = crypto.hash(\"sha512\", \"hex\", \"hello, world\");\nos.toast(hash);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the SHA-1 hex hash of a string\nconst hash = crypto.hash(\"sha1\", \"hex\", \"hello, world\");\nos.toast(hash);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/crypto"
+                        },
+                        {
+                            "tag": "doctitle",
+                            "paramName": "",
+                            "text": "Crypto Actions"
+                        },
+                        {
+                            "tag": "docsidebar",
+                            "paramName": "",
+                            "text": "Crypto"
+                        },
+                        {
+                            "tag": "docdescription",
+                            "paramName": "",
+                            "text": "Crypto actions are used for general cryptographic operations like hashing, encryption, and decryption."
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "crypto.hash"
+                        },
+                        {
+                            "tag": "docid",
+                            "paramName": "",
+                            "text": "crypto.hash-string\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1838,
+                        "name": "algorithm",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "a string indicating which algorithm should be used for calculating the hash.\nThe following algorithms are supported:\n\n-    `\"sha256\"` (equivalent to [`crypto.sha256(...data)`](ref:crypto.sha256))\n-    `\"sha512\"` (equivalent to [`crypto.sha512(...data)`](ref:crypto.sha512))\n-    `\"sha1\"` (not recommended unless needed for compatability with external software)\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "literal",
+                                    "value": "sha256"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "sha512"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "sha1"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 1839,
+                        "name": "format",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "a string indicating which format the hash should be output as.\nThe following formats are supported:\n\n-    `\"hex\"`  - The output should be a hexadecimal string.\n-    `\"base64\"` - The output should be a Base64 string.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "literal",
+                                    "value": "hex"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "base64"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 1840,
+                        "name": "data",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isRest": true
+                        },
+                        "comment": {
+                            "shortText": "the pieces of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated before hashing.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "intrinsic",
+                                "name": "unknown"
+                            }
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "Calculates the [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.",
+                "text": "Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the SHA-256 hex hash of a string\nconst hash = crypto.hash(\"sha256\", \"hex\", \"hello, world\");\nos.toast(hash);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the SHA-256 base64 hash of a string\nconst hash = crypto.hash(\"sha256\", \"base64\", \"hello, world\");\nos.toast(hash);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the SHA-512 hex hash of a string\nconst hash = crypto.hash(\"sha512\", \"hex\", \"hello, world\");\nos.toast(hash);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the SHA-1 hex hash of a string\nconst hash = crypto.hash(\"sha1\", \"hex\", \"hello, world\");\nos.toast(hash);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/crypto"
+                    },
+                    {
+                        "tagName": "doctitle",
+                        "paramName": "",
+                        "text": "Crypto Actions"
+                    },
+                    {
+                        "tagName": "docsidebar",
+                        "paramName": "",
+                        "text": "Crypto"
+                    },
+                    {
+                        "tagName": "docdescription",
+                        "paramName": "",
+                        "text": "Crypto actions are used for general cryptographic operations like hashing, encryption, and decryption."
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "crypto.hash"
+                    },
+                    {
+                        "tagName": "docid",
+                        "paramName": "",
+                        "text": "crypto.hash-string\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1868,
+            "order": 9999,
+            "name": "crypto.hmac-raw",
+            "reflection": {
+                "id": 1868,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.",
+                    "text": "HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the raw HMAC-SHA256 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha256\", \"raw\", \"key\", \"hello, world\");\nconsole.log(hash);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/crypto"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "crypto.hmac"
+                        },
+                        {
+                            "tag": "docid",
+                            "paramName": "",
+                            "text": "crypto.hmac-raw\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1869,
+                        "name": "algorithm",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "a string indicating which algorithm should be used for calculating the hash.\nThe following algorithms are supported:\n\n-    `\"hmac-sha256\"` (equivalent to [`crypto.hmacSha256(key, ...data)`](ref:crypto.hmacSha256))\n-    `\"hmac-sha512\"` (equivalent to [`crypto.hmacSha512(key, ...data)`](ref:crypto.hmacSha512))\n-    `\"hmac-sha1\"` (not recommended unless needed for compatability with external software)\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "literal",
+                                    "value": "sha256"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "sha512"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "sha1"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 1870,
+                        "name": "format",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "a string indicating which format the hash should be output as.\nThe following formats are supported:\n\n-    `\"hex\"`  - The output should be a hexadecimal string.\n-    `\"base64\"` - The output should be a Base64 string.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "literal",
+                            "value": "raw"
+                        }
+                    },
+                    {
+                        "id": 1871,
+                        "name": "key",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the secret key that should be used to create the HMAC.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1872,
+                        "name": "data",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isRest": true
+                        },
+                        "comment": {
+                            "shortText": "the pieces of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated before hashing.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "intrinsic",
+                                "name": "unknown"
+                            }
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "qualifiedName": "Uint8Array",
+                    "package": "typescript",
+                    "name": "Uint8Array"
+                }
+            },
+            "comment": {
+                "shortText": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.",
+                "text": "HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the raw HMAC-SHA256 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha256\", \"raw\", \"key\", \"hello, world\");\nconsole.log(hash);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/crypto"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "crypto.hmac"
+                    },
+                    {
+                        "tagName": "docid",
+                        "paramName": "",
+                        "text": "crypto.hmac-raw\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1861,
+            "order": 9999,
+            "name": "crypto.hmac-string",
+            "reflection": {
+                "id": 1861,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.",
+                    "text": "HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the hexadecimal HMAC-SHA256 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha256\", \"hex\", \"key\", \"hello, world\");\nos.toast(hash);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the Base64 HMAC-SHA256 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha256\", \"base64\", \"key\", \"hello, world\");\nos.toast(hash);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the hexadecimal HMAC-SHA512 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha512\", \"hex\", \"key\", \"hello, world\");\nos.toast(hash);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the hexadecimal HMAC-SHA1 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha1\", \"hex\", \"key\", \"hello, world\");\nos.toast(hash);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/crypto"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "crypto.hmac"
+                        },
+                        {
+                            "tag": "docid",
+                            "paramName": "",
+                            "text": "crypto.hmac-string\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1862,
+                        "name": "algorithm",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "a string indicating which algorithm should be used for calculating the hash.\nThe following algorithms are supported:\n\n-    `\"hmac-sha256\"` (equivalent to [`crypto.hmacSha256(key, ...data)`](ref:crypto.hmacSha256))\n-    `\"hmac-sha512\"` (equivalent to [`crypto.hmacSha512(key, ...data)`](ref:crypto.hmacSha512))\n-    `\"hmac-sha1\"` (not recommended unless needed for compatability with external software)\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "literal",
+                                    "value": "sha256"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "sha512"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "sha1"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 1863,
+                        "name": "format",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "a string indicating which format the hash should be output as.\nThe following formats are supported:\n\n-    `\"hex\"`  - The output should be a hexadecimal string.\n-    `\"base64\"` - The output should be a Base64 string.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "literal",
+                                    "value": "hex"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "base64"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 1864,
+                        "name": "key",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the secret key that should be used to create the HMAC.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1865,
+                        "name": "data",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isRest": true
+                        },
+                        "comment": {
+                            "shortText": "the pieces of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated before hashing.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "intrinsic",
+                                "name": "unknown"
+                            }
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data using the specified algorithm and returns the result in the specified format.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string, [Base64](https://en.wikipedia.org/wiki/Base64) string, or [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) based on the specified format.",
+                "text": "HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the hexadecimal HMAC-SHA256 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha256\", \"hex\", \"key\", \"hello, world\");\nos.toast(hash);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the Base64 HMAC-SHA256 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha256\", \"base64\", \"key\", \"hello, world\");\nos.toast(hash);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the hexadecimal HMAC-SHA512 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha512\", \"hex\", \"key\", \"hello, world\");\nos.toast(hash);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the hexadecimal HMAC-SHA1 of a string with a key\nconst hash = crypto.hmac(\"hmac-sha1\", \"hex\", \"key\", \"hello, world\");\nos.toast(hash);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/crypto"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "crypto.hmac"
+                    },
+                    {
+                        "tagName": "docid",
+                        "paramName": "",
+                        "text": "crypto.hmac-string\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1887,
+            "order": 9999,
+            "name": "crypto.hmacSha256",
+            "reflection": {
+                "id": 1887,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.",
+                    "text": "HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the HMAC of a string with a key.\nconst hash = crypto.hmacSha256(\"key\", \"hello, world\");\nos.toast(hash);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the HMAC of an object.\nconst hash = crypto.hmacSha256(\"key\", {\n    abc: \"def\"\n});\nos.toast(hash);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/crypto"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "crypto.hmacSha256\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1888,
+                        "name": "key",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the secret key that should be used to create the HMAC.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1889,
+                        "name": "data",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isRest": true
+                        },
+                        "comment": {
+                            "shortText": "the data that should be included in the hash. If multiple pieces of data are included, they will be concatenated before hashing.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "intrinsic",
+                                "name": "unknown"
+                            }
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.",
+                "text": "HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the HMAC of a string with a key.\nconst hash = crypto.hmacSha256(\"key\", \"hello, world\");\nos.toast(hash);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the HMAC of an object.\nconst hash = crypto.hmacSha256(\"key\", {\n    abc: \"def\"\n});\nos.toast(hash);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/crypto"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "crypto.hmacSha256\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1892,
+            "order": 9999,
+            "name": "crypto.hmacSha512",
+            "reflection": {
+                "id": 1892,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-215](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.",
+                    "text": "HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the HMAC of a string with a key.\nconst hash = crypto.hmacSha512(\"key\", \"hello, world\");\nos.toast(hash);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the HMAC of an object.\nconst hash = crypto.hmacSha512(\"key\", {\n    abc: \"def\"\n});\nos.toast(hash);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/crypto"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "crypto.hmacSha512\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1893,
+                        "name": "key",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the secret key that should be used to create the HMAC.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1894,
+                        "name": "data",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isRest": true
+                        },
+                        "comment": {
+                            "shortText": "the data that should be included in the hash. If multiple pieces of data are included, they will be concatenated before hashing.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "intrinsic",
+                                "name": "unknown"
+                            }
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "Calculates the [HMAC](https://en.wikipedia.org/wiki/HMAC) [SHA-215](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.",
+                "text": "HMAC hashes are generally useful for validating that a piece of data was sent from someone else who has a particular secret key.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the HMAC of a string with a key.\nconst hash = crypto.hmacSha512(\"key\", \"hello, world\");\nos.toast(hash);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the HMAC of an object.\nconst hash = crypto.hmacSha512(\"key\", {\n    abc: \"def\"\n});\nos.toast(hash);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/crypto"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "crypto.hmacSha512\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1907,
+            "order": 9999,
+            "name": "crypto.isEncrypted",
+            "reflection": {
+                "id": 1907,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Determines if the given value has been encrypted using [`crypto.encrypt(secret, data)`](ref:crypto.encrypt).\nReturns true if the data is encrypted and false otherwise.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Determine if a value is encrypted.\nconst encrypted = crypto.isEncrypted(\"hello, world\");\nos.toast('Is it encrypted? ' + encrypted);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/crypto"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "crypto.isEncrypted\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1908,
+                        "name": "cyphertext",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the value that should be tested to see if it has been encrypted.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "boolean"
+                }
+            },
+            "comment": {
+                "shortText": "Determines if the given value has been encrypted using {@link crypto.encrypt}.\nReturns true if the data is encrypted and false otherwise.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Determine if a value is encrypted.\nconst encrypted = crypto.isEncrypted(\"hello, world\");\nos.toast('Is it encrypted? ' + encrypted);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/crypto"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "crypto.isEncrypted\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1936,
+            "order": 9999,
+            "name": "crypto.keypair",
+            "reflection": {
+                "id": 1936,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Creates a keypair that can be used to [digitially sign](https://en.wikipedia.org/wiki/Digital_signature) and verify data.",
+                    "text": "Digital signatures are generally useful for verifying that a piece of data was sent from someone who had access to the keypair.\n\nUse [`crypto.sign(keypair, secret, data)`](ref:crypto.sign) and crypto.verify to sign and verify the data.\n\nKeypairs are made up of a private key and a public key. The private key is a special value that can be used to create digital signatures and the public key is a related value that can be used to verify that a digitital signature was created by the private key.\n\nThe private key is called \"private\" because it is encrypted using the given secret while the public key is called \"public\" because it is not encrypted so anyone can use it if they have access to it.\n\nNote that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless they have access to it.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Create a keypair and toast it.\nconst keypair = crypto.keypair(\"my secret\");\nos.toast(keypair);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/crypto"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "crypto.keypair\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1937,
+                        "name": "secret",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the secret that should be used to encrypt the private key of the keypair.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "Creates a keypair that can be used to [digitially sign](https://en.wikipedia.org/wiki/Digital_signature) and verify data.",
+                "text": "Digital signatures are generally useful for verifying that a piece of data was sent from someone who had access to the keypair.\n\nUse {@link crypto.sign} and {@link crypto.verify} to sign and verify the data.\n\nKeypairs are made up of a private key and a public key. The private key is a special value that can be used to create digital signatures and the public key is a related value that can be used to verify that a digitital signature was created by the private key.\n\nThe private key is called \"private\" because it is encrypted using the given secret while the public key is called \"public\" because it is not encrypted so anyone can use it if they have access to it.\n\nNote that both the private and public keys are randomly generated, so while the public is unencrypted, it won't be able to be used by someone else unless they have access to it.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Create a keypair and toast it.\nconst keypair = crypto.keypair(\"my secret\");\nos.toast(keypair);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/crypto"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "crypto.keypair\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1853,
+            "order": 9999,
+            "name": "crypto.sha256",
+            "reflection": {
+                "id": 1853,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Calculates the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.",
+                    "text": "Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the hash of a string.\nconst hash = crypto.sha256(\"hello, world\");\nos.toast(hash);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the hash of an object.\nconst hash = crypto.sha256({\n    abc: \"def\"\n});\nos.toast(hash);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/crypto"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "crypto.sha256\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1854,
+                        "name": "data",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isRest": true
+                        },
+                        "comment": {
+                            "shortText": "a piece of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated before hashing.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "intrinsic",
+                                "name": "unknown"
+                            }
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "Calculates the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.",
+                "text": "Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the hash of a string.\nconst hash = crypto.sha256(\"hello, world\");\nos.toast(hash);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the hash of an object.\nconst hash = crypto.sha256({\n    abc: \"def\"\n});\nos.toast(hash);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/crypto"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "crypto.sha256\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1857,
+            "order": 9999,
+            "name": "crypto.sha512",
+            "reflection": {
+                "id": 1857,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Calculates the [SHA-512](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.",
+                    "text": "Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the hash of a string.\nconst hash = crypto.sha512(\"hello, world\");\nos.toast(hash);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the hash of an object.\nconst hash = crypto.sha512({\n    abc: \"def\"\n});\nos.toast(hash);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/crypto"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "crypto.sha512\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1858,
+                        "name": "data",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isRest": true
+                        },
+                        "comment": {
+                            "shortText": "a piece of data that should be included in the hash. If multiple pieces of data are included, they will be concatenated before hashing.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "intrinsic",
+                                "name": "unknown"
+                            }
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "Calculates the [SHA-512](https://en.wikipedia.org/wiki/SHA-2) [hash](https://en.wikipedia.org/wiki/Cryptographic_hash_function) of the given data.\nReturns a [hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) string that represents the computed hash.",
+                "text": "Hashes are generally useful for validating that a piece of data did not change or for checking to see if two values are the same thing.\n\nSupports calculating hashes of strings, numbers, booleans, objects, arrays, and bots.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the hash of a string.\nconst hash = crypto.sha512(\"hello, world\");\nos.toast(hash);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the hash of an object.\nconst hash = crypto.sha512({\n    abc: \"def\"\n});\nos.toast(hash);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/crypto"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "crypto.sha512\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1940,
+            "order": 9999,
+            "name": "crypto.sign",
+            "reflection": {
+                "id": 1940,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Calculates the digital signature for the given data using the given keypair and secret (also commonly known as a password).",
+                    "text": "Use [`crypto.keypair(secret)`](ref:crypto.keypair) to create a keypair that can be used to create signatures.\n\nUse crypto.verify to validate signatures.\n\nDigital signatures are used to verify the authenticity and integrity of data.\n\nThis works by leveraging asymmetric encryption but in reverse.\n\nIf we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that the data was encrypted (i.e. signed) by the corresponding private key.\n\nAnd since the public key is available to everyone but the private key is only usable when you have the secret, we can use this to prove that a particular piece of data was signed by whoever knows the secret.\n\nNote that because of how digital signatures work, signing the same data with the same keypair will produce the same signature.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Create a signature for the string \"hello\".\n// Returned from crypto.keypair()\nconst keypair = \"vK1.ugqz8HzhaQhfORc8Coc6WVHTciMrcmfSUuw99KLRJYk=.djEuak1QNkF5MHFzMTBFMXRHamR1ZFhqTmRTV3AycjVyZUsudzFjSWZWVUFQVUdqK3hTM000NUduYUlNQ094SUhCTUEuanYrZEQwNVJFVGo3UzRPSklQQUkxc3U0anZjUmxrTEM2OW1BajkyMkxxdTFZd2sxNzV5QW9Dc3gwU3RENlQ0cmtNTVk4b2Zna2JRVTIrQmp5OUIrTTJsaFI2ajcyb0lJdmdSWkRXRU9lZE09\";\n\nconst signature = crypto.sign(keypair, \"my secret\", \"hello\");\nos.toast(signature);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/crypto"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "crypto.sign\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1941,
+                        "name": "keypair",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the keypair that should be used to sign the data.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1942,
+                        "name": "secret",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the secret that was used to encrypt the private key of the keypair.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1943,
+                        "name": "data",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the string data that should be signed.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "Calculates the digital signature for the given data using the given keypair and secret (also commonly known as a password).",
+                "text": "Use {@link crypto.keypair} to create a keypair that can be used to create signatures.\n\nUse {@link crypto.verify} to validate signatures.\n\nDigital signatures are used to verify the authenticity and integrity of data.\n\nThis works by leveraging asymmetric encryption but in reverse.\n\nIf we can encrypt some data such that only the public key of a keypair can decrypt it, then we can prove that the data was encrypted (i.e. signed) by the corresponding private key.\n\nAnd since the public key is available to everyone but the private key is only usable when you have the secret, we can use this to prove that a particular piece of data was signed by whoever knows the secret.\n\nNote that because of how digital signatures work, signing the same data with the same keypair will produce the same signature.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Create a signature for the string \"hello\".\n// Returned from crypto.keypair()\nconst keypair = \"vK1.ugqz8HzhaQhfORc8Coc6WVHTciMrcmfSUuw99KLRJYk=.djEuak1QNkF5MHFzMTBFMXRHamR1ZFhqTmRTV3AycjVyZUsudzFjSWZWVUFQVUdqK3hTM000NUduYUlNQ094SUhCTUEuanYrZEQwNVJFVGo3UzRPSklQQUkxc3U0anZjUmxrTEM2OW1BajkyMkxxdTFZd2sxNzV5QW9Dc3gwU3RENlQ0cmtNTVk4b2Zna2JRVTIrQmp5OUIrTTJsaFI2ajcyb0lJdmdSWkRXRU9lZE09\";\n\nconst signature = crypto.sign(keypair, \"my secret\", \"hello\");\nos.toast(signature);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/crypto"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "crypto.sign\n"
+                    }
+                ]
+            },
+            "group": null
+        }
+    ],
+    "references": {
+        "Quaternion": "types/math/rotations",
+        "id-3179": "Quaternion",
+        "Rotation": "types/math/rotations",
+        "id-3211": "Rotation",
+        "Vector2": "types/math/vectors",
+        "id-3045": "Vector2",
+        "Vector3": "types/math/vectors",
+        "id-3102": "Vector3",
+        "AddCountFailure": "types/records/events",
+        "id-2992": "AddCountFailure",
+        "AddCountSuccess": "types/records/events",
+        "id-2987": "AddCountSuccess",
+        "AnimateTagOptions": "types/animation",
+        "id-2103": "AnimateTagOptions",
+        "AttachDebuggerOptions": "types/debuggers/common",
+        "id-2478": "AttachDebuggerOptions",
+        "CasualOSDevice": "types/os",
+        "id-2811": "CasualOSDevice",
+        "CasualOSVersion": "types/os",
+        "id-2803": "CasualOSVersion",
+        "AxisAndAngle": "types/math/rotations",
+        "id-3257": "AxisAndAngle",
+        "BotTagMasks": "types/core",
+        "id-2780": "BotTagMasks",
+        "BotTags": "types/core",
+        "id-2695": "BotTags",
+        "BotState": "types/core",
+        "id-2793": "BotState",
+        "CompiledBotListeners": "types/core",
+        "id-2774": "CompiledBotListeners",
+        "ConvertGeolocationToWhat3WordsOptions": "types/os",
+        "id-2513": "ConvertGeolocationToWhat3WordsOptions",
+        "CreatePublicRecordKeyFailure": "types/records/key",
+        "id-2825": "CreatePublicRecordKeyFailure",
+        "CreatePublicRecordKeySuccess": "types/records/key",
+        "id-2821": "CreatePublicRecordKeySuccess",
+        "DebuggerCallFrame": "types/debuggers/common",
+        "id-2431": "DebuggerCallFrame",
+        "DebuggerFunctionLocation": "types/debuggers/common",
+        "id-2466": "DebuggerFunctionLocation",
+        "DebuggerPause": "types/debuggers/common",
+        "id-2460": "DebuggerPause",
+        "DebuggerTagMaskUpdate": "types/debuggers/common",
+        "id-2439": "DebuggerTagMaskUpdate",
+        "DebuggerTagUpdate": "types/debuggers/common",
+        "id-2445": "DebuggerTagUpdate",
+        "DebuggerVariable": "types/debuggers/common",
+        "id-2472": "DebuggerVariable",
+        "EnableXROptions": "types/os",
+        "id-2587": "EnableXROptions",
+        "EraseDataFailure": "types/records/data",
+        "id-2960": "EraseDataFailure",
+        "EraseDataSuccess": "types/records/data",
+        "id-2956": "EraseDataSuccess",
+        "EraseFileFailure": "types/records/files",
+        "id-2982": "EraseFileFailure",
+        "EraseFileSuccess": "types/records/files",
+        "id-2978": "EraseFileSuccess",
+        "EulerAnglesRotation": "types/math/rotations",
+        "id-3260": "EulerAnglesRotation",
+        "FocusOnOptions": "types/os",
+        "id-2547": "FocusOnOptions",
+        "FocusOnRotation": "types/os",
+        "id-2559": "FocusOnRotation",
+        "FormAnimationData": "types/os",
+        "id-2605": "FormAnimationData",
+        "FromToRotation": "types/math/rotations",
+        "id-3254": "FromToRotation",
+        "GetCountFailure": "types/records/events",
+        "id-3003": "GetCountFailure",
+        "GetCountSuccess": "types/records/events",
+        "id-2997": "GetCountSuccess",
+        "GetDataFailure": "types/records/data",
+        "id-2951": "GetDataFailure",
+        "GetDataSuccess": "types/records/data",
+        "id-2942": "GetDataSuccess",
+        "GetRoomOptionsFailure": "types/os",
+        "id-2193": "GetRoomOptionsFailure",
+        "GetRoomOptionsSuccess": "types/os",
+        "id-2189": "GetRoomOptionsSuccess",
+        "GetRoomRemoteOptionsFailure": "types/os",
+        "id-2236": "GetRoomRemoteOptionsFailure",
+        "GetRoomRemoteOptionsSuccess": "types/os",
+        "id-2231": "GetRoomRemoteOptionsSuccess",
+        "GetRoomTrackOptionsFailure": "types/os",
+        "id-2212": "GetRoomTrackOptionsFailure",
+        "GetRoomTrackOptionsSuccess": "types/os",
+        "id-2207": "GetRoomTrackOptionsSuccess",
+        "GrantMarkerPermissionFailure": "types/records/policies",
+        "id-3031": "GrantMarkerPermissionFailure",
+        "GrantMarkerPermissionSuccess": "types/records/policies",
+        "id-3029": "GrantMarkerPermissionSuccess",
+        "GrantRoleFailure": "types/records/roles",
+        "id-3017": "GrantRoleFailure",
+        "GrantRoleSuccess": "types/records/roles",
+        "id-3015": "GrantRoleSuccess",
+        "ImageClassifierOptions": "types/os",
+        "id-2565": "ImageClassifierOptions",
+        "InstUpdate": "types/os",
+        "id-2816": "InstUpdate",
+        "JoinRoomFailure": "types/os",
+        "id-2174": "JoinRoomFailure",
+        "JoinRoomSuccess": "types/os",
+        "id-2171": "JoinRoomSuccess",
+        "LeaveRoomFailure": "types/os",
+        "id-2183": "LeaveRoomFailure",
+        "LeaveRoomSuccess": "types/os",
+        "id-2180": "LeaveRoomSuccess",
+        "ListDataFailure": "types/records/data",
+        "id-2973": "ListDataFailure",
+        "ListDataSuccess": "types/records/data",
+        "id-2965": "ListDataSuccess",
+        "LookRotation": "types/math/rotations",
+        "id-3277": "LookRotation",
+        "MediaPermissionOptions": "types/os",
+        "id-2584": "MediaPermissionOptions",
+        "Debugger": "types/debuggers/debugger",
+        "id-2243": "Debugger",
+        "NormalDebuggerOptions": "types/debuggers/common",
+        "id-2450": "NormalDebuggerOptions",
+        "ParsedBotLink": "types/core",
+        "id-2799": "ParsedBotLink",
+        "PartialBotState": "types/core",
+        "id-2796": "PartialBotState",
+        "PausableDebugger": "types/debuggers/pausable-debugger",
+        "id-2299": "PausableDebugger",
+        "PausableDebuggerOptions": "types/debuggers/common",
+        "id-2455": "PausableDebuggerOptions",
+        "PauseTrigger": "types/debuggers/common",
+        "id-2418": "PauseTrigger",
+        "PauseTriggerOptions": "types/debuggers/common",
+        "id-2426": "PauseTriggerOptions",
+        "PossiblePauseTriggerLocation": "types/debuggers/common",
+        "id-2413": "PossiblePauseTriggerLocation",
+        "PseudoRandomNumberGenerator": "types/core",
+        "id-2480": "PseudoRandomNumberGenerator",
+        "QuaternionRotation": "types/math/rotations",
+        "id-3270": "QuaternionRotation",
+        "RaycastRay": "types/os",
+        "id-2167": "RaycastRay",
+        "RaycastResult": "types/os",
+        "id-2164": "RaycastResult",
+        "RecordActionOptions": "types/records/extra",
+        "id-2496": "RecordActionOptions",
+        "RecordDataFailure": "types/records/data",
+        "id-2937": "RecordDataFailure",
+        "RecordDataSuccess": "types/records/data",
+        "id-2933": "RecordDataSuccess",
+        "RecordFileFailure": "types/records/files",
+        "id-2134": "RecordFileFailure",
+        "RecordFileSuccess": "types/records/files",
+        "id-2130": "RecordFileSuccess",
+        "RegisterPrefixOptions": "types/core",
+        "id-2644": "RegisterPrefixOptions",
+        "RevokeMarkerPermissionFailure": "types/records/policies",
+        "id-3038": "RevokeMarkerPermissionFailure",
+        "RevokeMarkerPermissionSuccess": "types/records/policies",
+        "id-3036": "RevokeMarkerPermissionSuccess",
+        "RevokeRoleFailure": "types/records/roles",
+        "id-3024": "RevokeRoleFailure",
+        "RevokeRoleSuccess": "types/records/roles",
+        "id-3022": "RevokeRoleSuccess",
+        "RoomJoinOptions": "types/os",
+        "id-2610": "RoomJoinOptions",
+        "RoomOptions": "types/os",
+        "id-2619": "RoomOptions",
+        "RoomRemoteOptions": "types/os",
+        "id-2635": "RoomRemoteOptions",
+        "RoomTrackOptions": "types/os",
+        "id-2623": "RoomTrackOptions",
+        "RuntimeBot": "types/core",
+        "id-2647": "RuntimeBot",
+        "RuntimeBotLinks": "types/core",
+        "id-2786": "RuntimeBotLinks",
+        "RuntimeBotVars": "types/core",
+        "id-2783": "RuntimeBotVars",
+        "SequenceRotation": "types/math/rotations",
+        "id-3268": "SequenceRotation",
+        "SetRoomOptionsSuccess": "types/os",
+        "id-2198": "SetRoomOptionsSuccess",
+        "SetRoomTrackOptions": "types/os",
+        "id-2641": "SetRoomTrackOptions",
+        "SetRoomTrackOptionsFailure": "types/os",
+        "id-2224": "SetRoomTrackOptionsFailure",
+        "SetRoomTrackOptionsSuccess": "types/os",
+        "id-2219": "SetRoomTrackOptionsSuccess",
+        "ShareOptions": "types/os",
+        "id-2543": "ShareOptions",
+        "ShowChatOptions": "types/os",
+        "id-2537": "ShowChatOptions",
+        "ShowConfirmOptions": "types/os",
+        "id-2579": "ShowConfirmOptions",
+        "ShowInputOptions": "types/os",
+        "id-2570": "ShowInputOptions",
+        "SnapAxis": "types/os",
+        "id-2517": "SnapAxis",
+        "SnapGridTarget": "types/os",
+        "id-2139": "SnapGridTarget",
+        "SnapPoint": "types/os",
+        "id-2529": "SnapPoint",
+        "StartFormAnimationOptions": "types/os",
+        "id-2589": "StartFormAnimationOptions",
+        "StopFormAnimationOptions": "types/os",
+        "id-2602": "StopFormAnimationOptions",
+        "SuccessfulGeolocation": "types/os",
+        "id-2499": "SuccessfulGeolocation",
+        "UnsuccessfulGeolocation": "types/os",
+        "id-2509": "UnsuccessfulGeolocation",
+        "UpdateEventRecordFailure": "types/records/events",
+        "id-3010": "UpdateEventRecordFailure",
+        "UpdateEventRecordSuccess": "types/records/events",
+        "id-3008": "UpdateEventRecordSuccess",
+        "UploadedFile": "types/os",
+        "id-2160": "UploadedFile",
+        "WebhookOptions": "types/web",
+        "id-2084": "WebhookOptions",
+        "WebhookResult": "types/web",
+        "id-2096": "WebhookResult",
+        "AddCountResult": "types/records/events",
+        "id-2986": "AddCountResult",
+        "AvailablePermissions": "types/permissions",
+        "id-2830": "AvailablePermissions",
+        "BarcodeFormat": "types/os",
+        "id-2564": "BarcodeFormat",
+        "BotFilter": "types/core",
+        "id-2118": "BotFilter",
+        "BotSpace": "types/core",
+        "id-2770": "BotSpace",
+        "CameraType": "types/os",
+        "id-2563": "CameraType",
+        "CreatePublicRecordKeyResult": "types/records/key",
+        "id-2820": "CreatePublicRecordKeyResult",
+        "EraseDataResult": "types/records/data",
+        "id-2955": "EraseDataResult",
+        "EraseFileResult": "types/records/files",
+        "id-2977": "EraseFileResult",
+        "Geolocation": "types/os",
+        "id-2498": "Geolocation",
+        "GetCountResult": "types/records/events",
+        "id-2996": "GetCountResult",
+        "GetDataResult": "types/records/data",
+        "id-2941": "GetDataResult",
+        "GetRoomOptionsResult": "types/os",
+        "id-2188": "GetRoomOptionsResult",
+        "GetRoomRemoteOptionsResult": "types/os",
+        "id-2230": "GetRoomRemoteOptionsResult",
+        "GetRoomTrackOptionsResult": "types/os",
+        "id-2206": "GetRoomTrackOptionsResult",
+        "GrantMarkerPermissionResult": "types/records/policies",
+        "id-3028": "GrantMarkerPermissionResult",
+        "GrantRoleResult": "types/records/roles",
+        "id-3014": "GrantRoleResult",
+        "JoinRoomResult": "types/os",
+        "id-2170": "JoinRoomResult",
+        "LeaveRoomResult": "types/os",
+        "id-2179": "LeaveRoomResult",
+        "ListDataResult": "types/records/data",
+        "id-2964": "ListDataResult",
+        "Mod": "types/core",
+        "id-2113": "Mod",
+        "PortalType": "types/core",
+        "id-2802": "PortalType",
+        "PossiblePauseTriggerStates": "types/debuggers/common",
+        "id-2417": "PossiblePauseTriggerStates",
+        "RecordDataResult": "types/records/data",
+        "id-2932": "RecordDataResult",
+        "RecordFileResult": "types/records/files",
+        "id-2129": "RecordFileResult",
+        "RevokeMarkerPermissionResult": "types/records/policies",
+        "id-3035": "RevokeMarkerPermissionResult",
+        "RevokeRoleResult": "types/records/roles",
+        "id-3021": "RevokeRoleResult",
+        "SetRoomOptionsResult": "types/os",
+        "id-2197": "SetRoomOptionsResult",
+        "SetRoomTrackOptionsResult": "types/os",
+        "id-2218": "SetRoomTrackOptionsResult",
+        "SnapTarget": "types/os",
+        "id-2536": "SnapTarget",
+        "TagFilter": "types/core",
+        "id-2114": "TagFilter",
+        "UpdateEventRecordResult": "types/records/events",
+        "id-3007": "UpdateEventRecordResult",
+        "animateTag-byOptions": "actions/utility",
+        "id-364": "animateTag-byOptions",
+        "getbot-tag": "actions/data",
+        "id-33": "getbot-tag",
+        "getbots-tag": "actions/data",
+        "id-17": "getbots-tag",
+        "animateTag-byTag": "actions/utility",
+        "id-358": "animateTag-byTag",
+        "changeState": "actions/data",
+        "id-177": "changeState",
+        "create": "actions/data",
+        "id-162": "create",
+        "destroy": "actions/data",
+        "id-166": "destroy",
+        "getbot-filters": "actions/data",
+        "id-26": "getbot-filters",
+        "getbots-filters": "actions/data",
+        "id-10": "getbots-filters",
+        "priorityShout": "actions/event",
+        "id-225": "priorityShout",
+        "shout": "actions/event",
+        "id-237": "shout",
+        "updateBotLinks": "actions/data",
+        "id-198": "updateBotLinks",
+        "whisper": "actions/event",
+        "id-263": "whisper",
+        "action.perform": "actions/event",
+        "id-1589": "action.perform",
+        "action.reject": "actions/event",
+        "id-1593": "action.reject",
+        "applyDiffToSnapshot": "actions/data",
+        "id-83": "applyDiffToSnapshot",
+        "applyMod": "actions/mods",
+        "id-152": "applyMod",
+        "assert": "actions/debuggers",
+        "id-407": "assert",
+        "assertEqual": "actions/debuggers",
+        "id-412": "assertEqual",
+        "atPosition": "actions/bot-filters",
+        "id-293": "atPosition",
+        "byCreator": "actions/bot-filters",
+        "id-314": "byCreator",
+        "byID": "actions/bot-filters",
+        "id-281": "byID",
+        "byMod": "actions/bot-filters",
+        "id-285": "byMod",
+        "bySpace": "actions/bot-filters",
+        "id-310": "bySpace",
+        "byTag": "actions/bot-filters",
+        "id-276": "byTag",
+        "bytes.fromBase64String": "actions/bytes",
+        "id-1817": "bytes.fromBase64String",
+        "bytes.fromHexString": "actions/bytes",
+        "id-1825": "bytes.fromHexString",
+        "bytes.toBase64String": "actions/bytes",
+        "id-1813": "bytes.toBase64String",
+        "bytes.toHexString": "actions/bytes",
+        "id-1821": "bytes.toHexString",
+        "clearAnimations": "actions/utility",
+        "id-378": "clearAnimations",
+        "clearTagMasks": "actions/data",
+        "id-106": "clearTagMasks",
+        "crypto.hash-raw": "actions/crypto",
+        "id-1831": "crypto.hash-raw",
+        "crypto.hash-string": "actions/crypto",
+        "id-1837": "crypto.hash-string",
+        "crypto.hmac-raw": "actions/crypto",
+        "id-1868": "crypto.hmac-raw",
+        "crypto.hmac-string": "actions/crypto",
+        "id-1861": "crypto.hmac-string",
+        "crypto.asymmetric.decrypt": "actions/crypto",
+        "id-1926": "crypto.asymmetric.decrypt",
+        "crypto.asymmetric.encrypt": "actions/crypto",
+        "id-1921": "crypto.asymmetric.encrypt",
+        "crypto.asymmetric.isEncrypted": "actions/crypto",
+        "id-1932": "crypto.asymmetric.isEncrypted",
+        "crypto.asymmetric.isKeypair": "actions/crypto",
+        "id-1917": "crypto.asymmetric.isKeypair",
+        "crypto.asymmetric.keypair": "actions/crypto",
+        "id-1913": "crypto.asymmetric.keypair",
+        "crypto.encrypt": "actions/crypto",
+        "id-1897": "crypto.encrypt",
+        "crypto.hmacSha256": "actions/crypto",
+        "id-1887": "crypto.hmacSha256",
+        "crypto.hmacSha512": "actions/crypto",
+        "id-1892": "crypto.hmacSha512",
+        "crypto.isEncrypted": "actions/crypto",
+        "id-1907": "crypto.isEncrypted",
+        "crypto.keypair": "actions/crypto",
+        "id-1936": "crypto.keypair",
+        "crypto.sha256": "actions/crypto",
+        "id-1853": "crypto.sha256",
+        "crypto.sha512": "actions/crypto",
+        "id-1857": "crypto.sha512",
+        "crypto.sign": "actions/crypto",
+        "id-1940": "crypto.sign",
+        "deleteTagMaskText": "actions/data",
+        "id-133": "deleteTagMaskText",
+        "deleteTagText": "actions/data",
+        "id-126": "deleteTagText",
+        "diffSnapshots": "actions/data",
+        "id-78": "diffSnapshots",
+        "either": "actions/bot-filters",
+        "id-318": "either",
+        "os.beginAudioRecording": "actions/audio",
+        "id-1647": "os.beginAudioRecording",
+        "os.endAudioRecording": "actions/audio",
+        "id-1651": "os.endAudioRecording",
+        "getBotLinks": "actions/data",
+        "id-194": "getBotLinks",
+        "getBotPosition": "actions/data",
+        "id-52": "getBotPosition",
+        "getBotRotation": "actions/data",
+        "id-57": "getBotRotation",
+        "getBotTagValues": "actions/data",
+        "id-42": "getBotTagValues",
+        "getFormattedJSON": "actions/data",
+        "id-70": "getFormattedJSON",
+        "getID": "actions/data",
+        "id-62": "getID",
+        "getJSON": "actions/data",
+        "id-66": "getJSON",
+        "getLink": "actions/data",
+        "id-190": "getLink",
+        "getMod": "actions/mods",
+        "id-47": "getMod",
+        "getSnapshot": "actions/data",
+        "id-74": "getSnapshot",
+        "getTag": "actions/data",
+        "id-88": "getTag",
+        "inDimension": "actions/bot-filters",
+        "id-289": "inDimension",
+        "inStack": "actions/bot-filters",
+        "id-299": "inStack",
+        "insertTagMaskText": "actions/data",
+        "id-118": "insertTagMaskText",
+        "insertTagText": "actions/data",
+        "id-111": "insertTagText",
+        "math.abs": "actions/math",
+        "id-1687": "math.abs",
+        "math.addVectors": "actions/math",
+        "id-1757": "math.addVectors",
+        "math.areClose": "actions/math",
+        "id-1788": "math.areClose",
+        "math.avg": "actions/math",
+        "id-1679": "math.avg",
+        "math.degreesToRadians": "actions/math",
+        "id-1713": "math.degreesToRadians",
+        "math.getAnchorPointOffset": "actions/math",
+        "id-1753": "math.getAnchorPointOffset",
+        "math.getForwardDirection": "actions/math",
+        "id-1721": "math.getForwardDirection",
+        "math.getSeededRandomNumberGenerator": "actions/math",
+        "id-1695": "math.getSeededRandomNumberGenerator",
+        "math.intersectPlane": "actions/math",
+        "id-1730": "math.intersectPlane",
+        "math.negateVector": "actions/math",
+        "id-1767": "math.negateVector",
+        "math.normalizeVector": "actions/math",
+        "id-1772": "math.normalizeVector",
+        "math.radiansToDegrees": "actions/math",
+        "id-1717": "math.radiansToDegrees",
+        "math.random": "actions/math",
+        "id-1708": "math.random",
+        "math.randomInt": "actions/math",
+        "id-1703": "math.randomInt",
+        "math.scaleVector": "actions/math",
+        "id-1782": "math.scaleVector",
+        "math.setRandomSeed": "actions/math",
+        "id-1699": "math.setRandomSeed",
+        "math.sqrt": "actions/math",
+        "id-1683": "math.sqrt",
+        "math.stdDev": "actions/math",
+        "id-1691": "math.stdDev",
+        "math.subtractVectors": "actions/math",
+        "id-1762": "math.subtractVectors",
+        "math.sum": "actions/math",
+        "id-1675": "math.sum",
+        "math.vectorLength": "actions/math",
+        "id-1777": "math.vectorLength",
+        "neighboring": "actions/bot-filters",
+        "id-304": "neighboring",
+        "not": "actions/bot-filters",
+        "id-325": "not",
+        "os.attachDebugger": "actions/debuggers",
+        "id-1287": "os.attachDebugger",
+        "os.createDebugger-normal": "actions/debuggers",
+        "id-1276": "os.createDebugger-normal",
+        "os.createDebugger-pausable": "actions/debuggers",
+        "id-1280": "os.createDebugger-pausable",
+        "os.focusOn-bot": "actions/portals",
+        "id-480": "os.focusOn-bot",
+        "os.focusOn-position": "actions/portals",
+        "id-485": "os.focusOn-position",
+        "os.getExecutingDebugger": "actions/debuggers",
+        "id-1284": "os.getExecutingDebugger",
+        "showChat-options": "actions/os",
+        "id-507": "showChat-options",
+        "showChat-placeholder": "actions/os",
+        "id-503": "showChat-placeholder",
+        "os.showInput": "actions/portals",
+        "id-712": "os.showInput",
+        "os.addBotDropGrid": "actions/portals",
+        "id-786": "os.addBotDropGrid",
+        "os.addBotDropSnap": "actions/portals",
+        "id-777": "os.addBotDropSnap",
+        "os.addDropGrid": "actions/portals",
+        "id-782": "os.addDropGrid",
+        "os.addDropSnap": "actions/portals",
+        "id-773": "os.addDropSnap",
+        "os.applyUpdatesToInst": "actions/os",
+        "id-1230": "os.applyUpdatesToInst",
+        "os.arSupported": "actions/xr",
+        "id-548": "os.arSupported",
+        "os.bufferSound": "actions/audio",
+        "id-749": "os.bufferSound",
+        "os.calculateRayFromCamera": "actions/portals",
+        "id-1178": "os.calculateRayFromCamera",
+        "os.cancelSound": "actions/audio",
+        "id-753": "os.cancelSound",
+        "os.closeBarcodeScanner": "actions/barcodes",
+        "id-621": "os.closeBarcodeScanner",
+        "os.closeCircleWipe": "actions/portals",
+        "id-765": "os.closeCircleWipe",
+        "os.closeImageClassifier": "actions/image-classification",
+        "id-636": "os.closeImageClassifier",
+        "os.closeQRCodeScanner": "actions/barcodes",
+        "id-607": "os.closeQRCodeScanner",
+        "os.compileApp": "actions/app",
+        "id-900": "os.compileApp",
+        "os.convertGeolocationToWhat3Words": "actions/os",
+        "id-1163": "os.convertGeolocationToWhat3Words",
+        "os.countEvents": "actions/records",
+        "id-1157": "os.countEvents",
+        "os.createInitializationUpdate": "actions/os",
+        "id-1226": "os.createInitializationUpdate",
+        "os.device": "actions/os",
+        "id-525": "os.device",
+        "os.disableAR": "actions/xr",
+        "id-538": "os.disableAR",
+        "os.disablePointOfView": "actions/portals",
+        "id-563": "os.disablePointOfView",
+        "os.disableVR": "actions/xr",
+        "id-545": "os.disableVR",
+        "os.disableWakeLock": "actions/os",
+        "id-569": "os.disableWakeLock",
+        "os.download": "actions/files",
+        "id-575": "os.download",
+        "os.downloadBots": "actions/files",
+        "id-581": "os.downloadBots",
+        "os.downloadBotsAsInitialzationUpdate": "actions/files",
+        "id-586": "os.downloadBotsAsInitialzationUpdate",
+        "os.downloadInst": "actions/files",
+        "id-594": "os.downloadInst",
+        "os.enableAR": "actions/xr",
+        "id-534": "os.enableAR",
+        "os.enableCustomDragging": "actions/portals",
+        "id-791": "os.enableCustomDragging",
+        "os.enablePointOfView": "actions/portals",
+        "id-554": "os.enablePointOfView",
+        "os.enableVR": "actions/xr",
+        "id-541": "os.enableVR",
+        "os.eraseData": "actions/records",
+        "id-1100": "os.eraseData",
+        "os.eraseManualApprovalData": "actions/records",
+        "id-1106": "os.eraseManualApprovalData",
+        "os.exitFullscreenMode": "actions/portals",
+        "id-451": "os.exitFullscreenMode",
+        "os.getAverageFrameRate": "actions/os",
+        "id-848": "os.getAverageFrameRate",
+        "os.getCameraPosition": "actions/portals",
+        "id-804": "os.getCameraPosition",
+        "os.getCameraRotation": "actions/portals",
+        "id-808": "os.getCameraRotation",
+        "os.getCurrentDimension": "actions/portals",
+        "id-683": "os.getCurrentDimension",
+        "os.getCurrentInst": "actions/portals",
+        "id-689": "os.getCurrentInst",
+        "os.getCurrentInstUpdate": "actions/os",
+        "id-1234": "os.getCurrentInstUpdate",
+        "os.getData": "actions/records",
+        "id-1082": "os.getData",
+        "os.getDimensionalDepth": "actions/portals",
+        "id-702": "os.getDimensionalDepth",
+        "os.getFocusPoint": "actions/portals",
+        "id-816": "os.getFocusPoint",
+        "os.getGeolocation": "actions/os",
+        "id-798": "os.getGeolocation",
+        "os.getInputList": "actions/portals",
+        "id-841": "os.getInputList",
+        "os.getInputState": "actions/portals",
+        "id-836": "os.getInputState",
+        "os.getInstStateFromUpdates": "actions/os",
+        "id-1222": "os.getInstStateFromUpdates",
+        "os.getManualApprovalData": "actions/records",
+        "id-1088": "os.getManualApprovalData",
+        "os.getMediaPermission": "actions/os",
+        "id-844": "os.getMediaPermission",
+        "os.getMenuDimension": "actions/portals",
+        "id-692": "os.getMenuDimension",
+        "os.getMiniPortalDimension": "actions/portals",
+        "id-695": "os.getMiniPortalDimension",
+        "os.getPointerDirection": "actions/portals",
+        "id-832": "os.getPointerDirection",
+        "os.getPointerPosition": "actions/portals",
+        "id-820": "os.getPointerPosition",
+        "os.getPointerRotation": "actions/portals",
+        "id-824": "os.getPointerRotation",
+        "os.getPortalDimension": "actions/portals",
+        "id-698": "os.getPortalDimension",
+        "os.getPublicRecordKey": "actions/records",
+        "id-1007": "os.getPublicRecordKey",
+        "os.getRoomOptions": "actions/rooms",
+        "id-866": "os.getRoomOptions",
+        "os.getRoomRemoteOptions": "actions/rooms",
+        "id-881": "os.getRoomRemoteOptions",
+        "os.getRoomTrackOptions": "actions/rooms",
+        "id-870": "os.getRoomTrackOptions",
+        "os.getSubjectlessPublicRecordKey": "actions/records",
+        "id-1011": "os.getSubjectlessPublicRecordKey",
+        "os.getWakeLockConfiguration": "actions/os",
+        "id-572": "os.getWakeLockConfiguration",
+        "os.goToDimension": "actions/portals",
+        "id-726": "os.goToDimension",
+        "os.goToURL": "actions/portals",
+        "id-730": "os.goToURL",
+        "os.grantInstAdminPermission": "actions/records",
+        "id-1029": "os.grantInstAdminPermission",
+        "os.grantInstRole": "actions/records",
+        "id-1049": "os.grantInstRole",
+        "os.grantRecordMarkerPermission": "actions/records",
+        "id-1015": "os.grantRecordMarkerPermission",
+        "os.grantUserRole": "actions/records",
+        "id-1034": "os.grantUserRole",
+        "os.hasBotInMiniPortal": "actions/portals",
+        "id-757": "os.hasBotInMiniPortal",
+        "os.hideBarcode": "actions/barcodes",
+        "id-629": "os.hideBarcode",
+        "os.hideChat": "actions/os",
+        "id-515": "os.hideChat",
+        "os.hideHtml": "actions/os",
+        "id-458": "os.hideHtml",
+        "os.hideQRCode": "actions/barcodes",
+        "id-614": "os.hideQRCode",
+        "os.hideTips": "actions/portals",
+        "id-439": "os.hideTips",
+        "os.importAUX": "actions/files",
+        "id-667": "os.importAUX",
+        "os.inSheet": "actions/portals",
+        "id-801": "os.inSheet",
+        "os.instStatuses": "actions/os",
+        "id-1251": "os.instStatuses",
+        "os.instances": "actions/os",
+        "id-1241": "os.instances",
+        "os.isCollaborative": "actions/os",
+        "id-528": "os.isCollaborative",
+        "os.isInDimension": "actions/portals",
+        "id-679": "os.isInDimension",
+        "os.isRecordKey": "actions/records",
+        "id-1064": "os.isRecordKey",
+        "os.joinRoom": "actions/rooms",
+        "id-851": "os.joinRoom",
+        "os.leaveRoom": "actions/rooms",
+        "id-856": "os.leaveRoom",
+        "os.listBuiltinTags": "actions/app",
+        "id-1001": "os.listBuiltinTags",
+        "os.listData": "actions/records",
+        "id-1094": "os.listData",
+        "os.listFormAnimations": "actions/animations",
+        "id-1198": "os.listFormAnimations",
+        "os.listInstUpdates": "actions/os",
+        "id-1219": "os.listInstUpdates",
+        "os.loadInst": "actions/os",
+        "id-659": "os.loadInst",
+        "os.log": "actions/os",
+        "id-794": "os.log",
+        "os.meetCommand": "actions/os",
+        "id-1264": "os.meetCommand",
+        "os.meetFunction": "actions/os",
+        "id-1269": "os.meetFunction",
+        "os.openBarcodeScanner": "actions/barcodes",
+        "id-617": "os.openBarcodeScanner",
+        "os.openCircleWipe": "actions/portals",
+        "id-769": "os.openCircleWipe",
+        "os.openDevConsole": "actions/os",
+        "id-738": "os.openDevConsole",
+        "os.openImageClassifier": "actions/image-classification",
+        "id-632": "os.openImageClassifier",
+        "os.openQRCodeScanner": "actions/barcodes",
+        "id-603": "os.openQRCodeScanner",
+        "os.openURL": "actions/portals",
+        "id-734": "os.openURL",
+        "os.parseBotsFromData": "actions/files",
+        "id-671": "os.parseBotsFromData",
+        "os.playSound": "actions/audio",
+        "id-745": "os.playSound",
+        "os.raycast": "actions/portals",
+        "id-1172": "os.raycast",
+        "os.raycastFromCamera": "actions/portals",
+        "id-1167": "os.raycastFromCamera",
+        "os.recordData": "actions/records",
+        "id-1068": "os.recordData",
+        "os.recordEvent": "actions/records",
+        "id-1151": "os.recordEvent",
+        "os.recordFile": "actions/records",
+        "id-1112": "os.recordFile",
+        "os.recordManualApprovalData": "actions/records",
+        "id-1075": "os.recordManualApprovalData",
+        "os.registerApp": "actions/app",
+        "id-891": "os.registerApp",
+        "os.registerTagPrefix": "actions/app",
+        "id-886": "os.registerTagPrefix",
+        "os.remoteCount": "actions/os",
+        "id-1244": "os.remoteCount",
+        "os.remotes": "actions/os",
+        "id-1216": "os.remotes",
+        "os.replaceDragBot": "actions/portals",
+        "id-675": "os.replaceDragBot",
+        "os.requestAuthBot": "actions/records",
+        "id-1004": "os.requestAuthBot",
+        "os.requestFullscreenMode": "actions/portals",
+        "id-448": "os.requestFullscreenMode",
+        "os.requestWakeLock": "actions/os",
+        "id-566": "os.requestWakeLock",
+        "os.revokeInstRole": "actions/records",
+        "id-1057": "os.revokeInstRole",
+        "os.revokeRecordMarkerPermission": "actions/records",
+        "id-1022": "os.revokeRecordMarkerPermission",
+        "os.revokeUserRole": "actions/records",
+        "id-1042": "os.revokeUserRole",
+        "os.run": "actions/os",
+        "id-518": "os.run",
+        "os.setClipboard": "actions/os",
+        "id-461": "os.setClipboard",
+        "os.setRoomOptions": "actions/rooms",
+        "id-861": "os.setRoomOptions",
+        "os.setRoomTrackOptions": "actions/rooms",
+        "id-875": "os.setRoomTrackOptions",
+        "os.share": "actions/os",
+        "id-761": "os.share",
+        "os.showBarcode": "actions/barcodes",
+        "id-624": "os.showBarcode",
+        "os.showConfirm": "actions/portals",
+        "id-722": "os.showConfirm",
+        "os.showHtml": "actions/os",
+        "id-454": "os.showHtml",
+        "os.showInputForTag": "actions/portals",
+        "id-706": "os.showInputForTag",
+        "os.showJoinCode": "actions/barcodes",
+        "id-443": "os.showJoinCode",
+        "os.showQRCode": "actions/barcodes",
+        "id-610": "os.showQRCode",
+        "os.showUploadAuxFile": "actions/files",
+        "id-597": "os.showUploadAuxFile",
+        "os.showUploadFiles": "actions/files",
+        "id-600": "os.showUploadFiles",
+        "os.sleep": "actions/os",
+        "id-423": "os.sleep",
+        "os.startFormAnimation": "actions/animations",
+        "id-1187": "os.startFormAnimation",
+        "os.stopFormAnimation": "actions/animations",
+        "id-1193": "os.stopFormAnimation",
+        "os.tip": "actions/portals",
+        "id-432": "os.tip",
+        "os.toast": "actions/os",
+        "id-427": "os.toast",
+        "os.totalRemoteCount": "actions/os",
+        "id-1248": "os.totalRemoteCount",
+        "os.unloadInst": "actions/os",
+        "id-663": "os.unloadInst",
+        "os.unregisterApp": "actions/app",
+        "id-896": "os.unregisterApp",
+        "os.version": "actions/os",
+        "id-522": "os.version",
+        "os.vrSupported": "actions/xr",
+        "id-551": "os.vrSupported",
+        "os.agreedUponTime": "actions/time",
+        "id-640": "os.agreedUponTime",
+        "os.deadReckoningTime": "actions/time",
+        "id-648": "os.deadReckoningTime",
+        "os.instLatency": "actions/time",
+        "id-642": "os.instLatency",
+        "os.instTimeOffset": "actions/time",
+        "id-644": "os.instTimeOffset",
+        "os.instTimeOffsetSpread": "actions/time",
+        "id-646": "os.instTimeOffsetSpread",
+        "os.localTime": "actions/time",
+        "id-638": "os.localTime",
+        "removeTags": "actions/data",
+        "id-141": "removeTags",
+        "renameTag": "actions/data",
+        "id-146": "renameTag",
+        "setTag": "actions/data",
+        "id-93": "setTag",
+        "setTagMask": "actions/data",
+        "id-99": "setTagMask",
+        "subtractMods": "actions/mods",
+        "id-157": "subtractMods",
+        "superShout": "actions/event",
+        "id-220": "superShout",
+        "uuid": "actions/data",
+        "id-355": "uuid",
+        "web.get": "actions/web",
+        "id-1983": "web.get",
+        "web.hook": "actions/web",
+        "id-1994": "web.hook",
+        "web.post": "actions/web",
+        "id-1988": "web.post",
+        "configBot": "actions/os",
+        "id-418": "configBot"
+    }
+}

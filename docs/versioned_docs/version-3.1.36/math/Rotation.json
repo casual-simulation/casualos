@@ -1,0 +1,821 @@
+{
+  "id": 167,
+  "name": "Rotation",
+  "kind": 128,
+  "kindString": "Class",
+  "flags": {},
+  "comment": {
+    "shortText": "Defines a class that can represent geometric rotations."
+  },
+  "children": [
+    {
+      "id": 186,
+      "name": "constructor",
+      "kind": 512,
+      "kindString": "Constructor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 47,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 187,
+          "name": "new Rotation",
+          "kind": 16384,
+          "kindString": "Constructor signature",
+          "flags": {},
+          "comment": {
+            "shortText": "Creates a new rotation using the given parameters.",
+            "tags": [
+              {
+                "tag": "example",
+                "text": "Create a rotation from an axis and angle.\nconst rotation = new Rotation({\n    axis: new Vector3(0, 0, 1),\n    angle: Math.PI / 2\n}); // 90 degree rotation around Z axis\n"
+              },
+              {
+                "tag": "example",
+                "text": "Create a rotation from two vectors.\nconst rotation = new Rotation({\n    from: new Vector3(1, 0, 0),\n    to: new Vector3(0, 1, 0)\n}); // Rotation that rotates (1, 0, 0) to (0, 1, 0)\n"
+              },
+              {
+                "tag": "example",
+                "text": "Create a rotation that looks along the X axis.\nconst rotation = new Rotation({\n    direction: new Vector3(1, 0, 0),\n    upwards: new Vector3(0, 0, 1),\n    errorHandling: 'nudge'\n});\n"
+              },
+              {
+                "tag": "example",
+                "text": "Tilt this bot forwards in the home dimension.\ntags.homeRotation = new Rotation({\n    axis: new Vector3(1, 0, 0),\n    angle: Math.PI / 6 // 30 degrees\n});\n"
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 188,
+              "name": "rotation",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {
+                "isOptional": true
+              },
+              "comment": {
+                "shortText": "The information that should be used to construct the rotation.\n"
+              },
+              "type": {
+                "type": "union",
+                "types": [
+                  {
+                    "type": "reference",
+                    "id": 135,
+                    "name": "Quaternion"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 213,
+                    "name": "AxisAndAngle"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 210,
+                    "name": "FromToRotation"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 233,
+                    "name": "LookRotation"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 226,
+                    "name": "QuaternionRotation"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 224,
+                    "name": "SequenceRotation"
+                  },
+                  {
+                    "type": "reference",
+                    "id": 216,
+                    "name": "EulerAnglesRotation"
+                  }
+                ]
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 167,
+            "name": "Rotation"
+          }
+        }
+      ]
+    },
+    {
+      "id": 189,
+      "name": "_q",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {
+        "isPrivate": true
+      },
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 9,
+          "character": 12
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 135,
+        "name": "Quaternion"
+      }
+    },
+    {
+      "id": 190,
+      "name": "quaternion",
+      "kind": 262144,
+      "kindString": "Accessor",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 14,
+          "character": 8
+        }
+      ],
+      "getSignature": [
+        {
+          "id": 191,
+          "name": "quaternion",
+          "kind": 524288,
+          "kindString": "Get signature",
+          "flags": {},
+          "comment": {
+            "shortText": "The quaternion that this rotation uses."
+          },
+          "type": {
+            "type": "reference",
+            "id": 135,
+            "name": "Quaternion"
+          }
+        }
+      ]
+    },
+    {
+      "id": 203,
+      "name": "axisAndAngle",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 403,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 204,
+          "name": "axisAndAngle",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "shortText": "Gets the axis and angle that this rotation rotates around."
+          },
+          "type": {
+            "type": "reference",
+            "id": 213,
+            "name": "AxisAndAngle"
+          }
+        }
+      ]
+    },
+    {
+      "id": 198,
+      "name": "combineWith",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 378,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 199,
+          "name": "combineWith",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "shortText": "Combines this rotation with the other rotation and returns a new rotation that represents the combination of the two.",
+            "tags": [
+              {
+                "tag": "example",
+                "text": "Combine two rotations together.\nconst first = new Rotation({\n    axis: new Vector3(1, 0, 0),\n    angle: Math.PI / 4\n}); // 45 degree rotation around X axis\nconst second = new Rotation({\n    axis: new Vector3(1, 0, 0),\n    angle: Math.PI / 4\n}); // 45 degree rotation around X axis\n\nconst third = first.combineWith(second); // 90 degree rotation around X\n\nos.toast(third);\n"
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 200,
+              "name": "other",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "shortText": "The other rotation.\n"
+              },
+              "type": {
+                "type": "reference",
+                "id": 167,
+                "name": "Rotation"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 167,
+            "name": "Rotation"
+          }
+        }
+      ]
+    },
+    {
+      "id": 205,
+      "name": "equals",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 421,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 206,
+          "name": "equals",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "shortText": "Determines if this rotation equals the other rotation."
+          },
+          "parameters": [
+            {
+              "id": 207,
+              "name": "other",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "shortText": "The rotation to check.\n"
+              },
+              "type": {
+                "type": "reference",
+                "id": 167,
+                "name": "Rotation"
+              }
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "boolean"
+          }
+        }
+      ]
+    },
+    {
+      "id": 201,
+      "name": "invert",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 396,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 202,
+          "name": "invert",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "shortText": "Calculates the inverse rotation of this rotation and returns a new rotation with the result.",
+            "tags": [
+              {
+                "tag": "example",
+                "text": "Calculate the inverse of a rotation.\nconst first = new Rotation({\n    axis: new Vector3(1, 0, 0),\n    angle: Math.PI / 4\n}); // 45 degree rotation around X axis\nconst inverse = first.inverse();\n\nconst result = first.combineWith(inverse);\n\nos.toast(result);\n"
+              }
+            ]
+          },
+          "type": {
+            "type": "reference",
+            "id": 167,
+            "name": "Rotation"
+          }
+        }
+      ]
+    },
+    {
+      "id": 195,
+      "name": "rotateVector2",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 356,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 196,
+          "name": "rotateVector2",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "shortText": "Rotates the given Vector2 by this quaternion and returns a new vector containing the result.\nNote that rotations around any other axis than (0, 0, 1) or (0, 0, -1) can produce results that contain a Z component.",
+            "tags": [
+              {
+                "tag": "example",
+                "text": "Apply a rotation to a Vector2 object.\nconst rotation = new Rotation({\n    axis: new Vector3(1, 0, 0),\n    angle: Math.PI / 4\n}); // 45 degree rotation around X axis\n\nconst point = new Vector2(1, 2);\nconst rotated = rotation.rotateVector2(point);\nos.toast(rotated);\n"
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 197,
+              "name": "vector",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "shortText": "The 2D vector that should be rotated.\n"
+              },
+              "type": {
+                "type": "reference",
+                "id": 1,
+                "name": "Vector2"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 58,
+            "name": "Vector3"
+          }
+        }
+      ]
+    },
+    {
+      "id": 192,
+      "name": "rotateVector3",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 310,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 193,
+          "name": "rotateVector3",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "shortText": "Rotates the given Vector3 by this quaternion and returns a new vector containing the result.",
+            "tags": [
+              {
+                "tag": "example",
+                "text": "Apply a rotation to a Vector3 object.\nconst rotation = new Rotation({\n    axis: new Vector3(1, 0, 0),\n    angle: Math.PI / 4\n}); // 45 degree rotation around X axis\n\nconst point = new Vector3(1, 2, 0);\nconst rotated = rotation.rotateVector3(point);\nos.toast(rotated);\n"
+              }
+            ]
+          },
+          "parameters": [
+            {
+              "id": 194,
+              "name": "vector",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "shortText": "The 3D vector that should be rotated.\n"
+              },
+              "type": {
+                "type": "reference",
+                "id": 58,
+                "name": "Vector3"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 58,
+            "name": "Vector3"
+          }
+        }
+      ]
+    },
+    {
+      "id": 208,
+      "name": "toString",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {},
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 437,
+          "character": 4
+        }
+      ],
+      "signatures": [
+        {
+          "id": 209,
+          "name": "toString",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "shortText": "Converts this rotation to a human-readable string representation.",
+            "tags": [
+              {
+                "tag": "example",
+                "text": "Get a string of a rotation.\nconst myRotation = new Rotation({\n    axis: new Vector3(1, 0, 0),\n    angle: Math.PI / 4\n}); // 45 degree rotation around X axis\nconst rotationString = myRotation.toString();\n\nos.toast('My Rotation: ' + rotationString);\n"
+              }
+            ]
+          },
+          "type": {
+            "type": "intrinsic",
+            "name": "string"
+          }
+        }
+      ]
+    },
+    {
+      "id": 177,
+      "name": "angleBetween",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 241,
+          "character": 11
+        }
+      ],
+      "signatures": [
+        {
+          "id": 178,
+          "name": "angleBetween",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "shortText": "Determines the angle between the two given quaternions and returns the result in radians."
+          },
+          "parameters": [
+            {
+              "id": 179,
+              "name": "first",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "shortText": "The first quaternion. Must be a quaterion that represents a rotation"
+              },
+              "type": {
+                "type": "reference",
+                "id": 167,
+                "name": "Rotation"
+              }
+            },
+            {
+              "id": 180,
+              "name": "second",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "shortText": "The second quaternion.\n"
+              },
+              "type": {
+                "type": "reference",
+                "id": 167,
+                "name": "Rotation"
+              }
+            }
+          ],
+          "type": {
+            "type": "intrinsic",
+            "name": "number"
+          }
+        }
+      ]
+    },
+    {
+      "id": 181,
+      "name": "interpolate",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 253,
+          "character": 11
+        }
+      ],
+      "signatures": [
+        {
+          "id": 182,
+          "name": "interpolate",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "shortText": "Constructs a new rotation that is the spherical linear interpolation between the given first and second rotations.\nThe degree that the result is interpolated is determined by the given amount parameter."
+          },
+          "parameters": [
+            {
+              "id": 183,
+              "name": "first",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "shortText": "The first rotation."
+              },
+              "type": {
+                "type": "reference",
+                "id": 167,
+                "name": "Rotation"
+              }
+            },
+            {
+              "id": 184,
+              "name": "second",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "shortText": "The second rotation."
+              },
+              "type": {
+                "type": "reference",
+                "id": 167,
+                "name": "Rotation"
+              }
+            },
+            {
+              "id": 185,
+              "name": "amount",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "shortText": "The amount that the resulting rotation should be interpolated between the first and second rotations. Values near 0 indicate rotations close to the first and values near 1 indicate rotations close to the second.\n"
+              },
+              "type": {
+                "type": "intrinsic",
+                "name": "number"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 167,
+            "name": "Rotation"
+          }
+        }
+      ]
+    },
+    {
+      "id": 168,
+      "name": "quaternionFromAxisAndAngle",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 126,
+          "character": 11
+        }
+      ],
+      "signatures": [
+        {
+          "id": 169,
+          "name": "quaternionFromAxisAndAngle",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "shortText": "Constructs a new Quaternion from the given axis and angle."
+          },
+          "parameters": [
+            {
+              "id": 170,
+              "name": "axisAndAngle",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "shortText": "The object that contains the axis and angle values.\n"
+              },
+              "type": {
+                "type": "reference",
+                "id": 213,
+                "name": "AxisAndAngle"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 135,
+            "name": "Quaternion"
+          }
+        }
+      ]
+    },
+    {
+      "id": 171,
+      "name": "quaternionFromTo",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 143,
+          "character": 11
+        }
+      ],
+      "signatures": [
+        {
+          "id": 172,
+          "name": "quaternionFromTo",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "shortText": "Constructs a new Quaternion from the given from/to rotation.\nThis is equivalent to calculating the cross product and angle between the two vectors and constructing an axis/angle quaternion."
+          },
+          "parameters": [
+            {
+              "id": 173,
+              "name": "fromToRotation",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "shortText": "The object that contains the from and to values.\n"
+              },
+              "type": {
+                "type": "reference",
+                "id": 210,
+                "name": "FromToRotation"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 135,
+            "name": "Quaternion"
+          }
+        }
+      ]
+    },
+    {
+      "id": 174,
+      "name": "quaternionLook",
+      "kind": 2048,
+      "kindString": "Method",
+      "flags": {
+        "isStatic": true
+      },
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 160,
+          "character": 11
+        }
+      ],
+      "signatures": [
+        {
+          "id": 175,
+          "name": "quaternionLook",
+          "kind": 4096,
+          "kindString": "Call signature",
+          "flags": {},
+          "comment": {
+            "shortText": "Constructs a new Quaternion from the given look rotation."
+          },
+          "parameters": [
+            {
+              "id": 176,
+              "name": "look",
+              "kind": 32768,
+              "kindString": "Parameter",
+              "flags": {},
+              "comment": {
+                "shortText": "The object that contains the look rotation values.\n"
+              },
+              "type": {
+                "type": "reference",
+                "id": 233,
+                "name": "LookRotation"
+              }
+            }
+          ],
+          "type": {
+            "type": "reference",
+            "id": 135,
+            "name": "Quaternion"
+          }
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "title": "Constructors",
+      "kind": 512,
+      "children": [
+        186
+      ]
+    },
+    {
+      "title": "Properties",
+      "kind": 1024,
+      "children": [
+        189
+      ]
+    },
+    {
+      "title": "Accessors",
+      "kind": 262144,
+      "children": [
+        190
+      ]
+    },
+    {
+      "title": "Methods",
+      "kind": 2048,
+      "children": [
+        203,
+        198,
+        205,
+        201,
+        195,
+        192,
+        208,
+        177,
+        181,
+        168,
+        171,
+        174
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "src/aux-common/math/Rotation.ts",
+      "line": 8,
+      "character": 13
+    }
+  ]
+}

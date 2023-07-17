@@ -19,6 +19,13 @@
  *
  * This formula reflects scales the point by the quaternion. The reflection occurs across the axis specified by the quaternion X, Y, and Z values.
  * Additionally, the point will be scaled by the length of the quaternion. (i.e. sqrt( x^2 + y^2 + z^2 + w^2 ))
+ *
+ * @docHash types/math/rotations
+ * @docOrder 1
+ * @docTitle Rotations
+ * @docSidebar Rotations
+ * @docDescription Rotations help represent orientation.
+ * @docname Quaternion
  */
 export class Quaternion {
     /**

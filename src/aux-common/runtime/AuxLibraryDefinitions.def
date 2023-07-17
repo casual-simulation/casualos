@@ -3329,7 +3329,7 @@ export interface RecordActionOptions {
     endpoint?: string;
 }
 
-export type GrantMarkerPermissionResponse =
+export type GrantMarkerPermissionResult =
     | GrantMarkerPermissionSuccess
     | GrantMarkerPermissionFailure;
 
@@ -7453,7 +7453,7 @@ export interface PauseTrigger extends PauseTriggerOptions {
 /**
  * Defines an interface for a possible pause trigger location.
  */
-export interface PossibleTriggerLocation {
+export interface PossiblePauseTriggerLocation {
     /**
      * The line number that the trigger would pause the debugger at.
      */
@@ -8671,7 +8671,7 @@ interface DebuggerBase {
      * @param botOrId The bot or bot ID.
      * @param tag The name of the tag that the trigger locations should be listed for.
      */
-    listCommonPauseTriggers(botOrId: Bot | string, tag: string): PossibleTriggerLocation[];
+    listCommonPauseTriggers(botOrId: Bot | string, tag: string): PossiblePauseTriggerLocation[];
 
     /**
      * Resumes the debugger execution from the given pause.
@@ -10664,7 +10664,7 @@ interface Os {
         marker: string,
         permission: object,
         options?: RecordActionOptions
-    ): Promise<GrantMarkerPermissionResponse>;
+    ): Promise<GrantMarkerPermissionResult>;
 
     /**
      * Revokes the given permission from the given marker in the given record.

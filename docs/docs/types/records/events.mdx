@@ -1,0 +1,29 @@
+---
+id: events
+title: Event Types
+sidebar_label: Events
+description: Event records are useful for keeping track of how many times an event has occurred.
+---
+
+import Doc from '@site/docs/api-info/types/records/events.json'
+import { 
+    objectTableOfContents,
+    ObjectMembers,
+    classTableOfContents,
+    setLinkMap,
+    DebugObject,
+    getReturnType,
+    getProperty,
+    RenderTree,
+    getTypeReferences,
+    ApiContents,
+    apiTableOfContents
+} from '@site/util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />

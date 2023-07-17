@@ -23,7 +23,7 @@ export function createTestControllers(config?: SubscriptionConfiguration) {
     const authMessenger = new MemoryAuthMessenger();
     const auth = new AuthController(authStore, authMessenger, subConfig, true);
     const recordsStore = new MemoryRecordsStore();
-    const records = new RecordsController(recordsStore);
+    const records = new RecordsController(recordsStore, authStore);
     const policyStore = new MemoryPolicyStore();
     const policies = new PolicyController(auth, records, policyStore);
 

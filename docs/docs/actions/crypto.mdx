@@ -1,0 +1,29 @@
+---
+id: crypto
+title: Crypto Actions
+sidebar_label: Crypto
+description: Crypto actions are used for general cryptographic operations like hashing, encryption, and decryption.
+---
+
+import Doc from '@site/docs/api-info/actions/crypto.json'
+import { 
+    objectTableOfContents,
+    ObjectMembers,
+    classTableOfContents,
+    setLinkMap,
+    DebugObject,
+    getReturnType,
+    getProperty,
+    RenderTree,
+    getTypeReferences,
+    ApiContents,
+    apiTableOfContents
+} from '@site/util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />
