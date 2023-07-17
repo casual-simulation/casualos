@@ -207,7 +207,7 @@ export class PolicyController {
      */
     async grantMarkerPermission(
         request: GrantMarkerPermissionRequest
-    ): Promise<GrantMarkerPermissionResponse> {
+    ): Promise<GrantMarkerPermissionResult> {
         try {
             const baseRequest = {
                 recordKeyOrRecordName: request.recordKeyOrRecordName,
@@ -4510,20 +4510,55 @@ export interface GrantMarkerPermissionRequest {
     instances?: string[] | null;
 }
 
-export type GrantMarkerPermissionResponse =
+/**
+ * Defines the possible results of revoking a marker permission from a policy.
+ *
+ * @dochash types/records/policies
+ * @doctitle Policy Types
+ * @docsidebar Policies
+ * @docdescription Types for working with policies.
+ * @docgroup 01-grant
+ * @docorder 0
+ * @docname GrantMarkerPermissionResult
+ */
+export type GrantMarkerPermissionResult =
     | GrantMarkerPermissionSuccess
     | GrantMarkerPermissionFailure;
 
+/**
+ * Defines an interface that represents a successful request to grant a marker permission to a policy.
+ *
+ * @dochash types/records/policies
+ * @docgroup 01-grant
+ * @docorder 1
+ * @docname GrantMarkerPermissionSuccess
+ */
 export interface GrantMarkerPermissionSuccess {
     success: true;
 }
 
+/**
+ * Defines an interface that represents a failed request to grant a marker permission to a policy.
+ *
+ * @dochash types/records/policies
+ * @docgroup 01-grant
+ * @docorder 2
+ * @docname GrantMarkerPermissionFailure
+ */
 export interface GrantMarkerPermissionFailure {
     success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
         | ServerError
         | AuthorizeDenied['errorCode']
         | UpdateUserPolicyFailure['errorCode'];
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 }
 
@@ -4535,21 +4570,53 @@ export interface RevokeMarkerPermissionRequest {
     instances?: string[] | null;
 }
 
+/**
+ * Defines the possible results of revoking a marker permission from a policy.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 0
+ * @docname RevokeMarkerPermissionResult
+ */
 export type RevokeMarkerPermissionResult =
     | RevokeMarkerPermissionSuccess
     | RevokeMarkerPermissionFailure;
 
+/**
+ * Defines an interface that represents a successful request to revoke a marker permission from a policy.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 1
+ * @docname RevokeMarkerPermissionSuccess
+ */
 export interface RevokeMarkerPermissionSuccess {
     success: true;
 }
 
+/**
+ * Defines an interface that represents a failed request to revoke a marker permission from a policy.
+ *
+ * @dochash types/records/policies
+ * @docgroup 02-revoke
+ * @docorder 2
+ * @docname RevokeMarkerPermissionFailure
+ */
 export interface RevokeMarkerPermissionFailure {
     success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
         | ServerError
         | AuthorizeDenied['errorCode']
         | GetUserPolicyFailure['errorCode']
         | UpdateUserPolicyFailure['errorCode'];
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 }
 
@@ -4666,18 +4733,52 @@ export interface GrantRoleRequest {
     expireTimeMs?: number | null;
 }
 
+/**
+ * Defines the possible results of granting a role.
+ *
+ * @dochash types/records/roles
+ * @doctitle Role Types
+ * @docsidebar Roles
+ * @docdescription Types for working with roles.
+ * @docgroup 01-grant
+ * @docorder 0
+ * @docname GrantRoleResult
+ */
 export type GrantRoleResult = GrantRoleSuccess | GrantRoleFailure;
 
+/**
+ * Defines an interface that represents a successful request to grant a role.
+ *
+ * @dochash types/records/roles
+ * @docgroup 01-grant
+ * @docorder 1
+ * @docname GrantRoleSuccess
+ */
 export interface GrantRoleSuccess {
     success: true;
 }
 
+/**
+ * Defines an interface that represents a failed request to grant a role.
+ *
+ * @dochash types/records/roles
+ * @docgroup 01-grant
+ * @docorder 2
+ * @docname GrantRoleFailure
+ */
 export interface GrantRoleFailure {
     success: false;
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
         | ServerError
         | AuthorizeDenied['errorCode']
         | UpdateUserRolesFailure['errorCode'];
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 }
 
@@ -4687,17 +4788,49 @@ export interface RevokeRoleRequest {
     role: string;
 }
 
+/**
+ * Defines the possible results of revoking a role.
+ *
+ * @dochash types/records/roles
+ * @docgroup 01-revoke
+ * @docorder 0
+ * @docname RevokeRoleResult
+ */
 export type RevokeRoleResult = RevokeRoleSuccess | RevokeRoleFailure;
 
+/**
+ * Defines an interface that represents a successful request to revoke a role.
+ *
+ * @dochash types/records/roles
+ * @docgroup 01-revoke
+ * @docorder 1
+ * @docname RevokeRoleSuccess
+ */
 export interface RevokeRoleSuccess {
     success: true;
 }
 
+/**
+ * Defines an interface that represents a failed request to revoke a role.
+ *
+ * @dochash types/records/roles
+ * @docgroup 01-revoke
+ * @docorder 2
+ * @docname RevokeRoleFailure
+ */
 export interface RevokeRoleFailure {
     success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
         | ServerError
         | AuthorizeDenied['errorCode']
         | UpdateUserRolesFailure['errorCode'];
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 }

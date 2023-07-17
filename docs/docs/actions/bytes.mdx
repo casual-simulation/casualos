@@ -1,0 +1,29 @@
+---
+id: bytes
+title: Bytes Actions
+sidebar_label: Bytes
+description: Bytes actions are functions that make it easier to work with arrays of bytes and transform them into different formats.
+---
+
+import Doc from '@site/docs/api-info/actions/bytes.json'
+import { 
+    objectTableOfContents,
+    ObjectMembers,
+    classTableOfContents,
+    setLinkMap,
+    DebugObject,
+    getReturnType,
+    getProperty,
+    RenderTree,
+    getTypeReferences,
+    ApiContents,
+    apiTableOfContents
+} from '@site/util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />

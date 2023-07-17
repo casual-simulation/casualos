@@ -1,0 +1,29 @@
+---
+id: extra
+title: Extra Record Types
+sidebar_label: Extra
+description: Extra types that are used for records.
+---
+
+import Doc from '@site/docs/api-info/types/records/extra.json'
+import { 
+    objectTableOfContents,
+    ObjectMembers,
+    classTableOfContents,
+    setLinkMap,
+    DebugObject,
+    getReturnType,
+    getProperty,
+    RenderTree,
+    getTypeReferences,
+    ApiContents,
+    apiTableOfContents
+} from '@site/util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />

@@ -1,0 +1,29 @@
+---
+id: image-classification
+title: Image Classification Actions
+sidebar_label: Image Classification
+description: Actions for classifying images using AI.
+---
+
+import Doc from '@site/docs/api-info/actions/image-classification.json'
+import { 
+    objectTableOfContents,
+    ObjectMembers,
+    classTableOfContents,
+    setLinkMap,
+    DebugObject,
+    getReturnType,
+    getProperty,
+    RenderTree,
+    getTypeReferences,
+    ApiContents,
+    apiTableOfContents
+} from '@site/util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />

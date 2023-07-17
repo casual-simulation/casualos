@@ -1,0 +1,13 @@
+{
+    "extends": "../../../tsconfig.base.json",
+    "compilerOptions": {
+        "skipLibCheck": true
+    },
+    "files": [
+        "entry.ts",
+        "types.d.ts",
+    ],
+    "exclude": [
+        "**/node_modules/**"
+    ]
+}

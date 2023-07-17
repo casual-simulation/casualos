@@ -1,0 +1,29 @@
+---
+id: core
+title: Core Types
+sidebar_label: Core
+description: Documentation for core types that are used throughout CasualOS.
+---
+
+import Doc from '@site/docs/api-info/types/core.json'
+import { 
+    objectTableOfContents,
+    ObjectMembers,
+    classTableOfContents,
+    setLinkMap,
+    DebugObject,
+    getReturnType,
+    getProperty,
+    RenderTree,
+    getTypeReferences,
+    ApiContents,
+    apiTableOfContents
+} from '@site/util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />

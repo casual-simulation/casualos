@@ -534,16 +534,54 @@ export class DataRecordsController {
     }
 }
 
+/**
+ * The possible results of a record data request.
+ *
+ * @dochash types/records/data
+ * @doctitle Data Types
+ * @docsidebar Data
+ * @docdescription Data records are used to store key/value pairs of data.
+ * @docgroup 01-create
+ * @order 0
+ * @docname RecordDataResult
+ */
 export type RecordDataResult = RecordDataSuccess | RecordDataFailure;
 
+/**
+ * Defines an interface that represents a successful "record data" result.
+ *
+ * @dochash types/records/data
+ * @docgroup 01-create
+ * @order 1
+ * @docname RecordDataSuccess
+ */
 export interface RecordDataSuccess {
     success: true;
+    /**
+     * The name of the record that the data was recorded to.
+     */
     recordName: string;
+
+    /**
+     * The address that the data is stored at.
+     */
     address: string;
 }
 
+/**
+ * Defines an interface that represents a failed "record data" result.
+ *
+ * @dochash types/records/data
+ * @docgroup 01-create
+ * @order 2
+ * @docname RecordDataFailure
+ */
 export interface RecordDataFailure {
     success: false;
+
+    /**
+     * The error code for the failure.
+     */
     errorCode:
         | ServerError
         | NotLoggedInError
@@ -554,13 +592,30 @@ export interface RecordDataFailure {
         | 'not_supported'
         | 'invalid_update_policy'
         | 'invalid_delete_policy';
+
+    /**
+     * The error message for the failure.
+     */
     errorMessage: string;
 }
 
+/**
+ * The possible results of a get data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 02-get
+ * @order 0
+ * @docname GetDataResult
+ */
 export type GetDataResult = GetDataSuccess | GetDataFailure;
 
 /**
  * Defines an interface that represents a successful "get data" result.
+ *
+ * @dochash types/records/data
+ * @docgroup 02-get
+ * @order 1
+ * @docname GetDataSuccess
  */
 export interface GetDataSuccess {
     success: true;
@@ -601,26 +656,77 @@ export interface GetDataSuccess {
     markers: string[];
 }
 
+/**
+ * Defines an interface that repeesents a failed "get data" result.
+ *
+ * @dochash types/records/data
+ * @docgroup 02-get
+ * @order 3
+ * @docname GetDataFailure
+ */
 export interface GetDataFailure {
     success: false;
+    /**
+     * The error code for the failure.
+     */
     errorCode:
         | ServerError
         | GetDataStoreResult['errorCode']
         | AuthorizeDenied['errorCode']
         | 'not_supported';
+
+    /**
+     * The error message for the failure.
+     */
     errorMessage: string;
 }
 
+/**
+ * The possible results of an erase data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 03-erase
+ * @order 0
+ * @docname EraseDataResult
+ */
 export type EraseDataResult = EraseDataSuccess | EraseDataFailure;
 
+/**
+ * Defines an interface that represents a successful result for an erase data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 03-erase
+ * @order 1
+ * @docname EraseDataSuccess
+ */
 export interface EraseDataSuccess {
     success: true;
+
+    /**
+     * The name of the record that the data was erased from.
+     */
     recordName: string;
+
+    /**
+     * The address of the data that was erased.
+     */
     address: string;
 }
 
+/**
+ * Defines an interface that represents a failed result for an erase data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 03-erase
+ * @order 2
+ * @docname EraseDataFailure
+ */
 export interface EraseDataFailure {
     success: false;
+
+    /**
+     * The error code for the failure.
+     */
     errorCode:
         | ServerError
         | NotLoggedInError
@@ -628,14 +734,42 @@ export interface EraseDataFailure {
         | EraseDataStoreResult['errorCode']
         | ValidatePublicRecordKeyFailure['errorCode']
         | AuthorizeDenied['errorCode'];
+
+    /**
+     * The error message for the failure.
+     */
     errorMessage: string;
 }
 
+/**
+ * The possible results of a list data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 04-list
+ * @order 0
+ * @docname ListDataResult
+ */
 export type ListDataResult = ListDataSuccess | ListDataFailure;
 
+/**
+ * Defines an interface that represents a successful result for a list data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 04-list
+ * @order 1
+ * @docname ListDataSuccess
+ */
 export interface ListDataSuccess {
     success: true;
+
+    /**
+     * The name of the record that the data was listed from.
+     */
     recordName: string;
+
+    /**
+     * The items that were listed.
+     */
     items: {
         data: any;
         address: string;
@@ -643,6 +777,14 @@ export interface ListDataSuccess {
     }[];
 }
 
+/**
+ * Defines an interface that represents a failed result for a list data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 04-list
+ * @order 2
+ * @docname ListDataFailure
+ */
 export interface ListDataFailure {
     success: false;
     errorCode:

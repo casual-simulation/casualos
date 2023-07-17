@@ -1,0 +1,3445 @@
+{
+    "hash": "actions/records",
+    "pageTitle": "Records Actions",
+    "pageDescription": "Records are a way to store permenent data in CasualOS.",
+    "pageSidebarLabel": "Records",
+    "contents": [
+        {
+            "id": 1157,
+            "order": 9999,
+            "name": "os.countEvents",
+            "reflection": {
+                "id": 1157,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets the number of times that the given [event](glossary:event-record) has been recorded in the given record.",
+                    "text": "Returns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Get the number of times the click event has happened\nconst result = await os.countEvents(myRecord, 'click');\n\nif (result.success) {\n    os.toast(result.count);\n} else {\n    os.toast('Failed to get count ' + result.errorMessage);\n}\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.countEvents\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1158,
+                        "name": "recordNameOrKey",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the name of the record that the event count should be retrieved from. It can also be a record key.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1159,
+                        "name": "eventName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the name of the event whose count should be retrieved.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1160,
+                        "name": "endpoint",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "defaultValue": "null"
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 2996,
+                            "name": "GetCountResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Gets the number of times that the given [event](glossary:event-record) has been recorded in the given record.",
+                "text": "Returns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Get the number of times the click event has happened\nconst result = await os.countEvents(myRecord, 'click');\n\nif (result.success) {\n    os.toast(result.count);\n} else {\n    os.toast('Failed to get count ' + result.errorMessage);\n}\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.countEvents\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1100,
+            "order": 9999,
+            "name": "os.eraseData",
+            "reflection": {
+                "id": 1100,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Erases the [data](glossary:data-record) stored at the given address in the given [record](glossary:record).\nReturns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Erase some data from a record\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\nif (!recordKeyResult.success) {\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\n    return;\n}\nconst result = await os.eraseData(recordKeyResult.recordKey, 'myAddress');\n\nif (result.success) {\n    os.toast(\"Success!\");\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.eraseData\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1101,
+                        "name": "recordKeyOrName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the record key or record name that should be used to access the record. You can request a record key by using [`os.getPublicRecordKey(name)`](ref:os.getPublicRecordKey).",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1102,
+                        "name": "address",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the address that the data is stored at.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1103,
+                        "name": "endpoint",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the HTTP Endpoint of the records website that the data should be recorded to.\nIf omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "defaultValue": "null"
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 2955,
+                            "name": "EraseDataResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Erases the [data](glossary:data-record) stored at the given address in the given [record](glossary:record).\nReturns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Erase some data from a record\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\nif (!recordKeyResult.success) {\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\n    return;\n}\nconst result = await os.eraseData(recordKeyResult.recordKey, 'myAddress');\n\nif (result.success) {\n    os.toast(\"Success!\");\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.eraseData\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1106,
+            "order": 9999,
+            "name": "os.eraseManualApprovalData",
+            "reflection": {
+                "id": 1106,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Erases the [manual approval data](glossary:manual-approval-data-record) stored at the given address in the given record. Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.",
+                    "text": "Works the same as [`os.eraseData(recordKeyOrName, address, endpoint)`](ref:os.eraseData) except that manual approval data records require the user to allow the operation manually.\n",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.eraseManualApprovalData\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1107,
+                        "name": "recordKeyOrName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the record key or record name that should be used to access the record. You can request a record key by using [`os.getPublicRecordKey(name)`](ref:os.getPublicRecordKey).",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1108,
+                        "name": "address",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the address that the data is stored at.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1109,
+                        "name": "endpoint",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the HTTP Endpoint of the records website that the data should be recorded to.\nIf omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "defaultValue": "null"
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 2955,
+                            "name": "EraseDataResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Erases the [manual approval data](glossary:manual-approval-data-record) stored at the given address in the given record. Returns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.",
+                "text": "Works the same as {@link os.eraseData} except that manual approval data records require the user to allow the operation manually.\n",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.eraseManualApprovalData\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1082,
+            "order": 9999,
+            "name": "os.getData",
+            "reflection": {
+                "id": 1082,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets the data stored at the given address in the given record.\nReturns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Get some data from a record\nconst result = await os.getData('myRecord', 'myAddress');\n\nif (result.success) {\n    os.toast(result.data);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.getData\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1083,
+                        "name": "recordKeyOrName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the record name or a record key. This indicates the record that the data should be retrieved from.\nNote that you don't need a record key in order to retrieve public data from a record. Using a record name will work just fine.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1084,
+                        "name": "address",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the address that the data should be retrieved from.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1085,
+                        "name": "endpoint",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the HTTP Endpoint of the records website that the data should be recorded to.\nIf omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "defaultValue": "null"
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 2941,
+                            "name": "GetDataResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Gets the data stored at the given address in the given record.\nReturns a promise that resolves with an object that contains the data (if successful) or information about the error that occurred.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Get some data from a record\nconst result = await os.getData('myRecord', 'myAddress');\n\nif (result.success) {\n    os.toast(result.data);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.getData\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1088,
+            "order": 9999,
+            "name": "os.getManualApprovalData",
+            "reflection": {
+                "id": 1088,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets the [manual approval data](glossary:manual-approval-data-record) stored at the given address in the given record.",
+                    "text": "Works the same as [`os.getData(recordKeyOrName, address, endpoint)`](ref:os.getData) except that manual approval data records require the user to allow the operation manually.\n",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.getManualApprovalData\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1089,
+                        "name": "recordKeyOrName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the record name or a record key. This indicates the record that the data should be retrieved from.\nNote that you don't need a record key in order to retrieve public data from a record. Using a record name will work just fine.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1090,
+                        "name": "address",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the address that the data should be retrieved from.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1091,
+                        "name": "endpoint",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the HTTP Endpoint of the records website that the data should be recorded to.\nIf omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "defaultValue": "null"
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 2941,
+                            "name": "GetDataResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Gets the [manual approval data](glossary:manual-approval-data-record) stored at the given address in the given record.",
+                "text": "Works the same as {@link os.getData} except that manual approval data records require the user to allow the operation manually.\n",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.getManualApprovalData\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1007,
+            "order": 9999,
+            "name": "os.getPublicRecordKey",
+            "reflection": {
+                "id": 1007,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Requests an [access key](glossary:record-key) for the [public record](glossary:record) with the given name.\nReturns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Request an access key for a public record.\nconst result = await os.getPublicRecordKey('myPublicRecord');\n\nif (result.success) {\n    os.toast(result.recordKey);\n} else {\n    os.toast('Failed ' + result.errorMessage);\n}\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.getPublicRecordKey\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1008,
+                        "name": "name",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the name of the record to get the key for.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 2820,
+                            "name": "CreatePublicRecordKeyResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Requests an [access key](glossary:record-key) for the [public record](glossary:record) with the given name.\nReturns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Request an access key for a public record.\nconst result = await os.getPublicRecordKey('myPublicRecord');\n\nif (result.success) {\n    os.toast(result.recordKey);\n} else {\n    os.toast('Failed ' + result.errorMessage);\n}\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.getPublicRecordKey\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1011,
+            "order": 9999,
+            "name": "os.getSubjectlessPublicRecordKey",
+            "reflection": {
+                "id": 1011,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Requests an subjectless [access key](glossary:record-key) for the [public record](glossary:record) with the given name.\nReturns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.",
+                    "text": "This function works similarly to [`os.getPublicRecordKey(name)`](ref:os.getPublicRecordKey), except that it does not require the user to be signed in when the resulting key is used.\nUsage of subjectless keys should therefore be limited, since they do not record who is using the key and therefore make moderation more difficult.\n",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.getSubjectlessPublicRecordKey\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1012,
+                        "name": "name",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the name of the record.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 2820,
+                            "name": "CreatePublicRecordKeyResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Requests an subjectless [access key](glossary:record-key) for the [public record](glossary:record) with the given name.\nReturns a promise that resolves with an object that contains the record key (if successful) or information about the error that occurred.",
+                "text": "This function works similarly to {@link os.getPublicRecordKey}, except that it does not require the user to be signed in when the resulting key is used.\nUsage of subjectless keys should therefore be limited, since they do not record who is using the key and therefore make moderation more difficult.\n",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.getSubjectlessPublicRecordKey\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1029,
+            "order": 9999,
+            "name": "os.grantInstAdminPermission",
+            "reflection": {
+                "id": 1029,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Attempts to grant the current inst admin permissions in the given record for the rest of the day.",
+                    "text": "When called, the user will be prompted to accept/deny the request.\n\nSee [Record Security](page:learn/records/security) for more information.\n",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.grantInstAdminPermission\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1030,
+                        "name": "recordName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the name of the record.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1031,
+                        "name": "options",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the options for the operation.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2496,
+                            "name": "RecordActionOptions"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 3014,
+                            "name": "GrantRoleResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Attempts to grant the current inst admin permissions in the given record for the rest of the day.",
+                "text": "When called, the user will be prompted to accept/deny the request.\n\nSee [Record Security](page:learn/records/security) for more information.\n",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.grantInstAdminPermission\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1049,
+            "order": 9999,
+            "name": "os.grantInstRole",
+            "reflection": {
+                "id": 1049,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Grants the given inst the given role in the given record for the specified time.",
+                    "text": "See [Record Security](page:learn/records/security) for more information.\n",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.grantInstRole\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1050,
+                        "name": "recordName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the name of the record.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1051,
+                        "name": "role",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the role that should be granted.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1052,
+                        "name": "inst",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the inst that should be granted the role.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1053,
+                        "name": "expireTimeMs",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the time that the role grant expires. If null, then the role will not expire.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        },
+                        "defaultValue": "null"
+                    },
+                    {
+                        "id": 1054,
+                        "name": "options",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the options for the operation.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2496,
+                            "name": "RecordActionOptions"
+                        },
+                        "defaultValue": "{}"
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 3014,
+                            "name": "GrantRoleResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Grants the given inst the given role in the given record for the specified time.",
+                "text": "See [Record Security](page:learn/records/security) for more information.\n",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.grantInstRole\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1015,
+            "order": 9999,
+            "name": "os.grantRecordMarkerPermission",
+            "reflection": {
+                "id": 1015,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Grants the given marker the given permission in the given record.",
+                    "text": "See [Record Security](page:learn/records/security) for more information.\n",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.grantRecordMarkerPermission\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1016,
+                        "name": "recordName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the name of the record.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1017,
+                        "name": "marker",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the marker that the permission should be added to.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1018,
+                        "name": "permission",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the permission that should be added.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2830,
+                            "name": "AvailablePermissions"
+                        }
+                    },
+                    {
+                        "id": 1019,
+                        "name": "options",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the options for the operation.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2496,
+                            "name": "RecordActionOptions"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 3028,
+                            "name": "GrantMarkerPermissionResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Grants the given marker the given permission in the given record.",
+                "text": "See [Record Security](page:learn/records/security) for more information.\n",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.grantRecordMarkerPermission\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1034,
+            "order": 9999,
+            "name": "os.grantUserRole",
+            "reflection": {
+                "id": 1034,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Grants the given user the given role in the given record for the specified time.",
+                    "text": "See [Record Security](page:learn/records/security) for more information.\n",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.grantUserRole\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1035,
+                        "name": "recordName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the name of the record.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1036,
+                        "name": "role",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the role that should be granted to the user.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1037,
+                        "name": "userId",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the ID of the user that should be granted the role.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1038,
+                        "name": "expireTimeMs",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the time that the role grant expires. If `null`, then the role will not expire.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        },
+                        "defaultValue": "null"
+                    },
+                    {
+                        "id": 1039,
+                        "name": "options",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the options for the operation.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2496,
+                            "name": "RecordActionOptions"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 3014,
+                            "name": "GrantRoleResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Grants the given user the given role in the given record for the specified time.",
+                "text": "See [Record Security](page:learn/records/security) for more information.\n",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.grantUserRole\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1064,
+            "order": 9999,
+            "name": "os.isRecordKey",
+            "reflection": {
+                "id": 1064,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Determines if the given value represents a [record key](glossary:record-key).",
+                    "text": "Returns `true` if the value is a record key and `false` if the value is not a record key.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Determine if a value is a record key.\nconst isRecordKey = os.isRecordKey(tags.myRecordKey);\nos.toast(tags.myRecordKey ' is ' + (isRecordKey ? 'a' : 'not a') + ' record key.');\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.isRecordKey\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1065,
+                        "name": "key",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the value to test to see if it is a record key.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "unknown"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "boolean"
+                }
+            },
+            "comment": {
+                "shortText": "Determines if the given value represents a [record key](glossary:record-key).",
+                "text": "Returns `true` if the value is a record key and `false` if the value is not a record key.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Determine if a value is a record key.\nconst isRecordKey = os.isRecordKey(tags.myRecordKey);\nos.toast(tags.myRecordKey ' is ' + (isRecordKey ? 'a' : 'not a') + ' record key.');\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.isRecordKey\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1094,
+            "order": 9999,
+            "name": "os.listData",
+            "reflection": {
+                "id": 1094,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets a partial list of [data](glossary:data-record) that is stored in the given record.\nOptionally accepts the address before the first item that should be included in the list.\nReturns a promise that resolves with an object that contains the items (if successful) or information about the error that occurred.",
+                    "text": "On [publicos.link](https://publicos.link), the returned list is limited to 25 items.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Get a list of data items in a record\nconst result = await os.listData('myRecord');\nif (result.success) {\n    os.toast(result.items);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "List all the items in a record\nlet lastAddress;\nlet items = [];\nwhile(true) {\n    const result = await os.listData('myRecord', lastAddress);\n    if (result.success) {\n        console.log(result.items);\n        items.push(...result.items);\n        if (result.items.length > 0) {\n            lastAddress = result.items[result.items.length - 1].address;\n        } else {\n            // result.items is empty, so we can break out of the loop\n            break;\n        }\n    } else {\n        os.toast(\"Failed \" + result.errorMessage);\n        break;\n    }\n}\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.listData\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1095,
+                        "name": "recordKeyOrName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the record name or a record key. This indicates the record that the data should be retrieved from.\nNote that you don't need a record key in order to retrieve public data from a record. Using a record name will work just fine.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1096,
+                        "name": "startingAddress",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the address after which items will be included in the list.\nSince items are ordered within the record by address, this can be used as way to iterate through all the data items in a record.\nIf omitted, then the list will start with the first item.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "defaultValue": "null"
+                    },
+                    {
+                        "id": 1097,
+                        "name": "endpoint",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "defaultValue": "null"
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 2964,
+                            "name": "ListDataResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Gets a partial list of [data](glossary:data-record) that is stored in the given record.\nOptionally accepts the address before the first item that should be included in the list.\nReturns a promise that resolves with an object that contains the items (if successful) or information about the error that occurred.",
+                "text": "On [publicos.link](https://publicos.link), the returned list is limited to 25 items.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Get a list of data items in a record\nconst result = await os.listData('myRecord');\nif (result.success) {\n    os.toast(result.items);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "List all the items in a record\nlet lastAddress;\nlet items = [];\nwhile(true) {\n    const result = await os.listData('myRecord', lastAddress);\n    if (result.success) {\n        console.log(result.items);\n        items.push(...result.items);\n        if (result.items.length > 0) {\n            lastAddress = result.items[result.items.length - 1].address;\n        } else {\n            // result.items is empty, so we can break out of the loop\n            break;\n        }\n    } else {\n        os.toast(\"Failed \" + result.errorMessage);\n        break;\n    }\n}\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.listData\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1068,
+            "order": 9999,
+            "name": "os.recordData",
+            "reflection": {
+                "id": 1068,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Stores the given [data](glossary:data-record) in the given [record](glossary:record) at the given address.\nIf data already exists at the given address, it will be overwritten.",
+                    "text": "Returns a promise that resolves with an object that indicates if the request was successful.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Publish some data to a record\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\nif (!recordKeyResult.success) {\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\n    return;\n}\nconst result = await os.recordData(recordKeyResult.recordKey, 'myAddress', 'myData');\n\nif (result.success) {\n    os.toast(\"Success!\");\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.recordData\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1069,
+                        "name": "recordKeyOrRecordName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the key that should be used to access the record. You can request a record key by using [`os.getPublicRecordKey(name)`](ref:os.getPublicRecordKey).",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1070,
+                        "name": "address",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the address that the data should be stored at.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1071,
+                        "name": "data",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the data that should be stored. This can be any value that can be serialized to JSON.\nMust be less than 300KB in size.\nIf you need to store data larger than 300KB, you can use [`os.recordFile(recordKeyOrName, data, options, endpoint)`](ref:os.recordFile).",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                        }
+                    },
+                    {
+                        "id": 1072,
+                        "name": "endpointOrOptions",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the options that should be used to record the data.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "reference",
+                                    "name": "DataRecordOptions"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 2932,
+                            "name": "RecordDataResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Stores the given [data](glossary:data-record) in the given [record](glossary:record) at the given address.\nIf data already exists at the given address, it will be overwritten.",
+                "text": "Returns a promise that resolves with an object that indicates if the request was successful.",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Publish some data to a record\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\nif (!recordKeyResult.success) {\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\n    return;\n}\nconst result = await os.recordData(recordKeyResult.recordKey, 'myAddress', 'myData');\n\nif (result.success) {\n    os.toast(\"Success!\");\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.recordData\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1151,
+            "order": 9999,
+            "name": "os.recordEvent",
+            "reflection": {
+                "id": 1151,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Records that the given [event](glossary:event-record) occurred in the given record.",
+                    "text": "Returns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Record that a click event happened\nawait os.recordEvent(myRecordKey, 'click');\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.recordEvent\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1152,
+                        "name": "recordKeyOrName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the record key or record name that should be used to record the event.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1153,
+                        "name": "eventName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the name of the event whose count should be incremented.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1154,
+                        "name": "endpoint",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "defaultValue": "null"
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 2986,
+                            "name": "AddCountResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Records that the given [event](glossary:event-record) occurred in the given record.",
+                "text": "Returns a promise that resolves with an object that indicates whether the operation was successful or unsuccessful.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Record that a click event happened\nawait os.recordEvent(myRecordKey, 'click');\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.recordEvent\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1112,
+            "order": 9999,
+            "name": "os.recordFile",
+            "reflection": {
+                "id": 1112,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Stores the given [file data](glossary:file-record) in the given record using the given options for the file. The file can later be retrieved by using os.getFile(urlOrRecordFileResult).",
+                    "text": "Returns a promise that resolves with an object that contains the URL that the file was stored at (if successful) or information about the error that occurred.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Upload a file\nconst files = await os.showUploadFiles();\n\nif (files.length <= 0) {\n    return;\n}\n\nconst file = files[0];\nconst result = await os.recordFile(tags.recordKey, file);\n\nif (result.success) {\n    tags.uploadUrl = result.url;\n    os.toast(\"Success! Uploaded to \" + result.url);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Upload a string to a file record\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\nif (!recordKeyResult.success) {\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\n    return;\n}\nconst result = await os.recordFile(recordKeyResult.recordKey, 'my file data');\n\nif (result.success) {\n    tags.uploadUrl = result.url;\n    os.toast(\"Success! Uploaded to \" + result.url);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Upload red bots to a file record\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\nif (!recordKeyResult.success) {\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\n    return;\n}\nconst result = await os.recordFile(recordKeyResult.recordKey, getBots(\"color\", \"red\"), {\n    description: 'my bots'\n});\n\nif (result.success) {\n    tags.uploadUrl = result.url;\n    os.toast(\"Success! Uploaded to \" + result.url);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Upload a file to a custom endpoint\nconst files = await os.showUploadFiles();\n\nif (files.length <= 0) {\n    return;\n}\n\nconst file = files[0];\nconst result = await os.recordFile(tags.recordKey, file, undefined, 'https://myendpoint.com');\n\nif (result.success) {\n    tags.uploadUrl = result.url;\n    os.toast(\"Success! Uploaded to \" + result.url);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.recordFile\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1113,
+                        "name": "recordKeyOrName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the record key or record name that should be used to access the record. You can request a record key by using [`os.getPublicRecordKey(name)`](ref:os.getPublicRecordKey).",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1114,
+                        "name": "data",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the data that should be stored in the record. This can be a string, an object, a blob, or an ArrayBuffer.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                        }
+                    },
+                    {
+                        "id": 1115,
+                        "name": "options",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The options that should be used to record the file.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "name": "RecordFileOptions"
+                        }
+                    },
+                    {
+                        "id": 1116,
+                        "name": "endpoint",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the HTTP Endpoint of the records website that the data should be recorded to. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "defaultValue": "null"
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 2129,
+                            "name": "RecordFileResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Stores the given [file data](glossary:file-record) in the given record using the given options for the file. The file can later be retrieved by using os.getFile(urlOrRecordFileResult).",
+                "text": "Returns a promise that resolves with an object that contains the URL that the file was stored at (if successful) or information about the error that occurred.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Upload a file\nconst files = await os.showUploadFiles();\n\nif (files.length <= 0) {\n    return;\n}\n\nconst file = files[0];\nconst result = await os.recordFile(tags.recordKey, file);\n\nif (result.success) {\n    tags.uploadUrl = result.url;\n    os.toast(\"Success! Uploaded to \" + result.url);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Upload a string to a file record\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\nif (!recordKeyResult.success) {\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\n    return;\n}\nconst result = await os.recordFile(recordKeyResult.recordKey, 'my file data');\n\nif (result.success) {\n    tags.uploadUrl = result.url;\n    os.toast(\"Success! Uploaded to \" + result.url);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Upload red bots to a file record\nconst recordKeyResult = await os.getPublicRecordKey('myRecord');\nif (!recordKeyResult.success) {\n    os.toast(\"Failed to get a record key! \" + recordKeyResult.errorMessage);\n    return;\n}\nconst result = await os.recordFile(recordKeyResult.recordKey, getBots(\"color\", \"red\"), {\n    description: 'my bots'\n});\n\nif (result.success) {\n    tags.uploadUrl = result.url;\n    os.toast(\"Success! Uploaded to \" + result.url);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Upload a file to a custom endpoint\nconst files = await os.showUploadFiles();\n\nif (files.length <= 0) {\n    return;\n}\n\nconst file = files[0];\nconst result = await os.recordFile(tags.recordKey, file, undefined, 'https://myendpoint.com');\n\nif (result.success) {\n    tags.uploadUrl = result.url;\n    os.toast(\"Success! Uploaded to \" + result.url);\n} else {\n    os.toast(\"Failed \" + result.errorMessage);\n}\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.recordFile\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1075,
+            "order": 9999,
+            "name": "os.recordManualApprovalData",
+            "reflection": {
+                "id": 1075,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Stores the given [manual approval data](glossary:manual-approval-data-record) in the given record at the given address. If data already exists at the given address, it will be overwritten.",
+                    "text": "Returns a promise that resolves with an object that indicates if the request was successful.\n\nWorks the same as [`os.recordData(recordKeyOrRecordName, address, data, endpointOrOptions)`](ref:os.recordData) except that manual approval data records require the user to allow the operation manually.\n",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.recordManualApprovalData\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1076,
+                        "name": "recordKeyOrRecordName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the key that should be used to access the record. You can request a record key by using [`os.getPublicRecordKey(name)`](ref:os.getPublicRecordKey).",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1077,
+                        "name": "address",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the address that the data should be stored at.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1078,
+                        "name": "data",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the data that should be stored. This can be any value that can be serialized to JSON.\nMust be less than 300KB in size.\nIf you need to store data larger than 300KB, you can use [`os.recordFile(recordKeyOrName, data, options, endpoint)`](ref:os.recordFile).",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                        }
+                    },
+                    {
+                        "id": 1079,
+                        "name": "endpointOrOptions",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the options that should be used to record the data.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "reference",
+                                    "name": "DataRecordOptions"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 2932,
+                            "name": "RecordDataResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Stores the given [manual approval data](glossary:manual-approval-data-record) in the given record at the given address. If data already exists at the given address, it will be overwritten.",
+                "text": "Returns a promise that resolves with an object that indicates if the request was successful.\n\nWorks the same as {@link os.recordData} except that manual approval data records require the user to allow the operation manually.\n",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.recordManualApprovalData\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1004,
+            "order": 9999,
+            "name": "os.requestAuthBot",
+            "reflection": {
+                "id": 1004,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Requests that an \"authentication\" bot be added to the inst for the current browser tab.\nAuth bots are useful for discovering general information about the logged in user and are typically associated with a [https://publicos.link](https://publicos.link) user account.",
+                    "text": "Returns a promise that resolves with a bot that contains information about the signed in user session.\nResolves with `null` if the user was unable to sign in.\n\nOn success, the `authBot` global variable will reference the bot that was returned by the promise.\n\nSee [Auth Bot Tags](page:tags#auth-bot-tags) for more information.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Request an auth bot for the user\nawait os.requestAuthBot();\nos.toast(\"Logged in!\");\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "doctitle",
+                            "paramName": "",
+                            "text": "Records Actions"
+                        },
+                        {
+                            "tag": "docsidebar",
+                            "paramName": "",
+                            "text": "Records"
+                        },
+                        {
+                            "tag": "docdescription",
+                            "paramName": "",
+                            "text": "Records are a way to store permenent data in CasualOS."
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.requestAuthBot\n"
+                        }
+                    ]
+                },
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 2647,
+                            "name": "Bot"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Requests that an \"authentication\" bot be added to the inst for the current browser tab.\nAuth bots are useful for discovering general information about the logged in user and are typically associated with a [https://publicos.link](https://publicos.link) user account.",
+                "text": "Returns a promise that resolves with a bot that contains information about the signed in user session.\nResolves with `null` if the user was unable to sign in.\n\nOn success, the `authBot` global variable will reference the bot that was returned by the promise.\n\nSee [Auth Bot Tags](page:tags#auth-bot-tags) for more information.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Request an auth bot for the user\nawait os.requestAuthBot();\nos.toast(\"Logged in!\");\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "doctitle",
+                        "paramName": "",
+                        "text": "Records Actions"
+                    },
+                    {
+                        "tagName": "docsidebar",
+                        "paramName": "",
+                        "text": "Records"
+                    },
+                    {
+                        "tagName": "docdescription",
+                        "paramName": "",
+                        "text": "Records are a way to store permenent data in CasualOS."
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.requestAuthBot\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1057,
+            "order": 9999,
+            "name": "os.revokeInstRole",
+            "reflection": {
+                "id": 1057,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Revokes the given role from the given inst in the given record.",
+                    "text": "See [Record Security](page:learn/records/security) for more information.\n",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.revokeInstRole\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1058,
+                        "name": "recordName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The name of the record.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1059,
+                        "name": "role",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the role that should be revoked from the inst.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1060,
+                        "name": "inst",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the inst that the role should be revoked from.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1061,
+                        "name": "options",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the options for the operation.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2496,
+                            "name": "RecordActionOptions"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 3021,
+                            "name": "RevokeRoleResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Revokes the given role from the given inst in the given record.",
+                "text": "See [Record Security](page:learn/records/security) for more information.\n",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.revokeInstRole\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1022,
+            "order": 9999,
+            "name": "os.revokeRecordMarkerPermission",
+            "reflection": {
+                "id": 1022,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Revokes the given permission from the given marker in the given record.",
+                    "text": "See [Record Security](page:learn/records/security) for more information.\n",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.revokeRecordMarkerPermission\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1023,
+                        "name": "recordName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the name of the record.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1024,
+                        "name": "marker",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the name of the marker that the permission should be removed from.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1025,
+                        "name": "permission",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the permission that should be removed.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2830,
+                            "name": "AvailablePermissions"
+                        }
+                    },
+                    {
+                        "id": 1026,
+                        "name": "options",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the options for the operation.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2496,
+                            "name": "RecordActionOptions"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 3035,
+                            "name": "RevokeMarkerPermissionResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Revokes the given permission from the given marker in the given record.",
+                "text": "See [Record Security](page:learn/records/security) for more information.\n",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.revokeRecordMarkerPermission\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        },
+        {
+            "id": 1042,
+            "order": 9999,
+            "name": "os.revokeUserRole",
+            "reflection": {
+                "id": 1042,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Revokes the given role from the given user in the given record.",
+                    "text": "See [Record Security](page:learn/records/security) for more information.\n",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/records"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-records"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.revokeUserRole\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1043,
+                        "name": "recordName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the name of the record.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1044,
+                        "name": "role",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the role that should be revoked from the user.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1045,
+                        "name": "userId",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the ID of the user.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1046,
+                        "name": "options",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the options for the operation.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2496,
+                            "name": "RecordActionOptions"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 3021,
+                            "name": "RevokeRoleResult"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Revokes the given role from the given user in the given record.",
+                "text": "See [Record Security](page:learn/records/security) for more information.\n",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/records"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-records"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.revokeUserRole\n"
+                    }
+                ]
+            },
+            "group": "01-records"
+        }
+    ],
+    "references": {
+        "Quaternion": "types/math/rotations",
+        "id-3179": "Quaternion",
+        "Rotation": "types/math/rotations",
+        "id-3211": "Rotation",
+        "Vector2": "types/math/vectors",
+        "id-3045": "Vector2",
+        "Vector3": "types/math/vectors",
+        "id-3102": "Vector3",
+        "AddCountFailure": "types/records/events",
+        "id-2992": "AddCountFailure",
+        "AddCountSuccess": "types/records/events",
+        "id-2987": "AddCountSuccess",
+        "AnimateTagOptions": "types/animation",
+        "id-2103": "AnimateTagOptions",
+        "AttachDebuggerOptions": "types/debuggers/common",
+        "id-2478": "AttachDebuggerOptions",
+        "CasualOSDevice": "types/os",
+        "id-2811": "CasualOSDevice",
+        "CasualOSVersion": "types/os",
+        "id-2803": "CasualOSVersion",
+        "AxisAndAngle": "types/math/rotations",
+        "id-3257": "AxisAndAngle",
+        "BotTagMasks": "types/core",
+        "id-2780": "BotTagMasks",
+        "BotTags": "types/core",
+        "id-2695": "BotTags",
+        "BotState": "types/core",
+        "id-2793": "BotState",
+        "CompiledBotListeners": "types/core",
+        "id-2774": "CompiledBotListeners",
+        "ConvertGeolocationToWhat3WordsOptions": "types/os",
+        "id-2513": "ConvertGeolocationToWhat3WordsOptions",
+        "CreatePublicRecordKeyFailure": "types/records/key",
+        "id-2825": "CreatePublicRecordKeyFailure",
+        "CreatePublicRecordKeySuccess": "types/records/key",
+        "id-2821": "CreatePublicRecordKeySuccess",
+        "DebuggerCallFrame": "types/debuggers/common",
+        "id-2431": "DebuggerCallFrame",
+        "DebuggerFunctionLocation": "types/debuggers/common",
+        "id-2466": "DebuggerFunctionLocation",
+        "DebuggerPause": "types/debuggers/common",
+        "id-2460": "DebuggerPause",
+        "DebuggerTagMaskUpdate": "types/debuggers/common",
+        "id-2439": "DebuggerTagMaskUpdate",
+        "DebuggerTagUpdate": "types/debuggers/common",
+        "id-2445": "DebuggerTagUpdate",
+        "DebuggerVariable": "types/debuggers/common",
+        "id-2472": "DebuggerVariable",
+        "EnableXROptions": "types/os",
+        "id-2587": "EnableXROptions",
+        "EraseDataFailure": "types/records/data",
+        "id-2960": "EraseDataFailure",
+        "EraseDataSuccess": "types/records/data",
+        "id-2956": "EraseDataSuccess",
+        "EraseFileFailure": "types/records/files",
+        "id-2982": "EraseFileFailure",
+        "EraseFileSuccess": "types/records/files",
+        "id-2978": "EraseFileSuccess",
+        "EulerAnglesRotation": "types/math/rotations",
+        "id-3260": "EulerAnglesRotation",
+        "FocusOnOptions": "types/os",
+        "id-2547": "FocusOnOptions",
+        "FocusOnRotation": "types/os",
+        "id-2559": "FocusOnRotation",
+        "FormAnimationData": "types/os",
+        "id-2605": "FormAnimationData",
+        "FromToRotation": "types/math/rotations",
+        "id-3254": "FromToRotation",
+        "GetCountFailure": "types/records/events",
+        "id-3003": "GetCountFailure",
+        "GetCountSuccess": "types/records/events",
+        "id-2997": "GetCountSuccess",
+        "GetDataFailure": "types/records/data",
+        "id-2951": "GetDataFailure",
+        "GetDataSuccess": "types/records/data",
+        "id-2942": "GetDataSuccess",
+        "GetRoomOptionsFailure": "types/os",
+        "id-2193": "GetRoomOptionsFailure",
+        "GetRoomOptionsSuccess": "types/os",
+        "id-2189": "GetRoomOptionsSuccess",
+        "GetRoomRemoteOptionsFailure": "types/os",
+        "id-2236": "GetRoomRemoteOptionsFailure",
+        "GetRoomRemoteOptionsSuccess": "types/os",
+        "id-2231": "GetRoomRemoteOptionsSuccess",
+        "GetRoomTrackOptionsFailure": "types/os",
+        "id-2212": "GetRoomTrackOptionsFailure",
+        "GetRoomTrackOptionsSuccess": "types/os",
+        "id-2207": "GetRoomTrackOptionsSuccess",
+        "GrantMarkerPermissionFailure": "types/records/policies",
+        "id-3031": "GrantMarkerPermissionFailure",
+        "GrantMarkerPermissionSuccess": "types/records/policies",
+        "id-3029": "GrantMarkerPermissionSuccess",
+        "GrantRoleFailure": "types/records/roles",
+        "id-3017": "GrantRoleFailure",
+        "GrantRoleSuccess": "types/records/roles",
+        "id-3015": "GrantRoleSuccess",
+        "ImageClassifierOptions": "types/os",
+        "id-2565": "ImageClassifierOptions",
+        "InstUpdate": "types/os",
+        "id-2816": "InstUpdate",
+        "JoinRoomFailure": "types/os",
+        "id-2174": "JoinRoomFailure",
+        "JoinRoomSuccess": "types/os",
+        "id-2171": "JoinRoomSuccess",
+        "LeaveRoomFailure": "types/os",
+        "id-2183": "LeaveRoomFailure",
+        "LeaveRoomSuccess": "types/os",
+        "id-2180": "LeaveRoomSuccess",
+        "ListDataFailure": "types/records/data",
+        "id-2973": "ListDataFailure",
+        "ListDataSuccess": "types/records/data",
+        "id-2965": "ListDataSuccess",
+        "LookRotation": "types/math/rotations",
+        "id-3277": "LookRotation",
+        "MediaPermissionOptions": "types/os",
+        "id-2584": "MediaPermissionOptions",
+        "Debugger": "types/debuggers/debugger",
+        "id-2243": "Debugger",
+        "NormalDebuggerOptions": "types/debuggers/common",
+        "id-2450": "NormalDebuggerOptions",
+        "ParsedBotLink": "types/core",
+        "id-2799": "ParsedBotLink",
+        "PartialBotState": "types/core",
+        "id-2796": "PartialBotState",
+        "PausableDebugger": "types/debuggers/pausable-debugger",
+        "id-2299": "PausableDebugger",
+        "PausableDebuggerOptions": "types/debuggers/common",
+        "id-2455": "PausableDebuggerOptions",
+        "PauseTrigger": "types/debuggers/common",
+        "id-2418": "PauseTrigger",
+        "PauseTriggerOptions": "types/debuggers/common",
+        "id-2426": "PauseTriggerOptions",
+        "PossiblePauseTriggerLocation": "types/debuggers/common",
+        "id-2413": "PossiblePauseTriggerLocation",
+        "PseudoRandomNumberGenerator": "types/core",
+        "id-2480": "PseudoRandomNumberGenerator",
+        "QuaternionRotation": "types/math/rotations",
+        "id-3270": "QuaternionRotation",
+        "RaycastRay": "types/os",
+        "id-2167": "RaycastRay",
+        "RaycastResult": "types/os",
+        "id-2164": "RaycastResult",
+        "RecordActionOptions": "types/records/extra",
+        "id-2496": "RecordActionOptions",
+        "RecordDataFailure": "types/records/data",
+        "id-2937": "RecordDataFailure",
+        "RecordDataSuccess": "types/records/data",
+        "id-2933": "RecordDataSuccess",
+        "RecordFileFailure": "types/records/files",
+        "id-2134": "RecordFileFailure",
+        "RecordFileSuccess": "types/records/files",
+        "id-2130": "RecordFileSuccess",
+        "RegisterPrefixOptions": "types/core",
+        "id-2644": "RegisterPrefixOptions",
+        "RevokeMarkerPermissionFailure": "types/records/policies",
+        "id-3038": "RevokeMarkerPermissionFailure",
+        "RevokeMarkerPermissionSuccess": "types/records/policies",
+        "id-3036": "RevokeMarkerPermissionSuccess",
+        "RevokeRoleFailure": "types/records/roles",
+        "id-3024": "RevokeRoleFailure",
+        "RevokeRoleSuccess": "types/records/roles",
+        "id-3022": "RevokeRoleSuccess",
+        "RoomJoinOptions": "types/os",
+        "id-2610": "RoomJoinOptions",
+        "RoomOptions": "types/os",
+        "id-2619": "RoomOptions",
+        "RoomRemoteOptions": "types/os",
+        "id-2635": "RoomRemoteOptions",
+        "RoomTrackOptions": "types/os",
+        "id-2623": "RoomTrackOptions",
+        "RuntimeBot": "types/core",
+        "id-2647": "RuntimeBot",
+        "RuntimeBotLinks": "types/core",
+        "id-2786": "RuntimeBotLinks",
+        "RuntimeBotVars": "types/core",
+        "id-2783": "RuntimeBotVars",
+        "SequenceRotation": "types/math/rotations",
+        "id-3268": "SequenceRotation",
+        "SetRoomOptionsSuccess": "types/os",
+        "id-2198": "SetRoomOptionsSuccess",
+        "SetRoomTrackOptions": "types/os",
+        "id-2641": "SetRoomTrackOptions",
+        "SetRoomTrackOptionsFailure": "types/os",
+        "id-2224": "SetRoomTrackOptionsFailure",
+        "SetRoomTrackOptionsSuccess": "types/os",
+        "id-2219": "SetRoomTrackOptionsSuccess",
+        "ShareOptions": "types/os",
+        "id-2543": "ShareOptions",
+        "ShowChatOptions": "types/os",
+        "id-2537": "ShowChatOptions",
+        "ShowConfirmOptions": "types/os",
+        "id-2579": "ShowConfirmOptions",
+        "ShowInputOptions": "types/os",
+        "id-2570": "ShowInputOptions",
+        "SnapAxis": "types/os",
+        "id-2517": "SnapAxis",
+        "SnapGridTarget": "types/os",
+        "id-2139": "SnapGridTarget",
+        "SnapPoint": "types/os",
+        "id-2529": "SnapPoint",
+        "StartFormAnimationOptions": "types/os",
+        "id-2589": "StartFormAnimationOptions",
+        "StopFormAnimationOptions": "types/os",
+        "id-2602": "StopFormAnimationOptions",
+        "SuccessfulGeolocation": "types/os",
+        "id-2499": "SuccessfulGeolocation",
+        "UnsuccessfulGeolocation": "types/os",
+        "id-2509": "UnsuccessfulGeolocation",
+        "UpdateEventRecordFailure": "types/records/events",
+        "id-3010": "UpdateEventRecordFailure",
+        "UpdateEventRecordSuccess": "types/records/events",
+        "id-3008": "UpdateEventRecordSuccess",
+        "UploadedFile": "types/os",
+        "id-2160": "UploadedFile",
+        "WebhookOptions": "types/web",
+        "id-2084": "WebhookOptions",
+        "WebhookResult": "types/web",
+        "id-2096": "WebhookResult",
+        "AddCountResult": "types/records/events",
+        "id-2986": "AddCountResult",
+        "AvailablePermissions": "types/permissions",
+        "id-2830": "AvailablePermissions",
+        "BarcodeFormat": "types/os",
+        "id-2564": "BarcodeFormat",
+        "BotFilter": "types/core",
+        "id-2118": "BotFilter",
+        "BotSpace": "types/core",
+        "id-2770": "BotSpace",
+        "CameraType": "types/os",
+        "id-2563": "CameraType",
+        "CreatePublicRecordKeyResult": "types/records/key",
+        "id-2820": "CreatePublicRecordKeyResult",
+        "EraseDataResult": "types/records/data",
+        "id-2955": "EraseDataResult",
+        "EraseFileResult": "types/records/files",
+        "id-2977": "EraseFileResult",
+        "Geolocation": "types/os",
+        "id-2498": "Geolocation",
+        "GetCountResult": "types/records/events",
+        "id-2996": "GetCountResult",
+        "GetDataResult": "types/records/data",
+        "id-2941": "GetDataResult",
+        "GetRoomOptionsResult": "types/os",
+        "id-2188": "GetRoomOptionsResult",
+        "GetRoomRemoteOptionsResult": "types/os",
+        "id-2230": "GetRoomRemoteOptionsResult",
+        "GetRoomTrackOptionsResult": "types/os",
+        "id-2206": "GetRoomTrackOptionsResult",
+        "GrantMarkerPermissionResult": "types/records/policies",
+        "id-3028": "GrantMarkerPermissionResult",
+        "GrantRoleResult": "types/records/roles",
+        "id-3014": "GrantRoleResult",
+        "JoinRoomResult": "types/os",
+        "id-2170": "JoinRoomResult",
+        "LeaveRoomResult": "types/os",
+        "id-2179": "LeaveRoomResult",
+        "ListDataResult": "types/records/data",
+        "id-2964": "ListDataResult",
+        "Mod": "types/core",
+        "id-2113": "Mod",
+        "PortalType": "types/core",
+        "id-2802": "PortalType",
+        "PossiblePauseTriggerStates": "types/debuggers/common",
+        "id-2417": "PossiblePauseTriggerStates",
+        "RecordDataResult": "types/records/data",
+        "id-2932": "RecordDataResult",
+        "RecordFileResult": "types/records/files",
+        "id-2129": "RecordFileResult",
+        "RevokeMarkerPermissionResult": "types/records/policies",
+        "id-3035": "RevokeMarkerPermissionResult",
+        "RevokeRoleResult": "types/records/roles",
+        "id-3021": "RevokeRoleResult",
+        "SetRoomOptionsResult": "types/os",
+        "id-2197": "SetRoomOptionsResult",
+        "SetRoomTrackOptionsResult": "types/os",
+        "id-2218": "SetRoomTrackOptionsResult",
+        "SnapTarget": "types/os",
+        "id-2536": "SnapTarget",
+        "TagFilter": "types/core",
+        "id-2114": "TagFilter",
+        "UpdateEventRecordResult": "types/records/events",
+        "id-3007": "UpdateEventRecordResult",
+        "animateTag-byOptions": "actions/utility",
+        "id-364": "animateTag-byOptions",
+        "getbot-tag": "actions/data",
+        "id-33": "getbot-tag",
+        "getbots-tag": "actions/data",
+        "id-17": "getbots-tag",
+        "animateTag-byTag": "actions/utility",
+        "id-358": "animateTag-byTag",
+        "changeState": "actions/data",
+        "id-177": "changeState",
+        "create": "actions/data",
+        "id-162": "create",
+        "destroy": "actions/data",
+        "id-166": "destroy",
+        "getbot-filters": "actions/data",
+        "id-26": "getbot-filters",
+        "getbots-filters": "actions/data",
+        "id-10": "getbots-filters",
+        "priorityShout": "actions/event",
+        "id-225": "priorityShout",
+        "shout": "actions/event",
+        "id-237": "shout",
+        "updateBotLinks": "actions/data",
+        "id-198": "updateBotLinks",
+        "whisper": "actions/event",
+        "id-263": "whisper",
+        "action.perform": "actions/event",
+        "id-1589": "action.perform",
+        "action.reject": "actions/event",
+        "id-1593": "action.reject",
+        "applyDiffToSnapshot": "actions/data",
+        "id-83": "applyDiffToSnapshot",
+        "applyMod": "actions/mods",
+        "id-152": "applyMod",
+        "assert": "actions/debuggers",
+        "id-407": "assert",
+        "assertEqual": "actions/debuggers",
+        "id-412": "assertEqual",
+        "atPosition": "actions/bot-filters",
+        "id-293": "atPosition",
+        "byCreator": "actions/bot-filters",
+        "id-314": "byCreator",
+        "byID": "actions/bot-filters",
+        "id-281": "byID",
+        "byMod": "actions/bot-filters",
+        "id-285": "byMod",
+        "bySpace": "actions/bot-filters",
+        "id-310": "bySpace",
+        "byTag": "actions/bot-filters",
+        "id-276": "byTag",
+        "bytes.fromBase64String": "actions/bytes",
+        "id-1817": "bytes.fromBase64String",
+        "bytes.fromHexString": "actions/bytes",
+        "id-1825": "bytes.fromHexString",
+        "bytes.toBase64String": "actions/bytes",
+        "id-1813": "bytes.toBase64String",
+        "bytes.toHexString": "actions/bytes",
+        "id-1821": "bytes.toHexString",
+        "clearAnimations": "actions/utility",
+        "id-378": "clearAnimations",
+        "clearTagMasks": "actions/data",
+        "id-106": "clearTagMasks",
+        "crypto.hash-raw": "actions/crypto",
+        "id-1831": "crypto.hash-raw",
+        "crypto.hash-string": "actions/crypto",
+        "id-1837": "crypto.hash-string",
+        "crypto.hmac-raw": "actions/crypto",
+        "id-1868": "crypto.hmac-raw",
+        "crypto.hmac-string": "actions/crypto",
+        "id-1861": "crypto.hmac-string",
+        "crypto.asymmetric.decrypt": "actions/crypto",
+        "id-1926": "crypto.asymmetric.decrypt",
+        "crypto.asymmetric.encrypt": "actions/crypto",
+        "id-1921": "crypto.asymmetric.encrypt",
+        "crypto.asymmetric.isEncrypted": "actions/crypto",
+        "id-1932": "crypto.asymmetric.isEncrypted",
+        "crypto.asymmetric.isKeypair": "actions/crypto",
+        "id-1917": "crypto.asymmetric.isKeypair",
+        "crypto.asymmetric.keypair": "actions/crypto",
+        "id-1913": "crypto.asymmetric.keypair",
+        "crypto.encrypt": "actions/crypto",
+        "id-1897": "crypto.encrypt",
+        "crypto.hmacSha256": "actions/crypto",
+        "id-1887": "crypto.hmacSha256",
+        "crypto.hmacSha512": "actions/crypto",
+        "id-1892": "crypto.hmacSha512",
+        "crypto.isEncrypted": "actions/crypto",
+        "id-1907": "crypto.isEncrypted",
+        "crypto.keypair": "actions/crypto",
+        "id-1936": "crypto.keypair",
+        "crypto.sha256": "actions/crypto",
+        "id-1853": "crypto.sha256",
+        "crypto.sha512": "actions/crypto",
+        "id-1857": "crypto.sha512",
+        "crypto.sign": "actions/crypto",
+        "id-1940": "crypto.sign",
+        "deleteTagMaskText": "actions/data",
+        "id-133": "deleteTagMaskText",
+        "deleteTagText": "actions/data",
+        "id-126": "deleteTagText",
+        "diffSnapshots": "actions/data",
+        "id-78": "diffSnapshots",
+        "either": "actions/bot-filters",
+        "id-318": "either",
+        "os.beginAudioRecording": "actions/audio",
+        "id-1647": "os.beginAudioRecording",
+        "os.endAudioRecording": "actions/audio",
+        "id-1651": "os.endAudioRecording",
+        "getBotLinks": "actions/data",
+        "id-194": "getBotLinks",
+        "getBotPosition": "actions/data",
+        "id-52": "getBotPosition",
+        "getBotRotation": "actions/data",
+        "id-57": "getBotRotation",
+        "getBotTagValues": "actions/data",
+        "id-42": "getBotTagValues",
+        "getFormattedJSON": "actions/data",
+        "id-70": "getFormattedJSON",
+        "getID": "actions/data",
+        "id-62": "getID",
+        "getJSON": "actions/data",
+        "id-66": "getJSON",
+        "getLink": "actions/data",
+        "id-190": "getLink",
+        "getMod": "actions/mods",
+        "id-47": "getMod",
+        "getSnapshot": "actions/data",
+        "id-74": "getSnapshot",
+        "getTag": "actions/data",
+        "id-88": "getTag",
+        "inDimension": "actions/bot-filters",
+        "id-289": "inDimension",
+        "inStack": "actions/bot-filters",
+        "id-299": "inStack",
+        "insertTagMaskText": "actions/data",
+        "id-118": "insertTagMaskText",
+        "insertTagText": "actions/data",
+        "id-111": "insertTagText",
+        "math.abs": "actions/math",
+        "id-1687": "math.abs",
+        "math.addVectors": "actions/math",
+        "id-1757": "math.addVectors",
+        "math.areClose": "actions/math",
+        "id-1788": "math.areClose",
+        "math.avg": "actions/math",
+        "id-1679": "math.avg",
+        "math.degreesToRadians": "actions/math",
+        "id-1713": "math.degreesToRadians",
+        "math.getAnchorPointOffset": "actions/math",
+        "id-1753": "math.getAnchorPointOffset",
+        "math.getForwardDirection": "actions/math",
+        "id-1721": "math.getForwardDirection",
+        "math.getSeededRandomNumberGenerator": "actions/math",
+        "id-1695": "math.getSeededRandomNumberGenerator",
+        "math.intersectPlane": "actions/math",
+        "id-1730": "math.intersectPlane",
+        "math.negateVector": "actions/math",
+        "id-1767": "math.negateVector",
+        "math.normalizeVector": "actions/math",
+        "id-1772": "math.normalizeVector",
+        "math.radiansToDegrees": "actions/math",
+        "id-1717": "math.radiansToDegrees",
+        "math.random": "actions/math",
+        "id-1708": "math.random",
+        "math.randomInt": "actions/math",
+        "id-1703": "math.randomInt",
+        "math.scaleVector": "actions/math",
+        "id-1782": "math.scaleVector",
+        "math.setRandomSeed": "actions/math",
+        "id-1699": "math.setRandomSeed",
+        "math.sqrt": "actions/math",
+        "id-1683": "math.sqrt",
+        "math.stdDev": "actions/math",
+        "id-1691": "math.stdDev",
+        "math.subtractVectors": "actions/math",
+        "id-1762": "math.subtractVectors",
+        "math.sum": "actions/math",
+        "id-1675": "math.sum",
+        "math.vectorLength": "actions/math",
+        "id-1777": "math.vectorLength",
+        "neighboring": "actions/bot-filters",
+        "id-304": "neighboring",
+        "not": "actions/bot-filters",
+        "id-325": "not",
+        "os.attachDebugger": "actions/debuggers",
+        "id-1287": "os.attachDebugger",
+        "os.createDebugger-normal": "actions/debuggers",
+        "id-1276": "os.createDebugger-normal",
+        "os.createDebugger-pausable": "actions/debuggers",
+        "id-1280": "os.createDebugger-pausable",
+        "os.focusOn-bot": "actions/portals",
+        "id-480": "os.focusOn-bot",
+        "os.focusOn-position": "actions/portals",
+        "id-485": "os.focusOn-position",
+        "os.getExecutingDebugger": "actions/debuggers",
+        "id-1284": "os.getExecutingDebugger",
+        "showChat-options": "actions/os",
+        "id-507": "showChat-options",
+        "showChat-placeholder": "actions/os",
+        "id-503": "showChat-placeholder",
+        "os.showInput": "actions/portals",
+        "id-712": "os.showInput",
+        "os.addBotDropGrid": "actions/portals",
+        "id-786": "os.addBotDropGrid",
+        "os.addBotDropSnap": "actions/portals",
+        "id-777": "os.addBotDropSnap",
+        "os.addDropGrid": "actions/portals",
+        "id-782": "os.addDropGrid",
+        "os.addDropSnap": "actions/portals",
+        "id-773": "os.addDropSnap",
+        "os.applyUpdatesToInst": "actions/os",
+        "id-1230": "os.applyUpdatesToInst",
+        "os.arSupported": "actions/xr",
+        "id-548": "os.arSupported",
+        "os.bufferSound": "actions/audio",
+        "id-749": "os.bufferSound",
+        "os.calculateRayFromCamera": "actions/portals",
+        "id-1178": "os.calculateRayFromCamera",
+        "os.cancelSound": "actions/audio",
+        "id-753": "os.cancelSound",
+        "os.closeBarcodeScanner": "actions/barcodes",
+        "id-621": "os.closeBarcodeScanner",
+        "os.closeCircleWipe": "actions/portals",
+        "id-765": "os.closeCircleWipe",
+        "os.closeImageClassifier": "actions/image-classification",
+        "id-636": "os.closeImageClassifier",
+        "os.closeQRCodeScanner": "actions/barcodes",
+        "id-607": "os.closeQRCodeScanner",
+        "os.compileApp": "actions/app",
+        "id-900": "os.compileApp",
+        "os.convertGeolocationToWhat3Words": "actions/os",
+        "id-1163": "os.convertGeolocationToWhat3Words",
+        "os.countEvents": "actions/records",
+        "id-1157": "os.countEvents",
+        "os.createInitializationUpdate": "actions/os",
+        "id-1226": "os.createInitializationUpdate",
+        "os.device": "actions/os",
+        "id-525": "os.device",
+        "os.disableAR": "actions/xr",
+        "id-538": "os.disableAR",
+        "os.disablePointOfView": "actions/portals",
+        "id-563": "os.disablePointOfView",
+        "os.disableVR": "actions/xr",
+        "id-545": "os.disableVR",
+        "os.disableWakeLock": "actions/os",
+        "id-569": "os.disableWakeLock",
+        "os.download": "actions/files",
+        "id-575": "os.download",
+        "os.downloadBots": "actions/files",
+        "id-581": "os.downloadBots",
+        "os.downloadBotsAsInitialzationUpdate": "actions/files",
+        "id-586": "os.downloadBotsAsInitialzationUpdate",
+        "os.downloadInst": "actions/files",
+        "id-594": "os.downloadInst",
+        "os.enableAR": "actions/xr",
+        "id-534": "os.enableAR",
+        "os.enableCustomDragging": "actions/portals",
+        "id-791": "os.enableCustomDragging",
+        "os.enablePointOfView": "actions/portals",
+        "id-554": "os.enablePointOfView",
+        "os.enableVR": "actions/xr",
+        "id-541": "os.enableVR",
+        "os.eraseData": "actions/records",
+        "id-1100": "os.eraseData",
+        "os.eraseManualApprovalData": "actions/records",
+        "id-1106": "os.eraseManualApprovalData",
+        "os.exitFullscreenMode": "actions/portals",
+        "id-451": "os.exitFullscreenMode",
+        "os.getAverageFrameRate": "actions/os",
+        "id-848": "os.getAverageFrameRate",
+        "os.getCameraPosition": "actions/portals",
+        "id-804": "os.getCameraPosition",
+        "os.getCameraRotation": "actions/portals",
+        "id-808": "os.getCameraRotation",
+        "os.getCurrentDimension": "actions/portals",
+        "id-683": "os.getCurrentDimension",
+        "os.getCurrentInst": "actions/portals",
+        "id-689": "os.getCurrentInst",
+        "os.getCurrentInstUpdate": "actions/os",
+        "id-1234": "os.getCurrentInstUpdate",
+        "os.getData": "actions/records",
+        "id-1082": "os.getData",
+        "os.getDimensionalDepth": "actions/portals",
+        "id-702": "os.getDimensionalDepth",
+        "os.getFocusPoint": "actions/portals",
+        "id-816": "os.getFocusPoint",
+        "os.getGeolocation": "actions/os",
+        "id-798": "os.getGeolocation",
+        "os.getInputList": "actions/portals",
+        "id-841": "os.getInputList",
+        "os.getInputState": "actions/portals",
+        "id-836": "os.getInputState",
+        "os.getInstStateFromUpdates": "actions/os",
+        "id-1222": "os.getInstStateFromUpdates",
+        "os.getManualApprovalData": "actions/records",
+        "id-1088": "os.getManualApprovalData",
+        "os.getMediaPermission": "actions/os",
+        "id-844": "os.getMediaPermission",
+        "os.getMenuDimension": "actions/portals",
+        "id-692": "os.getMenuDimension",
+        "os.getMiniPortalDimension": "actions/portals",
+        "id-695": "os.getMiniPortalDimension",
+        "os.getPointerDirection": "actions/portals",
+        "id-832": "os.getPointerDirection",
+        "os.getPointerPosition": "actions/portals",
+        "id-820": "os.getPointerPosition",
+        "os.getPointerRotation": "actions/portals",
+        "id-824": "os.getPointerRotation",
+        "os.getPortalDimension": "actions/portals",
+        "id-698": "os.getPortalDimension",
+        "os.getPublicRecordKey": "actions/records",
+        "id-1007": "os.getPublicRecordKey",
+        "os.getRoomOptions": "actions/rooms",
+        "id-866": "os.getRoomOptions",
+        "os.getRoomRemoteOptions": "actions/rooms",
+        "id-881": "os.getRoomRemoteOptions",
+        "os.getRoomTrackOptions": "actions/rooms",
+        "id-870": "os.getRoomTrackOptions",
+        "os.getSubjectlessPublicRecordKey": "actions/records",
+        "id-1011": "os.getSubjectlessPublicRecordKey",
+        "os.getWakeLockConfiguration": "actions/os",
+        "id-572": "os.getWakeLockConfiguration",
+        "os.goToDimension": "actions/portals",
+        "id-726": "os.goToDimension",
+        "os.goToURL": "actions/portals",
+        "id-730": "os.goToURL",
+        "os.grantInstAdminPermission": "actions/records",
+        "id-1029": "os.grantInstAdminPermission",
+        "os.grantInstRole": "actions/records",
+        "id-1049": "os.grantInstRole",
+        "os.grantRecordMarkerPermission": "actions/records",
+        "id-1015": "os.grantRecordMarkerPermission",
+        "os.grantUserRole": "actions/records",
+        "id-1034": "os.grantUserRole",
+        "os.hasBotInMiniPortal": "actions/portals",
+        "id-757": "os.hasBotInMiniPortal",
+        "os.hideBarcode": "actions/barcodes",
+        "id-629": "os.hideBarcode",
+        "os.hideChat": "actions/os",
+        "id-515": "os.hideChat",
+        "os.hideHtml": "actions/os",
+        "id-458": "os.hideHtml",
+        "os.hideQRCode": "actions/barcodes",
+        "id-614": "os.hideQRCode",
+        "os.hideTips": "actions/portals",
+        "id-439": "os.hideTips",
+        "os.importAUX": "actions/files",
+        "id-667": "os.importAUX",
+        "os.inSheet": "actions/portals",
+        "id-801": "os.inSheet",
+        "os.instStatuses": "actions/os",
+        "id-1251": "os.instStatuses",
+        "os.instances": "actions/os",
+        "id-1241": "os.instances",
+        "os.isCollaborative": "actions/os",
+        "id-528": "os.isCollaborative",
+        "os.isInDimension": "actions/portals",
+        "id-679": "os.isInDimension",
+        "os.isRecordKey": "actions/records",
+        "id-1064": "os.isRecordKey",
+        "os.joinRoom": "actions/rooms",
+        "id-851": "os.joinRoom",
+        "os.leaveRoom": "actions/rooms",
+        "id-856": "os.leaveRoom",
+        "os.listBuiltinTags": "actions/app",
+        "id-1001": "os.listBuiltinTags",
+        "os.listData": "actions/records",
+        "id-1094": "os.listData",
+        "os.listFormAnimations": "actions/animations",
+        "id-1198": "os.listFormAnimations",
+        "os.listInstUpdates": "actions/os",
+        "id-1219": "os.listInstUpdates",
+        "os.loadInst": "actions/os",
+        "id-659": "os.loadInst",
+        "os.log": "actions/os",
+        "id-794": "os.log",
+        "os.meetCommand": "actions/os",
+        "id-1264": "os.meetCommand",
+        "os.meetFunction": "actions/os",
+        "id-1269": "os.meetFunction",
+        "os.openBarcodeScanner": "actions/barcodes",
+        "id-617": "os.openBarcodeScanner",
+        "os.openCircleWipe": "actions/portals",
+        "id-769": "os.openCircleWipe",
+        "os.openDevConsole": "actions/os",
+        "id-738": "os.openDevConsole",
+        "os.openImageClassifier": "actions/image-classification",
+        "id-632": "os.openImageClassifier",
+        "os.openQRCodeScanner": "actions/barcodes",
+        "id-603": "os.openQRCodeScanner",
+        "os.openURL": "actions/portals",
+        "id-734": "os.openURL",
+        "os.parseBotsFromData": "actions/files",
+        "id-671": "os.parseBotsFromData",
+        "os.playSound": "actions/audio",
+        "id-745": "os.playSound",
+        "os.raycast": "actions/portals",
+        "id-1172": "os.raycast",
+        "os.raycastFromCamera": "actions/portals",
+        "id-1167": "os.raycastFromCamera",
+        "os.recordData": "actions/records",
+        "id-1068": "os.recordData",
+        "os.recordEvent": "actions/records",
+        "id-1151": "os.recordEvent",
+        "os.recordFile": "actions/records",
+        "id-1112": "os.recordFile",
+        "os.recordManualApprovalData": "actions/records",
+        "id-1075": "os.recordManualApprovalData",
+        "os.registerApp": "actions/app",
+        "id-891": "os.registerApp",
+        "os.registerTagPrefix": "actions/app",
+        "id-886": "os.registerTagPrefix",
+        "os.remoteCount": "actions/os",
+        "id-1244": "os.remoteCount",
+        "os.remotes": "actions/os",
+        "id-1216": "os.remotes",
+        "os.replaceDragBot": "actions/portals",
+        "id-675": "os.replaceDragBot",
+        "os.requestAuthBot": "actions/records",
+        "id-1004": "os.requestAuthBot",
+        "os.requestFullscreenMode": "actions/portals",
+        "id-448": "os.requestFullscreenMode",
+        "os.requestWakeLock": "actions/os",
+        "id-566": "os.requestWakeLock",
+        "os.revokeInstRole": "actions/records",
+        "id-1057": "os.revokeInstRole",
+        "os.revokeRecordMarkerPermission": "actions/records",
+        "id-1022": "os.revokeRecordMarkerPermission",
+        "os.revokeUserRole": "actions/records",
+        "id-1042": "os.revokeUserRole",
+        "os.run": "actions/os",
+        "id-518": "os.run",
+        "os.setClipboard": "actions/os",
+        "id-461": "os.setClipboard",
+        "os.setRoomOptions": "actions/rooms",
+        "id-861": "os.setRoomOptions",
+        "os.setRoomTrackOptions": "actions/rooms",
+        "id-875": "os.setRoomTrackOptions",
+        "os.share": "actions/os",
+        "id-761": "os.share",
+        "os.showBarcode": "actions/barcodes",
+        "id-624": "os.showBarcode",
+        "os.showConfirm": "actions/portals",
+        "id-722": "os.showConfirm",
+        "os.showHtml": "actions/os",
+        "id-454": "os.showHtml",
+        "os.showInputForTag": "actions/portals",
+        "id-706": "os.showInputForTag",
+        "os.showJoinCode": "actions/barcodes",
+        "id-443": "os.showJoinCode",
+        "os.showQRCode": "actions/barcodes",
+        "id-610": "os.showQRCode",
+        "os.showUploadAuxFile": "actions/files",
+        "id-597": "os.showUploadAuxFile",
+        "os.showUploadFiles": "actions/files",
+        "id-600": "os.showUploadFiles",
+        "os.sleep": "actions/os",
+        "id-423": "os.sleep",
+        "os.startFormAnimation": "actions/animations",
+        "id-1187": "os.startFormAnimation",
+        "os.stopFormAnimation": "actions/animations",
+        "id-1193": "os.stopFormAnimation",
+        "os.tip": "actions/portals",
+        "id-432": "os.tip",
+        "os.toast": "actions/os",
+        "id-427": "os.toast",
+        "os.totalRemoteCount": "actions/os",
+        "id-1248": "os.totalRemoteCount",
+        "os.unloadInst": "actions/os",
+        "id-663": "os.unloadInst",
+        "os.unregisterApp": "actions/app",
+        "id-896": "os.unregisterApp",
+        "os.version": "actions/os",
+        "id-522": "os.version",
+        "os.vrSupported": "actions/xr",
+        "id-551": "os.vrSupported",
+        "os.agreedUponTime": "actions/time",
+        "id-640": "os.agreedUponTime",
+        "os.deadReckoningTime": "actions/time",
+        "id-648": "os.deadReckoningTime",
+        "os.instLatency": "actions/time",
+        "id-642": "os.instLatency",
+        "os.instTimeOffset": "actions/time",
+        "id-644": "os.instTimeOffset",
+        "os.instTimeOffsetSpread": "actions/time",
+        "id-646": "os.instTimeOffsetSpread",
+        "os.localTime": "actions/time",
+        "id-638": "os.localTime",
+        "removeTags": "actions/data",
+        "id-141": "removeTags",
+        "renameTag": "actions/data",
+        "id-146": "renameTag",
+        "setTag": "actions/data",
+        "id-93": "setTag",
+        "setTagMask": "actions/data",
+        "id-99": "setTagMask",
+        "subtractMods": "actions/mods",
+        "id-157": "subtractMods",
+        "superShout": "actions/event",
+        "id-220": "superShout",
+        "uuid": "actions/data",
+        "id-355": "uuid",
+        "web.get": "actions/web",
+        "id-1983": "web.get",
+        "web.hook": "actions/web",
+        "id-1994": "web.hook",
+        "web.post": "actions/web",
+        "id-1988": "web.post",
+        "configBot": "actions/os",
+        "id-418": "configBot"
+    }
+}
