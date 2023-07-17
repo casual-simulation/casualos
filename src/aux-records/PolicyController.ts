@@ -113,7 +113,8 @@ export class PolicyController {
             }
         } else {
             const result = await this._records.validateRecordName(
-                request.recordKeyOrRecordName
+                request.recordKeyOrRecordName,
+                request.userId
             );
 
             if (result.success === false) {

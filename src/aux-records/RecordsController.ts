@@ -87,7 +87,7 @@ export class RecordsController {
                     record.ownerId = userId;
                     // Clear the hashes and re-create the salt so that access to the record is revoked for any record key that was created before.
                     record.secretHashes = [];
-                    record.secretSalt = fromByteArray(randomBytes(16));
+                    record.secretSalt = this._createSalt();
                     await this._store.updateRecord({
                         ...record,
                     });
@@ -135,7 +135,7 @@ export class RecordsController {
 
                 const passwordBytes = randomBytes(16);
                 const password = fromByteArray(passwordBytes); // convert to human-readable string
-                const salt = fromByteArray(randomBytes(16));
+                const salt = this._createSalt();
                 const passwordHash = hashHighEntropyPasswordWithSalt(
                     password,
                     salt
@@ -307,17 +307,54 @@ export class RecordsController {
     /**
      * Validates the given record name. Returns information about the record if it exists.
      * @param name The name of the record.
+     * @param userId The ID of the user that is validating the record.
      */
-    async validateRecordName(name: string): Promise<ValidateRecordNameResult> {
+    async validateRecordName(
+        name: string,
+        userId: string | null
+    ): Promise<ValidateRecordNameResult> {
         try {
             const record = await this._store.getRecordByName(name);
 
             if (!record) {
+                if (userId && name === userId) {
+                    await this._store.addRecord({
+                        name,
+                        ownerId: userId,
+                        secretHashes: [],
+                        secretSalt: this._createSalt(),
+                    });
+
+                    return {
+                        success: true,
+                        recordName: name,
+                        ownerId: userId,
+                    };
+                }
+
                 return {
                     success: false,
                     errorCode: 'record_not_found',
                     errorMessage: 'Record not found.',
                 };
+            } else if (
+                userId &&
+                record.name === userId &&
+                record.ownerId !== userId
+            ) {
+                // The user is not currently the owner of their own record.
+                // This is an issue that needs to be fixed because users should always own the record that has the same name as their ID.
+                console.log(
+                    `[RecordsController] [validateRecordName recordName: ${name}, userId: ${userId}] Fixing record owner to match actual owner.`
+                );
+
+                record.ownerId = userId;
+                // Clear the hashes and re-create the salt so that access to the record is revoked for any record key that was created before.
+                record.secretHashes = [];
+                record.secretSalt = this._createSalt();
+                await this._store.updateRecord({
+                    ...record,
+                });
             }
 
             return {
@@ -333,6 +370,10 @@ export class RecordsController {
                 errorMessage: err.toString(),
             };
         }
+    }
+
+    private _createSalt(): string {
+        return fromByteArray(randomBytes(16));
     }
 }
 

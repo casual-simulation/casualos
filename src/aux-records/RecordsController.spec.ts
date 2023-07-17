@@ -1092,7 +1092,7 @@ describe('RecordsController', () => {
                 secretHashes: [],
                 secretSalt: '',
             });
-            const result = await manager.validateRecordName('name');
+            const result = await manager.validateRecordName('name', 'userId');
 
             expect(result).toEqual({
                 success: true,
@@ -1101,8 +1101,66 @@ describe('RecordsController', () => {
             });
         });
 
+        it('should return info about the given record even when given a null user ID', async () => {
+            await store.addRecord({
+                name: 'name',
+                ownerId: 'userId',
+                secretHashes: [],
+                secretSalt: '',
+            });
+            const result = await manager.validateRecordName('name', null);
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'name',
+                ownerId: 'userId',
+            });
+        });
+
+        it('should create the record if it doesnt exist and the name matches the given user ID', async () => {
+            const result = await manager.validateRecordName('userId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'userId',
+                ownerId: 'userId',
+            });
+
+            expect(await store.getRecordByName('userId')).toEqual({
+                name: 'userId',
+                ownerId: 'userId',
+                secretHashes: [],
+                secretSalt: expect.any(String),
+            });
+        });
+
+        it('should update the record if the name matches the given user ID but the owner is different', async () => {
+            await store.addRecord({
+                name: 'userId',
+                ownerId: 'otherUserId',
+                secretHashes: [],
+                secretSalt: 'salt',
+            });
+            const result = await manager.validateRecordName('userId', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'userId',
+                ownerId: 'userId',
+            });
+
+            const record = await store.getRecordByName('userId');
+            expect(record).toEqual({
+                name: 'userId',
+                ownerId: 'userId',
+                secretHashes: [],
+                secretSalt: expect.any(String),
+            });
+            expect(record.secretSalt).not.toBe('salt');
+        });
+
         it('should handle the case where the record does not exist', async () => {
-            const result = await manager.validateRecordName('name');
+            const result = await manager.validateRecordName('name', 'userId');
 
             expect(result).toEqual({
                 success: false,
