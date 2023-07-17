@@ -606,7 +606,10 @@ export class ServerBuilder {
             this._subscriptionConfig,
             this._forceAllowAllSubscriptionFeatures
         );
-        this._recordsController = new RecordsController(this._recordsStore);
+        this._recordsController = new RecordsController(
+            this._recordsStore,
+            this._authStore
+        );
         this._policyController = new PolicyController(
             this._authController,
             this._recordsController,
