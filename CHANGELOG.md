@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.1.37
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Improved the API reference documentation to be generated from documentation comments in the source code.
+
 ## V3.1.36
 
 #### Date: 7/7/2023
