@@ -318,6 +318,9 @@ export class RecordsController {
 
             if (!record) {
                 if (userId && name === userId) {
+                    console.log(
+                        `[RecordsController] [validateRecordName recordName: ${name}, userId: ${userId}] Creating record for user.`
+                    );
                     await this._store.addRecord({
                         name,
                         ownerId: userId,
