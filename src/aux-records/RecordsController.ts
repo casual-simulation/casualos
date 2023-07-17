@@ -10,16 +10,18 @@ import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import { NotLoggedInError, ServerError } from './Errors';
 import type { ValidateSessionKeyFailure } from './AuthController';
-import { type } from 'os';
+import { AuthStore } from './AuthStore';
 
 /**
  * Defines a class that manages records and their keys.
  */
 export class RecordsController {
     private _store: RecordsStore;
+    private _auth: AuthStore;
 
-    constructor(store: RecordsStore) {
+    constructor(store: RecordsStore, auth: AuthStore) {
         this._store = store;
+        this._auth = auth;
     }
 
     /**
@@ -62,7 +64,7 @@ export class RecordsController {
             }
 
             if (record) {
-                if (record.ownerId !== userId) {
+                if (record.ownerId !== userId && name !== userId) {
                     return {
                         success: false,
                         errorCode: 'unauthorized_to_create_record_key',
@@ -71,9 +73,25 @@ export class RecordsController {
                         errorReason: 'record_owned_by_different_user',
                     };
                 }
+
                 console.log(
                     `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}] Creating record key.`
                 );
+
+                if (name === userId) {
+                    // The user is not currently the owner of their own record.
+                    // This is an issue that needs to be fixed because users should always own the record that has the same name as their ID.
+                    console.log(
+                        `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}] Fixing record owner to match actual owner.`
+                    );
+                    record.ownerId = userId;
+                    // Clear the hashes and re-create the salt so that access to the record is revoked for any record key that was created before.
+                    record.secretHashes = [];
+                    record.secretSalt = fromByteArray(randomBytes(16));
+                    await this._store.updateRecord({
+                        ...record,
+                    });
+                }
 
                 const passwordBytes = randomBytes(16);
                 const password = fromByteArray(passwordBytes); // convert to human-readable string
@@ -96,6 +114,21 @@ export class RecordsController {
                     recordName: name,
                 };
             } else {
+                if (name !== userId) {
+                    const user = await this._auth.findUser(name);
+
+                    if (user) {
+                        // User exists for record. They should own the record and all record keys for it.
+                        return {
+                            success: false,
+                            errorCode: 'unauthorized_to_create_record_key',
+                            errorMessage:
+                                'Another user has already created this record.',
+                            errorReason: 'record_owned_by_different_user',
+                        };
+                    }
+                }
+
                 console.log(
                     `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}] Creating record.`
                 );
@@ -187,10 +220,21 @@ export class RecordsController {
                     name,
                     hashV2
                 );
-                if (!!key) {
-                    resultPolicy = key.policy;
-                    creatorId = key.creatorId;
-                    valid = true;
+                if (key) {
+                    if (
+                        name === record.ownerId &&
+                        key.creatorId !== record.ownerId
+                    ) {
+                        // The record is a user record (because the name is the same as the owner ID)
+                        // but this key was created when the record was owned by someone else.
+                        // Normally, this shouldn't happen, but it is possible if the record was created before v3.2.0 or if the record was created before the user was created.
+                        // This check is a failsafe to ensure that user records are always owned by the user, and not by someone else.
+                        valid = false;
+                    } else {
+                        resultPolicy = key.policy;
+                        creatorId = key.creatorId;
+                        valid = true;
+                    }
                 } else {
                     // Check v1 hashes
                     const hash = hashPasswordWithSalt(
@@ -206,10 +250,22 @@ export class RecordsController {
                                 name,
                                 hash
                             );
-                        if (!!key) {
-                            resultPolicy = key.policy;
-                            creatorId = key.creatorId;
-                            valid = true;
+
+                        if (key) {
+                            if (
+                                name === record.ownerId &&
+                                key.creatorId !== record.ownerId
+                            ) {
+                                // The record is a user record (because the name is the same as the owner ID)
+                                // but this key was created when the record was owned by someone else.
+                                // Normally, this shouldn't happen, but it is possible if the record was created before v3.2.0 or if the record was created before the user was created.
+                                // This check is a failsafe to ensure that user records are always owned by the user, and not by someone else.
+                                valid = false;
+                            } else {
+                                resultPolicy = key.policy;
+                                creatorId = key.creatorId;
+                                valid = true;
+                            }
                         }
                     }
                 }
