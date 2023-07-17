@@ -514,6 +514,60 @@ describe('FileRecordsController', () => {
             });
         });
 
+        it('should be able to record a file if the record name matches the user ID', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            const result = (await manager.recordFile(userId, userId, {
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                fileDescription: 'testDescription',
+                headers: {},
+            })) as RecordFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+                fileName: 'testSha256.txt',
+                markers: [PUBLIC_READ_MARKER],
+            });
+            expect(presignUrlMock).toHaveBeenCalledWith({
+                recordName: userId,
+                fileName: 'testSha256.txt',
+                fileSha256Hex: 'testSha256',
+                fileByteLength: 100,
+                fileMimeType: 'text/plain',
+                headers: {},
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await expect(
+                store.getFileRecord(userId, 'testSha256.txt')
+            ).resolves.toEqual({
+                success: true,
+                fileName: 'testSha256.txt',
+                description: 'testDescription',
+                recordName: userId,
+                publisherId: userId,
+                subjectId: userId,
+                sizeInBytes: 100,
+                markers: [PUBLIC_READ_MARKER],
+                uploaded: false,
+                url: expect.any(String),
+            });
+        });
+
         it('should be able to record a file with a custom marker', async () => {
             presignUrlMock.mockResolvedValueOnce({
                 success: true,
@@ -763,6 +817,38 @@ describe('FileRecordsController', () => {
             });
         });
 
+        it('should be able to erase a file if the record name matches the user ID', async () => {
+            await store.addFileRecord(
+                userId,
+                'testFile.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+
+            const result = (await manager.eraseFile(
+                userId,
+                'testFile.txt',
+                userId
+            )) as EraseFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                recordName: userId,
+                fileName: 'testFile.txt',
+            });
+
+            await expect(
+                store.getFileRecord(userId, 'testFile.txt')
+            ).resolves.toEqual({
+                success: false,
+                errorCode: 'file_not_found',
+                errorMessage: 'The file was not found in the store.',
+            });
+        });
+
         it('should reject the request if the user does not have the correct permissions', async () => {
             await store.addFileRecord(
                 recordName,
@@ -927,6 +1013,47 @@ describe('FileRecordsController', () => {
             });
             expect(presignReadMock).toHaveBeenCalledWith({
                 recordName: recordName,
+                fileName: 'testFile.txt',
+                headers: {},
+            });
+        });
+
+        it('should get a URL by record name if it matches the user ID', async () => {
+            presignReadMock.mockResolvedValueOnce({
+                success: true,
+                requestUrl: 'testUrl',
+                requestMethod: 'GET',
+                requestHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            await store.addFileRecord(
+                userId,
+                'testFile.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description',
+                ['secret']
+            );
+
+            const result = (await manager.readFile(
+                userId,
+                'testFile.txt',
+                userId
+            )) as ReadFileSuccess;
+
+            expect(result).toEqual({
+                success: true,
+                requestUrl: 'testUrl',
+                requestMethod: 'GET',
+                requestHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+            expect(presignReadMock).toHaveBeenCalledWith({
+                recordName: userId,
                 fileName: 'testFile.txt',
                 headers: {},
             });
@@ -1110,6 +1237,53 @@ describe('FileRecordsController', () => {
             ).resolves.toEqual({
                 success: true,
                 recordName: recordName,
+                fileName: 'testFile.txt',
+                publisherId: 'publisherId',
+                subjectId: 'subjectId',
+                sizeInBytes: 100,
+                description: 'description',
+                markers: ['secret'],
+                uploaded: false,
+                url: expect.any(String),
+            });
+        });
+
+        it('should be able to update the markers if the record name matches the user ID', async () => {
+            presignReadMock.mockResolvedValueOnce({
+                success: true,
+                requestUrl: 'testUrl',
+                requestMethod: 'GET',
+                requestHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            await store.addFileRecord(
+                userId,
+                'testFile.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+
+            const result = (await manager.updateFile(
+                userId,
+                'testFile.txt',
+                userId,
+                ['secret']
+            )) as UpdateFileRecordSuccess;
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            await expect(
+                store.getFileRecord(userId, 'testFile.txt')
+            ).resolves.toEqual({
+                success: true,
+                recordName: userId,
                 fileName: 'testFile.txt',
                 publisherId: 'publisherId',
                 subjectId: 'subjectId',
