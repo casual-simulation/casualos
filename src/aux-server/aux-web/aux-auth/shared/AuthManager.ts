@@ -1,9 +1,10 @@
 import axios from 'axios';
 import { Subject, BehaviorSubject, Observable, from } from 'rxjs';
 import { AppMetadata } from '../../../aux-backend/shared/AuthMetadata';
-import {
+import type {
     CreatePublicRecordKeyResult,
     PublicRecordKeyPolicy,
+    ListDataResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -238,6 +239,31 @@ export class AuthManager {
             }
             return null;
         }
+    }
+
+    async listData(recordName: string, startingAddress?: string) {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records/data/list`);
+
+        url.searchParams.set('recordName', recordName);
+        if (startingAddress) {
+            url.searchParams.set('address', startingAddress);
+        }
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as ListDataResult;
+        if (result.success === true) {
+            return result.items;
+        } else {
+            if (result.errorCode === 'not_supported') {
+                return null;
+            }
+        }
+
+        return null;
     }
 
     async manageSubscriptions(

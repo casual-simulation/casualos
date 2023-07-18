@@ -47,32 +47,32 @@ export default class AuthApp extends Vue {
     async loadRecords() {
         console.log('[AuthApp] Loading records...');
         this.loadingRecords = true;
-        setTimeout(() => {
-            this.records = [
-                {
-                    name: 'abc',
-                    label: 'abc',
-                    route: {
-                        name: 'record',
-                        params: {
-                            recordName: 'abc',
-                        },
+        this.records = [
+            {
+                name: 'abc',
+                label: 'abc',
+                route: {
+                    name: 'record',
+                    params: {
+                        recordName: 'abc',
                     },
                 },
-                {
-                    name: 'def',
-                    label: 'def',
-                    route: {
-                        name: 'record',
-                        params: {
-                            recordName: 'def',
-                        },
+            },
+            {
+                name: 'def',
+                label: 'def',
+                route: {
+                    name: 'record',
+                    params: {
+                        recordName: 'def',
                     },
                 },
-            ];
-            this.loadingRecords = false;
-            console.log('[AuthApp] Done');
-        }, 3000);
+            },
+        ];
+        this.loadingRecords = false;
+        // setTimeout(() => {
+        //     console.log('[AuthApp] Done');
+        // }, 3000);
         // this.loadingRecords = false;
     }
 }

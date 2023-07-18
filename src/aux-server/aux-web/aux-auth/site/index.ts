@@ -49,6 +49,8 @@ import {
     MdDialogPrompt,
     MdTable,
     MdChips,
+    MdEmptyState,
+    MdRipple,
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css';
 import 'vue-material/dist/theme/default.css';
@@ -64,6 +66,7 @@ import AuthLogin from './AuthLogin/AuthLogin';
 import AuthEnterCode from './AuthEnterCode/AuthEnterCode';
 import AuthRecords from './AuthRecords/AuthRecords';
 import AuthRecordsData from './AuthRecordsData/AuthRecordsData';
+import AuthRecordsFiles from './AuthRecordsFiles/AuthRecordsFiles';
 import { authManager } from '../shared/index';
 import AuthLoading from './AuthLoading/AuthLoading';
 import { EventBus } from '@casual-simulation/aux-components';
@@ -77,6 +80,9 @@ import AuthPrivacyPolicy from './AuthPrivacyPolicy/AuthPrivacyPolicy';
 import AuthAcceptableUsePolicy from './AuthAcceptableUsePolicy/AuthAcceptableUsePolicy';
 
 import 'virtual:svg-icons-register';
+import AuthRecordsEvents from './AuthRecordsEvents/AuthRecordsEvents';
+import AuthRecordsPolicies from './AuthRecordsPolicies/AuthRecordsPolicies';
+import AuthRecordsRoles from './AuthRecordsRoles/AuthRecordsRoles';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -102,6 +108,8 @@ Vue.use(MdBadge);
 Vue.use(MdDialogPrompt);
 Vue.use(MdDatepicker);
 Vue.use(MdChips);
+Vue.use(MdEmptyState);
+Vue.use(MdRipple);
 
 const routes: RouteConfig[] = [
     {
@@ -172,22 +180,22 @@ const routes: RouteConfig[] = [
             {
                 path: 'files',
                 name: 'records-files',
-                component: AuthRecordsData,
+                component: AuthRecordsFiles,
             },
             {
                 path: 'events',
                 name: 'records-events',
-                component: AuthRecordsData,
+                component: AuthRecordsEvents,
             },
             {
                 path: 'policies',
                 name: 'records-policies',
-                component: AuthRecordsData,
+                component: AuthRecordsPolicies,
             },
             {
                 path: 'roles',
                 name: 'records-roles',
-                component: AuthRecordsData,
+                component: AuthRecordsRoles,
             },
         ],
     },
