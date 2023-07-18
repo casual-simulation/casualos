@@ -170,6 +170,9 @@ const routes: RouteConfig[] = [
     {
         path: '/records/:recordName',
         name: 'records',
+        props: (route) => ({
+            recordName: route.params.recordName,
+        }),
         component: AuthRecords,
         children: [
             {

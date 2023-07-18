@@ -1,7 +1,7 @@
 import { EventBus } from '@casual-simulation/aux-components';
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide, Watch } from 'vue-property-decorator';
+import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
 import AuthRecordsData from '../AuthRecordsData/AuthRecordsData';
@@ -21,9 +21,8 @@ import AuthRecordsRoles from '../AuthRecordsRoles/AuthRecordsRoles';
     },
 })
 export default class AuthRecords extends Vue {
-    get recordName() {
-        return this.$route.params.recordName;
-    }
+    @Prop({ required: true })
+    recordName: string;
 
     created() {}
 }

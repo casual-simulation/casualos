@@ -16,9 +16,13 @@
                     item.address
                 }}</md-table-cell>
                 <md-table-cell md-label="Data" md-sort-by="data">{{ item.data }}</md-table-cell>
-                <md-table-cell md-label="Markers" md-sort-by="markers">{{
-                    item.markers
-                }}</md-table-cell>
+                <md-table-cell md-label="Markers" md-sort-by="markers">
+                    <auth-marker
+                        v-for="marker in item.markers"
+                        :key="marker"
+                        :marker="marker"
+                    ></auth-marker>
+                </md-table-cell>
             </md-table-row>
 
             <template v-slot:md-table-pagination>

@@ -27,7 +27,7 @@
                                 v-for="record in records"
                                 :key="record.name"
                                 class="md-inset"
-                                :to="{ name: 'records', params: { recordName: record.name } }"
+                                :to="{ name: 'records-data', params: { recordName: record.name } }"
                             >
                                 <md-icon>description</md-icon>
                                 <span class="md-list-item-text">{{ record.label }}</span>

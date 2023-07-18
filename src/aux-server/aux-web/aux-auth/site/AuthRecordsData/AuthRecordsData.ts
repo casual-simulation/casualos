@@ -1,23 +1,28 @@
 import { EventBus } from '@casual-simulation/aux-components';
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide, Watch } from 'vue-property-decorator';
+import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
 import type {
     ListDataResult,
     ListDataSuccess,
 } from '@casual-simulation/aux-records';
+import AuthMarker from '../AuthMarker/AuthMarker';
 
 const PAGE_SIZE = 10;
 
 @Component({
     components: {
         'svg-icon': SvgIcon,
+        'auth-marker': AuthMarker,
     },
 })
 export default class AuthRecordsData extends Vue {
     private _helper: LoadingHelper<ListDataSuccess['items'][0]>;
+
+    @Prop({ required: true })
+    recordName: string;
 
     loading: boolean = false;
     items: {
@@ -34,19 +39,19 @@ export default class AuthRecordsData extends Vue {
         endIndex: 0,
     };
 
-    get recordName() {
-        return this.$route.params.recordName;
-    }
-
     @Watch('recordName', {})
     onRecordNameChanged(last: string, next: string) {
+        console.log('changed');
         if (last !== next) {
-            console.log('changed', last, next);
-            this.updatePagination(1, PAGE_SIZE);
+            this._reset();
         }
     }
 
-    created() {
+    mounted() {
+        this._reset();
+    }
+
+    private _reset() {
         this._helper = new LoadingHelper(async (lastItem) => {
             let items =
                 (await authManager.listData(
