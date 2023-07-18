@@ -17,6 +17,7 @@ export type AvailablePermissions =
     | ListDataPermission
     | CreateFilePermission
     | ReadFilePermission
+    | ListFilePermission
     | UpdateFilePermission
     | DeleteFilePermission
     | IncrementEventPermission
@@ -45,6 +46,7 @@ export type AvailableDataPermissions =
 export type AvailableFilePermissions =
     | CreateFilePermission
     | ReadFilePermission
+    | ListFilePermission
     | UpdateFilePermission
     | DeleteFilePermission;
 
@@ -264,6 +266,22 @@ type ZodReadFilePermission = z.infer<typeof READ_FILE_VALIDATION>;
 type ZodReadFilePermissionAssertion = HasType<
     ZodReadFilePermission,
     ReadFilePermission
+>;
+
+/**
+ * Defines an interface that describes a permission to be able to list a file for a record marker.
+ */
+export interface ListFilePermission extends FilePermission {
+    type: 'file.list';
+}
+
+export const LIST_FILE_VALIDATION = FILE_PERMISSION_VALIDATION.extend({
+    type: z.literal('file.list'),
+});
+type ZodListFilePermission = z.infer<typeof LIST_FILE_VALIDATION>;
+type ZodListFilePermissionAssertion = HasType<
+    ZodListFilePermission,
+    ListFilePermission
 >;
 
 /**
@@ -669,6 +687,7 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion('type', [
     LIST_DATA_VALIDATION,
     CREATE_FILE_VALIDATION,
     READ_FILE_VALIDATION,
+    LIST_FILE_VALIDATION,
     UPDATE_FILE_VALIDATION,
     DELETE_FILE_VALIDATION,
     INCREMENT_EVENT_VALIDATION,
@@ -802,6 +821,10 @@ export const DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT: PolicyDocument = {
         },
         {
             type: 'file.read',
+            role: ADMIN_ROLE_NAME,
+        },
+        {
+            type: 'file.list',
             role: ADMIN_ROLE_NAME,
         },
         {

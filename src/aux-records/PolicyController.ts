@@ -3967,6 +3967,7 @@ export type AuthorizeRequest =
     | AuthorizeListDataRequest
     | AuthorizeCreateFileRequest
     | AuthorizeReadFileRequest
+    | AuthorizeListFileRequest
     | AuthorizeUpdateFileRequest
     | AuthorizeDeleteFileRequest
     | AuthorizeCountEventRequest
@@ -4108,6 +4109,15 @@ export interface AuthorizeReadFileRequest extends AuthorizeFileRequest {
      * The list of resource markers that are applied to the file.
      */
     resourceMarkers: string[];
+}
+
+export interface AuthorizeListFileRequest extends AuthorizeRequestBase {
+    action: 'file.list';
+
+    /**
+     * The list of items that should be filtered.
+     */
+    dataItems: ListedFileItem[];
 }
 
 export interface AuthorizeUpdateFileRequest extends AuthorizeFileRequest {
@@ -4267,6 +4277,28 @@ export interface ListedDataItem {
      * The address of the item.
      */
     address: string;
+
+    /**
+     * The list of markers for the item.
+     */
+    markers: string[];
+}
+
+export interface ListedFileItem {
+    /**
+     * The name of the file.
+     */
+    fileName: string;
+
+    /**
+     * The MIME type of the file.
+     */
+    fileMimeType: string;
+
+    /**
+     * The size of the file in bytes.
+     */
+    fileSizeInBytes: number;
 
     /**
      * The list of markers for the item.

@@ -6814,6 +6814,1310 @@ describe('PolicyController', () => {
             });
         });
 
+        describe('file.list', () => {
+            it.only('should allow the request if given a record key', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'file.list',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    dataItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.list',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the user has the admin role assigned', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.list',
+                    userId,
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the user is the record owner', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.list',
+                    userId: ownerId,
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the record name matches the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'data.list',
+                    userId: ownerId,
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the user has data.list access to the given resource marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.list',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.list',
+                    userId,
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: 'developer',
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the user has data.list access to one of the resources markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.list',
+                            role: 'developer',
+                            addresses: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.list',
+                    userId,
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['other', 'secret'],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret', 'other'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'other',
+                                actions: [],
+                            },
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: 'developer',
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['other', 'secret'],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret', 'other'],
+                        },
+                    ],
+                });
+            });
+
+            it('should filter out items that the user does not have data.list access to', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.list',
+                    userId,
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPolicy:
+                                            DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: true,
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [
+                        {
+                            address: 'testAddress3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                });
+            });
+
+            it('should filter out all non-public items if given no userId or record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.list',
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: null,
+                    subject: {
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [],
+                });
+            });
+
+            it('should filter out items if the data.list permission does not allow their address', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'data.list',
+                            role: 'developer',
+                            addresses: '^allowed_address$',
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.list',
+                    userId,
+                    dataItems: [
+                        {
+                            address: 'not_allowed_address',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [],
+                });
+            });
+
+            it('should filter out all non-public items if the user has no role assigned', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.list',
+                    userId,
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPolicy:
+                                            DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: true,
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [
+                        {
+                            address: 'testAddress3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                });
+            });
+
+            it('should deny the request if given an invalid record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: wrongRecordKey,
+                    action: 'data.list',
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'record_not_found',
+                    errorMessage: 'Record not found.',
+                });
+            });
+
+            it('should filter out all non-public items if there is no policy for the items marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.list',
+                    userId,
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPolicy:
+                                            DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: true,
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [
+                        {
+                            address: 'testAddress3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow all items if the user is an admin even though there is no policy for the given marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.list',
+                    userId,
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should filter out items that are non-public when requested from an inst that does not have a role', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.list',
+                    userId,
+                    instances: ['instance'],
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance',
+                            authorizationType: 'allowed',
+                            role: true,
+                            markers: [
+                                {
+                                    marker: 'secret',
+                                    actions: [],
+                                },
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'data.list',
+                                            grantingPolicy:
+                                                DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'data.list',
+                                                role: true,
+                                                addresses: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                    allowedDataItems: [
+                        {
+                            address: 'testAddress3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                });
+            });
+
+            it('should filter out items that are non-public when requested from an inst that is admin, but the user is not', async () => {
+                store.roles[recordName] = {
+                    ['instance']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.list',
+                    userId,
+                    instances: ['instance'],
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPolicy:
+                                            DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: true,
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: 'secret',
+                                    actions: [
+                                        {
+                                            action: 'data.list',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'data.list',
+                                                role: ADMIN_ROLE_NAME,
+                                                addresses: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'data.list',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'data.list',
+                                                role: ADMIN_ROLE_NAME,
+                                                addresses: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                    allowedDataItems: [
+                        {
+                            address: 'testAddress3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                });
+            });
+
+            it('should skip inst role checks when a record key is used', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'data.list',
+                    userId,
+                    instances: ['instance'],
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance',
+                            authorizationType: 'not_required',
+                        },
+                    ],
+                    allowedDataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if all the instances have roles for the data', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.list',
+                    userId,
+                    instances: ['instance1', 'instance2'],
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance1',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: 'secret',
+                                    actions: [
+                                        {
+                                            action: 'data.list',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'data.list',
+                                                role: ADMIN_ROLE_NAME,
+                                                addresses: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'data.list',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'data.list',
+                                                role: ADMIN_ROLE_NAME,
+                                                addresses: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            inst: 'instance2',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: 'secret',
+                                    actions: [
+                                        {
+                                            action: 'data.list',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'data.list',
+                                                role: ADMIN_ROLE_NAME,
+                                                addresses: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'data.list',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'data.list',
+                                                role: ADMIN_ROLE_NAME,
+                                                addresses: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                    allowedDataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should deny the request if more than 2 instances are provided', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance3']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.list',
+                    userId,
+                    instances: ['instance1', 'instance2', 'instance3'],
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                        {
+                            address: 'testAddress3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            address: 'testAddress2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                    reason: {
+                        type: 'too_many_insts',
+                    },
+                });
+            });
+        });
+
         describe('file.delete', () => {
             it('should allow the request if given a record key', async () => {
                 const result = await controller.authorizeRequest({
