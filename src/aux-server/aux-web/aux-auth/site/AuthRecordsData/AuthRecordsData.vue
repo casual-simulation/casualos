@@ -25,7 +25,7 @@
                 </md-table-cell>
             </md-table-row>
 
-            <template v-slot:md-table-pagination>
+            <template v-slot:md-table-pagination v-if="items.mdData.length > 0">
                 <div class="md-table-pagination">
                     <span>{{ items.startIndex }}-{{ items.endIndex }} of {{ items.mdCount }}</span>
 
