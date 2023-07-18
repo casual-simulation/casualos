@@ -21,12 +21,27 @@
                 }}</md-table-cell>
             </md-table-row>
 
-            <md-table-pagination
-                :md-page-size="1"
-                :md-page-options="[1]"
-                :md-update="updatePagination"
-                :md-data.sync="items"
-            />
+            <template v-slot:md-table-pagination>
+                <div class="md-table-pagination">
+                    <span>{{ items.startIndex }}-{{ items.endIndex }} of {{ items.mdCount }}</span>
+
+                    <md-button
+                        class="md-icon-button md-table-pagination-previous"
+                        @click="changePage(-1)"
+                        :disabled="items.mdPage === 1"
+                    >
+                        <md-icon>keyboard_arrow_left</md-icon>
+                    </md-button>
+
+                    <md-button
+                        class="md-icon-button md-table-pagination-next"
+                        @click="changePage(+1)"
+                        :disabled="items.endIndex + 1 >= items.mdCount"
+                    >
+                        <md-icon>keyboard_arrow_right</md-icon>
+                    </md-button>
+                </div>
+            </template>
         </md-table>
     </div>
 </template>

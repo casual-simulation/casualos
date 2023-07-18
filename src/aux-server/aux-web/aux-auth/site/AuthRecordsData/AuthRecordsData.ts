@@ -9,6 +9,8 @@ import type {
     ListDataSuccess,
 } from '@casual-simulation/aux-records';
 
+const PAGE_SIZE = 10;
+
 @Component({
     components: {
         'svg-icon': SvgIcon,
@@ -21,11 +23,15 @@ export default class AuthRecordsData extends Vue {
     items: {
         mdCount: number;
         mdPage: number;
+        startIndex: number;
+        endIndex: number;
         mdData: ListDataSuccess['items'];
     } = {
         mdCount: 100,
         mdPage: 0,
         mdData: [],
+        startIndex: 0,
+        endIndex: 0,
     };
 
     get recordName() {
@@ -36,7 +42,7 @@ export default class AuthRecordsData extends Vue {
     onRecordNameChanged(last: string, next: string) {
         if (last !== next) {
             console.log('changed', last, next);
-            this.updatePagination(1, 10);
+            this.updatePagination(1, PAGE_SIZE);
         }
     }
 
@@ -56,13 +62,22 @@ export default class AuthRecordsData extends Vue {
             mdCount: 100,
             mdPage: 0,
             mdData: [],
+            startIndex: 0,
+            endIndex: 0,
         };
         this.loading = false;
-        this.updatePagination(1, 1);
+        this.updatePagination(1, PAGE_SIZE);
+    }
+
+    changePage(change: number) {
+        this.updatePagination(this.items.mdPage + change, PAGE_SIZE);
     }
 
     async updatePagination(page: number, pageSize: number) {
-        this.items = await this._helper.loadPage(page, pageSize);
+        let nextPage = await this._helper.loadPage(page, pageSize);
+        if (nextPage) {
+            this.items = nextPage;
+        }
         return true;
     }
 }
@@ -107,19 +122,26 @@ class LoadingHelper<T> {
         let index = (page - 1) * pageSize;
         if (index >= this.items.length) {
             if (await this._loadMoreItems()) {
+                const items = this.items.slice(index, index + pageSize);
                 return {
                     mdCount: this.count,
                     mdPage: page,
-                    mdData: this.items.slice(index, index + pageSize),
+                    mdData: items,
+                    startIndex: index,
+                    endIndex: index + items.length,
                 };
+            } else {
+                return null;
             }
-        } else {
-            return {
-                mdCount: this.count,
-                mdPage: page,
-                mdData: this.items.slice(index, index + pageSize),
-            };
         }
+        const items = this.items.slice(index, index + pageSize);
+        return {
+            mdCount: this.count,
+            mdPage: page,
+            mdData: items,
+            startIndex: index,
+            endIndex: index + items.length,
+        };
     }
 
     private async _loadMoreItems(): Promise<boolean> {
@@ -133,6 +155,7 @@ class LoadingHelper<T> {
             return results.items.length > 0;
         } catch (err) {
             console.error(err);
+            return false;
         }
     }
 }
@@ -146,4 +169,6 @@ interface TablePage<T> {
     mdData: T[];
     mdCount: number;
     mdPage: number;
+    startIndex: number;
+    endIndex: number;
 }
