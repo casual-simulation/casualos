@@ -41,7 +41,6 @@ export default class AuthRecordsData extends Vue {
 
     @Watch('recordName', {})
     onRecordNameChanged(last: string, next: string) {
-        console.log('changed');
         if (last !== next) {
             this._reset();
         }
@@ -100,9 +99,7 @@ class LoadingHelper<T> {
     }
 
     loadPage(page: number, pageSize: number): Promise<TablePage<T>> {
-        console.log('load', page, pageSize);
         if (!this._currentRequest) {
-            console.log('none');
             this._currentRequest = this._loadPage(page, pageSize).then(
                 (result) => {
                     console.log('done');
@@ -110,7 +107,6 @@ class LoadingHelper<T> {
                     return result;
                 }
             );
-            console.log('req', this._currentRequest);
             return this._currentRequest;
         } else {
             this._currentRequest = this._currentRequest.then(() => {
@@ -152,8 +148,6 @@ class LoadingHelper<T> {
     private async _loadMoreItems(): Promise<boolean> {
         try {
             const lastItem = this.items[this.items.length - 1];
-            console.log('more', lastItem);
-            // console.log('last', lastAddress);
             let results = await this._makeRequest(lastItem);
             this.items = this.items.concat(results.items);
             this.count = results.totalCount;
