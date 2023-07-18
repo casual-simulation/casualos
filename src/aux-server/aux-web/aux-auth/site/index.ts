@@ -62,6 +62,8 @@ import AuthApp from './AuthApp/AuthApp';
 import AuthHome from './AuthHome/AuthHome';
 import AuthLogin from './AuthLogin/AuthLogin';
 import AuthEnterCode from './AuthEnterCode/AuthEnterCode';
+import AuthRecords from './AuthRecords/AuthRecords';
+import AuthRecordsData from './AuthRecordsData/AuthRecordsData';
 import { authManager } from '../shared/index';
 import AuthLoading from './AuthLoading/AuthLoading';
 import { EventBus } from '@casual-simulation/aux-components';
@@ -149,8 +151,45 @@ const routes: RouteConfig[] = [
     },
     {
         path: '/',
+        name: 'index',
+        redirect: { name: 'home' },
+    },
+    {
+        path: '/account',
         name: 'home',
         component: AuthHome,
+    },
+    {
+        path: '/records/:recordName',
+        name: 'records',
+        component: AuthRecords,
+        children: [
+            {
+                path: 'data',
+                name: 'records-data',
+                component: AuthRecordsData,
+            },
+            {
+                path: 'files',
+                name: 'records-files',
+                component: AuthRecordsData,
+            },
+            {
+                path: 'events',
+                name: 'records-events',
+                component: AuthRecordsData,
+            },
+            {
+                path: 'policies',
+                name: 'records-policies',
+                component: AuthRecordsData,
+            },
+            {
+                path: 'roles',
+                name: 'records-roles',
+                component: AuthRecordsData,
+            },
+        ],
     },
 ];
 
