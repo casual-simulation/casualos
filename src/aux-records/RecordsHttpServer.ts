@@ -535,6 +535,15 @@ export class RecordsHttpServer {
                 this._allowedApiOrigins
             );
         } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/list'
+        ) {
+            return formatResponse(
+                request,
+                await this._listRecords(request),
+                this._allowedApiOrigins
+            );
+        } else if (
             request.method === 'POST' &&
             request.path === '/api/v2/records/key'
         ) {
@@ -690,6 +699,25 @@ export class RecordsHttpServer {
                 'Access-Control-Allow-Headers': 'Content-Type, Authorization',
             },
         };
+    }
+
+    private async _listRecords(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const validation = await this._validateSessionKey(request);
+        if (validation.success === false) {
+            if (validation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(validation);
+        }
+
+        const result = await this._records.listRecords(validation.userId);
+        return returnResult(result);
     }
 
     private async _createRecordKey(

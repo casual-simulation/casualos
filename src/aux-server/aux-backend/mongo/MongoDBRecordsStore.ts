@@ -2,6 +2,7 @@ import {
     Record,
     RecordsStore,
     RecordKey,
+    ListedRecord,
 } from '@casual-simulation/aux-records';
 import { Collection } from 'mongodb';
 
@@ -61,5 +62,9 @@ export class MongoDBRecordsStore implements RecordsStore {
         });
 
         return key;
+    }
+
+    listRecordsByOwnerId(ownerId: string): Promise<ListedRecord[]> {
+        return this._collection.find({ ownerId: ownerId }).toArray();
     }
 }

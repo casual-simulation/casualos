@@ -82,6 +82,11 @@ Resources:
                     Properties:
                         Path: /api/v2/records/key
                         Method: POST
+                ListRecords:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/list
+                        Method: GET
                 RecordData:
                     Type: Api
                     Properties:

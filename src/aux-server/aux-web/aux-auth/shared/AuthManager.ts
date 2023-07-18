@@ -5,6 +5,8 @@ import type {
     CreatePublicRecordKeyResult,
     PublicRecordKeyPolicy,
     ListDataResult,
+    ListedRecord,
+    ListRecordsResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -239,6 +241,26 @@ export class AuthManager {
             }
             return null;
         }
+    }
+
+    async listRecords(): Promise<ListedRecord[]> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records/list`);
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as ListRecordsResult;
+        if (result.success === true) {
+            return result.records;
+        } else {
+            if (result.errorCode === 'not_supported') {
+                return [];
+            }
+        }
+
+        return null;
     }
 
     async listData(recordName: string, startingAddress?: string) {

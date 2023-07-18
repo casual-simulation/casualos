@@ -5681,6 +5681,71 @@ describe('RecordsHttpServer', () => {
         );
     });
 
+    describe('GET /api/v2/records/list', () => {
+        beforeEach(async () => {
+            await recordsStore.addRecord({
+                name: 'test0',
+                ownerId: 'otherUserId',
+                secretHashes: [],
+                secretSalt: '',
+            });
+            await recordsStore.addRecord({
+                name: 'test1',
+                ownerId: userId,
+                secretHashes: [],
+                secretSalt: '',
+            });
+            await recordsStore.addRecord({
+                name: 'test2',
+                ownerId: userId,
+                secretHashes: [],
+                secretSalt: '',
+            });
+            await recordsStore.addRecord({
+                name: 'test3',
+                ownerId: userId,
+                secretHashes: [],
+                secretSalt: '',
+            });
+            await recordsStore.addRecord({
+                name: 'test4',
+                ownerId: 'otherUserId',
+                secretHashes: [],
+                secretSalt: '',
+            });
+        });
+
+        it('should return the list of records for the user', async () => {
+            const result = await server.handleRequest(
+                httpGet('/api/v2/records/list', apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    records: [
+                        {
+                            name: 'test1',
+                            ownerId: userId,
+                        },
+                        {
+                            name: 'test2',
+                            ownerId: userId,
+                        },
+                        {
+                            name: 'test3',
+                            ownerId: userId,
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testAuthorization(() => httpGet('/api/v2/records/list', apiHeaders));
+    });
+
     describe('OPTIONS /api/v2/records', () => {
         it('should return a 204 response', async () => {
             const result = await server.handleRequest(
@@ -7906,6 +7971,28 @@ describe('RecordsHttpServer', () => {
                     errorCode: 'unacceptable_session_key',
                     errorMessage:
                         'The given session key is invalid. It must be a correctly formatted string.',
+                }),
+                headers: {
+                    'Access-Control-Allow-Origin': request.headers.origin,
+                    'Access-Control-Allow-Headers':
+                        'Content-Type, Authorization',
+                },
+            });
+        });
+
+        it('should return a 403 status code when the session key is invalid', async () => {
+            let request = getRequest();
+            request.headers['authorization'] =
+                'Bearer ' +
+                formatV1SessionKey(userId, 'sessionId', 'wrong', 9999999999);
+            const result = await server.handleRequest(request);
+
+            expect(result).toEqual({
+                statusCode: 403,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: 'The session key is invalid.',
                 }),
                 headers: {
                     'Access-Control-Allow-Origin': request.headers.origin,

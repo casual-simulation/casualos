@@ -1,4 +1,5 @@
-import { Record, RecordKey, RecordsStore } from './RecordsStore';
+import { sortBy } from 'lodash';
+import { ListedRecord, Record, RecordKey, RecordsStore } from './RecordsStore';
 
 export class MemoryRecordsStore implements RecordsStore {
     private _records: Record[] = [];
@@ -33,15 +34,34 @@ export class MemoryRecordsStore implements RecordsStore {
 
     async addRecordKey(key: RecordKey): Promise<void> {
         const existingKeyIndex = this._recordKeys.findIndex(
-            (k) => k.recordName === key.recordName && k.secretHash === key.secretHash
+            (k) =>
+                k.recordName === key.recordName &&
+                k.secretHash === key.secretHash
         );
         if (existingKeyIndex < 0) {
             this._recordKeys.push(key);
         }
     }
 
-    async getRecordKeyByRecordAndHash(recordName: string, hash: string): Promise<RecordKey> {
-        const key = this._recordKeys.find(k => k.recordName === recordName && k.secretHash == hash);
+    async getRecordKeyByRecordAndHash(
+        recordName: string,
+        hash: string
+    ): Promise<RecordKey> {
+        const key = this._recordKeys.find(
+            (k) => k.recordName === recordName && k.secretHash == hash
+        );
         return key;
+    }
+
+    async listRecordsByOwnerId(ownerId: string): Promise<ListedRecord[]> {
+        return sortBy(
+            this._records
+                .filter((r) => r.ownerId === ownerId)
+                .map((r) => ({
+                    name: r.name,
+                    ownerId: r.ownerId,
+                })),
+            (r) => r.name
+        );
     }
 }
