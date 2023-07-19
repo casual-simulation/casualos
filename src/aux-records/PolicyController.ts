@@ -955,6 +955,8 @@ export class PolicyController {
             return this._authorizeFileCreateRequest(context, request);
         } else if (request.action === 'file.read') {
             return this._authorizeFileReadRequest(context, request);
+        } else if (request.action === 'file.list') {
+            return this._authorizeFileListRequest(context, request);
         } else if (request.action === 'file.update') {
             return this._authorizeFileUpdateRequest(context, request);
         } else if (request.action === 'file.delete') {
@@ -1842,6 +1844,125 @@ export class PolicyController {
             success: false,
             reason: denialReason ?? {
                 type: 'missing_role',
+            },
+        };
+    }
+
+    private async _authorizeFileListRequest(
+        context: AuthorizationContext,
+        request: AuthorizeListFileRequest
+    ): Promise<AuthorizeResult> {
+        const allMarkers = union(...request.fileItems.map((i) => i.markers));
+        return await this._authorizeRequest(
+            context,
+            request,
+            allMarkers,
+            (context, type, id) => {
+                return this._authorizeFileList(context, type, id);
+            }
+        );
+    }
+
+    private async _authorizeFileList(
+        context: RolesContext<AuthorizeListFileRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        const authorizations: MarkerAuthorization[] = [];
+        let role: string | true | null = null;
+
+        const allowedFileItems = (context.allowedFileItems =
+            [] as ListedFileItem[]);
+
+        const markers = new Map<
+            string,
+            {
+                marker: MarkerPermission;
+                authorization: MarkerAuthorization;
+                usedPermissions: Set<any>;
+            }
+        >();
+        for (let marker of context.markers) {
+            const authorization: MarkerAuthorization = {
+                marker: marker.marker,
+                actions: [],
+            };
+            authorizations.push(authorization);
+            markers.set(marker.marker, {
+                marker,
+                authorization: authorization,
+                usedPermissions: new Set(),
+            });
+        }
+
+        for (let item of context.request.fileItems) {
+            let itemPermission: PossiblePermission;
+            for (let m of item.markers) {
+                const a = markers.get(m);
+                if (!a) {
+                    continue;
+                }
+                const { marker, authorization, usedPermissions } = a;
+
+                itemPermission = await this._findPermissionByFilter(
+                    marker.permissions,
+                    this._every(
+                        this._byFile(
+                            'file.list',
+                            item.fileSizeInBytes,
+                            item.fileMimeType
+                        ),
+                        role === null
+                            ? this._some(
+                                  this._byEveryoneRole(),
+                                  this._byAdminRole(context, type, id),
+                                  this._bySubjectRole(
+                                      context,
+                                      type,
+                                      context.recordName,
+                                      id
+                                  )
+                              )
+                            : this._byRole(role)
+                    )
+                );
+
+                if (!itemPermission) {
+                    continue;
+                }
+
+                if (role === null) {
+                    role = itemPermission.permission.role;
+                }
+
+                if (!usedPermissions.has(itemPermission.permission)) {
+                    usedPermissions.add(itemPermission.permission);
+                    authorization.actions.push({
+                        action: context.request.action,
+                        grantingPolicy: itemPermission.policy,
+                        grantingPermission: itemPermission.permission,
+                    });
+                }
+
+                if (itemPermission) {
+                    break;
+                }
+            }
+
+            if (itemPermission) {
+                allowedFileItems.push(item);
+            }
+        }
+
+        if (!role) {
+            role = true;
+        }
+
+        return {
+            success: true,
+            authorization: {
+                role,
+                markers: authorizations,
             },
         };
     }
@@ -3350,12 +3471,21 @@ export class PolicyController {
             async (inst) => {
                 let currentItems: ListedDataItem[] | null =
                     rolesContext.allowedDataItems?.slice();
+                let currentFiles: ListedFileItem[] | null =
+                    rolesContext.allowedFileItems?.slice();
                 const result = await authorize(rolesContext, 'inst', inst);
                 if (currentItems) {
                     rolesContext.allowedDataItems = intersectionBy(
                         currentItems,
                         rolesContext.allowedDataItems,
                         (item) => item.address
+                    );
+                }
+                if (currentFiles) {
+                    rolesContext.allowedFileItems = intersectionBy(
+                        currentFiles,
+                        rolesContext.allowedFileItems,
+                        (item) => item.fileName
                     );
                 }
                 return result;
@@ -3395,6 +3525,7 @@ export class PolicyController {
             },
             instances: authorizedInstances,
             allowedDataItems: rolesContext.allowedDataItems,
+            allowedFileItems: rolesContext.allowedFileItems,
         };
     }
 
@@ -3950,6 +4081,7 @@ export interface RolesContext<T extends AuthorizeRequestBase>
     request: T;
 
     allowedDataItems?: ListedDataItem[];
+    allowedFileItems?: ListedFileItem[];
 }
 
 type PermissionFilter = (permission: AvailablePermissions) => Promise<boolean>;
@@ -4117,7 +4249,7 @@ export interface AuthorizeListFileRequest extends AuthorizeRequestBase {
     /**
      * The list of items that should be filtered.
      */
-    dataItems: ListedFileItem[];
+    fileItems: ListedFileItem[];
 }
 
 export interface AuthorizeUpdateFileRequest extends AuthorizeFileRequest {
@@ -4344,6 +4476,11 @@ export interface AuthorizeAllowed {
      * The list of allowed data items.
      */
     allowedDataItems?: ListedDataItem[];
+
+    /**
+     * The list of allowed file items.
+     */
+    allowedFileItems?: ListedFileItem[];
 }
 
 export type GenericResult = GenericAllowed | GenericDenied;

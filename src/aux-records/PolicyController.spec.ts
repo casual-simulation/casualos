@@ -6815,12 +6815,12 @@ describe('PolicyController', () => {
         });
 
         describe('file.list', () => {
-            it.only('should allow the request if given a record key', async () => {
+            it('should allow the request if given a record key', async () => {
                 const result = await controller.authorizeRequest({
                     action: 'file.list',
                     recordKeyOrRecordName: recordKey,
                     userId,
-                    dataItems: [
+                    fileItems: [
                         {
                             fileSizeInBytes: 1024,
                             fileMimeType: 'application/json',
@@ -6863,7 +6863,7 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
-                    allowedDataItems: [
+                    allowedFileItems: [
                         {
                             fileSizeInBytes: 1024,
                             fileMimeType: 'application/json',
@@ -6887,15 +6887,19 @@ describe('PolicyController', () => {
 
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
-                    action: 'data.list',
+                    action: 'file.list',
                     userId,
-                    dataItems: [
+                    fileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
@@ -6915,11 +6919,10 @@ describe('PolicyController', () => {
                                 marker: 'secret',
                                 actions: [
                                     {
-                                        action: 'data.list',
+                                        action: 'file.list',
                                         grantingPermission: {
-                                            type: 'data.list',
+                                            type: 'file.list',
                                             role: ADMIN_ROLE_NAME,
-                                            addresses: true,
                                         },
                                         grantingPolicy:
                                             DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
@@ -6929,13 +6932,17 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
-                    allowedDataItems: [
+                    allowedFileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
@@ -6945,15 +6952,19 @@ describe('PolicyController', () => {
             it('should allow the request if the user is the record owner', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
-                    action: 'data.list',
+                    action: 'file.list',
                     userId: ownerId,
-                    dataItems: [
+                    fileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
@@ -6973,11 +6984,10 @@ describe('PolicyController', () => {
                                 marker: 'secret',
                                 actions: [
                                     {
-                                        action: 'data.list',
+                                        action: 'file.list',
                                         grantingPermission: {
-                                            type: 'data.list',
+                                            type: 'file.list',
                                             role: ADMIN_ROLE_NAME,
-                                            addresses: true,
                                         },
                                         grantingPolicy:
                                             DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
@@ -6987,13 +6997,17 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
-                    allowedDataItems: [
+                    allowedFileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
@@ -7003,15 +7017,19 @@ describe('PolicyController', () => {
             it('should allow the request if the record name matches the user ID', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: ownerId,
-                    action: 'data.list',
+                    action: 'file.list',
                     userId: ownerId,
-                    dataItems: [
+                    fileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
@@ -7031,11 +7049,10 @@ describe('PolicyController', () => {
                                 marker: 'secret',
                                 actions: [
                                     {
-                                        action: 'data.list',
+                                        action: 'file.list',
                                         grantingPermission: {
-                                            type: 'data.list',
+                                            type: 'file.list',
                                             role: ADMIN_ROLE_NAME,
-                                            addresses: true,
                                         },
                                         grantingPolicy:
                                             DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
@@ -7045,20 +7062,24 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
-                    allowedDataItems: [
+                    allowedFileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
                 });
             });
 
-            it('should allow the request if the user has data.list access to the given resource marker', async () => {
+            it('should allow the request if the user has file.list access to the given resource marker', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set(['developer']),
                 };
@@ -7066,9 +7087,8 @@ describe('PolicyController', () => {
                 const secretPolicy: PolicyDocument = {
                     permissions: [
                         {
-                            type: 'data.list',
+                            type: 'file.list',
                             role: 'developer',
-                            addresses: true,
                         },
                     ],
                 };
@@ -7082,15 +7102,19 @@ describe('PolicyController', () => {
 
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
-                    action: 'data.list',
+                    action: 'file.list',
                     userId,
-                    dataItems: [
+                    fileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
@@ -7110,12 +7134,11 @@ describe('PolicyController', () => {
                                 marker: 'secret',
                                 actions: [
                                     {
-                                        action: 'data.list',
+                                        action: 'file.list',
                                         grantingPolicy: secretPolicy,
                                         grantingPermission: {
-                                            type: 'data.list',
+                                            type: 'file.list',
                                             role: 'developer',
-                                            addresses: true,
                                         },
                                     },
                                 ],
@@ -7123,20 +7146,24 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
-                    allowedDataItems: [
+                    allowedFileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
                 });
             });
 
-            it('should allow the request if the user has data.list access to one of the resources markers', async () => {
+            it('should allow the request if the user has file.list access to one of the resources markers', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set(['developer']),
                 };
@@ -7144,9 +7171,8 @@ describe('PolicyController', () => {
                 const secretPolicy: PolicyDocument = {
                     permissions: [
                         {
-                            type: 'data.list',
+                            type: 'file.list',
                             role: 'developer',
-                            addresses: true,
                         },
                     ],
                 };
@@ -7160,16 +7186,20 @@ describe('PolicyController', () => {
 
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
-                    action: 'data.list',
+                    action: 'file.list',
                     userId,
-                    dataItems: [
+                    fileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['other', 'secret'],
                         },
                         {
-                            address: 'testAddress2',
-                            markers: ['secret', 'other'],
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['other', 'secret'],
                         },
                     ],
                 });
@@ -7192,12 +7222,11 @@ describe('PolicyController', () => {
                                 marker: 'secret',
                                 actions: [
                                     {
-                                        action: 'data.list',
+                                        action: 'file.list',
                                         grantingPolicy: secretPolicy,
                                         grantingPermission: {
-                                            type: 'data.list',
+                                            type: 'file.list',
                                             role: 'developer',
-                                            addresses: true,
                                         },
                                     },
                                 ],
@@ -7205,26 +7234,39 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
-                    allowedDataItems: [
+                    allowedFileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['other', 'secret'],
                         },
                         {
-                            address: 'testAddress2',
-                            markers: ['secret', 'other'],
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['other', 'secret'],
                         },
                     ],
                 });
             });
 
-            it('should filter out items that the user does not have data.list access to', async () => {
+            it('should filter out items that the user does not have file.list access to', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set(['developer']),
                 };
 
                 const secretPolicy: PolicyDocument = {
                     permissions: [],
+                };
+
+                const publicPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.list',
+                            role: true,
+                        },
+                    ],
                 };
 
                 store.policies[recordName] = {
@@ -7234,21 +7276,34 @@ describe('PolicyController', () => {
                     },
                 };
 
+                store.policies[recordName] = {
+                    [PUBLIC_READ_MARKER]: {
+                        document: publicPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
-                    action: 'data.list',
+                    action: 'file.list',
                     userId,
-                    dataItems: [
+                    fileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress3',
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
                             markers: [PUBLIC_READ_MARKER],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
@@ -7272,13 +7327,11 @@ describe('PolicyController', () => {
                                 marker: PUBLIC_READ_MARKER,
                                 actions: [
                                     {
-                                        action: 'data.list',
-                                        grantingPolicy:
-                                            DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
+                                        action: 'file.list',
+                                        grantingPolicy: publicPolicy,
                                         grantingPermission: {
-                                            type: 'data.list',
+                                            type: 'file.list',
                                             role: true,
-                                            addresses: true,
                                         },
                                     },
                                 ],
@@ -7286,26 +7339,38 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
-                    allowedDataItems: [
+                    allowedFileItems: [
                         {
-                            address: 'testAddress3',
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
                             markers: [PUBLIC_READ_MARKER],
                         },
                     ],
                 });
             });
 
-            it('should filter out all non-public items if given no userId or record key', async () => {
+            it('should filter out all items if given no userId or record key', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
-                    action: 'data.list',
-                    dataItems: [
+                    action: 'file.list',
+                    fileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
@@ -7324,14 +7389,18 @@ describe('PolicyController', () => {
                                 marker: 'secret',
                                 actions: [],
                             },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [],
+                            },
                         ],
                     },
                     instances: [],
-                    allowedDataItems: [],
+                    allowedFileItems: [],
                 });
             });
 
-            it('should filter out items if the data.list permission does not allow their address', async () => {
+            it('should filter out items if the file.list permission has a max file size', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set(['developer']),
                 };
@@ -7339,9 +7408,9 @@ describe('PolicyController', () => {
                 const secretPolicy: PolicyDocument = {
                     permissions: [
                         {
-                            type: 'data.list',
+                            type: 'file.list',
                             role: 'developer',
-                            addresses: '^allowed_address$',
+                            maxFileSizeInBytes: 1000,
                         },
                     ],
                 };
@@ -7355,11 +7424,19 @@ describe('PolicyController', () => {
 
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
-                    action: 'data.list',
+                    action: 'file.list',
                     userId,
-                    dataItems: [
+                    fileItems: [
                         {
-                            address: 'not_allowed_address',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
@@ -7382,26 +7459,95 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
-                    allowedDataItems: [],
+                    allowedFileItems: [],
                 });
             });
 
-            it('should filter out all non-public items if the user has no role assigned', async () => {
+            it('should filter out items if the file.list permission list of allowed mime types', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.list',
+                            role: 'developer',
+                            allowedMimeTypes: ['text/plain'],
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
-                    action: 'data.list',
+                    action: 'file.list',
                     userId,
-                    dataItems: [
+                    fileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress3',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [],
+                });
+            });
+
+            it('should filter out all items if the user has no role assigned', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.list',
+                    userId,
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
                             markers: [PUBLIC_READ_MARKER],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
@@ -7423,39 +7569,37 @@ describe('PolicyController', () => {
                             },
                             {
                                 marker: PUBLIC_READ_MARKER,
-                                actions: [
-                                    {
-                                        action: 'data.list',
-                                        grantingPolicy:
-                                            DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
-                                        grantingPermission: {
-                                            type: 'data.list',
-                                            role: true,
-                                            addresses: true,
-                                        },
-                                    },
-                                ],
+                                actions: [],
                             },
                         ],
                     },
                     instances: [],
-                    allowedDataItems: [
-                        {
-                            address: 'testAddress3',
-                            markers: [PUBLIC_READ_MARKER],
-                        },
-                    ],
+                    allowedFileItems: [],
                 });
             });
 
             it('should deny the request if given an invalid record key', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: wrongRecordKey,
-                    action: 'data.list',
-                    dataItems: [
+                    action: 'file.list',
+                    fileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
                             markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
                         },
                     ],
                 });
@@ -7467,26 +7611,32 @@ describe('PolicyController', () => {
                 });
             });
 
-            it('should filter out all non-public items if there is no policy for the items marker', async () => {
+            it('should filter out all items if there is no policy for the items marker', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set(['developer']),
                 };
 
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
-                    action: 'data.list',
+                    action: 'file.list',
                     userId,
-                    dataItems: [
+                    fileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress3',
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
                             markers: [PUBLIC_READ_MARKER],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
@@ -7508,28 +7658,12 @@ describe('PolicyController', () => {
                             },
                             {
                                 marker: PUBLIC_READ_MARKER,
-                                actions: [
-                                    {
-                                        action: 'data.list',
-                                        grantingPolicy:
-                                            DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
-                                        grantingPermission: {
-                                            type: 'data.list',
-                                            role: true,
-                                            addresses: true,
-                                        },
-                                    },
-                                ],
+                                actions: [],
                             },
                         ],
                     },
                     instances: [],
-                    allowedDataItems: [
-                        {
-                            address: 'testAddress3',
-                            markers: [PUBLIC_READ_MARKER],
-                        },
-                    ],
+                    allowedFileItems: [],
                 });
             });
 
@@ -7540,19 +7674,25 @@ describe('PolicyController', () => {
 
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
-                    action: 'data.list',
+                    action: 'file.list',
                     userId,
-                    dataItems: [
+                    fileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress3',
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
                             markers: [PUBLIC_READ_MARKER],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
@@ -7572,13 +7712,12 @@ describe('PolicyController', () => {
                                 marker: 'secret',
                                 actions: [
                                     {
-                                        action: 'data.list',
+                                        action: 'file.list',
                                         grantingPolicy:
                                             DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
                                         grantingPermission: {
-                                            type: 'data.list',
+                                            type: 'file.list',
                                             role: ADMIN_ROLE_NAME,
-                                            addresses: true,
                                         },
                                     },
                                 ],
@@ -7587,13 +7726,12 @@ describe('PolicyController', () => {
                                 marker: PUBLIC_READ_MARKER,
                                 actions: [
                                     {
-                                        action: 'data.list',
+                                        action: 'file.list',
                                         grantingPolicy:
                                             DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
                                         grantingPermission: {
-                                            type: 'data.list',
+                                            type: 'file.list',
                                             role: ADMIN_ROLE_NAME,
-                                            addresses: true,
                                         },
                                     },
                                 ],
@@ -7601,44 +7739,56 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
-                    allowedDataItems: [
+                    allowedFileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress3',
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
                             markers: [PUBLIC_READ_MARKER],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
                 });
             });
 
-            it('should filter out items that are non-public when requested from an inst that does not have a role', async () => {
+            it('should filter out all items when requested from an inst that does not have a role', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set([ADMIN_ROLE_NAME]),
                 };
 
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
-                    action: 'data.list',
+                    action: 'file.list',
                     userId,
                     instances: ['instance'],
-                    dataItems: [
+                    fileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress3',
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
                             markers: [PUBLIC_READ_MARKER],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
@@ -7658,13 +7808,12 @@ describe('PolicyController', () => {
                                 marker: 'secret',
                                 actions: [
                                     {
-                                        action: 'data.list',
+                                        action: 'file.list',
                                         grantingPolicy:
                                             DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
                                         grantingPermission: {
-                                            type: 'data.list',
+                                            type: 'file.list',
                                             role: ADMIN_ROLE_NAME,
-                                            addresses: true,
                                         },
                                     },
                                 ],
@@ -7673,13 +7822,12 @@ describe('PolicyController', () => {
                                 marker: PUBLIC_READ_MARKER,
                                 actions: [
                                     {
-                                        action: 'data.list',
+                                        action: 'file.list',
                                         grantingPolicy:
                                             DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
                                         grantingPermission: {
-                                            type: 'data.list',
+                                            type: 'file.list',
                                             role: ADMIN_ROLE_NAME,
-                                            addresses: true,
                                         },
                                     },
                                 ],
@@ -7698,52 +7846,42 @@ describe('PolicyController', () => {
                                 },
                                 {
                                     marker: PUBLIC_READ_MARKER,
-                                    actions: [
-                                        {
-                                            action: 'data.list',
-                                            grantingPolicy:
-                                                DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
-                                            grantingPermission: {
-                                                type: 'data.list',
-                                                role: true,
-                                                addresses: true,
-                                            },
-                                        },
-                                    ],
+                                    actions: [],
                                 },
                             ],
                         },
                     ],
-                    allowedDataItems: [
-                        {
-                            address: 'testAddress3',
-                            markers: [PUBLIC_READ_MARKER],
-                        },
-                    ],
+                    allowedFileItems: [],
                 });
             });
 
-            it('should filter out items that are non-public when requested from an inst that is admin, but the user is not', async () => {
+            it('should filter out all items when requested from an inst that is admin, but the user is not', async () => {
                 store.roles[recordName] = {
                     ['instance']: new Set([ADMIN_ROLE_NAME]),
                 };
 
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
-                    action: 'data.list',
+                    action: 'file.list',
                     userId,
                     instances: ['instance'],
-                    dataItems: [
+                    fileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress3',
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
                             markers: [PUBLIC_READ_MARKER],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
@@ -7765,18 +7903,7 @@ describe('PolicyController', () => {
                             },
                             {
                                 marker: PUBLIC_READ_MARKER,
-                                actions: [
-                                    {
-                                        action: 'data.list',
-                                        grantingPolicy:
-                                            DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
-                                        grantingPermission: {
-                                            type: 'data.list',
-                                            role: true,
-                                            addresses: true,
-                                        },
-                                    },
-                                ],
+                                actions: [],
                             },
                         ],
                     },
@@ -7790,13 +7917,12 @@ describe('PolicyController', () => {
                                     marker: 'secret',
                                     actions: [
                                         {
-                                            action: 'data.list',
+                                            action: 'file.list',
                                             grantingPolicy:
                                                 DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
                                             grantingPermission: {
-                                                type: 'data.list',
+                                                type: 'file.list',
                                                 role: ADMIN_ROLE_NAME,
-                                                addresses: true,
                                             },
                                         },
                                     ],
@@ -7805,13 +7931,12 @@ describe('PolicyController', () => {
                                     marker: PUBLIC_READ_MARKER,
                                     actions: [
                                         {
-                                            action: 'data.list',
+                                            action: 'file.list',
                                             grantingPolicy:
                                                 DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
                                             grantingPermission: {
-                                                type: 'data.list',
+                                                type: 'file.list',
                                                 role: ADMIN_ROLE_NAME,
-                                                addresses: true,
                                             },
                                         },
                                     ],
@@ -7819,32 +7944,33 @@ describe('PolicyController', () => {
                             ],
                         },
                     ],
-                    allowedDataItems: [
-                        {
-                            address: 'testAddress3',
-                            markers: [PUBLIC_READ_MARKER],
-                        },
-                    ],
+                    allowedFileItems: [],
                 });
             });
 
             it('should skip inst role checks when a record key is used', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordKey,
-                    action: 'data.list',
+                    action: 'file.list',
                     userId,
                     instances: ['instance'],
-                    dataItems: [
+                    fileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress3',
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
                             markers: [PUBLIC_READ_MARKER],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
@@ -7864,13 +7990,12 @@ describe('PolicyController', () => {
                                 marker: 'secret',
                                 actions: [
                                     {
-                                        action: 'data.list',
+                                        action: 'file.list',
                                         grantingPolicy:
                                             DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
                                         grantingPermission: {
-                                            type: 'data.list',
+                                            type: 'file.list',
                                             role: ADMIN_ROLE_NAME,
-                                            addresses: true,
                                         },
                                     },
                                 ],
@@ -7879,13 +8004,12 @@ describe('PolicyController', () => {
                                 marker: PUBLIC_READ_MARKER,
                                 actions: [
                                     {
-                                        action: 'data.list',
+                                        action: 'file.list',
                                         grantingPolicy:
                                             DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
                                         grantingPermission: {
-                                            type: 'data.list',
+                                            type: 'file.list',
                                             role: ADMIN_ROLE_NAME,
-                                            addresses: true,
                                         },
                                     },
                                 ],
@@ -7898,17 +8022,23 @@ describe('PolicyController', () => {
                             authorizationType: 'not_required',
                         },
                     ],
-                    allowedDataItems: [
+                    allowedFileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress3',
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
                             markers: [PUBLIC_READ_MARKER],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
@@ -7924,20 +8054,26 @@ describe('PolicyController', () => {
 
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
-                    action: 'data.list',
+                    action: 'file.list',
                     userId,
                     instances: ['instance1', 'instance2'],
-                    dataItems: [
+                    fileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress3',
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
                             markers: [PUBLIC_READ_MARKER],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
@@ -7957,13 +8093,12 @@ describe('PolicyController', () => {
                                 marker: 'secret',
                                 actions: [
                                     {
-                                        action: 'data.list',
+                                        action: 'file.list',
                                         grantingPolicy:
                                             DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
                                         grantingPermission: {
-                                            type: 'data.list',
+                                            type: 'file.list',
                                             role: ADMIN_ROLE_NAME,
-                                            addresses: true,
                                         },
                                     },
                                 ],
@@ -7972,13 +8107,12 @@ describe('PolicyController', () => {
                                 marker: PUBLIC_READ_MARKER,
                                 actions: [
                                     {
-                                        action: 'data.list',
+                                        action: 'file.list',
                                         grantingPolicy:
                                             DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
                                         grantingPermission: {
-                                            type: 'data.list',
+                                            type: 'file.list',
                                             role: ADMIN_ROLE_NAME,
-                                            addresses: true,
                                         },
                                     },
                                 ],
@@ -7995,13 +8129,12 @@ describe('PolicyController', () => {
                                     marker: 'secret',
                                     actions: [
                                         {
-                                            action: 'data.list',
+                                            action: 'file.list',
                                             grantingPolicy:
                                                 DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
                                             grantingPermission: {
-                                                type: 'data.list',
+                                                type: 'file.list',
                                                 role: ADMIN_ROLE_NAME,
-                                                addresses: true,
                                             },
                                         },
                                     ],
@@ -8010,13 +8143,12 @@ describe('PolicyController', () => {
                                     marker: PUBLIC_READ_MARKER,
                                     actions: [
                                         {
-                                            action: 'data.list',
+                                            action: 'file.list',
                                             grantingPolicy:
                                                 DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
                                             grantingPermission: {
-                                                type: 'data.list',
+                                                type: 'file.list',
                                                 role: ADMIN_ROLE_NAME,
-                                                addresses: true,
                                             },
                                         },
                                     ],
@@ -8032,13 +8164,12 @@ describe('PolicyController', () => {
                                     marker: 'secret',
                                     actions: [
                                         {
-                                            action: 'data.list',
+                                            action: 'file.list',
                                             grantingPolicy:
                                                 DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
                                             grantingPermission: {
-                                                type: 'data.list',
+                                                type: 'file.list',
                                                 role: ADMIN_ROLE_NAME,
-                                                addresses: true,
                                             },
                                         },
                                     ],
@@ -8047,13 +8178,12 @@ describe('PolicyController', () => {
                                     marker: PUBLIC_READ_MARKER,
                                     actions: [
                                         {
-                                            action: 'data.list',
+                                            action: 'file.list',
                                             grantingPolicy:
                                                 DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
                                             grantingPermission: {
-                                                type: 'data.list',
+                                                type: 'file.list',
                                                 role: ADMIN_ROLE_NAME,
-                                                addresses: true,
                                             },
                                         },
                                     ],
@@ -8061,17 +8191,23 @@ describe('PolicyController', () => {
                             ],
                         },
                     ],
-                    allowedDataItems: [
+                    allowedFileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress3',
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
                             markers: [PUBLIC_READ_MARKER],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
@@ -8088,20 +8224,26 @@ describe('PolicyController', () => {
 
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: recordName,
-                    action: 'data.list',
+                    action: 'file.list',
                     userId,
                     instances: ['instance1', 'instance2', 'instance3'],
-                    dataItems: [
+                    fileItems: [
                         {
-                            address: 'testAddress',
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
                             markers: ['secret'],
                         },
                         {
-                            address: 'testAddress3',
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
                             markers: [PUBLIC_READ_MARKER],
                         },
                         {
-                            address: 'testAddress2',
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
                             markers: ['secret'],
                         },
                     ],
