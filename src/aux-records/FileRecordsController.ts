@@ -383,6 +383,109 @@ export class FileRecordsController {
         }
     }
 
+    /**
+     * Attempts to list the files that are available in the given record.
+     * @param recordKeyOrRecordName The name of the record or the record key of the record.
+     * @param fileName The file name that the listing should start at. If null, then the listing will start with the first file in the record.
+     * @param userId The ID of the user who is retrieving the data. If null, then it is assumed that the user is not logged in.
+     * @param instances The instances that are loaded.
+     */
+    async listFiles(
+        recordKeyOrRecordName: string,
+        fileName: string | null,
+        userId?: string,
+        instances?: string[]
+    ): Promise<ListFilesResult> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName,
+                userId: userId,
+                instances,
+            };
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
+            );
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const result2 = await this._store.listUploadedFiles(
+                context.context.recordName,
+                fileName
+            );
+
+            if (result2.success === false) {
+                return {
+                    success: false,
+                    errorCode: result2.errorCode,
+                    errorMessage: result2.errorMessage,
+                };
+            }
+
+            const files = result2.files;
+            const authorizeResult =
+                await this._policies.authorizeRequestUsingContext(
+                    context.context,
+                    {
+                        action: 'file.list',
+                        ...baseRequest,
+                        fileItems: files.map((i) => ({
+                            fileName: i.fileName,
+                            fileSizeInBytes: i.sizeInBytes,
+                            fileMimeType: getType(i.fileName),
+                            markers: i.markers ?? [PUBLIC_READ_MARKER],
+                        })),
+                    }
+                );
+
+            if (authorizeResult.allowed === false) {
+                return returnAuthorizationResult(authorizeResult);
+            }
+
+            if (!authorizeResult.allowedFileItems) {
+                throw new Error('allowedFileItems is null!');
+            }
+
+            let items: ListedFile[] = [];
+            let originalListIndex = 0;
+            for (
+                let i = 0;
+                i < authorizeResult.allowedFileItems.length &&
+                originalListIndex < files.length;
+                i++
+            ) {
+                const allowedFile = authorizeResult.allowedFileItems[i];
+                const currentFile = files[originalListIndex];
+                if (allowedFile.fileName === currentFile.fileName) {
+                    items.push({
+                        description: currentFile.description,
+                        fileName: currentFile.fileName,
+                        markers: currentFile.markers ?? [PUBLIC_READ_MARKER],
+                        sizeInBytes: currentFile.sizeInBytes,
+                        url: currentFile.url,
+                    });
+                    originalListIndex++;
+                }
+            }
+
+            return {
+                success: true,
+                files: items,
+            };
+        } catch (err) {
+            console.log(
+                '[FileRecordsController] An error occurred while listing files:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     async updateFile(
         recordKeyOrRecordName: string,
         fileName: string,
@@ -747,6 +850,32 @@ export interface ReadFileSuccess {
 }
 
 export interface ReadFileFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | ValidatePublicRecordKeyFailure['errorCode']
+        | PresignFileReadFailure['errorCode']
+        | GetFileRecordFailure['errorCode']
+        | AuthorizeDenied['errorCode'];
+    errorMessage: string;
+}
+
+export type ListFilesResult = ListFilesSuccess | ListFilesFailure;
+
+export interface ListFilesSuccess {
+    success: true;
+    files: ListedFile[];
+}
+
+export interface ListedFile {
+    fileName: string;
+    url: string;
+    sizeInBytes: number;
+    description: string;
+    markers: string[];
+}
+
+export interface ListFilesFailure {
     success: false;
     errorCode:
         | ServerError

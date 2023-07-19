@@ -5,13 +5,18 @@ import {
     EraseFileFailure,
     EraseFileSuccess,
     FileRecordsController,
+    ListedFile,
     ReadFileFailure,
     ReadFileSuccess,
     RecordFileFailure,
     RecordFileSuccess,
     UpdateFileRecordSuccess,
 } from './FileRecordsController';
-import { FileRecordsStore, UpdateFileFailure } from './FileRecordsStore';
+import {
+    FileRecordsStore,
+    GetFileRecordSuccess,
+    UpdateFileFailure,
+} from './FileRecordsStore';
 import { MemoryFileRecordsStore } from './MemoryFileRecordsStore';
 import { MemoryPolicyStore } from './MemoryPolicyStore';
 import { PolicyController } from './PolicyController';
@@ -21,6 +26,7 @@ import {
     createTestUser,
 } from './TestUtils';
 import { ADMIN_ROLE_NAME, PUBLIC_READ_MARKER } from './PolicyPermissions';
+import { sortBy } from 'lodash';
 
 console.log = jest.fn();
 
@@ -745,7 +751,7 @@ describe('FileRecordsController', () => {
                 subjectId: 'subjectId',
                 markers: [PUBLIC_READ_MARKER],
                 uploaded: false,
-                url: 'testRecord/testFile.txt',
+                url: 'http://localhost:9191/testRecord/testFile.txt',
             });
         });
 
@@ -1149,6 +1155,100 @@ describe('FileRecordsController', () => {
         });
     });
 
+    describe('listFiles()', () => {
+        let files: ListedFile[];
+
+        beforeEach(async () => {
+            files = [];
+            for (let i = 0; i < 20; i++) {
+                const fileName = `abc${i}.json`;
+                await store.addFileRecord(
+                    recordName,
+                    fileName,
+                    'publisherId',
+                    'subjectId',
+                    100,
+                    'description',
+                    [PUBLIC_READ_MARKER]
+                );
+                await store.setFileRecordAsUploaded(recordName, fileName);
+                const file = (await store.getFileRecord(
+                    recordName,
+                    fileName
+                )) as GetFileRecordSuccess;
+                files.push({
+                    fileName: file.fileName,
+                    url: file.url,
+                    sizeInBytes: file.sizeInBytes,
+                    description: file.description,
+                    markers: file.markers ?? [PUBLIC_READ_MARKER],
+                });
+            }
+
+            for (let i = 0; i < 20; i++) {
+                const fileName = `abc${i}.txt`;
+                await store.addFileRecord(
+                    recordName,
+                    fileName,
+                    'publisherId',
+                    'subjectId',
+                    100,
+                    'description',
+                    ['secret']
+                );
+                await store.setFileRecordAsUploaded(recordName, fileName);
+                const file = (await store.getFileRecord(
+                    recordName,
+                    fileName
+                )) as GetFileRecordSuccess;
+                files.push({
+                    fileName: file.fileName,
+                    url: file.url,
+                    sizeInBytes: file.sizeInBytes,
+                    description: file.description,
+                    markers: file.markers ?? [PUBLIC_READ_MARKER],
+                });
+            }
+
+            files = sortBy(files, (f) => f.fileName);
+
+            policiesStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+        });
+
+        it('should return a list of files that the user has access to', async () => {
+            const result = await manager.listFiles(recordName, null, userId);
+
+            expect(result).toEqual({
+                success: true,
+                files: files.slice(0, 10),
+            });
+        });
+
+        it('should list only files that are after the given file name', async () => {
+            const result = await manager.listFiles(
+                recordName,
+                'abc3.json',
+                userId
+            );
+
+            expect(result).toEqual({
+                success: true,
+                files: files.slice(27, 37),
+            });
+        });
+
+        it('should return an empty list if there are no files', async () => {
+            const result = await manager.listFiles(recordName, 'zzzz', userId);
+
+            expect(result).toEqual({
+                success: true,
+                files: [],
+            });
+        });
+    });
+
     describe('updateFile()', () => {
         it('should be able to update the markers on the file', async () => {
             presignReadMock.mockResolvedValueOnce({
@@ -1412,7 +1512,7 @@ describe('FileRecordsController', () => {
                 subjectId: 'subjectId',
                 markers: [PUBLIC_READ_MARKER],
                 uploaded: false,
-                url: 'testRecord/testFile.txt',
+                url: 'http://localhost:9191/testRecord/testFile.txt',
             });
         });
 

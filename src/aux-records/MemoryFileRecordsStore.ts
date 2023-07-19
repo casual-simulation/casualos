@@ -1,3 +1,4 @@
+import { sortBy } from 'lodash';
 import {
     AddFileResult,
     EraseFileStoreResult,
@@ -6,6 +7,8 @@ import {
     FileRecordsStore,
     GetFileNameFromUrlResult,
     GetFileRecordResult,
+    ListFilesLookupResult,
+    ListFilesStoreResult,
     MarkFileRecordAsUploadedResult,
     PresignFileReadRequest,
     PresignFileReadResult,
@@ -102,7 +105,7 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
                 sizeInBytes: file.sizeInBytes,
                 uploaded: file.uploaded,
                 description: file.description,
-                url: `${file.recordName}/${file.fileName}`,
+                url: `${this._fileUploadUrl}/${file.recordName}/${file.fileName}`,
                 markers: file.markers,
             };
         } else {
@@ -112,6 +115,34 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
                 errorMessage: 'The file was not found in the store.',
             };
         }
+    }
+
+    async listUploadedFiles(
+        recordName: string,
+        fileName: string
+    ): Promise<ListFilesStoreResult> {
+        let files = sortBy(
+            [...this._files.values()].filter(
+                (f) => f.recordName === recordName && f.uploaded
+            ),
+            (f) => f.fileName
+        );
+
+        if (fileName) {
+            files = files.filter((f) => f.fileName > fileName);
+        }
+
+        return {
+            success: true,
+            files: files.slice(0, 10).map((f) => ({
+                fileName: f.fileName,
+                uploaded: f.uploaded,
+                markers: f.markers,
+                description: f.description,
+                sizeInBytes: f.sizeInBytes,
+                url: `${this._fileUploadUrl}/${f.recordName}/${f.fileName}`,
+            })),
+        };
     }
 
     async addFileRecord(
@@ -240,6 +271,33 @@ export class MemoryFileRecordsLookup implements FileRecordsLookup {
         } else {
             return null;
         }
+    }
+
+    async listUploadedFiles(
+        recordName: string,
+        fileName: string
+    ): Promise<ListFilesLookupResult> {
+        let files = sortBy(
+            [...this._files.values()].filter(
+                (f) => f.recordName === recordName && f.uploaded
+            ),
+            (f) => f.fileName
+        );
+
+        if (fileName) {
+            files = files.filter((f) => f.fileName > fileName);
+        }
+
+        return {
+            success: true,
+            files: files.slice(0, 10).map((f) => ({
+                fileName: f.fileName,
+                sizeInBytes: f.sizeInBytes,
+                uploaded: f.uploaded,
+                markers: f.markers,
+                description: f.description,
+            })),
+        };
     }
 
     async addFileRecord(
