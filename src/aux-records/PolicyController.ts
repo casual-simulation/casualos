@@ -1529,7 +1529,9 @@ export class PolicyController {
             allMarkers,
             (context, type, id) => {
                 return this._authorizeDataList(context, type, id);
-            }
+            },
+            undefined,
+            true
         );
     }
 
@@ -1859,7 +1861,9 @@ export class PolicyController {
             allMarkers,
             (context, type, id) => {
                 return this._authorizeFileList(context, type, id);
-            }
+            },
+            undefined,
+            true
         );
     }
 
@@ -3387,6 +3391,7 @@ export class PolicyController {
      * @param resourceMarkers The list of markers that need to be validated.
      * @param authorize The function that should be used to authorize each subject in the request.
      * @param skipInstanceChecksWhenValidRecordKeyIsProvided Whether or not to skip instance checks when a valid record key is provided.
+     * @param isListOperation Whether the request is a list operation.
      */
     private async _authorizeRequest<T extends AuthorizeRequestBase>(
         context: AuthorizationContext,
@@ -3397,7 +3402,8 @@ export class PolicyController {
             type: 'user' | 'inst',
             id: string
         ) => Promise<GenericResult>,
-        skipInstanceChecksWhenValidRecordKeyIsProvided: boolean = true
+        skipInstanceChecksWhenValidRecordKeyIsProvided: boolean = true,
+        isListOperation: boolean = false
     ): Promise<AuthorizeResult> {
         if (
             request.instances &&
@@ -3413,7 +3419,7 @@ export class PolicyController {
             return NOT_AUTHORIZED_TO_MANY_INSTANCES_RESULT;
         }
 
-        if (resourceMarkers.length <= 0) {
+        if (resourceMarkers.length <= 0 && !isListOperation) {
             console.log(
                 `[PolicyController] [action: ${request.action} recordName: ${context.recordName}, userId: ${request.userId}] Request denied because there are no markers.`
             );

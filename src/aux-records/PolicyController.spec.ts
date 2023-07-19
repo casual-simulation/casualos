@@ -3494,6 +3494,30 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if given no items', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'data.list',
+                    recordKeyOrRecordName: recordName,
+                    userId,
+                    dataItems: [],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [],
+                    },
+                    instances: [],
+                    allowedDataItems: [],
+                });
+            });
+
             it('should allow the request if the user has the admin role assigned', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -6877,6 +6901,30 @@ describe('PolicyController', () => {
                             markers: ['secret'],
                         },
                     ],
+                });
+            });
+
+            it('should allow the request if given no items', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'file.list',
+                    recordKeyOrRecordName: recordName,
+                    userId,
+                    fileItems: [],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [],
+                    },
+                    instances: [],
+                    allowedFileItems: [],
                 });
             });
 
