@@ -7,7 +7,7 @@ import {
     PresignFileReadFailure,
     GetFileRecordFailure,
 } from './FileRecordsStore';
-import { NotLoggedInError, ServerError } from './Errors';
+import { NotLoggedInError, NotSupportedError, ServerError } from './Errors';
 import {
     RecordsController,
     ValidatePublicRecordKeyFailure,
@@ -397,6 +397,14 @@ export class FileRecordsController {
         instances?: string[]
     ): Promise<ListFilesResult> {
         try {
+            if (!this._store.listUploadedFiles) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+
             const baseRequest = {
                 recordKeyOrRecordName,
                 userId: userId,
@@ -885,7 +893,8 @@ export interface ListFilesFailure {
         | ValidatePublicRecordKeyFailure['errorCode']
         | PresignFileReadFailure['errorCode']
         | GetFileRecordFailure['errorCode']
-        | AuthorizeDenied['errorCode'];
+        | AuthorizeDenied['errorCode']
+        | NotSupportedError;
     errorMessage: string;
 }
 

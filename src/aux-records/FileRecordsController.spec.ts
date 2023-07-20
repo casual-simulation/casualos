@@ -1340,6 +1340,18 @@ describe('FileRecordsController', () => {
                 files: [],
             });
         });
+
+        it('should return a not supported error if the store does not have the ability to list files', async () => {
+            (store as any).listUploadedFiles = null;
+
+            const result = await manager.listFiles(recordName, 'zzzz', userId);
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+        });
     });
 
     describe('updateFile()', () => {

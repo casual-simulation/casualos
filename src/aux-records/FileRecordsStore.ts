@@ -19,7 +19,7 @@ export interface FileRecordsLookup {
      * @param recordName The name of the record.
      * @param fileName The name of the file to start listing after.
      */
-    listUploadedFiles(
+    listUploadedFiles?(
         recordName: string,
         fileName: string | null
     ): Promise<ListFilesLookupResult>;
@@ -127,7 +127,7 @@ export interface FileRecordsStore extends FileRecordsVault {
      * @param recordName The name of the record.
      * @param fileName The name of the file that the listing should start after.
      */
-    listUploadedFiles(
+    listUploadedFiles?(
         recordName: string,
         fileName: string | null
     ): Promise<ListFilesStoreResult>;
