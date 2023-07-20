@@ -4,12 +4,18 @@ import Component from 'vue-class-component';
 import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
+import DataSize from '../DataSize/DataSize';
+import AuthMarker from '../AuthMarker/AuthMarker';
 import { LoadingHelper } from '../LoadingHelper';
 import type { ListFilesSuccess } from '@casual-simulation/aux-records';
+
+const PAGE_SIZE = 10;
 
 @Component({
     components: {
         'svg-icon': SvgIcon,
+        'auth-marker': AuthMarker,
+        'data-size': DataSize,
     },
 })
 export default class AuthRecordsFiles extends Vue {
@@ -47,9 +53,9 @@ export default class AuthRecordsFiles extends Vue {
     private _reset() {
         this._helper = new LoadingHelper(async (lastItem) => {
             let items =
-                (await authManager.listData(
+                (await authManager.listFiles(
                     this.recordName,
-                    lastItem?.address
+                    lastItem?.fileName
                 )) ?? [];
             return {
                 items,

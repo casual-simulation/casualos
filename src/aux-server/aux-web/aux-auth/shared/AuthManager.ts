@@ -304,7 +304,7 @@ export class AuthManager {
 
         const result = response.data as ListFilesResult;
         if (result.success === true) {
-            return result.items;
+            return result.files;
         } else {
             if (result.errorCode === 'not_supported') {
                 return null;
