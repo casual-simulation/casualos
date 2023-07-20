@@ -697,6 +697,16 @@ export class Server {
 
         app.use(express.static(dist));
 
+        app.get(
+            '/api/v2/records/file/list',
+            express.text({
+                type: 'application/json',
+            }),
+            asyncMiddleware(async (req, res) => {
+                await handleRequest(req, res);
+            })
+        );
+
         app.use(
             '/api/v2/records/file/*',
             express.raw({
