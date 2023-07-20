@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.2.1
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added a "repeated error limit" for individual tags that prevents `@onError` from being called if a tag emits a large number errors.
+
 ## V3.2.0
 
 #### Date: 7/17/2023
