@@ -448,15 +448,16 @@ export class FileRecordsController {
             }
 
             let items: ListedFile[] = [];
-            let originalListIndex = 0;
+            let allowedListIndex = 0;
             for (
                 let i = 0;
-                i < authorizeResult.allowedFileItems.length &&
-                originalListIndex < files.length;
+                i < files.length &&
+                allowedListIndex < authorizeResult.allowedFileItems.length;
                 i++
             ) {
-                const allowedFile = authorizeResult.allowedFileItems[i];
-                const currentFile = files[originalListIndex];
+                const allowedFile =
+                    authorizeResult.allowedFileItems[allowedListIndex];
+                const currentFile = files[i];
                 if (allowedFile.fileName === currentFile.fileName) {
                     items.push({
                         description: currentFile.description,
@@ -465,12 +466,13 @@ export class FileRecordsController {
                         sizeInBytes: currentFile.sizeInBytes,
                         url: currentFile.url,
                     });
-                    originalListIndex++;
+                    allowedListIndex++;
                 }
             }
 
             return {
                 success: true,
+                recordName: context.context.recordName,
                 files: items,
             };
         } catch (err) {
@@ -864,6 +866,7 @@ export type ListFilesResult = ListFilesSuccess | ListFilesFailure;
 
 export interface ListFilesSuccess {
     success: true;
+    recordName: string;
     files: ListedFile[];
 }
 

@@ -25,7 +25,11 @@ import {
     createTestRecordKey,
     createTestUser,
 } from './TestUtils';
-import { ADMIN_ROLE_NAME, PUBLIC_READ_MARKER } from './PolicyPermissions';
+import {
+    ACCOUNT_MARKER,
+    ADMIN_ROLE_NAME,
+    PUBLIC_READ_MARKER,
+} from './PolicyPermissions';
 import { sortBy } from 'lodash';
 
 console.log = jest.fn();
@@ -1217,12 +1221,87 @@ describe('FileRecordsController', () => {
             };
         });
 
-        it('should return a list of files that the user has access to', async () => {
+        it('should return a list of files', async () => {
             const result = await manager.listFiles(recordName, null, userId);
 
             expect(result).toEqual({
                 success: true,
+                recordName,
                 files: files.slice(0, 10),
+            });
+        });
+
+        it('should return only the files that the user has access to', async () => {
+            await store.addFileRecord(
+                recordName,
+                'test1.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description',
+                ['secret']
+            );
+            await store.addFileRecord(
+                recordName,
+                'test2.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+            await store.addFileRecord(
+                recordName,
+                'test3.txt',
+                'publisherId',
+                'subjectId',
+                100,
+                'description',
+                ['secret']
+            );
+            await store.setFileRecordAsUploaded(recordName, 'test1.txt');
+            await store.setFileRecordAsUploaded(recordName, 'test2.txt');
+            await store.setFileRecordAsUploaded(recordName, 'test3.txt');
+
+            policiesStore.roles[recordName] = {
+                [userId]: new Set(['developer']),
+            };
+
+            policiesStore.policies[recordName] = {
+                ['secret']: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'file.list',
+                                role: 'developer',
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+
+            const result = await manager.listFiles(recordName, 'test1', userId);
+
+            expect(result).toEqual({
+                success: true,
+                recordName,
+                files: [
+                    {
+                        fileName: 'test1.txt',
+                        url: 'http://localhost:9191/testRecord/test1.txt',
+                        sizeInBytes: 100,
+                        description: 'description',
+                        markers: ['secret'],
+                    },
+                    {
+                        fileName: 'test3.txt',
+                        url: 'http://localhost:9191/testRecord/test3.txt',
+                        sizeInBytes: 100,
+                        description: 'description',
+                        markers: ['secret'],
+                    },
+                ],
             });
         });
 
@@ -1235,6 +1314,7 @@ describe('FileRecordsController', () => {
 
             expect(result).toEqual({
                 success: true,
+                recordName,
                 files: files.slice(27, 37),
             });
         });
@@ -1244,6 +1324,19 @@ describe('FileRecordsController', () => {
 
             expect(result).toEqual({
                 success: true,
+                recordName,
+                files: [],
+            });
+        });
+
+        it('should return an empty list if the inst does not have permission', async () => {
+            const result = await manager.listFiles(recordName, null, userId, [
+                'inst',
+            ]);
+
+            expect(result).toEqual({
+                success: true,
+                recordName,
                 files: [],
             });
         });

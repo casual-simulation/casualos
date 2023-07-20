@@ -4115,6 +4115,278 @@ describe('RecordsHttpServer', () => {
         testRateLimit('GET', `/api/v2/records/file`);
     });
 
+    describe('GET /api/v2/records/file/list', () => {
+        beforeEach(async () => {
+            await filesStore.addFileRecord(
+                recordName,
+                'test1.txt',
+                userId,
+                userId,
+                10,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+            await filesStore.addFileRecord(
+                recordName,
+                'test2.txt',
+                userId,
+                userId,
+                10,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+            await filesStore.addFileRecord(
+                recordName,
+                'test3.txt',
+                userId,
+                userId,
+                10,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+            await filesStore.setFileRecordAsUploaded(recordName, 'test1.txt');
+            await filesStore.setFileRecordAsUploaded(recordName, 'test2.txt');
+            await filesStore.setFileRecordAsUploaded(recordName, 'test3.txt');
+        });
+
+        it('should return a list of files', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    files: [
+                        {
+                            fileName: 'test1.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test1.txt',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'test2.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test2.txt',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'test3.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test3.txt',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should be able to list files by name', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file/list?recordName=${recordName}&fileName=test2`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    files: [
+                        {
+                            fileName: 'test2.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test2.txt',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'test3.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test3.txt',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should list what the user can access', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set(['developer']),
+            };
+
+            policyStore.policies[recordName] = {
+                ['secret']: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'file.list',
+                                role: 'developer',
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+
+            await filesStore.updateFileRecord(recordName, 'test1.txt', [
+                'secret',
+            ]);
+            await filesStore.updateFileRecord(recordName, 'test3.txt', [
+                'secret',
+            ]);
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    files: [
+                        {
+                            fileName: 'test1.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test1.txt',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'test3.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test3.txt',
+                            markers: ['secret'],
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should list what the inst can access', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+                ['inst']: new Set(['developer']),
+            };
+
+            policyStore.policies[recordName] = {
+                ['secret']: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'file.list',
+                                role: 'developer',
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+            await filesStore.updateFileRecord(recordName, 'test1.txt', [
+                'secret',
+            ]);
+            await filesStore.updateFileRecord(recordName, 'test3.txt', [
+                'secret',
+            ]);
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file/list?recordName=${recordName}&instances=${'inst'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    files: [
+                        {
+                            fileName: 'test1.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test1.txt',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'test3.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test3.txt',
+                            markers: ['secret'],
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a recordName', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file/list?fileName=testAddress`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName is required.',
+                            path: ['recordName'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/file/list?recordName=${recordName}`,
+                apiHeaders
+            )
+        );
+    });
+
     describe('PUT /api/v2/records/file', () => {
         let fileName: string;
         let fileUrl: string;

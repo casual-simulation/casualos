@@ -137,6 +137,11 @@ Resources:
                     Properties:
                         Path: /api/v2/records/file
                         Method: GET
+                ListFiles:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/file/list
+                        Method: GET
                 UpdateFile:
                     Type: Api
                     Properties:
