@@ -3077,7 +3077,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 closeImageClassifier,
 
                 openPhotoCamera,
-                takeSinglePhoto,
+                capturePhoto,
                 closePhotoCamera,
 
                 /**
@@ -6011,20 +6011,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @param options the options that should be used for the photo camera.
      *
      * @example Prompt the user to take a single photo.
-     * const photo = await os.takeSinglePhoto();
+     * const photo = await os.capturePhoto();
      *
      * @example Take a single photo, defaulting to the front-facing camera.
-     * await os.takeSinglePhoto({
+     * await os.capturePhoto({
      *     cameraType: "front"
      * });
      *
      * @example Take a single photo, skipping the confirmation user step.
-     * await os.takeSinglePhoto({
+     * await os.capturePhoto({
      *    skipConfirm: true
      * });
      *
      * @example Take a single photo after a 3 second delay.
-     * await os.takeSinglePhoto({
+     * await os.capturePhoto({
      *    takePhotoAfterSeconds: 3
      * });
      *
@@ -6032,9 +6032,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @doctitle Camera Actions
      * @docsidebar Camera
      * @docdescription Actions for taking photos.
-     * @docname os.takeSinglePhoto
+     * @docname os.capturePhoto
      */
-    function takeSinglePhoto(options?: OpenPhotoCameraOptions): Promise<Photo> {
+    function capturePhoto(options?: OpenPhotoCameraOptions): Promise<Photo> {
         const task = context.createTask();
         const action = calcOpenPhotoCamera(true, true, options, task.taskId);
         return addAsyncAction(task, action);

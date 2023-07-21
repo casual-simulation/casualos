@@ -10261,10 +10261,10 @@ interface Os {
      * @param options the options that should be used for the photo camera.
      *
      * @example Prompt the user to take a single photo.
-     * const photo = await os.takeSinglePhoto();
+     * const photo = await os.capturePhoto();
      *
      * @example Take a single photo, defaulting to the front-facing camera.
-     * await os.takeSinglePhoto({
+     * await os.capturePhoto({
      *     cameraType: "front"
      * });
      *
@@ -10272,9 +10272,9 @@ interface Os {
      * @doctitle Camera Actions
      * @docsidebar Camera
      * @docdescription Actions for taking photos.
-     * @docname os.takeSinglePhoto
+     * @docname os.capturePhoto
      */
-    takeSinglePhoto(options?: OpenPhotoCameraOptions): Promise<Photo>;
+    capturePhoto(options?: OpenPhotoCameraOptions): Promise<Photo>;
 
     /**
      * Shows the given barcode.

@@ -3628,9 +3628,9 @@ describe('AuxLibrary', () => {
             });
         });
 
-        describe('os.takeSinglePhoto()', () => {
+        describe('os.capturePhoto()', () => {
             it('should emit a OpenPhotoCameraAction', () => {
-                const action: any = library.api.os.takeSinglePhoto();
+                const action: any = library.api.os.capturePhoto();
                 const expected = openPhotoCamera(
                     true,
                     true,
@@ -3642,7 +3642,7 @@ describe('AuxLibrary', () => {
             });
 
             it('should use the given camera type', () => {
-                const action: any = library.api.os.takeSinglePhoto({
+                const action: any = library.api.os.capturePhoto({
                     cameraType: 'front',
                 });
                 const expected = openPhotoCamera(
