@@ -2620,6 +2620,7 @@ export type TweenType = 'position' | 'rotation';
 /**
  * The possible easing types.
  * @dochash types/animation
+ * @docname EaseType
  */
 export type EaseType =
     | 'linear'
@@ -2635,6 +2636,7 @@ export type EaseType =
 /**
  * The possible easing modes.
  * @dochash types/animation
+ * @docname EaseMode
  */
 export type EaseMode = 'in' | 'out' | 'inout';
 
@@ -2648,6 +2650,7 @@ export type EaseMode = 'in' | 'out' | 'inout';
  * };
  *
  * @dochash types/animation
+ * @docname Easing
  */
 export interface Easing {
     /**
@@ -3349,21 +3352,40 @@ export interface EndAudioRecordingAction extends AsyncAction {
 
 /**
  * An interface that represents the options that can be used for making recordings.
+ *
+ * @dochash types/experimental
+ * @doctitle Experimental Types
+ * @docsidebar Experimental
+ * @docdescription Defines the types that are used by experimental actions.
+ * @docname RecordingOptions
  */
 export interface RecordingOptions {
     /**
      * Whether to record audio.
+     *
+     * If the computer does not have an audio device attached, then setting this to true
+     * will cause an error.
+     *
      * If an array is specified, only the specified audio sources will be recorded.
+     *
+     * Defaults to true.
      */
     audio: boolean | ('screen' | 'microphone')[];
 
     /**
      * Whether to record video.
+     *
+     * If the computer does not have a video device attached (like a web cam),
+     * then setting this to true will cause an error.
+     *
+     * Defaults to true.
      */
     video: boolean;
 
     /**
      * Whether to record the screen.
+     *
+     * Defaults to false.
      */
     screen: boolean;
 }
@@ -3454,6 +3476,9 @@ export interface GetVoicesAction extends AsyncAction {
 
 /**
  * Defines an interface that represents a synthetic voice.
+ *
+ * @dochash types/experimental
+ * @docname SyntheticVoice
  */
 export interface SyntheticVoice {
     /**
@@ -3577,6 +3602,9 @@ export interface UnsuccessfulGeolocation {
 
 /**
  * Defines an interface that contains recorded data.
+ *
+ * @dochash types/experimental
+ * @docname Recording
  */
 export interface Recording {
     /**
@@ -3585,6 +3613,12 @@ export interface Recording {
     files: RecordedFile[];
 }
 
+/**
+ * Defines an interface that represents a recorded file.
+ *
+ * @dochash types/experimental
+ * @docname RecordedFile
+ */
 export interface RecordedFile {
     /**
      * Whether the file contains the recorded audio.

@@ -62,6 +62,8 @@ export {
     DebuggerFunctionLocation,
     DebuggerVariable,
     AttachDebuggerOptions,
+    TweenOptions,
+    SpeakTextApiOptions,
 
     PseudoRandomNumberGenerator,
 } from '../../../src/aux-common/runtime/AuxLibrary';
@@ -100,7 +102,12 @@ export {
     RoomTrackOptions,
     RoomRemoteOptions,
     SetRoomTrackOptions,
-    RegisterPrefixOptions
+    RegisterPrefixOptions,
+
+    Recording,
+    RecordedFile,
+    RecordingOptions,
+    SyntheticVoice,
 } from '../../../src/aux-common/bots/BotEvents';
 export { 
     RuntimeBot,

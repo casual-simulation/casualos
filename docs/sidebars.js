@@ -43,6 +43,7 @@ module.exports = {
                         'actions/data',
                         'actions/debuggers',
                         'actions/event',
+                        'actions/experimental',
                         'actions/files',
                         'actions/math',
                         'actions/mods',
@@ -70,6 +71,7 @@ module.exports = {
                                 'types/debuggers/pausable-debugger',
                             ]
                         },
+                        'types/experimental',
                         {
                             type: 'category',
                             label: 'Math',
