@@ -3603,6 +3603,7 @@ describe('AuxLibrary', () => {
                 const action: any = library.api.os.openPhotoCamera();
                 const expected = openPhotoCamera(
                     true,
+                    false,
                     undefined,
                     context.tasks.size
                 );
@@ -3611,10 +3612,45 @@ describe('AuxLibrary', () => {
             });
 
             it('should use the given camera type', () => {
-                const action: any = library.api.os.openPhotoCamera('front');
+                const action: any = library.api.os.openPhotoCamera({
+                    cameraType: 'front',
+                });
                 const expected = openPhotoCamera(
                     true,
-                    'front',
+                    false,
+                    {
+                        cameraType: 'front',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.takeSinglePhoto()', () => {
+            it('should emit a OpenPhotoCameraAction', () => {
+                const action: any = library.api.os.takeSinglePhoto();
+                const expected = openPhotoCamera(
+                    true,
+                    true,
+                    undefined,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given camera type', () => {
+                const action: any = library.api.os.takeSinglePhoto({
+                    cameraType: 'front',
+                });
+                const expected = openPhotoCamera(
+                    true,
+                    true,
+                    {
+                        cameraType: 'front',
+                    },
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -3627,6 +3663,7 @@ describe('AuxLibrary', () => {
                 const action: any = library.api.os.closePhotoCamera();
 
                 const expected = openPhotoCamera(
+                    false,
                     false,
                     undefined,
                     context.tasks.size

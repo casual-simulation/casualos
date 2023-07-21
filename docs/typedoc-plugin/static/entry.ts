@@ -108,6 +108,8 @@ export {
     RecordedFile,
     RecordingOptions,
     SyntheticVoice,
+    OpenPhotoCameraOptions,
+    Photo,
 } from '../../../src/aux-common/bots/BotEvents';
 export { 
     RuntimeBot,

@@ -331,6 +331,8 @@ import {
     getCurrentInstUpdate as calcGetCurrentInstUpdate,
     Geolocation,
     openPhotoCamera as calcOpenPhotoCamera,
+    OpenPhotoCameraOptions,
+    Photo,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -3075,6 +3077,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 closeImageClassifier,
 
                 openPhotoCamera,
+                takeSinglePhoto,
                 closePhotoCamera,
 
                 /**
@@ -5978,13 +5981,15 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *
      * While open, each time the user takes a photo the system will send a {@tag @onPhotoCaptured} shout. Optionally accepts which camera to use for scanning. (front/back)
      *
-     * @param camera a string specifing which camera to use. Defaults to 'rear'. If the given camera type is not available, then the default camera will be used. Possible values are `"rear"` and "`front`".
+     * @param options the options that should be used for the photo camera.
      *
      * @example Open the photo camera.
      * await os.openPhotoCamera();
      *
      * @example Open the photo camera, defaulting to the front-facing camera.
-     * await os.openPhotoCamera("front");
+     * await os.openPhotoCamera({
+     *     cameraType: "front"
+     * });
      *
      * @dochash actions/camera
      * @doctitle Camera Actions
@@ -5992,9 +5997,36 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * @docdescription Actions for taking photos.
      * @docname os.openPhotoCamera
      */
-    function openPhotoCamera(camera?: CameraType): Promise<void> {
+    function openPhotoCamera(options?: OpenPhotoCameraOptions): Promise<void> {
         const task = context.createTask();
-        const action = calcOpenPhotoCamera(true, camera, task.taskId);
+        const action = calcOpenPhotoCamera(true, false, options, task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Opens the photo camera for the user to take a single photo. Returns a promise that resolves with the taken photo. Triggers the {@tag onPhotoCameraOpened} shout once opened.
+     *
+     * While open, each time the user takes a photo the system will send a {@tag @onPhotoCaptured} shout. Optionally accepts which camera to use for scanning. (front/back)
+     *
+     * @param options the options that should be used for the photo camera.
+     *
+     * @example Prompt the user to take a single photo.
+     * const photo = await os.takeSinglePhoto();
+     *
+     * @example Take a single photo, defaulting to the front-facing camera.
+     * await os.takeSinglePhoto({
+     *     cameraType: "front"
+     * });
+     *
+     * @dochash actions/camera
+     * @doctitle Camera Actions
+     * @docsidebar Camera
+     * @docdescription Actions for taking photos.
+     * @docname os.takeSinglePhoto
+     */
+    function takeSinglePhoto(options?: OpenPhotoCameraOptions): Promise<Photo> {
+        const task = context.createTask();
+        const action = calcOpenPhotoCamera(true, true, options, task.taskId);
         return addAsyncAction(task, action);
     }
 
@@ -6009,7 +6041,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function closePhotoCamera(): Promise<void> {
         const task = context.createTask();
-        const action = calcOpenPhotoCamera(false, undefined, task.taskId);
+        const action = calcOpenPhotoCamera(
+            false,
+            false,
+            undefined,
+            task.taskId
+        );
         return addAsyncAction(task, action);
     }
 

@@ -10,6 +10,7 @@ import {
     OpenPhotoCameraAction,
     ON_PHOTO_CAMERA_OPENED_ACTION_NAME,
     ON_PHOTO_CAPTURED_ACTION_NAME,
+    Photo,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../AppManager';
 import { Subscription } from 'rxjs';
@@ -42,6 +43,9 @@ export default class PhotoCamera extends Vue {
     hasPhoto: boolean = false;
     showPhotoCamera: boolean = false;
     cameraType: CameraType = null;
+    imageFormat: string = null;
+    imageQuality: number = null;
+    skipConfirm: boolean = false;
 
     private _openEvent: OpenPhotoCameraAction;
 
@@ -56,6 +60,9 @@ export default class PhotoCamera extends Vue {
         this.hasPhoto = false;
         this.showPhotoCamera = false;
         this.cameraType = null;
+        this.imageFormat = null;
+        this.imageQuality = null;
+        this.skipConfirm = false;
         this.processing = false;
 
         this._sub.add(
@@ -76,6 +83,8 @@ export default class PhotoCamera extends Vue {
     beforeDestroy() {
         this.processing = false;
         this.hasPhoto = false;
+        this._currentSimulation = null;
+        this._openEvent = null;
         if (this._sub) {
             this._sub.unsubscribe();
             this._sub = null;
@@ -119,15 +128,21 @@ export default class PhotoCamera extends Vue {
 
                 const data = await new Promise<Blob>((resolve, reject) => {
                     try {
-                        canvas.toBlob((blob) => {
-                            if (!blob) {
-                                reject(
-                                    new Error('Could not get blob from canvas.')
-                                );
-                                return;
-                            }
-                            resolve(blob);
-                        }, 'image/png');
+                        canvas.toBlob(
+                            (blob) => {
+                                if (!blob) {
+                                    reject(
+                                        new Error(
+                                            'Could not get blob from canvas.'
+                                        )
+                                    );
+                                    return;
+                                }
+                                resolve(blob);
+                            },
+                            this.imageFormat ?? 'image/png',
+                            this.imageQuality ?? undefined
+                        );
                     } catch (err) {
                         reject(err);
                     }
@@ -138,9 +153,13 @@ export default class PhotoCamera extends Vue {
                     width,
                     height,
                 };
-                this.hasPhoto = true;
-                const preview = this._getPreview();
-                preview.src = this._photoUrl;
+                if (this.skipConfirm) {
+                    await this.savePhoto();
+                } else {
+                    this.hasPhoto = true;
+                    const preview = this._getPreview();
+                    preview.src = this._photoUrl;
+                }
             } finally {
                 this.processing = false;
             }
@@ -150,18 +169,30 @@ export default class PhotoCamera extends Vue {
     async savePhoto() {
         if (this._photoData && this._currentSimulation) {
             const data = this._photoData;
+            const photo: Photo = {
+                data: data,
+                ...this._photoInfo,
+            };
+
+            if (this._openEvent.singlePhoto) {
+                this._currentSimulation.helper.transaction(
+                    asyncResult(this._openEvent.taskId, photo)
+                );
+            }
+
             await this._currentSimulation.helper.action(
                 ON_PHOTO_CAPTURED_ACTION_NAME,
                 null,
                 {
-                    photo: {
-                        data: data,
-                        ...this._photoInfo,
-                    },
+                    photo,
                 }
             );
 
             this.clearPhoto();
+
+            if (this._openEvent.singlePhoto) {
+                this.hidePhotoCamera();
+            }
         }
     }
 
@@ -178,66 +209,14 @@ export default class PhotoCamera extends Vue {
         this._photoData = null;
     }
 
-    // onImageClassified(event: ClassificationEvent) {
-    //     this._superAction(ON_IMAGE_CLASSIFIED_ACTION_NAME, {
-    //         model: {
-    //             ...pick(
-    //                 this._openEvent,
-    //                 'modelUrl',
-    //                 'modelJsonUrl',
-    //                 'modelMetadataUrl',
-    //                 'cameraType'
-    //             ),
-    //             classLabels: event.model.classLabels,
-    //         },
-    //         prediction: event.prediction,
-    //     });
-    // }
-
-    // onModelLoadError(error: ModelLoadError) {
-    //     if (this._openEvent && this._currentSimulation) {
-    //         if (hasValue(this._openEvent.taskId)) {
-    //             this._currentSimulation.helper.transaction(
-    //                 asyncError(this._openEvent.taskId, error.error.toString())
-    //             );
-    //         }
-    //     }
-    // }
-
-    // onModelLoaded(event: ModelLoadedEvent) {
-    //     if (this._openEvent && this._currentSimulation) {
-    //         const arg = {
-    //             ...pick(
-    //                 this._openEvent,
-    //                 'modelUrl',
-    //                 'modelJsonUrl',
-    //                 'modelMetadataUrl',
-    //                 'cameraType'
-    //             ),
-    //         };
-
-    //         if (event.model) {
-    //             (<any>arg).classLabels = event.model.classLabels;
-    //         }
-    //         if (hasValue(this._openEvent.taskId)) {
-    //             this._currentSimulation.helper.transaction(
-    //                 asyncResult(this._openEvent.taskId, arg)
-    //             );
-    //         }
-
-    //         if (event.model) {
-    //             this._superAction(ON_IMAGE_CLASSIFIER_OPENED_ACTION_NAME, arg);
-    //         }
-    //     }
-    // }
-
     onCameraStreamLoaded() {
         if (this._openEvent && this._currentSimulation) {
-            this._currentSimulation.helper.transaction(
-                asyncResult(this._openEvent.taskId, null)
-            );
+            if (!this._openEvent.singlePhoto) {
+                this._currentSimulation.helper.transaction(
+                    asyncResult(this._openEvent.taskId, null)
+                );
+            }
             this._superAction(ON_PHOTO_CAMERA_OPENED_ACTION_NAME);
-            this._openEvent = null;
             this._streaming = true;
         }
     }
@@ -266,7 +245,10 @@ export default class PhotoCamera extends Vue {
                     this.showPhotoCamera = !!e.open;
                     if (this.showPhotoCamera) {
                         console.log('[PhotoCamera] Loading video stream...');
-                        this.cameraType = e.cameraType;
+                        this.cameraType = e.options.cameraType;
+                        this.imageFormat = e.options.imageFormat;
+                        this.imageQuality = e.options.imageQuality;
+                        this.skipConfirm = e.options.skipConfirm;
                         this._openEvent = e;
                         this._currentSimulation = sim;
                     } else {

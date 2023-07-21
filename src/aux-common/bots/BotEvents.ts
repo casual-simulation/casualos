@@ -962,14 +962,79 @@ export interface OpenPhotoCameraAction extends AsyncAction {
     open: boolean;
 
     /**
+     * Whether only a single photo should be taken.
+     */
+    singlePhoto: boolean;
+
+    /**
+     * The options for the action.
+     */
+    options: OpenPhotoCameraOptions;
+}
+
+/**
+ * Defines a photo that was taken.
+ *
+ * @dochash types/camera
+ * @docname Photo
+ */
+export interface Photo {
+    /**
+     * The photo data.
+     */
+    data: Blob;
+
+    /**
+     * The width of the photo in pixels.
+     */
+    width: number;
+
+    /**
+     * The height of the photo in pixels.
+     */
+    height: number;
+}
+
+/**
+ * Options for {@link os.openPhotoCamera}.
+ *
+ * @dochash types/camera
+ * @doctitle Camera Types
+ * @docsidebar Camera
+ * @docdescription Types that are used in camera actions.
+ * @docname PhotoCameraOptions
+ */
+export interface OpenPhotoCameraOptions {
+    /**
      * The camera that should be used.
      */
-    cameraType: CameraType;
+    cameraType?: CameraType;
 
     /**
      * Whether to not allow switching the camera.
      */
-    disallowSwitchingCameras: boolean;
+    disallowSwitchingCameras?: boolean;
+
+    /**
+     * The image format that should be used.
+     *
+     * Defaults to "png".
+     */
+    imageFormat?: 'png' | 'jpef';
+
+    /**
+     * A number between 0 and 1 indicating the image quality to be used.
+     *
+     * If not specified, then the browser will use its own default.
+     */
+    imageQuality?: number;
+
+    /**
+     * Whether to skip allowing the user to confirm their photo.
+     *
+     * Defaults to false.
+     */
+    skipConfirm?: boolean;
 }
 
 /**
@@ -5258,18 +5323,20 @@ export function openBarcodeScanner(
 /**
  * Creates a new OpenPhotoCameraAction.
  * @param open Whether the barcode scanner should be open or closed.
+ * @param singlePhoto Whether only a single photo should be taken.
  * @param cameraType The camera type that should be used.
  */
 export function openPhotoCamera(
     open: boolean,
-    cameraType?: CameraType,
+    singlePhoto: boolean,
+    options?: OpenPhotoCameraOptions,
     taskId?: string | number
 ): OpenPhotoCameraAction {
     return {
         type: 'open_photo_camera',
         open: open,
-        cameraType: cameraType,
-        disallowSwitchingCameras: false,
+        singlePhoto,
+        options: options ?? {},
         taskId,
     };
 }
