@@ -8,6 +8,10 @@
 
 -   Added a "repeated error limit" for individual tags that prevents `@onError` from being called if a tag emits a large number errors.
 
+### :bug: Bug Fixes
+
+-   Fixed an issue where setting a portal to `null` in `@onPortalChanged` would cause an infinite loop.
+
 ## V3.2.0
 
 #### Date: 7/17/2023
