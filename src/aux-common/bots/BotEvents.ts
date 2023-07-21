@@ -1020,7 +1020,7 @@ export interface OpenPhotoCameraOptions {
      *
      * Defaults to "png".
      */
-    imageFormat?: 'png' | 'jpef';
+    imageFormat?: 'png' | 'jpeg';
 
     /**
      * A number between 0 and 1 indicating the image quality to be used.
