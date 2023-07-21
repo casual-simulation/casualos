@@ -5,11 +5,11 @@
     "pageSidebarLabel": "Permissions",
     "contents": [
         {
-            "id": 2916,
+            "id": 2934,
             "order": 9999,
             "name": "AssignPolicyPermission",
             "reflection": {
-                "id": 2916,
+                "id": 2934,
                 "name": "AssignPolicyPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -26,7 +26,7 @@
                 },
                 "children": [
                     {
-                        "id": 2918,
+                        "id": 2936,
                         "name": "policies",
                         "kind": 1024,
                         "kindString": "Property",
@@ -62,7 +62,7 @@
                         }
                     },
                     {
-                        "id": 2919,
+                        "id": 2937,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -98,7 +98,7 @@
                         }
                     },
                     {
-                        "id": 2917,
+                        "id": 2935,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -125,9 +125,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2918,
-                            2919,
-                            2917
+                            2936,
+                            2937,
+                            2935
                         ]
                     }
                 ],
@@ -159,11 +159,11 @@
             "group": null
         },
         {
-            "id": 2830,
+            "id": 2848,
             "order": 9999,
             "name": "AvailablePermissions",
             "reflection": {
-                "id": 2830,
+                "id": 2848,
                 "name": "AvailablePermissions",
                 "kind": 4194304,
                 "kindString": "Type alias",
@@ -210,117 +210,117 @@
                     "types": [
                         {
                             "type": "reference",
-                            "id": 2831,
+                            "id": 2849,
                             "name": "CreateDataPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2835,
+                            "id": 2853,
                             "name": "ReadDataPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2839,
+                            "id": 2857,
                             "name": "UpdateDataPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2847,
+                            "id": 2865,
                             "name": "DeleteDataPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2843,
+                            "id": 2861,
                             "name": "ListDataPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2851,
+                            "id": 2869,
                             "name": "CreateFilePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2856,
+                            "id": 2874,
                             "name": "ReadFilePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2861,
+                            "id": 2879,
                             "name": "UpdateFilePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2866,
+                            "id": 2884,
                             "name": "DeleteFilePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2871,
+                            "id": 2889,
                             "name": "IncrementEventPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2875,
+                            "id": 2893,
                             "name": "CountEventPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2879,
+                            "id": 2897,
                             "name": "UpdateEventPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2924,
+                            "id": 2942,
                             "name": "ReadPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2908,
+                            "id": 2926,
                             "name": "GrantPermissionToPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2912,
+                            "id": 2930,
                             "name": "RevokePermissionFromPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2928,
+                            "id": 2946,
                             "name": "ListPoliciesPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2916,
+                            "id": 2934,
                             "name": "AssignPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2920,
+                            "id": 2938,
                             "name": "UnassignPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2883,
+                            "id": 2901,
                             "name": "GrantRolePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2890,
+                            "id": 2908,
                             "name": "RevokeRolePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2896,
+                            "id": 2914,
                             "name": "ReadRolePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2904,
+                            "id": 2922,
                             "name": "ListRolesPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2900,
+                            "id": 2918,
                             "name": "UpdateRolePermission"
                         },
                         {
@@ -364,11 +364,11 @@
             "group": null
         },
         {
-            "id": 2875,
+            "id": 2893,
             "order": 9999,
             "name": "CountEventPermission",
             "reflection": {
-                "id": 2875,
+                "id": 2893,
                 "name": "CountEventPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -385,7 +385,7 @@
                 },
                 "children": [
                     {
-                        "id": 2877,
+                        "id": 2895,
                         "name": "events",
                         "kind": 1024,
                         "kindString": "Property",
@@ -421,7 +421,7 @@
                         }
                     },
                     {
-                        "id": 2878,
+                        "id": 2896,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -457,7 +457,7 @@
                         }
                     },
                     {
-                        "id": 2876,
+                        "id": 2894,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -484,9 +484,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2877,
-                            2878,
-                            2876
+                            2895,
+                            2896,
+                            2894
                         ]
                     }
                 ],
@@ -518,11 +518,11 @@
             "group": null
         },
         {
-            "id": 2831,
+            "id": 2849,
             "order": 9999,
             "name": "CreateDataPermission",
             "reflection": {
-                "id": 2831,
+                "id": 2849,
                 "name": "CreateDataPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -539,7 +539,7 @@
                 },
                 "children": [
                     {
-                        "id": 2833,
+                        "id": 2851,
                         "name": "addresses",
                         "kind": 1024,
                         "kindString": "Property",
@@ -575,7 +575,7 @@
                         }
                     },
                     {
-                        "id": 2834,
+                        "id": 2852,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -611,7 +611,7 @@
                         }
                     },
                     {
-                        "id": 2832,
+                        "id": 2850,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -638,9 +638,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2833,
-                            2834,
-                            2832
+                            2851,
+                            2852,
+                            2850
                         ]
                     }
                 ],
@@ -672,11 +672,11 @@
             "group": null
         },
         {
-            "id": 2851,
+            "id": 2869,
             "order": 9999,
             "name": "CreateFilePermission",
             "reflection": {
-                "id": 2851,
+                "id": 2869,
                 "name": "CreateFilePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -693,7 +693,7 @@
                 },
                 "children": [
                     {
-                        "id": 2854,
+                        "id": 2872,
                         "name": "allowedMimeTypes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -733,7 +733,7 @@
                         }
                     },
                     {
-                        "id": 2853,
+                        "id": 2871,
                         "name": "maxFileSizeInBytes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -761,7 +761,7 @@
                         }
                     },
                     {
-                        "id": 2855,
+                        "id": 2873,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -797,7 +797,7 @@
                         }
                     },
                     {
-                        "id": 2852,
+                        "id": 2870,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -824,10 +824,10 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2854,
-                            2853,
-                            2855,
-                            2852
+                            2872,
+                            2871,
+                            2873,
+                            2870
                         ]
                     }
                 ],
@@ -859,11 +859,11 @@
             "group": null
         },
         {
-            "id": 2847,
+            "id": 2865,
             "order": 9999,
             "name": "DeleteDataPermission",
             "reflection": {
-                "id": 2847,
+                "id": 2865,
                 "name": "DeleteDataPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -880,7 +880,7 @@
                 },
                 "children": [
                     {
-                        "id": 2849,
+                        "id": 2867,
                         "name": "addresses",
                         "kind": 1024,
                         "kindString": "Property",
@@ -916,7 +916,7 @@
                         }
                     },
                     {
-                        "id": 2850,
+                        "id": 2868,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -952,7 +952,7 @@
                         }
                     },
                     {
-                        "id": 2848,
+                        "id": 2866,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -979,9 +979,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2849,
-                            2850,
-                            2848
+                            2867,
+                            2868,
+                            2866
                         ]
                     }
                 ],
@@ -1013,11 +1013,11 @@
             "group": null
         },
         {
-            "id": 2866,
+            "id": 2884,
             "order": 9999,
             "name": "DeleteFilePermission",
             "reflection": {
-                "id": 2866,
+                "id": 2884,
                 "name": "DeleteFilePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1034,7 +1034,7 @@
                 },
                 "children": [
                     {
-                        "id": 2869,
+                        "id": 2887,
                         "name": "allowedMimeTypes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1074,7 +1074,7 @@
                         }
                     },
                     {
-                        "id": 2868,
+                        "id": 2886,
                         "name": "maxFileSizeInBytes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1102,7 +1102,7 @@
                         }
                     },
                     {
-                        "id": 2870,
+                        "id": 2888,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1138,7 +1138,7 @@
                         }
                     },
                     {
-                        "id": 2867,
+                        "id": 2885,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1165,10 +1165,10 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2869,
-                            2868,
-                            2870,
-                            2867
+                            2887,
+                            2886,
+                            2888,
+                            2885
                         ]
                     }
                 ],
@@ -1200,11 +1200,11 @@
             "group": null
         },
         {
-            "id": 2908,
+            "id": 2926,
             "order": 9999,
             "name": "GrantPermissionToPolicyPermission",
             "reflection": {
-                "id": 2908,
+                "id": 2926,
                 "name": "GrantPermissionToPolicyPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1221,7 +1221,7 @@
                 },
                 "children": [
                     {
-                        "id": 2910,
+                        "id": 2928,
                         "name": "policies",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1257,7 +1257,7 @@
                         }
                     },
                     {
-                        "id": 2911,
+                        "id": 2929,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1293,7 +1293,7 @@
                         }
                     },
                     {
-                        "id": 2909,
+                        "id": 2927,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1320,9 +1320,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2910,
-                            2911,
-                            2909
+                            2928,
+                            2929,
+                            2927
                         ]
                     }
                 ],
@@ -1354,11 +1354,11 @@
             "group": null
         },
         {
-            "id": 2883,
+            "id": 2901,
             "order": 9999,
             "name": "GrantRolePermission",
             "reflection": {
-                "id": 2883,
+                "id": 2901,
                 "name": "GrantRolePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1375,7 +1375,7 @@
                 },
                 "children": [
                     {
-                        "id": 2886,
+                        "id": 2904,
                         "name": "instances",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1406,7 +1406,7 @@
                         }
                     },
                     {
-                        "id": 2887,
+                        "id": 2905,
                         "name": "maxDurationMs",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1429,659 +1429,6 @@
                             "name": "number"
                         }
                     },
-                    {
-                        "id": 2889,
-                        "name": "role",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "The role that this permission is can be performed by.",
-                            "text": "If true, then the permission is valid for all roles. (everyone)\nIf a string, then the permission is valid for that specific role.\n",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "union",
-                            "types": [
-                                {
-                                    "type": "intrinsic",
-                                    "name": "string"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": true
-                                }
-                            ]
-                        },
-                        "inheritedFrom": {
-                            "type": "reference",
-                            "name": "RolePermission.role"
-                        }
-                    },
-                    {
-                        "id": 2888,
-                        "name": "roles",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "The roles that can be manipulated.",
-                            "text": "If true, then all roles are allowed.\nIf a string, then it should be a Regular Expression that matches only roles that are allowed to be manipulated.\n",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 527,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "union",
-                            "types": [
-                                {
-                                    "type": "intrinsic",
-                                    "name": "string"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": true
-                                }
-                            ]
-                        },
-                        "inheritedFrom": {
-                            "type": "reference",
-                            "name": "RolePermission.roles"
-                        }
-                    },
-                    {
-                        "id": 2884,
-                        "name": "type",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 542,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "literal",
-                            "value": "role.grant"
-                        },
-                        "overwrites": {
-                            "type": "reference",
-                            "name": "RolePermission.type"
-                        }
-                    },
-                    {
-                        "id": 2885,
-                        "name": "userIds",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "What user IDs can the role be granted to?\nIf true, then the role can be granted to anyone.\nIf false, then the role cannot be granted to a user.\nIf an array of strings, then the role can only be granted to the users with the given IDs.",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 550,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "union",
-                            "types": [
-                                {
-                                    "type": "intrinsic",
-                                    "name": "boolean"
-                                },
-                                {
-                                    "type": "array",
-                                    "elementType": {
-                                        "type": "intrinsic",
-                                        "name": "string"
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                ],
-                "groups": [
-                    {
-                        "title": "Properties",
-                        "kind": 1024,
-                        "children": [
-                            2886,
-                            2887,
-                            2889,
-                            2888,
-                            2884,
-                            2885
-                        ]
-                    }
-                ],
-                "sources": [
-                    {
-                        "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 541,
-                        "character": 17
-                    }
-                ],
-                "extendedTypes": [
-                    {
-                        "type": "reference",
-                        "name": "RolePermission"
-                    }
-                ]
-            },
-            "comment": {
-                "shortText": "Defines an interface that describes a permission to grant a role.",
-                "text": "",
-                "tags": [
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "types/permissions\n"
-                    }
-                ]
-            },
-            "group": null
-        },
-        {
-            "id": 2871,
-            "order": 9999,
-            "name": "IncrementEventPermission",
-            "reflection": {
-                "id": 2871,
-                "name": "IncrementEventPermission",
-                "kind": 256,
-                "kindString": "Interface",
-                "flags": {},
-                "comment": {
-                    "shortText": "Defines an interface that describes a permission to be able to increment an event record.",
-                    "tags": [
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/permissions\n"
-                        }
-                    ]
-                },
-                "children": [
-                    {
-                        "id": 2873,
-                        "name": "events",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "The events that can be manipulated.",
-                            "text": "If true, then all events are allowed.\nIf a string, then it should be a Regular Expression that matches only events that are allowed to be created.\n",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 316,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "union",
-                            "types": [
-                                {
-                                    "type": "intrinsic",
-                                    "name": "string"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": true
-                                }
-                            ]
-                        },
-                        "inheritedFrom": {
-                            "type": "reference",
-                            "name": "EventPermission.events"
-                        }
-                    },
-                    {
-                        "id": 2874,
-                        "name": "role",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "The role that this permission is can be performed by.",
-                            "text": "If true, then the permission is valid for all roles. (everyone)\nIf a string, then the permission is valid for that specific role.\n",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "union",
-                            "types": [
-                                {
-                                    "type": "intrinsic",
-                                    "name": "string"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": true
-                                }
-                            ]
-                        },
-                        "inheritedFrom": {
-                            "type": "reference",
-                            "name": "EventPermission.role"
-                        }
-                    },
-                    {
-                        "id": 2872,
-                        "name": "type",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 331,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "literal",
-                            "value": "event.increment"
-                        },
-                        "overwrites": {
-                            "type": "reference",
-                            "name": "EventPermission.type"
-                        }
-                    }
-                ],
-                "groups": [
-                    {
-                        "title": "Properties",
-                        "kind": 1024,
-                        "children": [
-                            2873,
-                            2874,
-                            2872
-                        ]
-                    }
-                ],
-                "sources": [
-                    {
-                        "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 330,
-                        "character": 17
-                    }
-                ],
-                "extendedTypes": [
-                    {
-                        "type": "reference",
-                        "name": "EventPermission"
-                    }
-                ]
-            },
-            "comment": {
-                "shortText": "Defines an interface that describes a permission to be able to increment an event record.",
-                "text": "",
-                "tags": [
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "types/permissions\n"
-                    }
-                ]
-            },
-            "group": null
-        },
-        {
-            "id": 2843,
-            "order": 9999,
-            "name": "ListDataPermission",
-            "reflection": {
-                "id": 2843,
-                "name": "ListDataPermission",
-                "kind": 256,
-                "kindString": "Interface",
-                "flags": {},
-                "comment": {
-                    "shortText": "Defines an interface that describes a permission to be able to list data for a record marker.",
-                    "tags": [
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/permissions\n"
-                        }
-                    ]
-                },
-                "children": [
-                    {
-                        "id": 2845,
-                        "name": "addresses",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "The addresses that can be manipulated.",
-                            "text": "If true, then all addresses are allowed.\nIf a string, then it should be a Regular Expression that matches only addresses that are allowed to be created.\n",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 106,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "union",
-                            "types": [
-                                {
-                                    "type": "intrinsic",
-                                    "name": "string"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": true
-                                }
-                            ]
-                        },
-                        "inheritedFrom": {
-                            "type": "reference",
-                            "name": "DataPermission.addresses"
-                        }
-                    },
-                    {
-                        "id": 2846,
-                        "name": "role",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "The role that this permission is can be performed by.",
-                            "text": "If true, then the permission is valid for all roles. (everyone)\nIf a string, then the permission is valid for that specific role.\n",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "union",
-                            "types": [
-                                {
-                                    "type": "intrinsic",
-                                    "name": "string"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": true
-                                }
-                            ]
-                        },
-                        "inheritedFrom": {
-                            "type": "reference",
-                            "name": "DataPermission.role"
-                        }
-                    },
-                    {
-                        "id": 2844,
-                        "name": "type",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 194,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "literal",
-                            "value": "data.list"
-                        },
-                        "overwrites": {
-                            "type": "reference",
-                            "name": "DataPermission.type"
-                        }
-                    }
-                ],
-                "groups": [
-                    {
-                        "title": "Properties",
-                        "kind": 1024,
-                        "children": [
-                            2845,
-                            2846,
-                            2844
-                        ]
-                    }
-                ],
-                "sources": [
-                    {
-                        "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 193,
-                        "character": 17
-                    }
-                ],
-                "extendedTypes": [
-                    {
-                        "type": "reference",
-                        "name": "DataPermission"
-                    }
-                ]
-            },
-            "comment": {
-                "shortText": "Defines an interface that describes a permission to be able to list data for a record marker.",
-                "text": "",
-                "tags": [
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "types/permissions\n"
-                    }
-                ]
-            },
-            "group": null
-        },
-        {
-            "id": 2928,
-            "order": 9999,
-            "name": "ListPoliciesPermission",
-            "reflection": {
-                "id": 2928,
-                "name": "ListPoliciesPermission",
-                "kind": 256,
-                "kindString": "Interface",
-                "flags": {},
-                "comment": {
-                    "shortText": "Defines an interface that describes a permission to be able to list policies.",
-                    "tags": [
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/permissions\n"
-                        }
-                    ]
-                },
-                "children": [
-                    {
-                        "id": 2930,
-                        "name": "policies",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "The policies that can be manipulated.",
-                            "text": "If true, then all policies are allowed.\nIf a string, then it should be a Regular Expression that matches only policies that are allowed to be manipulated.\n",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 390,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "union",
-                            "types": [
-                                {
-                                    "type": "intrinsic",
-                                    "name": "string"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": true
-                                }
-                            ]
-                        },
-                        "inheritedFrom": {
-                            "type": "reference",
-                            "name": "PolicyPermission.policies"
-                        }
-                    },
-                    {
-                        "id": 2931,
-                        "name": "role",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "The role that this permission is can be performed by.",
-                            "text": "If true, then the permission is valid for all roles. (everyone)\nIf a string, then the permission is valid for that specific role.\n",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "union",
-                            "types": [
-                                {
-                                    "type": "intrinsic",
-                                    "name": "string"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": true
-                                }
-                            ]
-                        },
-                        "inheritedFrom": {
-                            "type": "reference",
-                            "name": "PolicyPermission.role"
-                        }
-                    },
-                    {
-                        "id": 2929,
-                        "name": "type",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 426,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "literal",
-                            "value": "policy.list"
-                        },
-                        "overwrites": {
-                            "type": "reference",
-                            "name": "PolicyPermission.type"
-                        }
-                    }
-                ],
-                "groups": [
-                    {
-                        "title": "Properties",
-                        "kind": 1024,
-                        "children": [
-                            2930,
-                            2931,
-                            2929
-                        ]
-                    }
-                ],
-                "sources": [
-                    {
-                        "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 425,
-                        "character": 17
-                    }
-                ],
-                "extendedTypes": [
-                    {
-                        "type": "reference",
-                        "name": "PolicyPermission"
-                    }
-                ]
-            },
-            "comment": {
-                "shortText": "Defines an interface that describes a permission to be able to list policies.",
-                "text": "",
-                "tags": [
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "types/permissions\n"
-                    }
-                ]
-            },
-            "group": null
-        },
-        {
-            "id": 2904,
-            "order": 9999,
-            "name": "ListRolesPermission",
-            "reflection": {
-                "id": 2904,
-                "name": "ListRolesPermission",
-                "kind": 256,
-                "kindString": "Interface",
-                "flags": {},
-                "comment": {
-                    "shortText": "Defines an interface that describes a permission to list the available roles.",
-                    "tags": [
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/permissions\n"
-                        }
-                    ]
-                },
-                "children": [
                     {
                         "id": 2907,
                         "name": "role",
@@ -2155,7 +1502,7 @@
                         }
                     },
                     {
-                        "id": 2905,
+                        "id": 2902,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2163,17 +1510,51 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 652,
+                                "line": 542,
                                 "character": 4
                             }
                         ],
                         "type": {
                             "type": "literal",
-                            "value": "role.list"
+                            "value": "role.grant"
                         },
                         "overwrites": {
                             "type": "reference",
                             "name": "RolePermission.type"
+                        }
+                    },
+                    {
+                        "id": 2903,
+                        "name": "userIds",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "What user IDs can the role be granted to?\nIf true, then the role can be granted to anyone.\nIf false, then the role cannot be granted to a user.\nIf an array of strings, then the role can only be granted to the users with the given IDs.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/PolicyPermissions.ts",
+                                "line": 550,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "boolean"
+                                },
+                                {
+                                    "type": "array",
+                                    "elementType": {
+                                        "type": "intrinsic",
+                                        "name": "string"
+                                    }
+                                }
+                            ]
                         }
                     }
                 ],
@@ -2182,16 +1563,19 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
+                            2904,
+                            2905,
                             2907,
                             2906,
-                            2905
+                            2902,
+                            2903
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 651,
+                        "line": 541,
                         "character": 17
                     }
                 ],
@@ -2203,7 +1587,7 @@
                 ]
             },
             "comment": {
-                "shortText": "Defines an interface that describes a permission to list the available roles.",
+                "shortText": "Defines an interface that describes a permission to grant a role.",
                 "text": "",
                 "tags": [
                     {
@@ -2216,17 +1600,17 @@
             "group": null
         },
         {
-            "id": 2835,
+            "id": 2889,
             "order": 9999,
-            "name": "ReadDataPermission",
+            "name": "IncrementEventPermission",
             "reflection": {
-                "id": 2835,
-                "name": "ReadDataPermission",
+                "id": 2889,
+                "name": "IncrementEventPermission",
                 "kind": 256,
                 "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that describes a permission to be able to read data for a record marker.",
+                    "shortText": "Defines an interface that describes a permission to be able to increment an event record.",
                     "tags": [
                         {
                             "tag": "dochash",
@@ -2237,7 +1621,161 @@
                 },
                 "children": [
                     {
-                        "id": 2837,
+                        "id": 2891,
+                        "name": "events",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The events that can be manipulated.",
+                            "text": "If true, then all events are allowed.\nIf a string, then it should be a Regular Expression that matches only events that are allowed to be created.\n",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/PolicyPermissions.ts",
+                                "line": 316,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": true
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "EventPermission.events"
+                        }
+                    },
+                    {
+                        "id": 2892,
+                        "name": "role",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The role that this permission is can be performed by.",
+                            "text": "If true, then the permission is valid for all roles. (everyone)\nIf a string, then the permission is valid for that specific role.\n",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/PolicyPermissions.ts",
+                                "line": 86,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": true
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "EventPermission.role"
+                        }
+                    },
+                    {
+                        "id": 2890,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/PolicyPermissions.ts",
+                                "line": 331,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "event.increment"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "EventPermission.type"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2891,
+                            2892,
+                            2890
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-records/PolicyPermissions.ts",
+                        "line": 330,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "EventPermission"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines an interface that describes a permission to be able to increment an event record.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "types/permissions\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2861,
+            "order": 9999,
+            "name": "ListDataPermission",
+            "reflection": {
+                "id": 2861,
+                "name": "ListDataPermission",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines an interface that describes a permission to be able to list data for a record marker.",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "types/permissions\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2863,
                         "name": "addresses",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2273,7 +1811,7 @@
                         }
                     },
                     {
-                        "id": 2838,
+                        "id": 2864,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2309,7 +1847,469 @@
                         }
                     },
                     {
-                        "id": 2836,
+                        "id": 2862,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/PolicyPermissions.ts",
+                                "line": 194,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "data.list"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "DataPermission.type"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2863,
+                            2864,
+                            2862
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-records/PolicyPermissions.ts",
+                        "line": 193,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "DataPermission"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines an interface that describes a permission to be able to list data for a record marker.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "types/permissions\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2946,
+            "order": 9999,
+            "name": "ListPoliciesPermission",
+            "reflection": {
+                "id": 2946,
+                "name": "ListPoliciesPermission",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines an interface that describes a permission to be able to list policies.",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "types/permissions\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2948,
+                        "name": "policies",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The policies that can be manipulated.",
+                            "text": "If true, then all policies are allowed.\nIf a string, then it should be a Regular Expression that matches only policies that are allowed to be manipulated.\n",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/PolicyPermissions.ts",
+                                "line": 390,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": true
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "PolicyPermission.policies"
+                        }
+                    },
+                    {
+                        "id": 2949,
+                        "name": "role",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The role that this permission is can be performed by.",
+                            "text": "If true, then the permission is valid for all roles. (everyone)\nIf a string, then the permission is valid for that specific role.\n",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/PolicyPermissions.ts",
+                                "line": 86,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": true
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "PolicyPermission.role"
+                        }
+                    },
+                    {
+                        "id": 2947,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/PolicyPermissions.ts",
+                                "line": 426,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "policy.list"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "PolicyPermission.type"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2948,
+                            2949,
+                            2947
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-records/PolicyPermissions.ts",
+                        "line": 425,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "PolicyPermission"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines an interface that describes a permission to be able to list policies.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "types/permissions\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2922,
+            "order": 9999,
+            "name": "ListRolesPermission",
+            "reflection": {
+                "id": 2922,
+                "name": "ListRolesPermission",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines an interface that describes a permission to list the available roles.",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "types/permissions\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2925,
+                        "name": "role",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The role that this permission is can be performed by.",
+                            "text": "If true, then the permission is valid for all roles. (everyone)\nIf a string, then the permission is valid for that specific role.\n",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/PolicyPermissions.ts",
+                                "line": 86,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": true
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "RolePermission.role"
+                        }
+                    },
+                    {
+                        "id": 2924,
+                        "name": "roles",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The roles that can be manipulated.",
+                            "text": "If true, then all roles are allowed.\nIf a string, then it should be a Regular Expression that matches only roles that are allowed to be manipulated.\n",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/PolicyPermissions.ts",
+                                "line": 527,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": true
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "RolePermission.roles"
+                        }
+                    },
+                    {
+                        "id": 2923,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/PolicyPermissions.ts",
+                                "line": 652,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "role.list"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "RolePermission.type"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2925,
+                            2924,
+                            2923
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-records/PolicyPermissions.ts",
+                        "line": 651,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "RolePermission"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines an interface that describes a permission to list the available roles.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "types/permissions\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2853,
+            "order": 9999,
+            "name": "ReadDataPermission",
+            "reflection": {
+                "id": 2853,
+                "name": "ReadDataPermission",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines an interface that describes a permission to be able to read data for a record marker.",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "types/permissions\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2855,
+                        "name": "addresses",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The addresses that can be manipulated.",
+                            "text": "If true, then all addresses are allowed.\nIf a string, then it should be a Regular Expression that matches only addresses that are allowed to be created.\n",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/PolicyPermissions.ts",
+                                "line": 106,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": true
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "DataPermission.addresses"
+                        }
+                    },
+                    {
+                        "id": 2856,
+                        "name": "role",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The role that this permission is can be performed by.",
+                            "text": "If true, then the permission is valid for all roles. (everyone)\nIf a string, then the permission is valid for that specific role.\n",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/PolicyPermissions.ts",
+                                "line": 86,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": true
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "DataPermission.role"
+                        }
+                    },
+                    {
+                        "id": 2854,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2336,9 +2336,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2837,
-                            2838,
-                            2836
+                            2855,
+                            2856,
+                            2854
                         ]
                     }
                 ],
@@ -2370,11 +2370,11 @@
             "group": null
         },
         {
-            "id": 2856,
+            "id": 2874,
             "order": 9999,
             "name": "ReadFilePermission",
             "reflection": {
-                "id": 2856,
+                "id": 2874,
                 "name": "ReadFilePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2391,7 +2391,7 @@
                 },
                 "children": [
                     {
-                        "id": 2859,
+                        "id": 2877,
                         "name": "allowedMimeTypes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2431,7 +2431,7 @@
                         }
                     },
                     {
-                        "id": 2858,
+                        "id": 2876,
                         "name": "maxFileSizeInBytes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2459,7 +2459,7 @@
                         }
                     },
                     {
-                        "id": 2860,
+                        "id": 2878,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2495,7 +2495,7 @@
                         }
                     },
                     {
-                        "id": 2857,
+                        "id": 2875,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2522,10 +2522,10 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2859,
-                            2858,
-                            2860,
-                            2857
+                            2877,
+                            2876,
+                            2878,
+                            2875
                         ]
                     }
                 ],
@@ -2557,11 +2557,11 @@
             "group": null
         },
         {
-            "id": 2924,
+            "id": 2942,
             "order": 9999,
             "name": "ReadPolicyPermission",
             "reflection": {
-                "id": 2924,
+                "id": 2942,
                 "name": "ReadPolicyPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2578,7 +2578,7 @@
                 },
                 "children": [
                     {
-                        "id": 2926,
+                        "id": 2944,
                         "name": "policies",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2614,7 +2614,7 @@
                         }
                     },
                     {
-                        "id": 2927,
+                        "id": 2945,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2650,7 +2650,7 @@
                         }
                     },
                     {
-                        "id": 2925,
+                        "id": 2943,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2677,9 +2677,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2926,
-                            2927,
-                            2925
+                            2944,
+                            2945,
+                            2943
                         ]
                     }
                 ],
@@ -2711,11 +2711,11 @@
             "group": null
         },
         {
-            "id": 2896,
+            "id": 2914,
             "order": 9999,
             "name": "ReadRolePermission",
             "reflection": {
-                "id": 2896,
+                "id": 2914,
                 "name": "ReadRolePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2732,7 +2732,7 @@
                 },
                 "children": [
                     {
-                        "id": 2899,
+                        "id": 2917,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2768,7 +2768,7 @@
                         }
                     },
                     {
-                        "id": 2898,
+                        "id": 2916,
                         "name": "roles",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2804,7 +2804,7 @@
                         }
                     },
                     {
-                        "id": 2897,
+                        "id": 2915,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2831,9 +2831,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2899,
-                            2898,
-                            2897
+                            2917,
+                            2916,
+                            2915
                         ]
                     }
                 ],
@@ -2865,11 +2865,11 @@
             "group": null
         },
         {
-            "id": 2912,
+            "id": 2930,
             "order": 9999,
             "name": "RevokePermissionFromPolicyPermission",
             "reflection": {
-                "id": 2912,
+                "id": 2930,
                 "name": "RevokePermissionFromPolicyPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2886,7 +2886,7 @@
                 },
                 "children": [
                     {
-                        "id": 2914,
+                        "id": 2932,
                         "name": "policies",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2922,7 +2922,7 @@
                         }
                     },
                     {
-                        "id": 2915,
+                        "id": 2933,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2958,7 +2958,7 @@
                         }
                     },
                     {
-                        "id": 2913,
+                        "id": 2931,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2985,9 +2985,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2914,
-                            2915,
-                            2913
+                            2932,
+                            2933,
+                            2931
                         ]
                     }
                 ],
@@ -3019,11 +3019,11 @@
             "group": null
         },
         {
-            "id": 2890,
+            "id": 2908,
             "order": 9999,
             "name": "RevokeRolePermission",
             "reflection": {
-                "id": 2890,
+                "id": 2908,
                 "name": "RevokeRolePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3040,7 +3040,7 @@
                 },
                 "children": [
                     {
-                        "id": 2893,
+                        "id": 2911,
                         "name": "instances",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3071,7 +3071,7 @@
                         }
                     },
                     {
-                        "id": 2895,
+                        "id": 2913,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3107,7 +3107,7 @@
                         }
                     },
                     {
-                        "id": 2894,
+                        "id": 2912,
                         "name": "roles",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3143,7 +3143,7 @@
                         }
                     },
                     {
-                        "id": 2891,
+                        "id": 2909,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3165,7 +3165,7 @@
                         }
                     },
                     {
-                        "id": 2892,
+                        "id": 2910,
                         "name": "userIds",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3204,11 +3204,11 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2893,
-                            2895,
-                            2894,
-                            2891,
-                            2892
+                            2911,
+                            2913,
+                            2912,
+                            2909,
+                            2910
                         ]
                     }
                 ],
@@ -3240,11 +3240,11 @@
             "group": null
         },
         {
-            "id": 2920,
+            "id": 2938,
             "order": 9999,
             "name": "UnassignPolicyPermission",
             "reflection": {
-                "id": 2920,
+                "id": 2938,
                 "name": "UnassignPolicyPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3261,7 +3261,7 @@
                 },
                 "children": [
                     {
-                        "id": 2922,
+                        "id": 2940,
                         "name": "policies",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3297,7 +3297,7 @@
                         }
                     },
                     {
-                        "id": 2923,
+                        "id": 2941,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3333,7 +3333,7 @@
                         }
                     },
                     {
-                        "id": 2921,
+                        "id": 2939,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3360,9 +3360,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2922,
-                            2923,
-                            2921
+                            2940,
+                            2941,
+                            2939
                         ]
                     }
                 ],
@@ -3394,11 +3394,11 @@
             "group": null
         },
         {
-            "id": 2839,
+            "id": 2857,
             "order": 9999,
             "name": "UpdateDataPermission",
             "reflection": {
-                "id": 2839,
+                "id": 2857,
                 "name": "UpdateDataPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3415,7 +3415,7 @@
                 },
                 "children": [
                     {
-                        "id": 2841,
+                        "id": 2859,
                         "name": "addresses",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3451,7 +3451,7 @@
                         }
                     },
                     {
-                        "id": 2842,
+                        "id": 2860,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3487,7 +3487,7 @@
                         }
                     },
                     {
-                        "id": 2840,
+                        "id": 2858,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3514,9 +3514,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2841,
-                            2842,
-                            2840
+                            2859,
+                            2860,
+                            2858
                         ]
                     }
                 ],
@@ -3548,11 +3548,11 @@
             "group": null
         },
         {
-            "id": 2879,
+            "id": 2897,
             "order": 9999,
             "name": "UpdateEventPermission",
             "reflection": {
-                "id": 2879,
+                "id": 2897,
                 "name": "UpdateEventPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3569,7 +3569,7 @@
                 },
                 "children": [
                     {
-                        "id": 2881,
+                        "id": 2899,
                         "name": "events",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3605,7 +3605,7 @@
                         }
                     },
                     {
-                        "id": 2882,
+                        "id": 2900,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3641,7 +3641,7 @@
                         }
                     },
                     {
-                        "id": 2880,
+                        "id": 2898,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3668,9 +3668,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2881,
-                            2882,
-                            2880
+                            2899,
+                            2900,
+                            2898
                         ]
                     }
                 ],
@@ -3702,11 +3702,11 @@
             "group": null
         },
         {
-            "id": 2861,
+            "id": 2879,
             "order": 9999,
             "name": "UpdateFilePermission",
             "reflection": {
-                "id": 2861,
+                "id": 2879,
                 "name": "UpdateFilePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3723,7 +3723,7 @@
                 },
                 "children": [
                     {
-                        "id": 2864,
+                        "id": 2882,
                         "name": "allowedMimeTypes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3763,7 +3763,7 @@
                         }
                     },
                     {
-                        "id": 2863,
+                        "id": 2881,
                         "name": "maxFileSizeInBytes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3791,7 +3791,7 @@
                         }
                     },
                     {
-                        "id": 2865,
+                        "id": 2883,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3827,7 +3827,7 @@
                         }
                     },
                     {
-                        "id": 2862,
+                        "id": 2880,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3854,10 +3854,10 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2864,
-                            2863,
-                            2865,
-                            2862
+                            2882,
+                            2881,
+                            2883,
+                            2880
                         ]
                     }
                 ],
@@ -3889,11 +3889,11 @@
             "group": null
         },
         {
-            "id": 2900,
+            "id": 2918,
             "order": 9999,
             "name": "UpdateRolePermission",
             "reflection": {
-                "id": 2900,
+                "id": 2918,
                 "name": "UpdateRolePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3910,7 +3910,7 @@
                 },
                 "children": [
                     {
-                        "id": 2903,
+                        "id": 2921,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3946,7 +3946,7 @@
                         }
                     },
                     {
-                        "id": 2902,
+                        "id": 2920,
                         "name": "roles",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3982,7 +3982,7 @@
                         }
                     },
                     {
-                        "id": 2901,
+                        "id": 2919,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -4009,9 +4009,9 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2903,
-                            2902,
-                            2901
+                            2921,
+                            2920,
+                            2919
                         ]
                     }
                 ],
@@ -4045,287 +4045,305 @@
     ],
     "references": {
         "Quaternion": "types/math/rotations",
-        "id-3179": "Quaternion",
+        "id-3197": "Quaternion",
         "Rotation": "types/math/rotations",
-        "id-3211": "Rotation",
+        "id-3229": "Rotation",
         "Vector2": "types/math/vectors",
-        "id-3045": "Vector2",
+        "id-3063": "Vector2",
         "Vector3": "types/math/vectors",
-        "id-3102": "Vector3",
+        "id-3120": "Vector3",
         "AddCountFailure": "types/records/events",
-        "id-2992": "AddCountFailure",
+        "id-3010": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-2987": "AddCountSuccess",
+        "id-3005": "AddCountSuccess",
         "AnimateTagOptions": "types/animation",
-        "id-2103": "AnimateTagOptions",
+        "id-2099": "AnimateTagOptions",
         "AttachDebuggerOptions": "types/debuggers/common",
-        "id-2478": "AttachDebuggerOptions",
+        "id-2474": "AttachDebuggerOptions",
         "CasualOSDevice": "types/os",
-        "id-2811": "CasualOSDevice",
+        "id-2829": "CasualOSDevice",
         "CasualOSVersion": "types/os",
-        "id-2803": "CasualOSVersion",
+        "id-2821": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
-        "id-3257": "AxisAndAngle",
+        "id-3275": "AxisAndAngle",
         "BotTagMasks": "types/core",
-        "id-2780": "BotTagMasks",
+        "id-2798": "BotTagMasks",
         "BotTags": "types/core",
-        "id-2695": "BotTags",
+        "id-2713": "BotTags",
         "BotState": "types/core",
-        "id-2793": "BotState",
+        "id-2811": "BotState",
         "CompiledBotListeners": "types/core",
-        "id-2774": "CompiledBotListeners",
+        "id-2792": "CompiledBotListeners",
         "ConvertGeolocationToWhat3WordsOptions": "types/os",
-        "id-2513": "ConvertGeolocationToWhat3WordsOptions",
+        "id-2516": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-2825": "CreatePublicRecordKeyFailure",
+        "id-2843": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-2821": "CreatePublicRecordKeySuccess",
+        "id-2839": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
-        "id-2431": "DebuggerCallFrame",
+        "id-2427": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
-        "id-2466": "DebuggerFunctionLocation",
+        "id-2462": "DebuggerFunctionLocation",
         "DebuggerPause": "types/debuggers/common",
-        "id-2460": "DebuggerPause",
+        "id-2456": "DebuggerPause",
         "DebuggerTagMaskUpdate": "types/debuggers/common",
-        "id-2439": "DebuggerTagMaskUpdate",
+        "id-2435": "DebuggerTagMaskUpdate",
         "DebuggerTagUpdate": "types/debuggers/common",
-        "id-2445": "DebuggerTagUpdate",
+        "id-2441": "DebuggerTagUpdate",
         "DebuggerVariable": "types/debuggers/common",
-        "id-2472": "DebuggerVariable",
+        "id-2468": "DebuggerVariable",
+        "Easing": "types/animation",
+        "id-2496": "Easing",
         "EnableXROptions": "types/os",
-        "id-2587": "EnableXROptions",
+        "id-2590": "EnableXROptions",
         "EraseDataFailure": "types/records/data",
-        "id-2960": "EraseDataFailure",
+        "id-2978": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-2956": "EraseDataSuccess",
+        "id-2974": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-2982": "EraseFileFailure",
+        "id-3000": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-2978": "EraseFileSuccess",
+        "id-2996": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
-        "id-3260": "EulerAnglesRotation",
+        "id-3278": "EulerAnglesRotation",
         "FocusOnOptions": "types/os",
-        "id-2547": "FocusOnOptions",
+        "id-2550": "FocusOnOptions",
         "FocusOnRotation": "types/os",
-        "id-2559": "FocusOnRotation",
+        "id-2562": "FocusOnRotation",
         "FormAnimationData": "types/os",
-        "id-2605": "FormAnimationData",
+        "id-2608": "FormAnimationData",
         "FromToRotation": "types/math/rotations",
-        "id-3254": "FromToRotation",
+        "id-3272": "FromToRotation",
         "GetCountFailure": "types/records/events",
-        "id-3003": "GetCountFailure",
+        "id-3021": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-2997": "GetCountSuccess",
+        "id-3015": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-2951": "GetDataFailure",
+        "id-2969": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-2942": "GetDataSuccess",
+        "id-2960": "GetDataSuccess",
         "GetRoomOptionsFailure": "types/os",
-        "id-2193": "GetRoomOptionsFailure",
+        "id-2189": "GetRoomOptionsFailure",
         "GetRoomOptionsSuccess": "types/os",
-        "id-2189": "GetRoomOptionsSuccess",
+        "id-2185": "GetRoomOptionsSuccess",
         "GetRoomRemoteOptionsFailure": "types/os",
-        "id-2236": "GetRoomRemoteOptionsFailure",
+        "id-2232": "GetRoomRemoteOptionsFailure",
         "GetRoomRemoteOptionsSuccess": "types/os",
-        "id-2231": "GetRoomRemoteOptionsSuccess",
+        "id-2227": "GetRoomRemoteOptionsSuccess",
         "GetRoomTrackOptionsFailure": "types/os",
-        "id-2212": "GetRoomTrackOptionsFailure",
+        "id-2208": "GetRoomTrackOptionsFailure",
         "GetRoomTrackOptionsSuccess": "types/os",
-        "id-2207": "GetRoomTrackOptionsSuccess",
+        "id-2203": "GetRoomTrackOptionsSuccess",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3031": "GrantMarkerPermissionFailure",
+        "id-3049": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3029": "GrantMarkerPermissionSuccess",
+        "id-3047": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3017": "GrantRoleFailure",
+        "id-3035": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3015": "GrantRoleSuccess",
+        "id-3033": "GrantRoleSuccess",
         "ImageClassifierOptions": "types/os",
-        "id-2565": "ImageClassifierOptions",
+        "id-2568": "ImageClassifierOptions",
         "InstUpdate": "types/os",
-        "id-2816": "InstUpdate",
+        "id-2834": "InstUpdate",
         "JoinRoomFailure": "types/os",
-        "id-2174": "JoinRoomFailure",
+        "id-2170": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os",
-        "id-2171": "JoinRoomSuccess",
+        "id-2167": "JoinRoomSuccess",
         "LeaveRoomFailure": "types/os",
-        "id-2183": "LeaveRoomFailure",
+        "id-2179": "LeaveRoomFailure",
         "LeaveRoomSuccess": "types/os",
-        "id-2180": "LeaveRoomSuccess",
+        "id-2176": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-2973": "ListDataFailure",
+        "id-2991": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-2965": "ListDataSuccess",
+        "id-2983": "ListDataSuccess",
         "LookRotation": "types/math/rotations",
-        "id-3277": "LookRotation",
+        "id-3295": "LookRotation",
         "MediaPermissionOptions": "types/os",
-        "id-2584": "MediaPermissionOptions",
+        "id-2587": "MediaPermissionOptions",
         "Debugger": "types/debuggers/debugger",
-        "id-2243": "Debugger",
+        "id-2239": "Debugger",
         "NormalDebuggerOptions": "types/debuggers/common",
-        "id-2450": "NormalDebuggerOptions",
+        "id-2446": "NormalDebuggerOptions",
         "ParsedBotLink": "types/core",
-        "id-2799": "ParsedBotLink",
+        "id-2817": "ParsedBotLink",
         "PartialBotState": "types/core",
-        "id-2796": "PartialBotState",
+        "id-2814": "PartialBotState",
         "PausableDebugger": "types/debuggers/pausable-debugger",
-        "id-2299": "PausableDebugger",
+        "id-2295": "PausableDebugger",
         "PausableDebuggerOptions": "types/debuggers/common",
-        "id-2455": "PausableDebuggerOptions",
+        "id-2451": "PausableDebuggerOptions",
         "PauseTrigger": "types/debuggers/common",
-        "id-2418": "PauseTrigger",
+        "id-2414": "PauseTrigger",
         "PauseTriggerOptions": "types/debuggers/common",
-        "id-2426": "PauseTriggerOptions",
+        "id-2422": "PauseTriggerOptions",
         "PossiblePauseTriggerLocation": "types/debuggers/common",
-        "id-2413": "PossiblePauseTriggerLocation",
+        "id-2409": "PossiblePauseTriggerLocation",
         "PseudoRandomNumberGenerator": "types/core",
-        "id-2480": "PseudoRandomNumberGenerator",
+        "id-2483": "PseudoRandomNumberGenerator",
         "QuaternionRotation": "types/math/rotations",
-        "id-3270": "QuaternionRotation",
+        "id-3288": "QuaternionRotation",
         "RaycastRay": "types/os",
-        "id-2167": "RaycastRay",
+        "id-2163": "RaycastRay",
         "RaycastResult": "types/os",
-        "id-2164": "RaycastResult",
+        "id-2160": "RaycastResult",
         "RecordActionOptions": "types/records/extra",
-        "id-2496": "RecordActionOptions",
+        "id-2499": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-2937": "RecordDataFailure",
+        "id-2955": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-2933": "RecordDataSuccess",
+        "id-2951": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
-        "id-2134": "RecordFileFailure",
+        "id-2130": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
-        "id-2130": "RecordFileSuccess",
+        "id-2126": "RecordFileSuccess",
+        "RecordedFile": "types/experimental",
+        "id-2652": "RecordedFile",
+        "Recording": "types/experimental",
+        "id-2650": "Recording",
+        "RecordingOptions": "types/experimental",
+        "id-2657": "RecordingOptions",
         "RegisterPrefixOptions": "types/core",
-        "id-2644": "RegisterPrefixOptions",
+        "id-2647": "RegisterPrefixOptions",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3038": "RevokeMarkerPermissionFailure",
+        "id-3056": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3036": "RevokeMarkerPermissionSuccess",
+        "id-3054": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3024": "RevokeRoleFailure",
+        "id-3042": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3022": "RevokeRoleSuccess",
+        "id-3040": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os",
-        "id-2610": "RoomJoinOptions",
+        "id-2613": "RoomJoinOptions",
         "RoomOptions": "types/os",
-        "id-2619": "RoomOptions",
+        "id-2622": "RoomOptions",
         "RoomRemoteOptions": "types/os",
-        "id-2635": "RoomRemoteOptions",
+        "id-2638": "RoomRemoteOptions",
         "RoomTrackOptions": "types/os",
-        "id-2623": "RoomTrackOptions",
+        "id-2626": "RoomTrackOptions",
         "RuntimeBot": "types/core",
-        "id-2647": "RuntimeBot",
+        "id-2665": "RuntimeBot",
         "RuntimeBotLinks": "types/core",
-        "id-2786": "RuntimeBotLinks",
+        "id-2804": "RuntimeBotLinks",
         "RuntimeBotVars": "types/core",
-        "id-2783": "RuntimeBotVars",
+        "id-2801": "RuntimeBotVars",
         "SequenceRotation": "types/math/rotations",
-        "id-3268": "SequenceRotation",
+        "id-3286": "SequenceRotation",
         "SetRoomOptionsSuccess": "types/os",
-        "id-2198": "SetRoomOptionsSuccess",
+        "id-2194": "SetRoomOptionsSuccess",
         "SetRoomTrackOptions": "types/os",
-        "id-2641": "SetRoomTrackOptions",
+        "id-2644": "SetRoomTrackOptions",
         "SetRoomTrackOptionsFailure": "types/os",
-        "id-2224": "SetRoomTrackOptionsFailure",
+        "id-2220": "SetRoomTrackOptionsFailure",
         "SetRoomTrackOptionsSuccess": "types/os",
-        "id-2219": "SetRoomTrackOptionsSuccess",
+        "id-2215": "SetRoomTrackOptionsSuccess",
         "ShareOptions": "types/os",
-        "id-2543": "ShareOptions",
+        "id-2546": "ShareOptions",
         "ShowChatOptions": "types/os",
-        "id-2537": "ShowChatOptions",
+        "id-2540": "ShowChatOptions",
         "ShowConfirmOptions": "types/os",
-        "id-2579": "ShowConfirmOptions",
+        "id-2582": "ShowConfirmOptions",
         "ShowInputOptions": "types/os",
-        "id-2570": "ShowInputOptions",
+        "id-2573": "ShowInputOptions",
         "SnapAxis": "types/os",
-        "id-2517": "SnapAxis",
+        "id-2520": "SnapAxis",
         "SnapGridTarget": "types/os",
-        "id-2139": "SnapGridTarget",
+        "id-2135": "SnapGridTarget",
         "SnapPoint": "types/os",
-        "id-2529": "SnapPoint",
+        "id-2532": "SnapPoint",
+        "SpeakTextOptions": "types/experimental",
+        "id-2479": "SpeakTextOptions",
         "StartFormAnimationOptions": "types/os",
-        "id-2589": "StartFormAnimationOptions",
+        "id-2592": "StartFormAnimationOptions",
         "StopFormAnimationOptions": "types/os",
-        "id-2602": "StopFormAnimationOptions",
+        "id-2605": "StopFormAnimationOptions",
         "SuccessfulGeolocation": "types/os",
-        "id-2499": "SuccessfulGeolocation",
+        "id-2502": "SuccessfulGeolocation",
+        "SyntheticVoice": "types/experimental",
+        "id-2661": "SyntheticVoice",
+        "TweenOptions": "types/experimental",
+        "id-2476": "TweenOptions",
         "UnsuccessfulGeolocation": "types/os",
-        "id-2509": "UnsuccessfulGeolocation",
+        "id-2512": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3010": "UpdateEventRecordFailure",
+        "id-3028": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3008": "UpdateEventRecordSuccess",
+        "id-3026": "UpdateEventRecordSuccess",
         "UploadedFile": "types/os",
-        "id-2160": "UploadedFile",
+        "id-2156": "UploadedFile",
         "WebhookOptions": "types/web",
-        "id-2084": "WebhookOptions",
+        "id-2080": "WebhookOptions",
         "WebhookResult": "types/web",
-        "id-2096": "WebhookResult",
+        "id-2092": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-2986": "AddCountResult",
+        "id-3004": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-2830": "AvailablePermissions",
+        "id-2848": "AvailablePermissions",
         "BarcodeFormat": "types/os",
-        "id-2564": "BarcodeFormat",
+        "id-2567": "BarcodeFormat",
         "BotFilter": "types/core",
-        "id-2118": "BotFilter",
+        "id-2114": "BotFilter",
         "BotSpace": "types/core",
-        "id-2770": "BotSpace",
+        "id-2788": "BotSpace",
         "CameraType": "types/os",
-        "id-2563": "CameraType",
+        "id-2566": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-2820": "CreatePublicRecordKeyResult",
+        "id-2838": "CreatePublicRecordKeyResult",
+        "EaseMode": "types/animation",
+        "id-2495": "EaseMode",
+        "EaseType": "types/animation",
+        "id-2494": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-2955": "EraseDataResult",
+        "id-2973": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-2977": "EraseFileResult",
+        "id-2995": "EraseFileResult",
         "Geolocation": "types/os",
-        "id-2498": "Geolocation",
+        "id-2501": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-2996": "GetCountResult",
+        "id-3014": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-2941": "GetDataResult",
+        "id-2959": "GetDataResult",
         "GetRoomOptionsResult": "types/os",
-        "id-2188": "GetRoomOptionsResult",
+        "id-2184": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os",
-        "id-2230": "GetRoomRemoteOptionsResult",
+        "id-2226": "GetRoomRemoteOptionsResult",
         "GetRoomTrackOptionsResult": "types/os",
-        "id-2206": "GetRoomTrackOptionsResult",
+        "id-2202": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3028": "GrantMarkerPermissionResult",
+        "id-3046": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3014": "GrantRoleResult",
+        "id-3032": "GrantRoleResult",
         "JoinRoomResult": "types/os",
-        "id-2170": "JoinRoomResult",
+        "id-2166": "JoinRoomResult",
         "LeaveRoomResult": "types/os",
-        "id-2179": "LeaveRoomResult",
+        "id-2175": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-2964": "ListDataResult",
+        "id-2982": "ListDataResult",
         "Mod": "types/core",
-        "id-2113": "Mod",
+        "id-2109": "Mod",
         "PortalType": "types/core",
-        "id-2802": "PortalType",
+        "id-2820": "PortalType",
         "PossiblePauseTriggerStates": "types/debuggers/common",
-        "id-2417": "PossiblePauseTriggerStates",
+        "id-2413": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-2932": "RecordDataResult",
+        "id-2950": "RecordDataResult",
         "RecordFileResult": "types/records/files",
-        "id-2129": "RecordFileResult",
+        "id-2125": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3035": "RevokeMarkerPermissionResult",
+        "id-3053": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3021": "RevokeRoleResult",
+        "id-3039": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os",
-        "id-2197": "SetRoomOptionsResult",
+        "id-2193": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os",
-        "id-2218": "SetRoomTrackOptionsResult",
+        "id-2214": "SetRoomTrackOptionsResult",
         "SnapTarget": "types/os",
-        "id-2536": "SnapTarget",
+        "id-2539": "SnapTarget",
         "TagFilter": "types/core",
-        "id-2114": "TagFilter",
+        "id-2110": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3007": "UpdateEventRecordResult",
+        "id-3025": "UpdateEventRecordResult",
         "animateTag-byOptions": "actions/utility",
         "id-364": "animateTag-byOptions",
         "getbot-tag": "actions/data",
@@ -4377,51 +4395,51 @@
         "byTag": "actions/bot-filters",
         "id-276": "byTag",
         "bytes.fromBase64String": "actions/bytes",
-        "id-1817": "bytes.fromBase64String",
+        "id-1813": "bytes.fromBase64String",
         "bytes.fromHexString": "actions/bytes",
-        "id-1825": "bytes.fromHexString",
+        "id-1821": "bytes.fromHexString",
         "bytes.toBase64String": "actions/bytes",
-        "id-1813": "bytes.toBase64String",
+        "id-1809": "bytes.toBase64String",
         "bytes.toHexString": "actions/bytes",
-        "id-1821": "bytes.toHexString",
+        "id-1817": "bytes.toHexString",
         "clearAnimations": "actions/utility",
         "id-378": "clearAnimations",
         "clearTagMasks": "actions/data",
         "id-106": "clearTagMasks",
         "crypto.hash-raw": "actions/crypto",
-        "id-1831": "crypto.hash-raw",
+        "id-1827": "crypto.hash-raw",
         "crypto.hash-string": "actions/crypto",
-        "id-1837": "crypto.hash-string",
+        "id-1833": "crypto.hash-string",
         "crypto.hmac-raw": "actions/crypto",
-        "id-1868": "crypto.hmac-raw",
+        "id-1864": "crypto.hmac-raw",
         "crypto.hmac-string": "actions/crypto",
-        "id-1861": "crypto.hmac-string",
+        "id-1857": "crypto.hmac-string",
         "crypto.asymmetric.decrypt": "actions/crypto",
-        "id-1926": "crypto.asymmetric.decrypt",
+        "id-1922": "crypto.asymmetric.decrypt",
         "crypto.asymmetric.encrypt": "actions/crypto",
-        "id-1921": "crypto.asymmetric.encrypt",
+        "id-1917": "crypto.asymmetric.encrypt",
         "crypto.asymmetric.isEncrypted": "actions/crypto",
-        "id-1932": "crypto.asymmetric.isEncrypted",
+        "id-1928": "crypto.asymmetric.isEncrypted",
         "crypto.asymmetric.isKeypair": "actions/crypto",
-        "id-1917": "crypto.asymmetric.isKeypair",
+        "id-1913": "crypto.asymmetric.isKeypair",
         "crypto.asymmetric.keypair": "actions/crypto",
-        "id-1913": "crypto.asymmetric.keypair",
+        "id-1909": "crypto.asymmetric.keypair",
         "crypto.encrypt": "actions/crypto",
-        "id-1897": "crypto.encrypt",
+        "id-1893": "crypto.encrypt",
         "crypto.hmacSha256": "actions/crypto",
-        "id-1887": "crypto.hmacSha256",
+        "id-1883": "crypto.hmacSha256",
         "crypto.hmacSha512": "actions/crypto",
-        "id-1892": "crypto.hmacSha512",
+        "id-1888": "crypto.hmacSha512",
         "crypto.isEncrypted": "actions/crypto",
-        "id-1907": "crypto.isEncrypted",
+        "id-1903": "crypto.isEncrypted",
         "crypto.keypair": "actions/crypto",
-        "id-1936": "crypto.keypair",
+        "id-1932": "crypto.keypair",
         "crypto.sha256": "actions/crypto",
-        "id-1853": "crypto.sha256",
+        "id-1849": "crypto.sha256",
         "crypto.sha512": "actions/crypto",
-        "id-1857": "crypto.sha512",
+        "id-1853": "crypto.sha512",
         "crypto.sign": "actions/crypto",
-        "id-1940": "crypto.sign",
+        "id-1936": "crypto.sign",
         "deleteTagMaskText": "actions/data",
         "id-133": "deleteTagMaskText",
         "deleteTagText": "actions/data",
@@ -4432,8 +4450,24 @@
         "id-318": "either",
         "os.beginAudioRecording": "actions/audio",
         "id-1647": "os.beginAudioRecording",
+        "experiment.beginRecording": "actions/experimental",
+        "id-1654": "experiment.beginRecording",
         "os.endAudioRecording": "actions/audio",
         "id-1651": "os.endAudioRecording",
+        "experiment.endRecording": "actions/experimental",
+        "id-1658": "experiment.endRecording",
+        "experiment.getAnchorPointPosition": "actions/experimental",
+        "id-1637": "experiment.getAnchorPointPosition",
+        "experiment.getVoices": "actions/experimental",
+        "id-1666": "experiment.getVoices",
+        "experiment.localFormAnimation": "actions/experimental",
+        "id-1610": "experiment.localFormAnimation",
+        "experiment.localPositionTween": "actions/experimental",
+        "id-1615": "experiment.localPositionTween",
+        "experiment.localRotationTween": "actions/experimental",
+        "id-1626": "experiment.localRotationTween",
+        "experiment.speakText": "actions/experimental",
+        "id-1661": "experiment.speakText",
         "getBotLinks": "actions/data",
         "id-194": "getBotLinks",
         "getBotPosition": "actions/data",
@@ -4465,47 +4499,47 @@
         "insertTagText": "actions/data",
         "id-111": "insertTagText",
         "math.abs": "actions/math",
-        "id-1687": "math.abs",
+        "id-1683": "math.abs",
         "math.addVectors": "actions/math",
-        "id-1757": "math.addVectors",
+        "id-1753": "math.addVectors",
         "math.areClose": "actions/math",
-        "id-1788": "math.areClose",
+        "id-1784": "math.areClose",
         "math.avg": "actions/math",
-        "id-1679": "math.avg",
+        "id-1675": "math.avg",
         "math.degreesToRadians": "actions/math",
-        "id-1713": "math.degreesToRadians",
+        "id-1709": "math.degreesToRadians",
         "math.getAnchorPointOffset": "actions/math",
-        "id-1753": "math.getAnchorPointOffset",
+        "id-1749": "math.getAnchorPointOffset",
         "math.getForwardDirection": "actions/math",
-        "id-1721": "math.getForwardDirection",
+        "id-1717": "math.getForwardDirection",
         "math.getSeededRandomNumberGenerator": "actions/math",
-        "id-1695": "math.getSeededRandomNumberGenerator",
+        "id-1691": "math.getSeededRandomNumberGenerator",
         "math.intersectPlane": "actions/math",
-        "id-1730": "math.intersectPlane",
+        "id-1726": "math.intersectPlane",
         "math.negateVector": "actions/math",
-        "id-1767": "math.negateVector",
+        "id-1763": "math.negateVector",
         "math.normalizeVector": "actions/math",
-        "id-1772": "math.normalizeVector",
+        "id-1768": "math.normalizeVector",
         "math.radiansToDegrees": "actions/math",
-        "id-1717": "math.radiansToDegrees",
+        "id-1713": "math.radiansToDegrees",
         "math.random": "actions/math",
-        "id-1708": "math.random",
+        "id-1704": "math.random",
         "math.randomInt": "actions/math",
-        "id-1703": "math.randomInt",
+        "id-1699": "math.randomInt",
         "math.scaleVector": "actions/math",
-        "id-1782": "math.scaleVector",
+        "id-1778": "math.scaleVector",
         "math.setRandomSeed": "actions/math",
-        "id-1699": "math.setRandomSeed",
+        "id-1695": "math.setRandomSeed",
         "math.sqrt": "actions/math",
-        "id-1683": "math.sqrt",
+        "id-1679": "math.sqrt",
         "math.stdDev": "actions/math",
-        "id-1691": "math.stdDev",
+        "id-1687": "math.stdDev",
         "math.subtractVectors": "actions/math",
-        "id-1762": "math.subtractVectors",
+        "id-1758": "math.subtractVectors",
         "math.sum": "actions/math",
-        "id-1675": "math.sum",
+        "id-1671": "math.sum",
         "math.vectorLength": "actions/math",
-        "id-1777": "math.vectorLength",
+        "id-1773": "math.vectorLength",
         "neighboring": "actions/bot-filters",
         "id-304": "neighboring",
         "not": "actions/bot-filters",
@@ -4540,6 +4574,8 @@
         "id-1230": "os.applyUpdatesToInst",
         "os.arSupported": "actions/xr",
         "id-548": "os.arSupported",
+        "os.bufferFormAddressGLTF": "actions/animations",
+        "id-1183": "os.bufferFormAddressGLTF",
         "os.bufferSound": "actions/audio",
         "id-749": "os.bufferSound",
         "os.calculateRayFromCamera": "actions/portals",
@@ -4829,11 +4865,11 @@
         "uuid": "actions/data",
         "id-355": "uuid",
         "web.get": "actions/web",
-        "id-1983": "web.get",
+        "id-1979": "web.get",
         "web.hook": "actions/web",
-        "id-1994": "web.hook",
+        "id-1990": "web.hook",
         "web.post": "actions/web",
-        "id-1988": "web.post",
+        "id-1984": "web.post",
         "configBot": "actions/os",
         "id-418": "configBot"
     }

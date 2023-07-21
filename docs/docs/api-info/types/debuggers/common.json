@@ -5,11 +5,11 @@
     "pageSidebarLabel": "Common",
     "contents": [
         {
-            "id": 2478,
+            "id": 2474,
             "order": 9999,
             "name": "AttachDebuggerOptions",
             "reflection": {
-                "id": 2478,
+                "id": 2474,
                 "name": "AttachDebuggerOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -46,7 +46,7 @@
                 },
                 "children": [
                     {
-                        "id": 2479,
+                        "id": 2475,
                         "name": "tagNameMapper",
                         "kind": 1024,
                         "kindString": "Property",
@@ -60,7 +60,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1717,
+                                "line": 1747,
                                 "character": 4
                             }
                         ],
@@ -75,14 +75,14 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2479
+                            2475
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                        "line": 1712,
+                        "line": 1742,
                         "character": 17
                     }
                 ]
@@ -121,11 +121,11 @@
             "group": null
         },
         {
-            "id": 2431,
+            "id": 2427,
             "order": 9999,
             "name": "DebuggerCallFrame",
             "reflection": {
-                "id": 2431,
+                "id": 2427,
                 "name": "DebuggerCallFrame",
                 "kind": 256,
                 "kindString": "Interface",
@@ -147,7 +147,7 @@
                 },
                 "children": [
                     {
-                        "id": 2432,
+                        "id": 2428,
                         "name": "location",
                         "kind": 1024,
                         "kindString": "Property",
@@ -159,25 +159,25 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1892,
+                                "line": 1922,
                                 "character": 4
                             }
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 2466,
+                            "id": 2462,
                             "name": "DebuggerFunctionLocation"
                         }
                     },
                     {
-                        "id": 2433,
+                        "id": 2429,
                         "name": "listVariables",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2434,
+                                "id": 2430,
                                 "name": "listVariables",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -190,7 +190,7 @@
                                     "type": "array",
                                     "elementType": {
                                         "type": "reference",
-                                        "id": 2472,
+                                        "id": 2468,
                                         "name": "DebuggerVariable"
                                     }
                                 }
@@ -198,14 +198,14 @@
                         ]
                     },
                     {
-                        "id": 2435,
+                        "id": 2431,
                         "name": "setVariableValue",
                         "kind": 2048,
                         "kindString": "Method",
                         "flags": {},
                         "signatures": [
                             {
-                                "id": 2436,
+                                "id": 2432,
                                 "name": "setVariableValue",
                                 "kind": 4096,
                                 "kindString": "Call signature",
@@ -216,7 +216,7 @@
                                 },
                                 "parameters": [
                                     {
-                                        "id": 2437,
+                                        "id": 2433,
                                         "name": "variableName",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -231,7 +231,7 @@
                                         }
                                     },
                                     {
-                                        "id": 2438,
+                                        "id": 2434,
                                         "name": "value",
                                         "kind": 32768,
                                         "kindString": "Parameter",
@@ -259,22 +259,22 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2432
+                            2428
                         ]
                     },
                     {
                         "title": "Methods",
                         "kind": 2048,
                         "children": [
-                            2433,
-                            2435
+                            2429,
+                            2431
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                        "line": 1888,
+                        "line": 1918,
                         "character": 17
                     }
                 ]
@@ -298,11 +298,11 @@
             "group": null
         },
         {
-            "id": 2466,
+            "id": 2462,
             "order": 9999,
             "name": "DebuggerFunctionLocation",
             "reflection": {
-                "id": 2466,
+                "id": 2462,
                 "name": "DebuggerFunctionLocation",
                 "kind": 256,
                 "kindString": "Interface",
@@ -324,7 +324,7 @@
                 },
                 "children": [
                     {
-                        "id": 2468,
+                        "id": 2464,
                         "name": "botId",
                         "kind": 1024,
                         "kindString": "Property",
@@ -338,7 +338,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1922,
+                                "line": 1952,
                                 "character": 4
                             }
                         ],
@@ -348,7 +348,7 @@
                         }
                     },
                     {
-                        "id": 2471,
+                        "id": 2467,
                         "name": "columnNumber",
                         "kind": 1024,
                         "kindString": "Property",
@@ -362,7 +362,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1937,
+                                "line": 1967,
                                 "character": 4
                             }
                         ],
@@ -372,7 +372,7 @@
                         }
                     },
                     {
-                        "id": 2470,
+                        "id": 2466,
                         "name": "lineNumber",
                         "kind": 1024,
                         "kindString": "Property",
@@ -386,7 +386,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1932,
+                                "line": 1962,
                                 "character": 4
                             }
                         ],
@@ -396,7 +396,7 @@
                         }
                     },
                     {
-                        "id": 2467,
+                        "id": 2463,
                         "name": "name",
                         "kind": 1024,
                         "kindString": "Property",
@@ -410,7 +410,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1917,
+                                "line": 1947,
                                 "character": 4
                             }
                         ],
@@ -420,7 +420,7 @@
                         }
                     },
                     {
-                        "id": 2469,
+                        "id": 2465,
                         "name": "tag",
                         "kind": 1024,
                         "kindString": "Property",
@@ -434,7 +434,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1927,
+                                "line": 1957,
                                 "character": 4
                             }
                         ],
@@ -449,18 +449,18 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2468,
-                            2471,
-                            2470,
+                            2464,
                             2467,
-                            2469
+                            2466,
+                            2463,
+                            2465
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                        "line": 1913,
+                        "line": 1943,
                         "character": 17
                     }
                 ]
@@ -484,11 +484,11 @@
             "group": null
         },
         {
-            "id": 2460,
+            "id": 2456,
             "order": 9999,
             "name": "DebuggerPause",
             "reflection": {
-                "id": 2460,
+                "id": 2456,
                 "name": "DebuggerPause",
                 "kind": 256,
                 "kindString": "Interface",
@@ -510,7 +510,7 @@
                 },
                 "children": [
                     {
-                        "id": 2465,
+                        "id": 2461,
                         "name": "callStack",
                         "kind": 1024,
                         "kindString": "Property",
@@ -522,7 +522,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1879,
+                                "line": 1909,
                                 "character": 4
                             }
                         ],
@@ -530,13 +530,13 @@
                             "type": "array",
                             "elementType": {
                                 "type": "reference",
-                                "id": 2431,
+                                "id": 2427,
                                 "name": "DebuggerCallFrame"
                             }
                         }
                     },
                     {
-                        "id": 2461,
+                        "id": 2457,
                         "name": "pauseId",
                         "kind": 1024,
                         "kindString": "Property",
@@ -548,7 +548,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1858,
+                                "line": 1888,
                                 "character": 4
                             }
                         ],
@@ -567,7 +567,7 @@
                         }
                     },
                     {
-                        "id": 2464,
+                        "id": 2460,
                         "name": "result",
                         "kind": 1024,
                         "kindString": "Property",
@@ -581,7 +581,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1874,
+                                "line": 1904,
                                 "character": 4
                             }
                         ],
@@ -591,7 +591,7 @@
                         }
                     },
                     {
-                        "id": 2463,
+                        "id": 2459,
                         "name": "state",
                         "kind": 1024,
                         "kindString": "Property",
@@ -603,7 +603,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1869,
+                                "line": 1899,
                                 "character": 4
                             }
                         ],
@@ -622,7 +622,7 @@
                         }
                     },
                     {
-                        "id": 2462,
+                        "id": 2458,
                         "name": "trigger",
                         "kind": 1024,
                         "kindString": "Property",
@@ -634,13 +634,13 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1863,
+                                "line": 1893,
                                 "character": 4
                             }
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 2418,
+                            "id": 2414,
                             "name": "PauseTrigger"
                         }
                     }
@@ -650,18 +650,18 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2465,
                             2461,
-                            2464,
-                            2463,
-                            2462
+                            2457,
+                            2460,
+                            2459,
+                            2458
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                        "line": 1854,
+                        "line": 1884,
                         "character": 17
                     }
                 ]
@@ -685,11 +685,11 @@
             "group": null
         },
         {
-            "id": 2439,
+            "id": 2435,
             "order": 9999,
             "name": "DebuggerTagMaskUpdate",
             "reflection": {
-                "id": 2439,
+                "id": 2435,
                 "name": "DebuggerTagMaskUpdate",
                 "kind": 256,
                 "kindString": "Interface",
@@ -711,7 +711,7 @@
                 },
                 "children": [
                     {
-                        "id": 2441,
+                        "id": 2437,
                         "name": "botId",
                         "kind": 1024,
                         "kindString": "Property",
@@ -723,7 +723,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1672,
+                                "line": 1702,
                                 "character": 4
                             }
                         ],
@@ -733,12 +733,12 @@
                         },
                         "inheritedFrom": {
                             "type": "reference",
-                            "id": 2446,
+                            "id": 2442,
                             "name": "DebuggerTagUpdate.botId"
                         }
                     },
                     {
-                        "id": 2444,
+                        "id": 2440,
                         "name": "newValue",
                         "kind": 1024,
                         "kindString": "Property",
@@ -750,7 +750,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1687,
+                                "line": 1717,
                                 "character": 4
                             }
                         ],
@@ -760,12 +760,12 @@
                         },
                         "inheritedFrom": {
                             "type": "reference",
-                            "id": 2449,
+                            "id": 2445,
                             "name": "DebuggerTagUpdate.newValue"
                         }
                     },
                     {
-                        "id": 2443,
+                        "id": 2439,
                         "name": "oldValue",
                         "kind": 1024,
                         "kindString": "Property",
@@ -777,7 +777,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1682,
+                                "line": 1712,
                                 "character": 4
                             }
                         ],
@@ -787,12 +787,12 @@
                         },
                         "inheritedFrom": {
                             "type": "reference",
-                            "id": 2448,
+                            "id": 2444,
                             "name": "DebuggerTagUpdate.oldValue"
                         }
                     },
                     {
-                        "id": 2440,
+                        "id": 2436,
                         "name": "space",
                         "kind": 1024,
                         "kindString": "Property",
@@ -804,7 +804,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1700,
+                                "line": 1730,
                                 "character": 4
                             }
                         ],
@@ -814,7 +814,7 @@
                         }
                     },
                     {
-                        "id": 2442,
+                        "id": 2438,
                         "name": "tag",
                         "kind": 1024,
                         "kindString": "Property",
@@ -826,7 +826,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1677,
+                                "line": 1707,
                                 "character": 4
                             }
                         ],
@@ -836,7 +836,7 @@
                         },
                         "inheritedFrom": {
                             "type": "reference",
-                            "id": 2447,
+                            "id": 2443,
                             "name": "DebuggerTagUpdate.tag"
                         }
                     }
@@ -846,25 +846,25 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2441,
-                            2444,
-                            2443,
+                            2437,
                             2440,
-                            2442
+                            2439,
+                            2436,
+                            2438
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                        "line": 1696,
+                        "line": 1726,
                         "character": 17
                     }
                 ],
                 "extendedTypes": [
                     {
                         "type": "reference",
-                        "id": 2445,
+                        "id": 2441,
                         "name": "DebuggerTagUpdate"
                     }
                 ]
@@ -888,11 +888,11 @@
             "group": null
         },
         {
-            "id": 2445,
+            "id": 2441,
             "order": 9999,
             "name": "DebuggerTagUpdate",
             "reflection": {
-                "id": 2445,
+                "id": 2441,
                 "name": "DebuggerTagUpdate",
                 "kind": 256,
                 "kindString": "Interface",
@@ -914,7 +914,7 @@
                 },
                 "children": [
                     {
-                        "id": 2446,
+                        "id": 2442,
                         "name": "botId",
                         "kind": 1024,
                         "kindString": "Property",
@@ -926,7 +926,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1672,
+                                "line": 1702,
                                 "character": 4
                             }
                         ],
@@ -936,7 +936,7 @@
                         }
                     },
                     {
-                        "id": 2449,
+                        "id": 2445,
                         "name": "newValue",
                         "kind": 1024,
                         "kindString": "Property",
@@ -948,7 +948,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1687,
+                                "line": 1717,
                                 "character": 4
                             }
                         ],
@@ -958,7 +958,7 @@
                         }
                     },
                     {
-                        "id": 2448,
+                        "id": 2444,
                         "name": "oldValue",
                         "kind": 1024,
                         "kindString": "Property",
@@ -970,7 +970,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1682,
+                                "line": 1712,
                                 "character": 4
                             }
                         ],
@@ -980,7 +980,7 @@
                         }
                     },
                     {
-                        "id": 2447,
+                        "id": 2443,
                         "name": "tag",
                         "kind": 1024,
                         "kindString": "Property",
@@ -992,7 +992,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1677,
+                                "line": 1707,
                                 "character": 4
                             }
                         ],
@@ -1007,24 +1007,24 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2446,
-                            2449,
-                            2448,
-                            2447
+                            2442,
+                            2445,
+                            2444,
+                            2443
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                        "line": 1668,
+                        "line": 1698,
                         "character": 17
                     }
                 ],
                 "extendedBy": [
                     {
                         "type": "reference",
-                        "id": 2439,
+                        "id": 2435,
                         "name": "DebuggerTagMaskUpdate"
                     }
                 ]
@@ -1048,11 +1048,11 @@
             "group": null
         },
         {
-            "id": 2472,
+            "id": 2468,
             "order": 9999,
             "name": "DebuggerVariable",
             "reflection": {
-                "id": 2472,
+                "id": 2468,
                 "name": "DebuggerVariable",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1074,7 +1074,7 @@
                 },
                 "children": [
                     {
-                        "id": 2477,
+                        "id": 2473,
                         "name": "initialized",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1088,7 +1088,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1974,
+                                "line": 2004,
                                 "character": 4
                             }
                         ],
@@ -1098,7 +1098,7 @@
                         }
                     },
                     {
-                        "id": 2473,
+                        "id": 2469,
                         "name": "name",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1110,7 +1110,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1950,
+                                "line": 1980,
                                 "character": 4
                             }
                         ],
@@ -1120,7 +1120,7 @@
                         }
                     },
                     {
-                        "id": 2475,
+                        "id": 2471,
                         "name": "scope",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1133,7 +1133,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1964,
+                                "line": 1994,
                                 "character": 4
                             }
                         ],
@@ -1156,7 +1156,7 @@
                         }
                     },
                     {
-                        "id": 2474,
+                        "id": 2470,
                         "name": "value",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1168,7 +1168,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1955,
+                                "line": 1985,
                                 "character": 4
                             }
                         ],
@@ -1178,7 +1178,7 @@
                         }
                     },
                     {
-                        "id": 2476,
+                        "id": 2472,
                         "name": "writable",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1190,7 +1190,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1969,
+                                "line": 1999,
                                 "character": 4
                             }
                         ],
@@ -1205,18 +1205,18 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2477,
                             2473,
-                            2475,
-                            2474,
-                            2476
+                            2469,
+                            2471,
+                            2470,
+                            2472
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                        "line": 1946,
+                        "line": 1976,
                         "character": 17
                     }
                 ]
@@ -1240,11 +1240,11 @@
             "group": null
         },
         {
-            "id": 2450,
+            "id": 2446,
             "order": 9999,
             "name": "NormalDebuggerOptions",
             "reflection": {
-                "id": 2450,
+                "id": 2446,
                 "name": "NormalDebuggerOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1266,7 +1266,7 @@
                 },
                 "children": [
                     {
-                        "id": 2453,
+                        "id": 2449,
                         "name": "allowAsynchronousScripts",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1280,7 +1280,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1734,
+                                "line": 1764,
                                 "character": 4
                             }
                         ],
@@ -1294,7 +1294,7 @@
                         }
                     },
                     {
-                        "id": 2454,
+                        "id": 2450,
                         "name": "configBot",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1308,7 +1308,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1740,
+                                "line": 1770,
                                 "character": 4
                             }
                         ],
@@ -1317,12 +1317,12 @@
                             "types": [
                                 {
                                     "type": "reference",
-                                    "id": 2647,
+                                    "id": 2665,
                                     "name": "Bot"
                                 },
                                 {
                                     "type": "reference",
-                                    "id": 2695,
+                                    "id": 2713,
                                     "name": "Tags"
                                 }
                             ]
@@ -1333,7 +1333,7 @@
                         }
                     },
                     {
-                        "id": 2451,
+                        "id": 2447,
                         "name": "pausable",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1343,7 +1343,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1751,
+                                "line": 1781,
                                 "character": 4
                             }
                         ],
@@ -1353,7 +1353,7 @@
                         }
                     },
                     {
-                        "id": 2452,
+                        "id": 2448,
                         "name": "useRealUUIDs",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1367,7 +1367,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1727,
+                                "line": 1757,
                                 "character": 4
                             }
                         ],
@@ -1386,17 +1386,17 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2453,
-                            2454,
-                            2451,
-                            2452
+                            2449,
+                            2450,
+                            2447,
+                            2448
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                        "line": 1750,
+                        "line": 1780,
                         "character": 17
                     }
                 ],
@@ -1426,11 +1426,11 @@
             "group": null
         },
         {
-            "id": 2455,
+            "id": 2451,
             "order": 9999,
             "name": "PausableDebuggerOptions",
             "reflection": {
-                "id": 2455,
+                "id": 2451,
                 "name": "PausableDebuggerOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1452,7 +1452,7 @@
                 },
                 "children": [
                     {
-                        "id": 2458,
+                        "id": 2454,
                         "name": "allowAsynchronousScripts",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1466,7 +1466,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1734,
+                                "line": 1764,
                                 "character": 4
                             }
                         ],
@@ -1480,7 +1480,7 @@
                         }
                     },
                     {
-                        "id": 2459,
+                        "id": 2455,
                         "name": "configBot",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1494,7 +1494,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1740,
+                                "line": 1770,
                                 "character": 4
                             }
                         ],
@@ -1503,12 +1503,12 @@
                             "types": [
                                 {
                                     "type": "reference",
-                                    "id": 2647,
+                                    "id": 2665,
                                     "name": "Bot"
                                 },
                                 {
                                     "type": "reference",
-                                    "id": 2695,
+                                    "id": 2713,
                                     "name": "Tags"
                                 }
                             ]
@@ -1519,7 +1519,7 @@
                         }
                     },
                     {
-                        "id": 2456,
+                        "id": 2452,
                         "name": "pausable",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1527,7 +1527,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1762,
+                                "line": 1792,
                                 "character": 4
                             }
                         ],
@@ -1537,7 +1537,7 @@
                         }
                     },
                     {
-                        "id": 2457,
+                        "id": 2453,
                         "name": "useRealUUIDs",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1551,7 +1551,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1727,
+                                "line": 1757,
                                 "character": 4
                             }
                         ],
@@ -1570,17 +1570,17 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2458,
-                            2459,
-                            2456,
-                            2457
+                            2454,
+                            2455,
+                            2452,
+                            2453
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                        "line": 1761,
+                        "line": 1791,
                         "character": 17
                     }
                 ],
@@ -1610,11 +1610,11 @@
             "group": null
         },
         {
-            "id": 2418,
+            "id": 2414,
             "order": 9999,
             "name": "PauseTrigger",
             "reflection": {
-                "id": 2418,
+                "id": 2414,
                 "name": "PauseTrigger",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1636,7 +1636,7 @@
                 },
                 "children": [
                     {
-                        "id": 2420,
+                        "id": 2416,
                         "name": "botId",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1648,7 +1648,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1841,
+                                "line": 1871,
                                 "character": 4
                             }
                         ],
@@ -1658,7 +1658,7 @@
                         }
                     },
                     {
-                        "id": 2423,
+                        "id": 2419,
                         "name": "columnNumber",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1670,7 +1670,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1811,
+                                "line": 1841,
                                 "character": 4
                             }
                         ],
@@ -1680,12 +1680,12 @@
                         },
                         "inheritedFrom": {
                             "type": "reference",
-                            "id": 2428,
+                            "id": 2424,
                             "name": "PauseTriggerOptions.columnNumber"
                         }
                     },
                     {
-                        "id": 2425,
+                        "id": 2421,
                         "name": "enabled",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1699,7 +1699,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1823,
+                                "line": 1853,
                                 "character": 4
                             }
                         ],
@@ -1709,12 +1709,12 @@
                         },
                         "inheritedFrom": {
                             "type": "reference",
-                            "id": 2430,
+                            "id": 2426,
                             "name": "PauseTriggerOptions.enabled"
                         }
                     },
                     {
-                        "id": 2422,
+                        "id": 2418,
                         "name": "lineNumber",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1726,7 +1726,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1806,
+                                "line": 1836,
                                 "character": 4
                             }
                         ],
@@ -1736,12 +1736,12 @@
                         },
                         "inheritedFrom": {
                             "type": "reference",
-                            "id": 2427,
+                            "id": 2423,
                             "name": "PauseTriggerOptions.lineNumber"
                         }
                     },
                     {
-                        "id": 2424,
+                        "id": 2420,
                         "name": "states",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1755,7 +1755,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1817,
+                                "line": 1847,
                                 "character": 4
                             }
                         ],
@@ -1777,12 +1777,12 @@
                         },
                         "inheritedFrom": {
                             "type": "reference",
-                            "id": 2429,
+                            "id": 2425,
                             "name": "PauseTriggerOptions.states"
                         }
                     },
                     {
-                        "id": 2421,
+                        "id": 2417,
                         "name": "tag",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1794,7 +1794,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1846,
+                                "line": 1876,
                                 "character": 4
                             }
                         ],
@@ -1804,7 +1804,7 @@
                         }
                     },
                     {
-                        "id": 2419,
+                        "id": 2415,
                         "name": "triggerId",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1816,7 +1816,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1836,
+                                "line": 1866,
                                 "character": 4
                             }
                         ],
@@ -1831,27 +1831,27 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2420,
-                            2423,
-                            2425,
-                            2422,
-                            2424,
+                            2416,
+                            2419,
                             2421,
-                            2419
+                            2418,
+                            2420,
+                            2417,
+                            2415
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                        "line": 1832,
+                        "line": 1862,
                         "character": 17
                     }
                 ],
                 "extendedTypes": [
                     {
                         "type": "reference",
-                        "id": 2426,
+                        "id": 2422,
                         "name": "PauseTriggerOptions"
                     }
                 ]
@@ -1875,11 +1875,11 @@
             "group": null
         },
         {
-            "id": 2426,
+            "id": 2422,
             "order": 9999,
             "name": "PauseTriggerOptions",
             "reflection": {
-                "id": 2426,
+                "id": 2422,
                 "name": "PauseTriggerOptions",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1901,7 +1901,7 @@
                 },
                 "children": [
                     {
-                        "id": 2428,
+                        "id": 2424,
                         "name": "columnNumber",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1913,7 +1913,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1811,
+                                "line": 1841,
                                 "character": 4
                             }
                         ],
@@ -1923,7 +1923,7 @@
                         }
                     },
                     {
-                        "id": 2430,
+                        "id": 2426,
                         "name": "enabled",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1937,7 +1937,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1823,
+                                "line": 1853,
                                 "character": 4
                             }
                         ],
@@ -1947,7 +1947,7 @@
                         }
                     },
                     {
-                        "id": 2427,
+                        "id": 2423,
                         "name": "lineNumber",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1959,7 +1959,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1806,
+                                "line": 1836,
                                 "character": 4
                             }
                         ],
@@ -1969,7 +1969,7 @@
                         }
                     },
                     {
-                        "id": 2429,
+                        "id": 2425,
                         "name": "states",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1983,7 +1983,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1817,
+                                "line": 1847,
                                 "character": 4
                             }
                         ],
@@ -2010,24 +2010,24 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2428,
-                            2430,
-                            2427,
-                            2429
+                            2424,
+                            2426,
+                            2423,
+                            2425
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                        "line": 1802,
+                        "line": 1832,
                         "character": 17
                     }
                 ],
                 "extendedBy": [
                     {
                         "type": "reference",
-                        "id": 2418,
+                        "id": 2414,
                         "name": "PauseTrigger"
                     }
                 ]
@@ -2051,11 +2051,11 @@
             "group": null
         },
         {
-            "id": 2413,
+            "id": 2409,
             "order": 9999,
             "name": "PossiblePauseTriggerLocation",
             "reflection": {
-                "id": 2413,
+                "id": 2409,
                 "name": "PossiblePauseTriggerLocation",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2077,7 +2077,7 @@
                 },
                 "children": [
                     {
-                        "id": 2415,
+                        "id": 2411,
                         "name": "columnNumber",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2089,7 +2089,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1644,
+                                "line": 1674,
                                 "character": 4
                             }
                         ],
@@ -2099,7 +2099,7 @@
                         }
                     },
                     {
-                        "id": 2414,
+                        "id": 2410,
                         "name": "lineNumber",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2111,7 +2111,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1639,
+                                "line": 1669,
                                 "character": 4
                             }
                         ],
@@ -2121,7 +2121,7 @@
                         }
                     },
                     {
-                        "id": 2416,
+                        "id": 2412,
                         "name": "possibleStates",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2133,13 +2133,13 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 1649,
+                                "line": 1679,
                                 "character": 4
                             }
                         ],
                         "type": {
                             "type": "reference",
-                            "id": 2417,
+                            "id": 2413,
                             "name": "PossiblePauseTriggerStates"
                         }
                     }
@@ -2149,16 +2149,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2415,
-                            2414,
-                            2416
+                            2411,
+                            2410,
+                            2412
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                        "line": 1635,
+                        "line": 1665,
                         "character": 17
                     }
                 ]
@@ -2182,11 +2182,11 @@
             "group": null
         },
         {
-            "id": 2417,
+            "id": 2413,
             "order": 9999,
             "name": "PossiblePauseTriggerStates",
             "reflection": {
-                "id": 2417,
+                "id": 2413,
                 "name": "PossiblePauseTriggerStates",
                 "kind": 4194304,
                 "kindString": "Type alias",
@@ -2209,7 +2209,7 @@
                 "sources": [
                     {
                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                        "line": 1658,
+                        "line": 1688,
                         "character": 12
                     }
                 ],
@@ -2271,287 +2271,305 @@
     ],
     "references": {
         "Quaternion": "types/math/rotations",
-        "id-3179": "Quaternion",
+        "id-3197": "Quaternion",
         "Rotation": "types/math/rotations",
-        "id-3211": "Rotation",
+        "id-3229": "Rotation",
         "Vector2": "types/math/vectors",
-        "id-3045": "Vector2",
+        "id-3063": "Vector2",
         "Vector3": "types/math/vectors",
-        "id-3102": "Vector3",
+        "id-3120": "Vector3",
         "AddCountFailure": "types/records/events",
-        "id-2992": "AddCountFailure",
+        "id-3010": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-2987": "AddCountSuccess",
+        "id-3005": "AddCountSuccess",
         "AnimateTagOptions": "types/animation",
-        "id-2103": "AnimateTagOptions",
+        "id-2099": "AnimateTagOptions",
         "AttachDebuggerOptions": "types/debuggers/common",
-        "id-2478": "AttachDebuggerOptions",
+        "id-2474": "AttachDebuggerOptions",
         "CasualOSDevice": "types/os",
-        "id-2811": "CasualOSDevice",
+        "id-2829": "CasualOSDevice",
         "CasualOSVersion": "types/os",
-        "id-2803": "CasualOSVersion",
+        "id-2821": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
-        "id-3257": "AxisAndAngle",
+        "id-3275": "AxisAndAngle",
         "BotTagMasks": "types/core",
-        "id-2780": "BotTagMasks",
+        "id-2798": "BotTagMasks",
         "BotTags": "types/core",
-        "id-2695": "BotTags",
+        "id-2713": "BotTags",
         "BotState": "types/core",
-        "id-2793": "BotState",
+        "id-2811": "BotState",
         "CompiledBotListeners": "types/core",
-        "id-2774": "CompiledBotListeners",
+        "id-2792": "CompiledBotListeners",
         "ConvertGeolocationToWhat3WordsOptions": "types/os",
-        "id-2513": "ConvertGeolocationToWhat3WordsOptions",
+        "id-2516": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-2825": "CreatePublicRecordKeyFailure",
+        "id-2843": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-2821": "CreatePublicRecordKeySuccess",
+        "id-2839": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
-        "id-2431": "DebuggerCallFrame",
+        "id-2427": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
-        "id-2466": "DebuggerFunctionLocation",
+        "id-2462": "DebuggerFunctionLocation",
         "DebuggerPause": "types/debuggers/common",
-        "id-2460": "DebuggerPause",
+        "id-2456": "DebuggerPause",
         "DebuggerTagMaskUpdate": "types/debuggers/common",
-        "id-2439": "DebuggerTagMaskUpdate",
+        "id-2435": "DebuggerTagMaskUpdate",
         "DebuggerTagUpdate": "types/debuggers/common",
-        "id-2445": "DebuggerTagUpdate",
+        "id-2441": "DebuggerTagUpdate",
         "DebuggerVariable": "types/debuggers/common",
-        "id-2472": "DebuggerVariable",
+        "id-2468": "DebuggerVariable",
+        "Easing": "types/animation",
+        "id-2496": "Easing",
         "EnableXROptions": "types/os",
-        "id-2587": "EnableXROptions",
+        "id-2590": "EnableXROptions",
         "EraseDataFailure": "types/records/data",
-        "id-2960": "EraseDataFailure",
+        "id-2978": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-2956": "EraseDataSuccess",
+        "id-2974": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-2982": "EraseFileFailure",
+        "id-3000": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-2978": "EraseFileSuccess",
+        "id-2996": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
-        "id-3260": "EulerAnglesRotation",
+        "id-3278": "EulerAnglesRotation",
         "FocusOnOptions": "types/os",
-        "id-2547": "FocusOnOptions",
+        "id-2550": "FocusOnOptions",
         "FocusOnRotation": "types/os",
-        "id-2559": "FocusOnRotation",
+        "id-2562": "FocusOnRotation",
         "FormAnimationData": "types/os",
-        "id-2605": "FormAnimationData",
+        "id-2608": "FormAnimationData",
         "FromToRotation": "types/math/rotations",
-        "id-3254": "FromToRotation",
+        "id-3272": "FromToRotation",
         "GetCountFailure": "types/records/events",
-        "id-3003": "GetCountFailure",
+        "id-3021": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-2997": "GetCountSuccess",
+        "id-3015": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-2951": "GetDataFailure",
+        "id-2969": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-2942": "GetDataSuccess",
+        "id-2960": "GetDataSuccess",
         "GetRoomOptionsFailure": "types/os",
-        "id-2193": "GetRoomOptionsFailure",
+        "id-2189": "GetRoomOptionsFailure",
         "GetRoomOptionsSuccess": "types/os",
-        "id-2189": "GetRoomOptionsSuccess",
+        "id-2185": "GetRoomOptionsSuccess",
         "GetRoomRemoteOptionsFailure": "types/os",
-        "id-2236": "GetRoomRemoteOptionsFailure",
+        "id-2232": "GetRoomRemoteOptionsFailure",
         "GetRoomRemoteOptionsSuccess": "types/os",
-        "id-2231": "GetRoomRemoteOptionsSuccess",
+        "id-2227": "GetRoomRemoteOptionsSuccess",
         "GetRoomTrackOptionsFailure": "types/os",
-        "id-2212": "GetRoomTrackOptionsFailure",
+        "id-2208": "GetRoomTrackOptionsFailure",
         "GetRoomTrackOptionsSuccess": "types/os",
-        "id-2207": "GetRoomTrackOptionsSuccess",
+        "id-2203": "GetRoomTrackOptionsSuccess",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3031": "GrantMarkerPermissionFailure",
+        "id-3049": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3029": "GrantMarkerPermissionSuccess",
+        "id-3047": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3017": "GrantRoleFailure",
+        "id-3035": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3015": "GrantRoleSuccess",
+        "id-3033": "GrantRoleSuccess",
         "ImageClassifierOptions": "types/os",
-        "id-2565": "ImageClassifierOptions",
+        "id-2568": "ImageClassifierOptions",
         "InstUpdate": "types/os",
-        "id-2816": "InstUpdate",
+        "id-2834": "InstUpdate",
         "JoinRoomFailure": "types/os",
-        "id-2174": "JoinRoomFailure",
+        "id-2170": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os",
-        "id-2171": "JoinRoomSuccess",
+        "id-2167": "JoinRoomSuccess",
         "LeaveRoomFailure": "types/os",
-        "id-2183": "LeaveRoomFailure",
+        "id-2179": "LeaveRoomFailure",
         "LeaveRoomSuccess": "types/os",
-        "id-2180": "LeaveRoomSuccess",
+        "id-2176": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-2973": "ListDataFailure",
+        "id-2991": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-2965": "ListDataSuccess",
+        "id-2983": "ListDataSuccess",
         "LookRotation": "types/math/rotations",
-        "id-3277": "LookRotation",
+        "id-3295": "LookRotation",
         "MediaPermissionOptions": "types/os",
-        "id-2584": "MediaPermissionOptions",
+        "id-2587": "MediaPermissionOptions",
         "Debugger": "types/debuggers/debugger",
-        "id-2243": "Debugger",
+        "id-2239": "Debugger",
         "NormalDebuggerOptions": "types/debuggers/common",
-        "id-2450": "NormalDebuggerOptions",
+        "id-2446": "NormalDebuggerOptions",
         "ParsedBotLink": "types/core",
-        "id-2799": "ParsedBotLink",
+        "id-2817": "ParsedBotLink",
         "PartialBotState": "types/core",
-        "id-2796": "PartialBotState",
+        "id-2814": "PartialBotState",
         "PausableDebugger": "types/debuggers/pausable-debugger",
-        "id-2299": "PausableDebugger",
+        "id-2295": "PausableDebugger",
         "PausableDebuggerOptions": "types/debuggers/common",
-        "id-2455": "PausableDebuggerOptions",
+        "id-2451": "PausableDebuggerOptions",
         "PauseTrigger": "types/debuggers/common",
-        "id-2418": "PauseTrigger",
+        "id-2414": "PauseTrigger",
         "PauseTriggerOptions": "types/debuggers/common",
-        "id-2426": "PauseTriggerOptions",
+        "id-2422": "PauseTriggerOptions",
         "PossiblePauseTriggerLocation": "types/debuggers/common",
-        "id-2413": "PossiblePauseTriggerLocation",
+        "id-2409": "PossiblePauseTriggerLocation",
         "PseudoRandomNumberGenerator": "types/core",
-        "id-2480": "PseudoRandomNumberGenerator",
+        "id-2483": "PseudoRandomNumberGenerator",
         "QuaternionRotation": "types/math/rotations",
-        "id-3270": "QuaternionRotation",
+        "id-3288": "QuaternionRotation",
         "RaycastRay": "types/os",
-        "id-2167": "RaycastRay",
+        "id-2163": "RaycastRay",
         "RaycastResult": "types/os",
-        "id-2164": "RaycastResult",
+        "id-2160": "RaycastResult",
         "RecordActionOptions": "types/records/extra",
-        "id-2496": "RecordActionOptions",
+        "id-2499": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-2937": "RecordDataFailure",
+        "id-2955": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-2933": "RecordDataSuccess",
+        "id-2951": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
-        "id-2134": "RecordFileFailure",
+        "id-2130": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
-        "id-2130": "RecordFileSuccess",
+        "id-2126": "RecordFileSuccess",
+        "RecordedFile": "types/experimental",
+        "id-2652": "RecordedFile",
+        "Recording": "types/experimental",
+        "id-2650": "Recording",
+        "RecordingOptions": "types/experimental",
+        "id-2657": "RecordingOptions",
         "RegisterPrefixOptions": "types/core",
-        "id-2644": "RegisterPrefixOptions",
+        "id-2647": "RegisterPrefixOptions",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3038": "RevokeMarkerPermissionFailure",
+        "id-3056": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3036": "RevokeMarkerPermissionSuccess",
+        "id-3054": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3024": "RevokeRoleFailure",
+        "id-3042": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3022": "RevokeRoleSuccess",
+        "id-3040": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os",
-        "id-2610": "RoomJoinOptions",
+        "id-2613": "RoomJoinOptions",
         "RoomOptions": "types/os",
-        "id-2619": "RoomOptions",
+        "id-2622": "RoomOptions",
         "RoomRemoteOptions": "types/os",
-        "id-2635": "RoomRemoteOptions",
+        "id-2638": "RoomRemoteOptions",
         "RoomTrackOptions": "types/os",
-        "id-2623": "RoomTrackOptions",
+        "id-2626": "RoomTrackOptions",
         "RuntimeBot": "types/core",
-        "id-2647": "RuntimeBot",
+        "id-2665": "RuntimeBot",
         "RuntimeBotLinks": "types/core",
-        "id-2786": "RuntimeBotLinks",
+        "id-2804": "RuntimeBotLinks",
         "RuntimeBotVars": "types/core",
-        "id-2783": "RuntimeBotVars",
+        "id-2801": "RuntimeBotVars",
         "SequenceRotation": "types/math/rotations",
-        "id-3268": "SequenceRotation",
+        "id-3286": "SequenceRotation",
         "SetRoomOptionsSuccess": "types/os",
-        "id-2198": "SetRoomOptionsSuccess",
+        "id-2194": "SetRoomOptionsSuccess",
         "SetRoomTrackOptions": "types/os",
-        "id-2641": "SetRoomTrackOptions",
+        "id-2644": "SetRoomTrackOptions",
         "SetRoomTrackOptionsFailure": "types/os",
-        "id-2224": "SetRoomTrackOptionsFailure",
+        "id-2220": "SetRoomTrackOptionsFailure",
         "SetRoomTrackOptionsSuccess": "types/os",
-        "id-2219": "SetRoomTrackOptionsSuccess",
+        "id-2215": "SetRoomTrackOptionsSuccess",
         "ShareOptions": "types/os",
-        "id-2543": "ShareOptions",
+        "id-2546": "ShareOptions",
         "ShowChatOptions": "types/os",
-        "id-2537": "ShowChatOptions",
+        "id-2540": "ShowChatOptions",
         "ShowConfirmOptions": "types/os",
-        "id-2579": "ShowConfirmOptions",
+        "id-2582": "ShowConfirmOptions",
         "ShowInputOptions": "types/os",
-        "id-2570": "ShowInputOptions",
+        "id-2573": "ShowInputOptions",
         "SnapAxis": "types/os",
-        "id-2517": "SnapAxis",
+        "id-2520": "SnapAxis",
         "SnapGridTarget": "types/os",
-        "id-2139": "SnapGridTarget",
+        "id-2135": "SnapGridTarget",
         "SnapPoint": "types/os",
-        "id-2529": "SnapPoint",
+        "id-2532": "SnapPoint",
+        "SpeakTextOptions": "types/experimental",
+        "id-2479": "SpeakTextOptions",
         "StartFormAnimationOptions": "types/os",
-        "id-2589": "StartFormAnimationOptions",
+        "id-2592": "StartFormAnimationOptions",
         "StopFormAnimationOptions": "types/os",
-        "id-2602": "StopFormAnimationOptions",
+        "id-2605": "StopFormAnimationOptions",
         "SuccessfulGeolocation": "types/os",
-        "id-2499": "SuccessfulGeolocation",
+        "id-2502": "SuccessfulGeolocation",
+        "SyntheticVoice": "types/experimental",
+        "id-2661": "SyntheticVoice",
+        "TweenOptions": "types/experimental",
+        "id-2476": "TweenOptions",
         "UnsuccessfulGeolocation": "types/os",
-        "id-2509": "UnsuccessfulGeolocation",
+        "id-2512": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3010": "UpdateEventRecordFailure",
+        "id-3028": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3008": "UpdateEventRecordSuccess",
+        "id-3026": "UpdateEventRecordSuccess",
         "UploadedFile": "types/os",
-        "id-2160": "UploadedFile",
+        "id-2156": "UploadedFile",
         "WebhookOptions": "types/web",
-        "id-2084": "WebhookOptions",
+        "id-2080": "WebhookOptions",
         "WebhookResult": "types/web",
-        "id-2096": "WebhookResult",
+        "id-2092": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-2986": "AddCountResult",
+        "id-3004": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-2830": "AvailablePermissions",
+        "id-2848": "AvailablePermissions",
         "BarcodeFormat": "types/os",
-        "id-2564": "BarcodeFormat",
+        "id-2567": "BarcodeFormat",
         "BotFilter": "types/core",
-        "id-2118": "BotFilter",
+        "id-2114": "BotFilter",
         "BotSpace": "types/core",
-        "id-2770": "BotSpace",
+        "id-2788": "BotSpace",
         "CameraType": "types/os",
-        "id-2563": "CameraType",
+        "id-2566": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-2820": "CreatePublicRecordKeyResult",
+        "id-2838": "CreatePublicRecordKeyResult",
+        "EaseMode": "types/animation",
+        "id-2495": "EaseMode",
+        "EaseType": "types/animation",
+        "id-2494": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-2955": "EraseDataResult",
+        "id-2973": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-2977": "EraseFileResult",
+        "id-2995": "EraseFileResult",
         "Geolocation": "types/os",
-        "id-2498": "Geolocation",
+        "id-2501": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-2996": "GetCountResult",
+        "id-3014": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-2941": "GetDataResult",
+        "id-2959": "GetDataResult",
         "GetRoomOptionsResult": "types/os",
-        "id-2188": "GetRoomOptionsResult",
+        "id-2184": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os",
-        "id-2230": "GetRoomRemoteOptionsResult",
+        "id-2226": "GetRoomRemoteOptionsResult",
         "GetRoomTrackOptionsResult": "types/os",
-        "id-2206": "GetRoomTrackOptionsResult",
+        "id-2202": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3028": "GrantMarkerPermissionResult",
+        "id-3046": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3014": "GrantRoleResult",
+        "id-3032": "GrantRoleResult",
         "JoinRoomResult": "types/os",
-        "id-2170": "JoinRoomResult",
+        "id-2166": "JoinRoomResult",
         "LeaveRoomResult": "types/os",
-        "id-2179": "LeaveRoomResult",
+        "id-2175": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-2964": "ListDataResult",
+        "id-2982": "ListDataResult",
         "Mod": "types/core",
-        "id-2113": "Mod",
+        "id-2109": "Mod",
         "PortalType": "types/core",
-        "id-2802": "PortalType",
+        "id-2820": "PortalType",
         "PossiblePauseTriggerStates": "types/debuggers/common",
-        "id-2417": "PossiblePauseTriggerStates",
+        "id-2413": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-2932": "RecordDataResult",
+        "id-2950": "RecordDataResult",
         "RecordFileResult": "types/records/files",
-        "id-2129": "RecordFileResult",
+        "id-2125": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3035": "RevokeMarkerPermissionResult",
+        "id-3053": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3021": "RevokeRoleResult",
+        "id-3039": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os",
-        "id-2197": "SetRoomOptionsResult",
+        "id-2193": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os",
-        "id-2218": "SetRoomTrackOptionsResult",
+        "id-2214": "SetRoomTrackOptionsResult",
         "SnapTarget": "types/os",
-        "id-2536": "SnapTarget",
+        "id-2539": "SnapTarget",
         "TagFilter": "types/core",
-        "id-2114": "TagFilter",
+        "id-2110": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3007": "UpdateEventRecordResult",
+        "id-3025": "UpdateEventRecordResult",
         "animateTag-byOptions": "actions/utility",
         "id-364": "animateTag-byOptions",
         "getbot-tag": "actions/data",
@@ -2603,51 +2621,51 @@
         "byTag": "actions/bot-filters",
         "id-276": "byTag",
         "bytes.fromBase64String": "actions/bytes",
-        "id-1817": "bytes.fromBase64String",
+        "id-1813": "bytes.fromBase64String",
         "bytes.fromHexString": "actions/bytes",
-        "id-1825": "bytes.fromHexString",
+        "id-1821": "bytes.fromHexString",
         "bytes.toBase64String": "actions/bytes",
-        "id-1813": "bytes.toBase64String",
+        "id-1809": "bytes.toBase64String",
         "bytes.toHexString": "actions/bytes",
-        "id-1821": "bytes.toHexString",
+        "id-1817": "bytes.toHexString",
         "clearAnimations": "actions/utility",
         "id-378": "clearAnimations",
         "clearTagMasks": "actions/data",
         "id-106": "clearTagMasks",
         "crypto.hash-raw": "actions/crypto",
-        "id-1831": "crypto.hash-raw",
+        "id-1827": "crypto.hash-raw",
         "crypto.hash-string": "actions/crypto",
-        "id-1837": "crypto.hash-string",
+        "id-1833": "crypto.hash-string",
         "crypto.hmac-raw": "actions/crypto",
-        "id-1868": "crypto.hmac-raw",
+        "id-1864": "crypto.hmac-raw",
         "crypto.hmac-string": "actions/crypto",
-        "id-1861": "crypto.hmac-string",
+        "id-1857": "crypto.hmac-string",
         "crypto.asymmetric.decrypt": "actions/crypto",
-        "id-1926": "crypto.asymmetric.decrypt",
+        "id-1922": "crypto.asymmetric.decrypt",
         "crypto.asymmetric.encrypt": "actions/crypto",
-        "id-1921": "crypto.asymmetric.encrypt",
+        "id-1917": "crypto.asymmetric.encrypt",
         "crypto.asymmetric.isEncrypted": "actions/crypto",
-        "id-1932": "crypto.asymmetric.isEncrypted",
+        "id-1928": "crypto.asymmetric.isEncrypted",
         "crypto.asymmetric.isKeypair": "actions/crypto",
-        "id-1917": "crypto.asymmetric.isKeypair",
+        "id-1913": "crypto.asymmetric.isKeypair",
         "crypto.asymmetric.keypair": "actions/crypto",
-        "id-1913": "crypto.asymmetric.keypair",
+        "id-1909": "crypto.asymmetric.keypair",
         "crypto.encrypt": "actions/crypto",
-        "id-1897": "crypto.encrypt",
+        "id-1893": "crypto.encrypt",
         "crypto.hmacSha256": "actions/crypto",
-        "id-1887": "crypto.hmacSha256",
+        "id-1883": "crypto.hmacSha256",
         "crypto.hmacSha512": "actions/crypto",
-        "id-1892": "crypto.hmacSha512",
+        "id-1888": "crypto.hmacSha512",
         "crypto.isEncrypted": "actions/crypto",
-        "id-1907": "crypto.isEncrypted",
+        "id-1903": "crypto.isEncrypted",
         "crypto.keypair": "actions/crypto",
-        "id-1936": "crypto.keypair",
+        "id-1932": "crypto.keypair",
         "crypto.sha256": "actions/crypto",
-        "id-1853": "crypto.sha256",
+        "id-1849": "crypto.sha256",
         "crypto.sha512": "actions/crypto",
-        "id-1857": "crypto.sha512",
+        "id-1853": "crypto.sha512",
         "crypto.sign": "actions/crypto",
-        "id-1940": "crypto.sign",
+        "id-1936": "crypto.sign",
         "deleteTagMaskText": "actions/data",
         "id-133": "deleteTagMaskText",
         "deleteTagText": "actions/data",
@@ -2658,8 +2676,24 @@
         "id-318": "either",
         "os.beginAudioRecording": "actions/audio",
         "id-1647": "os.beginAudioRecording",
+        "experiment.beginRecording": "actions/experimental",
+        "id-1654": "experiment.beginRecording",
         "os.endAudioRecording": "actions/audio",
         "id-1651": "os.endAudioRecording",
+        "experiment.endRecording": "actions/experimental",
+        "id-1658": "experiment.endRecording",
+        "experiment.getAnchorPointPosition": "actions/experimental",
+        "id-1637": "experiment.getAnchorPointPosition",
+        "experiment.getVoices": "actions/experimental",
+        "id-1666": "experiment.getVoices",
+        "experiment.localFormAnimation": "actions/experimental",
+        "id-1610": "experiment.localFormAnimation",
+        "experiment.localPositionTween": "actions/experimental",
+        "id-1615": "experiment.localPositionTween",
+        "experiment.localRotationTween": "actions/experimental",
+        "id-1626": "experiment.localRotationTween",
+        "experiment.speakText": "actions/experimental",
+        "id-1661": "experiment.speakText",
         "getBotLinks": "actions/data",
         "id-194": "getBotLinks",
         "getBotPosition": "actions/data",
@@ -2691,47 +2725,47 @@
         "insertTagText": "actions/data",
         "id-111": "insertTagText",
         "math.abs": "actions/math",
-        "id-1687": "math.abs",
+        "id-1683": "math.abs",
         "math.addVectors": "actions/math",
-        "id-1757": "math.addVectors",
+        "id-1753": "math.addVectors",
         "math.areClose": "actions/math",
-        "id-1788": "math.areClose",
+        "id-1784": "math.areClose",
         "math.avg": "actions/math",
-        "id-1679": "math.avg",
+        "id-1675": "math.avg",
         "math.degreesToRadians": "actions/math",
-        "id-1713": "math.degreesToRadians",
+        "id-1709": "math.degreesToRadians",
         "math.getAnchorPointOffset": "actions/math",
-        "id-1753": "math.getAnchorPointOffset",
+        "id-1749": "math.getAnchorPointOffset",
         "math.getForwardDirection": "actions/math",
-        "id-1721": "math.getForwardDirection",
+        "id-1717": "math.getForwardDirection",
         "math.getSeededRandomNumberGenerator": "actions/math",
-        "id-1695": "math.getSeededRandomNumberGenerator",
+        "id-1691": "math.getSeededRandomNumberGenerator",
         "math.intersectPlane": "actions/math",
-        "id-1730": "math.intersectPlane",
+        "id-1726": "math.intersectPlane",
         "math.negateVector": "actions/math",
-        "id-1767": "math.negateVector",
+        "id-1763": "math.negateVector",
         "math.normalizeVector": "actions/math",
-        "id-1772": "math.normalizeVector",
+        "id-1768": "math.normalizeVector",
         "math.radiansToDegrees": "actions/math",
-        "id-1717": "math.radiansToDegrees",
+        "id-1713": "math.radiansToDegrees",
         "math.random": "actions/math",
-        "id-1708": "math.random",
+        "id-1704": "math.random",
         "math.randomInt": "actions/math",
-        "id-1703": "math.randomInt",
+        "id-1699": "math.randomInt",
         "math.scaleVector": "actions/math",
-        "id-1782": "math.scaleVector",
+        "id-1778": "math.scaleVector",
         "math.setRandomSeed": "actions/math",
-        "id-1699": "math.setRandomSeed",
+        "id-1695": "math.setRandomSeed",
         "math.sqrt": "actions/math",
-        "id-1683": "math.sqrt",
+        "id-1679": "math.sqrt",
         "math.stdDev": "actions/math",
-        "id-1691": "math.stdDev",
+        "id-1687": "math.stdDev",
         "math.subtractVectors": "actions/math",
-        "id-1762": "math.subtractVectors",
+        "id-1758": "math.subtractVectors",
         "math.sum": "actions/math",
-        "id-1675": "math.sum",
+        "id-1671": "math.sum",
         "math.vectorLength": "actions/math",
-        "id-1777": "math.vectorLength",
+        "id-1773": "math.vectorLength",
         "neighboring": "actions/bot-filters",
         "id-304": "neighboring",
         "not": "actions/bot-filters",
@@ -2766,6 +2800,8 @@
         "id-1230": "os.applyUpdatesToInst",
         "os.arSupported": "actions/xr",
         "id-548": "os.arSupported",
+        "os.bufferFormAddressGLTF": "actions/animations",
+        "id-1183": "os.bufferFormAddressGLTF",
         "os.bufferSound": "actions/audio",
         "id-749": "os.bufferSound",
         "os.calculateRayFromCamera": "actions/portals",
@@ -3055,11 +3091,11 @@
         "uuid": "actions/data",
         "id-355": "uuid",
         "web.get": "actions/web",
-        "id-1983": "web.get",
+        "id-1979": "web.get",
         "web.hook": "actions/web",
-        "id-1994": "web.hook",
+        "id-1990": "web.hook",
         "web.post": "actions/web",
-        "id-1988": "web.post",
+        "id-1984": "web.post",
         "configBot": "actions/os",
         "id-418": "configBot"
     }

@@ -1,650 +1,76 @@
 {
-    "hash": "actions/files",
-    "pageTitle": "File Actions",
-    "pageDescription": "Actions for uploading and downloading files.",
-    "pageSidebarLabel": "Files",
+    "hash": "actions/experimental",
+    "pageTitle": "Experimental Actions",
+    "pageDescription": "Experimental actions are actions that are not yet fully supported and may change in the future.",
+    "pageSidebarLabel": "Experimental",
     "contents": [
         {
-            "id": 575,
+            "id": 1654,
             "order": 9999,
-            "name": "os.download",
+            "name": "experiment.beginRecording",
             "reflection": {
-                "id": 575,
+                "id": 1654,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
                 "flags": {},
                 "comment": {
-                    "shortText": "Downloads the given data with the given filename and [MIME Type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types).",
+                    "shortText": "Starts a new recording. Returns a promise that resolves when recording has started.\nThe returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone.",
                     "tags": [
                         {
                             "tag": "example",
                             "paramName": "",
-                            "text": "Download a text file named \"test.txt\" that contains \"abc\".\nos.download(\"abc\", \"test.txt\");\n"
+                            "text": "Record for 10 seconds and download the files.\nawait experiment.beginRecording({\n    audio: true,\n    video: true,\n    screen: false\n});\nawait os.sleep(10000);\nconst data = await experiment.endRecording();\nlet index = 0;\nfor(let file of data.files) {\n    os.download(file.data, `file-${index}`);\n    index += 1;\n}\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Record the screen with microphone audio.\nawait experiment.beginRecording({\n    audio: ['microphone'],\n    video: false,\n    screen: true\n});\nawait os.sleep(10000);\nconst data = await experiment.endRecording();\nlet index = 0;\nfor(let file of data.files) {\n    os.download(file.data, `file-${index}`);\n    index += 1;\n}\n"
                         },
                         {
                             "tag": "dochash",
                             "paramName": "",
-                            "text": "actions/files"
+                            "text": "actions/experimental"
                         },
                         {
                             "tag": "doctitle",
                             "paramName": "",
-                            "text": "File Actions"
+                            "text": "Experimental Actions"
                         },
                         {
                             "tag": "docsidebar",
                             "paramName": "",
-                            "text": "Files"
+                            "text": "Experimental"
                         },
                         {
                             "tag": "docdescription",
                             "paramName": "",
-                            "text": "Actions for uploading and downloading files."
+                            "text": "Experimental actions are actions that are not yet fully supported and may change in the future."
                         },
                         {
                             "tag": "docname",
                             "paramName": "",
-                            "text": "os.download"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "10-download\n"
+                            "text": "experiment.beginRecording\n"
                         }
                     ]
                 },
                 "parameters": [
                     {
-                        "id": 576,
-                        "name": "data",
+                        "id": 1655,
+                        "name": "options",
                         "kind": 32768,
                         "kindString": "Parameter",
-                        "flags": {},
+                        "flags": {
+                            "isOptional": true
+                        },
                         "comment": {
-                            "shortText": "the data that should be downloaded. This can be a string, object, or binary data in the form of an [ArrayBuffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer) or [Blob](https://developer.mozilla.org/en-us/docs/Web/API/Blob).",
+                            "shortText": "the options that should be used for the recording.\nDefaults to: `{ audio: true, video: true, screen: false }`\n",
                             "tags": []
                         },
                         "type": {
-                            "type": "union",
-                            "types": [
-                                {
-                                    "type": "intrinsic",
-                                    "name": "string"
-                                },
-                                {
-                                    "type": "intrinsic",
-                                    "name": "object"
-                                },
-                                {
-                                    "type": "reference",
-                                    "qualifiedName": "ArrayBuffer",
-                                    "package": "typescript",
-                                    "name": "ArrayBuffer"
-                                },
-                                {
-                                    "type": "reference",
-                                    "qualifiedName": "Blob",
-                                    "package": "typescript",
-                                    "name": "Blob"
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "id": 577,
-                        "name": "filename",
-                        "kind": 32768,
-                        "kindString": "Parameter",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "the name of the file that should be downloaded.",
-                            "tags": []
-                        },
-                        "type": {
-                            "type": "intrinsic",
-                            "name": "string"
-                        }
-                    },
-                    {
-                        "id": 578,
-                        "name": "mimeType",
-                        "kind": 32768,
-                        "kindString": "Parameter",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "the [MIME Type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) that the downloaded file should have. If not provided, then it will be inferred from the provided filename.\n",
-                            "tags": []
-                        },
-                        "type": {
-                            "type": "intrinsic",
-                            "name": "string"
-                        },
-                        "defaultValue": "..."
-                    }
-                ],
-                "type": {
-                    "type": "reference",
-                    "name": "DownloadAction"
-                }
-            },
-            "comment": {
-                "shortText": "Downloads the given data with the given filename and [MIME Type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types).",
-                "text": "",
-                "tags": [
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Download a text file named \"test.txt\" that contains \"abc\".\nos.download(\"abc\", \"test.txt\");\n"
-                    },
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "actions/files"
-                    },
-                    {
-                        "tagName": "doctitle",
-                        "paramName": "",
-                        "text": "File Actions"
-                    },
-                    {
-                        "tagName": "docsidebar",
-                        "paramName": "",
-                        "text": "Files"
-                    },
-                    {
-                        "tagName": "docdescription",
-                        "paramName": "",
-                        "text": "Actions for uploading and downloading files."
-                    },
-                    {
-                        "tagName": "docname",
-                        "paramName": "",
-                        "text": "os.download"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "10-download\n"
-                    }
-                ]
-            },
-            "group": "10-download"
-        },
-        {
-            "id": 581,
-            "order": 9999,
-            "name": "os.downloadBots",
-            "reflection": {
-                "id": 581,
-                "name": "__type",
-                "kind": 4096,
-                "kindString": "Call signature",
-                "flags": {},
-                "comment": {
-                    "shortText": "Downloads the given array of bots as a `.aux` or a `.pdf` file with the given filename. Useful for quickly backing up a set of bots.",
-                    "text": "The downloaded bots will be stored in the Version 1 format of the [AUX File Format](glossary:aux), which is well suited for most scenarios.\nFor scenarios where you want conflict-free initialization of a shared inst, you should use [`os.downloadBotsAsInitialzationUpdate(bots, filename)`](ref:os.downloadBotsAsInitialzationUpdate).\n",
-                    "tags": [
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Download all the bots in the \"abc\" dimension as \"abcBots.aux\".\nos.downloadBots(getBots(inDimension(\"abc\")), \"abcBots\");\n"
-                        },
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Download the current bot as \"currentBot.aux\".\nos.downloadBots([bot], \"currentBot\");\n"
-                        },
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Download all bots as \"myServer.pdf\".\nos.downloadBots(getBots(), \"myServer.pdf\");\n"
-                        },
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "actions/files"
-                        },
-                        {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "os.downloadBots"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "10-download\n"
-                        }
-                    ]
-                },
-                "parameters": [
-                    {
-                        "id": 582,
-                        "name": "bots",
-                        "kind": 32768,
-                        "kindString": "Parameter",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "the array of bots that should be downloaded.",
-                            "tags": []
-                        },
-                        "type": {
-                            "type": "array",
-                            "elementType": {
-                                "type": "reference",
-                                "id": 2665,
-                                "name": "Bot"
-                            }
-                        }
-                    },
-                    {
-                        "id": 583,
-                        "name": "filename",
-                        "kind": 32768,
-                        "kindString": "Parameter",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "the name of the file that the bots should be stored in. If the filename ends with `.pdf`, then a PDF file will be downloaded with the bots as embedded data. Otherwise, `.aux` will automatically be added to the end of the filename.\n",
-                            "tags": []
-                        },
-                        "type": {
-                            "type": "intrinsic",
-                            "name": "string"
-                        }
-                    }
-                ],
-                "type": {
-                    "type": "reference",
-                    "name": "DownloadAction"
-                }
-            },
-            "comment": {
-                "shortText": "Downloads the given array of bots as a `.aux` or a `.pdf` file with the given filename. Useful for quickly backing up a set of bots.",
-                "text": "The downloaded bots will be stored in the Version 1 format of the [AUX File Format](glossary:aux), which is well suited for most scenarios.\nFor scenarios where you want conflict-free initialization of a shared inst, you should use {@link os.downloadBotsAsInitialzationUpdate}.\n",
-                "tags": [
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Download all the bots in the \"abc\" dimension as \"abcBots.aux\".\nos.downloadBots(getBots(inDimension(\"abc\")), \"abcBots\");\n"
-                    },
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Download the current bot as \"currentBot.aux\".\nos.downloadBots([bot], \"currentBot\");\n"
-                    },
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Download all bots as \"myServer.pdf\".\nos.downloadBots(getBots(), \"myServer.pdf\");\n"
-                    },
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "actions/files"
-                    },
-                    {
-                        "tagName": "docname",
-                        "paramName": "",
-                        "text": "os.downloadBots"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "10-download\n"
-                    }
-                ]
-            },
-            "group": "10-download"
-        },
-        {
-            "id": 586,
-            "order": 9999,
-            "name": "os.downloadBotsAsInitialzationUpdate",
-            "reflection": {
-                "id": 586,
-                "name": "__type",
-                "kind": 4096,
-                "kindString": "Call signature",
-                "flags": {},
-                "comment": {
-                    "shortText": "Downloads the given array of bots as a `.aux` or a `.pdf` file with the given filename.",
-                    "text": "The downloaded bots will be stored in the Version 2 format of the [AUX File Format](glossary:aux), which is better suited towards scenarios which require conflict-free initialization of a shared inst from the AUX file.\nFor an archive of the current state, you should use [`os.downloadBots(bots, filename)`](ref:os.downloadBots) which is better for scenarios which require direct access to the bot data.\n",
-                    "tags": [
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Download all the bots in the \"abc\" dimension as \"abcBots.aux\".\nos.downloadBotsAsInitialzationUpdate(getBots(inDimension(\"abc\")), \"abcBots\");\n"
-                        },
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Download the current bot as \"currentBot.aux\".\nos.downloadBotsAsInitialzationUpdate([bot], \"currentBot\");\n"
-                        },
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Download all bots as \"myServer.pdf\".\nos.downloadBotsAsInitialzationUpdate(getBots(), \"myServer.pdf\");\n"
-                        },
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "actions/files"
-                        },
-                        {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "os.downloadBotsAsInitialzationUpdate"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "10-download\n"
-                        }
-                    ]
-                },
-                "parameters": [
-                    {
-                        "id": 587,
-                        "name": "bots",
-                        "kind": 32768,
-                        "kindString": "Parameter",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "the array of bots that should be downloaded.",
-                            "tags": []
-                        },
-                        "type": {
-                            "type": "array",
-                            "elementType": {
-                                "type": "reference",
-                                "id": 2665,
-                                "name": "Bot"
-                            }
-                        }
-                    },
-                    {
-                        "id": 588,
-                        "name": "filename",
-                        "kind": 32768,
-                        "kindString": "Parameter",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "the name of the file that the bots should be stored in. If the filename ends with `.pdf`, then a PDF file will be downloaded with the bots as embedded data. Otherwise, `.aux` will automatically be added to the end of the filename.\n",
-                            "tags": []
-                        },
-                        "type": {
-                            "type": "intrinsic",
-                            "name": "string"
-                        }
-                    }
-                ],
-                "type": {
-                    "type": "reference",
-                    "name": "DownloadAction"
-                }
-            },
-            "comment": {
-                "shortText": "Downloads the given array of bots as a `.aux` or a `.pdf` file with the given filename.",
-                "text": "The downloaded bots will be stored in the Version 2 format of the [AUX File Format](glossary:aux), which is better suited towards scenarios which require conflict-free initialization of a shared inst from the AUX file.\nFor an archive of the current state, you should use {@link os.downloadBots} which is better for scenarios which require direct access to the bot data.\n",
-                "tags": [
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Download all the bots in the \"abc\" dimension as \"abcBots.aux\".\nos.downloadBotsAsInitialzationUpdate(getBots(inDimension(\"abc\")), \"abcBots\");\n"
-                    },
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Download the current bot as \"currentBot.aux\".\nos.downloadBotsAsInitialzationUpdate([bot], \"currentBot\");\n"
-                    },
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Download all bots as \"myServer.pdf\".\nos.downloadBotsAsInitialzationUpdate(getBots(), \"myServer.pdf\");\n"
-                    },
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "actions/files"
-                    },
-                    {
-                        "tagName": "docname",
-                        "paramName": "",
-                        "text": "os.downloadBotsAsInitialzationUpdate"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "10-download\n"
-                    }
-                ]
-            },
-            "group": "10-download"
-        },
-        {
-            "id": 594,
-            "order": 9999,
-            "name": "os.downloadInst",
-            "reflection": {
-                "id": 594,
-                "name": "__type",
-                "kind": 4096,
-                "kindString": "Call signature",
-                "flags": {},
-                "comment": {
-                    "shortText": "Downloads all of the shared bots into a `.aux` file on the player's computer. The file will have the same name as the inst.",
-                    "text": "Note that this function is almost exactly the same as [`os.downloadBots(bots, filename)`](ref:os.downloadBots). The only difference is that all bots in the shared space are included and the file is named for you automatically.\n",
-                    "tags": [
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Download the entire inst.\nos.downloadInst();\n"
-                        },
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "actions/files"
-                        },
-                        {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "os.downloadInst"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "10-download\n"
-                        }
-                    ]
-                },
-                "type": {
-                    "type": "reference",
-                    "name": "DownloadAction"
-                }
-            },
-            "comment": {
-                "shortText": "Downloads all of the shared bots into a `.aux` file on the player's computer. The file will have the same name as the inst.",
-                "text": "Note that this function is almost exactly the same as {@link os.downloadBots}. The only difference is that all bots in the shared space are included and the file is named for you automatically.\n",
-                "tags": [
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Download the entire inst.\nos.downloadInst();\n"
-                    },
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "actions/files"
-                    },
-                    {
-                        "tagName": "docname",
-                        "paramName": "",
-                        "text": "os.downloadInst"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "10-download\n"
-                    }
-                ]
-            },
-            "group": "10-download"
-        },
-        {
-            "id": 671,
-            "order": 9999,
-            "name": "os.parseBotsFromData",
-            "reflection": {
-                "id": 671,
-                "name": "__type",
-                "kind": 4096,
-                "kindString": "Call signature",
-                "flags": {},
-                "comment": {
-                    "shortText": "Parses a list of bot mods from the given string of data.\nThe data can be JSON or the contents of a PDF file.\nReturns an array of mods where each mod has the structure of a bot (i.e. it has `id` and `tags` properties).\nReturns `null` if the data is not valid JSON or PDF.",
-                    "tags": [
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Parse the list of bots in an @onFileUpload\nlet bots = os.parseBotsFromData(that.file.data);\n"
-                        },
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "actions/files"
-                        },
-                        {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "os.parseBotsFromData"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "10-download\n"
-                        }
-                    ]
-                },
-                "parameters": [
-                    {
-                        "id": 672,
-                        "name": "jsonOrPdf",
-                        "kind": 32768,
-                        "kindString": "Parameter",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "the JSON data or the contents of the PDF file that should parsed.\n",
-                            "tags": []
-                        },
-                        "type": {
-                            "type": "union",
-                            "types": [
-                                {
-                                    "type": "intrinsic",
-                                    "name": "string"
-                                },
-                                {
-                                    "type": "reference",
-                                    "qualifiedName": "ArrayBuffer",
-                                    "package": "typescript",
-                                    "name": "ArrayBuffer"
-                                }
-                            ]
-                        }
-                    }
-                ],
-                "type": {
-                    "type": "array",
-                    "elementType": {
-                        "type": "reference",
-                        "id": 2665,
-                        "name": "Bot"
-                    }
-                }
-            },
-            "comment": {
-                "shortText": "Parses a list of bot mods from the given string of data.\nThe data can be JSON or the contents of a PDF file.\nReturns an array of mods where each mod has the structure of a bot (i.e. it has `id` and `tags` properties).\nReturns `null` if the data is not valid JSON or PDF.",
-                "text": "",
-                "tags": [
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Parse the list of bots in an @onFileUpload\nlet bots = os.parseBotsFromData(that.file.data);\n"
-                    },
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "actions/files"
-                    },
-                    {
-                        "tagName": "docname",
-                        "paramName": "",
-                        "text": "os.parseBotsFromData"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "10-download\n"
-                    }
-                ]
-            },
-            "group": "10-download"
-        },
-        {
-            "id": 667,
-            "order": 9999,
-            "name": "os.importAUX",
-            "reflection": {
-                "id": 667,
-                "name": "__type",
-                "kind": 4096,
-                "kindString": "Call signature",
-                "flags": {},
-                "comment": {
-                    "shortText": "Imports an AUX file from the given string.",
-                    "text": "If the string contains JSON, then the JSON will be imported as if it was a .aux file. If the string is a [URL](https://en.wikipedia.org/wiki/URL), then it will be downloaded and imported.\n\nThis is useful to quickly download a AUX file and load it into the current inst from a site such as https://gist.github.com/.\n",
-                    "tags": [
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Import an AUX file from a file.\nconst path = '/drives/myFile.aux';\nos.importAUX(path);\n"
-                        },
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Import an AUX file from JSON.\nos.importAUX(`{\n    \"version\": 1,\n    \"state\": {\n        \"079847e4-6a58-423d-9a86-8d4ef8be5970\": {\n            \"id\": \"079847e4-6a58-423d-9a86-8d4ef8be5970\",\n            \"tags\": {\n                \"color\": \"red\"\n            }\n        }\n    }\n}`);\n"
-                        },
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "actions/files"
-                        },
-                        {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "os.importAUX"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "10-upload\n"
-                        }
-                    ]
-                },
-                "parameters": [
-                    {
-                        "id": 668,
-                        "name": "urlOrJSON",
-                        "kind": 32768,
-                        "kindString": "Parameter",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "the URL or JSON to load.\n                 If given JSON, then it will be imported as if it was a `.aux` file.\n                 If given a URL, then it will be downloaded and then imported.\n",
-                            "tags": []
-                        },
-                        "type": {
-                            "type": "intrinsic",
-                            "name": "string"
+                            "type": "reference",
+                            "id": 2657,
+                            "name": "RecordingOptions"
                         }
                     }
                 ],
@@ -662,138 +88,353 @@
                 }
             },
             "comment": {
-                "shortText": "Imports an AUX file from the given string.",
-                "text": "If the string contains JSON, then the JSON will be imported as if it was a .aux file. If the string is a [URL](https://en.wikipedia.org/wiki/URL), then it will be downloaded and imported.\n\nThis is useful to quickly download a AUX file and load it into the current inst from a site such as https://gist.github.com/.\n",
-                "tags": [
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Import an AUX file from a file.\nconst path = '/drives/myFile.aux';\nos.importAUX(path);\n"
-                    },
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Import an AUX file from JSON.\nos.importAUX(`{\n    \"version\": 1,\n    \"state\": {\n        \"079847e4-6a58-423d-9a86-8d4ef8be5970\": {\n            \"id\": \"079847e4-6a58-423d-9a86-8d4ef8be5970\",\n            \"tags\": {\n                \"color\": \"red\"\n            }\n        }\n    }\n}`);\n"
-                    },
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "actions/files"
-                    },
-                    {
-                        "tagName": "docname",
-                        "paramName": "",
-                        "text": "os.importAUX"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "10-upload\n"
-                    }
-                ]
-            },
-            "group": "10-upload"
-        },
-        {
-            "id": 597,
-            "order": 9999,
-            "name": "os.showUploadAuxFile",
-            "reflection": {
-                "id": 597,
-                "name": "__type",
-                "kind": 4096,
-                "kindString": "Call signature",
-                "flags": {},
-                "comment": {
-                    "shortText": "Shows the \"Upload AUX File\" dialog which lets the user select a .aux file to upload to the inst.",
-                    "tags": [
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Show the \"Upload AUX File\" dialog.\nos.showUploadAuxFile();\n"
-                        },
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "actions/files"
-                        },
-                        {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "os.showUploadAuxFile"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "10-upload\n"
-                        }
-                    ]
-                },
-                "type": {
-                    "type": "reference",
-                    "name": "ShowUploadAuxFileAction"
-                }
-            },
-            "comment": {
-                "shortText": "Shows the \"Upload AUX File\" dialog which lets the user select a .aux file to upload to the inst.",
+                "shortText": "Starts a new recording. Returns a promise that resolves when recording has started.\nThe returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone.",
                 "text": "",
                 "tags": [
                     {
                         "tagName": "example",
                         "paramName": "",
-                        "text": "Show the \"Upload AUX File\" dialog.\nos.showUploadAuxFile();\n"
+                        "text": "Record for 10 seconds and download the files.\nawait experiment.beginRecording({\n    audio: true,\n    video: true,\n    screen: false\n});\nawait os.sleep(10000);\nconst data = await experiment.endRecording();\nlet index = 0;\nfor(let file of data.files) {\n    os.download(file.data, `file-${index}`);\n    index += 1;\n}\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Record the screen with microphone audio.\nawait experiment.beginRecording({\n    audio: ['microphone'],\n    video: false,\n    screen: true\n});\nawait os.sleep(10000);\nconst data = await experiment.endRecording();\nlet index = 0;\nfor(let file of data.files) {\n    os.download(file.data, `file-${index}`);\n    index += 1;\n}\n"
                     },
                     {
                         "tagName": "dochash",
                         "paramName": "",
-                        "text": "actions/files"
+                        "text": "actions/experimental"
+                    },
+                    {
+                        "tagName": "doctitle",
+                        "paramName": "",
+                        "text": "Experimental Actions"
+                    },
+                    {
+                        "tagName": "docsidebar",
+                        "paramName": "",
+                        "text": "Experimental"
+                    },
+                    {
+                        "tagName": "docdescription",
+                        "paramName": "",
+                        "text": "Experimental actions are actions that are not yet fully supported and may change in the future."
                     },
                     {
                         "tagName": "docname",
                         "paramName": "",
-                        "text": "os.showUploadAuxFile"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "10-upload\n"
+                        "text": "experiment.beginRecording\n"
                     }
                 ]
             },
-            "group": "10-upload"
+            "group": null
         },
         {
-            "id": 600,
+            "id": 1658,
             "order": 9999,
-            "name": "os.showUploadFiles",
+            "name": "experiment.endRecording",
             "reflection": {
-                "id": 600,
+                "id": 1658,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
                 "flags": {},
                 "comment": {
-                    "shortText": "Shows the \"Upload Files\" dialog which lets the user select some files to upload to the inst.\nReturns a promise that resolves with the list of files that were uploaded.",
+                    "shortText": "Stops the recording that is in progress. Returns a promise that resolves with the recorded data.",
                     "tags": [
                         {
                             "tag": "example",
                             "paramName": "",
-                            "text": "Show the \"Upload Files\" dialog.\nconst files = await os.showUploadFiles();\nos.toast(\"You uploaded \" + files.length + \" file(s)!\");\n"
+                            "text": "Record for 10 seconds and download the files.\nawait experiment.beginRecording({\n    audio: true,\n    video: true,\n    screen: false\n});\nawait os.sleep(10000);\nconst data = await experiment.endRecording();\nlet index = 0;\nfor(let file of data.files) {\n    os.download(file.data, `file-${index}`);\n    index += 1;\n}\n"
                         },
                         {
                             "tag": "dochash",
                             "paramName": "",
-                            "text": "actions/files"
+                            "text": "actions/experimental"
                         },
                         {
                             "tag": "docname",
                             "paramName": "",
-                            "text": "os.showUploadFiles"
+                            "text": "experiment.endRecording\n"
+                        }
+                    ]
+                },
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 2650,
+                            "name": "Recording"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Stops the recording that is in progress. Returns a promise that resolves with the recorded data.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Record for 10 seconds and download the files.\nawait experiment.beginRecording({\n    audio: true,\n    video: true,\n    screen: false\n});\nawait os.sleep(10000);\nconst data = await experiment.endRecording();\nlet index = 0;\nfor(let file of data.files) {\n    os.download(file.data, `file-${index}`);\n    index += 1;\n}\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/experimental"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "experiment.endRecording\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1637,
+            "order": 9999,
+            "name": "experiment.getAnchorPointPosition",
+            "reflection": {
+                "id": 1637,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets the absolute position in the given dimension that the center of the given bot would be placed at if the bot was using the given anchor point.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Get the top anchor point of the current bot in the \"home\" dimension.\nconst point = experiment.getAnchorPointPosition(bot, \"home\", \"top\");\nos.toast(point);\n"
                         },
                         {
-                            "tag": "docgroup",
+                            "tag": "example",
                             "paramName": "",
-                            "text": "10-upload\n"
+                            "text": "Get the back right anchor point of the current bot in the \"home\" dimension.\nconst point = experiment.getAnchorPointPosition(bot, \"home\", [ 0.5, -0.5, 0 ]);\nos.toast(point);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Place bots at each of the anchor points.\nlet points = [\n    'top',\n    'bottom',\n    'front',\n    'back',\n    'left',\n    'right',\n    'center',\n];\n\nfor(let point of points) {\n    let pos = experiment.getAnchorPointPosition(bot, os.getCurrentDimension(), point);\n    create({\n        space: 'tempShared',\n        color: 'green',\n        [os.getCurrentDimension()]: true,\n        [os.getCurrentDimension() + \"X\"]: pos.x,\n        [os.getCurrentDimension() + \"Y\"]: pos.y,\n        [os.getCurrentDimension() + \"Z\"]: pos.z,\n        anchorPoint: 'center',\n        targetAnchorPoint: point,\n        scale: 0.1,\n    });\n}\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/experimental"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "experiment.getAnchorPointPosition\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1638,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the bot that the anchor point position should be calculated for.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2665,
+                            "name": "Bot"
+                        }
+                    },
+                    {
+                        "id": 1639,
+                        "name": "dimension",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the dimension that the anchor point position should be calculated in.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1640,
+                        "name": "anchorPoint",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the anchor point that should be calculated. Can be any valid [`#anchorPoint`](tags:anchorPoint) value.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "name": "BotAnchorPoint"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reflection",
+                    "declaration": {
+                        "id": 1641,
+                        "name": "__type",
+                        "kind": 65536,
+                        "kindString": "Type literal",
+                        "flags": {},
+                        "children": [
+                            {
+                                "id": 1642,
+                                "name": "x",
+                                "kind": 1024,
+                                "kindString": "Property",
+                                "flags": {},
+                                "sources": [
+                                    {
+                                        "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                        "line": 11516,
+                                        "character": 9
+                                    }
+                                ],
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            },
+                            {
+                                "id": 1643,
+                                "name": "y",
+                                "kind": 1024,
+                                "kindString": "Property",
+                                "flags": {},
+                                "sources": [
+                                    {
+                                        "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                        "line": 11516,
+                                        "character": 20
+                                    }
+                                ],
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            },
+                            {
+                                "id": 1644,
+                                "name": "z",
+                                "kind": 1024,
+                                "kindString": "Property",
+                                "flags": {},
+                                "sources": [
+                                    {
+                                        "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                        "line": 11516,
+                                        "character": 31
+                                    }
+                                ],
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            }
+                        ],
+                        "groups": [
+                            {
+                                "title": "Properties",
+                                "kind": 1024,
+                                "children": [
+                                    1642,
+                                    1643,
+                                    1644
+                                ]
+                            }
+                        ],
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                "line": 11516,
+                                "character": 7
+                            }
+                        ]
+                    }
+                }
+            },
+            "comment": {
+                "shortText": "Gets the absolute position in the given dimension that the center of the given bot would be placed at if the bot was using the given anchor point.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Get the top anchor point of the current bot in the \"home\" dimension.\nconst point = experiment.getAnchorPointPosition(bot, \"home\", \"top\");\nos.toast(point);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Get the back right anchor point of the current bot in the \"home\" dimension.\nconst point = experiment.getAnchorPointPosition(bot, \"home\", [ 0.5, -0.5, 0 ]);\nos.toast(point);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Place bots at each of the anchor points.\nlet points = [\n    'top',\n    'bottom',\n    'front',\n    'back',\n    'left',\n    'right',\n    'center',\n];\n\nfor(let point of points) {\n    let pos = experiment.getAnchorPointPosition(bot, os.getCurrentDimension(), point);\n    create({\n        space: 'tempShared',\n        color: 'green',\n        [os.getCurrentDimension()]: true,\n        [os.getCurrentDimension() + \"X\"]: pos.x,\n        [os.getCurrentDimension() + \"Y\"]: pos.y,\n        [os.getCurrentDimension() + \"Z\"]: pos.z,\n        anchorPoint: 'center',\n        targetAnchorPoint: point,\n        scale: 0.1,\n    });\n}\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/experimental"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "experiment.getAnchorPointPosition\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1666,
+            "order": 9999,
+            "name": "experiment.getVoices",
+            "reflection": {
+                "id": 1666,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets the list of synthetic voices that are supported by the system.\nReturns a promise that resolves with the voices.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Toast the list of voices that are supported.\nconst voices = await experiment.getVoices();\nos.toast(voices);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Get the first US English voice.\nconst voices = await experiment.getVoices();\nconst usEnglish = voices.find(v => v.language === \"en-US\");\nos.toast(usEnglish);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/experimental"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "experiment.getVoices\n"
                         }
                     ]
                 },
@@ -804,8 +445,8 @@
                             "type": "array",
                             "elementType": {
                                 "type": "reference",
-                                "id": 2156,
-                                "name": "UploadedFile"
+                                "id": 2661,
+                                "name": "SyntheticVoice"
                             }
                         }
                     ],
@@ -815,32 +456,708 @@
                 }
             },
             "comment": {
-                "shortText": "Shows the \"Upload Files\" dialog which lets the user select some files to upload to the inst.\nReturns a promise that resolves with the list of files that were uploaded.",
+                "shortText": "Gets the list of synthetic voices that are supported by the system.\nReturns a promise that resolves with the voices.",
                 "text": "",
                 "tags": [
                     {
                         "tagName": "example",
                         "paramName": "",
-                        "text": "Show the \"Upload Files\" dialog.\nconst files = await os.showUploadFiles();\nos.toast(\"You uploaded \" + files.length + \" file(s)!\");\n"
+                        "text": "Toast the list of voices that are supported.\nconst voices = await experiment.getVoices();\nos.toast(voices);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Get the first US English voice.\nconst voices = await experiment.getVoices();\nconst usEnglish = voices.find(v => v.language === \"en-US\");\nos.toast(usEnglish);\n"
                     },
                     {
                         "tagName": "dochash",
                         "paramName": "",
-                        "text": "actions/files"
+                        "text": "actions/experimental"
                     },
                     {
                         "tagName": "docname",
                         "paramName": "",
-                        "text": "os.showUploadFiles"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "10-upload\n"
+                        "text": "experiment.getVoices\n"
                     }
                 ]
             },
-            "group": "10-upload"
+            "group": null
+        },
+        {
+            "id": 1610,
+            "order": 9999,
+            "name": "experiment.localFormAnimation",
+            "reflection": {
+                "id": 1610,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Locally plays the given animation on the given bot.",
+                    "text": "If an animation is already playing, it will be interrupted.\nWhen the given animation is finished playing, the interrupted animation will be restored.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Play the \"jump\" animation on this bot.\nexperiment.localFormAnimation(this, \"jump\");\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/experimental"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "experiment.localFormAnimation\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1611,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the Bot or Bot ID that the animation should be played on.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "reference",
+                                    "id": 2665,
+                                    "name": "Bot"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 1612,
+                        "name": "animation",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the name or index of the animation that should be played.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "name": "LocalFormAnimationAction"
+                }
+            },
+            "comment": {
+                "shortText": "Locally plays the given animation on the given bot.",
+                "text": "If an animation is already playing, it will be interrupted.\nWhen the given animation is finished playing, the interrupted animation will be restored.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Play the \"jump\" animation on this bot.\nexperiment.localFormAnimation(this, \"jump\");\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/experimental"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "experiment.localFormAnimation\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1615,
+            "order": 9999,
+            "name": "experiment.localPositionTween",
+            "reflection": {
+                "id": 1615,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Locally plays a tween that moves the given bot in the given dimension to the given position.\nOptionally allows customizing the easing of the tween.",
+                    "text": "Returns a promise that resolves when the tween is finished.\n\nWhile the tween is playing, any updates to the bot's position and rotation are ignored.\nOnce the tween is done playing, any change to the bot will reset the position/rotation.\n\n\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Tween the bot to X = 10 in the `home` dimension.\nexperiment.localPositionTween(\n    this,\n    'home',\n    {\n        x: 10,\n    });\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Tween the bot over 5 seconds.\nexperiment.localPositionTween(\n    this,\n    'home',\n    {\n        x: 10,\n    },\n    {\n        duration: 5\n    });\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Tween the bot with quadratic easing.\nexperiment.localPositionTween(\n    this,\n    'home',\n    {\n        x: 10,\n    },\n    {\n        easing: {\n            type: 'quadratic',\n            mode: 'inout'\n        }\n    });\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/experimental"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "experiment.localPositionTween\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1616,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the bot or ID of the bot that should be tweened.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "reference",
+                                    "id": 2665,
+                                    "name": "Bot"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 1617,
+                        "name": "dimension",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the dimension that the bot should be tweened in.\nNote that the tween will only work if the given dimension is currently in the grid portal or miniGridPortal.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1618,
+                        "name": "position",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the position that the bot should be tweened to. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reflection",
+                            "declaration": {
+                                "id": 1619,
+                                "name": "__type",
+                                "kind": 65536,
+                                "kindString": "Type literal",
+                                "flags": {},
+                                "children": [
+                                    {
+                                        "id": 1620,
+                                        "name": "x",
+                                        "kind": 1024,
+                                        "kindString": "Property",
+                                        "flags": {},
+                                        "sources": [
+                                            {
+                                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                "line": 11383,
+                                                "character": 20
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    },
+                                    {
+                                        "id": 1621,
+                                        "name": "y",
+                                        "kind": 1024,
+                                        "kindString": "Property",
+                                        "flags": {},
+                                        "sources": [
+                                            {
+                                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                "line": 11383,
+                                                "character": 31
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    },
+                                    {
+                                        "id": 1622,
+                                        "name": "z",
+                                        "kind": 1024,
+                                        "kindString": "Property",
+                                        "flags": {
+                                            "isOptional": true
+                                        },
+                                        "sources": [
+                                            {
+                                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                "line": 11383,
+                                                "character": 42
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    }
+                                ],
+                                "groups": [
+                                    {
+                                        "title": "Properties",
+                                        "kind": 1024,
+                                        "children": [
+                                            1620,
+                                            1621,
+                                            1622
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "id": 1623,
+                        "name": "options",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the options that should be used.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2476,
+                            "name": "TweenOptions"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "intrinsic",
+                            "name": "void"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Locally plays a tween that moves the given bot in the given dimension to the given position.\nOptionally allows customizing the easing of the tween.",
+                "text": "Returns a promise that resolves when the tween is finished.\n\nWhile the tween is playing, any updates to the bot's position and rotation are ignored.\nOnce the tween is done playing, any change to the bot will reset the position/rotation.\n\n\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Tween the bot to X = 10 in the `home` dimension.\nexperiment.localPositionTween(\n    this,\n    'home',\n    {\n        x: 10,\n    });\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Tween the bot over 5 seconds.\nexperiment.localPositionTween(\n    this,\n    'home',\n    {\n        x: 10,\n    },\n    {\n        duration: 5\n    });\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Tween the bot with quadratic easing.\nexperiment.localPositionTween(\n    this,\n    'home',\n    {\n        x: 10,\n    },\n    {\n        easing: {\n            type: 'quadratic',\n            mode: 'inout'\n        }\n    });\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/experimental"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "experiment.localPositionTween\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1626,
+            "order": 9999,
+            "name": "experiment.localRotationTween",
+            "reflection": {
+                "id": 1626,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Locally plays a tween that rotates the given bot in the given dimension to the given rotation.\nOptionally allows customizing the easing of the tween.",
+                    "text": "Returns a promise that resolves when the tween is finished.\n\nWhile the tween is playing, any updates to the bot's position and rotation are ignored.\nOnce the tween is done playing, any change to the bot will reset the position/rotation.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Tween the bot 90 degrees around the Z axis in the `home` dimension.\nexperiment.localRotationTween(\n    this,\n    'home',\n    {\n        z: Math.PI / 2,\n    });\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Tween the bot for 5 seconds.\nexperiment.localRotationTween(\n    this,\n    'home',\n    {\n        z: Math.PI / 2,\n    },\n    {\n        duration: 5\n    });\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Tween the bot with quadratic easing.\nexperiment.localRotationTween(\n    this,\n    'home',\n    {\n        z: Math.PI / 2,\n    },\n    {\n        easing: {\n            type: 'quadratic',\n            mode: 'inout'\n        }\n    });\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/experimental"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "experiment.localRotationTween\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1627,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the bot or ID of the bot that should be tweened.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "reference",
+                                    "id": 2665,
+                                    "name": "Bot"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 1628,
+                        "name": "dimension",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the dimension that the bot should be tweened in.\nNote that the tween will only work if the given dimension is currently in the grid portal or miniGridPortal.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1629,
+                        "name": "rotation",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the rotation that the bot should be tweened to in radians. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reflection",
+                            "declaration": {
+                                "id": 1630,
+                                "name": "__type",
+                                "kind": 65536,
+                                "kindString": "Type literal",
+                                "flags": {},
+                                "children": [
+                                    {
+                                        "id": 1631,
+                                        "name": "x",
+                                        "kind": 1024,
+                                        "kindString": "Property",
+                                        "flags": {},
+                                        "sources": [
+                                            {
+                                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                "line": 11453,
+                                                "character": 20
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    },
+                                    {
+                                        "id": 1632,
+                                        "name": "y",
+                                        "kind": 1024,
+                                        "kindString": "Property",
+                                        "flags": {},
+                                        "sources": [
+                                            {
+                                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                "line": 11453,
+                                                "character": 31
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    },
+                                    {
+                                        "id": 1633,
+                                        "name": "z",
+                                        "kind": 1024,
+                                        "kindString": "Property",
+                                        "flags": {
+                                            "isOptional": true
+                                        },
+                                        "sources": [
+                                            {
+                                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                "line": 11453,
+                                                "character": 42
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    }
+                                ],
+                                "groups": [
+                                    {
+                                        "title": "Properties",
+                                        "kind": 1024,
+                                        "children": [
+                                            1631,
+                                            1632,
+                                            1633
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "id": 1634,
+                        "name": "options",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The options that should be used for the tween.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2476,
+                            "name": "TweenOptions"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "intrinsic",
+                            "name": "void"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Locally plays a tween that rotates the given bot in the given dimension to the given rotation.\nOptionally allows customizing the easing of the tween.",
+                "text": "Returns a promise that resolves when the tween is finished.\n\nWhile the tween is playing, any updates to the bot's position and rotation are ignored.\nOnce the tween is done playing, any change to the bot will reset the position/rotation.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Tween the bot 90 degrees around the Z axis in the `home` dimension.\nexperiment.localRotationTween(\n    this,\n    'home',\n    {\n        z: Math.PI / 2,\n    });\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Tween the bot for 5 seconds.\nexperiment.localRotationTween(\n    this,\n    'home',\n    {\n        z: Math.PI / 2,\n    },\n    {\n        duration: 5\n    });\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Tween the bot with quadratic easing.\nexperiment.localRotationTween(\n    this,\n    'home',\n    {\n        z: Math.PI / 2,\n    },\n    {\n        easing: {\n            type: 'quadratic',\n            mode: 'inout'\n        }\n    });\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/experimental"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "experiment.localRotationTween\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1661,
+            "order": 9999,
+            "name": "experiment.speakText",
+            "reflection": {
+                "id": 1661,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Speaks the given text using a synthetic voice and options.\nNote that this is a local effect. The gererated sounds are only played in the current session.",
+                    "text": "Returns a promise that resolves when the text has been spoken.",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/experimental"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "experiment.speakText\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1662,
+                        "name": "text",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the text that should be spoken.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 1663,
+                        "name": "options",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the options that should be used to speak the text.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2479,
+                            "name": "SpeakTextOptions"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "intrinsic",
+                            "name": "void"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Speaks the given text using a synthetic voice and options.\nNote that this is a local effect. The gererated sounds are only played in the current session.",
+                "text": "Returns a promise that resolves when the text has been spoken.",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/experimental"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "experiment.speakText\n"
+                    }
+                ]
+            },
+            "group": null
         }
     ],
     "references": {

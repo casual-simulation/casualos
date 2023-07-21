@@ -1,411 +1,823 @@
 {
-    "hash": "actions/time",
-    "pageTitle": "Time Actions",
-    "pageDescription": "Time actions make working with time across devices easy.",
-    "pageSidebarLabel": "Time",
+    "hash": "types/experimental",
+    "pageTitle": "Experimental Types",
+    "pageDescription": "Defines the types that are used by experimental actions.",
+    "pageSidebarLabel": "Experimental",
     "contents": [
         {
-            "id": 640,
+            "id": 2652,
             "order": 9999,
-            "name": "os.agreedUponTime",
+            "name": "RecordedFile",
             "reflection": {
-                "id": 640,
-                "name": "agreedUponTime",
-                "kind": 524288,
-                "kindString": "Get signature",
+                "id": 2652,
+                "name": "RecordedFile",
+                "kind": 256,
+                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Gets the shared time that has been agreed upon between devices in the inst as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch).\nThis is what your device's clock thinks the inst clock says.",
-                    "text": "If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.\n",
+                    "shortText": "Defines an interface that represents a recorded file.",
                     "tags": [
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Toast the current shared time\nos.toast(os.agreedUponTime);\n"
-                        },
                         {
                             "tag": "dochash",
                             "paramName": "",
-                            "text": "actions/time"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-time"
+                            "text": "types/experimental"
                         },
                         {
                             "tag": "docname",
                             "paramName": "",
-                            "text": "os.agreedUponTime\n"
+                            "text": "RecordedFile\n"
                         }
                     ]
                 },
-                "type": {
-                    "type": "intrinsic",
-                    "name": "number"
-                }
+                "children": [
+                    {
+                        "id": 2653,
+                        "name": "containsAudio",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "Whether the file contains the recorded audio.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 3626,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        }
+                    },
+                    {
+                        "id": 2655,
+                        "name": "containsScreen",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "Whether the file contains the recorded screen data.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 3636,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        }
+                    },
+                    {
+                        "id": 2654,
+                        "name": "containsVideo",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "Whether the file contains the recorded video.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 3631,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        }
+                    },
+                    {
+                        "id": 2656,
+                        "name": "data",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The data that the file contains.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 3641,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "reference",
+                            "qualifiedName": "Blob",
+                            "package": "typescript",
+                            "name": "Blob"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2653,
+                            2655,
+                            2654,
+                            2656
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 3622,
+                        "character": 17
+                    }
+                ]
             },
             "comment": {
-                "shortText": "Gets the shared time that has been agreed upon between devices in the inst as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch).\nThis is what your device's clock thinks the inst clock says.",
-                "text": "If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.\n",
+                "shortText": "Defines an interface that represents a recorded file.",
+                "text": "",
                 "tags": [
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Toast the current shared time\nos.toast(os.agreedUponTime);\n"
-                    },
                     {
                         "tagName": "dochash",
                         "paramName": "",
-                        "text": "actions/time"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "01-time"
+                        "text": "types/experimental"
                     },
                     {
                         "tagName": "docname",
                         "paramName": "",
-                        "text": "os.agreedUponTime\n"
+                        "text": "RecordedFile\n"
                     }
                 ]
             },
-            "group": "01-time"
+            "group": null
         },
         {
-            "id": 648,
+            "id": 2650,
             "order": 9999,
-            "name": "os.deadReckoningTime",
+            "name": "Recording",
             "reflection": {
-                "id": 648,
-                "name": "deadReckoningTime",
-                "kind": 524288,
-                "kindString": "Get signature",
+                "id": 2650,
+                "name": "Recording",
+                "kind": 256,
+                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Gets the shared time that has been agreed upon between devices but with an additional 50ms offset added.\nThis offset attempts to ensure that changes/events will be recieved by all connected devices by the time it occurs, thereby making synchronized actions easier to perform.",
-                    "text": "If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.\n",
+                    "shortText": "Defines an interface that contains recorded data.",
                     "tags": [
                         {
                             "tag": "dochash",
                             "paramName": "",
-                            "text": "actions/time"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-time"
+                            "text": "types/experimental"
                         },
                         {
                             "tag": "docname",
                             "paramName": "",
-                            "text": "os.deadReckoningTime\n"
+                            "text": "Recording\n"
                         }
                     ]
                 },
-                "type": {
-                    "type": "intrinsic",
-                    "name": "number"
-                }
+                "children": [
+                    {
+                        "id": 2651,
+                        "name": "files",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The list of files that were produced when recording.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 3613,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "reference",
+                                "id": 2652,
+                                "name": "RecordedFile"
+                            }
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2651
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 3609,
+                        "character": 17
+                    }
+                ]
             },
             "comment": {
-                "shortText": "Gets the shared time that has been agreed upon between devices but with an additional 50ms offset added.\nThis offset attempts to ensure that changes/events will be recieved by all connected devices by the time it occurs, thereby making synchronized actions easier to perform.",
-                "text": "If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.\n",
+                "shortText": "Defines an interface that contains recorded data.",
+                "text": "",
                 "tags": [
                     {
                         "tagName": "dochash",
                         "paramName": "",
-                        "text": "actions/time"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "01-time"
+                        "text": "types/experimental"
                     },
                     {
                         "tagName": "docname",
                         "paramName": "",
-                        "text": "os.deadReckoningTime\n"
+                        "text": "Recording\n"
                     }
                 ]
             },
-            "group": "01-time"
+            "group": null
         },
         {
-            "id": 642,
+            "id": 2657,
             "order": 9999,
-            "name": "os.instLatency",
+            "name": "RecordingOptions",
             "reflection": {
-                "id": 642,
-                "name": "instLatency",
-                "kind": 524288,
-                "kindString": "Get signature",
+                "id": 2657,
+                "name": "RecordingOptions",
+                "kind": 256,
+                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Gets the average latency between this device's clock and the inst clock in miliseconds. Lower values tend to indicate a good connection while higher values tend to indicate a bad connection.",
-                    "text": "If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.\n",
+                    "shortText": "An interface that represents the options that can be used for making recordings.",
                     "tags": [
                         {
                             "tag": "dochash",
                             "paramName": "",
-                            "text": "actions/time"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-time"
-                        },
-                        {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "os.instLatency\n"
-                        }
-                    ]
-                },
-                "type": {
-                    "type": "intrinsic",
-                    "name": "number"
-                }
-            },
-            "comment": {
-                "shortText": "Gets the average latency between this device's clock and the inst clock in miliseconds. Lower values tend to indicate a good connection while higher values tend to indicate a bad connection.",
-                "text": "If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.\n",
-                "tags": [
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "actions/time"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "01-time"
-                    },
-                    {
-                        "tagName": "docname",
-                        "paramName": "",
-                        "text": "os.instLatency\n"
-                    }
-                ]
-            },
-            "group": "01-time"
-        },
-        {
-            "id": 644,
-            "order": 9999,
-            "name": "os.instTimeOffset",
-            "reflection": {
-                "id": 644,
-                "name": "instTimeOffset",
-                "kind": 524288,
-                "kindString": "Get signature",
-                "flags": {},
-                "comment": {
-                    "shortText": "Gets the calculated time offset between the inst clock and the local clock. This value is equivalent to `os.agreedUponTime - os.localTime`.",
-                    "text": "If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.\n",
-                    "tags": [
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "actions/time"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-time"
-                        },
-                        {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "os.instTimeOffset\n"
-                        }
-                    ]
-                },
-                "type": {
-                    "type": "intrinsic",
-                    "name": "number"
-                }
-            },
-            "comment": {
-                "shortText": "Gets the calculated time offset between the inst clock and the local clock. This value is equivalent to `os.agreedUponTime - os.localTime`.",
-                "text": "If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.\n",
-                "tags": [
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "actions/time"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "01-time"
-                    },
-                    {
-                        "tagName": "docname",
-                        "paramName": "",
-                        "text": "os.instTimeOffset\n"
-                    }
-                ]
-            },
-            "group": "01-time"
-        },
-        {
-            "id": 646,
-            "order": 9999,
-            "name": "os.instTimeOffsetSpread",
-            "reflection": {
-                "id": 646,
-                "name": "instTimeOffsetSpread",
-                "kind": 524288,
-                "kindString": "Get signature",
-                "flags": {},
-                "comment": {
-                    "shortText": "Gets the spread between calculated time offsets. Higher values indicate that [`os.agreedUponTime`](ref:os.agreedUponTime) is less accurate. Lower values indicate that [`os.agreedUponTime`](ref:os.agreedUponTime) is more accurate.",
-                    "text": "If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.\n",
-                    "tags": [
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "actions/time"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-time"
-                        },
-                        {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "os.instTimeOffsetSpread\n"
-                        }
-                    ]
-                },
-                "type": {
-                    "type": "intrinsic",
-                    "name": "number"
-                }
-            },
-            "comment": {
-                "shortText": "Gets the spread between calculated time offsets. Higher values indicate that {@link os.agreedUponTime} is less accurate. Lower values indicate that {@link os.agreedUponTime} is more accurate.",
-                "text": "If an agreed upon time cannot be determined (for example, because collaboration is disabled in the inst), then this value will always be `NaN`.\n",
-                "tags": [
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "actions/time"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "01-time"
-                    },
-                    {
-                        "tagName": "docname",
-                        "paramName": "",
-                        "text": "os.instTimeOffsetSpread\n"
-                    }
-                ]
-            },
-            "group": "01-time"
-        },
-        {
-            "id": 638,
-            "order": 9999,
-            "name": "os.localTime",
-            "reflection": {
-                "id": 638,
-                "name": "localTime",
-                "kind": 524288,
-                "kindString": "Get signature",
-                "flags": {},
-                "comment": {
-                    "shortText": "Gets the device-local time as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch). This is what your device's clock thinks the current time is.",
-                    "tags": [
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Toast the number of miliseconds since the Unix Epoch\nos.toast(os.localTime);\n"
-                        },
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "actions/time"
+                            "text": "types/experimental"
                         },
                         {
                             "tag": "doctitle",
                             "paramName": "",
-                            "text": "Time Actions"
+                            "text": "Experimental Types"
                         },
                         {
                             "tag": "docsidebar",
                             "paramName": "",
-                            "text": "Time"
+                            "text": "Experimental"
                         },
                         {
                             "tag": "docdescription",
                             "paramName": "",
-                            "text": "Time actions make working with time across devices easy."
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-time"
+                            "text": "Defines the types that are used by experimental actions."
                         },
                         {
                             "tag": "docname",
                             "paramName": "",
-                            "text": "os.localTime\n"
+                            "text": "RecordingOptions\n"
                         }
                     ]
                 },
-                "type": {
-                    "type": "intrinsic",
-                    "name": "number"
-                }
+                "children": [
+                    {
+                        "id": 2658,
+                        "name": "audio",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "Whether to record audio.",
+                            "text": "If the computer does not have an audio device attached, then setting this to true\nwill cause an error.\n\nIf an array is specified, only the specified audio sources will be recorded.\n\nDefaults to true.\n",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 3373,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "boolean"
+                                },
+                                {
+                                    "type": "array",
+                                    "elementType": {
+                                        "type": "union",
+                                        "types": [
+                                            {
+                                                "type": "literal",
+                                                "value": "screen"
+                                            },
+                                            {
+                                                "type": "literal",
+                                                "value": "microphone"
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 2660,
+                        "name": "screen",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "Whether to record the screen.",
+                            "text": "Defaults to false.\n",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 3390,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        }
+                    },
+                    {
+                        "id": 2659,
+                        "name": "video",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "Whether to record video.",
+                            "text": "If the computer does not have a video device attached (like a web cam),\nthen setting this to true will cause an error.\n\nDefaults to true.\n",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 3383,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2658,
+                            2660,
+                            2659
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 3362,
+                        "character": 17
+                    }
+                ]
             },
             "comment": {
-                "shortText": "Gets the device-local time as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch). This is what your device's clock thinks the current time is.",
+                "shortText": "An interface that represents the options that can be used for making recordings.",
                 "text": "",
                 "tags": [
                     {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Toast the number of miliseconds since the Unix Epoch\nos.toast(os.localTime);\n"
-                    },
-                    {
                         "tagName": "dochash",
                         "paramName": "",
-                        "text": "actions/time"
+                        "text": "types/experimental"
                     },
                     {
                         "tagName": "doctitle",
                         "paramName": "",
-                        "text": "Time Actions"
+                        "text": "Experimental Types"
                     },
                     {
                         "tagName": "docsidebar",
                         "paramName": "",
-                        "text": "Time"
+                        "text": "Experimental"
                     },
                     {
                         "tagName": "docdescription",
                         "paramName": "",
-                        "text": "Time actions make working with time across devices easy."
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "01-time"
+                        "text": "Defines the types that are used by experimental actions."
                     },
                     {
                         "tagName": "docname",
                         "paramName": "",
-                        "text": "os.localTime\n"
+                        "text": "RecordingOptions\n"
                     }
                 ]
             },
-            "group": "01-time"
+            "group": null
+        },
+        {
+            "id": 2479,
+            "order": 9999,
+            "name": "SpeakTextOptions",
+            "reflection": {
+                "id": 2479,
+                "name": "SpeakTextApiOptions",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines the options for [`experiment.speakText(text, options)`](ref:experiment.speakText).",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "types/experimental"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "SpeakTextOptions\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2481,
+                        "name": "pitch",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The pitch that the text should be spoken at.\nThis can be any positive number.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                "line": 815,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    },
+                    {
+                        "id": 2480,
+                        "name": "rate",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The rate that the text should be spoken at.\nThis can be any positive number.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                "line": 809,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    },
+                    {
+                        "id": 2482,
+                        "name": "voice",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The voice that the text should be spoken with.\nThis can be the voice object or the name of a voice.\nNote that not all browsers support the same voices.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                "line": 822,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "reference",
+                                    "id": 2661,
+                                    "name": "SyntheticVoice"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2481,
+                            2480,
+                            2482
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                        "line": 804,
+                        "character": 17
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines the options for {@link experiment.speakText}.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "types/experimental"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "SpeakTextOptions\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2661,
+            "order": 9999,
+            "name": "SyntheticVoice",
+            "reflection": {
+                "id": 2661,
+                "name": "SyntheticVoice",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines an interface that represents a synthetic voice.",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "types/experimental"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "SyntheticVoice\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2662,
+                        "name": "default",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "Whether this voice is the default synthetic voice.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 3487,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        }
+                    },
+                    {
+                        "id": 2663,
+                        "name": "language",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The language that this voice can speak.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 3492,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2664,
+                        "name": "name",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The name of the voice.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 3497,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2662,
+                            2663,
+                            2664
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 3483,
+                        "character": 17
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines an interface that represents a synthetic voice.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "types/experimental"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "SyntheticVoice\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2476,
+            "order": 9999,
+            "name": "TweenOptions",
+            "reflection": {
+                "id": 2476,
+                "name": "TweenOptions",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines a set of options for a tween.",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "types/experimental"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "TweenOptions\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2478,
+                        "name": "duration",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The duration of the tween in seconds.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                "line": 840,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    },
+                    {
+                        "id": 2477,
+                        "name": "easing",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The easing for the tween.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                "line": 835,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "reference",
+                            "id": 2496,
+                            "name": "Easing"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2478,
+                            2477
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                        "line": 831,
+                        "character": 17
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines a set of options for a tween.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "types/experimental"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "TweenOptions\n"
+                    }
+                ]
+            },
+            "group": null
         }
     ],
     "references": {
