@@ -150,7 +150,11 @@ export default class PhotoCamera extends Vue {
                                 }
                                 resolve(blob);
                             },
-                            this.imageFormat ?? 'image/png',
+                            this.imageFormat === 'png'
+                                ? 'image/png'
+                                : this.imageFormat === 'jpeg'
+                                ? 'image/jpeg'
+                                : 'image/png',
                             this.imageQuality ?? undefined
                         );
                     } catch (err) {
