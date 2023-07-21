@@ -258,7 +258,8 @@ export type AsyncActions =
     | AnalyticsRecordEventAction
     | HtmlAppMethodCallAction
     | AttachRuntimeAction
-    | DetachRuntimeAction;
+    | DetachRuntimeAction
+    | OpenPhotoCameraAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -935,6 +936,28 @@ export interface OpenBarcodeScannerAction extends Action {
 
     /**
      * Whether the barcode scanner should be visible.
+     */
+    open: boolean;
+
+    /**
+     * The camera that should be used.
+     */
+    cameraType: CameraType;
+
+    /**
+     * Whether to not allow switching the camera.
+     */
+    disallowSwitchingCameras: boolean;
+}
+
+/**
+ * An event that is used to show or hide the photo camera.
+ */
+export interface OpenPhotoCameraAction extends AsyncAction {
+    type: 'open_photo_camera';
+
+    /**
+     * Whether the photo camera should be visible.
      */
     open: boolean;
 
@@ -5229,6 +5252,25 @@ export function openBarcodeScanner(
         open: open,
         cameraType: cameraType,
         disallowSwitchingCameras: false,
+    };
+}
+
+/**
+ * Creates a new OpenPhotoCameraAction.
+ * @param open Whether the barcode scanner should be open or closed.
+ * @param cameraType The camera type that should be used.
+ */
+export function openPhotoCamera(
+    open: boolean,
+    cameraType?: CameraType,
+    taskId?: string | number
+): OpenPhotoCameraAction {
+    return {
+        type: 'open_photo_camera',
+        open: open,
+        cameraType: cameraType,
+        disallowSwitchingCameras: false,
+        taskId,
     };
 }
 

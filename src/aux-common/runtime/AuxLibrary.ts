@@ -330,6 +330,7 @@ import {
     RecordFileActionOptions,
     getCurrentInstUpdate as calcGetCurrentInstUpdate,
     Geolocation,
+    openPhotoCamera as calcOpenPhotoCamera,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -3072,6 +3073,9 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 openImageClassifier,
                 closeImageClassifier,
+
+                openPhotoCamera,
+                closePhotoCamera,
 
                 /**
                  * Gets the device-local time as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch). This is what your device's clock thinks the current time is.
@@ -5966,6 +5970,46 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function closeImageClassifier(): Promise<void> {
         const task = context.createTask();
         const action = calcOpenImageClassifier(false, {}, task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Opens the photo camera. Returns a promise that resolves once the camera has been opened. Triggers the {@tag onPhotoCameraOpened} shout once opened.
+     *
+     * While open, each time the user takes a photo the system will send a {@tag @onPhotoCaptured} shout. Optionally accepts which camera to use for scanning. (front/back)
+     *
+     * @param camera a string specifing which camera to use. Defaults to 'rear'. If the given camera type is not available, then the default camera will be used. Possible values are `"rear"` and "`front`".
+     *
+     * @example Open the photo camera.
+     * await os.openPhotoCamera();
+     *
+     * @example Open the photo camera, defaulting to the front-facing camera.
+     * await os.openPhotoCamera("front");
+     *
+     * @dochash actions/camera
+     * @doctitle Camera Actions
+     * @docsidebar Camera
+     * @docdescription Actions for taking photos.
+     * @docname os.openPhotoCamera
+     */
+    function openPhotoCamera(camera?: CameraType): Promise<void> {
+        const task = context.createTask();
+        const action = calcOpenPhotoCamera(true, camera, task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Closes the photo camera. Returns a promise that resolves once the camera has been closed. Triggers the {@tag onPhotoCameraClosed} shout once closed.
+     *
+     * @example Close the photo camera
+     * await os.closePhotoCamera();
+     *
+     * @dochash actions/camera
+     * @docname os.closePhotoCamera
+     */
+    function closePhotoCamera(): Promise<void> {
+        const task = context.createTask();
+        const action = calcOpenPhotoCamera(false, undefined, task.taskId);
         return addAsyncAction(task, action);
     }
 

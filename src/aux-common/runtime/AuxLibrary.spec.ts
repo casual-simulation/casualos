@@ -225,6 +225,7 @@ import {
     InstUpdate,
     getCurrentInstUpdate,
     getFile,
+    openPhotoCamera,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -3590,6 +3591,44 @@ describe('AuxLibrary', () => {
                 const expected = openImageClassifier(
                     false,
                     {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.openPhotoCamera()', () => {
+            it('should emit a OpenPhotoCameraAction', () => {
+                const action: any = library.api.os.openPhotoCamera();
+                const expected = openPhotoCamera(
+                    true,
+                    undefined,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given camera type', () => {
+                const action: any = library.api.os.openPhotoCamera('front');
+                const expected = openPhotoCamera(
+                    true,
+                    'front',
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.closePhotoCamera()', () => {
+            it('should emit a OpenPhotoCameraAction', () => {
+                const action: any = library.api.os.closePhotoCamera();
+
+                const expected = openPhotoCamera(
+                    false,
+                    undefined,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
