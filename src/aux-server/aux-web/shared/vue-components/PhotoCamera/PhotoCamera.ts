@@ -20,6 +20,7 @@ import {
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import CameraStream from '../CameraStream/CameraStream';
+import { max } from 'lodash';
 
 @Component({
     components: {
@@ -46,6 +47,10 @@ export default class PhotoCamera extends Vue {
     imageFormat: string = null;
     imageQuality: number = null;
     skipConfirm: boolean = false;
+    startingTimer: number = null;
+    currentTimer: number = null;
+
+    private _currentInterval: any;
 
     private _openEvent: OpenPhotoCameraAction;
 
@@ -63,6 +68,8 @@ export default class PhotoCamera extends Vue {
         this.imageFormat = null;
         this.imageQuality = null;
         this.skipConfirm = false;
+        this.startingTimer = null;
+        this.currentTimer = null;
         this.processing = false;
 
         this._sub.add(
@@ -97,6 +104,9 @@ export default class PhotoCamera extends Vue {
 
     hidePhotoCamera() {
         this.showPhotoCamera = false;
+        if (this._currentInterval) {
+            clearInterval(this._currentInterval);
+        }
     }
 
     private _getCamera() {
@@ -207,6 +217,20 @@ export default class PhotoCamera extends Vue {
             this._photoUrl = null;
         }
         this._photoData = null;
+
+        if (
+            this._openEvent &&
+            this._currentSimulation &&
+            this._openEvent.singlePhoto
+        ) {
+            this._currentSimulation.helper.transaction(
+                asyncError(
+                    this._openEvent.taskId,
+                    new Error('Photo cancelled.')
+                )
+            );
+            this.hidePhotoCamera();
+        }
     }
 
     onCameraStreamLoaded() {
@@ -218,6 +242,38 @@ export default class PhotoCamera extends Vue {
             }
             this._superAction(ON_PHOTO_CAMERA_OPENED_ACTION_NAME);
             this._streaming = true;
+
+            this.startTimerIfConfigured();
+        }
+    }
+
+    startTimerIfConfigured(minimumTime: number = 1, maximumTime: number = 100) {
+        if (typeof this.startingTimer === 'number' && this.startingTimer >= 0) {
+            console.log('starting timer', this.startingTimer);
+            this.currentTimer = Math.max(
+                Math.min(this.startingTimer, maximumTime),
+                minimumTime
+            );
+
+            if (this.currentTimer <= 0) {
+                this.takePhoto();
+            } else {
+                if (this._currentInterval) {
+                    clearInterval(this._currentInterval);
+                }
+                this._currentInterval = setInterval(() => {
+                    this.currentTimer -= 1;
+                    if (this.currentTimer <= 0) {
+                        this.takePhoto();
+                        clearInterval(this._currentInterval);
+                    }
+                }, 1000);
+                this._sub.add(() => {
+                    if (this._currentInterval) {
+                        clearInterval(this._currentInterval);
+                    }
+                });
+            }
         }
     }
 
@@ -249,6 +305,10 @@ export default class PhotoCamera extends Vue {
                         this.imageFormat = e.options.imageFormat;
                         this.imageQuality = e.options.imageQuality;
                         this.skipConfirm = e.options.skipConfirm;
+                        this.startingTimer =
+                            e.options.takePhotoAfterSeconds ?? null;
+                        console.log('timer', this.startingTimer);
+                        this.currentTimer = null;
                         this._openEvent = e;
                         this._currentSimulation = sim;
                     } else {

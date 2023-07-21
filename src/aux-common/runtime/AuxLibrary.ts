@@ -6018,6 +6018,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      *     cameraType: "front"
      * });
      *
+     * @example Take a single photo, skipping the confirmation user step.
+     * await os.takeSinglePhoto({
+     *    skipConfirm: true
+     * });
+     *
+     * @example Take a single photo after a 3 second delay.
+     * await os.takeSinglePhoto({
+     *    takePhotoAfterSeconds: 3
+     * });
+     *
      * @dochash actions/camera
      * @doctitle Camera Actions
      * @docsidebar Camera

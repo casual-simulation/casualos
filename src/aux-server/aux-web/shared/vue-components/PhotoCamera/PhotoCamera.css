@@ -47,6 +47,18 @@ canvas {
 .processing-spinner {
     width: 48px;
     height: 48px;
-    justify-self: center;
     margin: 0;
+    position: absolute;
+}
+
+.capture-timer {
+    width: 60px;
+    height: 60px;
+    justify-self: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.capture-timer span {
 }
