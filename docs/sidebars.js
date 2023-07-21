@@ -39,6 +39,7 @@ module.exports = {
                         'actions/barcodes',
                         'actions/bot-filters',
                         'actions/bytes',
+                        'actions/camera',
                         'actions/crypto',
                         'actions/data',
                         'actions/debuggers',
@@ -61,6 +62,7 @@ module.exports = {
                     label: 'Types',
                     items: [
                         'types/animation',
+                        'types/camera',
                         'types/core',
                         {
                             type: 'category',
