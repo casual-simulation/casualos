@@ -1,230 +1,395 @@
 {
-    "hash": "actions/image-classification",
-    "pageTitle": "Image Classification Actions",
-    "pageDescription": "Actions for classifying images using AI.",
-    "pageSidebarLabel": "Image Classification",
+    "hash": "types/camera",
+    "pageTitle": "Camera Types",
+    "pageDescription": "Types that are used in camera actions.",
+    "pageSidebarLabel": "Camera",
     "contents": [
         {
-            "id": 632,
-            "order": 0,
-            "name": "os.openImageClassifier",
+            "id": 2683,
+            "order": 9999,
+            "name": "Photo",
             "reflection": {
-                "id": 632,
-                "name": "__type",
-                "kind": 4096,
-                "kindString": "Call signature",
+                "id": 2683,
+                "name": "Photo",
+                "kind": 256,
+                "kindString": "Interface",
                 "flags": {},
                 "comment": {
-                    "shortText": "Opens the [image classifier](glossary:image-classification) with the given options. Returns a promise that resolves once the image classifier has been opened.",
-                    "text": "Sends the [`@onImageClassifierOpened`](tags:@onImageClassifierOpened) shout once opened and the [`@onImageClassified`](tags:@onImageClassified) shout every time an image has been classified.\n",
+                    "shortText": "Defines a photo that was taken.",
                     "tags": [
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Open the image classifier.\nawait os.openImageClassifier({\n    modelUrl: 'MY_MODEL_URL'\n});\n"
-                        },
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Open the image classifier with a specific camera.\nawait os.openImageClassifier({\n    modelUrl: 'MY_MODEL_URL',\n    cameraType: 'front'\n});\n"
-                        },
                         {
                             "tag": "dochash",
                             "paramName": "",
-                            "text": "actions/image-classification"
+                            "text": "types/camera"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "Photo\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2684,
+                        "name": "data",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The photo data.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 985,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "reference",
+                            "qualifiedName": "Blob",
+                            "package": "typescript",
+                            "name": "Blob"
+                        }
+                    },
+                    {
+                        "id": 2686,
+                        "name": "height",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The height of the photo in pixels.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 995,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    },
+                    {
+                        "id": 2685,
+                        "name": "width",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The width of the photo in pixels.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 990,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2684,
+                            2686,
+                            2685
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 981,
+                        "character": 17
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines a photo that was taken.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "types/camera"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "Photo\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2676,
+            "order": 9999,
+            "name": "PhotoCameraOptions",
+            "reflection": {
+                "id": 2676,
+                "name": "OpenPhotoCameraOptions",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Options for [`os.openPhotoCamera(options)`](ref:os.openPhotoCamera).",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "types/camera"
                         },
                         {
                             "tag": "doctitle",
                             "paramName": "",
-                            "text": "Image Classification Actions"
+                            "text": "Camera Types"
                         },
                         {
                             "tag": "docsidebar",
                             "paramName": "",
-                            "text": "Image Classification"
+                            "text": "Camera"
                         },
                         {
                             "tag": "docdescription",
                             "paramName": "",
-                            "text": "Actions for classifying images using AI."
+                            "text": "Types that are used in camera actions."
                         },
                         {
                             "tag": "docname",
                             "paramName": "",
-                            "text": "os.openImageClassifier"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "10-image-classifier"
-                        },
-                        {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "0\n"
+                            "text": "PhotoCameraOptions\n"
                         }
                     ]
                 },
-                "parameters": [
+                "children": [
                     {
-                        "id": 633,
-                        "name": "options",
-                        "kind": 32768,
-                        "kindString": "Parameter",
-                        "flags": {},
+                        "id": 2677,
+                        "name": "cameraType",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
                         "comment": {
-                            "shortText": "the options that should be used for the image classifier.\n",
+                            "shortText": "The camera that should be used.",
                             "tags": []
                         },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1011,
+                                "character": 4
+                            }
+                        ],
                         "type": {
                             "type": "reference",
-                            "id": 2579,
-                            "name": "ImageClassifierOptions"
+                            "id": 2577,
+                            "name": "CameraType"
+                        }
+                    },
+                    {
+                        "id": 2678,
+                        "name": "disallowSwitchingCameras",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether to not allow switching the camera.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1016,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        }
+                    },
+                    {
+                        "id": 2679,
+                        "name": "imageFormat",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The image format that should be used.",
+                            "text": "Defaults to \"png\".\n",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1023,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "literal",
+                                    "value": "png"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": "jpeg"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 2680,
+                        "name": "imageQuality",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "A number between 0 and 1 indicating the image quality to be used.",
+                            "text": "If not specified, then the browser will use its own default.\n",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1030,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    },
+                    {
+                        "id": 2681,
+                        "name": "skipConfirm",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether to skip allowing the user to confirm their photo.",
+                            "text": "Defaults to false.\n",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1037,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "boolean"
+                        }
+                    },
+                    {
+                        "id": 2682,
+                        "name": "takePhotoAfterSeconds",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "Whether to automatically take a photo after a number of seconds.",
+                            "text": "If null, then there is no timer and the user is allowed to take the photo manually.\nIf positive, then the timer will start counting down from the given number of seconds.\nThe user can always cancel the operation manually.\n",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/bots/BotEvents.ts",
+                                "line": 1046,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
                         }
                     }
                 ],
-                "type": {
-                    "type": "reference",
-                    "typeArguments": [
-                        {
-                            "type": "intrinsic",
-                            "name": "void"
-                        }
-                    ],
-                    "qualifiedName": "Promise",
-                    "package": "typescript",
-                    "name": "Promise"
-                }
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2677,
+                            2678,
+                            2679,
+                            2680,
+                            2681,
+                            2682
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/bots/BotEvents.ts",
+                        "line": 1007,
+                        "character": 17
+                    }
+                ]
             },
             "comment": {
-                "shortText": "Opens the [image classifier](glossary:image-classification) with the given options. Returns a promise that resolves once the image classifier has been opened.",
-                "text": "Sends the {@tag @onImageClassifierOpened} shout once opened and the {@tag @onImageClassified} shout every time an image has been classified.\n",
+                "shortText": "Options for {@link os.openPhotoCamera}.",
+                "text": "",
                 "tags": [
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Open the image classifier.\nawait os.openImageClassifier({\n    modelUrl: 'MY_MODEL_URL'\n});\n"
-                    },
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Open the image classifier with a specific camera.\nawait os.openImageClassifier({\n    modelUrl: 'MY_MODEL_URL',\n    cameraType: 'front'\n});\n"
-                    },
                     {
                         "tagName": "dochash",
                         "paramName": "",
-                        "text": "actions/image-classification"
+                        "text": "types/camera"
                     },
                     {
                         "tagName": "doctitle",
                         "paramName": "",
-                        "text": "Image Classification Actions"
+                        "text": "Camera Types"
                     },
                     {
                         "tagName": "docsidebar",
                         "paramName": "",
-                        "text": "Image Classification"
+                        "text": "Camera"
                     },
                     {
                         "tagName": "docdescription",
                         "paramName": "",
-                        "text": "Actions for classifying images using AI."
+                        "text": "Types that are used in camera actions."
                     },
                     {
                         "tagName": "docname",
                         "paramName": "",
-                        "text": "os.openImageClassifier"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "10-image-classifier"
-                    },
-                    {
-                        "tagName": "docorder",
-                        "paramName": "",
-                        "text": "0\n"
+                        "text": "PhotoCameraOptions\n"
                     }
                 ]
             },
-            "group": "10-image-classifier"
-        },
-        {
-            "id": 636,
-            "order": 9999,
-            "name": "os.closeImageClassifier",
-            "reflection": {
-                "id": 636,
-                "name": "__type",
-                "kind": 4096,
-                "kindString": "Call signature",
-                "flags": {},
-                "comment": {
-                    "shortText": "Closes the image classifier.\nReturns a promise that resolves once the image classifier has been closed.",
-                    "text": "Also sends the [`@onImageClassifierClosed`](tags:@onImageClassifierClosed) shout once closed.\n",
-                    "tags": [
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Close the image classifier.\nawait os.closeImageClassifier();\n"
-                        },
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "actions/image-classification"
-                        },
-                        {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "os.closeImageClassifier"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "10-image-classifier\n"
-                        }
-                    ]
-                },
-                "type": {
-                    "type": "reference",
-                    "typeArguments": [
-                        {
-                            "type": "intrinsic",
-                            "name": "void"
-                        }
-                    ],
-                    "qualifiedName": "Promise",
-                    "package": "typescript",
-                    "name": "Promise"
-                }
-            },
-            "comment": {
-                "shortText": "Closes the image classifier.\nReturns a promise that resolves once the image classifier has been closed.",
-                "text": "Also sends the {@tag @onImageClassifierClosed} shout once closed.\n",
-                "tags": [
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Close the image classifier.\nawait os.closeImageClassifier();\n"
-                    },
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "actions/image-classification"
-                    },
-                    {
-                        "tagName": "docname",
-                        "paramName": "",
-                        "text": "os.closeImageClassifier"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "10-image-classifier\n"
-                    }
-                ]
-            },
-            "group": "10-image-classifier"
+            "group": null
         }
     ],
     "references": {

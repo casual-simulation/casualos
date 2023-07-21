@@ -5977,7 +5977,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Opens the photo camera. Returns a promise that resolves once the camera has been opened. Triggers the {@tag onPhotoCameraOpened} shout once opened.
+     * Opens the photo camera. Returns a promise that resolves once the camera has been opened. Triggers the {@tag @onPhotoCameraOpened} shout once opened.
      *
      * While open, each time the user takes a photo the system will send a {@tag @onPhotoCaptured} shout. Optionally accepts which camera to use for scanning. (front/back)
      *
@@ -6004,7 +6004,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Opens the photo camera for the user to take a single photo. Returns a promise that resolves with the taken photo. Triggers the {@tag onPhotoCameraOpened} shout once opened.
+     * Opens the photo camera for the user to take a single photo. Returns a promise that resolves with the taken photo. Triggers the {@tag @onPhotoCameraOpened} shout once opened.
      *
      * While open, each time the user takes a photo the system will send a {@tag @onPhotoCaptured} shout. Optionally accepts which camera to use for scanning. (front/back)
      *
@@ -6041,7 +6041,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Closes the photo camera. Returns a promise that resolves once the camera has been closed. Triggers the {@tag onPhotoCameraClosed} shout once closed.
+     * Closes the photo camera. Returns a promise that resolves once the camera has been closed. Triggers the {@tag @onPhotoCameraClosed} shout once closed.
      *
      * @example Close the photo camera
      * await os.closePhotoCamera();

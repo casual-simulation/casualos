@@ -1,85 +1,291 @@
 {
-    "hash": "actions/image-classification",
-    "pageTitle": "Image Classification Actions",
-    "pageDescription": "Actions for classifying images using AI.",
-    "pageSidebarLabel": "Image Classification",
+    "hash": "actions/camera",
+    "pageTitle": "Camera Actions",
+    "pageDescription": "Actions for taking photos.",
+    "pageSidebarLabel": "Camera",
     "contents": [
         {
-            "id": 632,
-            "order": 0,
-            "name": "os.openImageClassifier",
+            "id": 643,
+            "order": 9999,
+            "name": "os.capturePhoto",
             "reflection": {
-                "id": 632,
+                "id": 643,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
                 "flags": {},
                 "comment": {
-                    "shortText": "Opens the [image classifier](glossary:image-classification) with the given options. Returns a promise that resolves once the image classifier has been opened.",
-                    "text": "Sends the [`@onImageClassifierOpened`](tags:@onImageClassifierOpened) shout once opened and the [`@onImageClassified`](tags:@onImageClassified) shout every time an image has been classified.\n",
+                    "shortText": "Opens the photo camera for the user to take a single photo. Returns a promise that resolves with the taken photo. Triggers the [`@onPhotoCameraOpened`](tags:@onPhotoCameraOpened) shout once opened.",
+                    "text": "While open, each time the user takes a photo the system will send a [`@onPhotoCaptured`](tags:@onPhotoCaptured) shout. Optionally accepts which camera to use for scanning. (front/back)\n",
                     "tags": [
                         {
                             "tag": "example",
                             "paramName": "",
-                            "text": "Open the image classifier.\nawait os.openImageClassifier({\n    modelUrl: 'MY_MODEL_URL'\n});\n"
+                            "text": "Prompt the user to take a single photo.\nconst photo = await os.capturePhoto();\n"
                         },
                         {
                             "tag": "example",
                             "paramName": "",
-                            "text": "Open the image classifier with a specific camera.\nawait os.openImageClassifier({\n    modelUrl: 'MY_MODEL_URL',\n    cameraType: 'front'\n});\n"
+                            "text": "Take a single photo, defaulting to the front-facing camera.\nawait os.capturePhoto({\n    cameraType: \"front\"\n});\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Take a single photo, skipping the confirmation user step.\nawait os.capturePhoto({\n   skipConfirm: true\n});\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Take a single photo after a 3 second delay.\nawait os.capturePhoto({\n   takePhotoAfterSeconds: 3\n});\n"
                         },
                         {
                             "tag": "dochash",
                             "paramName": "",
-                            "text": "actions/image-classification"
+                            "text": "actions/camera"
                         },
                         {
                             "tag": "doctitle",
                             "paramName": "",
-                            "text": "Image Classification Actions"
+                            "text": "Camera Actions"
                         },
                         {
                             "tag": "docsidebar",
                             "paramName": "",
-                            "text": "Image Classification"
+                            "text": "Camera"
                         },
                         {
                             "tag": "docdescription",
                             "paramName": "",
-                            "text": "Actions for classifying images using AI."
+                            "text": "Actions for taking photos."
                         },
                         {
                             "tag": "docname",
                             "paramName": "",
-                            "text": "os.openImageClassifier"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "10-image-classifier"
-                        },
-                        {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "0\n"
+                            "text": "os.capturePhoto\n"
                         }
                     ]
                 },
                 "parameters": [
                     {
-                        "id": 633,
+                        "id": 644,
                         "name": "options",
                         "kind": 32768,
                         "kindString": "Parameter",
-                        "flags": {},
+                        "flags": {
+                            "isOptional": true
+                        },
                         "comment": {
-                            "shortText": "the options that should be used for the image classifier.\n",
+                            "shortText": "the options that should be used for the photo camera.\n",
                             "tags": []
                         },
                         "type": {
                             "type": "reference",
-                            "id": 2579,
-                            "name": "ImageClassifierOptions"
+                            "id": 2676,
+                            "name": "PhotoCameraOptions"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 2683,
+                            "name": "Photo"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Opens the photo camera for the user to take a single photo. Returns a promise that resolves with the taken photo. Triggers the {@tag @onPhotoCameraOpened} shout once opened.",
+                "text": "While open, each time the user takes a photo the system will send a {@tag @onPhotoCaptured} shout. Optionally accepts which camera to use for scanning. (front/back)\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Prompt the user to take a single photo.\nconst photo = await os.capturePhoto();\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Take a single photo, defaulting to the front-facing camera.\nawait os.capturePhoto({\n    cameraType: \"front\"\n});\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Take a single photo, skipping the confirmation user step.\nawait os.capturePhoto({\n   skipConfirm: true\n});\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Take a single photo after a 3 second delay.\nawait os.capturePhoto({\n   takePhotoAfterSeconds: 3\n});\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/camera"
+                    },
+                    {
+                        "tagName": "doctitle",
+                        "paramName": "",
+                        "text": "Camera Actions"
+                    },
+                    {
+                        "tagName": "docsidebar",
+                        "paramName": "",
+                        "text": "Camera"
+                    },
+                    {
+                        "tagName": "docdescription",
+                        "paramName": "",
+                        "text": "Actions for taking photos."
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.capturePhoto\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 647,
+            "order": 9999,
+            "name": "os.closePhotoCamera",
+            "reflection": {
+                "id": 647,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Closes the photo camera. Returns a promise that resolves once the camera has been closed. Triggers the [`@onPhotoCameraClosed`](tags:@onPhotoCameraClosed) shout once closed.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Close the photo camera\nawait os.closePhotoCamera();\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/camera"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.closePhotoCamera\n"
+                        }
+                    ]
+                },
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "intrinsic",
+                            "name": "void"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Closes the photo camera. Returns a promise that resolves once the camera has been closed. Triggers the {@tag @onPhotoCameraClosed} shout once closed.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Close the photo camera\nawait os.closePhotoCamera();\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/camera"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "os.closePhotoCamera\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 639,
+            "order": 9999,
+            "name": "os.openPhotoCamera",
+            "reflection": {
+                "id": 639,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Opens the photo camera. Returns a promise that resolves once the camera has been opened. Triggers the [`@onPhotoCameraOpened`](tags:@onPhotoCameraOpened) shout once opened.",
+                    "text": "While open, each time the user takes a photo the system will send a [`@onPhotoCaptured`](tags:@onPhotoCaptured) shout. Optionally accepts which camera to use for scanning. (front/back)\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Open the photo camera.\nawait os.openPhotoCamera();\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Open the photo camera, defaulting to the front-facing camera.\nawait os.openPhotoCamera({\n    cameraType: \"front\"\n});\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/camera"
+                        },
+                        {
+                            "tag": "doctitle",
+                            "paramName": "",
+                            "text": "Camera Actions"
+                        },
+                        {
+                            "tag": "docsidebar",
+                            "paramName": "",
+                            "text": "Camera"
+                        },
+                        {
+                            "tag": "docdescription",
+                            "paramName": "",
+                            "text": "Actions for taking photos."
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "os.openPhotoCamera\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 640,
+                        "name": "options",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the options that should be used for the photo camera.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2676,
+                            "name": "PhotoCameraOptions"
                         }
                     }
                 ],
@@ -97,134 +303,47 @@
                 }
             },
             "comment": {
-                "shortText": "Opens the [image classifier](glossary:image-classification) with the given options. Returns a promise that resolves once the image classifier has been opened.",
-                "text": "Sends the {@tag @onImageClassifierOpened} shout once opened and the {@tag @onImageClassified} shout every time an image has been classified.\n",
+                "shortText": "Opens the photo camera. Returns a promise that resolves once the camera has been opened. Triggers the {@tag @onPhotoCameraOpened} shout once opened.",
+                "text": "While open, each time the user takes a photo the system will send a {@tag @onPhotoCaptured} shout. Optionally accepts which camera to use for scanning. (front/back)\n",
                 "tags": [
                     {
                         "tagName": "example",
                         "paramName": "",
-                        "text": "Open the image classifier.\nawait os.openImageClassifier({\n    modelUrl: 'MY_MODEL_URL'\n});\n"
+                        "text": "Open the photo camera.\nawait os.openPhotoCamera();\n"
                     },
                     {
                         "tagName": "example",
                         "paramName": "",
-                        "text": "Open the image classifier with a specific camera.\nawait os.openImageClassifier({\n    modelUrl: 'MY_MODEL_URL',\n    cameraType: 'front'\n});\n"
+                        "text": "Open the photo camera, defaulting to the front-facing camera.\nawait os.openPhotoCamera({\n    cameraType: \"front\"\n});\n"
                     },
                     {
                         "tagName": "dochash",
                         "paramName": "",
-                        "text": "actions/image-classification"
+                        "text": "actions/camera"
                     },
                     {
                         "tagName": "doctitle",
                         "paramName": "",
-                        "text": "Image Classification Actions"
+                        "text": "Camera Actions"
                     },
                     {
                         "tagName": "docsidebar",
                         "paramName": "",
-                        "text": "Image Classification"
+                        "text": "Camera"
                     },
                     {
                         "tagName": "docdescription",
                         "paramName": "",
-                        "text": "Actions for classifying images using AI."
+                        "text": "Actions for taking photos."
                     },
                     {
                         "tagName": "docname",
                         "paramName": "",
-                        "text": "os.openImageClassifier"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "10-image-classifier"
-                    },
-                    {
-                        "tagName": "docorder",
-                        "paramName": "",
-                        "text": "0\n"
+                        "text": "os.openPhotoCamera\n"
                     }
                 ]
             },
-            "group": "10-image-classifier"
-        },
-        {
-            "id": 636,
-            "order": 9999,
-            "name": "os.closeImageClassifier",
-            "reflection": {
-                "id": 636,
-                "name": "__type",
-                "kind": 4096,
-                "kindString": "Call signature",
-                "flags": {},
-                "comment": {
-                    "shortText": "Closes the image classifier.\nReturns a promise that resolves once the image classifier has been closed.",
-                    "text": "Also sends the [`@onImageClassifierClosed`](tags:@onImageClassifierClosed) shout once closed.\n",
-                    "tags": [
-                        {
-                            "tag": "example",
-                            "paramName": "",
-                            "text": "Close the image classifier.\nawait os.closeImageClassifier();\n"
-                        },
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "actions/image-classification"
-                        },
-                        {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "os.closeImageClassifier"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "10-image-classifier\n"
-                        }
-                    ]
-                },
-                "type": {
-                    "type": "reference",
-                    "typeArguments": [
-                        {
-                            "type": "intrinsic",
-                            "name": "void"
-                        }
-                    ],
-                    "qualifiedName": "Promise",
-                    "package": "typescript",
-                    "name": "Promise"
-                }
-            },
-            "comment": {
-                "shortText": "Closes the image classifier.\nReturns a promise that resolves once the image classifier has been closed.",
-                "text": "Also sends the {@tag @onImageClassifierClosed} shout once closed.\n",
-                "tags": [
-                    {
-                        "tagName": "example",
-                        "paramName": "",
-                        "text": "Close the image classifier.\nawait os.closeImageClassifier();\n"
-                    },
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "actions/image-classification"
-                    },
-                    {
-                        "tagName": "docname",
-                        "paramName": "",
-                        "text": "os.closeImageClassifier"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "10-image-classifier\n"
-                    }
-                ]
-            },
-            "group": "10-image-classifier"
+            "group": null
         }
     ],
     "references": {
