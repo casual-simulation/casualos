@@ -83,6 +83,7 @@ import 'virtual:svg-icons-register';
 import AuthRecordsEvents from './AuthRecordsEvents/AuthRecordsEvents';
 import AuthRecordsPolicies from './AuthRecordsPolicies/AuthRecordsPolicies';
 import AuthRecordsRoles from './AuthRecordsRoles/AuthRecordsRoles';
+import './global.css';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);

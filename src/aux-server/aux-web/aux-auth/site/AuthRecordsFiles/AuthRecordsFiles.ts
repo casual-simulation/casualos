@@ -7,7 +7,10 @@ import { SvgIcon } from '@casual-simulation/aux-components';
 import DataSize from '../DataSize/DataSize';
 import AuthMarker from '../AuthMarker/AuthMarker';
 import { LoadingHelper } from '../LoadingHelper';
-import type { ListFilesSuccess } from '@casual-simulation/aux-records';
+import type {
+    ListFilesSuccess,
+    ListedFile,
+} from '@casual-simulation/aux-records';
 
 const PAGE_SIZE = 10;
 
@@ -90,5 +93,13 @@ export default class AuthRecordsFiles extends Vue {
             this.items = nextPage;
         }
         return true;
+    }
+
+    async deleteFile(item: ListedFile) {
+        const success = await authManager.eraseFile(this.recordName, item.url);
+
+        if (success) {
+            this._reset();
+        }
     }
 }
