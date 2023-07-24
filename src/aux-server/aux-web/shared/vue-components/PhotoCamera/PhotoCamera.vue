@@ -13,6 +13,8 @@
                 <camera-stream
                     ref="camera"
                     :cameraType="cameraType"
+                    :constraints="cameraConstraints"
+                    :mirror="mirrorPhoto"
                     @streaming="onCameraStreamLoaded"
                     @streamingError="onCameraStreamError"
                     @stopped="onCameraStreamStopped"

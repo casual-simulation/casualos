@@ -934,6 +934,31 @@ export interface OpenPhotoCameraOptions {
      * The user can always cancel the operation manually.
      */
     takePhotoAfterSeconds?: number;
+
+    /**
+     * The ideal resolution for the photo to be taken at.
+     * 
+     * If specified, then the web browser will be told to prefer this resolution, but will use a lower resolution if
+     * it is not possible to use the ideal resolution.
+     */
+    idealResolution?: {
+        /**
+         * The width of the photo in pixels.
+         */
+        width: number;
+
+        /**
+         * The height of the photo in pixels.
+         */
+        height: number;
+    }
+
+    /**
+     * Whether to mirror the photo after it is taken.
+     * 
+     * Defaults to false.
+     */
+    mirrorPhoto?: boolean;
 }
 
 /**
