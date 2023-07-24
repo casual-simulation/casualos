@@ -330,6 +330,9 @@ import {
     RecordFileActionOptions,
     getCurrentInstUpdate as calcGetCurrentInstUpdate,
     Geolocation,
+    openPhotoCamera as calcOpenPhotoCamera,
+    OpenPhotoCameraOptions,
+    Photo,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -796,7 +799,37 @@ export type RecordFilters =
     | RecordReference;
 
 /**
+ * Defines the options for {@link experiment.speakText}.
+ *
+ * @dochash types/experimental
+ * @docname SpeakTextOptions
+ */
+export interface SpeakTextApiOptions {
+    /**
+     * The rate that the text should be spoken at.
+     * This can be any positive number.
+     */
+    rate?: number;
+
+    /**
+     * The pitch that the text should be spoken at.
+     * This can be any positive number.
+     */
+    pitch?: number;
+
+    /**
+     * The voice that the text should be spoken with.
+     * This can be the voice object or the name of a voice.
+     * Note that not all browsers support the same voices.
+     */
+    voice?: string | SyntheticVoice;
+}
+
+/**
  * Defines a set of options for a tween.
+ *
+ * @dochash types/experimental
+ * @docname TweenOptions
  */
 export interface TweenOptions {
     /**
@@ -3042,6 +3075,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 openImageClassifier,
                 closeImageClassifier,
+
+                openPhotoCamera,
+                capturePhoto,
+                closePhotoCamera,
 
                 /**
                  * Gets the device-local time as the number of miliseconds since midnight January 1st, 1970 UTC-0 (i.e. the Unix Epoch). This is what your device's clock thinks the current time is.
@@ -5940,6 +5977,90 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
+     * Opens the photo camera. Returns a promise that resolves once the camera has been opened. Triggers the {@tag @onPhotoCameraOpened} shout once opened.
+     *
+     * While open, each time the user takes a photo the system will send a {@tag @onPhotoCaptured} shout. Optionally accepts which camera to use for scanning. (front/back)
+     *
+     * @param options the options that should be used for the photo camera.
+     *
+     * @example Open the photo camera.
+     * await os.openPhotoCamera();
+     *
+     * @example Open the photo camera, defaulting to the front-facing camera.
+     * await os.openPhotoCamera({
+     *     cameraType: "front"
+     * });
+     *
+     * @dochash actions/camera
+     * @doctitle Camera Actions
+     * @docsidebar Camera
+     * @docdescription Actions for taking photos.
+     * @docname os.openPhotoCamera
+     */
+    function openPhotoCamera(options?: OpenPhotoCameraOptions): Promise<void> {
+        const task = context.createTask();
+        const action = calcOpenPhotoCamera(true, false, options, task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Opens the photo camera for the user to take a single photo. Returns a promise that resolves with the taken photo. Triggers the {@tag @onPhotoCameraOpened} shout once opened.
+     *
+     * While open, each time the user takes a photo the system will send a {@tag @onPhotoCaptured} shout. Optionally accepts which camera to use for scanning. (front/back)
+     *
+     * @param options the options that should be used for the photo camera.
+     *
+     * @example Prompt the user to take a single photo.
+     * const photo = await os.capturePhoto();
+     *
+     * @example Take a single photo, defaulting to the front-facing camera.
+     * await os.capturePhoto({
+     *     cameraType: "front"
+     * });
+     *
+     * @example Take a single photo, skipping the confirmation user step.
+     * await os.capturePhoto({
+     *    skipConfirm: true
+     * });
+     *
+     * @example Take a single photo after a 3 second delay.
+     * await os.capturePhoto({
+     *    takePhotoAfterSeconds: 3
+     * });
+     *
+     * @dochash actions/camera
+     * @doctitle Camera Actions
+     * @docsidebar Camera
+     * @docdescription Actions for taking photos.
+     * @docname os.capturePhoto
+     */
+    function capturePhoto(options?: OpenPhotoCameraOptions): Promise<Photo> {
+        const task = context.createTask();
+        const action = calcOpenPhotoCamera(true, true, options, task.taskId);
+        return addAsyncAction(task, action);
+    }
+
+    /**
+     * Closes the photo camera. Returns a promise that resolves once the camera has been closed. Triggers the {@tag @onPhotoCameraClosed} shout once closed.
+     *
+     * @example Close the photo camera
+     * await os.closePhotoCamera();
+     *
+     * @dochash actions/camera
+     * @docname os.closePhotoCamera
+     */
+    function closePhotoCamera(): Promise<void> {
+        const task = context.createTask();
+        const action = calcOpenPhotoCamera(
+            false,
+            false,
+            undefined,
+            task.taskId
+        );
+        return addAsyncAction(task, action);
+    }
+
+    /**
      * Loads the given inst into the current browser tab. When the inst is loaded, the {@tag @onInstJoined} shout will be triggered.
      *
      * Note that separate instances cannot interact directly. They must instead interact via super shouts
@@ -8771,8 +8892,16 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Requests that the given address be pre-cached so that it is available for use on a bot.
+     * Pre-caches the given GLTF mesh address so that it will load instantly when used on a bot later.
+     * Returns a promise that resolves once the address has been cached.
      * @param address The address that should be cached.
+     *
+     * @example Buffer a specific GLTF
+     * await os.bufferFormAddressGLTF('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF/Fox.gltf');
+     * os.toast("Buffered!");
+     *
+     * @dochash actions/animations
+     * @docname os.bufferFormAddressGLTF
      */
     function bufferFormAddressGLTF(address: string): Promise<void> {
         const task = context.createTask();
@@ -11264,13 +11393,19 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Plays the given animation on the given bot locally.
-     * Reverts back to the original animation when done playing.
-     * @param bot The bot.
-     * @param animation The animation to play.
+     * Locally plays the given animation on the given bot.
      *
-     * @docgroup 20-experimental
-     * @docgrouptitle Experimental Actions
+     * If an animation is already playing, it will be interrupted.
+     * When the given animation is finished playing, the interrupted animation will be restored.
+     *
+     * @param bot the Bot or Bot ID that the animation should be played on.
+     * @param animation the name or index of the animation that should be played.
+     *
+     * @example Play the "jump" animation on this bot.
+     * experiment.localFormAnimation(this, "jump");
+     *
+     * @dochash actions/experimental
+     * @docname experiment.localFormAnimation
      */
     function localFormAnimation(
         bot: Bot | string,
@@ -11280,13 +11415,58 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Tweens the position of the given bot.
-     * @param bot The bot or bot ID to tween.
-     * @param dimension The dimension that the bot should be tweened in.
-     * @param position The position that the bot should be tweened to.
-     * @param options The options that should be used for the tween.
+     * Locally plays a tween that moves the given bot in the given dimension to the given position.
+     * Optionally allows customizing the easing of the tween.
      *
-     * @docgroup 20-experimental
+     * Returns a promise that resolves when the tween is finished.
+     *
+     * While the tween is playing, any updates to the bot's position and rotation are ignored.
+     * Once the tween is done playing, any change to the bot will reset the position/rotation.
+     *
+     *
+     *
+     * @param bot the bot or ID of the bot that should be tweened.
+     * @param dimension the dimension that the bot should be tweened in.
+     * Note that the tween will only work if the given dimension is currently in the grid portal or miniGridPortal.
+     *
+     * @param position the position that the bot should be tweened to. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
+     * @param options the options that should be used.
+     *
+     * @example Tween the bot to X = 10 in the `home` dimension.
+     * experiment.localPositionTween(
+     *     this,
+     *     'home',
+     *     {
+     *         x: 10,
+     *     });
+     *
+     * @example Tween the bot over 5 seconds.
+     * experiment.localPositionTween(
+     *     this,
+     *     'home',
+     *     {
+     *         x: 10,
+     *     },
+     *     {
+     *         duration: 5
+     *     });
+     *
+     * @example Tween the bot with quadratic easing.
+     * experiment.localPositionTween(
+     *     this,
+     *     'home',
+     *     {
+     *         x: 10,
+     *     },
+     *     {
+     *         easing: {
+     *             type: 'quadratic',
+     *             mode: 'inout'
+     *         }
+     *     });
+     *
+     * @dochash actions/experimental
+     * @docname experiment.localPositionTween
      */
     function localPositionTween(
         bot: Bot | string,
@@ -11307,13 +11487,56 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Tweens the rotation of the given bot.
-     * @param bot The bot or bot ID to tween.
-     * @param dimension The dimension that the bot should be tweened in.
-     * @param rotation The rotation that the bot should be tweened to.
-     * @param options The options that should be used for the tween.\
+     * Locally plays a tween that rotates the given bot in the given dimension to the given rotation.
+     * Optionally allows customizing the easing of the tween.
      *
-     * @docgroup 20-experimental
+     * Returns a promise that resolves when the tween is finished.
+     *
+     * While the tween is playing, any updates to the bot's position and rotation are ignored.
+     * Once the tween is done playing, any change to the bot will reset the position/rotation.
+     *
+     * @param bot the bot or ID of the bot that should be tweened.
+     * @param dimension the dimension that the bot should be tweened in.
+     * Note that the tween will only work if the given dimension is currently in the grid portal or miniGridPortal.
+     *
+     * @param rotation the rotation that the bot should be tweened to in radians. If you exclude a dimension (like `x`, `y`, or `z`), then it will remain unchanged.
+     * @param options The options that should be used for the tween.
+     *
+     * @example Tween the bot 90 degrees around the Z axis in the `home` dimension.
+     * experiment.localRotationTween(
+     *     this,
+     *     'home',
+     *     {
+     *         z: Math.PI / 2,
+     *     });
+     *
+     * @example Tween the bot for 5 seconds.
+     * experiment.localRotationTween(
+     *     this,
+     *     'home',
+     *     {
+     *         z: Math.PI / 2,
+     *     },
+     *     {
+     *         duration: 5
+     *     });
+     *
+     * @example Tween the bot with quadratic easing.
+     * experiment.localRotationTween(
+     *     this,
+     *     'home',
+     *     {
+     *         z: Math.PI / 2,
+     *     },
+     *     {
+     *         easing: {
+     *             type: 'quadratic',
+     *             mode: 'inout'
+     *         }
+     *     });
+     *
+     * @dochash actions/experimental
+     * @docname experiment.localRotationTween
      */
     function localRotationTween(
         bot: Bot | string,
@@ -11334,12 +11557,48 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Gets the position that the center of the given bot would placed at if it had the given anchor point.
-     * @param bot The bot.
-     * @param dimension The dimension to get the position of.
-     * @param anchorPoint The anchor point.
+     * Gets the absolute position in the given dimension that the center of the given bot would be placed at if the bot was using the given anchor point.
      *
-     * @docgroup 20-experimental
+     * @param bot the bot that the anchor point position should be calculated for.
+     * @param dimension the dimension that the anchor point position should be calculated in.
+     * @param anchorPoint the anchor point that should be calculated. Can be any valid {@tag anchorPoint} value.
+     *
+     * @example Get the top anchor point of the current bot in the "home" dimension.
+     * const point = experiment.getAnchorPointPosition(bot, "home", "top");
+     * os.toast(point);
+     *
+     * @example Get the back right anchor point of the current bot in the "home" dimension.
+     * const point = experiment.getAnchorPointPosition(bot, "home", [ 0.5, -0.5, 0 ]);
+     * os.toast(point);
+     *
+     * @example Place bots at each of the anchor points.
+     * let points = [
+     *     'top',
+     *     'bottom',
+     *     'front',
+     *     'back',
+     *     'left',
+     *     'right',
+     *     'center',
+     * ];
+     *
+     * for(let point of points) {
+     *     let pos = experiment.getAnchorPointPosition(bot, os.getCurrentDimension(), point);
+     *     create({
+     *         space: 'tempShared',
+     *         color: 'green',
+     *         [os.getCurrentDimension()]: true,
+     *         [os.getCurrentDimension() + "X"]: pos.x,
+     *         [os.getCurrentDimension() + "Y"]: pos.y,
+     *         [os.getCurrentDimension() + "Z"]: pos.z,
+     *         anchorPoint: 'center',
+     *         targetAnchorPoint: point,
+     *         scale: 0.1,
+     *     });
+     * }
+     *
+     * @dochash actions/experimental
+     * @docname experiment.getAnchorPointPosition
      */
     function getAnchorPointPosition(
         bot: Bot,
@@ -11419,25 +11678,73 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Starts a new recording.
-     * @param options The options for the recording.
-     * @returns A promise that resolves when the recording has started.
+     * Starts a new recording. Returns a promise that resolves when recording has started.
+     * The returned promise will throw an error if recording could not be started. Reasons for this include insufficient permissions and not having a microphone.
+     * @param options the options that should be used for the recording.
+     * Defaults to: `{ audio: true, video: true, screen: false }`
      *
-     * @docgroup 20-experimental
+     * @example Record for 10 seconds and download the files.
+     * await experiment.beginRecording({
+     *     audio: true,
+     *     video: true,
+     *     screen: false
+     * });
+     * await os.sleep(10000);
+     * const data = await experiment.endRecording();
+     * let index = 0;
+     * for(let file of data.files) {
+     *     os.download(file.data, `file-${index}`);
+     *     index += 1;
+     * }
+     *
+     * @example Record the screen with microphone audio.
+     * await experiment.beginRecording({
+     *     audio: ['microphone'],
+     *     video: false,
+     *     screen: true
+     * });
+     * await os.sleep(10000);
+     * const data = await experiment.endRecording();
+     * let index = 0;
+     * for(let file of data.files) {
+     *     os.download(file.data, `file-${index}`);
+     *     index += 1;
+     * }
+     *
+     * @dochash actions/experimental
+     * @doctitle Experimental Actions
+     * @docsidebar Experimental
+     * @docdescription Experimental actions are actions that are not yet fully supported and may change in the future.
+     * @docname experiment.beginRecording
      */
-    function beginRecording(
-        options: RecordingOptions = { audio: true, video: true, screen: false }
-    ): Promise<void> {
+    function beginRecording(options?: RecordingOptions): Promise<void> {
+        if (!options) {
+            options = { audio: true, video: true, screen: false };
+        }
         const task = context.createTask();
         const action = calcBeginRecording(options, task.taskId);
         return addAsyncAction(task, action);
     }
 
     /**
-     * Finishes a recording.
-     * Returns a promise that resolves with the recorded data.
+     * Stops the recording that is in progress. Returns a promise that resolves with the recorded data.
      *
-     * @docgroup 20-experimental
+     * @example Record for 10 seconds and download the files.
+     * await experiment.beginRecording({
+     *     audio: true,
+     *     video: true,
+     *     screen: false
+     * });
+     * await os.sleep(10000);
+     * const data = await experiment.endRecording();
+     * let index = 0;
+     * for(let file of data.files) {
+     *     os.download(file.data, `file-${index}`);
+     *     index += 1;
+     * }
+     *
+     * @dochash actions/experimental
+     * @docname experiment.endRecording
      */
     function endRecording(): Promise<Recording> {
         const task = context.createTask();
@@ -11744,21 +12051,21 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     /**
-     * Speaks the given text.
-     * Returns a promise that resolves when the text has been spoken.
-     * @param text The text that should be spoken.
-     * @param options The options that should be used.
+     * Speaks the given text using a synthetic voice and options.
+     * Note that this is a local effect. The gererated sounds are only played in the current session.
      *
-     * @docgroup 20-experimental
+     * Returns a promise that resolves when the text has been spoken.
+     * @param text the text that should be spoken.
+     * @param options the options that should be used to speak the text.
+     *
+     * @dochash actions/experimental
+     * @docname experiment.speakText
      */
     function speakText(
         text: string,
-        options: {
-            rate?: number;
-            pitch?: number;
-            voice?: string | SyntheticVoice;
-        } = {}
+        options?: SpeakTextApiOptions
     ): Promise<void> {
+        options = options ?? {};
         const task = context.createTask();
         const voice =
             typeof options.voice === 'object'
@@ -11779,7 +12086,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      * Gets the list of synthetic voices that are supported by the system.
      * Returns a promise that resolves with the voices.
      *
-     * @docgroup 20-experimental
+     * @example Toast the list of voices that are supported.
+     * const voices = await experiment.getVoices();
+     * os.toast(voices);
+     *
+     * @example Get the first US English voice.
+     * const voices = await experiment.getVoices();
+     * const usEnglish = voices.find(v => v.language === "en-US");
+     * os.toast(usEnglish);
+     *
+     * @dochash actions/experimental
+     * @docname experiment.getVoices
      */
     function getVoices(): Promise<SyntheticVoice[]> {
         const task = context.createTask();

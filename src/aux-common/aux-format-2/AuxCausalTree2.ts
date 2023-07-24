@@ -74,6 +74,7 @@ import { Action } from '@casual-simulation/causal-trees';
 import { merge as lodashMerge } from 'lodash';
 import { v4 as uuid } from 'uuid';
 import { ensureTagIsSerializable } from '../runtime/Utils';
+import { hasValue } from '../bots/BotCalculations';
 
 /**
  * Defines an interface that represents the state of a causal tree that contains AUX state.
@@ -458,9 +459,13 @@ export function applyEvents(
             }
 
             const currentVal = findValueNode(node);
+            if (!hasValue(val) && !hasValue(currentVal?.atom.value.value)) {
+                continue;
+            }
+
             if (
                 !currentVal ||
-                val !== currentVal.atom.value.value ||
+                val !== currentVal?.atom.value.value ||
                 Array.isArray(val) ||
                 first(iterateChildren(currentVal)) !== undefined
             ) {

@@ -7,6 +7,14 @@
 ### :rocket: Improvements
 
 -   Added a "repeated error limit" for individual tags that prevents `@onError` from being called if a tag emits a large number errors.
+-   Added the `os.openPhotoCamera()`, `os.closePhotoCamera()`, and `os.capturePhoto()` functions.
+    -   When called, they open/close the photo camera modal that makes it easy for the user to take photos.
+    -   The `@onPhotoCaptured` shout is sent for every photo that the user captures.
+    -   See the documentation for more info.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where setting a portal to `null` in `@onPortalChanged` would cause an infinite loop.
 
 ## V3.2.0
 

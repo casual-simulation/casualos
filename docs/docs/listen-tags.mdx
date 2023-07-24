@@ -873,6 +873,40 @@ let that: {
 
 A shout that is sent to all bots when the image classifier is closed.
 
+### `@onPhotoCaptured`
+
+A shout that is sent to all bots when a picture has been captured from the photo camera.
+
+#### Arguments:
+```typescript
+let that: {
+    photo: {
+        /**
+         * The width of the captured photo in pixels.
+         */
+        width: number;
+
+        /**
+         * The height of the captured photo in pixels.
+         */
+        height: number;
+
+        /**
+         * The data of the captured photo.
+         */
+        data: Blob;
+    }
+};
+```
+
+### `@onPhotoCameraOpened`
+
+A shout that is sent to all bots when the photo camera is opened.
+
+### `@onPhotoCameraClosed`
+
+A shout that is sent to all bots when the photo camera is closed.
+
 ### `@onTapCode`
 
 A shout that is sent to all bots whenever a 4-digit tap code is entered.

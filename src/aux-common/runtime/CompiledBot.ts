@@ -176,6 +176,7 @@ export function createCompiledBot(
             originalTagEditValues: {},
             originalTagMaskEditValues: {},
             breakpoints: [],
+            errorCounts: {},
         };
     }
     return {
@@ -189,5 +190,6 @@ export function createCompiledBot(
         originalTagEditValues: {},
         originalTagMaskEditValues: {},
         breakpoints: [],
+        errorCounts: {},
     };
 }
