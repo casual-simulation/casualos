@@ -5324,6 +5324,7 @@ describe('RecordsHttpServer', () => {
                             markers: [PUBLIC_READ_MARKER],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: corsHeaders(defaultHeaders['origin']),
             });
@@ -5354,6 +5355,7 @@ describe('RecordsHttpServer', () => {
                             markers: [PUBLIC_READ_MARKER],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: corsHeaders(defaultHeaders['origin']),
             });
@@ -5421,6 +5423,7 @@ describe('RecordsHttpServer', () => {
                             markers: ['secret'],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: corsHeaders(apiHeaders['origin']),
             });
@@ -5477,6 +5480,7 @@ describe('RecordsHttpServer', () => {
                             markers: [PUBLIC_READ_MARKER],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: corsHeaders(apiHeaders['origin']),
             });

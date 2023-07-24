@@ -118,6 +118,11 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
         if (!!address) {
             query.address = { gt: address };
         }
+        const count = await this._collection.count({
+            where: {
+                recordName: recordName,
+            },
+        });
         const records = await this._collection.findMany({
             where: query,
             orderBy: {
@@ -138,6 +143,7 @@ export class PrismaDataRecordsStore implements DataRecordsStore {
                 data: r.data,
                 markers: convertMarkers(r.markers),
             })),
+            totalCount: count,
         };
     }
 

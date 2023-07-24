@@ -281,7 +281,7 @@ export class AuthManager {
 
         const result = response.data as ListDataResult;
         if (result.success === true) {
-            return result.items;
+            return result;
         } else {
             if (result.errorCode === 'not_supported') {
                 return null;

@@ -896,6 +896,7 @@ describe('DataRecordsController', () => {
                         markers: [PUBLIC_READ_MARKER],
                     },
                 ],
+                totalCount: 5,
             });
         });
 
@@ -938,6 +939,7 @@ describe('DataRecordsController', () => {
                         markers: ['secret'],
                     },
                 ],
+                totalCount: 5,
             });
         });
 
@@ -972,6 +974,7 @@ describe('DataRecordsController', () => {
                         markers: ['secret'],
                     },
                 ],
+                totalCount: 5,
             });
         });
 
@@ -1010,6 +1013,7 @@ describe('DataRecordsController', () => {
                         markers: ['secret'],
                     },
                 ],
+                totalCount: 5,
             });
         });
 
@@ -1043,6 +1047,7 @@ describe('DataRecordsController', () => {
                         markers: [PUBLIC_READ_MARKER],
                     },
                 ],
+                totalCount: 5,
             });
         });
 
@@ -1075,6 +1080,7 @@ describe('DataRecordsController', () => {
                 success: true,
                 recordName: 'testRecord',
                 items: [],
+                totalCount: 5,
             });
         });
     });

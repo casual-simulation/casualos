@@ -33,7 +33,7 @@ export default class AuthRecordsData extends Vue {
         endIndex: number;
         mdData: ListDataSuccess['items'];
     } = {
-        mdCount: 100,
+        mdCount: 0,
         mdPage: 0,
         mdData: [],
         startIndex: 0,
@@ -53,18 +53,25 @@ export default class AuthRecordsData extends Vue {
 
     private _reset(page: number = 1) {
         this._helper = new LoadingHelper(async (lastItem) => {
-            let items =
-                (await authManager.listData(
-                    this.recordName,
-                    lastItem?.address
-                )) ?? [];
-            return {
-                items,
-                totalCount: 100,
-            };
+            let result = await authManager.listData(
+                this.recordName,
+                lastItem?.address
+            );
+
+            if (result) {
+                return {
+                    items: result.items,
+                    totalCount: result.totalCount,
+                };
+            } else {
+                return {
+                    items: [],
+                    totalCount: 0,
+                };
+            }
         });
         this.items = {
-            mdCount: 100,
+            mdCount: 0,
             mdPage: page,
             mdData: [],
             startIndex: 0,
