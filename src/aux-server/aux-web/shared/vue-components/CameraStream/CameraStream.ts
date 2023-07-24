@@ -66,7 +66,7 @@ export default class CameraStream extends Vue {
 
     async startVideo(): Promise<boolean> {
         try {
-            if (this._startVideoStream()) {
+            if (await this._startVideoStream()) {
                 this.$emit('streaming');
                 return true;
             }
