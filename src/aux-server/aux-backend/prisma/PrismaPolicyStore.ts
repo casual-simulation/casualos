@@ -77,7 +77,8 @@ export class PrismaPolicyStore implements PolicyStore {
             return {
                 marker: p.marker,
                 document: p.document as unknown as PolicyDocument,
-            } as ListedUserPolicy;
+                markers: p.markers,
+            };
         });
     }
 

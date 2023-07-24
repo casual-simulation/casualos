@@ -10,6 +10,7 @@ import type {
     ListFilesResult,
     EraseFileResult,
     EraseDataResult,
+    ListUserPoliciesResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -352,6 +353,27 @@ export class AuthManager {
 
         const result = response.data as EraseDataResult;
         return result.success === true;
+    }
+
+    async listPolicies(recordName: string, startingMarker?: string) {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records/policy/list`);
+
+        url.searchParams.set('recordName', recordName);
+        if (startingMarker) {
+            url.searchParams.set('startingMarker', startingMarker);
+        }
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as ListUserPoliciesResult;
+        if (result.success === true) {
+            return result;
+        }
+
+        return null;
     }
 
     async manageSubscriptions(

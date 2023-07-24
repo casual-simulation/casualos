@@ -584,6 +584,9 @@ export interface GrantRolePermission extends RolePermission {
 
 export const GRANT_ROLE_VALIDATION = ROLE_PERMISSION_VALIDATION.extend({
     type: z.literal('role.grant'),
+    userIds: z.union([z.boolean(), z.array(z.string())]),
+    instances: z.union([z.boolean(), z.string()]),
+    maxDurationMs: z.number().optional(),
 });
 type ZodGrantRolePermission = z.infer<typeof GRANT_ROLE_VALIDATION>;
 type ZodGrantRolePermissionAssertion = HasType<
@@ -618,6 +621,8 @@ export interface RevokeRolePermission extends RolePermission {
 
 export const REVOKE_ROLE_VALIDATION = ROLE_PERMISSION_VALIDATION.extend({
     type: z.literal('role.revoke'),
+    userIds: z.union([z.boolean(), z.array(z.string())]),
+    instances: z.union([z.boolean(), z.string()]),
 });
 type ZodRevokeRolePermission = z.infer<typeof REVOKE_ROLE_VALIDATION>;
 type ZodRevokeRolePermissionAssertion = HasType<

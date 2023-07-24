@@ -28,6 +28,7 @@ import {
     AssignedRole,
     getExpireTime,
     GetUserPolicyFailure,
+    ListedUserPolicy,
     PolicyStore,
     RoleAssignment,
     UpdateUserPolicyFailure,
@@ -4821,22 +4822,7 @@ export type ListUserPoliciesResult =
 
 export interface ListUserPoliciesSuccess {
     success: true;
-    policies: {
-        /**
-         * The marker that the policy is for.
-         */
-        marker: string;
-
-        /**
-         * The document that describes the policy.
-         */
-        document: PolicyDocument;
-
-        /**
-         * The markers that are applied to the policy.
-         */
-        markers: string[];
-    }[];
+    policies: ListedUserPolicy[];
 }
 
 export interface ListUserPoliciesFailure {
