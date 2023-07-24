@@ -96,10 +96,10 @@ export default class AuthRecordsFiles extends Vue {
     }
 
     async deleteFile(item: ListedFile) {
-        const success = await authManager.eraseFile(this.recordName, item.url);
-
-        if (success) {
-            this._reset();
+        if (await authManager.eraseFile(this.recordName, item.url)) {
+            this.items.mdData = this.items.mdData.filter(
+                (i) => i.url !== item.url
+            );
         }
     }
 }
