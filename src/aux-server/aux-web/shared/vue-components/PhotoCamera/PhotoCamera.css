@@ -58,6 +58,7 @@ canvas {
     display: flex;
     align-items: center;
     justify-content: center;
+    color: #fff;
 }
 
 .capture-timer span {
