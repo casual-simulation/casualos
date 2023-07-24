@@ -16,6 +16,12 @@ export default class CameraStream extends Vue {
     @Prop({ default: null as CameraType })
     cameraType: CameraType;
 
+    @Prop({ default: null })
+    constraints: MediaTrackConstraints;
+
+    @Prop({ default: false })
+    mirror: boolean;
+
     loading: boolean = false;
 
     constructor() {
@@ -96,6 +102,7 @@ export default class CameraStream extends Vue {
 
         const media = await navigator.mediaDevices.getUserMedia({
             video: {
+                ...(this.constraints ?? {}),
                 facingMode: {
                     ideal: this.cameraType === 'front' ? 'user' : 'environment',
                 },
