@@ -12,7 +12,7 @@
     right: 0;
     height: 80px;
 
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(0, 0, 0, 0.66);
 }
 
 .md-dialog-actions {
@@ -61,4 +61,9 @@ canvas {
 }
 
 .capture-timer span {
+}
+
+.clear-photo-button .md-icon,
+.close-button .md-icon {
+    color: #fff;
 }

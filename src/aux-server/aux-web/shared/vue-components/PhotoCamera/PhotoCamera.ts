@@ -188,7 +188,8 @@ export default class PhotoCamera extends Vue {
                 ...this._photoInfo,
             };
 
-            if (this._openEvent.singlePhoto) {
+            const singlePhoto = this._openEvent?.singlePhoto;
+            if (singlePhoto) {
                 this._currentSimulation.helper.transaction(
                     asyncResult(this._openEvent.taskId, photo)
                 );
@@ -204,7 +205,7 @@ export default class PhotoCamera extends Vue {
 
             this.clearPhoto();
 
-            if (this._openEvent.singlePhoto) {
+            if (singlePhoto) {
                 this.hidePhotoCamera();
             }
         }
