@@ -128,6 +128,8 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
             (f) => f.fileName
         );
 
+        const count = files.length;
+
         if (fileName) {
             files = files.filter((f) => f.fileName > fileName);
         }
@@ -142,6 +144,7 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
                 sizeInBytes: f.sizeInBytes,
                 url: `${this._fileUploadUrl}/${f.recordName}/${f.fileName}`,
             })),
+            totalCount: count,
         };
     }
 
@@ -284,6 +287,8 @@ export class MemoryFileRecordsLookup implements FileRecordsLookup {
             (f) => f.fileName
         );
 
+        const count = files.length;
+
         if (fileName) {
             files = files.filter((f) => f.fileName > fileName);
         }
@@ -297,6 +302,7 @@ export class MemoryFileRecordsLookup implements FileRecordsLookup {
                 markers: f.markers,
                 description: f.description,
             })),
+            totalCount: count,
         };
     }
 

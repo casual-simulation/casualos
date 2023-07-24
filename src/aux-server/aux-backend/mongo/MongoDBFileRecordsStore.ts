@@ -48,6 +48,7 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
                         ...f,
                         url: this._fileUrl(recordName, f.fileName),
                     })),
+                    totalCount: result.totalCount,
                 };
             };
         }
@@ -257,6 +258,11 @@ export class MongoDBFileRecordsLookup implements FileRecordsLookup {
             query.fileName = { $gt: fileName };
         }
 
+        const count = await this._collection.count({
+            recordName: recordName,
+            uploaded: true,
+        });
+
         const files = await this._collection
             .find(query)
             .sort({ fileName: 1 })
@@ -272,6 +278,7 @@ export class MongoDBFileRecordsLookup implements FileRecordsLookup {
                 markers: f.markers,
                 uploaded: f.uploaded,
             })),
+            totalCount: count,
         };
     }
 

@@ -52,18 +52,25 @@ export default class AuthRecordsFiles extends Vue {
 
     private _reset() {
         this._helper = new LoadingHelper(async (lastItem) => {
-            let items =
-                (await authManager.listFiles(
-                    this.recordName,
-                    lastItem?.fileName
-                )) ?? [];
-            return {
-                items,
-                totalCount: 100,
-            };
+            let result = await authManager.listFiles(
+                this.recordName,
+                lastItem?.fileName
+            );
+
+            if (result) {
+                return {
+                    items: result.files,
+                    totalCount: result.totalCount,
+                };
+            } else {
+                return {
+                    items: [],
+                    totalCount: 0,
+                };
+            }
         });
         this.items = {
-            mdCount: 100,
+            mdCount: 0,
             mdPage: 0,
             mdData: [],
             startIndex: 0,

@@ -482,6 +482,7 @@ export class FileRecordsController {
                 success: true,
                 recordName: context.context.recordName,
                 files: items,
+                totalCount: result2.totalCount,
             };
         } catch (err) {
             console.log(
@@ -876,6 +877,11 @@ export interface ListFilesSuccess {
     success: true;
     recordName: string;
     files: ListedFile[];
+
+    /**
+     * The total number of files in the record.
+     */
+    totalCount: number;
 }
 
 export interface ListedFile {

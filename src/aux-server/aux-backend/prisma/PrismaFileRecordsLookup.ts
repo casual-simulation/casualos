@@ -90,6 +90,13 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
             take: 10,
         });
 
+        const count = await this._client.fileRecord.count({
+            where: {
+                recordName: recordName,
+                uploadedAt: { not: null },
+            },
+        });
+
         const now = new Date();
         return {
             success: true,
@@ -100,6 +107,7 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
                 description: r.description,
                 uploaded: r.uploadedAt < now,
             })),
+            totalCount: count,
         };
     }
 

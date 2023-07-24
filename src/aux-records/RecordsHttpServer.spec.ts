@@ -4189,6 +4189,7 @@ describe('RecordsHttpServer', () => {
                             markers: [PUBLIC_READ_MARKER],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: apiCorsHeaders,
             });
@@ -4227,6 +4228,7 @@ describe('RecordsHttpServer', () => {
                             markers: [PUBLIC_READ_MARKER],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: apiCorsHeaders,
             });
@@ -4286,6 +4288,7 @@ describe('RecordsHttpServer', () => {
                             markers: ['secret'],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: apiCorsHeaders,
             });
@@ -4345,6 +4348,7 @@ describe('RecordsHttpServer', () => {
                             markers: ['secret'],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: apiCorsHeaders,
             });

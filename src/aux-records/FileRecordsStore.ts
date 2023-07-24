@@ -440,6 +440,7 @@ export type ListFilesLookupResult =
 export interface ListFilesLookupSuccess {
     success: true;
     files: ListedLookupFile[];
+    totalCount: number;
 }
 
 export interface ListedLookupFile {
@@ -463,6 +464,7 @@ export type ListFilesStoreResult =
 export interface ListFilesStoreSuccess {
     success: true;
     files: ListedFileRecord[];
+    totalCount: number;
 }
 
 export interface ListedFileRecord {

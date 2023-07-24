@@ -1228,6 +1228,7 @@ describe('FileRecordsController', () => {
                 success: true,
                 recordName,
                 files: files.slice(0, 10),
+                totalCount: files.length,
             });
         });
 
@@ -1302,6 +1303,7 @@ describe('FileRecordsController', () => {
                         markers: ['secret'],
                     },
                 ],
+                totalCount: 43,
             });
         });
 
@@ -1316,6 +1318,7 @@ describe('FileRecordsController', () => {
                 success: true,
                 recordName,
                 files: files.slice(27, 37),
+                totalCount: 40,
             });
         });
 
@@ -1326,6 +1329,7 @@ describe('FileRecordsController', () => {
                 success: true,
                 recordName,
                 files: [],
+                totalCount: 40,
             });
         });
 
@@ -1338,6 +1342,7 @@ describe('FileRecordsController', () => {
                 success: true,
                 recordName,
                 files: [],
+                totalCount: 40,
             });
         });
 
