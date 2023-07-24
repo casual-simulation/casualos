@@ -282,17 +282,59 @@ export class EventRecordsController {
     }
 }
 
+/**
+ * Defines the possible results of a "add event count" request.
+ *
+ * @dochash types/records/events
+ * @doctitle Event Types
+ * @docsidebar Events
+ * @docdescription Event records are useful for keeping track of how many times an event has occurred.
+ * @docgroup 01-add
+ * @docorder 0
+ * @docname AddCountResult
+ */
 export type AddCountResult = AddCountSuccess | AddCountFailure;
 
+/**
+ * Defines an interface that represents a successful "add event count" result.
+ *
+ * @dochash types/records/events
+ * @docgroup 02-add
+ * @docorder 1
+ * @docname AddCountSuccess
+ */
 export interface AddCountSuccess {
     success: true;
+    /**
+     * The name of the record.
+     */
     recordName: string;
+
+    /**
+     * The name of the event that the count was added to.
+     */
     eventName: string;
+
+    /**
+     * The number of events that were added.
+     */
     countAdded: number;
 }
 
+/**
+ * Defines an interface that represents a failed "add event count" result.
+ *
+ * @dochash types/records/events
+ * @docgroup 01-add
+ * @docorder 2
+ * @docname AddCountFailure
+ */
 export interface AddCountFailure {
     success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
         | ServerError
         | NotLoggedInError
@@ -300,13 +342,30 @@ export interface AddCountFailure {
         | AddEventCountStoreFailure['errorCode']
         | AuthorizeDenied['errorCode']
         | 'not_supported';
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 }
 
+/**
+ * Defines the possible results of a "get event count" request.
+ *
+ * @dochash types/records/events
+ * @docgroup 02-count
+ * @docorder 0
+ * @docname GetCountResult
+ */
 export type GetCountResult = GetCountSuccess | GetCountFailure;
 
 /**
- * Defines an interface that represents a successful "get data" result.
+ * Defines an interface that represents a successful "get event count" result.
+ *
+ * @dochash types/records/events
+ * @docgroup 02-count
+ * @docorder 1
+ * @docname GetCountSuccess
  */
 export interface GetCountSuccess {
     success: true;
@@ -332,16 +391,40 @@ export interface GetCountSuccess {
     markers: string[];
 }
 
+/**
+ * Defines an interface that represents a failed "get event count" result.
+ *
+ * @dochash types/records/events
+ * @docgroup 02-count
+ * @docorder 2
+ * @docname GetCountFailure
+ */
 export interface GetCountFailure {
     success: false;
+
+    /**
+     * The error code that indicates why the request failed.
+     */
     errorCode:
         | ServerError
         | GetEventCountStoreFailure['errorCode']
         | AuthorizeDenied['errorCode']
         | 'not_supported';
+
+    /**
+     * The error message that indicates why the request failed.
+     */
     errorMessage: string;
 }
 
+/**
+ * Defines an interface that represents a request to update an event.
+ *
+ * @dochash types/records/events
+ * @docgroup 03-update
+ * @docorder 0
+ * @docname UpdateEventRecordRequest
+ */
 export interface UpdateEventRecordRequest {
     /**
      * The record key or the name of the record that should be updated.
@@ -377,14 +460,38 @@ export interface UpdateEventRecordRequest {
     instances?: string[];
 }
 
+/**
+ * Defines the possible results of an "update event" request.
+ *
+ * @dochash types/records/events
+ * @docgroup 03-update
+ * @docorder 1
+ * @docname UpdateEventRecordResult
+ */
 export type UpdateEventRecordResult =
     | UpdateEventRecordSuccess
     | UpdateEventRecordFailure;
 
+/**
+ * Defines an interface that represents a successful "update event" result.
+ *
+ * @dochash types/records/events
+ * @docgroup 03-update
+ * @docorder 2
+ * @docname UpdateEventRecordSuccess
+ */
 export interface UpdateEventRecordSuccess {
     success: true;
 }
 
+/**
+ * Defines an interface that represents a failed "update event" result.
+ *
+ * @dochash types/records/events
+ * @docgroup 03-update
+ * @docorder 3
+ * @docname UpdateEventRecordFailure
+ */
 export interface UpdateEventRecordFailure {
     success: false;
     errorCode:

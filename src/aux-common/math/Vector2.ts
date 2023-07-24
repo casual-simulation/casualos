@@ -2,6 +2,12 @@ import { UNCOPIABLE } from '@casual-simulation/js-interpreter/InterpreterUtils';
 
 /**
  * Defines a class that represents a 2D point in space.
+ * @docHash types/math/vectors
+ * @docOrder 0
+ * @docTitle Vectors
+ * @docSidebar Vectors
+ * @docDescription Vectors help represent positions and directions.
+ * @docname Vector2
  */
 export class Vector2 {
     /**

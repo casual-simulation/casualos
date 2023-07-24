@@ -1,0 +1,3135 @@
+{
+    "hash": "actions/math",
+    "pageTitle": "Math Actions",
+    "pageDescription": "Math actions are useful for performing math operations on bots and numbers.",
+    "pageSidebarLabel": "Math",
+    "contents": [
+        {
+            "id": 1694,
+            "order": 9999,
+            "name": "math.abs",
+            "reflection": {
+                "id": 1694,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Calculates the absolute value of the given number. That is, the number without its sign.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the absolute value for the number -42.\nconst _42 = math.abs(-42);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.abs\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1695,
+                        "name": "number",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the number that the absolute value should be calculated for.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "number"
+                }
+            },
+            "comment": {
+                "shortText": "Calculates the absolute value of the given number. That is, the number without its sign.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the absolute value for the number -42.\nconst _42 = math.abs(-42);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.abs\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1764,
+            "order": 9999,
+            "name": "math.addVectors",
+            "reflection": {
+                "id": 1764,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Mathematically adds the given vectors to each other and returns the sum result.",
+                    "text": "A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Add two 3D points together.\nconst result = math.addVectors(\n    { x: 1, y: 2, z: 3 },\n    { x: 5, y: 6, z: 7 }\n);\n\nos.toast(result); // { x: 6, y: 8, z: 10 }\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Add arbitrary numbers together.\nconst result = math.addVectors(\n    { salary: 1000, tax: 50 },\n    { salary: 5000, tax: 250 },\n    { salary: 750, tax: 37.5 },\n);\n\nos.toast(result); // { salary: 6750, tax: 337.5 }\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.addVectors\n"
+                        }
+                    ]
+                },
+                "typeParameter": [
+                    {
+                        "id": 1765,
+                        "name": "T",
+                        "kind": 131072,
+                        "kindString": "Type parameter",
+                        "flags": {}
+                    }
+                ],
+                "parameters": [
+                    {
+                        "id": 1766,
+                        "name": "vectors",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isRest": true
+                        },
+                        "comment": {
+                            "shortText": "the vectors that should be added together.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "reference",
+                                "id": 1765,
+                                "name": "T"
+                            }
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "id": 1765,
+                    "name": "T"
+                }
+            },
+            "comment": {
+                "shortText": "Mathematically adds the given vectors to each other and returns the sum result.",
+                "text": "A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Add two 3D points together.\nconst result = math.addVectors(\n    { x: 1, y: 2, z: 3 },\n    { x: 5, y: 6, z: 7 }\n);\n\nos.toast(result); // { x: 6, y: 8, z: 10 }\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Add arbitrary numbers together.\nconst result = math.addVectors(\n    { salary: 1000, tax: 50 },\n    { salary: 5000, tax: 250 },\n    { salary: 750, tax: 37.5 },\n);\n\nos.toast(result); // { salary: 6750, tax: 337.5 }\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.addVectors\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1795,
+            "order": 9999,
+            "name": "math.areClose",
+            "reflection": {
+                "id": 1795,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Determines if the given numbers are within 2 decimal places of each other.",
+                    "text": "Because [JavaScript numbers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number) have limited precision, some calculations cannot be represented like they can in normal math.\nFor example, `1/3` is `0.3333...` but in JavaScript `1/3` gives `0.33333333333333331483`.\nThis inaccuracy can cause problems when many calculations are done, which can cause numbers that appear to be the same to actually be different.\n\nThe solution is to check the difference between two numbers to see if it is below some arbitrary threshold.\nIn this case, the threshold is `0.005`.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Determine 0.1 + 0.2 is close to 0.3.\nconst first = 0.1 + 0.2;\nconst second = 0.3;\nconst result = math.areClose(first, second);\nconst areEqual = first === second;\nos.toast(\"Equal: \" + areEqual + \", Close: \" + result); // Equal: false, Close: true\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.areClose\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1796,
+                        "name": "first",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the first number to check.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    },
+                    {
+                        "id": 1797,
+                        "name": "second",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the second number to check.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "boolean"
+                }
+            },
+            "comment": {
+                "shortText": "Determines if the given numbers are within 2 decimal places of each other.",
+                "text": "Because [JavaScript numbers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number) have limited precision, some calculations cannot be represented like they can in normal math.\nFor example, `1/3` is `0.3333...` but in JavaScript `1/3` gives `0.33333333333333331483`.\nThis inaccuracy can cause problems when many calculations are done, which can cause numbers that appear to be the same to actually be different.\n\nThe solution is to check the difference between two numbers to see if it is below some arbitrary threshold.\nIn this case, the threshold is `0.005`.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Determine 0.1 + 0.2 is close to 0.3.\nconst first = 0.1 + 0.2;\nconst second = 0.3;\nconst result = math.areClose(first, second);\nconst areEqual = first === second;\nos.toast(\"Equal: \" + areEqual + \", Close: \" + result); // Equal: false, Close: true\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.areClose\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1686,
+            "order": 9999,
+            "name": "math.avg",
+            "reflection": {
+                "id": 1686,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Calculates the arithmetic mean of the given list of values.\nThat is, the sum of the values divided by the number of values.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the average of a list of numbers.\nconst average = math.avg([4, 54.2, 31]);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the average #age of all the bots.\nconst averageAge = math.avg(getBotTagValues('#age'));\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.avg\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1687,
+                        "name": "list",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The value that should be averaged.\n            If it is a list, then the result will be sum(list)/list.length.\n            If it is not a list, then the result will be the value converted to a number.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "number"
+                }
+            },
+            "comment": {
+                "shortText": "Calculates the arithmetic mean of the given list of values.\nThat is, the sum of the values divided by the number of values.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the average of a list of numbers.\nconst average = math.avg([4, 54.2, 31]);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the average #age of all the bots.\nconst averageAge = math.avg(getBotTagValues('#age'));\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.avg\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1720,
+            "order": 9999,
+            "name": "math.degreesToRadians",
+            "reflection": {
+                "id": 1720,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Converts the given number of [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) to [radians](https://en.wikipedia.org/wiki/Radian) and returns the result.",
+                    "text": "This operation is equivalent to `radians = degrees * (Math.PI / 180)`.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Get the number of radians for a 90 degree angle\nconst radians = math.degreesToRadians(90);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.degreesToRadians\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1721,
+                        "name": "degrees",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the number of degrees that should be converted to radians.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "number"
+                }
+            },
+            "comment": {
+                "shortText": "Converts the given number of [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) to [radians](https://en.wikipedia.org/wiki/Radian) and returns the result.",
+                "text": "This operation is equivalent to `radians = degrees * (Math.PI / 180)`.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Get the number of radians for a 90 degree angle\nconst radians = math.degreesToRadians(90);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.degreesToRadians\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1760,
+            "order": 9999,
+            "name": "math.getAnchorPointOffset",
+            "reflection": {
+                "id": 1760,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Calculates the 3D position offset for the given anchor point and returns it.\nThis is essentially [`experiment.getAnchorPointPosition(bot, dimension, anchorPoint)`](ref:experiment.getAnchorPointPosition) but without the bot's position/scale applied.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the anchor point offset for \"bottom\".\nconst offset = math.getAnchorPointOffset(\"bottom\");\nos.toast(offset);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.getAnchorPointOffset\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1761,
+                        "name": "anchorPoint",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the anchor point that should be calculated. Can be any valid [`#anchorPoint`](tags:anchorPoint) value.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "name": "BotAnchorPoint"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "id": 3142,
+                    "name": "Vector3"
+                }
+            },
+            "comment": {
+                "shortText": "Calculates the 3D position offset for the given anchor point and returns it.\nThis is essentially {@link experiment.getAnchorPointPosition} but without the bot's position/scale applied.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the anchor point offset for \"bottom\".\nconst offset = math.getAnchorPointOffset(\"bottom\");\nos.toast(offset);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.getAnchorPointOffset\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1728,
+            "order": 9999,
+            "name": "math.getForwardDirection",
+            "reflection": {
+                "id": 1728,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets the forward direction for the given rotation.",
+                    "text": "Useful for finding where a bot would be pointing if it has a custom rotation.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Get the direction that a pointer is pointing.\nconst pointerRotation = os.getPointerRotation('mouse');\nconst pointerDirection = math.getForwardDirection(pointerRotation);\nos.toast(pointerDirection);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.getForwardDirection\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1729,
+                        "name": "pointerRotation",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The rotation that the pointer has represented in radians.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "reference",
+                                    "id": 3251,
+                                    "name": "Rotation"
+                                },
+                                {
+                                    "type": "reflection",
+                                    "declaration": {
+                                        "id": 1730,
+                                        "name": "__type",
+                                        "kind": 65536,
+                                        "kindString": "Type literal",
+                                        "flags": {},
+                                        "children": [
+                                            {
+                                                "id": 1734,
+                                                "name": "w",
+                                                "kind": 1024,
+                                                "kindString": "Property",
+                                                "flags": {
+                                                    "isOptional": true
+                                                },
+                                                "sources": [
+                                                    {
+                                                        "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                        "line": 12424,
+                                                        "character": 18
+                                                    }
+                                                ],
+                                                "type": {
+                                                    "type": "intrinsic",
+                                                    "name": "number"
+                                                }
+                                            },
+                                            {
+                                                "id": 1731,
+                                                "name": "x",
+                                                "kind": 1024,
+                                                "kindString": "Property",
+                                                "flags": {},
+                                                "sources": [
+                                                    {
+                                                        "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                        "line": 12421,
+                                                        "character": 18
+                                                    }
+                                                ],
+                                                "type": {
+                                                    "type": "intrinsic",
+                                                    "name": "number"
+                                                }
+                                            },
+                                            {
+                                                "id": 1732,
+                                                "name": "y",
+                                                "kind": 1024,
+                                                "kindString": "Property",
+                                                "flags": {},
+                                                "sources": [
+                                                    {
+                                                        "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                        "line": 12422,
+                                                        "character": 18
+                                                    }
+                                                ],
+                                                "type": {
+                                                    "type": "intrinsic",
+                                                    "name": "number"
+                                                }
+                                            },
+                                            {
+                                                "id": 1733,
+                                                "name": "z",
+                                                "kind": 1024,
+                                                "kindString": "Property",
+                                                "flags": {},
+                                                "sources": [
+                                                    {
+                                                        "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                        "line": 12423,
+                                                        "character": 18
+                                                    }
+                                                ],
+                                                "type": {
+                                                    "type": "intrinsic",
+                                                    "name": "number"
+                                                }
+                                            }
+                                        ],
+                                        "groups": [
+                                            {
+                                                "title": "Properties",
+                                                "kind": 1024,
+                                                "children": [
+                                                    1734,
+                                                    1731,
+                                                    1732,
+                                                    1733
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "id": 3142,
+                    "name": "Vector3"
+                }
+            },
+            "comment": {
+                "shortText": "Gets the forward direction for the given rotation.",
+                "text": "Useful for finding where a bot would be pointing if it has a custom rotation.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Get the direction that a pointer is pointing.\nconst pointerRotation = os.getPointerRotation('mouse');\nconst pointerDirection = math.getForwardDirection(pointerRotation);\nos.toast(pointerDirection);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.getForwardDirection\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1702,
+            "order": 9999,
+            "name": "math.getSeededRandomNumberGenerator",
+            "reflection": {
+                "id": 1702,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Creates a new random number generator from the given seed and returns it.\nBecause of how random number generators work, generators created with the same seed will return the same sequence of random numbers.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Create two random number generators with the same seed.\nlet random1 = math.getSeededRandomNumberGenerator(123);\nlet random2 = math.getSeededRandomNumberGenerator(123);\n\nos.toast(random1.randomInt(0, 10) + ' == ' + random2.randomInt(0, 10) + ' == 9');\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Create a random number generator and store it for later\nlet randomNumberGenerator = math.getSeededRandomNumberGenerator(123);\n\n// Store it in the bot variables so it can be used in other scripts.\nbot.vars.randomNumberGenerator = randomNumberGenerator;\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.getSeededRandomNumberGenerator\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1703,
+                        "name": "seed",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the number or string that should be used as the seed value for the random number generator.\nIf omitted, then a seed will be chosen in a somewhat unpredictable manner.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "id": 2494,
+                    "name": "PseudoRandomNumberGenerator"
+                }
+            },
+            "comment": {
+                "shortText": "Creates a new random number generator from the given seed and returns it.\nBecause of how random number generators work, generators created with the same seed will return the same sequence of random numbers.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Create two random number generators with the same seed.\nlet random1 = math.getSeededRandomNumberGenerator(123);\nlet random2 = math.getSeededRandomNumberGenerator(123);\n\nos.toast(random1.randomInt(0, 10) + ' == ' + random2.randomInt(0, 10) + ' == 9');\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Create a random number generator and store it for later\nlet randomNumberGenerator = math.getSeededRandomNumberGenerator(123);\n\n// Store it in the bot variables so it can be used in other scripts.\nbot.vars.randomNumberGenerator = randomNumberGenerator;\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.getSeededRandomNumberGenerator\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1737,
+            "order": 9999,
+            "name": "math.intersectPlane",
+            "reflection": {
+                "id": 1737,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the grid portal ground plane.\nReturns null if the ray does not intersect the ground plane.",
+                    "text": "Useful for calculating where on the ground something is pointing.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Get the spot on the ground that a pointer is pointing at.\nconst pointerPosition = os.getPointerPosition('mouse');\nconst pointerRotation = os.getPointerRotation('mouse');\nconst pointerDirection = math.getForwardDirection(pointerRotation);\nconst groundPoint = math.intersectPlane(pointerPosition, pointerDirection);\nos.toast(groundPoint);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.intersectPlane\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1738,
+                        "name": "origin",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the 3D point that the ray should start at.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reflection",
+                            "declaration": {
+                                "id": 1739,
+                                "name": "__type",
+                                "kind": 65536,
+                                "kindString": "Type literal",
+                                "flags": {},
+                                "children": [
+                                    {
+                                        "id": 1740,
+                                        "name": "x",
+                                        "kind": 1024,
+                                        "kindString": "Property",
+                                        "flags": {},
+                                        "sources": [
+                                            {
+                                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                "line": 12476,
+                                                "character": 18
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    },
+                                    {
+                                        "id": 1741,
+                                        "name": "y",
+                                        "kind": 1024,
+                                        "kindString": "Property",
+                                        "flags": {},
+                                        "sources": [
+                                            {
+                                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                "line": 12476,
+                                                "character": 29
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    },
+                                    {
+                                        "id": 1742,
+                                        "name": "z",
+                                        "kind": 1024,
+                                        "kindString": "Property",
+                                        "flags": {},
+                                        "sources": [
+                                            {
+                                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                "line": 12476,
+                                                "character": 40
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    }
+                                ],
+                                "groups": [
+                                    {
+                                        "title": "Properties",
+                                        "kind": 1024,
+                                        "children": [
+                                            1740,
+                                            1741,
+                                            1742
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "id": 1743,
+                        "name": "direction",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the direction that the ray is traveling along.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reflection",
+                            "declaration": {
+                                "id": 1744,
+                                "name": "__type",
+                                "kind": 65536,
+                                "kindString": "Type literal",
+                                "flags": {},
+                                "children": [
+                                    {
+                                        "id": 1745,
+                                        "name": "x",
+                                        "kind": 1024,
+                                        "kindString": "Property",
+                                        "flags": {},
+                                        "sources": [
+                                            {
+                                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                "line": 12477,
+                                                "character": 21
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    },
+                                    {
+                                        "id": 1746,
+                                        "name": "y",
+                                        "kind": 1024,
+                                        "kindString": "Property",
+                                        "flags": {},
+                                        "sources": [
+                                            {
+                                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                "line": 12477,
+                                                "character": 32
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    },
+                                    {
+                                        "id": 1747,
+                                        "name": "z",
+                                        "kind": 1024,
+                                        "kindString": "Property",
+                                        "flags": {},
+                                        "sources": [
+                                            {
+                                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                "line": 12477,
+                                                "character": 43
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    }
+                                ],
+                                "groups": [
+                                    {
+                                        "title": "Properties",
+                                        "kind": 1024,
+                                        "children": [
+                                            1745,
+                                            1746,
+                                            1747
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "id": 1748,
+                        "name": "planeNormal",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the normal vector that the plane should use.\nFor 2D planes, the normal vector is the 3D direction that is perpendicular to the the surface of the plane.\nFor example, a plane that covers the entire XY surface has a normal vector equal to `➡️0,0,1`, while a plane that covers the YZ surface has a normal vector equal to `➡️1,0,0`.\nThis parameter defaults to `➡️0,0,1`.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reflection",
+                            "declaration": {
+                                "id": 1749,
+                                "name": "__type",
+                                "kind": 65536,
+                                "kindString": "Type literal",
+                                "flags": {},
+                                "children": [
+                                    {
+                                        "id": 1750,
+                                        "name": "x",
+                                        "kind": 1024,
+                                        "kindString": "Property",
+                                        "flags": {},
+                                        "sources": [
+                                            {
+                                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                "line": 12478,
+                                                "character": 24
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    },
+                                    {
+                                        "id": 1751,
+                                        "name": "y",
+                                        "kind": 1024,
+                                        "kindString": "Property",
+                                        "flags": {},
+                                        "sources": [
+                                            {
+                                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                "line": 12478,
+                                                "character": 35
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    },
+                                    {
+                                        "id": 1752,
+                                        "name": "z",
+                                        "kind": 1024,
+                                        "kindString": "Property",
+                                        "flags": {},
+                                        "sources": [
+                                            {
+                                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                "line": 12478,
+                                                "character": 46
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    }
+                                ],
+                                "groups": [
+                                    {
+                                        "title": "Properties",
+                                        "kind": 1024,
+                                        "children": [
+                                            1750,
+                                            1751,
+                                            1752
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "id": 1753,
+                        "name": "planeOrigin",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the 3D position that the center of the plane should travel through. Defaults to `➡️0,0,0`.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reflection",
+                            "declaration": {
+                                "id": 1754,
+                                "name": "__type",
+                                "kind": 65536,
+                                "kindString": "Type literal",
+                                "flags": {},
+                                "children": [
+                                    {
+                                        "id": 1755,
+                                        "name": "x",
+                                        "kind": 1024,
+                                        "kindString": "Property",
+                                        "flags": {},
+                                        "sources": [
+                                            {
+                                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                "line": 12479,
+                                                "character": 24
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    },
+                                    {
+                                        "id": 1756,
+                                        "name": "y",
+                                        "kind": 1024,
+                                        "kindString": "Property",
+                                        "flags": {},
+                                        "sources": [
+                                            {
+                                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                "line": 12479,
+                                                "character": 35
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    },
+                                    {
+                                        "id": 1757,
+                                        "name": "z",
+                                        "kind": 1024,
+                                        "kindString": "Property",
+                                        "flags": {},
+                                        "sources": [
+                                            {
+                                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                                "line": 12479,
+                                                "character": 46
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "number"
+                                        }
+                                    }
+                                ],
+                                "groups": [
+                                    {
+                                        "title": "Properties",
+                                        "kind": 1024,
+                                        "children": [
+                                            1755,
+                                            1756,
+                                            1757
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "id": 3142,
+                    "name": "Vector3"
+                }
+            },
+            "comment": {
+                "shortText": "Calculates the 3D point that a ray starting at the given origin point and traveling in the given direction intersects the grid portal ground plane.\nReturns null if the ray does not intersect the ground plane.",
+                "text": "Useful for calculating where on the ground something is pointing.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Get the spot on the ground that a pointer is pointing at.\nconst pointerPosition = os.getPointerPosition('mouse');\nconst pointerRotation = os.getPointerRotation('mouse');\nconst pointerDirection = math.getForwardDirection(pointerRotation);\nconst groundPoint = math.intersectPlane(pointerPosition, pointerDirection);\nos.toast(groundPoint);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.intersectPlane\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1774,
+            "order": 9999,
+            "name": "math.negateVector",
+            "reflection": {
+                "id": 1774,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Mathematically negates the given vector and returns the result.",
+                    "text": "A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Negate a 3D point.\nconst result = math.negateVector(\n    { x: 5, y: 6, z: 7 }\n);\n\nos.toast(result); // { x: -5, y: -6, z: -7 }\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.negateVector\n"
+                        }
+                    ]
+                },
+                "typeParameter": [
+                    {
+                        "id": 1775,
+                        "name": "T",
+                        "kind": 131072,
+                        "kindString": "Type parameter",
+                        "flags": {}
+                    }
+                ],
+                "parameters": [
+                    {
+                        "id": 1776,
+                        "name": "vector",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the vector that should be negated.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 1775,
+                            "name": "T"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "id": 1775,
+                    "name": "T"
+                }
+            },
+            "comment": {
+                "shortText": "Mathematically negates the given vector and returns the result.",
+                "text": "A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Negate a 3D point.\nconst result = math.negateVector(\n    { x: 5, y: 6, z: 7 }\n);\n\nos.toast(result); // { x: -5, y: -6, z: -7 }\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.negateVector\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1779,
+            "order": 9999,
+            "name": "math.normalizeVector",
+            "reflection": {
+                "id": 1779,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Normalizes the given vector. The result is a vector that has the same direction as the given vector but has a length/magnitude of 1.",
+                    "text": "Mathemematically, this is the same as finding the [`math.vectorLength(vector)`](ref:math.vectorLength) and dividing each component in the vector by it.\n\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Normalize a 3D point.\nconst result = math.normalizeVector(\n    { x: 1, y: 2, z: 3 }\n);\n\nos.toast(result);\n// x: 0.2672612419124244\n// y: 0.5345224838248488\n// z: 0.8017837257372732\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.normalizeVector\n"
+                        }
+                    ]
+                },
+                "typeParameter": [
+                    {
+                        "id": 1780,
+                        "name": "T",
+                        "kind": 131072,
+                        "kindString": "Type parameter",
+                        "flags": {}
+                    }
+                ],
+                "parameters": [
+                    {
+                        "id": 1781,
+                        "name": "vector",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the vector that should be normalized.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 1780,
+                            "name": "T"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "id": 1780,
+                    "name": "T"
+                }
+            },
+            "comment": {
+                "shortText": "Normalizes the given vector. The result is a vector that has the same direction as the given vector but has a length/magnitude of 1.",
+                "text": "Mathemematically, this is the same as finding the {@link math.vectorLength} and dividing each component in the vector by it.\n\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Normalize a 3D point.\nconst result = math.normalizeVector(\n    { x: 1, y: 2, z: 3 }\n);\n\nos.toast(result);\n// x: 0.2672612419124244\n// y: 0.5345224838248488\n// z: 0.8017837257372732\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.normalizeVector\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1724,
+            "order": 9999,
+            "name": "math.radiansToDegrees",
+            "reflection": {
+                "id": 1724,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Converts the given number of [radians](https://en.wikipedia.org/wiki/Radian) to [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) and returns the result.",
+                    "text": "This operation is equivalent to `degrees = radians * (180 / Math.PI)`.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Get the number of degrees for a Math.PI / 2 angle\nconst degrees = math.radiansToDegrees(Math.PI / 2);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.radiansToDegrees\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1725,
+                        "name": "radians",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the number of radians that should be converted to degrees.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "number"
+                }
+            },
+            "comment": {
+                "shortText": "Converts the given number of [radians](https://en.wikipedia.org/wiki/Radian) to [degrees](https://en.wikipedia.org/wiki/Degree_(angle)) and returns the result.",
+                "text": "This operation is equivalent to `degrees = radians * (180 / Math.PI)`.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Get the number of degrees for a Math.PI / 2 angle\nconst degrees = math.radiansToDegrees(Math.PI / 2);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.radiansToDegrees\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1715,
+            "order": 9999,
+            "name": "math.random",
+            "reflection": {
+                "id": 1715,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Generates a random number between the given minimum and maximum values.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Generate a random number between 0 and Math.PI.\nconst number = math.random(0, Math.PI);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.random\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1716,
+                        "name": "min",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The smallest allowed value.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        },
+                        "defaultValue": "0"
+                    },
+                    {
+                        "id": 1717,
+                        "name": "max",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The largest allowed value.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "number"
+                }
+            },
+            "comment": {
+                "shortText": "Generates a random number between the given minimum and maximum values.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Generate a random number between 0 and Math.PI.\nconst number = math.random(0, Math.PI);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.random\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1710,
+            "order": 9999,
+            "name": "math.randomInt",
+            "reflection": {
+                "id": 1710,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Generates a random integer number between the given minimum and maximum values.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Generate a random number between 5 and 10.\nconst number = math.randomInt(5, 10);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.randomInt\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1711,
+                        "name": "min",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The smallest allowed value.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        },
+                        "defaultValue": "0"
+                    },
+                    {
+                        "id": 1712,
+                        "name": "max",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The largest allowed value.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "number"
+                }
+            },
+            "comment": {
+                "shortText": "Generates a random integer number between the given minimum and maximum values.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Generate a random number between 5 and 10.\nconst number = math.randomInt(5, 10);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.randomInt\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1789,
+            "order": 9999,
+            "name": "math.scaleVector",
+            "reflection": {
+                "id": 1789,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Multiplies each property of the given vector by the given scale and returns the result.",
+                    "text": "A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Scale a 3D point by 5.\nconst result = math.scaleVector(\n    { x: 5, y: 6, z: 7 },\n    5\n);\n\nos.toast(result); // { x: 25, y: 30, z: 35 }\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.scaleVector\n"
+                        }
+                    ]
+                },
+                "typeParameter": [
+                    {
+                        "id": 1790,
+                        "name": "T",
+                        "kind": 131072,
+                        "kindString": "Type parameter",
+                        "flags": {}
+                    }
+                ],
+                "parameters": [
+                    {
+                        "id": 1791,
+                        "name": "vector",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the vector that should be scaled.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 1790,
+                            "name": "T"
+                        }
+                    },
+                    {
+                        "id": 1792,
+                        "name": "scale",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the number that the vector should be multiplied by.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "id": 1790,
+                    "name": "T"
+                }
+            },
+            "comment": {
+                "shortText": "Multiplies each property of the given vector by the given scale and returns the result.",
+                "text": "A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Scale a 3D point by 5.\nconst result = math.scaleVector(\n    { x: 5, y: 6, z: 7 },\n    5\n);\n\nos.toast(result); // { x: 25, y: 30, z: 35 }\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.scaleVector\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1706,
+            "order": 9999,
+            "name": "math.setRandomSeed",
+            "reflection": {
+                "id": 1706,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Sets the seed that should be used for the random numbers generated with [`math.randomInt(min, max)`](ref:math.randomInt) and [`math.random(min, max)`](ref:math.random).",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Set the random seed for math.random() and math.randomInt().\nmath.setRandomSeed(123);\n\nexpect(math.randomInt(0, 10)).toBe(9);\nexpect(math.random()).toBe(0.36078753814001446);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Clear the random seed.\nmath.setRandomSeed(null);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.setRandomSeed\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1707,
+                        "name": "seed",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the number or string that should be used as the seed value for the internal random number generator.\nIf null is provided, then a seed will be chosen in a somewhat unpredictable manner.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "intrinsic",
+                                    "name": "number"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "void"
+                }
+            },
+            "comment": {
+                "shortText": "Sets the seed that should be used for the random numbers generated with {@link math.randomInt} and {@link math.random}.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Set the random seed for math.random() and math.randomInt().\nmath.setRandomSeed(123);\n\nexpect(math.randomInt(0, 10)).toBe(9);\nexpect(math.random()).toBe(0.36078753814001446);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Clear the random seed.\nmath.setRandomSeed(null);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.setRandomSeed\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1690,
+            "order": 9999,
+            "name": "math.sqrt",
+            "reflection": {
+                "id": 1690,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Calculates the square root of the given value.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the square root of 4.\nconst rootOf4 = math.sqrt(4);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.sqrt\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1691,
+                        "name": "value",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the value that the square root should be calculated for.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "number"
+                }
+            },
+            "comment": {
+                "shortText": "Calculates the square root of the given value.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the square root of 4.\nconst rootOf4 = math.sqrt(4);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.sqrt\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1698,
+            "order": 9999,
+            "name": "math.stdDev",
+            "reflection": {
+                "id": 1698,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Calculates the [standard deviation](https://en.wikipedia.org/wiki/Standard_deviation for the given list of values.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the standard deviation of a list of numbers.\nconst standardDeviation = math.stdDev([2, 97, 745]);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the standard deviation of the #age of all the bots.\nconst ageDeviation = math.stdDev(getBotTagValues('#age'));\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.stdDev\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1699,
+                        "name": "list",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the list of values that the standard deviation should be calculated for.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "number"
+                }
+            },
+            "comment": {
+                "shortText": "Calculates the [standard deviation](https://en.wikipedia.org/wiki/Standard_deviation for the given list of values.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the standard deviation of a list of numbers.\nconst standardDeviation = math.stdDev([2, 97, 745]);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the standard deviation of the #age of all the bots.\nconst ageDeviation = math.stdDev(getBotTagValues('#age'));\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.stdDev\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1769,
+            "order": 9999,
+            "name": "math.subtractVectors",
+            "reflection": {
+                "id": 1769,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Mathematically subtracts the given vectors from each other and returns the result.",
+                    "text": "A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Subtract two 3D points from each other.\nconst result = math.addVectors(\n    { x: 5, y: 6, z: 7 },\n    { x: 1, y: 2, z: 3 },\n);\n\nos.toast(result); // { x: 4, y: 4, z: 4 }\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.subtractVectors\n"
+                        }
+                    ]
+                },
+                "typeParameter": [
+                    {
+                        "id": 1770,
+                        "name": "T",
+                        "kind": 131072,
+                        "kindString": "Type parameter",
+                        "flags": {}
+                    }
+                ],
+                "parameters": [
+                    {
+                        "id": 1771,
+                        "name": "vectors",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isRest": true
+                        },
+                        "comment": {
+                            "shortText": "the vectors that should be subtracted from each other.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "reference",
+                                "id": 1770,
+                                "name": "T"
+                            }
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "id": 1770,
+                    "name": "T"
+                }
+            },
+            "comment": {
+                "shortText": "Mathematically subtracts the given vectors from each other and returns the result.",
+                "text": "A vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Subtract two 3D points from each other.\nconst result = math.addVectors(\n    { x: 5, y: 6, z: 7 },\n    { x: 1, y: 2, z: 3 },\n);\n\nos.toast(result); // { x: 4, y: 4, z: 4 }\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.subtractVectors\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1682,
+            "order": 9999,
+            "name": "math.sum",
+            "reflection": {
+                "id": 1682,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Calculates the numerical sum of the given values.",
+                    "text": "If any value in the list is not a number, it will be converted to one.\nIf the given value is not an array, then it will be converted to a number and returned.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the sum of a list of numbers.\nconst total = math.sum([92, 123, 21]);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the total #age of all the bots.\nconst totalAge = math.sum(getBotTagValues('#age'));\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "doctitle",
+                            "paramName": "",
+                            "text": "Math Actions"
+                        },
+                        {
+                            "tag": "docsidebar",
+                            "paramName": "",
+                            "text": "Math"
+                        },
+                        {
+                            "tag": "docdescription",
+                            "paramName": "",
+                            "text": "Math actions are useful for performing math operations on bots and numbers."
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.sum\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 1683,
+                        "name": "list",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the list of values that should be summed up. If any value in the list is not a number, it will be converted to one.\nIf the list is not actually a list, then it will be converted to a number and returned.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "number"
+                }
+            },
+            "comment": {
+                "shortText": "Calculates the numerical sum of the given values.",
+                "text": "If any value in the list is not a number, it will be converted to one.\nIf the given value is not an array, then it will be converted to a number and returned.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the sum of a list of numbers.\nconst total = math.sum([92, 123, 21]);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the total #age of all the bots.\nconst totalAge = math.sum(getBotTagValues('#age'));\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "doctitle",
+                        "paramName": "",
+                        "text": "Math Actions"
+                    },
+                    {
+                        "tagName": "docsidebar",
+                        "paramName": "",
+                        "text": "Math"
+                    },
+                    {
+                        "tagName": "docdescription",
+                        "paramName": "",
+                        "text": "Math actions are useful for performing math operations on bots and numbers."
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.sum\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 1784,
+            "order": 9999,
+            "name": "math.vectorLength",
+            "reflection": {
+                "id": 1784,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Calculates the length (i.e. magnitude) of the given vector.",
+                    "text": "Mathemematically, this is equivalent to `length = sqrt(sum(components.map(c => c * c)))`. As a consequence, vectors that are normalized always have a length of 1.\n\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the length of a 3D point\nconst result = math.vectorLength(\n    { x: 1, y: 2, z: 3 }\n);\n\nos.toast(result); // 3.7416573867739413\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/math"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "math.vectorLength\n"
+                        }
+                    ]
+                },
+                "typeParameter": [
+                    {
+                        "id": 1785,
+                        "name": "T",
+                        "kind": 131072,
+                        "kindString": "Type parameter",
+                        "flags": {}
+                    }
+                ],
+                "parameters": [
+                    {
+                        "id": 1786,
+                        "name": "vector",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the vector to calculate the length of.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 1785,
+                            "name": "T"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "number"
+                }
+            },
+            "comment": {
+                "shortText": "Calculates the length (i.e. magnitude) of the given vector.",
+                "text": "Mathemematically, this is equivalent to `length = sqrt(sum(components.map(c => c * c)))`. As a consequence, vectors that are normalized always have a length of 1.\n\nA vector is a group of numbers which represents a specific point in 2D/3D/4D/etc. space.\nFor example, the vector `{ x: 1, y: 2, z: 3 }` represents the point `(1, 2, 3)` in 3D space where `x`, `y`, and `z` are the names of the dimensions (or axes).\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the length of a 3D point\nconst result = math.vectorLength(\n    { x: 1, y: 2, z: 3 }\n);\n\nos.toast(result); // 3.7416573867739413\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/math"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "math.vectorLength\n"
+                    }
+                ]
+            },
+            "group": null
+        }
+    ],
+    "references": {
+        "Quaternion": "types/math/rotations",
+        "id-3219": "Quaternion",
+        "Rotation": "types/math/rotations",
+        "id-3251": "Rotation",
+        "Vector2": "types/math/vectors",
+        "id-3085": "Vector2",
+        "Vector3": "types/math/vectors",
+        "id-3142": "Vector3",
+        "AddCountFailure": "types/records/events",
+        "id-3032": "AddCountFailure",
+        "AddCountSuccess": "types/records/events",
+        "id-3027": "AddCountSuccess",
+        "AnimateTagOptions": "types/animation",
+        "id-2110": "AnimateTagOptions",
+        "AttachDebuggerOptions": "types/debuggers/common",
+        "id-2485": "AttachDebuggerOptions",
+        "CasualOSDevice": "types/os",
+        "id-2851": "CasualOSDevice",
+        "CasualOSVersion": "types/os",
+        "id-2843": "CasualOSVersion",
+        "AxisAndAngle": "types/math/rotations",
+        "id-3297": "AxisAndAngle",
+        "BotTagMasks": "types/core",
+        "id-2820": "BotTagMasks",
+        "BotTags": "types/core",
+        "id-2735": "BotTags",
+        "BotState": "types/core",
+        "id-2833": "BotState",
+        "CompiledBotListeners": "types/core",
+        "id-2814": "CompiledBotListeners",
+        "ConvertGeolocationToWhat3WordsOptions": "types/os",
+        "id-2527": "ConvertGeolocationToWhat3WordsOptions",
+        "CreatePublicRecordKeyFailure": "types/records/key",
+        "id-2865": "CreatePublicRecordKeyFailure",
+        "CreatePublicRecordKeySuccess": "types/records/key",
+        "id-2861": "CreatePublicRecordKeySuccess",
+        "DebuggerCallFrame": "types/debuggers/common",
+        "id-2438": "DebuggerCallFrame",
+        "DebuggerFunctionLocation": "types/debuggers/common",
+        "id-2473": "DebuggerFunctionLocation",
+        "DebuggerPause": "types/debuggers/common",
+        "id-2467": "DebuggerPause",
+        "DebuggerTagMaskUpdate": "types/debuggers/common",
+        "id-2446": "DebuggerTagMaskUpdate",
+        "DebuggerTagUpdate": "types/debuggers/common",
+        "id-2452": "DebuggerTagUpdate",
+        "DebuggerVariable": "types/debuggers/common",
+        "id-2479": "DebuggerVariable",
+        "Easing": "types/animation",
+        "id-2507": "Easing",
+        "EnableXROptions": "types/os",
+        "id-2601": "EnableXROptions",
+        "EraseDataFailure": "types/records/data",
+        "id-3000": "EraseDataFailure",
+        "EraseDataSuccess": "types/records/data",
+        "id-2996": "EraseDataSuccess",
+        "EraseFileFailure": "types/records/files",
+        "id-3022": "EraseFileFailure",
+        "EraseFileSuccess": "types/records/files",
+        "id-3018": "EraseFileSuccess",
+        "EulerAnglesRotation": "types/math/rotations",
+        "id-3300": "EulerAnglesRotation",
+        "FocusOnOptions": "types/os",
+        "id-2561": "FocusOnOptions",
+        "FocusOnRotation": "types/os",
+        "id-2573": "FocusOnRotation",
+        "FormAnimationData": "types/os",
+        "id-2619": "FormAnimationData",
+        "FromToRotation": "types/math/rotations",
+        "id-3294": "FromToRotation",
+        "GetCountFailure": "types/records/events",
+        "id-3043": "GetCountFailure",
+        "GetCountSuccess": "types/records/events",
+        "id-3037": "GetCountSuccess",
+        "GetDataFailure": "types/records/data",
+        "id-2991": "GetDataFailure",
+        "GetDataSuccess": "types/records/data",
+        "id-2982": "GetDataSuccess",
+        "GetRoomOptionsFailure": "types/os",
+        "id-2200": "GetRoomOptionsFailure",
+        "GetRoomOptionsSuccess": "types/os",
+        "id-2196": "GetRoomOptionsSuccess",
+        "GetRoomRemoteOptionsFailure": "types/os",
+        "id-2243": "GetRoomRemoteOptionsFailure",
+        "GetRoomRemoteOptionsSuccess": "types/os",
+        "id-2238": "GetRoomRemoteOptionsSuccess",
+        "GetRoomTrackOptionsFailure": "types/os",
+        "id-2219": "GetRoomTrackOptionsFailure",
+        "GetRoomTrackOptionsSuccess": "types/os",
+        "id-2214": "GetRoomTrackOptionsSuccess",
+        "GrantMarkerPermissionFailure": "types/records/policies",
+        "id-3071": "GrantMarkerPermissionFailure",
+        "GrantMarkerPermissionSuccess": "types/records/policies",
+        "id-3069": "GrantMarkerPermissionSuccess",
+        "GrantRoleFailure": "types/records/roles",
+        "id-3057": "GrantRoleFailure",
+        "GrantRoleSuccess": "types/records/roles",
+        "id-3055": "GrantRoleSuccess",
+        "ImageClassifierOptions": "types/os",
+        "id-2579": "ImageClassifierOptions",
+        "InstUpdate": "types/os",
+        "id-2856": "InstUpdate",
+        "JoinRoomFailure": "types/os",
+        "id-2181": "JoinRoomFailure",
+        "JoinRoomSuccess": "types/os",
+        "id-2178": "JoinRoomSuccess",
+        "LeaveRoomFailure": "types/os",
+        "id-2190": "LeaveRoomFailure",
+        "LeaveRoomSuccess": "types/os",
+        "id-2187": "LeaveRoomSuccess",
+        "ListDataFailure": "types/records/data",
+        "id-3013": "ListDataFailure",
+        "ListDataSuccess": "types/records/data",
+        "id-3005": "ListDataSuccess",
+        "LookRotation": "types/math/rotations",
+        "id-3317": "LookRotation",
+        "MediaPermissionOptions": "types/os",
+        "id-2598": "MediaPermissionOptions",
+        "Debugger": "types/debuggers/debugger",
+        "id-2250": "Debugger",
+        "NormalDebuggerOptions": "types/debuggers/common",
+        "id-2457": "NormalDebuggerOptions",
+        "PhotoCameraOptions": "types/camera",
+        "id-2676": "PhotoCameraOptions",
+        "ParsedBotLink": "types/core",
+        "id-2839": "ParsedBotLink",
+        "PartialBotState": "types/core",
+        "id-2836": "PartialBotState",
+        "PausableDebugger": "types/debuggers/pausable-debugger",
+        "id-2306": "PausableDebugger",
+        "PausableDebuggerOptions": "types/debuggers/common",
+        "id-2462": "PausableDebuggerOptions",
+        "PauseTrigger": "types/debuggers/common",
+        "id-2425": "PauseTrigger",
+        "PauseTriggerOptions": "types/debuggers/common",
+        "id-2433": "PauseTriggerOptions",
+        "Photo": "types/camera",
+        "id-2683": "Photo",
+        "PossiblePauseTriggerLocation": "types/debuggers/common",
+        "id-2420": "PossiblePauseTriggerLocation",
+        "PseudoRandomNumberGenerator": "types/core",
+        "id-2494": "PseudoRandomNumberGenerator",
+        "QuaternionRotation": "types/math/rotations",
+        "id-3310": "QuaternionRotation",
+        "RaycastRay": "types/os",
+        "id-2174": "RaycastRay",
+        "RaycastResult": "types/os",
+        "id-2171": "RaycastResult",
+        "RecordActionOptions": "types/records/extra",
+        "id-2510": "RecordActionOptions",
+        "RecordDataFailure": "types/records/data",
+        "id-2977": "RecordDataFailure",
+        "RecordDataSuccess": "types/records/data",
+        "id-2973": "RecordDataSuccess",
+        "RecordFileFailure": "types/records/files",
+        "id-2141": "RecordFileFailure",
+        "RecordFileSuccess": "types/records/files",
+        "id-2137": "RecordFileSuccess",
+        "RecordedFile": "types/experimental",
+        "id-2663": "RecordedFile",
+        "Recording": "types/experimental",
+        "id-2661": "Recording",
+        "RecordingOptions": "types/experimental",
+        "id-2668": "RecordingOptions",
+        "RegisterPrefixOptions": "types/core",
+        "id-2658": "RegisterPrefixOptions",
+        "RevokeMarkerPermissionFailure": "types/records/policies",
+        "id-3078": "RevokeMarkerPermissionFailure",
+        "RevokeMarkerPermissionSuccess": "types/records/policies",
+        "id-3076": "RevokeMarkerPermissionSuccess",
+        "RevokeRoleFailure": "types/records/roles",
+        "id-3064": "RevokeRoleFailure",
+        "RevokeRoleSuccess": "types/records/roles",
+        "id-3062": "RevokeRoleSuccess",
+        "RoomJoinOptions": "types/os",
+        "id-2624": "RoomJoinOptions",
+        "RoomOptions": "types/os",
+        "id-2633": "RoomOptions",
+        "RoomRemoteOptions": "types/os",
+        "id-2649": "RoomRemoteOptions",
+        "RoomTrackOptions": "types/os",
+        "id-2637": "RoomTrackOptions",
+        "RuntimeBot": "types/core",
+        "id-2687": "RuntimeBot",
+        "RuntimeBotLinks": "types/core",
+        "id-2826": "RuntimeBotLinks",
+        "RuntimeBotVars": "types/core",
+        "id-2823": "RuntimeBotVars",
+        "SequenceRotation": "types/math/rotations",
+        "id-3308": "SequenceRotation",
+        "SetRoomOptionsSuccess": "types/os",
+        "id-2205": "SetRoomOptionsSuccess",
+        "SetRoomTrackOptions": "types/os",
+        "id-2655": "SetRoomTrackOptions",
+        "SetRoomTrackOptionsFailure": "types/os",
+        "id-2231": "SetRoomTrackOptionsFailure",
+        "SetRoomTrackOptionsSuccess": "types/os",
+        "id-2226": "SetRoomTrackOptionsSuccess",
+        "ShareOptions": "types/os",
+        "id-2557": "ShareOptions",
+        "ShowChatOptions": "types/os",
+        "id-2551": "ShowChatOptions",
+        "ShowConfirmOptions": "types/os",
+        "id-2593": "ShowConfirmOptions",
+        "ShowInputOptions": "types/os",
+        "id-2584": "ShowInputOptions",
+        "SnapAxis": "types/os",
+        "id-2531": "SnapAxis",
+        "SnapGridTarget": "types/os",
+        "id-2146": "SnapGridTarget",
+        "SnapPoint": "types/os",
+        "id-2543": "SnapPoint",
+        "SpeakTextOptions": "types/experimental",
+        "id-2490": "SpeakTextOptions",
+        "StartFormAnimationOptions": "types/os",
+        "id-2603": "StartFormAnimationOptions",
+        "StopFormAnimationOptions": "types/os",
+        "id-2616": "StopFormAnimationOptions",
+        "SuccessfulGeolocation": "types/os",
+        "id-2513": "SuccessfulGeolocation",
+        "SyntheticVoice": "types/experimental",
+        "id-2672": "SyntheticVoice",
+        "TweenOptions": "types/experimental",
+        "id-2487": "TweenOptions",
+        "UnsuccessfulGeolocation": "types/os",
+        "id-2523": "UnsuccessfulGeolocation",
+        "UpdateEventRecordFailure": "types/records/events",
+        "id-3050": "UpdateEventRecordFailure",
+        "UpdateEventRecordSuccess": "types/records/events",
+        "id-3048": "UpdateEventRecordSuccess",
+        "UploadedFile": "types/os",
+        "id-2167": "UploadedFile",
+        "WebhookOptions": "types/web",
+        "id-2091": "WebhookOptions",
+        "WebhookResult": "types/web",
+        "id-2103": "WebhookResult",
+        "AddCountResult": "types/records/events",
+        "id-3026": "AddCountResult",
+        "AvailablePermissions": "types/permissions",
+        "id-2870": "AvailablePermissions",
+        "BarcodeFormat": "types/os",
+        "id-2578": "BarcodeFormat",
+        "BotFilter": "types/core",
+        "id-2125": "BotFilter",
+        "BotSpace": "types/core",
+        "id-2810": "BotSpace",
+        "CameraType": "types/os",
+        "id-2577": "CameraType",
+        "CreatePublicRecordKeyResult": "types/records/key",
+        "id-2860": "CreatePublicRecordKeyResult",
+        "EaseMode": "types/animation",
+        "id-2506": "EaseMode",
+        "EaseType": "types/animation",
+        "id-2505": "EaseType",
+        "EraseDataResult": "types/records/data",
+        "id-2995": "EraseDataResult",
+        "EraseFileResult": "types/records/files",
+        "id-3017": "EraseFileResult",
+        "Geolocation": "types/os",
+        "id-2512": "Geolocation",
+        "GetCountResult": "types/records/events",
+        "id-3036": "GetCountResult",
+        "GetDataResult": "types/records/data",
+        "id-2981": "GetDataResult",
+        "GetRoomOptionsResult": "types/os",
+        "id-2195": "GetRoomOptionsResult",
+        "GetRoomRemoteOptionsResult": "types/os",
+        "id-2237": "GetRoomRemoteOptionsResult",
+        "GetRoomTrackOptionsResult": "types/os",
+        "id-2213": "GetRoomTrackOptionsResult",
+        "GrantMarkerPermissionResult": "types/records/policies",
+        "id-3068": "GrantMarkerPermissionResult",
+        "GrantRoleResult": "types/records/roles",
+        "id-3054": "GrantRoleResult",
+        "JoinRoomResult": "types/os",
+        "id-2177": "JoinRoomResult",
+        "LeaveRoomResult": "types/os",
+        "id-2186": "LeaveRoomResult",
+        "ListDataResult": "types/records/data",
+        "id-3004": "ListDataResult",
+        "Mod": "types/core",
+        "id-2120": "Mod",
+        "PortalType": "types/core",
+        "id-2842": "PortalType",
+        "PossiblePauseTriggerStates": "types/debuggers/common",
+        "id-2424": "PossiblePauseTriggerStates",
+        "RecordDataResult": "types/records/data",
+        "id-2972": "RecordDataResult",
+        "RecordFileResult": "types/records/files",
+        "id-2136": "RecordFileResult",
+        "RevokeMarkerPermissionResult": "types/records/policies",
+        "id-3075": "RevokeMarkerPermissionResult",
+        "RevokeRoleResult": "types/records/roles",
+        "id-3061": "RevokeRoleResult",
+        "SetRoomOptionsResult": "types/os",
+        "id-2204": "SetRoomOptionsResult",
+        "SetRoomTrackOptionsResult": "types/os",
+        "id-2225": "SetRoomTrackOptionsResult",
+        "SnapTarget": "types/os",
+        "id-2550": "SnapTarget",
+        "TagFilter": "types/core",
+        "id-2121": "TagFilter",
+        "UpdateEventRecordResult": "types/records/events",
+        "id-3047": "UpdateEventRecordResult",
+        "animateTag-byOptions": "actions/utility",
+        "id-364": "animateTag-byOptions",
+        "getbot-tag": "actions/data",
+        "id-33": "getbot-tag",
+        "getbots-tag": "actions/data",
+        "id-17": "getbots-tag",
+        "animateTag-byTag": "actions/utility",
+        "id-358": "animateTag-byTag",
+        "changeState": "actions/data",
+        "id-177": "changeState",
+        "create": "actions/data",
+        "id-162": "create",
+        "destroy": "actions/data",
+        "id-166": "destroy",
+        "getbot-filters": "actions/data",
+        "id-26": "getbot-filters",
+        "getbots-filters": "actions/data",
+        "id-10": "getbots-filters",
+        "priorityShout": "actions/event",
+        "id-225": "priorityShout",
+        "shout": "actions/event",
+        "id-237": "shout",
+        "updateBotLinks": "actions/data",
+        "id-198": "updateBotLinks",
+        "whisper": "actions/event",
+        "id-263": "whisper",
+        "action.perform": "actions/event",
+        "id-1600": "action.perform",
+        "action.reject": "actions/event",
+        "id-1604": "action.reject",
+        "applyDiffToSnapshot": "actions/data",
+        "id-83": "applyDiffToSnapshot",
+        "applyMod": "actions/mods",
+        "id-152": "applyMod",
+        "assert": "actions/debuggers",
+        "id-407": "assert",
+        "assertEqual": "actions/debuggers",
+        "id-412": "assertEqual",
+        "atPosition": "actions/bot-filters",
+        "id-293": "atPosition",
+        "byCreator": "actions/bot-filters",
+        "id-314": "byCreator",
+        "byID": "actions/bot-filters",
+        "id-281": "byID",
+        "byMod": "actions/bot-filters",
+        "id-285": "byMod",
+        "bySpace": "actions/bot-filters",
+        "id-310": "bySpace",
+        "byTag": "actions/bot-filters",
+        "id-276": "byTag",
+        "bytes.fromBase64String": "actions/bytes",
+        "id-1824": "bytes.fromBase64String",
+        "bytes.fromHexString": "actions/bytes",
+        "id-1832": "bytes.fromHexString",
+        "bytes.toBase64String": "actions/bytes",
+        "id-1820": "bytes.toBase64String",
+        "bytes.toHexString": "actions/bytes",
+        "id-1828": "bytes.toHexString",
+        "clearAnimations": "actions/utility",
+        "id-378": "clearAnimations",
+        "clearTagMasks": "actions/data",
+        "id-106": "clearTagMasks",
+        "crypto.hash-raw": "actions/crypto",
+        "id-1838": "crypto.hash-raw",
+        "crypto.hash-string": "actions/crypto",
+        "id-1844": "crypto.hash-string",
+        "crypto.hmac-raw": "actions/crypto",
+        "id-1875": "crypto.hmac-raw",
+        "crypto.hmac-string": "actions/crypto",
+        "id-1868": "crypto.hmac-string",
+        "crypto.asymmetric.decrypt": "actions/crypto",
+        "id-1933": "crypto.asymmetric.decrypt",
+        "crypto.asymmetric.encrypt": "actions/crypto",
+        "id-1928": "crypto.asymmetric.encrypt",
+        "crypto.asymmetric.isEncrypted": "actions/crypto",
+        "id-1939": "crypto.asymmetric.isEncrypted",
+        "crypto.asymmetric.isKeypair": "actions/crypto",
+        "id-1924": "crypto.asymmetric.isKeypair",
+        "crypto.asymmetric.keypair": "actions/crypto",
+        "id-1920": "crypto.asymmetric.keypair",
+        "crypto.encrypt": "actions/crypto",
+        "id-1904": "crypto.encrypt",
+        "crypto.hmacSha256": "actions/crypto",
+        "id-1894": "crypto.hmacSha256",
+        "crypto.hmacSha512": "actions/crypto",
+        "id-1899": "crypto.hmacSha512",
+        "crypto.isEncrypted": "actions/crypto",
+        "id-1914": "crypto.isEncrypted",
+        "crypto.keypair": "actions/crypto",
+        "id-1943": "crypto.keypair",
+        "crypto.sha256": "actions/crypto",
+        "id-1860": "crypto.sha256",
+        "crypto.sha512": "actions/crypto",
+        "id-1864": "crypto.sha512",
+        "crypto.sign": "actions/crypto",
+        "id-1947": "crypto.sign",
+        "deleteTagMaskText": "actions/data",
+        "id-133": "deleteTagMaskText",
+        "deleteTagText": "actions/data",
+        "id-126": "deleteTagText",
+        "diffSnapshots": "actions/data",
+        "id-78": "diffSnapshots",
+        "either": "actions/bot-filters",
+        "id-318": "either",
+        "os.beginAudioRecording": "actions/audio",
+        "id-1658": "os.beginAudioRecording",
+        "experiment.beginRecording": "actions/experimental",
+        "id-1665": "experiment.beginRecording",
+        "os.endAudioRecording": "actions/audio",
+        "id-1662": "os.endAudioRecording",
+        "experiment.endRecording": "actions/experimental",
+        "id-1669": "experiment.endRecording",
+        "experiment.getAnchorPointPosition": "actions/experimental",
+        "id-1648": "experiment.getAnchorPointPosition",
+        "experiment.getVoices": "actions/experimental",
+        "id-1677": "experiment.getVoices",
+        "experiment.localFormAnimation": "actions/experimental",
+        "id-1621": "experiment.localFormAnimation",
+        "experiment.localPositionTween": "actions/experimental",
+        "id-1626": "experiment.localPositionTween",
+        "experiment.localRotationTween": "actions/experimental",
+        "id-1637": "experiment.localRotationTween",
+        "experiment.speakText": "actions/experimental",
+        "id-1672": "experiment.speakText",
+        "getBotLinks": "actions/data",
+        "id-194": "getBotLinks",
+        "getBotPosition": "actions/data",
+        "id-52": "getBotPosition",
+        "getBotRotation": "actions/data",
+        "id-57": "getBotRotation",
+        "getBotTagValues": "actions/data",
+        "id-42": "getBotTagValues",
+        "getFormattedJSON": "actions/data",
+        "id-70": "getFormattedJSON",
+        "getID": "actions/data",
+        "id-62": "getID",
+        "getJSON": "actions/data",
+        "id-66": "getJSON",
+        "getLink": "actions/data",
+        "id-190": "getLink",
+        "getMod": "actions/mods",
+        "id-47": "getMod",
+        "getSnapshot": "actions/data",
+        "id-74": "getSnapshot",
+        "getTag": "actions/data",
+        "id-88": "getTag",
+        "inDimension": "actions/bot-filters",
+        "id-289": "inDimension",
+        "inStack": "actions/bot-filters",
+        "id-299": "inStack",
+        "insertTagMaskText": "actions/data",
+        "id-118": "insertTagMaskText",
+        "insertTagText": "actions/data",
+        "id-111": "insertTagText",
+        "math.abs": "actions/math",
+        "id-1694": "math.abs",
+        "math.addVectors": "actions/math",
+        "id-1764": "math.addVectors",
+        "math.areClose": "actions/math",
+        "id-1795": "math.areClose",
+        "math.avg": "actions/math",
+        "id-1686": "math.avg",
+        "math.degreesToRadians": "actions/math",
+        "id-1720": "math.degreesToRadians",
+        "math.getAnchorPointOffset": "actions/math",
+        "id-1760": "math.getAnchorPointOffset",
+        "math.getForwardDirection": "actions/math",
+        "id-1728": "math.getForwardDirection",
+        "math.getSeededRandomNumberGenerator": "actions/math",
+        "id-1702": "math.getSeededRandomNumberGenerator",
+        "math.intersectPlane": "actions/math",
+        "id-1737": "math.intersectPlane",
+        "math.negateVector": "actions/math",
+        "id-1774": "math.negateVector",
+        "math.normalizeVector": "actions/math",
+        "id-1779": "math.normalizeVector",
+        "math.radiansToDegrees": "actions/math",
+        "id-1724": "math.radiansToDegrees",
+        "math.random": "actions/math",
+        "id-1715": "math.random",
+        "math.randomInt": "actions/math",
+        "id-1710": "math.randomInt",
+        "math.scaleVector": "actions/math",
+        "id-1789": "math.scaleVector",
+        "math.setRandomSeed": "actions/math",
+        "id-1706": "math.setRandomSeed",
+        "math.sqrt": "actions/math",
+        "id-1690": "math.sqrt",
+        "math.stdDev": "actions/math",
+        "id-1698": "math.stdDev",
+        "math.subtractVectors": "actions/math",
+        "id-1769": "math.subtractVectors",
+        "math.sum": "actions/math",
+        "id-1682": "math.sum",
+        "math.vectorLength": "actions/math",
+        "id-1784": "math.vectorLength",
+        "neighboring": "actions/bot-filters",
+        "id-304": "neighboring",
+        "not": "actions/bot-filters",
+        "id-325": "not",
+        "os.attachDebugger": "actions/debuggers",
+        "id-1298": "os.attachDebugger",
+        "os.createDebugger-normal": "actions/debuggers",
+        "id-1287": "os.createDebugger-normal",
+        "os.createDebugger-pausable": "actions/debuggers",
+        "id-1291": "os.createDebugger-pausable",
+        "os.focusOn-bot": "actions/portals",
+        "id-480": "os.focusOn-bot",
+        "os.focusOn-position": "actions/portals",
+        "id-485": "os.focusOn-position",
+        "os.getExecutingDebugger": "actions/debuggers",
+        "id-1295": "os.getExecutingDebugger",
+        "showChat-options": "actions/os",
+        "id-507": "showChat-options",
+        "showChat-placeholder": "actions/os",
+        "id-503": "showChat-placeholder",
+        "os.showInput": "actions/portals",
+        "id-723": "os.showInput",
+        "os.addBotDropGrid": "actions/portals",
+        "id-797": "os.addBotDropGrid",
+        "os.addBotDropSnap": "actions/portals",
+        "id-788": "os.addBotDropSnap",
+        "os.addDropGrid": "actions/portals",
+        "id-793": "os.addDropGrid",
+        "os.addDropSnap": "actions/portals",
+        "id-784": "os.addDropSnap",
+        "os.applyUpdatesToInst": "actions/os",
+        "id-1241": "os.applyUpdatesToInst",
+        "os.arSupported": "actions/xr",
+        "id-548": "os.arSupported",
+        "os.bufferFormAddressGLTF": "actions/animations",
+        "id-1194": "os.bufferFormAddressGLTF",
+        "os.bufferSound": "actions/audio",
+        "id-760": "os.bufferSound",
+        "os.calculateRayFromCamera": "actions/portals",
+        "id-1189": "os.calculateRayFromCamera",
+        "os.cancelSound": "actions/audio",
+        "id-764": "os.cancelSound",
+        "os.capturePhoto": "actions/camera",
+        "id-643": "os.capturePhoto",
+        "os.closeBarcodeScanner": "actions/barcodes",
+        "id-621": "os.closeBarcodeScanner",
+        "os.closeCircleWipe": "actions/portals",
+        "id-776": "os.closeCircleWipe",
+        "os.closeImageClassifier": "actions/image-classification",
+        "id-636": "os.closeImageClassifier",
+        "os.closePhotoCamera": "actions/camera",
+        "id-647": "os.closePhotoCamera",
+        "os.closeQRCodeScanner": "actions/barcodes",
+        "id-607": "os.closeQRCodeScanner",
+        "os.compileApp": "actions/app",
+        "id-911": "os.compileApp",
+        "os.convertGeolocationToWhat3Words": "actions/os",
+        "id-1174": "os.convertGeolocationToWhat3Words",
+        "os.countEvents": "actions/records",
+        "id-1168": "os.countEvents",
+        "os.createInitializationUpdate": "actions/os",
+        "id-1237": "os.createInitializationUpdate",
+        "os.device": "actions/os",
+        "id-525": "os.device",
+        "os.disableAR": "actions/xr",
+        "id-538": "os.disableAR",
+        "os.disablePointOfView": "actions/portals",
+        "id-563": "os.disablePointOfView",
+        "os.disableVR": "actions/xr",
+        "id-545": "os.disableVR",
+        "os.disableWakeLock": "actions/os",
+        "id-569": "os.disableWakeLock",
+        "os.download": "actions/files",
+        "id-575": "os.download",
+        "os.downloadBots": "actions/files",
+        "id-581": "os.downloadBots",
+        "os.downloadBotsAsInitialzationUpdate": "actions/files",
+        "id-586": "os.downloadBotsAsInitialzationUpdate",
+        "os.downloadInst": "actions/files",
+        "id-594": "os.downloadInst",
+        "os.enableAR": "actions/xr",
+        "id-534": "os.enableAR",
+        "os.enableCustomDragging": "actions/portals",
+        "id-802": "os.enableCustomDragging",
+        "os.enablePointOfView": "actions/portals",
+        "id-554": "os.enablePointOfView",
+        "os.enableVR": "actions/xr",
+        "id-541": "os.enableVR",
+        "os.eraseData": "actions/records",
+        "id-1111": "os.eraseData",
+        "os.eraseManualApprovalData": "actions/records",
+        "id-1117": "os.eraseManualApprovalData",
+        "os.exitFullscreenMode": "actions/portals",
+        "id-451": "os.exitFullscreenMode",
+        "os.getAverageFrameRate": "actions/os",
+        "id-859": "os.getAverageFrameRate",
+        "os.getCameraPosition": "actions/portals",
+        "id-815": "os.getCameraPosition",
+        "os.getCameraRotation": "actions/portals",
+        "id-819": "os.getCameraRotation",
+        "os.getCurrentDimension": "actions/portals",
+        "id-694": "os.getCurrentDimension",
+        "os.getCurrentInst": "actions/portals",
+        "id-700": "os.getCurrentInst",
+        "os.getCurrentInstUpdate": "actions/os",
+        "id-1245": "os.getCurrentInstUpdate",
+        "os.getData": "actions/records",
+        "id-1093": "os.getData",
+        "os.getDimensionalDepth": "actions/portals",
+        "id-713": "os.getDimensionalDepth",
+        "os.getFocusPoint": "actions/portals",
+        "id-827": "os.getFocusPoint",
+        "os.getGeolocation": "actions/os",
+        "id-809": "os.getGeolocation",
+        "os.getInputList": "actions/portals",
+        "id-852": "os.getInputList",
+        "os.getInputState": "actions/portals",
+        "id-847": "os.getInputState",
+        "os.getInstStateFromUpdates": "actions/os",
+        "id-1233": "os.getInstStateFromUpdates",
+        "os.getManualApprovalData": "actions/records",
+        "id-1099": "os.getManualApprovalData",
+        "os.getMediaPermission": "actions/os",
+        "id-855": "os.getMediaPermission",
+        "os.getMenuDimension": "actions/portals",
+        "id-703": "os.getMenuDimension",
+        "os.getMiniPortalDimension": "actions/portals",
+        "id-706": "os.getMiniPortalDimension",
+        "os.getPointerDirection": "actions/portals",
+        "id-843": "os.getPointerDirection",
+        "os.getPointerPosition": "actions/portals",
+        "id-831": "os.getPointerPosition",
+        "os.getPointerRotation": "actions/portals",
+        "id-835": "os.getPointerRotation",
+        "os.getPortalDimension": "actions/portals",
+        "id-709": "os.getPortalDimension",
+        "os.getPublicRecordKey": "actions/records",
+        "id-1018": "os.getPublicRecordKey",
+        "os.getRoomOptions": "actions/rooms",
+        "id-877": "os.getRoomOptions",
+        "os.getRoomRemoteOptions": "actions/rooms",
+        "id-892": "os.getRoomRemoteOptions",
+        "os.getRoomTrackOptions": "actions/rooms",
+        "id-881": "os.getRoomTrackOptions",
+        "os.getSubjectlessPublicRecordKey": "actions/records",
+        "id-1022": "os.getSubjectlessPublicRecordKey",
+        "os.getWakeLockConfiguration": "actions/os",
+        "id-572": "os.getWakeLockConfiguration",
+        "os.goToDimension": "actions/portals",
+        "id-737": "os.goToDimension",
+        "os.goToURL": "actions/portals",
+        "id-741": "os.goToURL",
+        "os.grantInstAdminPermission": "actions/records",
+        "id-1040": "os.grantInstAdminPermission",
+        "os.grantInstRole": "actions/records",
+        "id-1060": "os.grantInstRole",
+        "os.grantRecordMarkerPermission": "actions/records",
+        "id-1026": "os.grantRecordMarkerPermission",
+        "os.grantUserRole": "actions/records",
+        "id-1045": "os.grantUserRole",
+        "os.hasBotInMiniPortal": "actions/portals",
+        "id-768": "os.hasBotInMiniPortal",
+        "os.hideBarcode": "actions/barcodes",
+        "id-629": "os.hideBarcode",
+        "os.hideChat": "actions/os",
+        "id-515": "os.hideChat",
+        "os.hideHtml": "actions/os",
+        "id-458": "os.hideHtml",
+        "os.hideQRCode": "actions/barcodes",
+        "id-614": "os.hideQRCode",
+        "os.hideTips": "actions/portals",
+        "id-439": "os.hideTips",
+        "os.importAUX": "actions/files",
+        "id-678": "os.importAUX",
+        "os.inSheet": "actions/portals",
+        "id-812": "os.inSheet",
+        "os.instStatuses": "actions/os",
+        "id-1262": "os.instStatuses",
+        "os.instances": "actions/os",
+        "id-1252": "os.instances",
+        "os.isCollaborative": "actions/os",
+        "id-528": "os.isCollaborative",
+        "os.isInDimension": "actions/portals",
+        "id-690": "os.isInDimension",
+        "os.isRecordKey": "actions/records",
+        "id-1075": "os.isRecordKey",
+        "os.joinRoom": "actions/rooms",
+        "id-862": "os.joinRoom",
+        "os.leaveRoom": "actions/rooms",
+        "id-867": "os.leaveRoom",
+        "os.listBuiltinTags": "actions/app",
+        "id-1012": "os.listBuiltinTags",
+        "os.listData": "actions/records",
+        "id-1105": "os.listData",
+        "os.listFormAnimations": "actions/animations",
+        "id-1209": "os.listFormAnimations",
+        "os.listInstUpdates": "actions/os",
+        "id-1230": "os.listInstUpdates",
+        "os.loadInst": "actions/os",
+        "id-670": "os.loadInst",
+        "os.log": "actions/os",
+        "id-805": "os.log",
+        "os.meetCommand": "actions/os",
+        "id-1275": "os.meetCommand",
+        "os.meetFunction": "actions/os",
+        "id-1280": "os.meetFunction",
+        "os.openBarcodeScanner": "actions/barcodes",
+        "id-617": "os.openBarcodeScanner",
+        "os.openCircleWipe": "actions/portals",
+        "id-780": "os.openCircleWipe",
+        "os.openDevConsole": "actions/os",
+        "id-749": "os.openDevConsole",
+        "os.openImageClassifier": "actions/image-classification",
+        "id-632": "os.openImageClassifier",
+        "os.openPhotoCamera": "actions/camera",
+        "id-639": "os.openPhotoCamera",
+        "os.openQRCodeScanner": "actions/barcodes",
+        "id-603": "os.openQRCodeScanner",
+        "os.openURL": "actions/portals",
+        "id-745": "os.openURL",
+        "os.parseBotsFromData": "actions/files",
+        "id-682": "os.parseBotsFromData",
+        "os.playSound": "actions/audio",
+        "id-756": "os.playSound",
+        "os.raycast": "actions/portals",
+        "id-1183": "os.raycast",
+        "os.raycastFromCamera": "actions/portals",
+        "id-1178": "os.raycastFromCamera",
+        "os.recordData": "actions/records",
+        "id-1079": "os.recordData",
+        "os.recordEvent": "actions/records",
+        "id-1162": "os.recordEvent",
+        "os.recordFile": "actions/records",
+        "id-1123": "os.recordFile",
+        "os.recordManualApprovalData": "actions/records",
+        "id-1086": "os.recordManualApprovalData",
+        "os.registerApp": "actions/app",
+        "id-902": "os.registerApp",
+        "os.registerTagPrefix": "actions/app",
+        "id-897": "os.registerTagPrefix",
+        "os.remoteCount": "actions/os",
+        "id-1255": "os.remoteCount",
+        "os.remotes": "actions/os",
+        "id-1227": "os.remotes",
+        "os.replaceDragBot": "actions/portals",
+        "id-686": "os.replaceDragBot",
+        "os.requestAuthBot": "actions/records",
+        "id-1015": "os.requestAuthBot",
+        "os.requestFullscreenMode": "actions/portals",
+        "id-448": "os.requestFullscreenMode",
+        "os.requestWakeLock": "actions/os",
+        "id-566": "os.requestWakeLock",
+        "os.revokeInstRole": "actions/records",
+        "id-1068": "os.revokeInstRole",
+        "os.revokeRecordMarkerPermission": "actions/records",
+        "id-1033": "os.revokeRecordMarkerPermission",
+        "os.revokeUserRole": "actions/records",
+        "id-1053": "os.revokeUserRole",
+        "os.run": "actions/os",
+        "id-518": "os.run",
+        "os.setClipboard": "actions/os",
+        "id-461": "os.setClipboard",
+        "os.setRoomOptions": "actions/rooms",
+        "id-872": "os.setRoomOptions",
+        "os.setRoomTrackOptions": "actions/rooms",
+        "id-886": "os.setRoomTrackOptions",
+        "os.share": "actions/os",
+        "id-772": "os.share",
+        "os.showBarcode": "actions/barcodes",
+        "id-624": "os.showBarcode",
+        "os.showConfirm": "actions/portals",
+        "id-733": "os.showConfirm",
+        "os.showHtml": "actions/os",
+        "id-454": "os.showHtml",
+        "os.showInputForTag": "actions/portals",
+        "id-717": "os.showInputForTag",
+        "os.showJoinCode": "actions/barcodes",
+        "id-443": "os.showJoinCode",
+        "os.showQRCode": "actions/barcodes",
+        "id-610": "os.showQRCode",
+        "os.showUploadAuxFile": "actions/files",
+        "id-597": "os.showUploadAuxFile",
+        "os.showUploadFiles": "actions/files",
+        "id-600": "os.showUploadFiles",
+        "os.sleep": "actions/os",
+        "id-423": "os.sleep",
+        "os.startFormAnimation": "actions/animations",
+        "id-1198": "os.startFormAnimation",
+        "os.stopFormAnimation": "actions/animations",
+        "id-1204": "os.stopFormAnimation",
+        "os.tip": "actions/portals",
+        "id-432": "os.tip",
+        "os.toast": "actions/os",
+        "id-427": "os.toast",
+        "os.totalRemoteCount": "actions/os",
+        "id-1259": "os.totalRemoteCount",
+        "os.unloadInst": "actions/os",
+        "id-674": "os.unloadInst",
+        "os.unregisterApp": "actions/app",
+        "id-907": "os.unregisterApp",
+        "os.version": "actions/os",
+        "id-522": "os.version",
+        "os.vrSupported": "actions/xr",
+        "id-551": "os.vrSupported",
+        "os.agreedUponTime": "actions/time",
+        "id-651": "os.agreedUponTime",
+        "os.deadReckoningTime": "actions/time",
+        "id-659": "os.deadReckoningTime",
+        "os.instLatency": "actions/time",
+        "id-653": "os.instLatency",
+        "os.instTimeOffset": "actions/time",
+        "id-655": "os.instTimeOffset",
+        "os.instTimeOffsetSpread": "actions/time",
+        "id-657": "os.instTimeOffsetSpread",
+        "os.localTime": "actions/time",
+        "id-649": "os.localTime",
+        "removeTags": "actions/data",
+        "id-141": "removeTags",
+        "renameTag": "actions/data",
+        "id-146": "renameTag",
+        "setTag": "actions/data",
+        "id-93": "setTag",
+        "setTagMask": "actions/data",
+        "id-99": "setTagMask",
+        "subtractMods": "actions/mods",
+        "id-157": "subtractMods",
+        "superShout": "actions/event",
+        "id-220": "superShout",
+        "uuid": "actions/data",
+        "id-355": "uuid",
+        "web.get": "actions/web",
+        "id-1990": "web.get",
+        "web.hook": "actions/web",
+        "id-2001": "web.hook",
+        "web.post": "actions/web",
+        "id-1995": "web.post",
+        "configBot": "actions/os",
+        "id-418": "configBot"
+    }
+}

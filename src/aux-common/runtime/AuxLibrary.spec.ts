@@ -224,6 +224,8 @@ import {
     revokeInstRole,
     InstUpdate,
     getCurrentInstUpdate,
+    getFile,
+    openPhotoCamera,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -1039,8 +1041,8 @@ describe('AuxLibrary', () => {
                 bot1.tags.redY = 2;
                 bot1.tags.redSortOrder = 100;
 
-                expect(typeof filter.sort).toBe('function');
-                expect(filter.sort(bot1)).toBe(100);
+                expect(typeof (filter as any).sort).toBe('function');
+                expect((filter as any).sort(bot1)).toBe(100);
             });
 
             it('should support sorting when the dimension tag starts with a hashtag', () => {
@@ -1051,8 +1053,8 @@ describe('AuxLibrary', () => {
                 bot1.tags.redY = 2;
                 bot1.tags.redSortOrder = 100;
 
-                expect(typeof filter.sort).toBe('function');
-                expect(filter.sort(bot1)).toBe(100);
+                expect(typeof (filter as any).sort).toBe('function');
+                expect((filter as any).sort(bot1)).toBe(100);
             });
 
             it('should return true for bots that are close to the target position', () => {
@@ -1128,8 +1130,8 @@ describe('AuxLibrary', () => {
                 bot2.tags.redY = 2;
                 bot2.tags.redSortOrder = 100;
 
-                expect(typeof filter.sort).toBe('function');
-                expect(filter.sort(bot2)).toEqual(100);
+                expect(typeof (filter as any).sort).toBe('function');
+                expect((filter as any).sort(bot2)).toEqual(100);
             });
 
             it('should support sorting when the dimension tag starts with a hashtag', () => {
@@ -1143,8 +1145,8 @@ describe('AuxLibrary', () => {
                 bot2.tags.redY = 2;
                 bot2.tags.redSortOrder = 100;
 
-                expect(typeof filter.sort).toBe('function');
-                expect(filter.sort(bot2)).toEqual(100);
+                expect(typeof (filter as any).sort).toBe('function');
+                expect((filter as any).sort(bot2)).toEqual(100);
             });
 
             it('should return true for bots that are close to each other', () => {
@@ -1230,8 +1232,8 @@ describe('AuxLibrary', () => {
                     bot2.tags.redY = y;
                     bot2.tags.redSortOrder = 100;
 
-                    expect(typeof filter.sort).toEqual('function');
-                    expect(filter.sort(bot2)).toEqual(100);
+                    expect(typeof (filter as any).sort).toEqual('function');
+                    expect((filter as any).sort(bot2)).toEqual(100);
                 });
             });
 
@@ -1329,7 +1331,7 @@ describe('AuxLibrary', () => {
                 it('should return a function without a sort function', () => {
                     const filter = library.api.neighboring(bot1, 'red');
 
-                    expect(typeof filter.sort).toEqual('undefined');
+                    expect(typeof (filter as any).sort).toEqual('undefined');
                 });
             });
         });
@@ -1423,7 +1425,7 @@ describe('AuxLibrary', () => {
                     (b) => false,
                     (b) => true
                 );
-                expect(typeof filter.sort).toEqual('undefined');
+                expect(typeof (filter as any).sort).toEqual('undefined');
             });
         });
 
@@ -3589,6 +3591,81 @@ describe('AuxLibrary', () => {
                 const expected = openImageClassifier(
                     false,
                     {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.openPhotoCamera()', () => {
+            it('should emit a OpenPhotoCameraAction', () => {
+                const action: any = library.api.os.openPhotoCamera();
+                const expected = openPhotoCamera(
+                    true,
+                    false,
+                    undefined,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given camera type', () => {
+                const action: any = library.api.os.openPhotoCamera({
+                    cameraType: 'front',
+                });
+                const expected = openPhotoCamera(
+                    true,
+                    false,
+                    {
+                        cameraType: 'front',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.capturePhoto()', () => {
+            it('should emit a OpenPhotoCameraAction', () => {
+                const action: any = library.api.os.capturePhoto();
+                const expected = openPhotoCamera(
+                    true,
+                    true,
+                    undefined,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given camera type', () => {
+                const action: any = library.api.os.capturePhoto({
+                    cameraType: 'front',
+                });
+                const expected = openPhotoCamera(
+                    true,
+                    true,
+                    {
+                        cameraType: 'front',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.closePhotoCamera()', () => {
+            it('should emit a OpenPhotoCameraAction', () => {
+                const action: any = library.api.os.closePhotoCamera();
+
+                const expected = openPhotoCamera(
+                    false,
+                    false,
+                    undefined,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -5824,7 +5901,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if no key is provided', async () => {
                 expect(() => {
                     library.api.os.eraseData(null, 'address');
-                }).toThrow('A recordKey must be provided.');
+                }).toThrow('recordKeyOrName must be provided.');
             });
 
             it('should throw an error if no address is provided', async () => {
@@ -5836,7 +5913,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if recordKey is not a string', async () => {
                 expect(() => {
                     library.api.os.eraseData({} as string, 'address');
-                }).toThrow('recordKey must be a string.');
+                }).toThrow('recordKeyOrName must be a string.');
             });
 
             it('should throw an error if address is not a string', async () => {
@@ -5883,7 +5960,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if no key is provided', async () => {
                 expect(() => {
                     library.api.os.eraseManualApprovalData(null, 'address');
-                }).toThrow('A recordKey must be provided.');
+                }).toThrow('recordKeyOrName must be provided.');
             });
 
             it('should throw an error if no address is provided', async () => {
@@ -5898,7 +5975,7 @@ describe('AuxLibrary', () => {
                         {} as string,
                         'address'
                     );
-                }).toThrow('recordKey must be a string.');
+                }).toThrow('recordKeyOrName must be a string.');
             });
 
             it('should throw an error if address is not a string', async () => {
@@ -6038,13 +6115,13 @@ describe('AuxLibrary', () => {
             it('should throw an error if no recordKey is provided', async () => {
                 expect(() => {
                     library.api.os.recordFile(null, 'data');
-                }).toThrow('A recordKey must be provided.');
+                }).toThrow('recordKeyOrName must be provided.');
             });
 
             it('should throw an error if recordKey is not a string', async () => {
                 expect(() => {
                     library.api.os.recordFile({} as string, 'data');
-                }).toThrow('recordKey must be a string.');
+                }).toThrow('recordKeyOrName must be a string.');
             });
 
             it('should convert bots to copiable values', async () => {
@@ -6129,6 +6206,145 @@ describe('AuxLibrary', () => {
 
                 expect(result).toEqual('data');
             });
+
+            it('should emit a get_file event if the webhook fails', async () => {
+                let result: any;
+                const action = library.api.os.getFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                action.then((data) => (result = data));
+
+                context.rejectTask(
+                    context.tasks.size,
+                    {
+                        response: {
+                            status: 403,
+                        },
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                const expected = getFile('fileUrl', {}, 2);
+
+                expect(context.actions.slice(1)).toEqual([expected]);
+
+                context.resolveTask(2, 'Hello, world!', false);
+
+                await waitAsync();
+
+                expect(result).toEqual('Hello, world!');
+            });
+        });
+
+        describe('os.getPublicFile()', () => {
+            it('should emit a Webhook', () => {
+                const action: any = library.api.os.getPublicFile('fileUrl');
+                const expected = webhook(
+                    {
+                        method: 'GET',
+                        url: 'fileUrl',
+                        responseShout: undefined,
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if given a null url', () => {
+                expect(() => {
+                    library.api.os.getPublicFile(null);
+                }).toThrow();
+            });
+
+            it('should support record file results', () => {
+                const action: any = library.api.os.getPublicFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                const expected = webhook(
+                    {
+                        method: 'GET',
+                        url: 'fileUrl',
+                        responseShout: undefined,
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return the webhook result data', async () => {
+                let result: any;
+                const action = library.api.os.getPublicFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                action.then((data) => (result = data));
+
+                context.resolveTask(
+                    context.tasks.size,
+                    {
+                        data: 'data',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual('data');
+            });
+        });
+
+        describe('os.getPrivateFile()', () => {
+            it('should emit a get_file event', () => {
+                const action: any = library.api.os.getPrivateFile('fileUrl');
+                const expected = getFile('fileUrl', {}, context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if given a null url', () => {
+                expect(() => {
+                    library.api.os.getPrivateFile(null);
+                }).toThrow();
+            });
+
+            it('should support record file results', () => {
+                const action: any = library.api.os.getPrivateFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                const expected = getFile('fileUrl', {}, context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return the result', async () => {
+                let result: any;
+                const action = library.api.os.getPrivateFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                action.then((data) => (result = data));
+
+                context.resolveTask(
+                    context.tasks.size,
+                    {
+                        data: 'data',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual({
+                    data: 'data',
+                });
+            });
         });
 
         describe('os.eraseFile()', () => {
@@ -6166,7 +6382,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if no key is provided', async () => {
                 expect(() => {
                     library.api.os.eraseFile(null, 'address');
-                }).toThrow('A recordKey must be provided.');
+                }).toThrow('recordKeyOrName must be provided.');
             });
 
             it('should throw an error if no file URL is provided', async () => {
@@ -6180,7 +6396,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if recordKey is not a string', async () => {
                 expect(() => {
                     library.api.os.eraseData({} as string, 'address');
-                }).toThrow('recordKey must be a string.');
+                }).toThrow('recordKeyOrName must be a string.');
             });
         });
 
@@ -6221,7 +6437,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if no key is provided', async () => {
                 expect(() => {
                     library.api.os.recordEvent(null, 'address');
-                }).toThrow('A recordKey must be provided.');
+                }).toThrow('recordKeyOrName must be provided.');
             });
 
             it('should throw an error if no event name is provided', async () => {
@@ -6233,7 +6449,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if key is not a string', async () => {
                 expect(() => {
                     library.api.os.recordEvent({} as string, 'address');
-                }).toThrow('recordKey must be a string.');
+                }).toThrow('recordKeyOrName must be a string.');
             });
 
             it('should throw an error if event name is not a string', async () => {

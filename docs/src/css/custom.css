@@ -78,6 +78,7 @@ html[data-theme="dark"] .rc-tooltip {
 
 div.api h2 {
     margin-left: -26.95px;
+    font-size: 2rem;
 }
 
 div.api h3 > a.hash-link {

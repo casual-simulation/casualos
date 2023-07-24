@@ -226,6 +226,7 @@ export type AsyncActions =
     | ListRecordDataAction
     | EraseRecordDataAction
     | RecordFileAction
+    | GetFileAction
     | EraseFileAction
     | RecordEventAction
     | GetEventCountAction
@@ -257,7 +258,8 @@ export type AsyncActions =
     | AnalyticsRecordEventAction
     | HtmlAppMethodCallAction
     | AttachRuntimeAction
-    | DetachRuntimeAction;
+    | DetachRuntimeAction
+    | OpenPhotoCameraAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -763,74 +765,102 @@ export interface HideHtmlAction extends Action {
 }
 
 /**
- * Options for the os.tweenTo(), os.moveTo(), and os.focusOn() actions.
+ * Options for {@link os.focusOn-bot}, and {@link os.focusOn-position} actions.
+ *
+ * @dochash types/os
+ * @docname FocusOnOptions
  */
 export interface FocusOnOptions {
     /*
      * The zoom value to use.
+     * For the bot and miniGridPortals, possible values are between `0` and `80`. `1` is the default.
+     * For the map portal, this is the scale that the focused point should appear at.
+     * For example, 24000 would indicate that the scale is 1:24,000.
+     * If no value is specified, then the zoom will remain at its current value.
      */
     zoom?: number;
 
     /*
-     * The rotation value to use. These are the spherical coordinates that determine where the camera should orbit around the target point.
+     * The rotation value to use in radians.
+     * These are the polar coordinates that determine where
+     * the camera should orbit around the target point.
      */
-    rotation?: {
-        x: number;
-        y: number;
-
-        /**
-         * Whether to normalize the rotation values to between 0 and 2*PI.
-         * Defaults to true. Setting this to false can be useful for rotating around a bot multiple times.
-         */
-        normalize?: boolean;
-    };
+    rotation?: FocusOnRotation;
 
     /**
-     * The duration in seconds that the tween should take.
+     * The duration in seconds that the animation should take.
+     * Defaults to 1.
      */
     duration?: number;
 
     /**
-     * The type of easing to use.
-     * If not specified then "linear" "inout" will be used.
+     * The options for easing.
+     * Can be an "easing type" or an object that specifies the type and mode.
+     * If an easing type is specified, then "inout" mode is used.
+     * If omitted, then "quadratic" "inout" is used.
      */
     easing?: EaseType | Easing;
 
     /**
      * The tag that should be focused.
+     * Only supported in the system portal.
      */
     tag?: string;
 
     /**
-     * The space of the tag that should be focused.
+     * The tag space that should be focused.
+     * Only supported in the system portal, sheet portal, and tag portals.
      */
     space?: string;
 
     /**
-     * The line number that should be focued.
+     * The line number that should be selected in the editor.
+     * Only supported in the system portal, sheet portal, and tag portals.
      */
     lineNumber?: number;
 
     /**
-     * The column number that should be focused.
+     * The column number that should be selected in the editor.
+     * Only supported in the system portal, sheet portal, and tag portals.
      */
     columnNumber?: number;
 
     /**
      * The index of the first character that should be selected.
+     * Only supported in the system portal, sheet portal, and tag portals.
      */
     startIndex?: number;
 
     /**
      * The index of the last character that should be selected.
+     * Only supported in the system portal, sheet portal, and tag portals.
      */
     endIndex?: number;
 
     /**
-     * The portal that the bot is in.
-     * If not specified, then the bot will be focused in all portals.
+     * The portal that the bot should be focused in.
+     * If not specified, then the bot will be focused in all the portals it is in. (bot, mini and menu)
+     * Useful if a bot is in two portals but you only want to focus it in one portal.
      */
     portal?: PortalType;
+}
+
+/**
+ * Defines an interface that represents a rotation in polar coordinates for use with {@link os.focusOn-bot}.
+ *
+ * @dochash types/os
+ * @docname FocusOnRotation
+ */
+export interface FocusOnRotation {
+    x: number;
+    y: number;
+
+    /**
+     * Whether to normalize the rotation. Normalized rotations are clamped to between 0 and Math.PI*2.
+     * You can set this to false to allow using angles more than Math.PI*2. This would allow the camera to rotate around an object multiple times.
+     * Defaults to true.
+     */
+    normalize?: boolean;
 }
 
 /**
@@ -870,6 +900,9 @@ export interface CancelAnimationAction extends AsyncAction {
 
 /**
  * The possible camera types.
+ *
+ * @dochash types/os
+ * @docname CameraType
  */
 export type CameraType = 'front' | 'rear';
 
@@ -918,6 +951,102 @@ export interface OpenBarcodeScannerAction extends Action {
 }
 
 /**
+ * An event that is used to show or hide the photo camera.
+ */
+export interface OpenPhotoCameraAction extends AsyncAction {
+    type: 'open_photo_camera';
+
+    /**
+     * Whether the photo camera should be visible.
+     */
+    open: boolean;
+
+    /**
+     * Whether only a single photo should be taken.
+     */
+    singlePhoto: boolean;
+
+    /**
+     * The options for the action.
+     */
+    options: OpenPhotoCameraOptions;
+}
+
+/**
+ * Defines a photo that was taken.
+ *
+ * @dochash types/camera
+ * @docname Photo
+ */
+export interface Photo {
+    /**
+     * The photo data.
+     */
+    data: Blob;
+
+    /**
+     * The width of the photo in pixels.
+     */
+    width: number;
+
+    /**
+     * The height of the photo in pixels.
+     */
+    height: number;
+}
+
+/**
+ * Options for {@link os.openPhotoCamera}.
+ *
+ * @dochash types/camera
+ * @doctitle Camera Types
+ * @docsidebar Camera
+ * @docdescription Types that are used in camera actions.
+ * @docname PhotoCameraOptions
+ */
+export interface OpenPhotoCameraOptions {
+    /**
+     * The camera that should be used.
+     */
+    cameraType?: CameraType;
+
+    /**
+     * Whether to not allow switching the camera.
+     */
+    disallowSwitchingCameras?: boolean;
+
+    /**
+     * The image format that should be used.
+     *
+     * Defaults to "png".
+     */
+    imageFormat?: 'png' | 'jpeg';
+
+    /**
+     * A number between 0 and 1 indicating the image quality to be used.
+     *
+     * If not specified, then the browser will use its own default.
+     */
+    imageQuality?: number;
+
+    /**
+     * Whether to skip allowing the user to confirm their photo.
+     *
+     * Defaults to false.
+     */
+    skipConfirm?: boolean;
+
+    /**
+     * Whether to automatically take a photo after a number of seconds.
+     *
+     * If null, then there is no timer and the user is allowed to take the photo manually.
+     * If positive, then the timer will start counting down from the given number of seconds.
+     * The user can always cancel the operation manually.
+     */
+    takePhotoAfterSeconds?: number;
+}
+
+/**
  * An event that is used to toggle whether the console is open.
  */
 export interface OpenConsoleAction extends Action {
@@ -948,6 +1077,9 @@ export interface ShowQRCodeAction extends Action {
 
 /**
  * The list of possible barcode formats.
+ *
+ * @dochash types/os
+ * @docname BarcodeFormat
  */
 export type BarcodeFormat =
     | 'code128'
@@ -985,14 +1117,24 @@ export interface ShowBarcodeAction extends Action {
 /**
  * An event that is used to show or hide an image classifier on screen.
  */
-export interface OpenImageClassifierAction extends AsyncAction {
+export interface OpenImageClassifierAction
+    extends AsyncAction,
+        ImageClassifierOptions {
     type: 'show_image_classifier';
 
     /**
      * Whether the image classifier should be visible.
      */
     open: boolean;
+}
 
+/**
+ * Defines an interface that represents a set of options for {@link os.openImageClassifier}.
+ *
+ * @dochash types/os
+ * @docname ImageClassifierOptions
+ */
+export interface ImageClassifierOptions {
     /**
      * The URL that the model should be loaded from.
      */
@@ -1015,11 +1157,6 @@ export interface OpenImageClassifierAction extends AsyncAction {
      */
     cameraType?: CameraType;
 }
-
-export type ImageClassifierOptions = Pick<
-    OpenImageClassifierAction,
-    'modelUrl' | 'modelJsonUrl' | 'modelMetadataUrl' | 'cameraType'
->;
 
 /**
  * An event that is used to load a simulation.
@@ -1382,6 +1519,9 @@ export interface ShowConfirmAction extends AsyncAction {
 
 /**
  * Defines an interface that represents the options that can be used for a confirmation dialog.
+ *
+ * @dochash types/os
+ * @docname ShowConfirmOptions
  */
 export interface ShowConfirmOptions {
     /**
@@ -1509,6 +1649,9 @@ export interface DownloadAction extends Action {
 
 /**
  * Defines an interface for options that a show input event can use.
+ *
+ * @dochash types/os
+ * @docname ShowInputOptions
  */
 export interface ShowInputOptions {
     /**
@@ -2349,6 +2492,9 @@ export interface ShowChatBarAction {
 
 /**
  * Defines the possible options for showing the chat bar.
+ *
+ * @dochash types/os
+ * @docname ShowChatOptions
  */
 export interface ShowChatOptions {
     /**
@@ -2568,6 +2714,11 @@ export interface LocalFormAnimationAction {
 
 export type TweenType = 'position' | 'rotation';
 
+/**
+ * The possible easing types.
+ * @dochash types/animation
+ * @docname EaseType
+ */
 export type EaseType =
     | 'linear'
     | 'quadratic'
@@ -2579,10 +2730,34 @@ export type EaseType =
     | 'circular'
     | 'elastic';
 
+/**
+ * The possible easing modes.
+ * @dochash types/animation
+ * @docname EaseMode
+ */
 export type EaseMode = 'in' | 'out' | 'inout';
 
+/**
+ * Defines an interface that represents easing types.
+ *
+ * @example Create an object that represents "quadratic" "inout" easing
+ * let easing = {
+ *    type: "quadratic",
+ *    mode: "inout"
+ * };
+ *
+ * @dochash types/animation
+ * @docname Easing
+ */
 export interface Easing {
+    /**
+     * The type of easing to use.
+     */
     type: EaseType;
+
+    /**
+     * The mode of easing to use.
+     */
     mode: EaseMode;
 }
 
@@ -2643,6 +2818,9 @@ export interface LocalRotationTweenAction extends LocalTweenAction {
 
 /**
  * Defines an interface that represents the options that an EnableARAction or EnableVRAction can have.
+ *
+ * @dochash types/os
+ * @docname EnableXROptions
  */
 export interface EnableXROptions {
     /**
@@ -2759,6 +2937,9 @@ export interface ExitFullscreenAction {
 
 /**
  * Defines the options that a share action can have.
+ *
+ * @dochash types/os
+ * @docname ShareOptions
  */
 export interface ShareOptions {
     /**
@@ -3011,6 +3192,9 @@ export interface RegisterPrefixAction extends AsyncAction {
 
 /**
  * Defines an interface that contains options for register prefix actions.
+ *
+ * @dochash types/core
+ * @docname RegisterPrefixOptions
  */
 export interface RegisterPrefixOptions {
     /**
@@ -3082,10 +3266,17 @@ export interface AddDropSnapTargetsAction extends AddDropSnapAction {
 /**
  * Defines an interface that represents a snap point.
  * That is, a point in 3D space with an associated snap distance.
+ *
+ * @dochash types/os
+ * @docgroup 10-snap
+ * @docorder 1
+ * @docname SnapPoint
  */
 export interface SnapPoint {
     /**
      * The 3D position for the point.
+     *
+     * @docsource Vector3
      */
     position: { x: number; y: number; z: number };
 
@@ -3098,15 +3289,24 @@ export interface SnapPoint {
 /**
  * Defines an interface that represents a snap axis.
  * That is, a ray in 3D space with an associated snap distance.
+ *
+ * @dochash types/os
+ * @docgroup 10-snap
+ * @docorder 2
+ * @docname SnapAxis
  */
 export interface SnapAxis {
     /**
      * The 3D direction that the axis ray travels along.
+     *
+     * @docsource Vector3
      */
     direction: { x: number; y: number; z: number };
 
     /**
      * The 3D position that the ray starts at.
+     *
+     * @docsource Vector3
      */
     origin: { x: number; y: number; z: number };
 
@@ -3118,10 +3318,15 @@ export interface SnapAxis {
 
 /**
  * The list of possible snap targets.
- * - "ground" means that the dragged bot should snap to the ground plane. This option is overriden by "grid".
- * - "grid" means that the dragged bot should snap to grid tiles.
- * - "face" means that the dragged bot should snap to other bot faces.
- * - "bots" means that the dragged bot will snap to other bots.
+ * - `"ground"` means that the dragged bot should snap to the ground plane. This option is overriden by "grid".
+ * - `"grid"` means that the dragged bot should snap to grid tiles.
+ * - `"face"` means that the dragged bot should snap to other bot faces.
+ * - `"bots"` means that the dragged bot will snap to other bots.
+ *
+ * @dochash types/os
+ * @docgroup 10-snap
+ * @docorder 0
+ * @docname SnapTarget
  */
 export type SnapTarget =
     | 'ground'
@@ -3244,21 +3449,40 @@ export interface EndAudioRecordingAction extends AsyncAction {
 
 /**
  * An interface that represents the options that can be used for making recordings.
+ *
+ * @dochash types/experimental
+ * @doctitle Experimental Types
+ * @docsidebar Experimental
+ * @docdescription Defines the types that are used by experimental actions.
+ * @docname RecordingOptions
  */
 export interface RecordingOptions {
     /**
      * Whether to record audio.
+     *
+     * If the computer does not have an audio device attached, then setting this to true
+     * will cause an error.
+     *
      * If an array is specified, only the specified audio sources will be recorded.
+     *
+     * Defaults to true.
      */
     audio: boolean | ('screen' | 'microphone')[];
 
     /**
      * Whether to record video.
+     *
+     * If the computer does not have a video device attached (like a web cam),
+     * then setting this to true will cause an error.
+     *
+     * Defaults to true.
      */
     video: boolean;
 
     /**
      * Whether to record the screen.
+     *
+     * Defaults to false.
      */
     screen: boolean;
 }
@@ -3349,6 +3573,9 @@ export interface GetVoicesAction extends AsyncAction {
 
 /**
  * Defines an interface that represents a synthetic voice.
+ *
+ * @dochash types/experimental
+ * @docname SyntheticVoice
  */
 export interface SyntheticVoice {
     /**
@@ -3374,6 +3601,27 @@ export interface GetGeolocationAction extends AsyncAction {
     type: 'get_geolocation';
 }
 
+/**
+ * Defines the possible geolocation results.
+ *
+ * @dochash types/os
+ * @doctitle OS Types
+ * @docsidebar OS
+ * @docdescription Defines the types that are used by OS actions.
+ * @docgroup 01-geo
+ * @docorder 0
+ * @docname Geolocation
+ */
+export type Geolocation = SuccessfulGeolocation | UnsuccessfulGeolocation;
+
+/**
+ * Defines an interface that represents a successful geolocation result.
+ *
+ * @dochash types/os
+ * @docgroup 01-geo
+ * @docorder 1
+ * @docname SuccessfulGeolocation
+ */
 export interface SuccessfulGeolocation {
     success: true;
 
@@ -3423,6 +3671,14 @@ export interface SuccessfulGeolocation {
     timestamp: number;
 }
 
+/**
+ * Defines an interface that represents an unsuccessful geolocation result.
+ *
+ * @dochash types/os
+ * @docgroup 01-geo
+ * @docorder 2
+ * @docname UnsuccessfulGeolocation
+ */
 export interface UnsuccessfulGeolocation {
     success: false;
 
@@ -3442,12 +3698,10 @@ export interface UnsuccessfulGeolocation {
 }
 
 /**
- * Defines an interface that represents a geolocation result.
- */
-export type Geolocation = SuccessfulGeolocation | UnsuccessfulGeolocation;
-
-/**
  * Defines an interface that contains recorded data.
+ *
+ * @dochash types/experimental
+ * @docname Recording
  */
 export interface Recording {
     /**
@@ -3456,6 +3710,12 @@ export interface Recording {
     files: RecordedFile[];
 }
 
+/**
+ * Defines an interface that represents a recorded file.
+ *
+ * @dochash types/experimental
+ * @docname RecordedFile
+ */
 export interface RecordedFile {
     /**
      * Whether the file contains the recorded audio.
@@ -3571,6 +3831,12 @@ export const APPROVED_SYMBOL = Symbol('approved');
 
 /**
  * Defines an interface that represents the base for options for a records action.
+ *
+ * @dochash types/records/extra
+ * @doctitle Extra Record Types
+ * @docsidebar Extra
+ * @docdescription Extra types that are used for records.
+ * @docname RecordActionOptions
  */
 export interface RecordActionOptions {
     /**
@@ -3592,13 +3858,19 @@ export interface RecordsAction extends AsyncAction {
 /**
  * Defines a type that represents a policy that indicates which users are allowed to affect a record.
  *
- * True indicates that any user can edit the record.
- * An array of strings indicates the list of users that are allowed to edit the record.
+ * - `true` indicates that any user can edit the record.
+ * - An array of strings indicates the list of users that are allowed to edit the record.
+ *
+ * @dochash types/records
+ * @docname RecordUserPolicyType
  */
 export type RecordUserPolicyType = true | string[];
 
 /**
  * The options for data record actions.
+ *
+ * @dochash types/records
+ * @docName DataRecordOptions
  */
 export interface DataRecordOptions extends RecordActionOptions {
     /**
@@ -3615,6 +3887,11 @@ export interface DataRecordOptions extends RecordActionOptions {
      * The markers that should be applied to the record.
      */
     markers?: string[];
+
+    /**
+     * The marker that should be applied to the record.
+     */
+    marker?: string;
 }
 
 /**
@@ -3747,6 +4024,18 @@ export interface RecordFileAction extends RecordsAction {
 }
 
 /**
+ * Defines an event that requests a file from a record.
+ */
+export interface GetFileAction extends RecordsAction {
+    type: 'get_file';
+
+    /**
+     * The URL that the file is stored at.
+     */
+    fileUrl: string;
+}
+
+/**
  * Defines an event that erases a file from a record.
  */
 export interface EraseFileAction extends RecordsAction {
@@ -3825,6 +4114,11 @@ export interface GetRecordsActionResult {
 
 /**
  * Defines an interface that represents options for converting a geolocation to a what3words address.
+ *
+ * @dochash types/os
+ * @docgroup 01-geo
+ * @docorder 3
+ * @docname ConvertGeolocationToWhat3WordsOptions
  */
 export interface ConvertGeolocationToWhat3WordsOptions {
     /**
@@ -4000,6 +4294,12 @@ export interface RevokeRoleAction extends RecordsAction {
     inst?: string;
 }
 
+/**
+ * Defines an interface that represents options for requesting media permissions.
+ *
+ * @dochash types/os
+ * @docname MediaPermissionOptions
+ */
 export interface MediaPermssionOptions {
     /**
      * Should include audio permission.
@@ -4028,6 +4328,10 @@ export interface GetAverageFrameRateAction extends AsyncAction {
     type: 'get_average_frame_rate';
 }
 
+/**
+ * @docid JoinRoomActionOptions
+ * @docrename RoomJoinOptions
+ */
 export type JoinRoomActionOptions = RecordActionOptions &
     Partial<RoomJoinOptions>;
 
@@ -4079,6 +4383,9 @@ export interface SetRoomOptionsAction extends AsyncAction {
 
 /**
  * Defines a set of options that the local user can have for a room.
+ *
+ * @dochash types/os
+ * @docname RoomOptions
  */
 export interface RoomOptions {
     /**
@@ -4099,6 +4406,9 @@ export interface RoomOptions {
 
 /**
  * Defines a set of options that the local usr can specify when joining a room.
+ *
+ * @dochash types/os
+ * @docname RoomJoinOptions
  */
 export interface RoomJoinOptions extends RoomOptions {
     /**
@@ -4180,6 +4490,12 @@ export interface SetRoomTrackOptionsAction extends AsyncAction {
     options: SetRoomTrackOptions;
 }
 
+/**
+ * Defines an interface that represents the set of options that can be set on a room video/audio track.
+ *
+ * @dochash types/os
+ * @docname SetRoomTrackOptions
+ */
 export interface SetRoomTrackOptions {
     /**
      * Whether to mute the track locally.
@@ -4193,6 +4509,12 @@ export interface SetRoomTrackOptions {
     videoQuality?: TrackVideoQuality;
 }
 
+/**
+ * Defines an interface that represents the options that a audio/video track has.
+ *
+ * @dochash types/os
+ * @docname RoomTrackOptions
+ */
 export interface RoomTrackOptions {
     /**
      * Whether the track is being sourced from a remote user.
@@ -4241,6 +4563,13 @@ export type TrackSource =
     | 'microphone'
     | 'screen_share'
     | 'screen_share_audio';
+
+/**
+ * Defines the possible qualities that a track can stream at.
+ *
+ * @dochash types/os
+ * @docname TrackVideoQuality
+ */
 export type TrackVideoQuality = 'high' | 'medium' | 'low' | 'off';
 
 /**
@@ -4262,6 +4591,9 @@ export interface GetRoomRemoteOptionsAction extends AsyncAction {
 
 /**
  * Defines an interface that contains options for a remote room user.
+ *
+ * @dochash types/os
+ * @docname RoomRemoteOptions
  */
 export interface RoomRemoteOptions {
     /**
@@ -4361,6 +4693,9 @@ export interface BufferFormAddressGLTFAction extends AsyncAction {
 
 /**
  * Defines an interface that contains a bunch of options for starting an animation.
+ *
+ * @dochash types/os
+ * @docname StartFormAnimationOptions
  */
 export interface StartFormAnimationOptions {
     /**
@@ -4446,6 +4781,9 @@ export interface StartFormAnimationAction
 
 /**
  * Defines an interface that contains a bunch of options for stopping an animation.
+ *
+ * @dochash types/os
+ * @docname StopFormAnimationOptions
  */
 export interface StopFormAnimationOptions {
     /**
@@ -4488,6 +4826,9 @@ export interface ListFormAnimationsAction extends AsyncAction {
 
 /**
  * Defines an interface that contains animation information.
+ *
+ * @dochash types/os
+ * @docname FormAnimationData
  */
 export interface FormAnimationData {
     /**
@@ -4985,6 +5326,27 @@ export function openBarcodeScanner(
         open: open,
         cameraType: cameraType,
         disallowSwitchingCameras: false,
+    };
+}
+
+/**
+ * Creates a new OpenPhotoCameraAction.
+ * @param open Whether the barcode scanner should be open or closed.
+ * @param singlePhoto Whether only a single photo should be taken.
+ * @param cameraType The camera type that should be used.
+ */
+export function openPhotoCamera(
+    open: boolean,
+    singlePhoto: boolean,
+    options?: OpenPhotoCameraOptions,
+    taskId?: string | number
+): OpenPhotoCameraAction {
+    return {
+        type: 'open_photo_camera',
+        open: open,
+        singlePhoto,
+        options: options ?? {},
+        taskId,
     };
 }
 
@@ -7854,6 +8216,26 @@ export function recordFile(
         data,
         description,
         mimeType,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a GetFileAction.
+ * @param recordKey The key that should be used to access the record.
+ * @param fileUrl The URL that the file was stored at.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function getFile(
+    fileUrl: string,
+    options: RecordActionOptions,
+    taskId?: number | string
+): GetFileAction {
+    return {
+        type: 'get_file',
+        fileUrl,
         options,
         taskId,
     };

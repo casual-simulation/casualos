@@ -866,6 +866,65 @@ declare interface OpenBarcodeScannerAction extends Action {
     cameraType: CameraType;
 }
 
+
+/**
+ * Defines a photo that was taken.
+ * 
+ * @dochash types/camera
+ * @docname Photo
+ */
+export interface Photo {
+    /**
+     * The photo data.
+     */
+    data: Blob;
+
+    /**
+     * The width of the photo in pixels.
+     */
+    width: number;
+
+    /**
+     * The height of the photo in pixels.
+     */
+    height: number;
+}
+
+/**
+ * Options for {@link os.openPhotoCamera}.
+ * 
+ * @dochash types/camera
+ * @doctitle Camera Types
+ * @docsidebar Camera
+ * @docdescription Types that are used in camera actions.
+ * @docname PhotoCameraOptions
+ */
+export interface OpenPhotoCameraOptions {
+    /**
+     * The camera that should be used.
+     */
+    cameraType?: CameraType;
+
+    /**
+     * Whether to not allow switching the camera.
+     */
+    disallowSwitchingCameras?: boolean;
+
+    /**
+     * The image format that should be used.
+     * 
+     * Defaults to "png".
+     */
+    imageFormat?: 'png' | 'jpef';
+
+    /**
+     * A number between 0 and 1 indicating the image quality to be used.
+     * 
+     * If not specified, then the browser will use its own default.
+     */
+    imageQuality?: number;
+}
+
 /**
  * An event that is used to toggle whether the console is open.
  */
@@ -3329,7 +3388,7 @@ export interface RecordActionOptions {
     endpoint?: string;
 }
 
-export type GrantMarkerPermissionResponse =
+export type GrantMarkerPermissionResult =
     | GrantMarkerPermissionSuccess
     | GrantMarkerPermissionFailure;
 
@@ -7453,7 +7512,7 @@ export interface PauseTrigger extends PauseTriggerOptions {
 /**
  * Defines an interface for a possible pause trigger location.
  */
-export interface PossibleTriggerLocation {
+export interface PossiblePauseTriggerLocation {
     /**
      * The line number that the trigger would pause the debugger at.
      */
@@ -8671,7 +8730,7 @@ interface DebuggerBase {
      * @param botOrId The bot or bot ID.
      * @param tag The name of the tag that the trigger locations should be listed for.
      */
-    listCommonPauseTriggers(botOrId: Bot | string, tag: string): PossibleTriggerLocation[];
+    listCommonPauseTriggers(botOrId: Bot | string, tag: string): PossiblePauseTriggerLocation[];
 
     /**
      * Resumes the debugger execution from the given pause.
@@ -10161,6 +10220,63 @@ interface Os {
     closeBarcodeScanner(): OpenBarcodeScannerAction;
 
     /**
+     * Opens the photo camera. Returns a promise that resolves once the camera has been opened. Triggers the {@tag onPhotoCameraOpened} shout once opened.
+     *
+     * While open, each time the user takes a photo the system will send a {@tag @onPhotoCaptured} shout. Optionally accepts which camera to use for scanning. (front/back)
+     *
+     * @param options the options that should be used for the photo camera.
+     *
+     * @example Open the photo camera.
+     * await os.openPhotoCamera();
+     *
+     * @example Open the photo camera, defaulting to the front-facing camera.
+     * await os.openPhotoCamera({
+     *     cameraType: "front"
+     * });
+     *
+     * @dochash actions/camera
+     * @doctitle Camera Actions
+     * @docsidebar Camera
+     * @docdescription Actions for taking photos.
+     * @docname os.openPhotoCamera
+     */
+    openPhotoCamera(options?: OpenPhotoCameraOptions): Promise<void>;
+
+    /**
+     * Closes the photo camera. Returns a promise that resolves once the camera has been closed. Triggers the {@tag onPhotoCameraClosed} shout once closed.
+     *
+     * @example Close the photo camera
+     * await os.closePhotoCamera();
+     * 
+     * @dochash actions/camera
+     * @docname os.closePhotoCamera
+     */
+    closePhotoCamera(): Promise<void>;
+
+    /**
+     * Opens the photo camera for the user to take a single photo. Returns a promise that resolves with the taken photo. Triggers the {@tag onPhotoCameraOpened} shout once opened.
+     *
+     * While open, each time the user takes a photo the system will send a {@tag @onPhotoCaptured} shout. Optionally accepts which camera to use for scanning. (front/back)
+     *
+     * @param options the options that should be used for the photo camera.
+     *
+     * @example Prompt the user to take a single photo.
+     * const photo = await os.capturePhoto();
+     *
+     * @example Take a single photo, defaulting to the front-facing camera.
+     * await os.capturePhoto({
+     *     cameraType: "front"
+     * });
+     *
+     * @dochash actions/camera
+     * @doctitle Camera Actions
+     * @docsidebar Camera
+     * @docdescription Actions for taking photos.
+     * @docname os.capturePhoto
+     */
+    capturePhoto(options?: OpenPhotoCameraOptions): Promise<Photo>;
+
+    /**
      * Shows the given barcode.
      * @param code The code that should be shown.
      * @param format The format that the barcode should be shown in.
@@ -10664,7 +10780,7 @@ interface Os {
         marker: string,
         permission: object,
         options?: RecordActionOptions
-    ): Promise<GrantMarkerPermissionResponse>;
+    ): Promise<GrantMarkerPermissionResult>;
 
     /**
      * Revokes the given permission from the given marker in the given record.
@@ -10868,6 +10984,60 @@ interface Os {
      * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
      */
     getFile(urlOrRecordFileResult: string | RecordFileSuccess): Promise<any>;
+
+    /**
+     * Gets the data stored in the given public file.
+     * Only works for files that have the `publicRead` marker.
+     * If the file is not public, then this operation will fail.
+     * @param result The successful result of a os.recordFile() call.
+     * @param endpoint The endpoint that should be queried. Optional.
+     */
+    getPublicFile(result: RecordFileSuccess): Promise<any>;
+
+    /**
+     * Gets the data stored in the given public file.
+     * Only works for files that have the `publicRead` marker.
+     * If the file is not public, then this operation will fail.
+     * @param url The URL that the public file is stored at.
+     */
+    getPublicFile(url: string): Promise<any>;
+
+    /**
+     * Gets the data stored in the given public file.
+     * Only works for files that have the `publicRead` marker.
+     * If the file is not public, then this operation will fail.
+     * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     */
+    getPublicFile(
+        urlOrRecordFileResult: string | RecordFileSuccess
+    ): Promise<string>;
+
+    /**
+     * Gets the data stored in the given private file.
+     * @param result The successful result of a os.recordFile() call.
+     * @param endpoint The endpoint that should be queried. Optional.
+     */
+    getPrivateFile(
+        result: RecordFileSuccess,
+        endpoint?: string
+    ): Promise<any>;
+
+    /**
+     * Gets the data stored in the given private file.
+     * @param url The URL that the public file is stored at.
+     * @param endpoint The endpoint that should be queried. Optional.
+     */
+    getPrivateFile(url: string, endpoint?: string): Promise<any>;
+
+    /**
+     * Gets the data stored in the given private file.
+     * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     * @param endpoint The endpoint that should be queried. Optional.
+     */
+    getPrivateFile(
+        urlOrRecordFileResult: string | RecordFileSuccess,
+        endpoint?: string
+    ): Promise<string>;
 
     /**
      * Deletes the specified file using the given record key.

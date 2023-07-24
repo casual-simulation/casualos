@@ -105,6 +105,25 @@ You can analyze builds to see what is making them large and which dependencies a
 4. Upload the sourcemaps from `src/aux-server/aux-web/dist/assets`.
 5. Advance to the analysis page by clicking the button at the bottom of the page.
 
+## Documentation
+
+The reference documentation is generated automatically from doc comments.
+Here is a brief list of tags that are used to help generate the documentation:
+
+-   `@dochash` - This tells the documentation generator which page a type should be placed in. If a type does not have a `@dochash` tag, then it will only make it into the documentation if it is a child of a type that is included via `@dochash`. Each unique `@dochash` ends up as its own page.
+-   `@doctitle` - The title of a page. Only the first `@doctitle` found for each `@dochash` will be used.
+-   `@docsidebar` - The title of a page in the sidebar. Only the first `@docsidebar` found for each `@dochash` will be used.
+-   `@docdescription` - The SEO description of a page. Only the first `@docdescription` found for each `@dochash` will be used.
+-   `@docname` - The visual name of the type/function being documented.
+-   `@docid` - The ID of the type/function being documented. You can use `{@link ref}` annotations to reference types/functions by their IDs. If omitted, then `@docname` is used as the ID of a type.
+-   `@docgroup` - An internal group ID for the type. Within a page, types are sorted first by `@docgroup`, then by `@docorder`, and finally by `@docid`.
+-   `@docorder` - An internal order for the type. Within a page, types are sorted first by `@docgroup`, then by `@docorder`, and finally by `@docid`.
+-   `@docrename` - Used to rename a type to reference another type. (e.g. `@docrename MyOtherType` will cause all references to this type in the documentation to appear as if they are references to `MyOtherType`)
+-   `@docsource` - Tells the generator to generate an interface with the specified name from the property's type. Useful for properties that utilize type declarations.
+-   `@docreferenceactions` - Tells the generator to find all other types/properties whose IDs match the given regex pattern and include them as extra references for the type.
+-   `{@link [ref]}` - Renders a link to the type with `@docid` matching `[ref]`.
+-   `{@tag [tag]}` - Renders a link to the given `[tag]`. Prefix the tag with `@` to link to listen tags.
+
 ## Projects
 
 ### [AUX Server](./src/aux-server/)

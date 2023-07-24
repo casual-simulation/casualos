@@ -1,0 +1,53 @@
+{
+  "id": 224,
+  "name": "SequenceRotation",
+  "kind": 256,
+  "kindString": "Interface",
+  "flags": {},
+  "comment": {
+    "shortText": "Defines an interface that represents a sequence of rotations."
+  },
+  "children": [
+    {
+      "id": 225,
+      "name": "sequence",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "comment": {
+        "shortText": "The sequence of successive rotations."
+      },
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 519,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "array",
+        "elementType": {
+          "type": "reference",
+          "id": 167,
+          "name": "Rotation"
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Properties",
+      "kind": 1024,
+      "children": [
+        225
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "src/aux-common/math/Rotation.ts",
+      "line": 515,
+      "character": 17
+    }
+  ]
+}

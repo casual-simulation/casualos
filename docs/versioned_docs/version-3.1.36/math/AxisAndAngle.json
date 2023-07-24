@@ -1,0 +1,72 @@
+{
+  "id": 213,
+  "name": "AxisAndAngle",
+  "kind": 256,
+  "kindString": "Interface",
+  "flags": {},
+  "comment": {
+    "shortText": "Defines an interface that represents an Axis and Angle pair."
+  },
+  "children": [
+    {
+      "id": 215,
+      "name": "angle",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "comment": {
+        "shortText": "The number of radians that should be rotated around the axis."
+      },
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 475,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "intrinsic",
+        "name": "number"
+      }
+    },
+    {
+      "id": 214,
+      "name": "axis",
+      "kind": 1024,
+      "kindString": "Property",
+      "flags": {},
+      "comment": {
+        "shortText": "The axis about which the angle should rotate around."
+      },
+      "sources": [
+        {
+          "fileName": "src/aux-common/math/Rotation.ts",
+          "line": 470,
+          "character": 4
+        }
+      ],
+      "type": {
+        "type": "reference",
+        "id": 58,
+        "name": "Vector3"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "title": "Properties",
+      "kind": 1024,
+      "children": [
+        215,
+        214
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "fileName": "src/aux-common/math/Rotation.ts",
+      "line": 466,
+      "character": 17
+    }
+  ]
+}

@@ -88,6 +88,7 @@ import SystemPortal from '../../shared/vue-components/SystemPortal/SystemPortal'
 import { loadScript } from '../../shared/SharedUtils';
 import RecordsUI from '../../shared/vue-components/RecordsUI/RecordsUI';
 import ImageClassifier from '../../shared/vue-components/ImageClassifier/ImageClassifier';
+import PhotoCamera from '../../shared/vue-components/PhotoCamera/PhotoCamera';
 import BotPortal from '../../shared/vue-components/BotPortal/BotPortal';
 import Tooltips from '../../shared/vue-components/Tooltips/Tooltips';
 import WakeLock from '../../shared/vue-components/WakeLock/WakeLock';
@@ -146,6 +147,7 @@ declare function sa_event(name: string, callback: Function): void;
         'bot-portal': BotPortal,
         'bot-tooltips': Tooltips,
         'wake-lock': WakeLock,
+        'photo-camera': PhotoCamera,
     },
 })
 export default class PlayerApp extends Vue {

@@ -25,6 +25,7 @@ import {
     GrantInstAdminPermissionAction,
     GrantRoleAction,
     RevokeRoleAction,
+    GetFileAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -39,10 +40,13 @@ import {
     RecordFileResult,
     IssueMeetTokenResult,
     isRecordKey,
-    GrantMarkerPermissionResponse,
+    GrantMarkerPermissionResult,
     RevokeMarkerPermissionResult,
     GrantRoleResult,
     RevokeRoleResult,
+    GetFileRecordResult,
+    ReadFileResult,
+    ReadFileFailure,
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
@@ -146,6 +150,8 @@ export class RecordsManager {
                 this._eraseRecordData(event);
             } else if (event.type === 'record_file') {
                 this._recordFile(event);
+            } else if (event.type === 'get_file') {
+                this._getFile(event);
             } else if (event.type === 'erase_file') {
                 this._eraseFile(event);
             } else if (event.type === 'record_event') {
@@ -245,19 +251,8 @@ export class RecordsManager {
             return;
         }
         try {
-            const auth = this._getAuthFromEvent(event.options);
-
-            if (!auth) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_supported',
-                            errorMessage:
-                                'Records are not supported on this inst.',
-                        } as GetDataResult)
-                    );
-                }
+            const info = await this._resolveInfoForEvent(event, false);
+            if (info.error) {
                 return;
             }
 
@@ -270,7 +265,7 @@ export class RecordsManager {
             if (hasValue(event.taskId)) {
                 const result: AxiosResponse<GetDataResult> = await axios.get(
                     await this._publishUrl(
-                        auth,
+                        info.auth,
                         !event.requiresApproval
                             ? '/api/v2/records/data'
                             : '/api/v2/records/manual/data',
@@ -282,6 +277,7 @@ export class RecordsManager {
                     ),
                     {
                         ...this._axiosOptions,
+                        headers: info.headers,
                     }
                 );
 
@@ -304,21 +300,12 @@ export class RecordsManager {
             return;
         }
         try {
-            const auth = this._getAuthFromEvent(event.options);
-
-            if (!auth) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_supported',
-                            errorMessage:
-                                'Records are not supported on this inst.',
-                        } as ListDataResult)
-                    );
-                }
+            const info = await this._resolveInfoForEvent(event);
+            if (info.error) {
                 return;
             }
+            const auth = info.auth;
+
             if (event.requiresApproval) {
                 if (hasValue(event.taskId)) {
                     this._helper.transaction(
@@ -347,6 +334,7 @@ export class RecordsManager {
                     }),
                     {
                         ...this._axiosOptions,
+                        headers: info.headers,
                     }
                 );
 
@@ -605,6 +593,72 @@ export class RecordsManager {
         }
     }
 
+    private async _getFile(event: GetFileAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event, false);
+            if (info.error) {
+                return;
+            }
+
+            let instances: string[] = undefined;
+            if (hasValue(this._helper.inst)) {
+                instances = [this._helper.inst];
+            }
+
+            const result: AxiosResponse<ReadFileResult> = await axios.get(
+                await this._publishUrl(info.auth, '/api/v2/records/file', {
+                    fileUrl: event.fileUrl,
+                    instances,
+                }),
+                {
+                    ...this._axiosOptions,
+                    headers: info.headers,
+                }
+            );
+
+            if (hasValue(event.taskId)) {
+                if (result.data.success) {
+                    const getResult = await axios.request({
+                        ...this._axiosOptions,
+                        method: result.data.requestMethod as any,
+                        url: result.data.requestUrl,
+                        headers: result.data.requestHeaders,
+                    });
+
+                    if (getResult.status >= 200 && getResult.status < 300) {
+                        this._helper.transaction(
+                            asyncResult(event.taskId, getResult.data)
+                        );
+                    } else {
+                        this._helper.transaction(
+                            asyncError(event.taskId, {
+                                success: false,
+                                errorCode:
+                                    getResult.status === 404
+                                        ? 'file_not_found'
+                                        : getResult.status >= 500
+                                        ? 'server_error'
+                                        : 'not_authorized',
+                                errorMessage: 'The file upload failed.',
+                            } as ReadFileFailure)
+                        );
+                    }
+                } else {
+                    this._helper.transaction(
+                        asyncError(event.taskId, result.data)
+                    );
+                }
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error getting file:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
     private async _eraseFile(event: EraseFileAction) {
         try {
             const info = await this._resolveInfoForEvent(event);
@@ -700,21 +754,12 @@ export class RecordsManager {
 
     private async _getEventCount(event: GetEventCountAction) {
         try {
-            const auth = this._getAuthFromEvent(event.options);
-
-            if (!auth) {
-                if (hasValue(event.taskId)) {
-                    this._helper.transaction(
-                        asyncResult(event.taskId, {
-                            success: false,
-                            errorCode: 'not_supported',
-                            errorMessage:
-                                'Records are not supported on this inst.',
-                        } as GetDataResult)
-                    );
-                }
+            const info = await this._resolveInfoForEvent(event);
+            if (info.error) {
                 return;
             }
+
+            const auth = info.auth;
 
             if (hasValue(event.taskId)) {
                 let instances: string[] = undefined;
@@ -731,7 +776,7 @@ export class RecordsManager {
                             instances,
                         }
                     ),
-                    { ...this._axiosOptions }
+                    { ...this._axiosOptions, headers: info.headers }
                 );
 
                 this._helper.transaction(
@@ -1200,15 +1245,20 @@ export class RecordsManager {
     private async _resolveInfoForEvent(
         event:
             | RecordFileAction
+            | GetRecordDataAction
+            | ListRecordDataAction
+            | GetFileAction
             | EraseFileAction
             | RecordDataAction
             | EraseRecordDataAction
             | RecordEventAction
+            | GetEventCountAction
             | GrantRecordMarkerPermissionAction
             | RevokeRecordMarkerPermissionAction
             | GrantInstAdminPermissionAction
             | GrantRoleAction
-            | RevokeRoleAction
+            | RevokeRoleAction,
+        authenticateIfNotLoggedIn: boolean = true
     ): Promise<{
         error: boolean;
         auth: AuthHelperInterface;
@@ -1239,7 +1289,10 @@ export class RecordsManager {
             const policy = await auth.getRecordKeyPolicy(event.recordKey);
 
             if (policy !== 'subjectless') {
-                token = await this._getAuthToken(auth);
+                token = await this._getAuthToken(
+                    auth,
+                    authenticateIfNotLoggedIn
+                );
                 if (!token) {
                     if (hasValue(event.taskId)) {
                         this._helper.transaction(
@@ -1260,7 +1313,7 @@ export class RecordsManager {
                 headers['Authorization'] = `Bearer ${token}`;
             }
         } else {
-            token = await this._getAuthToken(auth);
+            token = await this._getAuthToken(auth, authenticateIfNotLoggedIn);
             if (hasValue(token)) {
                 headers['Authorization'] = `Bearer ${token}`;
             }
@@ -1302,12 +1355,17 @@ export class RecordsManager {
         return auth;
     }
 
-    private async _getAuthToken(auth: AuthHelperInterface): Promise<string> {
+    private async _getAuthToken(
+        auth: AuthHelperInterface,
+        authenticateIfNotLoggedIn: boolean
+    ): Promise<string> {
         if (!auth) {
             return null;
         }
-        if (!(await auth.isAuthenticated())) {
-            await auth.authenticate();
+        if (authenticateIfNotLoggedIn) {
+            if (!(await auth.isAuthenticated())) {
+                await auth.authenticate();
+            }
         }
         return auth.getAuthToken();
     }

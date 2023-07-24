@@ -154,7 +154,7 @@ describe('RecordsHttpServer', () => {
         );
 
         const memRecordsStore = (recordsStore = new MemoryRecordsStore());
-        recordsController = new RecordsController(recordsStore);
+        recordsController = new RecordsController(recordsStore, authStore);
 
         policyStore = new MemoryPolicyStore();
         policyController = new PolicyController(
