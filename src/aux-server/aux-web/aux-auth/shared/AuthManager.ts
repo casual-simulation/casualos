@@ -9,6 +9,7 @@ import type {
     ListRecordsResult,
     ListFilesResult,
     EraseFileResult,
+    EraseDataResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -331,6 +332,25 @@ export class AuthManager {
         });
 
         const result = response.data as EraseFileResult;
+        return result.success === true;
+    }
+
+    async eraseData(
+        recordKeyOrName: string,
+        address: string
+    ): Promise<boolean> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records/data`);
+
+        const response = await axios.delete(url.href, {
+            headers: this._authenticationHeaders(),
+            data: {
+                recordKey: recordKeyOrName,
+                address: address,
+            },
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as EraseDataResult;
         return result.success === true;
     }
 

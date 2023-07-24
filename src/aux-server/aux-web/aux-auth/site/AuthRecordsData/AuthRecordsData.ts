@@ -51,7 +51,7 @@ export default class AuthRecordsData extends Vue {
         this._reset();
     }
 
-    private _reset() {
+    private _reset(page: number = 1) {
         this._helper = new LoadingHelper(async (lastItem) => {
             let items =
                 (await authManager.listData(
@@ -65,7 +65,7 @@ export default class AuthRecordsData extends Vue {
         });
         this.items = {
             mdCount: 100,
-            mdPage: 0,
+            mdPage: page,
             mdData: [],
             startIndex: 0,
             endIndex: 0,
@@ -84,5 +84,13 @@ export default class AuthRecordsData extends Vue {
             this.items = nextPage;
         }
         return true;
+    }
+
+    async deleteItem(item: ListDataSuccess['items'][0]) {
+        if (await authManager.eraseData(this.recordName, item.address)) {
+            this.items.mdData = this.items.mdData.filter(
+                (i) => i.address !== item.address
+            );
+        }
     }
 }
