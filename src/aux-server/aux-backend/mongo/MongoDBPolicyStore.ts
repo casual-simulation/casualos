@@ -3,6 +3,7 @@ import {
     DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
     DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
     GetUserPolicyResult,
+    ListUserPoliciesStoreResult,
     ListedRoleAssignments,
     ListedUserPolicy,
     PUBLIC_READ_MARKER,
@@ -51,7 +52,7 @@ export class MongoDBPolicyStore implements PolicyStore {
     async listUserPolicies(
         recordName: string,
         startingMarker: string
-    ): Promise<ListedUserPolicy[]> {
+    ): Promise<ListUserPoliciesStoreResult> {
         let query = {
             recordName: { $eq: recordName },
         } as FilterQuery<MongoDBPolicy>;
@@ -61,12 +62,16 @@ export class MongoDBPolicyStore implements PolicyStore {
         }
         const policies = await this._policies.find(query).toArray();
 
-        return policies.map((p) => {
-            return {
-                marker: p.marker,
-                document: p.document,
-            } as ListedUserPolicy;
-        });
+        return {
+            success: true,
+            policies: policies.map((p) => {
+                return {
+                    marker: p.marker,
+                    document: p.document,
+                } as ListedUserPolicy;
+            }),
+            totalCount: policies.length,
+        };
     }
 
     async listRolesForUser(

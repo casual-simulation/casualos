@@ -11,6 +11,7 @@ import {
     GetUserPolicyResult,
     ListedRoleAssignments,
     ListedUserPolicy,
+    ListUserPoliciesStoreResult,
     PolicyStore,
     RoleAssignment,
     UpdateRolesUpdate,
@@ -56,7 +57,7 @@ export class MemoryPolicyStore implements PolicyStore {
     async listUserPolicies(
         recordName: string,
         startingMarker: string
-    ): Promise<ListedUserPolicy[]> {
+    ): Promise<ListUserPoliciesStoreResult> {
         const recordPolicies = this.policies[recordName] ?? {};
 
         const keys = sortBy(Object.keys(recordPolicies));
@@ -75,7 +76,11 @@ export class MemoryPolicyStore implements PolicyStore {
             }
         }
 
-        return results;
+        return {
+            success: true,
+            policies: results,
+            totalCount: results.length,
+        };
     }
 
     async getUserPolicy(
@@ -183,6 +188,9 @@ export class MemoryPolicyStore implements PolicyStore {
 
         return {
             assignments,
+            totalCount: assignments.length,
+        };
+    }
 
     async listAssignments(
         recordName: string,

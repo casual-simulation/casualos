@@ -19414,6 +19414,7 @@ describe('PolicyController', () => {
                         markers: [ACCOUNT_MARKER],
                     },
                 ],
+                totalCount: 3,
             });
         });
 
@@ -19441,6 +19442,7 @@ describe('PolicyController', () => {
                         markers: [ACCOUNT_MARKER],
                     },
                 ],
+                totalCount: 1,
             });
         });
 
@@ -19497,6 +19499,7 @@ describe('PolicyController', () => {
                         markers: [ACCOUNT_MARKER],
                     },
                 ],
+                totalCount: 3,
             });
         });
 

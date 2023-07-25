@@ -65,7 +65,7 @@ export default class AuthRecordsPolicies extends Vue {
             if (result) {
                 return {
                     items: result.policies,
-                    totalCount: result.policies.length,
+                    totalCount: result.totalCount,
                 };
             } else {
                 return {

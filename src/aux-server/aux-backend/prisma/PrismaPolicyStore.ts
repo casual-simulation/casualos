@@ -3,6 +3,7 @@ import {
     DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
     DEFAULT_PUBLIC_READ_POLICY_DOCUMENT,
     GetUserPolicyResult,
+    ListUserPoliciesStoreResult,
     ListedRoleAssignments,
     ListedUserPolicy,
     PUBLIC_READ_MARKER,
@@ -55,7 +56,7 @@ export class PrismaPolicyStore implements PolicyStore {
     async listUserPolicies(
         recordName: string,
         startingMarker: string
-    ): Promise<ListedUserPolicy[]> {
+    ): Promise<ListUserPoliciesStoreResult> {
         let query: Prisma.PolicyWhereInput = {
             recordName: recordName,
         };
@@ -73,13 +74,19 @@ export class PrismaPolicyStore implements PolicyStore {
             take: 10,
         });
 
-        return policies.map((p) => {
+        const results = policies.map((p) => {
             return {
                 marker: p.marker,
                 document: p.document as unknown as PolicyDocument,
                 markers: p.markers,
             };
         });
+
+        return {
+            success: true,
+            policies: results,
+            totalCount: results.length,
+        };
     }
 
     async listRolesForUser(

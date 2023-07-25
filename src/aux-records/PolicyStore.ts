@@ -23,7 +23,7 @@ export interface PolicyStore {
     listUserPolicies(
         recordName: string,
         startingMarker: string | null
-    ): Promise<ListedUserPolicy[]>;
+    ): Promise<ListUserPoliciesStoreResult>;
 
     /**
      * Lists the roles that are assigned to the user.
@@ -198,6 +198,22 @@ export interface UpdateUserRolesSuccess {
 export interface UpdateUserRolesFailure {
     success: false;
     errorCode: ServerError | 'roles_too_large';
+    errorMessage: string;
+}
+
+export type ListUserPoliciesStoreResult =
+    | ListUserPoliciesStoreSuccess
+    | ListUserPoliciesStoreFailure;
+
+export interface ListUserPoliciesStoreSuccess {
+    success: true;
+    policies: ListedUserPolicy[];
+    totalCount: number;
+}
+
+export interface ListUserPoliciesStoreFailure {
+    success: false;
+    errorCode: ServerError;
     errorMessage: string;
 }
 

@@ -533,9 +533,14 @@ export class PolicyController {
                 startingMarker
             );
 
+            if (!result.success) {
+                return result;
+            }
+
             return {
                 success: true,
-                policies: result,
+                policies: result.policies,
+                totalCount: result.totalCount,
             };
         } catch (err) {
             console.error('[PolicyController] A server error occurred.', err);
@@ -5042,6 +5047,7 @@ export type ListUserPoliciesResult =
 export interface ListUserPoliciesSuccess {
     success: true;
     policies: ListedUserPolicy[];
+    totalCount: number;
 }
 
 export interface ListUserPoliciesFailure {
