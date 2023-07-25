@@ -870,6 +870,7 @@ export interface ListedFile {
     sizeInBytes: number;
     description: string;
     markers: string[];
+    uploaded: boolean;
 }
 
 export interface ListFilesFailure {

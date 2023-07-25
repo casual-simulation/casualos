@@ -1185,6 +1185,7 @@ describe('FileRecordsController', () => {
                     url: file.url,
                     sizeInBytes: file.sizeInBytes,
                     description: file.description,
+                    uploaded: true,
                     markers: file.markers ?? [PUBLIC_READ_MARKER],
                 });
             }
@@ -1210,6 +1211,7 @@ describe('FileRecordsController', () => {
                     url: file.url,
                     sizeInBytes: file.sizeInBytes,
                     description: file.description,
+                    uploaded: true,
                     markers: file.markers ?? [PUBLIC_READ_MARKER],
                 });
             }
@@ -1293,6 +1295,7 @@ describe('FileRecordsController', () => {
                         url: 'http://localhost:9191/testRecord/test1.txt',
                         sizeInBytes: 100,
                         description: 'description',
+                        uploaded: true,
                         markers: ['secret'],
                     },
                     {
@@ -1300,6 +1303,7 @@ describe('FileRecordsController', () => {
                         url: 'http://localhost:9191/testRecord/test3.txt',
                         sizeInBytes: 100,
                         description: 'description',
+                        uploaded: true,
                         markers: ['secret'],
                     },
                 ],

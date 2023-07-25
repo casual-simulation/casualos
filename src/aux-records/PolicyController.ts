@@ -5,7 +5,7 @@ import {
     ValidatePublicRecordKeyFailure,
     ValidatePublicRecordKeyResult,
 } from './RecordsController';
-import { ServerError } from './Errors';
+import { NotSupportedError, ServerError } from './Errors';
 import {
     ADMIN_ROLE_NAME,
     AssignPolicyPermission,
@@ -751,6 +751,13 @@ export class PolicyController {
         instances?: string[]
     ): Promise<ListRoleAssignmentsResult> {
         try {
+            if (!this._policies.listAssignments) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
             const baseRequest = {
                 recordKeyOrRecordName: recordKeyOrRecordName,
                 userId: userId,
@@ -5114,7 +5121,7 @@ export interface ListRoleAssignmentsSuccess {
 
 export interface ListRoleAssignmentsFailure {
     success: false;
-    errorCode: ServerError | AuthorizeDenied['errorCode'];
+    errorCode: ServerError | NotSupportedError | AuthorizeDenied['errorCode'];
     errorMessage: string;
 }
 

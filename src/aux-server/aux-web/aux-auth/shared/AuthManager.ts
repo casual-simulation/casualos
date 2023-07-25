@@ -396,6 +396,10 @@ export class AuthManager {
         const result = response.data as ListRoleAssignmentsResult;
         if (result.success === true) {
             return result;
+        } else {
+            if (result.errorCode === 'not_supported') {
+                return null;
+            }
         }
 
         return null;

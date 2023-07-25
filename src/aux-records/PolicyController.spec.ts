@@ -19871,6 +19871,22 @@ describe('PolicyController', () => {
             };
         });
 
+        it('should return a not_supported result if the store does not implement listAssignments()', async () => {
+            (store as any).listAssignments = null;
+
+            const result = await controller.listRoleAssignments(
+                recordName,
+                userId,
+                null
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+        });
+
         it('should list all role assignments', async () => {
             const result = await controller.listRoleAssignments(
                 recordName,

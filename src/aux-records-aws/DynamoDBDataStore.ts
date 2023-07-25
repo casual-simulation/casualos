@@ -219,7 +219,7 @@ export class DynamoDBDataStore implements DataRecordsStore {
         return {
             success: true,
             items,
-            totalCount: null,
+            totalCount: items.length,
         };
     }
 }
