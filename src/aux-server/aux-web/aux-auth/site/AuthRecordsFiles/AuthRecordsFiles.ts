@@ -35,7 +35,7 @@ export default class AuthRecordsFiles extends Vue {
         endIndex: number;
         mdData: ListFilesSuccess['files'];
     } = {
-        mdCount: 100,
+        mdCount: 0,
         mdPage: 0,
         mdData: [],
         startIndex: 0,

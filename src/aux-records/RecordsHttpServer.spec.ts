@@ -3656,7 +3656,7 @@ describe('RecordsHttpServer', () => {
                 subjectId: userId,
                 sizeInBytes: 10,
                 description: 'description',
-                url: `${recordName}/${hash}.json`,
+                url: `http://localhost:9191/${recordName}/${hash}.json`,
                 uploaded: false,
                 markers: [PUBLIC_READ_MARKER],
             });
@@ -3716,7 +3716,7 @@ describe('RecordsHttpServer', () => {
                 subjectId: null,
                 sizeInBytes: 10,
                 description: 'description',
-                url: `${recordName}/${hash}.json`,
+                url: `http://localhost:9191/${recordName}/${hash}.json`,
                 uploaded: false,
                 markers: [PUBLIC_READ_MARKER],
             });
@@ -3771,7 +3771,7 @@ describe('RecordsHttpServer', () => {
                 subjectId: userId,
                 sizeInBytes: 10,
                 description: 'description',
-                url: `${recordName}/${hash}.json`,
+                url: `http://localhost:9191/${recordName}/${hash}.json`,
                 uploaded: false,
                 markers: ['secret'],
             });
@@ -4316,6 +4316,7 @@ describe('RecordsHttpServer', () => {
                             sizeInBytes: 10,
                             description: 'description',
                             url: 'http://localhost:9191/testRecord/test1.txt',
+                            uploaded: true,
                             markers: [PUBLIC_READ_MARKER],
                         },
                         {
@@ -4323,6 +4324,7 @@ describe('RecordsHttpServer', () => {
                             sizeInBytes: 10,
                             description: 'description',
                             url: 'http://localhost:9191/testRecord/test2.txt',
+                            uploaded: true,
                             markers: [PUBLIC_READ_MARKER],
                         },
                         {
@@ -4330,6 +4332,7 @@ describe('RecordsHttpServer', () => {
                             sizeInBytes: 10,
                             description: 'description',
                             url: 'http://localhost:9191/testRecord/test3.txt',
+                            uploaded: true,
                             markers: [PUBLIC_READ_MARKER],
                         },
                     ],
@@ -4362,6 +4365,7 @@ describe('RecordsHttpServer', () => {
                             sizeInBytes: 10,
                             description: 'description',
                             url: 'http://localhost:9191/testRecord/test2.txt',
+                            uploaded: true,
                             markers: [PUBLIC_READ_MARKER],
                         },
                         {
@@ -4369,6 +4373,7 @@ describe('RecordsHttpServer', () => {
                             sizeInBytes: 10,
                             description: 'description',
                             url: 'http://localhost:9191/testRecord/test3.txt',
+                            uploaded: true,
                             markers: [PUBLIC_READ_MARKER],
                         },
                     ],
@@ -4422,6 +4427,7 @@ describe('RecordsHttpServer', () => {
                             sizeInBytes: 10,
                             description: 'description',
                             url: 'http://localhost:9191/testRecord/test1.txt',
+                            uploaded: true,
                             markers: ['secret'],
                         },
                         {
@@ -4429,6 +4435,7 @@ describe('RecordsHttpServer', () => {
                             sizeInBytes: 10,
                             description: 'description',
                             url: 'http://localhost:9191/testRecord/test3.txt',
+                            uploaded: true,
                             markers: ['secret'],
                         },
                     ],
@@ -4482,6 +4489,7 @@ describe('RecordsHttpServer', () => {
                             sizeInBytes: 10,
                             description: 'description',
                             url: 'http://localhost:9191/testRecord/test1.txt',
+                            uploaded: true,
                             markers: ['secret'],
                         },
                         {
@@ -4489,6 +4497,7 @@ describe('RecordsHttpServer', () => {
                             sizeInBytes: 10,
                             description: 'description',
                             url: 'http://localhost:9191/testRecord/test3.txt',
+                            uploaded: true,
                             markers: ['secret'],
                         },
                     ],
@@ -4628,7 +4637,7 @@ describe('RecordsHttpServer', () => {
                 subjectId: userId,
                 sizeInBytes: 10,
                 description: 'desc',
-                url: `${recordName}/${fileName}`,
+                url: `http://localhost:9191/${recordName}/${fileName}`,
                 uploaded: false,
                 markers: ['other'],
             });
@@ -4674,7 +4683,7 @@ describe('RecordsHttpServer', () => {
                 subjectId: userId,
                 sizeInBytes: 10,
                 description: 'desc',
-                url: `${recordName}/${fileName}`,
+                url: `http://localhost:9191/${recordName}/${fileName}`,
                 uploaded: false,
                 markers: ['other'],
             });

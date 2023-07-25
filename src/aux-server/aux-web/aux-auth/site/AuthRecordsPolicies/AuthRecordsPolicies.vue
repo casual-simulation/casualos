@@ -74,7 +74,7 @@
 
                 <md-table-row
                     v-for="(permission, index) in selectedItem.document.permissions"
-                    :key="permission.index"
+                    :key="index"
                 >
                     <md-table-cell>{{ permission.type }}</md-table-cell>
                     <md-table-cell>{{ permission.role }}</md-table-cell>
