@@ -11877,7 +11877,7 @@ describe('PolicyController', () => {
             });
         });
 
-        describe.only('event.list', () => {
+        describe('event.list', () => {
             it('should allow the request if given a record key', async () => {
                 const result = await controller.authorizeRequest({
                     action: 'event.list',

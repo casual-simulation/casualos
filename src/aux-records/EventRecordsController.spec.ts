@@ -587,4 +587,78 @@ describe('EventRecordsController', () => {
             });
         });
     });
+
+    describe('listEvents()', () => {
+        let events: any[] = [];
+        beforeEach(async () => {
+            events = [];
+            for (let i = 0; i < 20; i++) {
+                const name = `test${i.toString().padStart(2, '0')}`;
+                await store.addEventCount(recordName, name, i);
+                events.push({
+                    eventName: name,
+                    count: i,
+                    markers: [PUBLIC_READ_MARKER],
+                });
+            }
+        });
+
+        it('should be able to list events', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await manager.listEvents(recordName, null, userId);
+
+            expect(result).toEqual({
+                success: true,
+                events: events.slice(0, 10),
+                totalCount: 20,
+            });
+        });
+
+        it('should return an empty list if the user is not authorized', async () => {
+            const result = await manager.listEvents(recordName, null, userId);
+
+            expect(result).toEqual({
+                success: true,
+                events: [],
+                totalCount: 20,
+            });
+        });
+
+        it('should skip events until after the given event name', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await manager.listEvents(
+                recordName,
+                'test05',
+                userId
+            );
+
+            expect(result).toEqual({
+                success: true,
+                events: events.slice(6, 16),
+                totalCount: 20,
+            });
+        });
+
+        it('should return an empty list if the inst is not authorized', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await manager.listEvents(recordName, null, userId, [
+                'inst',
+            ]);
+
+            expect(result).toEqual({
+                success: true,
+                events: [],
+                totalCount: 20,
+            });
+        });
+    });
 });

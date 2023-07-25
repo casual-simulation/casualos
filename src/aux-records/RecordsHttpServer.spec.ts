@@ -2190,6 +2190,150 @@ describe('RecordsHttpServer', () => {
         testRateLimit('GET', `/api/v2/records/events/count`);
     });
 
+    describe('GET /api/v2/records/events/list', () => {
+        let events: any[];
+        beforeEach(async () => {
+            events = [];
+            for (let i = 0; i < 20; i++) {
+                const name = `test${i.toString().padStart(2, '0')}`;
+                await eventsController.addCount(recordKey, name, i, userId);
+                events.push({
+                    eventName: name,
+                    count: i,
+                    markers: [PUBLIC_READ_MARKER],
+                });
+            }
+        });
+
+        it('should get a list of events', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    events: events.slice(0, 10),
+                    totalCount: 20,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return the events that are listed after the given event name', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/list?recordName=${recordName}&eventName=${'test05'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    events: events.slice(6, 16),
+                    totalCount: 20,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an empty list if the inst doesnt have permission', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/list?recordName=${recordName}&instances=inst`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    events: [],
+                    totalCount: 20,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should get a list of events if the inst and user have permission', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+                ['inst']: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/list?recordName=${recordName}&instances=inst`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    events: events.slice(0, 10),
+                    totalCount: 20,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result if recordName is omitted', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/list?eventName=${'testEvent'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName is required.',
+                            path: ['recordName'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testRateLimit('GET', `/api/v2/records/events/list`);
+    });
+
     describe('POST /api/v2/records/events', () => {
         beforeEach(async () => {
             await eventsController.updateEvent({

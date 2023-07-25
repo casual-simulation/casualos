@@ -426,6 +426,15 @@ export class RecordsHttpServer {
                 this._allowedApiOrigins
             );
         } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/events/list'
+        ) {
+            return formatResponse(
+                request,
+                await this._listEvents(request),
+                this._allowedApiOrigins
+            );
+        } else if (
             request.method === 'POST' &&
             request.path === '/api/v2/records/events'
         ) {
@@ -2301,6 +2310,71 @@ export class RecordsHttpServer {
             instances
         );
 
+        return returnResult(result);
+    }
+
+    private async _listEvents(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must be non-empty.'),
+            eventName: z
+                .string({
+                    invalid_type_error: 'eventName must be a string.',
+                    required_error: 'eventName is required.',
+                })
+                .nonempty('eventName must be non-empty.')
+                .optional(),
+            instances: z
+                .string()
+                .nonempty()
+                .optional()
+                .transform((value) => parseInstancesList(value)),
+        });
+
+        const parseResult = schema.safeParse(request.query || {});
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        let { recordName, eventName, instances } = parseResult.data;
+
+        if (!!recordName && typeof recordName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'recordName must be a string.',
+            });
+        }
+        if (!!eventName && typeof eventName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'fileName must be a string.',
+            });
+        }
+
+        const validation = await this._validateSessionKey(request);
+        if (
+            validation.success === false &&
+            validation.errorCode !== 'no_session_key'
+        ) {
+            return returnResult(validation);
+        }
+        const userId = validation.userId;
+
+        const result = await this._events.listEvents(
+            recordName,
+            eventName,
+            userId,
+            instances
+        );
         return returnResult(result);
     }
 

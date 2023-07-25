@@ -443,6 +443,7 @@ export class FileRecordsController {
                             fileSizeInBytes: i.sizeInBytes,
                             fileMimeType: getType(i.fileName),
                             markers: i.markers ?? [PUBLIC_READ_MARKER],
+                            original: i,
                         })),
                     }
                 );
@@ -455,33 +456,12 @@ export class FileRecordsController {
                 throw new Error('allowedFileItems is null!');
             }
 
-            let items: ListedFile[] = [];
-            let allowedListIndex = 0;
-            for (
-                let i = 0;
-                i < files.length &&
-                allowedListIndex < authorizeResult.allowedFileItems.length;
-                i++
-            ) {
-                const allowedFile =
-                    authorizeResult.allowedFileItems[allowedListIndex];
-                const currentFile = files[i];
-                if (allowedFile.fileName === currentFile.fileName) {
-                    items.push({
-                        description: currentFile.description,
-                        fileName: currentFile.fileName,
-                        markers: currentFile.markers ?? [PUBLIC_READ_MARKER],
-                        sizeInBytes: currentFile.sizeInBytes,
-                        url: currentFile.url,
-                    });
-                    allowedListIndex++;
-                }
-            }
-
             return {
                 success: true,
                 recordName: context.context.recordName,
-                files: items,
+                files: authorizeResult.allowedFileItems.map(
+                    (f) => (f as any).original
+                ),
                 totalCount: result2.totalCount,
             };
         } catch (err) {

@@ -38,6 +38,16 @@ export interface EventRecordsStore {
         eventName: string,
         updates: EventRecordUpdate
     ): Promise<UpdateEventResult>;
+
+    /**
+     * Lists the events that are in the given record.
+     * @param recordName The name of the record.
+     * @param eventName The name of the event that the list should start after.
+     */
+    listEvents(
+        recordName: string,
+        eventName: string | null
+    ): Promise<ListEventsStoreResult>;
 }
 
 export type AddEventCountStoreResult =
@@ -85,4 +95,26 @@ export interface UpdateEventFailure {
 export interface EventRecordUpdate {
     count?: number;
     markers?: string[];
+}
+
+export type ListEventsStoreResult =
+    | ListEventsStoreSuccess
+    | ListEventsStoreFailure;
+
+export interface ListEventsStoreSuccess {
+    success: true;
+    events: ListedStoreEvent[];
+    totalCount: number;
+}
+
+export interface ListEventsStoreFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export interface ListedStoreEvent {
+    eventName: string;
+    count: number;
+    markers: string[];
 }
