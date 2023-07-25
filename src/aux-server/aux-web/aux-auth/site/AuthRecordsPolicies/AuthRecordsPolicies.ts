@@ -98,14 +98,6 @@ export default class AuthRecordsPolicies extends Vue {
         return true;
     }
 
-    async deletePolicy(item: ListedUserPolicy) {
-        // if (await authManager.eraseFile(this.recordName, item.url)) {
-        //     this.items.mdData = this.items.mdData.filter(
-        //         (i) => i.url !== item.url
-        //     );
-        // }
-    }
-
     onSelect(item: ListedUserPolicy) {
         this.selectedItem = item;
     }
