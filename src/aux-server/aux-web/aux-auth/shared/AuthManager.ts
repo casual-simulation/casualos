@@ -12,6 +12,7 @@ import type {
     EraseDataResult,
     ListUserPoliciesResult,
     ListEventsResult,
+    ListRoleAssignmentsResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -370,6 +371,29 @@ export class AuthManager {
         });
 
         const result = response.data as ListUserPoliciesResult;
+        if (result.success === true) {
+            return result;
+        }
+
+        return null;
+    }
+
+    async listRoleAssignments(recordName: string, startingRole?: string) {
+        const url = new URL(
+            `${this.apiEndpoint}/api/v2/records/role/assignments/list`
+        );
+
+        url.searchParams.set('recordName', recordName);
+        if (startingRole) {
+            url.searchParams.set('startingRole', startingRole);
+        }
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as ListRoleAssignmentsResult;
         if (result.success === true) {
             return result;
         }

@@ -678,7 +678,7 @@ export class PolicyController {
      * @param role The name of the role whose assigments should be listed.
      * @param instances The instances that the request is being made from.
      */
-    async listRoleAssignments(
+    async listAssignedRoles(
         recordKeyOrRecordName: string,
         userId: string,
         role: string,
@@ -721,6 +721,68 @@ export class PolicyController {
             return {
                 success: true,
                 assignments: result.assignments,
+            };
+        } catch (err) {
+            console.error('[PolicyController] A server error occurred.', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Lists the role assignments that have been made in the given record.
+     * @param recordKeyOrRecordName The record key or record name.
+     * @param userId The ID of the user that is currently logged in.
+     * @param startingRole The role that assignments should be returned after.
+     * @param instances The instances that the request is being made from.
+     */
+    async listRoleAssignments(
+        recordKeyOrRecordName: string,
+        userId: string,
+        startingRole: string | null,
+        instances?: string[]
+    ): Promise<ListRoleAssignmentsResult> {
+        try {
+            const baseRequest = {
+                recordKeyOrRecordName: recordKeyOrRecordName,
+                userId: userId,
+            };
+            const context = await this.constructAuthorizationContext(
+                baseRequest
+            );
+            if (context.success === false) {
+                return {
+                    success: false,
+                    errorCode: context.errorCode,
+                    errorMessage: context.errorMessage,
+                };
+            }
+
+            const authorization = await this.authorizeRequestUsingContext(
+                context.context,
+                {
+                    action: 'role.list',
+                    ...baseRequest,
+                    instances,
+                }
+            );
+
+            if (authorization.allowed === false) {
+                return returnAuthorizationResult(authorization);
+            }
+
+            const result = await this._policies.listAssignments(
+                context.context.recordName,
+                startingRole
+            );
+
+            return {
+                success: true,
+                assignments: result.assignments,
+                totalCount: result.totalCount,
             };
         } catch (err) {
             console.error('[PolicyController] A server error occurred.', err);
@@ -5037,6 +5099,11 @@ export interface ListRoleAssignmentsSuccess {
      * The list of assignments for the role.
      */
     assignments: RoleAssignment[];
+
+    /**
+     * The total number of assignments.
+     */
+    totalCount?: number;
 }
 
 export interface ListRoleAssignmentsFailure {

@@ -53,6 +53,16 @@ export interface PolicyStore {
     ): Promise<ListedRoleAssignments>;
 
     /**
+     * Lists the role assignments in the given record.
+     * @param recordName The name of the record.
+     * @param role The name of the role that the assignments should be listed after. If null, then the list starts with the first role assignment.
+     */
+    listAssignments?(
+        recordName: string,
+        startingRole: string | null
+    ): Promise<ListedRoleAssignments>;
+
+    /**
      * Gets the user-created policy for the given marker.
      * @param recordName The name of the record.
      * @param marker The name of the marker.
@@ -193,6 +203,7 @@ export interface UpdateUserRolesFailure {
 
 export interface ListedRoleAssignments {
     assignments: RoleAssignment[];
+    totalCount: number;
 }
 
 export type RoleAssignment = UserRoleAssignment | InstRoleAssignment;

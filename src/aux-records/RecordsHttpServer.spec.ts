@@ -7045,6 +7045,7 @@ describe('RecordsHttpServer', () => {
                             markers: [ACCOUNT_MARKER],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: apiCorsHeaders,
             });
@@ -7090,6 +7091,7 @@ describe('RecordsHttpServer', () => {
                             markers: [ACCOUNT_MARKER],
                         },
                     ],
+                    totalCount: 2,
                 },
                 headers: apiCorsHeaders,
             });
@@ -7534,10 +7536,10 @@ describe('RecordsHttpServer', () => {
             };
         });
 
-        it('should list the roles for the given inst', async () => {
+        it('should list the role assignments in the record', async () => {
             const result = await server.handleRequest(
                 httpGet(
-                    `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}`,
                     apiHeaders
                 )
             );
@@ -7547,6 +7549,22 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: true,
                     assignments: [
+                        {
+                            type: 'user',
+                            userId: 'testId',
+                            role: {
+                                role: 'abc',
+                                expireTimeMs: null,
+                            },
+                        },
+                        {
+                            type: 'user',
+                            userId: userId,
+                            role: {
+                                role: ADMIN_ROLE_NAME,
+                                expireTimeMs: null,
+                            },
+                        },
                         {
                             type: 'user',
                             userId: 'testId',
@@ -7563,7 +7581,44 @@ describe('RecordsHttpServer', () => {
                                 expireTimeMs: null,
                             },
                         },
+                        {
+                            type: 'user',
+                            userId: 'testId2',
+                            role: {
+                                role: 'role2',
+                                expireTimeMs: null,
+                            },
+                        },
                     ],
+                    totalCount: 5,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should list the role assignments after the given startingRole', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}&startingRole=${'role1'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    assignments: [
+                        {
+                            type: 'user',
+                            userId: 'testId2',
+                            role: {
+                                role: 'role2',
+                                expireTimeMs: null,
+                            },
+                        },
+                    ],
+                    totalCount: 5,
                 },
                 headers: apiCorsHeaders,
             });
@@ -7574,7 +7629,7 @@ describe('RecordsHttpServer', () => {
 
             const result = await server.handleRequest(
                 httpGet(
-                    `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}`,
                     apiHeaders
                 )
             );
@@ -7602,7 +7657,7 @@ describe('RecordsHttpServer', () => {
         it('should deny the request if the inst is not authorized', async () => {
             const result = await server.handleRequest(
                 httpGet(
-                    `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}&instances=${'inst'}`,
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}&instances=${'inst'}`,
                     apiHeaders
                 )
             );
@@ -7629,10 +7684,7 @@ describe('RecordsHttpServer', () => {
 
         it('should return an unacceptable_request result when not given a recordName', async () => {
             const result = await server.handleRequest(
-                httpGet(
-                    `/api/v2/records/role/assignments/list?role=${'role1'}`,
-                    apiHeaders
-                )
+                httpGet(`/api/v2/records/role/assignments/list`, apiHeaders)
             );
 
             expectResponseBodyToEqual(result, {
@@ -7656,53 +7708,167 @@ describe('RecordsHttpServer', () => {
             });
         });
 
-        it('should return an unacceptable_request result when not given a role', async () => {
-            const result = await server.handleRequest(
-                httpGet(
-                    `/api/v2/records/role/assignments/list?recordName=${recordName}`,
-                    apiHeaders
-                )
-            );
-
-            expectResponseBodyToEqual(result, {
-                statusCode: 400,
-                body: {
-                    success: false,
-                    errorCode: 'unacceptable_request',
-                    errorMessage:
-                        'The request was invalid. One or more fields were invalid.',
-                    issues: [
-                        {
-                            code: 'invalid_type',
-                            expected: 'string',
-                            message: 'role is required.',
-                            path: ['role'],
-                            received: 'undefined',
-                        },
-                    ],
-                },
-                headers: apiCorsHeaders,
-            });
-        });
-
         testOrigin(
             'GET',
-            `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`
+            `/api/v2/records/role/assignments/list?recordName=${recordName}`
         );
         testAuthorization(
             () =>
                 httpGet(
-                    `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}`,
                     apiHeaders
                 ),
             'The user is not logged in. A session key must be provided for this operation.'
         );
         testRateLimit(() =>
             httpGet(
-                `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                `/api/v2/records/role/assignments/list?recordName=${recordName}`,
                 defaultHeaders
             )
         );
+
+        describe('?role', () => {
+            it('should list the roles for the given inst', async () => {
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        assignments: [
+                            {
+                                type: 'user',
+                                userId: 'testId',
+                                role: {
+                                    role: 'role1',
+                                    expireTimeMs: null,
+                                },
+                            },
+                            {
+                                type: 'user',
+                                userId: 'testId2',
+                                role: {
+                                    role: 'role1',
+                                    expireTimeMs: null,
+                                },
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+
+            it('should deny the request if the user is not authorized', async () => {
+                delete policyStore.roles[recordName][userId];
+
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            id: userId,
+                            kind: 'user',
+                            marker: 'account',
+                            permission: 'role.list',
+                            role: null,
+                            type: 'missing_permission',
+                        },
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+
+            it('should deny the request if the inst is not authorized', async () => {
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}&instances=${'inst'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            id: 'inst',
+                            kind: 'inst',
+                            marker: 'account',
+                            permission: 'role.list',
+                            role: null,
+                            type: 'missing_permission',
+                        },
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+
+            it('should return an unacceptable_request result when not given a recordName', async () => {
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/records/role/assignments/list?role=${'role1'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 400,
+                    body: {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'The request was invalid. One or more fields were invalid.',
+                        issues: [
+                            {
+                                code: 'invalid_type',
+                                expected: 'string',
+                                message: 'recordName is required.',
+                                path: ['recordName'],
+                                received: 'undefined',
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+
+            testOrigin(
+                'GET',
+                `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`
+            );
+            testAuthorization(
+                () =>
+                    httpGet(
+                        `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                        apiHeaders
+                    ),
+                'The user is not logged in. A session key must be provided for this operation.'
+            );
+            testRateLimit(() =>
+                httpGet(
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                    defaultHeaders
+                )
+            );
+        });
     });
 
     describe('POST /api/v2/records/role/grant', () => {

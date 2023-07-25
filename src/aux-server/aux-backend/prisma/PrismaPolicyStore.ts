@@ -174,32 +174,120 @@ export class PrismaPolicyStore implements PolicyStore {
             },
         });
 
+        const results = assignments.map((a) => {
+            if (a.type === 'inst') {
+                return {
+                    type: 'inst',
+                    inst: a.subjectId,
+                    role: {
+                        role: a.roleId,
+                        expireTimeMs: getExpireTime(
+                            convertToMillis(a.expireTime)
+                        ),
+                    },
+                } as const;
+            } else {
+                return {
+                    type: 'user',
+                    userId: a.userId,
+                    role: {
+                        role: a.roleId,
+                        expireTimeMs: getExpireTime(
+                            convertToMillis(a.expireTime)
+                        ),
+                    },
+                } as const;
+            }
+        });
+
         return {
-            assignments: assignments.map((a) => {
-                if (a.type === 'inst') {
-                    return {
-                        type: 'inst',
-                        inst: a.subjectId,
-                        role: {
-                            role: a.roleId,
-                            expireTimeMs: getExpireTime(
-                                convertToMillis(a.expireTime)
-                            ),
-                        },
-                    };
-                } else {
-                    return {
-                        type: 'user',
-                        userId: a.userId,
-                        role: {
-                            role: a.roleId,
-                            expireTimeMs: getExpireTime(
-                                convertToMillis(a.expireTime)
-                            ),
-                        },
-                    };
-                }
-            }),
+            assignments: results,
+            totalCount: results.length,
+        };
+    }
+
+    async listAssignments(
+        recordName: string,
+        startingRole: string
+    ): Promise<ListedRoleAssignments> {
+        const now = new Date();
+        const simpleQuery: Prisma.RoleAssignmentWhereInput = {
+            recordName: recordName,
+            OR: [
+                {
+                    expireTime: {
+                        gt: now,
+                    },
+                },
+                {
+                    expireTime: {
+                        equals: null,
+                    },
+                },
+            ],
+        };
+        let query: Prisma.RoleAssignmentWhereInput = {
+            ...simpleQuery,
+        };
+
+        if (startingRole) {
+            query.roleId = { gt: startingRole };
+        }
+
+        const totalCount = await this._client.roleAssignment.count({
+            where: simpleQuery,
+        });
+        const assignments = await this._client.roleAssignment.findMany({
+            where: query,
+            select: {
+                roleId: true,
+                type: true,
+                subjectId: true,
+                expireTime: true,
+            },
+            take: 10,
+            orderBy: [
+                {
+                    recordName: 'asc',
+                },
+                {
+                    roleId: 'asc',
+                },
+                {
+                    subjectId: 'asc',
+                },
+            ],
+        });
+
+        const results = assignments.map((a) => {
+            if (a.type === 'inst') {
+                return {
+                    type: 'inst',
+                    inst: a.subjectId,
+                    role: {
+                        role: a.roleId,
+                        expireTimeMs: getExpireTime(
+                            convertToMillis(a.expireTime)
+                        ),
+                    },
+                } as const;
+            } else {
+                return {
+                    type: 'user',
+                    userId: a.subjectId,
+                    role: {
+                        role: a.roleId,
+                        expireTimeMs: getExpireTime(
+                            convertToMillis(a.expireTime)
+                        ),
+                    },
+                } as const;
+            }
+        });
+
+        return {
+            assignments: results,
+            totalCount: totalCount,
         };
     }
 

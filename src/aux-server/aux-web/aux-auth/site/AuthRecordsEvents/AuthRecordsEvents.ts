@@ -30,7 +30,7 @@ export default class AuthRecordsEvents extends Vue {
         endIndex: number;
         mdData: ListedEvent[];
     } = {
-        mdCount: 100,
+        mdCount: 0,
         mdPage: 0,
         mdData: [],
         startIndex: 0,

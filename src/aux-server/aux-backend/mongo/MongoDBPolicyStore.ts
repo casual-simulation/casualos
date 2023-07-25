@@ -152,6 +152,55 @@ export class MongoDBPolicyStore implements PolicyStore {
 
         return {
             assignments,
+            totalCount: assignments.length,
+        };
+    }
+
+    async listAssignments(
+        recordName: string,
+        startingRole: string
+    ): Promise<ListedRoleAssignments> {
+        let query: FilterQuery<MongoDBRole> = {
+            recordName: { $eq: recordName },
+        };
+
+        if (startingRole) {
+            query.role = { $gt: startingRole };
+        }
+
+        const roles = await this._roles.find(query).toArray();
+
+        let assignments: RoleAssignment[] = [];
+
+        for (let r of roles) {
+            if (r.type === 'inst') {
+                for (let a of r.assignments) {
+                    assignments.push({
+                        type: 'inst',
+                        inst: r.id,
+                        role: {
+                            role: a.role,
+                            expireTimeMs: getExpireTime(a.expireTimeMs),
+                        },
+                    });
+                }
+            } else {
+                for (let a of r.assignments) {
+                    assignments.push({
+                        type: 'user',
+                        userId: r.id,
+                        role: {
+                            role: a.role,
+                            expireTimeMs: getExpireTime(a.expireTimeMs),
+                        },
+                    });
+                }
+            }
+        }
+
+        return {
+            assignments,
+            totalCount: assignments.length,
         };
     }
 

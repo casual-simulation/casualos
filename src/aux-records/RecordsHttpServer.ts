@@ -1158,12 +1158,20 @@ export class RecordsHttpServer {
                     required_error: 'recordName is required.',
                 })
                 .nonempty('recordName must not be empty'),
+            startingRole: z
+                .string({
+                    invalid_type_error: 'startingRole must be a string.',
+                    required_error: 'startingRole is required.',
+                })
+                .nonempty('startingRole must not be empty')
+                .optional(),
             role: z
                 .string({
                     invalid_type_error: 'role must be a string.',
                     required_error: 'role is required.',
                 })
-                .nonempty('role must not be empty'),
+                .nonempty('role must not be empty')
+                .optional(),
             instances: z
                 .string({
                     invalid_type_error: 'instances must be a string.',
@@ -1180,7 +1188,7 @@ export class RecordsHttpServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordName, role, instances } = parseResult.data;
+        const { recordName, role, startingRole, instances } = parseResult.data;
 
         const sessionKeyValidation = await this._validateSessionKey(request);
         if (sessionKeyValidation.success === false) {
@@ -1190,14 +1198,25 @@ export class RecordsHttpServer {
             return returnResult(sessionKeyValidation);
         }
 
-        const result = await this._policyController.listRoleAssignments(
-            recordName,
-            sessionKeyValidation.userId,
-            role,
-            instances
-        );
+        if (role) {
+            const result = await this._policyController.listAssignedRoles(
+                recordName,
+                sessionKeyValidation.userId,
+                role,
+                instances
+            );
 
-        return returnResult(result);
+            return returnResult(result);
+        } else {
+            const result = await this._policyController.listRoleAssignments(
+                recordName,
+                sessionKeyValidation.userId,
+                startingRole,
+                instances
+            );
+
+            return returnResult(result);
+        }
     }
 
     private async _roleGrant(
