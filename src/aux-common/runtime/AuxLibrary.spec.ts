@@ -2378,6 +2378,14 @@ describe('AuxLibrary', () => {
             addToContext(context, bot1, bot2);
         });
 
+        describe('ai.chat()', () => {
+            it('should emit a AIChatAction', () => {
+                const promise: any = library.api.ai.chat('hello, world!');
+
+                // const expected =
+            });
+        });
+
         describe('os.toast()', () => {
             it('should emit a ShowToastAction', () => {
                 let action = library.api.os.toast('hello, world!');
