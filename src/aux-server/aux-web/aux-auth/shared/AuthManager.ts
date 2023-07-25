@@ -11,6 +11,7 @@ import type {
     EraseFileResult,
     EraseDataResult,
     ListUserPoliciesResult,
+    ListEventsResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -371,6 +372,31 @@ export class AuthManager {
         const result = response.data as ListUserPoliciesResult;
         if (result.success === true) {
             return result;
+        }
+
+        return null;
+    }
+
+    async listEvents(recordName: string, startingEventName?: string) {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records/events/list`);
+
+        url.searchParams.set('recordName', recordName);
+        if (startingEventName) {
+            url.searchParams.set('eventName', startingEventName);
+        }
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as ListEventsResult;
+        if (result.success === true) {
+            return result;
+        } else {
+            if (result.errorCode === 'not_supported') {
+                return null;
+            }
         }
 
         return null;
