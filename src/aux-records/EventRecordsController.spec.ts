@@ -660,5 +660,23 @@ describe('EventRecordsController', () => {
                 totalCount: 20,
             });
         });
+
+        it('should return a not_supported result if the store does not implement listEvents()', async () => {
+            (store as any).listEvents = null;
+
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await manager.listEvents(recordName, null, userId, [
+                'inst',
+            ]);
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+        });
     });
 });

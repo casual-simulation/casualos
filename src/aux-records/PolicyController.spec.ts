@@ -12034,7 +12034,7 @@ describe('PolicyController', () => {
                         },
                         {
                             eventName: 'test3',
-                            markers: ['secret'],
+                            markers: [PUBLIC_READ_MARKER],
                         },
                     ],
                 });
@@ -12064,6 +12064,21 @@ describe('PolicyController', () => {
                                     },
                                 ],
                             },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
                         ],
                     },
                     instances: [],
@@ -12074,7 +12089,7 @@ describe('PolicyController', () => {
                         },
                         {
                             eventName: 'test3',
-                            markers: ['secret'],
+                            markers: [PUBLIC_READ_MARKER],
                         },
                     ],
                 });

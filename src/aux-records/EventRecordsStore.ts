@@ -44,7 +44,7 @@ export interface EventRecordsStore {
      * @param recordName The name of the record.
      * @param eventName The name of the event that the list should start after.
      */
-    listEvents(
+    listEvents?(
         recordName: string,
         eventName: string | null
     ): Promise<ListEventsStoreResult>;

@@ -3,7 +3,7 @@ import {
     PolicyController,
     returnAuthorizationResult,
 } from './PolicyController';
-import { NotLoggedInError, ServerError } from './Errors';
+import { NotLoggedInError, NotSupportedError, ServerError } from './Errors';
 import {
     EventRecordsStore,
     AddEventCountStoreResult,
@@ -289,6 +289,14 @@ export class EventRecordsController {
         instances?: string[]
     ): Promise<ListEventsResult> {
         try {
+            if (!this._store.listEvents) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+
             const baseRequest = {
                 recordKeyOrRecordName: recordKeyOrRecordName,
                 userId: userId,
@@ -574,6 +582,7 @@ export interface ListEventsFailure {
     success: false;
     errorCode:
         | ServerError
+        | NotSupportedError
         | AuthorizeDenied['errorCode']
         | ValidatePublicRecordKeyFailure['errorCode'];
     errorMessage: string;
