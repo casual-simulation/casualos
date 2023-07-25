@@ -689,6 +689,10 @@ export class RemoteYjsPartitionImpl implements YjsPartition {
         );
         this._sub.add(
             this._client.watchRateLimitExceeded().subscribe((event) => {
+                console.error(
+                    '[RemoteYjsPartition] Rate limit exceeded!',
+                    event
+                );
                 this._onEvents.next([
                     action(
                         ON_SPACE_RATE_LIMIT_EXCEEDED_ACTION_NAME,

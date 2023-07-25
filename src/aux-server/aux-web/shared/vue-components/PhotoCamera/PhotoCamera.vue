@@ -13,6 +13,8 @@
                 <camera-stream
                     ref="camera"
                     :cameraType="cameraType"
+                    :constraints="cameraConstraints"
+                    :mirror="mirrorPhoto"
                     @streaming="onCameraStreamLoaded"
                     @streamingError="onCameraStreamError"
                     @stopped="onCameraStreamStopped"
@@ -21,7 +23,7 @@
         </div>
         <div class="photo-controls-container">
             <div v-if="hasPhoto" class="has-photo-controls">
-                <md-button class="md-icon-button" @click="clearPhoto()">
+                <md-button class="md-icon-button clear-photo-button" @click="clearPhoto()">
                     <md-icon>delete</md-icon>
                 </md-button>
                 <md-button class="md-icon-button md-primary save-button" @click="savePhoto()">
@@ -29,7 +31,7 @@
                 </md-button>
             </div>
             <div v-else class="take-photo-controls">
-                <md-button class="md-icon-button" @click="hidePhotoCamera()">
+                <md-button class="md-icon-button close-button" @click="hidePhotoCamera()">
                     <md-icon>close</md-icon>
                 </md-button>
                 <md-button

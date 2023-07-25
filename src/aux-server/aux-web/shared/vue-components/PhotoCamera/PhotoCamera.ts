@@ -44,9 +44,11 @@ export default class PhotoCamera extends Vue {
     hasPhoto: boolean = false;
     showPhotoCamera: boolean = false;
     cameraType: CameraType = null;
+    cameraConstraints: MediaTrackConstraints = null;
     imageFormat: string = null;
     imageQuality: number = null;
     skipConfirm: boolean = false;
+    mirrorPhoto: boolean = false;
     startingTimer: number = null;
     currentTimer: number = null;
 
@@ -65,9 +67,11 @@ export default class PhotoCamera extends Vue {
         this.hasPhoto = false;
         this.showPhotoCamera = false;
         this.cameraType = null;
+        this.cameraConstraints = null;
         this.imageFormat = null;
         this.imageQuality = null;
         this.skipConfirm = false;
+        this.mirrorPhoto = false;
         this.startingTimer = null;
         this.currentTimer = null;
         this.processing = false;
@@ -134,7 +138,14 @@ export default class PhotoCamera extends Vue {
 
                 const ctx = canvas.getContext('2d');
                 ctx.imageSmoothingEnabled = false;
+
+                if (this.mirrorPhoto) {
+                    ctx.translate(width, 0);
+                    ctx.scale(-1, 1);
+                }
+
                 ctx.drawImage(video, 0, 0, width, height);
+                ctx.resetTransform();
 
                 const data = await new Promise<Blob>((resolve, reject) => {
                     try {
@@ -188,7 +199,8 @@ export default class PhotoCamera extends Vue {
                 ...this._photoInfo,
             };
 
-            if (this._openEvent.singlePhoto) {
+            const singlePhoto = this._openEvent?.singlePhoto;
+            if (singlePhoto) {
                 this._currentSimulation.helper.transaction(
                     asyncResult(this._openEvent.taskId, photo)
                 );
@@ -204,7 +216,7 @@ export default class PhotoCamera extends Vue {
 
             this.clearPhoto();
 
-            if (this._openEvent.singlePhoto) {
+            if (singlePhoto) {
                 this.hidePhotoCamera();
             }
         }
@@ -253,7 +265,6 @@ export default class PhotoCamera extends Vue {
 
     startTimerIfConfigured(minimumTime: number = 1, maximumTime: number = 100) {
         if (typeof this.startingTimer === 'number' && this.startingTimer >= 0) {
-            console.log('starting timer', this.startingTimer);
             this.currentTimer = Math.max(
                 Math.min(this.startingTimer, maximumTime),
                 minimumTime
@@ -309,9 +320,23 @@ export default class PhotoCamera extends Vue {
                         this.imageFormat = e.options.imageFormat;
                         this.imageQuality = e.options.imageQuality;
                         this.skipConfirm = e.options.skipConfirm;
+                        this.mirrorPhoto = e.options.mirrorPhoto;
                         this.startingTimer =
                             e.options.takePhotoAfterSeconds ?? null;
-                        console.log('timer', this.startingTimer);
+
+                        if (e.options.idealResolution) {
+                            this.cameraConstraints = {
+                                width: {
+                                    ideal: e.options.idealResolution.width,
+                                },
+                                height: {
+                                    ideal: e.options.idealResolution.height,
+                                },
+                            };
+                        } else {
+                            this.cameraConstraints = null;
+                        }
+
                         this.currentTimer = null;
                         this._openEvent = e;
                         this._currentSimulation = sim;

@@ -906,16 +906,11 @@ export interface OpenPhotoCameraOptions {
     cameraType?: CameraType;
 
     /**
-     * Whether to not allow switching the camera.
-     */
-    disallowSwitchingCameras?: boolean;
-
-    /**
      * The image format that should be used.
      * 
      * Defaults to "png".
      */
-    imageFormat?: 'png' | 'jpef';
+    imageFormat?: 'png' | 'jpeg';
 
     /**
      * A number between 0 and 1 indicating the image quality to be used.
@@ -923,6 +918,47 @@ export interface OpenPhotoCameraOptions {
      * If not specified, then the browser will use its own default.
      */
     imageQuality?: number;
+
+    /**
+     * Whether to skip allowing the user to confirm their photo.
+     *
+     * Defaults to false.
+     */
+    skipConfirm?: boolean;
+
+    /**
+     * Whether to automatically take a photo after a number of seconds.
+     *
+     * If null, then there is no timer and the user is allowed to take the photo manually.
+     * If positive, then the timer will start counting down from the given number of seconds.
+     * The user can always cancel the operation manually.
+     */
+    takePhotoAfterSeconds?: number;
+
+    /**
+     * The ideal resolution for the photo to be taken at.
+     * 
+     * If specified, then the web browser will be told to prefer this resolution, but will use a lower resolution if
+     * it is not possible to use the ideal resolution.
+     */
+    idealResolution?: {
+        /**
+         * The width of the photo in pixels.
+         */
+        width: number;
+
+        /**
+         * The height of the photo in pixels.
+         */
+        height: number;
+    }
+
+    /**
+     * Whether to mirror the photo after it is taken.
+     * 
+     * Defaults to false.
+     */
+    mirrorPhoto?: boolean;
 }
 
 /**
