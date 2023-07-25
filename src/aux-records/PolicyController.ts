@@ -968,6 +968,8 @@ export class PolicyController {
             return this._authorizeEventIncrementRequest(context, request);
         } else if (request.action === 'event.update') {
             return this._authorizeEventUpdateRequest(context, request);
+        } else if (request.action === 'event.list') {
+            return this._authorizeEventListRequest(context, request);
         } else if (request.action === 'policy.grantPermission') {
             return this._authorizePolicyGrantPermissionRequest(
                 context,
@@ -2656,6 +2658,123 @@ export class PolicyController {
         };
     }
 
+    private async _authorizeEventListRequest(
+        context: AuthorizationContext,
+        request: AuthorizeListEventRequest
+    ): Promise<AuthorizeResult> {
+        const allMarkers = union(...request.eventItems.map((i) => i.markers));
+        return await this._authorizeRequest(
+            context,
+            request,
+            allMarkers,
+            (context, type, id) => {
+                return this._authorizeEventList(context, type, id);
+            },
+            undefined,
+            true
+        );
+    }
+
+    private async _authorizeEventList(
+        context: RolesContext<AuthorizeListEventRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        const authorizations: MarkerAuthorization[] = [];
+        let role: string | true | null = null;
+
+        const allowedEventItems = (context.allowedEventItems =
+            [] as ListedEventItem[]);
+
+        const markers = new Map<
+            string,
+            {
+                marker: MarkerPermission;
+                authorization: MarkerAuthorization;
+                usedPermissions: Set<any>;
+            }
+        >();
+        for (let marker of context.markers) {
+            const authorization: MarkerAuthorization = {
+                marker: marker.marker,
+                actions: [],
+            };
+            authorizations.push(authorization);
+            markers.set(marker.marker, {
+                marker,
+                authorization: authorization,
+                usedPermissions: new Set(),
+            });
+        }
+
+        for (let item of context.request.eventItems) {
+            let itemPermission: PossiblePermission;
+            for (let m of item.markers) {
+                const a = markers.get(m);
+                if (!a) {
+                    continue;
+                }
+                const { marker, authorization, usedPermissions } = a;
+
+                itemPermission = await this._findPermissionByFilter(
+                    marker.permissions,
+                    this._every(
+                        this._byEvent('event.list', item.eventName),
+                        role === null
+                            ? this._some(
+                                  this._byEveryoneRole(),
+                                  this._byAdminRole(context, type, id),
+                                  this._bySubjectRole(
+                                      context,
+                                      type,
+                                      context.recordName,
+                                      id
+                                  )
+                              )
+                            : this._byRole(role)
+                    )
+                );
+
+                if (!itemPermission) {
+                    continue;
+                }
+
+                if (role === null) {
+                    role = itemPermission.permission.role;
+                }
+
+                if (!usedPermissions.has(itemPermission.permission)) {
+                    usedPermissions.add(itemPermission.permission);
+                    authorization.actions.push({
+                        action: context.request.action,
+                        grantingPolicy: itemPermission.policy,
+                        grantingPermission: itemPermission.permission,
+                    });
+                }
+
+                if (itemPermission) {
+                    break;
+                }
+            }
+
+            if (itemPermission) {
+                allowedEventItems.push(item);
+            }
+        }
+
+        if (!role) {
+            role = true;
+        }
+
+        return {
+            success: true,
+            authorization: {
+                role,
+                markers: authorizations,
+            },
+        };
+    }
+
     private async _authorizePolicyGrantPermissionRequest(
         context: AuthorizationContext,
         request: AuthorizeGrantPermissionToPolicyRequest
@@ -3480,6 +3599,8 @@ export class PolicyController {
                     rolesContext.allowedDataItems?.slice();
                 let currentFiles: ListedFileItem[] | null =
                     rolesContext.allowedFileItems?.slice();
+                let currentEvents: ListedEventItem[] | null =
+                    rolesContext.allowedEventItems?.slice();
                 const result = await authorize(rolesContext, 'inst', inst);
                 if (currentItems) {
                     rolesContext.allowedDataItems = intersectionBy(
@@ -3493,6 +3614,13 @@ export class PolicyController {
                         currentFiles,
                         rolesContext.allowedFileItems,
                         (item) => item.fileName
+                    );
+                }
+                if (currentEvents) {
+                    rolesContext.allowedEventItems = intersectionBy(
+                        currentEvents,
+                        rolesContext.allowedEventItems,
+                        (item) => item.eventName
                     );
                 }
                 return result;
@@ -3533,6 +3661,7 @@ export class PolicyController {
             instances: authorizedInstances,
             allowedDataItems: rolesContext.allowedDataItems,
             allowedFileItems: rolesContext.allowedFileItems,
+            allowedEventItems: rolesContext.allowedEventItems,
         };
     }
 
@@ -4089,6 +4218,7 @@ export interface RolesContext<T extends AuthorizeRequestBase>
 
     allowedDataItems?: ListedDataItem[];
     allowedFileItems?: ListedFileItem[];
+    allowedEventItems?: ListedEventItem[];
 }
 
 type PermissionFilter = (permission: AvailablePermissions) => Promise<boolean>;
@@ -4112,6 +4242,7 @@ export type AuthorizeRequest =
     | AuthorizeCountEventRequest
     | AuthorizeIncrementEventRequest
     | AuthorizeUpdateEventRequest
+    | AuthorizeListEventRequest
     | AuthorizeGrantPermissionToPolicyRequest
     | AuthorizeRevokePermissionToPolicyRequest
     | AuthorizeReadPolicyRequest
@@ -4335,6 +4466,15 @@ export interface AuthorizeUpdateEventRequest extends AuthorizeEventRequest {
     removedMarkers?: string[];
 }
 
+export interface AuthorizeListEventRequest extends AuthorizeRequestBase {
+    action: 'event.list';
+
+    /**
+     * The list of items that should be filtered.
+     */
+    eventItems: ListedEventItem[];
+}
+
 export interface AuthorizePolicyRequest extends AuthorizeRequestBase {
     /**
      * The name of the policy.
@@ -4445,6 +4585,18 @@ export interface ListedFileItem {
     markers: string[];
 }
 
+export interface ListedEventItem {
+    /**
+     * The name of the event.
+     */
+    eventName: string;
+
+    /**
+     * The list of markers for the item.
+     */
+    markers: string[];
+}
+
 export type AuthorizeResult = AuthorizeAllowed | AuthorizeDenied;
 
 export interface AuthorizeAllowed {
@@ -4488,6 +4640,11 @@ export interface AuthorizeAllowed {
      * The list of allowed file items.
      */
     allowedFileItems?: ListedFileItem[];
+
+    /**
+     * The list of allowed event items.
+     */
+    allowedEventItems?: ListedEventItem[];
 }
 
 export type GenericResult = GenericAllowed | GenericDenied;

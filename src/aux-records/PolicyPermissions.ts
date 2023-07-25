@@ -23,6 +23,7 @@ export type AvailablePermissions =
     | IncrementEventPermission
     | CountEventPermission
     | UpdateEventPermission
+    | ListEventPermission
     | ReadPolicyPermission
     | GrantPermissionToPolicyPermission
     | RevokePermissionFromPolicyPermission
@@ -53,7 +54,8 @@ export type AvailableFilePermissions =
 export type AvailableEventPermissions =
     | IncrementEventPermission
     | CountEventPermission
-    | UpdateEventPermission;
+    | UpdateEventPermission
+    | ListEventPermission;
 
 export type AvailablePolicyPermissions =
     | AssignPolicyPermission
@@ -393,6 +395,24 @@ type ZodUpdateEventPermission = z.infer<typeof UPDATE_EVENT_VALIDATION>;
 type ZodUpdateEventPermissionAssertion = HasType<
     ZodUpdateEventPermission,
     UpdateEventPermission
+>;
+
+/**
+ * Defines an interface that describes a permission to be able to list events in a record.
+ *
+ * @dochash types/permissions
+ */
+export interface ListEventPermission extends EventPermission {
+    type: 'event.list';
+}
+
+export const LIST_EVENT_VALIDATION = EVENT_PERMISSION_VALIDATION.extend({
+    type: z.literal('event.list'),
+});
+type ZodListEventPermission = z.infer<typeof LIST_EVENT_VALIDATION>;
+type ZodListEventPermissionAssertion = HasType<
+    ZodListEventPermission,
+    ListEventPermission
 >;
 
 /**
@@ -852,6 +872,11 @@ export const DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT: PolicyDocument = {
         },
         {
             type: 'event.update',
+            role: ADMIN_ROLE_NAME,
+            events: true,
+        },
+        {
+            type: 'event.list',
             role: ADMIN_ROLE_NAME,
             events: true,
         },
