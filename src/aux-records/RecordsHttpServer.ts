@@ -28,6 +28,8 @@ import { PublicRecordKeyPolicy } from './RecordsStore';
 import { RateLimitController } from './RateLimitController';
 import { AVAILABLE_PERMISSIONS_VALIDATION } from './PolicyPermissions';
 import { PolicyController } from './PolicyController';
+import { AIController } from './AIController';
+import { AIChatMessage, AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
 
 /**
  * Defines an interface for a generic HTTP request.
@@ -153,6 +155,12 @@ const SUBSCRIPTIONS_NOT_SUPPORTED_RESULT = {
     errorMessage: 'Subscriptions are not supported by this server.',
 };
 
+const AI_NOT_SUPPORTED_RESULT = {
+    success: false,
+    errorCode: 'not_supported',
+    errorMessage: 'AI features are not supported by this server.',
+};
+
 /**
  * The Zod validation for record keys.
  */
@@ -213,6 +221,7 @@ export class RecordsHttpServer {
     private _manualData: DataRecordsController;
     private _files: FileRecordsController;
     private _subscriptions: SubscriptionController | null;
+    private _aiController: AIController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -238,7 +247,8 @@ export class RecordsHttpServer {
         filesController: FileRecordsController,
         subscriptionController: SubscriptionController | null,
         rateLimitController: RateLimitController,
-        policyController: PolicyController
+        policyController: PolicyController,
+        aiController: AIController | null
     ) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -252,6 +262,7 @@ export class RecordsHttpServer {
         this._subscriptions = subscriptionController;
         this._rateLimit = rateLimitController;
         this._policyController = policyController;
+        this._aiController = aiController;
     }
 
     /**
@@ -649,6 +660,15 @@ export class RecordsHttpServer {
             return formatResponse(
                 request,
                 await this._roleRevoke(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/ai/chat'
+        ) {
+            return formatResponse(
+                request,
+                await this._aiChat(request),
                 this._allowedApiOrigins
             );
         } else if (request.method === 'OPTIONS') {
@@ -1378,6 +1398,61 @@ export class RecordsHttpServer {
             },
             instances
         );
+
+        return returnResult(result);
+    }
+
+    private async _aiChat(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (!this._aiController) {
+            return returnResult(AI_NOT_SUPPORTED_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            model: z.string().nonempty(),
+            messages: z.array(AI_CHAT_MESSAGE_SCHEMA).nonempty(),
+            instances: z.array(z.string()).nonempty().optional(),
+            temperature: z.number().min(0).max(1).optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { model, messages, temperature, instances } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._aiController.chat({
+            model,
+            messages: messages as AIChatMessage[],
+            temperature: temperature,
+            userId: sessionKeyValidation.userId,
+            userSubscriptionTier: sessionKeyValidation.subscriptionTier,
+        });
 
         return returnResult(result);
     }

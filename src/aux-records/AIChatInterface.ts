@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 /**
  * Defines an interface that is able to send and receive AI chat messages.
  */
@@ -85,6 +87,22 @@ export interface AIChatMessage {
 }
 
 /**
+ * Defines a schema that represents an AI chat message.
+ */
+export const AI_CHAT_MESSAGE_SCHEMA = z.object({
+    role: z.union([
+        z.literal('system'),
+        z.literal('user'),
+        z.literal('assistant'),
+        z.literal('function'),
+    ]),
+    content: z.string().nonempty(),
+    author: z.string().nonempty().optional(),
+});
+type ZodAIChatMessage = z.infer<typeof AI_CHAT_MESSAGE_SCHEMA>;
+type ZodAIChatMessageAssertion = HasType<ZodAIChatMessage, AIChatMessage>;
+
+/**
  * Defines an interface that represents an AI function call.
  */
 export interface AIFunctionCall {
@@ -97,3 +115,5 @@ export interface AIFunctionCall {
         [key: string]: any;
     };
 }
+
+type HasType<T, Q extends T> = Q;

@@ -46,6 +46,11 @@ import { RateLimitController } from './RateLimitController';
 import { MemoryRateLimiter } from './MemoryRateLimiter';
 import { RateLimiter } from '@casual-simulation/rate-limit-redis';
 import { createTestUser } from './TestUtils';
+import { AIController } from './AIController';
+import {
+    AIChatInterfaceRequest,
+    AIChatInterfaceResponse,
+} from './AIChatInterface';
 
 console.log = jest.fn();
 
@@ -85,6 +90,14 @@ describe('RecordsHttpServer', () => {
         createCustomer: jest.Mock<any>;
         listActiveSubscriptionsForCustomer: jest.Mock<any>;
         constructWebhookEvent: jest.Mock<any>;
+    };
+
+    let aiController: AIController;
+    let chatInterface: {
+        chat: jest.Mock<
+            Promise<AIChatInterfaceResponse>,
+            [AIChatInterfaceRequest]
+        >;
     };
 
     let stripe: StripeInterface;
@@ -228,6 +241,19 @@ describe('RecordsHttpServer', () => {
             subscriptionConfig
         );
 
+        chatInterface = {
+            chat: jest.fn(),
+        };
+        aiController = new AIController({
+            chat: {
+                interface: chatInterface,
+                options: {
+                    allowedChatModels: ['model-1', 'model-2'],
+                    allowedChatSubscriptionTiers: ['beta'],
+                },
+            },
+        });
+
         server = new RecordsHttpServer(
             allowedAccountOrigins,
             allowedApiOrigins,
@@ -240,7 +266,8 @@ describe('RecordsHttpServer', () => {
             filesController,
             subscriptionController,
             rateLimitController,
-            policyController
+            policyController,
+            aiController
         );
         defaultHeaders = {
             origin: 'test.com',
@@ -8457,6 +8484,145 @@ describe('RecordsHttpServer', () => {
         );
     });
 
+    describe('POST /api/v2/ai/chat', () => {
+        beforeEach(async () => {
+            const u = await authStore.findUser(userId);
+            await authStore.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+        });
+
+        it('should return a not_supported result if the server has a null AI controller', async () => {
+            server = new RecordsHttpServer(
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                null as any,
+                policyController,
+                null
+            );
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/chat`,
+                    JSON.stringify({
+                        model: 'model-1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'AI features are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should call the AI chat interface', async () => {
+            chatInterface.chat.mockResolvedValueOnce({
+                choices: [
+                    {
+                        role: 'assistant',
+                        content: 'hi!',
+                    },
+                ],
+            });
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/chat`,
+                    JSON.stringify({
+                        model: 'model-1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    choices: [
+                        {
+                            role: 'assistant',
+                            content: 'hi!',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/ai/chat`, () =>
+            JSON.stringify({
+                model: 'model-1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'hello',
+                    },
+                ],
+            })
+        );
+        testAuthorization(() =>
+            httpPost(
+                `/api/v2/ai/chat`,
+                JSON.stringify({
+                    model: 'model-1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'hello',
+                        },
+                    ],
+                }),
+                apiHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/ai/chat`,
+                JSON.stringify({
+                    model: 'model-1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'hello',
+                        },
+                    ],
+                }),
+                apiHeaders
+            )
+        );
+    });
+
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
         const result = await server.handleRequest(
             httpRequest('GET', `/api/missing`, null)
@@ -8720,7 +8886,8 @@ describe('RecordsHttpServer', () => {
                 filesController,
                 subscriptionController,
                 null as any,
-                policyController
+                policyController,
+                aiController
             );
 
             await rateLimiter.increment(ip, 100);
