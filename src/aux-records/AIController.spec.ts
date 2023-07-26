@@ -22,9 +22,14 @@ describe('AIController', () => {
         chatInterface = {
             chat: jest.fn(),
         };
-        controller = new AIController(chatInterface, {
-            allowedChatModels: ['test-model1', 'test-model2'],
-            allowedChatSubscriptionTiers: ['test-tier'],
+        controller = new AIController({
+            chat: {
+                interface: chatInterface,
+                options: {
+                    allowedChatModels: ['test-model1', 'test-model2'],
+                    allowedChatSubscriptionTiers: ['test-tier'],
+                },
+            },
         });
     });
 
@@ -185,9 +190,14 @@ describe('AIController', () => {
                 })
             );
 
-            controller = new AIController(chatInterface, {
-                allowedChatModels: ['test-model1', 'test-model2'],
-                allowedChatSubscriptionTiers: true,
+            controller = new AIController({
+                chat: {
+                    interface: chatInterface,
+                    options: {
+                        allowedChatModels: ['test-model1', 'test-model2'],
+                        allowedChatSubscriptionTiers: true,
+                    },
+                },
             });
 
             const result = await controller.chat({
@@ -223,6 +233,31 @@ describe('AIController', () => {
                 ],
                 temperature: 0.5,
                 userId: 'test-user',
+            });
+        });
+
+        it('should return a not_supported result if no chat configuration is provided', async () => {
+            controller = new AIController({
+                chat: null,
+            });
+
+            const result = await controller.chat({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId,
+                userSubscriptionTier: null as any,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
             });
         });
     });

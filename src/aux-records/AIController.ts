@@ -2,11 +2,22 @@ import {
     InvalidSubscriptionTierError,
     NotLoggedInError,
     NotSubscribedError,
+    NotSupportedError,
     ServerError,
 } from './Errors';
 import { AIChatInterface, AIChatMessage } from './AIChatInterface';
+import { config } from 'process';
 
-export interface AIOptions {
+export interface AIConfiguration {
+    chat: AIChatConfiguration | null;
+}
+
+export interface AIChatConfiguration {
+    interface: AIChatInterface;
+    options: AIChatOptions;
+}
+
+export interface AIChatOptions {
     /**
      * The list of allowed models that are allowed to be used for chat.
      */
@@ -22,24 +33,35 @@ export interface AIOptions {
  * Defines a class that is able to handle AI requests.
  */
 export class AIController {
-    private _chat: AIChatInterface;
-    private _options: AIOptions;
+    private _chat: AIChatInterface | null;
+    private _chatOptions: AIChatOptions;
 
     private _allowedChatModels: Set<string>;
     private _allowedChatSubscriptionTiers: true | Set<string>;
 
-    constructor(chat: AIChatInterface, options: AIOptions) {
-        this._chat = chat;
-        this._options = options;
-        this._allowedChatModels = new Set(options.allowedChatModels);
-        this._allowedChatSubscriptionTiers =
-            typeof options.allowedChatSubscriptionTiers === 'boolean'
-                ? options.allowedChatSubscriptionTiers
-                : new Set(options.allowedChatSubscriptionTiers);
+    constructor(configuration: AIConfiguration) {
+        if (configuration.chat) {
+            const chat = configuration.chat;
+            const options = chat.options;
+            this._chat = chat.interface;
+            this._chatOptions = options;
+            this._allowedChatModels = new Set(options.allowedChatModels);
+            this._allowedChatSubscriptionTiers =
+                typeof options.allowedChatSubscriptionTiers === 'boolean'
+                    ? options.allowedChatSubscriptionTiers
+                    : new Set(options.allowedChatSubscriptionTiers);
+        }
     }
 
     async chat(request: AIChatRequest): Promise<AIChatResponse> {
         try {
+            if (!this._chat) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
             if (!request.userId) {
                 return {
                     success: false,
@@ -154,6 +176,7 @@ export interface AIChatFailure {
         | NotLoggedInError
         | NotSubscribedError
         | InvalidSubscriptionTierError
+        | NotSupportedError
         | 'invalid_model';
     errorMessage: string;
 
