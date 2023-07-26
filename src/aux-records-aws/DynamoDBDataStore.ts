@@ -9,6 +9,7 @@ import {
     EraseDataStoreResult,
     ListDataStoreResult,
     UserPolicy,
+    ListedDataStoreItem,
 } from '@casual-simulation/aux-records/DataRecordsStore';
 import dynamodb from 'aws-sdk/clients/dynamodb';
 
@@ -209,7 +210,7 @@ export class DynamoDBDataStore implements DataRecordsStore {
 
         const result = await this._dynamo.query(params).promise();
 
-        let items: ListDataStoreResult['items'] = result.Items.map((i) => ({
+        let items: ListedDataStoreItem[] = result.Items.map((i) => ({
             address: i.address,
             data: i.data,
             markers: i.markers,
@@ -218,6 +219,7 @@ export class DynamoDBDataStore implements DataRecordsStore {
         return {
             success: true,
             items,
+            totalCount: items.length,
         };
     }
 }

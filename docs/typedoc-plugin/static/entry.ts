@@ -151,10 +151,12 @@ export {
     ReadFilePermission,
     UpdateFilePermission,
     DeleteFilePermission,
+    ListFilePermission,
 
     IncrementEventPermission,
     CountEventPermission,
     UpdateEventPermission,
+    ListEventPermission,
 
     GrantRolePermission,
     RevokeRolePermission,

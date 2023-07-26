@@ -11,6 +11,7 @@ import {
     GetUserPolicyResult,
     ListedRoleAssignments,
     ListedUserPolicy,
+    ListUserPoliciesStoreResult,
     PolicyStore,
     RoleAssignment,
     UpdateRolesUpdate,
@@ -56,7 +57,7 @@ export class MemoryPolicyStore implements PolicyStore {
     async listUserPolicies(
         recordName: string,
         startingMarker: string
-    ): Promise<ListedUserPolicy[]> {
+    ): Promise<ListUserPoliciesStoreResult> {
         const recordPolicies = this.policies[recordName] ?? {};
 
         const keys = sortBy(Object.keys(recordPolicies));
@@ -75,7 +76,11 @@ export class MemoryPolicyStore implements PolicyStore {
             }
         }
 
-        return results;
+        return {
+            success: true,
+            policies: results,
+            totalCount: results.length,
+        };
     }
 
     async getUserPolicy(
@@ -183,6 +188,60 @@ export class MemoryPolicyStore implements PolicyStore {
 
         return {
             assignments,
+            totalCount: assignments.length,
+        };
+    }
+
+    async listAssignments(
+        recordName: string,
+        startingRole: string
+    ): Promise<ListedRoleAssignments> {
+        let record = this.roles[recordName];
+        let assignedRoles = this.roleAssignments[recordName];
+
+        let totalCount: number = 0;
+        let assignments: RoleAssignment[] = [];
+
+        for (let id in record) {
+            const roles = record[id];
+            for (let role of roles) {
+                assignments.push({
+                    type: 'user',
+                    userId: id,
+                    role: {
+                        role,
+                        expireTimeMs: null,
+                    },
+                });
+                totalCount += 1;
+            }
+        }
+
+        for (let id in assignedRoles) {
+            let roles = assignedRoles[id];
+            for (let role of roles) {
+                assignments.push({
+                    type: 'user',
+                    userId: id,
+                    role,
+                });
+                totalCount += 1;
+            }
+        }
+
+        assignments = sortBy(
+            assignments,
+            (a) => a.role.role,
+            (a) => (a as any).userId ?? (a as any).inst
+        );
+
+        if (startingRole) {
+            assignments = assignments.filter((a) => a.role.role > startingRole);
+        }
+
+        return {
+            assignments: assignments.slice(0, 10),
+            totalCount: totalCount,
         };
     }
 

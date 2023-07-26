@@ -229,6 +229,7 @@ describe('DynamoDBDataStore', () => {
                         markers: ['marker'],
                     },
                 ],
+                totalCount: 1,
             });
             expect(dynamodb.query).toHaveBeenCalledWith({
                 TableName: 'test-table',
@@ -272,6 +273,7 @@ describe('DynamoDBDataStore', () => {
                         },
                     },
                 ],
+                totalCount: 1,
             });
             expect(dynamodb.query).toHaveBeenCalledWith({
                 TableName: 'test-table',

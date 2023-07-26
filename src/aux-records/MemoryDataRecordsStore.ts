@@ -3,6 +3,7 @@ import {
     EraseDataStoreResult,
     GetDataStoreResult,
     ListDataStoreResult,
+    ListedDataStoreItem,
     SetDataResult,
     UserPolicy,
 } from './DataRecordsStore';
@@ -83,8 +84,9 @@ export class MemoryDataRecordsStore implements DataRecordsStore {
         address: string
     ): Promise<ListDataStoreResult> {
         let record = this._getRecord(recordName);
-        let items = [] as ListDataStoreResult['items'];
+        let items = [] as ListedDataStoreItem[];
 
+        const count = record.size;
         for (let [key, item] of record.entries()) {
             if (!address || key > address) {
                 items.push({
@@ -98,6 +100,7 @@ export class MemoryDataRecordsStore implements DataRecordsStore {
         return {
             success: true,
             items,
+            totalCount: count,
         };
     }
 

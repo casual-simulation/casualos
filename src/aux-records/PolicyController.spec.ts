@@ -3494,6 +3494,30 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if given no items', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'data.list',
+                    recordKeyOrRecordName: recordName,
+                    userId,
+                    dataItems: [],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [],
+                    },
+                    instances: [],
+                    allowedDataItems: [],
+                });
+            });
+
             it('should allow the request if the user has the admin role assigned', async () => {
                 store.roles[recordName] = {
                     [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -6801,6 +6825,1476 @@ describe('PolicyController', () => {
                     resourceMarkers: [PUBLIC_READ_MARKER],
                     fileSizeInBytes: 1000,
                     fileMimeType: 'text/plain',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                    reason: {
+                        type: 'too_many_insts',
+                    },
+                });
+            });
+        });
+
+        describe('file.list', () => {
+            it('should allow the request if given a record key', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'file.list',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.list',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if given no items', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'file.list',
+                    recordKeyOrRecordName: recordName,
+                    userId,
+                    fileItems: [],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [],
+                    },
+                    instances: [],
+                    allowedFileItems: [],
+                });
+            });
+
+            it('should allow the request if the user has the admin role assigned', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.list',
+                    userId,
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.list',
+                                        grantingPermission: {
+                                            type: 'file.list',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the user is the record owner', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.list',
+                    userId: ownerId,
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.list',
+                                        grantingPermission: {
+                                            type: 'file.list',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the record name matches the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'file.list',
+                    userId: ownerId,
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.list',
+                                        grantingPermission: {
+                                            type: 'file.list',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the user has file.list access to the given resource marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.list',
+                            role: 'developer',
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.list',
+                    userId,
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.list',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'file.list',
+                                            role: 'developer',
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the user has file.list access to one of the resources markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.list',
+                            role: 'developer',
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.list',
+                    userId,
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['other', 'secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['other', 'secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'other',
+                                actions: [],
+                            },
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.list',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'file.list',
+                                            role: 'developer',
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['other', 'secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['other', 'secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should filter out items that the user does not have file.list access to', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [],
+                };
+
+                const publicPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.list',
+                            role: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                store.policies[recordName] = {
+                    [PUBLIC_READ_MARKER]: {
+                        document: publicPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.list',
+                    userId,
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'file.list',
+                                        grantingPolicy: publicPolicy,
+                                        grantingPermission: {
+                                            type: 'file.list',
+                                            role: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [
+                        {
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                });
+            });
+
+            it('should filter out all items if given no userId or record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.list',
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: null,
+                    subject: {
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [],
+                });
+            });
+
+            it('should filter out items if the file.list permission has a max file size', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.list',
+                            role: 'developer',
+                            maxFileSizeInBytes: 1000,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.list',
+                    userId,
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [],
+                });
+            });
+
+            it('should filter out items if the file.list permission list of allowed mime types', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'file.list',
+                            role: 'developer',
+                            allowedMimeTypes: ['text/plain'],
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.list',
+                    userId,
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [],
+                });
+            });
+
+            it('should filter out all items if the user has no role assigned', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.list',
+                    userId,
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [],
+                });
+            });
+
+            it('should deny the request if given an invalid record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: wrongRecordKey,
+                    action: 'file.list',
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'record_not_found',
+                    errorMessage: 'Record not found.',
+                });
+            });
+
+            it('should filter out all items if there is no policy for the items marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.list',
+                    userId,
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [],
+                });
+            });
+
+            it('should allow all items if the user is an admin even though there is no policy for the given marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.list',
+                    userId,
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.list',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'file.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.list',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should filter out all items when requested from an inst that does not have a role', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.list',
+                    userId,
+                    instances: ['instance'],
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.list',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'file.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.list',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance',
+                            authorizationType: 'allowed',
+                            role: true,
+                            markers: [
+                                {
+                                    marker: 'secret',
+                                    actions: [],
+                                },
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [],
+                                },
+                            ],
+                        },
+                    ],
+                    allowedFileItems: [],
+                });
+            });
+
+            it('should filter out all items when requested from an inst that is admin, but the user is not', async () => {
+                store.roles[recordName] = {
+                    ['instance']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.list',
+                    userId,
+                    instances: ['instance'],
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: 'secret',
+                                    actions: [
+                                        {
+                                            action: 'file.list',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'file.list',
+                                                role: ADMIN_ROLE_NAME,
+                                            },
+                                        },
+                                    ],
+                                },
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'file.list',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'file.list',
+                                                role: ADMIN_ROLE_NAME,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                    allowedFileItems: [],
+                });
+            });
+
+            it('should skip inst role checks when a record key is used', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'file.list',
+                    userId,
+                    instances: ['instance'],
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.list',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'file.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.list',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance',
+                            authorizationType: 'not_required',
+                        },
+                    ],
+                    allowedFileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if all the instances have roles for the data', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.list',
+                    userId,
+                    instances: ['instance1', 'instance2'],
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.list',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'file.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'file.list',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance1',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: 'secret',
+                                    actions: [
+                                        {
+                                            action: 'file.list',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'file.list',
+                                                role: ADMIN_ROLE_NAME,
+                                            },
+                                        },
+                                    ],
+                                },
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'file.list',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'file.list',
+                                                role: ADMIN_ROLE_NAME,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            inst: 'instance2',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: 'secret',
+                                    actions: [
+                                        {
+                                            action: 'file.list',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'file.list',
+                                                role: ADMIN_ROLE_NAME,
+                                            },
+                                        },
+                                    ],
+                                },
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'file.list',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'file.list',
+                                                role: ADMIN_ROLE_NAME,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                    allowedFileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should deny the request if more than 2 instances are provided', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance3']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'file.list',
+                    userId,
+                    instances: ['instance1', 'instance2', 'instance3'],
+                    fileItems: [
+                        {
+                            fileSizeInBytes: 1024,
+                            fileMimeType: 'application/json',
+                            fileName: 'testFile.json',
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'testFile3.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 123,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'testFile2.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 9999,
+                            markers: ['secret'],
+                        },
+                    ],
                 });
 
                 expect(result).toEqual({
@@ -10370,6 +11864,1314 @@ describe('PolicyController', () => {
                     userId,
                     instances: ['instance1', 'instance2', 'instance3'],
                     existingMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage: `This action is not authorized because more than 2 instances are loaded.`,
+                    reason: {
+                        type: 'too_many_insts',
+                    },
+                });
+            });
+        });
+
+        describe('event.list', () => {
+            it('should allow the request if given a record key', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'event.list',
+                    recordKeyOrRecordName: recordKey,
+                    userId,
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test2',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if given no items', async () => {
+                const result = await controller.authorizeRequest({
+                    action: 'event.list',
+                    recordKeyOrRecordName: recordName,
+                    userId,
+                    eventItems: [],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [],
+                    },
+                    instances: [],
+                    allowedEventItems: [],
+                });
+            });
+
+            it('should allow the request if the user has the admin role assigned', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.list',
+                    userId,
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the user is the record owner', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.list',
+                    userId: ownerId,
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the record name matches the user ID', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: ownerId,
+                    action: 'event.list',
+                    userId: ownerId,
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: ownerId,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the user has event.list access to the given resource marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.list',
+                            role: 'developer',
+                            events: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.list',
+                    userId,
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: 'developer',
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the user has event.list access to one of the resources markers', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.list',
+                            role: 'developer',
+                            events: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.list',
+                    userId,
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['other', 'secret'],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['other', 'secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: 'developer',
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'other',
+                                actions: [],
+                            },
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPolicy: secretPolicy,
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: 'developer',
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['other', 'secret'],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['other', 'secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should filter out items that the user does not have event.list access to', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [],
+                };
+
+                const publicPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.list',
+                            role: true,
+                            events: true,
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                store.policies[recordName] = {
+                    [PUBLIC_READ_MARKER]: {
+                        document: publicPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.list',
+                    userId,
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPolicy: publicPolicy,
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: true,
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [
+                        {
+                            eventName: 'test2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                });
+            });
+
+            it('should filter out all items if given no userId or record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.list',
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: null,
+                    subject: {
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [],
+                });
+            });
+
+            it('should filter out items if the event.list permission list of allowed event names', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const secretPolicy: PolicyDocument = {
+                    permissions: [
+                        {
+                            type: 'event.list',
+                            role: 'developer',
+                            events: 'none',
+                        },
+                    ],
+                };
+
+                store.policies[recordName] = {
+                    ['secret']: {
+                        document: secretPolicy,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.list',
+                    userId,
+                    eventItems: [
+                        {
+                            eventName: 'test2',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [],
+                });
+            });
+
+            it('should filter out all items if the user has no role assigned', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.list',
+                    userId,
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [],
+                });
+            });
+
+            it('should deny the request if given an invalid record key', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: wrongRecordKey,
+                    action: 'event.list',
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'record_not_found',
+                    errorMessage: 'Record not found.',
+                });
+            });
+
+            it('should filter out all items if there is no policy for the items marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set(['developer']),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.list',
+                    userId,
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [],
+                });
+            });
+
+            it('should allow all items if the user is an admin even though there is no policy for the given marker', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.list',
+                    userId,
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should filter out all items when requested from an inst that does not have a role', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.list',
+                    userId,
+                    instances: ['instance'],
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance',
+                            authorizationType: 'allowed',
+                            role: true,
+                            markers: [
+                                {
+                                    marker: 'secret',
+                                    actions: [],
+                                },
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [],
+                                },
+                            ],
+                        },
+                    ],
+                    allowedEventItems: [],
+                });
+            });
+
+            it('should filter out all items when requested from an inst that is admin, but the user is not', async () => {
+                store.roles[recordName] = {
+                    ['instance']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.list',
+                    userId,
+                    instances: ['instance'],
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: 'secret',
+                                    actions: [
+                                        {
+                                            action: 'event.list',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'event.list',
+                                                role: ADMIN_ROLE_NAME,
+                                                events: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'event.list',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'event.list',
+                                                role: ADMIN_ROLE_NAME,
+                                                events: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                    allowedEventItems: [],
+                });
+            });
+
+            it('should skip inst role checks when a record key is used', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordKey,
+                    action: 'event.list',
+                    userId,
+                    instances: ['instance'],
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: userId,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance',
+                            authorizationType: 'not_required',
+                        },
+                    ],
+                    allowedEventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if all the instances have roles for the data', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.list',
+                    userId,
+                    instances: ['instance1', 'instance2'],
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [
+                        {
+                            inst: 'instance1',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: 'secret',
+                                    actions: [
+                                        {
+                                            action: 'event.list',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'event.list',
+                                                role: ADMIN_ROLE_NAME,
+                                                events: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'event.list',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'event.list',
+                                                role: ADMIN_ROLE_NAME,
+                                                events: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            inst: 'instance2',
+                            authorizationType: 'allowed',
+                            role: ADMIN_ROLE_NAME,
+                            markers: [
+                                {
+                                    marker: 'secret',
+                                    actions: [
+                                        {
+                                            action: 'event.list',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'event.list',
+                                                role: ADMIN_ROLE_NAME,
+                                                events: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                                {
+                                    marker: PUBLIC_READ_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'event.list',
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                            grantingPermission: {
+                                                type: 'event.list',
+                                                role: ADMIN_ROLE_NAME,
+                                                events: true,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                    allowedEventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should deny the request if more than 2 instances are provided', async () => {
+                store.roles[recordName] = {
+                    [userId]: new Set([ADMIN_ROLE_NAME]),
+                    ['instance1']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance2']: new Set([ADMIN_ROLE_NAME]),
+                    ['instance3']: new Set([ADMIN_ROLE_NAME]),
+                };
+
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'event.list',
+                    userId,
+                    instances: ['instance1', 'instance2', 'instance3'],
+                    eventItems: [
+                        {
+                            eventName: 'test1',
+                            markers: ['secret'],
+                        },
+                        {
+                            eventName: 'test2',
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            eventName: 'test3',
+                            markers: ['secret'],
+                        },
+                    ],
                 });
 
                 expect(result).toEqual({
@@ -16612,6 +19414,7 @@ describe('PolicyController', () => {
                         markers: [ACCOUNT_MARKER],
                     },
                 ],
+                totalCount: 3,
             });
         });
 
@@ -16639,6 +19442,7 @@ describe('PolicyController', () => {
                         markers: [ACCOUNT_MARKER],
                     },
                 ],
+                totalCount: 1,
             });
         });
 
@@ -16695,6 +19499,7 @@ describe('PolicyController', () => {
                         markers: [ACCOUNT_MARKER],
                     },
                 ],
+                totalCount: 3,
             });
         });
 
@@ -16958,7 +19763,7 @@ describe('PolicyController', () => {
         });
     });
 
-    describe('listRoleAssignments()', () => {
+    describe('listAssignedRoles()', () => {
         beforeEach(() => {
             store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
@@ -16970,7 +19775,7 @@ describe('PolicyController', () => {
         });
 
         it('should list the users that are assigned the given role', async () => {
-            const result = await controller.listRoleAssignments(
+            const result = await controller.listAssignedRoles(
                 recordName,
                 userId,
                 'role1'
@@ -17010,7 +19815,7 @@ describe('PolicyController', () => {
         it('should deny the request if the user is not authorized', async () => {
             delete store.roles[recordName][userId];
 
-            const result = await controller.listRoleAssignments(
+            const result = await controller.listAssignedRoles(
                 recordName,
                 userId,
                 'role1'
@@ -17032,10 +19837,235 @@ describe('PolicyController', () => {
         });
 
         it('should deny the request if the inst is not authorized', async () => {
-            const result = await controller.listRoleAssignments(
+            const result = await controller.listAssignedRoles(
                 recordName,
                 userId,
                 'role1',
+                ['inst']
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'role.list',
+                    kind: 'inst',
+                    id: 'inst',
+                    marker: ACCOUNT_MARKER,
+                    role: null,
+                },
+            });
+        });
+    });
+
+    describe('listRoleAssignments()', () => {
+        beforeEach(() => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+                ['testId']: new Set(['role1', 'role2', 'abc']),
+                ['testId2']: new Set(['role1', 'role2', 'abc']),
+                ['testId4']: new Set(['role2']),
+                ['testId3']: new Set(['role1']),
+            };
+        });
+
+        it('should return a not_supported result if the store does not implement listAssignments()', async () => {
+            (store as any).listAssignments = null;
+
+            const result = await controller.listRoleAssignments(
+                recordName,
+                userId,
+                null
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+        });
+
+        it('should list all role assignments', async () => {
+            const result = await controller.listRoleAssignments(
+                recordName,
+                userId,
+                null
+            );
+
+            expect(result).toEqual({
+                success: true,
+                totalCount: 9,
+                assignments: [
+                    {
+                        type: 'user',
+                        userId: 'testId',
+                        role: {
+                            role: 'abc',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId2',
+                        role: {
+                            role: 'abc',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: userId,
+                        role: {
+                            role: ADMIN_ROLE_NAME,
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId2',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId3',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId',
+                        role: {
+                            role: 'role2',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId2',
+                        role: {
+                            role: 'role2',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId4',
+                        role: {
+                            role: 'role2',
+                            expireTimeMs: null,
+                        },
+                    },
+                ],
+            });
+        });
+
+        it('should list roles after the given role', async () => {
+            const result = await controller.listRoleAssignments(
+                recordName,
+                userId,
+                ADMIN_ROLE_NAME
+            );
+
+            expect(result).toEqual({
+                success: true,
+                totalCount: 9,
+                assignments: [
+                    {
+                        type: 'user',
+                        userId: 'testId',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId2',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId3',
+                        role: {
+                            role: 'role1',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId',
+                        role: {
+                            role: 'role2',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId2',
+                        role: {
+                            role: 'role2',
+                            expireTimeMs: null,
+                        },
+                    },
+                    {
+                        type: 'user',
+                        userId: 'testId4',
+                        role: {
+                            role: 'role2',
+                            expireTimeMs: null,
+                        },
+                    },
+                ],
+            });
+        });
+
+        it('should deny the request if the user is not authorized', async () => {
+            delete store.roles[recordName][userId];
+
+            const result = await controller.listRoleAssignments(
+                recordName,
+                userId,
+                null
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to perform this action.',
+                reason: {
+                    type: 'missing_permission',
+                    permission: 'role.list',
+                    kind: 'user',
+                    id: userId,
+                    marker: ACCOUNT_MARKER,
+                    role: null,
+                },
+            });
+        });
+
+        it('should deny the request if the inst is not authorized', async () => {
+            const result = await controller.listRoleAssignments(
+                recordName,
+                userId,
+                null,
                 ['inst']
             );
 

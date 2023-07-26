@@ -1,6 +1,8 @@
 import {
     FileRecordsStore,
     GetFileNameFromUrlResult,
+    ListFilesLookupFailure,
+    ListFilesStoreResult,
     PresignFileReadRequest,
     PresignFileReadResult,
     signRequest,
@@ -52,7 +54,38 @@ export class S3FileRecordsStore implements FileRecordsStore {
         this._aws = aws;
         this._s3Host = s3Host;
         this._s3Options = s3Options;
+
+        if (this._lookup.listUploadedFiles) {
+            this.listUploadedFiles = async (
+                recordName: string,
+                fileName: string
+            ) => {
+                const result = await this._lookup.listUploadedFiles(
+                    recordName,
+                    fileName
+                );
+
+                if (!result.success) {
+                    return result as ListFilesLookupFailure;
+                } else {
+                    const files = result.files.map((f) => ({
+                        ...f,
+                        url: this._fileUrl(recordName, f.fileName).href,
+                    }));
+
+                    return {
+                        success: true,
+                        files,
+                    } as ListFilesStoreResult;
+                }
+            };
+        }
     }
+
+    listUploadedFiles?(
+        recordName: string,
+        fileName: string
+    ): Promise<ListFilesStoreResult>;
 
     getAllowedUploadHeaders(): string[] {
         return [

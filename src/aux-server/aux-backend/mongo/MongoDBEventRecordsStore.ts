@@ -3,6 +3,7 @@ import {
     EventRecordUpdate,
     EventRecordsStore,
     GetEventCountStoreResult,
+    ListEventsStoreResult,
     UpdateEventResult,
     cleanupObject,
 } from '@casual-simulation/aux-records';
@@ -88,6 +89,35 @@ export class MongoDBEventRecordsStore implements EventRecordsStore {
 
         return {
             success: true,
+        };
+    }
+
+    async listEvents(
+        recordName: string,
+        eventName: string
+    ): Promise<ListEventsStoreResult> {
+        let query: FilterQuery<EventRecord> = {
+            recordName: recordName,
+        };
+
+        if (!!eventName) {
+            query.eventName = { $gt: eventName };
+        }
+
+        const count = await this._collection.count({
+            recordName: recordName,
+        });
+
+        const events = await this._collection.find(query).limit(10).toArray();
+
+        return {
+            success: true,
+            events: events.map((e) => ({
+                eventName: e.eventName,
+                count: e.count,
+                markers: e.markers,
+            })),
+            totalCount: count,
         };
     }
 }

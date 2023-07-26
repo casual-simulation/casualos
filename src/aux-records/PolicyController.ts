@@ -5,7 +5,7 @@ import {
     ValidatePublicRecordKeyFailure,
     ValidatePublicRecordKeyResult,
 } from './RecordsController';
-import { ServerError } from './Errors';
+import { NotSupportedError, ServerError } from './Errors';
 import {
     ADMIN_ROLE_NAME,
     AssignPolicyPermission,
@@ -28,6 +28,7 @@ import {
     AssignedRole,
     getExpireTime,
     GetUserPolicyFailure,
+    ListedUserPolicy,
     PolicyStore,
     RoleAssignment,
     UpdateUserPolicyFailure,
@@ -532,9 +533,14 @@ export class PolicyController {
                 startingMarker
             );
 
+            if (!result.success) {
+                return result;
+            }
+
             return {
                 success: true,
-                policies: result,
+                policies: result.policies,
+                totalCount: result.totalCount,
             };
         } catch (err) {
             console.error('[PolicyController] A server error occurred.', err);
@@ -677,7 +683,7 @@ export class PolicyController {
      * @param role The name of the role whose assigments should be listed.
      * @param instances The instances that the request is being made from.
      */
-    async listRoleAssignments(
+    async listAssignedRoles(
         recordKeyOrRecordName: string,
         userId: string,
         role: string,
@@ -720,6 +726,75 @@ export class PolicyController {
             return {
                 success: true,
                 assignments: result.assignments,
+            };
+        } catch (err) {
+            console.error('[PolicyController] A server error occurred.', err);
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Lists the role assignments that have been made in the given record.
+     * @param recordKeyOrRecordName The record key or record name.
+     * @param userId The ID of the user that is currently logged in.
+     * @param startingRole The role that assignments should be returned after.
+     * @param instances The instances that the request is being made from.
+     */
+    async listRoleAssignments(
+        recordKeyOrRecordName: string,
+        userId: string,
+        startingRole: string | null,
+        instances?: string[]
+    ): Promise<ListRoleAssignmentsResult> {
+        try {
+            if (!this._policies.listAssignments) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+            const baseRequest = {
+                recordKeyOrRecordName: recordKeyOrRecordName,
+                userId: userId,
+            };
+            const context = await this.constructAuthorizationContext(
+                baseRequest
+            );
+            if (context.success === false) {
+                return {
+                    success: false,
+                    errorCode: context.errorCode,
+                    errorMessage: context.errorMessage,
+                };
+            }
+
+            const authorization = await this.authorizeRequestUsingContext(
+                context.context,
+                {
+                    action: 'role.list',
+                    ...baseRequest,
+                    instances,
+                }
+            );
+
+            if (authorization.allowed === false) {
+                return returnAuthorizationResult(authorization);
+            }
+
+            const result = await this._policies.listAssignments(
+                context.context.recordName,
+                startingRole
+            );
+
+            return {
+                success: true,
+                assignments: result.assignments,
+                totalCount: result.totalCount,
             };
         } catch (err) {
             console.error('[PolicyController] A server error occurred.', err);
@@ -955,6 +1030,8 @@ export class PolicyController {
             return this._authorizeFileCreateRequest(context, request);
         } else if (request.action === 'file.read') {
             return this._authorizeFileReadRequest(context, request);
+        } else if (request.action === 'file.list') {
+            return this._authorizeFileListRequest(context, request);
         } else if (request.action === 'file.update') {
             return this._authorizeFileUpdateRequest(context, request);
         } else if (request.action === 'file.delete') {
@@ -965,6 +1042,8 @@ export class PolicyController {
             return this._authorizeEventIncrementRequest(context, request);
         } else if (request.action === 'event.update') {
             return this._authorizeEventUpdateRequest(context, request);
+        } else if (request.action === 'event.list') {
+            return this._authorizeEventListRequest(context, request);
         } else if (request.action === 'policy.grantPermission') {
             return this._authorizePolicyGrantPermissionRequest(
                 context,
@@ -1527,7 +1606,9 @@ export class PolicyController {
             allMarkers,
             (context, type, id) => {
                 return this._authorizeDataList(context, type, id);
-            }
+            },
+            undefined,
+            true
         );
     }
 
@@ -1842,6 +1923,127 @@ export class PolicyController {
             success: false,
             reason: denialReason ?? {
                 type: 'missing_role',
+            },
+        };
+    }
+
+    private async _authorizeFileListRequest(
+        context: AuthorizationContext,
+        request: AuthorizeListFileRequest
+    ): Promise<AuthorizeResult> {
+        const allMarkers = union(...request.fileItems.map((i) => i.markers));
+        return await this._authorizeRequest(
+            context,
+            request,
+            allMarkers,
+            (context, type, id) => {
+                return this._authorizeFileList(context, type, id);
+            },
+            undefined,
+            true
+        );
+    }
+
+    private async _authorizeFileList(
+        context: RolesContext<AuthorizeListFileRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        const authorizations: MarkerAuthorization[] = [];
+        let role: string | true | null = null;
+
+        const allowedFileItems = (context.allowedFileItems =
+            [] as ListedFileItem[]);
+
+        const markers = new Map<
+            string,
+            {
+                marker: MarkerPermission;
+                authorization: MarkerAuthorization;
+                usedPermissions: Set<any>;
+            }
+        >();
+        for (let marker of context.markers) {
+            const authorization: MarkerAuthorization = {
+                marker: marker.marker,
+                actions: [],
+            };
+            authorizations.push(authorization);
+            markers.set(marker.marker, {
+                marker,
+                authorization: authorization,
+                usedPermissions: new Set(),
+            });
+        }
+
+        for (let item of context.request.fileItems) {
+            let itemPermission: PossiblePermission;
+            for (let m of item.markers) {
+                const a = markers.get(m);
+                if (!a) {
+                    continue;
+                }
+                const { marker, authorization, usedPermissions } = a;
+
+                itemPermission = await this._findPermissionByFilter(
+                    marker.permissions,
+                    this._every(
+                        this._byFile(
+                            'file.list',
+                            item.fileSizeInBytes,
+                            item.fileMimeType
+                        ),
+                        role === null
+                            ? this._some(
+                                  this._byEveryoneRole(),
+                                  this._byAdminRole(context, type, id),
+                                  this._bySubjectRole(
+                                      context,
+                                      type,
+                                      context.recordName,
+                                      id
+                                  )
+                              )
+                            : this._byRole(role)
+                    )
+                );
+
+                if (!itemPermission) {
+                    continue;
+                }
+
+                if (role === null) {
+                    role = itemPermission.permission.role;
+                }
+
+                if (!usedPermissions.has(itemPermission.permission)) {
+                    usedPermissions.add(itemPermission.permission);
+                    authorization.actions.push({
+                        action: context.request.action,
+                        grantingPolicy: itemPermission.policy,
+                        grantingPermission: itemPermission.permission,
+                    });
+                }
+
+                if (itemPermission) {
+                    break;
+                }
+            }
+
+            if (itemPermission) {
+                allowedFileItems.push(item);
+            }
+        }
+
+        if (!role) {
+            role = true;
+        }
+
+        return {
+            success: true,
+            authorization: {
+                role,
+                markers: authorizations,
             },
         };
     }
@@ -2519,6 +2721,123 @@ export class PolicyController {
                     type: 'missing_role',
                 },
             };
+        }
+
+        return {
+            success: true,
+            authorization: {
+                role,
+                markers: authorizations,
+            },
+        };
+    }
+
+    private async _authorizeEventListRequest(
+        context: AuthorizationContext,
+        request: AuthorizeListEventRequest
+    ): Promise<AuthorizeResult> {
+        const allMarkers = union(...request.eventItems.map((i) => i.markers));
+        return await this._authorizeRequest(
+            context,
+            request,
+            allMarkers,
+            (context, type, id) => {
+                return this._authorizeEventList(context, type, id);
+            },
+            undefined,
+            true
+        );
+    }
+
+    private async _authorizeEventList(
+        context: RolesContext<AuthorizeListEventRequest>,
+        type: 'user' | 'inst',
+        id: string
+    ): Promise<GenericResult> {
+        const authorizations: MarkerAuthorization[] = [];
+        let role: string | true | null = null;
+
+        const allowedEventItems = (context.allowedEventItems =
+            [] as ListedEventItem[]);
+
+        const markers = new Map<
+            string,
+            {
+                marker: MarkerPermission;
+                authorization: MarkerAuthorization;
+                usedPermissions: Set<any>;
+            }
+        >();
+        for (let marker of context.markers) {
+            const authorization: MarkerAuthorization = {
+                marker: marker.marker,
+                actions: [],
+            };
+            authorizations.push(authorization);
+            markers.set(marker.marker, {
+                marker,
+                authorization: authorization,
+                usedPermissions: new Set(),
+            });
+        }
+
+        for (let item of context.request.eventItems) {
+            let itemPermission: PossiblePermission;
+            for (let m of item.markers) {
+                const a = markers.get(m);
+                if (!a) {
+                    continue;
+                }
+                const { marker, authorization, usedPermissions } = a;
+
+                itemPermission = await this._findPermissionByFilter(
+                    marker.permissions,
+                    this._every(
+                        this._byEvent('event.list', item.eventName),
+                        role === null
+                            ? this._some(
+                                  this._byEveryoneRole(),
+                                  this._byAdminRole(context, type, id),
+                                  this._bySubjectRole(
+                                      context,
+                                      type,
+                                      context.recordName,
+                                      id
+                                  )
+                              )
+                            : this._byRole(role)
+                    )
+                );
+
+                if (!itemPermission) {
+                    continue;
+                }
+
+                if (role === null) {
+                    role = itemPermission.permission.role;
+                }
+
+                if (!usedPermissions.has(itemPermission.permission)) {
+                    usedPermissions.add(itemPermission.permission);
+                    authorization.actions.push({
+                        action: context.request.action,
+                        grantingPolicy: itemPermission.policy,
+                        grantingPermission: itemPermission.permission,
+                    });
+                }
+
+                if (itemPermission) {
+                    break;
+                }
+            }
+
+            if (itemPermission) {
+                allowedEventItems.push(item);
+            }
+        }
+
+        if (!role) {
+            role = true;
         }
 
         return {
@@ -3266,6 +3585,7 @@ export class PolicyController {
      * @param resourceMarkers The list of markers that need to be validated.
      * @param authorize The function that should be used to authorize each subject in the request.
      * @param skipInstanceChecksWhenValidRecordKeyIsProvided Whether or not to skip instance checks when a valid record key is provided.
+     * @param isListOperation Whether the request is a list operation.
      */
     private async _authorizeRequest<T extends AuthorizeRequestBase>(
         context: AuthorizationContext,
@@ -3276,7 +3596,8 @@ export class PolicyController {
             type: 'user' | 'inst',
             id: string
         ) => Promise<GenericResult>,
-        skipInstanceChecksWhenValidRecordKeyIsProvided: boolean = true
+        skipInstanceChecksWhenValidRecordKeyIsProvided: boolean = true,
+        isListOperation: boolean = false
     ): Promise<AuthorizeResult> {
         if (
             request.instances &&
@@ -3292,7 +3613,7 @@ export class PolicyController {
             return NOT_AUTHORIZED_TO_MANY_INSTANCES_RESULT;
         }
 
-        if (resourceMarkers.length <= 0) {
+        if (resourceMarkers.length <= 0 && !isListOperation) {
             console.log(
                 `[PolicyController] [action: ${request.action} recordName: ${context.recordName}, userId: ${request.userId}] Request denied because there are no markers.`
             );
@@ -3350,12 +3671,30 @@ export class PolicyController {
             async (inst) => {
                 let currentItems: ListedDataItem[] | null =
                     rolesContext.allowedDataItems?.slice();
+                let currentFiles: ListedFileItem[] | null =
+                    rolesContext.allowedFileItems?.slice();
+                let currentEvents: ListedEventItem[] | null =
+                    rolesContext.allowedEventItems?.slice();
                 const result = await authorize(rolesContext, 'inst', inst);
                 if (currentItems) {
                     rolesContext.allowedDataItems = intersectionBy(
                         currentItems,
                         rolesContext.allowedDataItems,
                         (item) => item.address
+                    );
+                }
+                if (currentFiles) {
+                    rolesContext.allowedFileItems = intersectionBy(
+                        currentFiles,
+                        rolesContext.allowedFileItems,
+                        (item) => item.fileName
+                    );
+                }
+                if (currentEvents) {
+                    rolesContext.allowedEventItems = intersectionBy(
+                        currentEvents,
+                        rolesContext.allowedEventItems,
+                        (item) => item.eventName
                     );
                 }
                 return result;
@@ -3395,6 +3734,8 @@ export class PolicyController {
             },
             instances: authorizedInstances,
             allowedDataItems: rolesContext.allowedDataItems,
+            allowedFileItems: rolesContext.allowedFileItems,
+            allowedEventItems: rolesContext.allowedEventItems,
         };
     }
 
@@ -3950,6 +4291,8 @@ export interface RolesContext<T extends AuthorizeRequestBase>
     request: T;
 
     allowedDataItems?: ListedDataItem[];
+    allowedFileItems?: ListedFileItem[];
+    allowedEventItems?: ListedEventItem[];
 }
 
 type PermissionFilter = (permission: AvailablePermissions) => Promise<boolean>;
@@ -3967,11 +4310,13 @@ export type AuthorizeRequest =
     | AuthorizeListDataRequest
     | AuthorizeCreateFileRequest
     | AuthorizeReadFileRequest
+    | AuthorizeListFileRequest
     | AuthorizeUpdateFileRequest
     | AuthorizeDeleteFileRequest
     | AuthorizeCountEventRequest
     | AuthorizeIncrementEventRequest
     | AuthorizeUpdateEventRequest
+    | AuthorizeListEventRequest
     | AuthorizeGrantPermissionToPolicyRequest
     | AuthorizeRevokePermissionToPolicyRequest
     | AuthorizeReadPolicyRequest
@@ -4110,6 +4455,15 @@ export interface AuthorizeReadFileRequest extends AuthorizeFileRequest {
     resourceMarkers: string[];
 }
 
+export interface AuthorizeListFileRequest extends AuthorizeRequestBase {
+    action: 'file.list';
+
+    /**
+     * The list of items that should be filtered.
+     */
+    fileItems: ListedFileItem[];
+}
+
 export interface AuthorizeUpdateFileRequest extends AuthorizeFileRequest {
     action: 'file.update';
 
@@ -4184,6 +4538,15 @@ export interface AuthorizeUpdateEventRequest extends AuthorizeEventRequest {
      * If omitted, then no markers are being removed from the event.
      */
     removedMarkers?: string[];
+}
+
+export interface AuthorizeListEventRequest extends AuthorizeRequestBase {
+    action: 'event.list';
+
+    /**
+     * The list of items that should be filtered.
+     */
+    eventItems: ListedEventItem[];
 }
 
 export interface AuthorizePolicyRequest extends AuthorizeRequestBase {
@@ -4274,6 +4637,40 @@ export interface ListedDataItem {
     markers: string[];
 }
 
+export interface ListedFileItem {
+    /**
+     * The name of the file.
+     */
+    fileName: string;
+
+    /**
+     * The MIME type of the file.
+     */
+    fileMimeType: string;
+
+    /**
+     * The size of the file in bytes.
+     */
+    fileSizeInBytes: number;
+
+    /**
+     * The list of markers for the item.
+     */
+    markers: string[];
+}
+
+export interface ListedEventItem {
+    /**
+     * The name of the event.
+     */
+    eventName: string;
+
+    /**
+     * The list of markers for the item.
+     */
+    markers: string[];
+}
+
 export type AuthorizeResult = AuthorizeAllowed | AuthorizeDenied;
 
 export interface AuthorizeAllowed {
@@ -4312,6 +4709,16 @@ export interface AuthorizeAllowed {
      * The list of allowed data items.
      */
     allowedDataItems?: ListedDataItem[];
+
+    /**
+     * The list of allowed file items.
+     */
+    allowedFileItems?: ListedFileItem[];
+
+    /**
+     * The list of allowed event items.
+     */
+    allowedEventItems?: ListedEventItem[];
 }
 
 export type GenericResult = GenericAllowed | GenericDenied;
@@ -4646,22 +5053,8 @@ export type ListUserPoliciesResult =
 
 export interface ListUserPoliciesSuccess {
     success: true;
-    policies: {
-        /**
-         * The marker that the policy is for.
-         */
-        marker: string;
-
-        /**
-         * The document that describes the policy.
-         */
-        document: PolicyDocument;
-
-        /**
-         * The markers that are applied to the policy.
-         */
-        markers: string[];
-    }[];
+    policies: ListedUserPolicy[];
+    totalCount: number;
 }
 
 export interface ListUserPoliciesFailure {
@@ -4719,11 +5112,16 @@ export interface ListRoleAssignmentsSuccess {
      * The list of assignments for the role.
      */
     assignments: RoleAssignment[];
+
+    /**
+     * The total number of assignments.
+     */
+    totalCount?: number;
 }
 
 export interface ListRoleAssignmentsFailure {
     success: false;
-    errorCode: ServerError | AuthorizeDenied['errorCode'];
+    errorCode: ServerError | NotSupportedError | AuthorizeDenied['errorCode'];
     errorMessage: string;
 }
 
