@@ -31,7 +31,19 @@ export interface RecordsStore {
      * @param recordName The name of the record.
      * @param hash The scrypt hash of the key that should be retrieved.
      */
-    getRecordKeyByRecordAndHash(recordName: string, hash: string): Promise<RecordKey>;
+    getRecordKeyByRecordAndHash(
+        recordName: string,
+        hash: string
+    ): Promise<RecordKey>;
+
+    /**
+     * Gets the list of records that the user with the given ID owns.
+     *
+     * If null or undefined, then this store does not support this method.
+     *
+     * @param ownerId The ID of the user that owns the records.
+     */
+    listRecordsByOwnerId?(ownerId: string): Promise<ListedRecord[]>;
 }
 
 /**
@@ -62,10 +74,21 @@ export interface Record {
     secretSalt: string;
 }
 
+export interface ListedRecord {
+    /**
+     * The name of the record.
+     */
+    name: string;
+
+    /**
+     * The ID of the user that created the record.
+     */
+    ownerId: string;
+}
 
 /**
  * Defines a type that represents the different kinds of policies that a record key can have.
- * 
+ *
  * - null and "subjectfull" indicate that actions performed with this key must require a subject to provide their access token in order for operations to succeed.
  * - "subjectless" indicates that actions may be performed with key despite not having an access key from a subject.
  */

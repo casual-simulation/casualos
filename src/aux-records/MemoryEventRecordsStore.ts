@@ -1,8 +1,10 @@
+import { sortBy } from 'lodash';
 import {
     AddEventCountStoreResult,
     EventRecordsStore,
     EventRecordUpdate,
     GetEventCountStoreResult,
+    ListEventsStoreResult,
     UpdateEventResult,
 } from './EventRecordsStore';
 
@@ -69,6 +71,29 @@ export class MemoryEventRecordsStore implements EventRecordsStore {
 
         return {
             success: true,
+        };
+    }
+
+    async listEvents(
+        recordName: string,
+        eventName: string
+    ): Promise<ListEventsStoreResult> {
+        const record = this._getRecord(recordName);
+        const totalCount = record.size;
+        let events = sortBy([...record.entries()], ([name, data]) => name);
+
+        if (eventName) {
+            events = events.filter(([name, data]) => name > eventName);
+        }
+
+        return {
+            success: true,
+            events: events.slice(0, 10).map(([name, data]) => ({
+                eventName: name,
+                count: data.count,
+                markers: data.markers,
+            })),
+            totalCount,
         };
     }
 

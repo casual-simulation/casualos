@@ -16,6 +16,7 @@ import {
     UserPolicyRecord,
     getExpireTime,
 } from '@casual-simulation/aux-records';
+import { ListUserPoliciesStoreResult } from '@casual-simulation/aux-records/PolicyStore';
 import dynamodb from 'aws-sdk/clients/dynamodb';
 import { differenceBy } from 'lodash';
 
@@ -72,7 +73,7 @@ export class DynamoDBPolicyStore implements PolicyStore {
     async listUserPolicies(
         recordName: string,
         startingMarker: string | null
-    ): Promise<ListedUserPolicy[]> {
+    ): Promise<ListUserPoliciesStoreResult> {
         const query =
             typeof startingMarker === 'string'
                 ? 'recordName = :recordName AND marker > :marker'
@@ -98,15 +99,19 @@ export class DynamoDBPolicyStore implements PolicyStore {
 
         const items: DynamoDBPolicy[] = result.Items as DynamoDBPolicy[];
 
-        return items.map((i) => {
-            let policy: ListedUserPolicy = {
-                marker: i.marker,
-                document: i.document,
-                markers: i.markers,
-            };
+        return {
+            success: true,
+            policies: items.map((i) => {
+                let policy: ListedUserPolicy = {
+                    marker: i.marker,
+                    document: i.document,
+                    markers: i.markers,
+                };
 
-            return policy;
-        });
+                return policy;
+            }),
+            totalCount: items.length,
+        };
     }
 
     async listRolesForUser(
@@ -204,6 +209,7 @@ export class DynamoDBPolicyStore implements PolicyStore {
 
         return {
             assignments,
+            totalCount: assignments.length,
         };
     }
 

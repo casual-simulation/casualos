@@ -115,13 +115,17 @@ describe('DynamoDBPolicyStore', () => {
 
             const policies = await store.listUserPolicies('test-record', null);
 
-            expect(policies).toEqual([
-                {
-                    marker: 'test',
-                    document: document,
-                    markers: [ACCOUNT_MARKER],
-                },
-            ]);
+            expect(policies).toEqual({
+                success: true,
+                policies: [
+                    {
+                        marker: 'test',
+                        document: document,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                ],
+                totalCount: 1,
+            });
 
             expect(dynamodb.query).toHaveBeenCalledWith({
                 TableName: 'policy-table',
@@ -158,13 +162,17 @@ describe('DynamoDBPolicyStore', () => {
 
             const policies = await store.listUserPolicies('test-record', 'abc');
 
-            expect(policies).toEqual([
-                {
-                    marker: 'test',
-                    document: document,
-                    markers: [ACCOUNT_MARKER],
-                },
-            ]);
+            expect(policies).toEqual({
+                success: true,
+                policies: [
+                    {
+                        marker: 'test',
+                        document: document,
+                        markers: [ACCOUNT_MARKER],
+                    },
+                ],
+                totalCount: 1,
+            });
 
             expect(dynamodb.query).toHaveBeenCalledWith({
                 TableName: 'policy-table',
@@ -411,6 +419,7 @@ describe('DynamoDBPolicyStore', () => {
                         },
                     },
                 ],
+                totalCount: 3,
             });
 
             expect(dynamodb.query).toHaveBeenCalledWith({
@@ -472,6 +481,7 @@ describe('DynamoDBPolicyStore', () => {
                         },
                     },
                 ],
+                totalCount: 2,
             });
 
             expect(dynamodb.query).toHaveBeenCalledWith({

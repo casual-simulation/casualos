@@ -2,7 +2,7 @@
 
 ## V3.2.1
 
-#### Date: TBD
+#### Date: 7/26/2023
 
 ### :rocket: Improvements
 
@@ -11,6 +11,10 @@
     -   When called, they open/close the photo camera modal that makes it easy for the user to take photos.
     -   The `@onPhotoCaptured` shout is sent for every photo that the user captures.
     -   See the documentation for more info.
+-   Added a basic admin panel to the auth site.
+    -   This lets you see the records you own and browse the information contained in them.
+    -   It is very limited, but right now it is useful for very basic administration.
+    -   It can list data items, files, events, policies, and roles.
 
 ### :bug: Bug Fixes
 

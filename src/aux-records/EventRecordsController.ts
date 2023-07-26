@@ -3,7 +3,7 @@ import {
     PolicyController,
     returnAuthorizationResult,
 } from './PolicyController';
-import { NotLoggedInError, ServerError } from './Errors';
+import { NotLoggedInError, NotSupportedError, ServerError } from './Errors';
 import {
     EventRecordsStore,
     AddEventCountStoreResult,
@@ -17,6 +17,7 @@ import {
 } from './RecordsController';
 import { cleanupObject, getMarkersOrDefault } from './Utils';
 import { without } from 'lodash';
+import { PUBLIC_READ_MARKER } from './PolicyPermissions';
 
 /**
  * Defines a class that is able to manage event (count) records.
@@ -280,6 +281,74 @@ export class EventRecordsController {
             };
         }
     }
+
+    async listEvents(
+        recordKeyOrRecordName: string,
+        eventName: string | null,
+        userId: string,
+        instances?: string[]
+    ): Promise<ListEventsResult> {
+        try {
+            if (!this._store.listEvents) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+
+            const baseRequest = {
+                recordKeyOrRecordName: recordKeyOrRecordName,
+                userId: userId,
+                instances: instances,
+            };
+
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
+            );
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const recordName = context.context.recordName;
+            const result = await this._store.listEvents(recordName, eventName);
+
+            if (result.success === false) {
+                return result;
+            }
+
+            const authorizeResult = await this._policies.authorizeRequest({
+                action: 'event.list',
+                ...baseRequest,
+                eventItems: result.events.map((e) => ({
+                    eventName: e.eventName,
+                    markers: e.markers ?? [PUBLIC_READ_MARKER],
+                    count: e.count,
+                })),
+            });
+
+            if (authorizeResult.allowed === false) {
+                return returnAuthorizationResult(authorizeResult);
+            }
+
+            return {
+                success: true,
+                totalCount: result.totalCount,
+                events: authorizeResult.allowedEventItems as ListedEvent[],
+            };
+        } catch (err) {
+            console.error(
+                '[EventRecordsController] Failed to list events:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
 }
 
 /**
@@ -499,4 +568,27 @@ export interface UpdateEventRecordFailure {
         | AuthorizeDenied['errorCode']
         | ValidatePublicRecordKeyFailure['errorCode'];
     errorMessage: string;
+}
+
+export type ListEventsResult = ListEventsSuccess | ListEventsFailure;
+
+export interface ListEventsSuccess {
+    success: true;
+    events: ListedEvent[];
+    totalCount: number;
+}
+
+export interface ListEventsFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotSupportedError
+        | AuthorizeDenied['errorCode']
+        | ValidatePublicRecordKeyFailure['errorCode'];
+    errorMessage: string;
+}
+
+export interface ListedEvent {
+    eventName: string;
+    markers: string[];
 }

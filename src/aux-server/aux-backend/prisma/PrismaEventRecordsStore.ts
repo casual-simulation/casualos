@@ -3,10 +3,12 @@ import {
     EventRecordUpdate,
     EventRecordsStore,
     GetEventCountStoreResult,
+    ListEventsStoreResult,
     UpdateEventResult,
     cleanupObject,
 } from '@casual-simulation/aux-records';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
+import { convertMarkers } from './Utils';
 
 export class PrismaEventRecordsStore implements EventRecordsStore {
     private _client: PrismaClient;
@@ -98,6 +100,47 @@ export class PrismaEventRecordsStore implements EventRecordsStore {
 
         return {
             success: true,
+        };
+    }
+
+    async listEvents(
+        recordName: string,
+        eventName: string
+    ): Promise<ListEventsStoreResult> {
+        let query: Prisma.EventRecordWhereInput = {
+            recordName: recordName,
+        };
+        if (!!eventName) {
+            query.name = { gt: eventName };
+        }
+
+        const totalCount = await this._client.eventRecord.count({
+            where: {
+                recordName: recordName,
+            },
+        });
+        const events = await this._client.eventRecord.findMany({
+            where: query,
+            select: {
+                recordName: true,
+                count: true,
+                markers: true,
+                name: true,
+            },
+            orderBy: {
+                name: 'asc',
+            },
+            take: 10,
+        });
+
+        return {
+            success: true,
+            events: events.map((e) => ({
+                eventName: e.name,
+                count: Number(e.count),
+                markers: convertMarkers(e.markers),
+            })),
+            totalCount: totalCount,
         };
     }
 }

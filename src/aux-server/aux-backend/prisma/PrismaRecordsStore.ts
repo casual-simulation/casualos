@@ -3,6 +3,7 @@ import {
     RecordsStore,
     RecordKey,
     cleanupObject,
+    ListedRecord,
 } from '@casual-simulation/aux-records';
 import { PrismaClient } from '@prisma/client';
 
@@ -87,5 +88,17 @@ export class PrismaRecordsStore implements RecordsStore {
         });
 
         return recordKey as any;
+    }
+
+    listRecordsByOwnerId(ownerId: string): Promise<ListedRecord[]> {
+        return this._client.record.findMany({
+            where: {
+                ownerId: ownerId,
+            },
+            select: {
+                name: true,
+                ownerId: true,
+            },
+        });
     }
 }
