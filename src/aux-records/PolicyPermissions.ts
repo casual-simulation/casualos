@@ -17,11 +17,13 @@ export type AvailablePermissions =
     | ListDataPermission
     | CreateFilePermission
     | ReadFilePermission
+    | ListFilePermission
     | UpdateFilePermission
     | DeleteFilePermission
     | IncrementEventPermission
     | CountEventPermission
     | UpdateEventPermission
+    | ListEventPermission
     | ReadPolicyPermission
     | GrantPermissionToPolicyPermission
     | RevokePermissionFromPolicyPermission
@@ -45,13 +47,15 @@ export type AvailableDataPermissions =
 export type AvailableFilePermissions =
     | CreateFilePermission
     | ReadFilePermission
+    | ListFilePermission
     | UpdateFilePermission
     | DeleteFilePermission;
 
 export type AvailableEventPermissions =
     | IncrementEventPermission
     | CountEventPermission
-    | UpdateEventPermission;
+    | UpdateEventPermission
+    | ListEventPermission;
 
 export type AvailablePolicyPermissions =
     | AssignPolicyPermission
@@ -267,6 +271,22 @@ type ZodReadFilePermissionAssertion = HasType<
 >;
 
 /**
+ * Defines an interface that describes a permission to be able to list a file for a record marker.
+ */
+export interface ListFilePermission extends FilePermission {
+    type: 'file.list';
+}
+
+export const LIST_FILE_VALIDATION = FILE_PERMISSION_VALIDATION.extend({
+    type: z.literal('file.list'),
+});
+type ZodListFilePermission = z.infer<typeof LIST_FILE_VALIDATION>;
+type ZodListFilePermissionAssertion = HasType<
+    ZodListFilePermission,
+    ListFilePermission
+>;
+
+/**
  * Defines an interface that describes a permission to be able to update a file for a record marker.
  * Currently only used to update resource markers that are on a file.
  *
@@ -375,6 +395,24 @@ type ZodUpdateEventPermission = z.infer<typeof UPDATE_EVENT_VALIDATION>;
 type ZodUpdateEventPermissionAssertion = HasType<
     ZodUpdateEventPermission,
     UpdateEventPermission
+>;
+
+/**
+ * Defines an interface that describes a permission to be able to list events in a record.
+ *
+ * @dochash types/permissions
+ */
+export interface ListEventPermission extends EventPermission {
+    type: 'event.list';
+}
+
+export const LIST_EVENT_VALIDATION = EVENT_PERMISSION_VALIDATION.extend({
+    type: z.literal('event.list'),
+});
+type ZodListEventPermission = z.infer<typeof LIST_EVENT_VALIDATION>;
+type ZodListEventPermissionAssertion = HasType<
+    ZodListEventPermission,
+    ListEventPermission
 >;
 
 /**
@@ -566,6 +604,9 @@ export interface GrantRolePermission extends RolePermission {
 
 export const GRANT_ROLE_VALIDATION = ROLE_PERMISSION_VALIDATION.extend({
     type: z.literal('role.grant'),
+    userIds: z.union([z.boolean(), z.array(z.string())]),
+    instances: z.union([z.boolean(), z.string()]),
+    maxDurationMs: z.number().optional(),
 });
 type ZodGrantRolePermission = z.infer<typeof GRANT_ROLE_VALIDATION>;
 type ZodGrantRolePermissionAssertion = HasType<
@@ -600,6 +641,8 @@ export interface RevokeRolePermission extends RolePermission {
 
 export const REVOKE_ROLE_VALIDATION = ROLE_PERMISSION_VALIDATION.extend({
     type: z.literal('role.revoke'),
+    userIds: z.union([z.boolean(), z.array(z.string())]),
+    instances: z.union([z.boolean(), z.string()]),
 });
 type ZodRevokeRolePermission = z.infer<typeof REVOKE_ROLE_VALIDATION>;
 type ZodRevokeRolePermissionAssertion = HasType<
@@ -669,6 +712,7 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion('type', [
     LIST_DATA_VALIDATION,
     CREATE_FILE_VALIDATION,
     READ_FILE_VALIDATION,
+    LIST_FILE_VALIDATION,
     UPDATE_FILE_VALIDATION,
     DELETE_FILE_VALIDATION,
     INCREMENT_EVENT_VALIDATION,
@@ -805,6 +849,10 @@ export const DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT: PolicyDocument = {
             role: ADMIN_ROLE_NAME,
         },
         {
+            type: 'file.list',
+            role: ADMIN_ROLE_NAME,
+        },
+        {
             type: 'file.delete',
             role: ADMIN_ROLE_NAME,
         },
@@ -824,6 +872,11 @@ export const DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT: PolicyDocument = {
         },
         {
             type: 'event.update',
+            role: ADMIN_ROLE_NAME,
+            events: true,
+        },
+        {
+            type: 'event.list',
             role: ADMIN_ROLE_NAME,
             events: true,
         },

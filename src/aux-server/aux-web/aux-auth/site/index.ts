@@ -49,6 +49,8 @@ import {
     MdDialogPrompt,
     MdTable,
     MdChips,
+    MdEmptyState,
+    MdRipple,
 } from 'vue-material/dist/components';
 import 'vue-material/dist/vue-material.min.css';
 import 'vue-material/dist/theme/default.css';
@@ -62,6 +64,9 @@ import AuthApp from './AuthApp/AuthApp';
 import AuthHome from './AuthHome/AuthHome';
 import AuthLogin from './AuthLogin/AuthLogin';
 import AuthEnterCode from './AuthEnterCode/AuthEnterCode';
+import AuthRecords from './AuthRecords/AuthRecords';
+import AuthRecordsData from './AuthRecordsData/AuthRecordsData';
+import AuthRecordsFiles from './AuthRecordsFiles/AuthRecordsFiles';
 import { authManager } from '../shared/index';
 import AuthLoading from './AuthLoading/AuthLoading';
 import { EventBus } from '@casual-simulation/aux-components';
@@ -75,6 +80,10 @@ import AuthPrivacyPolicy from './AuthPrivacyPolicy/AuthPrivacyPolicy';
 import AuthAcceptableUsePolicy from './AuthAcceptableUsePolicy/AuthAcceptableUsePolicy';
 
 import 'virtual:svg-icons-register';
+import AuthRecordsEvents from './AuthRecordsEvents/AuthRecordsEvents';
+import AuthRecordsPolicies from './AuthRecordsPolicies/AuthRecordsPolicies';
+import AuthRecordsRoles from './AuthRecordsRoles/AuthRecordsRoles';
+import './global.css';
 
 Vue.use(VueRouter);
 Vue.use(MdButton);
@@ -100,6 +109,8 @@ Vue.use(MdBadge);
 Vue.use(MdDialogPrompt);
 Vue.use(MdDatepicker);
 Vue.use(MdChips);
+Vue.use(MdEmptyState);
+Vue.use(MdRipple);
 
 const routes: RouteConfig[] = [
     {
@@ -149,8 +160,48 @@ const routes: RouteConfig[] = [
     },
     {
         path: '/',
+        name: 'index',
+        redirect: { name: 'home' },
+    },
+    {
+        path: '/account',
         name: 'home',
         component: AuthHome,
+    },
+    {
+        path: '/records/:recordName',
+        name: 'records',
+        props: (route) => ({
+            recordName: route.params.recordName,
+        }),
+        component: AuthRecords,
+        children: [
+            {
+                path: 'data',
+                name: 'records-data',
+                component: AuthRecordsData,
+            },
+            {
+                path: 'files',
+                name: 'records-files',
+                component: AuthRecordsFiles,
+            },
+            {
+                path: 'events',
+                name: 'records-events',
+                component: AuthRecordsEvents,
+            },
+            {
+                path: 'policies',
+                name: 'records-policies',
+                component: AuthRecordsPolicies,
+            },
+            {
+                path: 'roles',
+                name: 'records-roles',
+                component: AuthRecordsRoles,
+            },
+        ],
     },
 ];
 

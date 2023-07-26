@@ -15,6 +15,16 @@ export interface FileRecordsLookup {
     ): Promise<FileRecord | null>;
 
     /**
+     * Attempts to list the files in the given record.
+     * @param recordName The name of the record.
+     * @param fileName The name of the file to start listing after.
+     */
+    listUploadedFiles?(
+        recordName: string,
+        fileName: string | null
+    ): Promise<ListFilesLookupResult>;
+
+    /**
      * Attempts to add a record for a file to the store.
      * @param recordName The name of the record that the file was recorded in.
      * @param fileName The name of the file that should be recorded.
@@ -111,6 +121,16 @@ export interface FileRecordsStore extends FileRecordsVault {
         recordName: string,
         fileName: string
     ): Promise<GetFileRecordResult>;
+
+    /**
+     * Attempts to list the files in the given record.
+     * @param recordName The name of the record.
+     * @param fileName The name of the file that the listing should start after.
+     */
+    listUploadedFiles?(
+        recordName: string,
+        fileName: string | null
+    ): Promise<ListFilesStoreResult>;
 
     /**
      * Attempts to add a record for a file to the store.
@@ -408,6 +428,55 @@ export interface PresignFileReadSuccess {
 }
 
 export interface PresignFileReadFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export type ListFilesLookupResult =
+    | ListFilesLookupSuccess
+    | ListFilesLookupFailure;
+
+export interface ListFilesLookupSuccess {
+    success: true;
+    files: ListedLookupFile[];
+    totalCount: number;
+}
+
+export interface ListedLookupFile {
+    fileName: string;
+    description: string;
+    sizeInBytes: number;
+    uploaded: boolean;
+    markers: string[] | null;
+}
+
+export interface ListFilesLookupFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export type ListFilesStoreResult =
+    | ListFilesStoreSuccess
+    | ListFilesStoreFailure;
+
+export interface ListFilesStoreSuccess {
+    success: true;
+    files: ListedFileRecord[];
+    totalCount: number;
+}
+
+export interface ListedFileRecord {
+    fileName: string;
+    description: string;
+    sizeInBytes: number;
+    uploaded: boolean;
+    url: string;
+    markers: string[] | null;
+}
+
+export interface ListFilesStoreFailure {
     success: false;
     errorCode: ServerError;
     errorMessage: string;

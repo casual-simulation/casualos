@@ -12,8 +12,11 @@ import {
     PresignFileReadResult,
     FileRecordsLookup,
     FileRecord,
+    ListFilesLookupResult,
+    ListFilesStoreResult,
+    ListFilesStoreFailure,
 } from '@casual-simulation/aux-records';
-import { Collection } from 'mongodb';
+import { Collection, FilterQuery } from 'mongodb';
 
 /**
  * Defines a file records store that can store data in MongoDB.
@@ -25,6 +28,30 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
     constructor(lookup: FileRecordsLookup, fileUploadUrl: string) {
         this._lookup = lookup;
         this._fileUploadUrl = fileUploadUrl;
+
+        if (this._lookup.listUploadedFiles) {
+            this.listUploadedFiles = async (
+                recordName: string,
+                fileName: string
+            ) => {
+                const result = await this._lookup.listUploadedFiles(
+                    recordName,
+                    fileName
+                );
+
+                if (!result.success) {
+                    return result as ListFilesStoreFailure;
+                }
+                return {
+                    success: true,
+                    files: result.files.map((f) => ({
+                        ...f,
+                        url: this._fileUrl(recordName, f.fileName),
+                    })),
+                    totalCount: result.totalCount,
+                };
+            };
+        }
     }
 
     getAllowedUploadHeaders(): string[] {
@@ -58,6 +85,11 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
             errorMessage: 'The URL does not match an expected format.',
         };
     }
+
+    listUploadedFiles?(
+        recordName: string,
+        fileName: string
+    ): Promise<ListFilesStoreResult>;
 
     async presignFileUpload(
         request: PresignFileUploadRequest
@@ -211,6 +243,42 @@ export class MongoDBFileRecordsLookup implements FileRecordsLookup {
             sizeInBytes: record.sizeInBytes,
             uploaded: record.uploaded,
             markers: record.markers,
+        };
+    }
+
+    async listUploadedFiles(
+        recordName: string,
+        fileName: string
+    ): Promise<ListFilesLookupResult> {
+        let query = {
+            recordName: recordName,
+            uploaded: true,
+        } as FilterQuery<MongoFileRecord>;
+        if (!!fileName) {
+            query.fileName = { $gt: fileName };
+        }
+
+        const count = await this._collection.count({
+            recordName: recordName,
+            uploaded: true,
+        });
+
+        const files = await this._collection
+            .find(query)
+            .sort({ fileName: 1 })
+            .limit(10)
+            .toArray();
+
+        return {
+            success: true,
+            files: files.map((f) => ({
+                fileName: f.fileName,
+                description: f.description,
+                sizeInBytes: f.sizeInBytes,
+                markers: f.markers,
+                uploaded: f.uploaded,
+            })),
+            totalCount: count,
         };
     }
 

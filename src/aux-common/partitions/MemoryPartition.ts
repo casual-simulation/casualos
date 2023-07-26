@@ -243,7 +243,11 @@ export class MemoryPartitionImpl implements MemoryPartition {
                         );
                         const oldVal = newBot.tags[tag];
 
-                        if (newVal !== oldVal || Array.isArray(newVal)) {
+                        if (
+                            (newVal !== oldVal &&
+                                (hasValue(newVal) || hasValue(oldVal))) ||
+                            Array.isArray(newVal)
+                        ) {
                             changedTags.push(tag);
                         }
 
@@ -279,9 +283,12 @@ export class MemoryPartitionImpl implements MemoryPartition {
                             if (!hasValue(newBot.tags[tag])) {
                                 delete newBot.tags[tag];
                             }
-                        } else {
+                        } else if (hasValue(oldVal)) {
                             delete newBot.tags[tag];
                             updatedBot.tags[tag] = null;
+                        } else {
+                            delete newBot.tags[tag];
+                            delete updatedBot.tags[tag];
                         }
                     }
 
@@ -296,6 +303,8 @@ export class MemoryPartitionImpl implements MemoryPartition {
                             bot: newBot,
                             tags: changedTags,
                         });
+                    } else {
+                        delete updatedState[event.id];
                     }
                 }
 

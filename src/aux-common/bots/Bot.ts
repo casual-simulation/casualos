@@ -1686,6 +1686,21 @@ export const ON_IMAGE_CLASSIFIER_OPENED_ACTION_NAME: string =
 export const ON_IMAGE_CLASSIFIED_ACTION_NAME: string = 'onImageClassified';
 
 /**
+ * The name of the event that is triggered when the photo camera is opened.
+ */
+export const ON_PHOTO_CAMERA_OPENED_ACTION_NAME: string = 'onPhotoCameraOpened';
+
+/**
+ * The name of the event that is triggered when the photo camera is closed.
+ */
+export const ON_PHOTO_CAMERA_CLOSED_ACTION_NAME: string = 'onPhotoCameraClosed';
+
+/**
+ * The name of the event that is triggered when a photo is captured from the photo camera.
+ */
+export const ON_PHOTO_CAPTURED_ACTION_NAME: string = 'onPhotoCaptured';
+
+/**
  * The name of the event that is triggered when the checkout process is completed.
  */
 export const ON_CHECKOUT_ACTION_NAME: string = 'onCheckout';
@@ -2727,6 +2742,10 @@ export const KNOWN_TAGS: string[] = [
     ON_IMAGE_CLASSIFIER_CLOSED_ACTION_NAME,
     ON_IMAGE_CLASSIFIER_OPENED_ACTION_NAME,
     ON_IMAGE_CLASSIFIED_ACTION_NAME,
+
+    ON_PHOTO_CAMERA_OPENED_ACTION_NAME,
+    ON_PHOTO_CAMERA_CLOSED_ACTION_NAME,
+    ON_PHOTO_CAPTURED_ACTION_NAME,
 
     ON_POINTER_ENTER,
     ON_POINTER_EXIT,

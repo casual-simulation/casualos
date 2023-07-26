@@ -258,7 +258,8 @@ export type AsyncActions =
     | AnalyticsRecordEventAction
     | HtmlAppMethodCallAction
     | AttachRuntimeAction
-    | DetachRuntimeAction;
+    | DetachRuntimeAction
+    | OpenPhotoCameraAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -947,6 +948,127 @@ export interface OpenBarcodeScannerAction extends Action {
      * Whether to not allow switching the camera.
      */
     disallowSwitchingCameras: boolean;
+}
+
+/**
+ * An event that is used to show or hide the photo camera.
+ */
+export interface OpenPhotoCameraAction extends AsyncAction {
+    type: 'open_photo_camera';
+
+    /**
+     * Whether the photo camera should be visible.
+     */
+    open: boolean;
+
+    /**
+     * Whether only a single photo should be taken.
+     */
+    singlePhoto: boolean;
+
+    /**
+     * The options for the action.
+     */
+    options: OpenPhotoCameraOptions;
+}
+
+/**
+ * Defines a photo that was taken.
+ *
+ * @dochash types/camera
+ * @docname Photo
+ */
+export interface Photo {
+    /**
+     * The photo data.
+     */
+    data: Blob;
+
+    /**
+     * The width of the photo in pixels.
+     */
+    width: number;
+
+    /**
+     * The height of the photo in pixels.
+     */
+    height: number;
+}
+
+/**
+ * Options for {@link os.openPhotoCamera}.
+ *
+ * @dochash types/camera
+ * @doctitle Camera Types
+ * @docsidebar Camera
+ * @docdescription Types that are used in camera actions.
+ * @docname PhotoCameraOptions
+ */
+export interface OpenPhotoCameraOptions {
+    /**
+     * The camera that should be used.
+     */
+    cameraType?: CameraType;
+
+    /**
+     * Whether to not allow switching the camera.
+     */
+    disallowSwitchingCameras?: boolean;
+
+    /**
+     * The image format that should be used.
+     *
+     * Defaults to "png".
+     */
+    imageFormat?: 'png' | 'jpeg';
+
+    /**
+     * A number between 0 and 1 indicating the image quality to be used.
+     *
+     * If not specified, then the browser will use its own default.
+     */
+    imageQuality?: number;
+
+    /**
+     * Whether to skip allowing the user to confirm their photo.
+     *
+     * Defaults to false.
+     */
+    skipConfirm?: boolean;
+
+    /**
+     * Whether to automatically take a photo after a number of seconds.
+     *
+     * If null, then there is no timer and the user is allowed to take the photo manually.
+     * If positive, then the timer will start counting down from the given number of seconds.
+     * The user can always cancel the operation manually.
+     */
+    takePhotoAfterSeconds?: number;
+
+    /**
+     * The ideal resolution for the photo to be taken at.
+     *
+     * If specified, then the web browser will be told to prefer this resolution, but will use a lower resolution if
+     * it is not possible to use the ideal resolution.
+     */
+    idealResolution?: {
+        /**
+         * The width of the photo in pixels.
+         */
+        width: number;
+
+        /**
+         * The height of the photo in pixels.
+         */
+        height: number;
+    };
+
+    /**
+     * Whether to mirror the photo after it is taken.
+     *
+     * Defaults to false.
+     */
+    mirrorPhoto?: boolean;
 }
 
 /**
@@ -2620,6 +2742,7 @@ export type TweenType = 'position' | 'rotation';
 /**
  * The possible easing types.
  * @dochash types/animation
+ * @docname EaseType
  */
 export type EaseType =
     | 'linear'
@@ -2635,6 +2758,7 @@ export type EaseType =
 /**
  * The possible easing modes.
  * @dochash types/animation
+ * @docname EaseMode
  */
 export type EaseMode = 'in' | 'out' | 'inout';
 
@@ -2648,6 +2772,7 @@ export type EaseMode = 'in' | 'out' | 'inout';
  * };
  *
  * @dochash types/animation
+ * @docname Easing
  */
 export interface Easing {
     /**
@@ -3349,21 +3474,40 @@ export interface EndAudioRecordingAction extends AsyncAction {
 
 /**
  * An interface that represents the options that can be used for making recordings.
+ *
+ * @dochash types/experimental
+ * @doctitle Experimental Types
+ * @docsidebar Experimental
+ * @docdescription Defines the types that are used by experimental actions.
+ * @docname RecordingOptions
  */
 export interface RecordingOptions {
     /**
      * Whether to record audio.
+     *
+     * If the computer does not have an audio device attached, then setting this to true
+     * will cause an error.
+     *
      * If an array is specified, only the specified audio sources will be recorded.
+     *
+     * Defaults to true.
      */
     audio: boolean | ('screen' | 'microphone')[];
 
     /**
      * Whether to record video.
+     *
+     * If the computer does not have a video device attached (like a web cam),
+     * then setting this to true will cause an error.
+     *
+     * Defaults to true.
      */
     video: boolean;
 
     /**
      * Whether to record the screen.
+     *
+     * Defaults to false.
      */
     screen: boolean;
 }
@@ -3454,6 +3598,9 @@ export interface GetVoicesAction extends AsyncAction {
 
 /**
  * Defines an interface that represents a synthetic voice.
+ *
+ * @dochash types/experimental
+ * @docname SyntheticVoice
  */
 export interface SyntheticVoice {
     /**
@@ -3577,6 +3724,9 @@ export interface UnsuccessfulGeolocation {
 
 /**
  * Defines an interface that contains recorded data.
+ *
+ * @dochash types/experimental
+ * @docname Recording
  */
 export interface Recording {
     /**
@@ -3585,6 +3735,12 @@ export interface Recording {
     files: RecordedFile[];
 }
 
+/**
+ * Defines an interface that represents a recorded file.
+ *
+ * @dochash types/experimental
+ * @docname RecordedFile
+ */
 export interface RecordedFile {
     /**
      * Whether the file contains the recorded audio.
@@ -5195,6 +5351,27 @@ export function openBarcodeScanner(
         open: open,
         cameraType: cameraType,
         disallowSwitchingCameras: false,
+    };
+}
+
+/**
+ * Creates a new OpenPhotoCameraAction.
+ * @param open Whether the barcode scanner should be open or closed.
+ * @param singlePhoto Whether only a single photo should be taken.
+ * @param cameraType The camera type that should be used.
+ */
+export function openPhotoCamera(
+    open: boolean,
+    singlePhoto: boolean,
+    options?: OpenPhotoCameraOptions,
+    taskId?: string | number
+): OpenPhotoCameraAction {
+    return {
+        type: 'open_photo_camera',
+        open: open,
+        singlePhoto,
+        options: options ?? {},
+        taskId,
     };
 }
 

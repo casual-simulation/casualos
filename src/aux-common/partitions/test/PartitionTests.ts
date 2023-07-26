@@ -606,6 +606,30 @@ export function testPartitionImplementation(
             expect(updated).toEqual([]);
         });
 
+        it('should ignore updates that set tag values to null if the value is undefined', async () => {
+            const bot = createBot('test', {
+                abc: 'def',
+            });
+
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
+            await partition.applyEvents([
+                botUpdated('test', {
+                    tags: {
+                        example: null,
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(updated).toEqual([]);
+            expect(updates.slice(1)).toEqual([]);
+        });
+
         it('should support updates to arrays that keep the same array instance', async () => {
             let arr = [] as any[];
             const bot = createBot('test', {

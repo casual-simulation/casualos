@@ -866,6 +866,101 @@ declare interface OpenBarcodeScannerAction extends Action {
     cameraType: CameraType;
 }
 
+
+/**
+ * Defines a photo that was taken.
+ * 
+ * @dochash types/camera
+ * @docname Photo
+ */
+export interface Photo {
+    /**
+     * The photo data.
+     */
+    data: Blob;
+
+    /**
+     * The width of the photo in pixels.
+     */
+    width: number;
+
+    /**
+     * The height of the photo in pixels.
+     */
+    height: number;
+}
+
+/**
+ * Options for {@link os.openPhotoCamera}.
+ * 
+ * @dochash types/camera
+ * @doctitle Camera Types
+ * @docsidebar Camera
+ * @docdescription Types that are used in camera actions.
+ * @docname PhotoCameraOptions
+ */
+export interface OpenPhotoCameraOptions {
+    /**
+     * The camera that should be used.
+     */
+    cameraType?: CameraType;
+
+    /**
+     * The image format that should be used.
+     * 
+     * Defaults to "png".
+     */
+    imageFormat?: 'png' | 'jpeg';
+
+    /**
+     * A number between 0 and 1 indicating the image quality to be used.
+     * 
+     * If not specified, then the browser will use its own default.
+     */
+    imageQuality?: number;
+
+    /**
+     * Whether to skip allowing the user to confirm their photo.
+     *
+     * Defaults to false.
+     */
+    skipConfirm?: boolean;
+
+    /**
+     * Whether to automatically take a photo after a number of seconds.
+     *
+     * If null, then there is no timer and the user is allowed to take the photo manually.
+     * If positive, then the timer will start counting down from the given number of seconds.
+     * The user can always cancel the operation manually.
+     */
+    takePhotoAfterSeconds?: number;
+
+    /**
+     * The ideal resolution for the photo to be taken at.
+     * 
+     * If specified, then the web browser will be told to prefer this resolution, but will use a lower resolution if
+     * it is not possible to use the ideal resolution.
+     */
+    idealResolution?: {
+        /**
+         * The width of the photo in pixels.
+         */
+        width: number;
+
+        /**
+         * The height of the photo in pixels.
+         */
+        height: number;
+    }
+
+    /**
+     * Whether to mirror the photo after it is taken.
+     * 
+     * Defaults to false.
+     */
+    mirrorPhoto?: boolean;
+}
+
 /**
  * An event that is used to toggle whether the console is open.
  */
@@ -10159,6 +10254,63 @@ interface Os {
      * Closes the barcode scanner.
      */
     closeBarcodeScanner(): OpenBarcodeScannerAction;
+
+    /**
+     * Opens the photo camera. Returns a promise that resolves once the camera has been opened. Triggers the {@tag onPhotoCameraOpened} shout once opened.
+     *
+     * While open, each time the user takes a photo the system will send a {@tag @onPhotoCaptured} shout. Optionally accepts which camera to use for scanning. (front/back)
+     *
+     * @param options the options that should be used for the photo camera.
+     *
+     * @example Open the photo camera.
+     * await os.openPhotoCamera();
+     *
+     * @example Open the photo camera, defaulting to the front-facing camera.
+     * await os.openPhotoCamera({
+     *     cameraType: "front"
+     * });
+     *
+     * @dochash actions/camera
+     * @doctitle Camera Actions
+     * @docsidebar Camera
+     * @docdescription Actions for taking photos.
+     * @docname os.openPhotoCamera
+     */
+    openPhotoCamera(options?: OpenPhotoCameraOptions): Promise<void>;
+
+    /**
+     * Closes the photo camera. Returns a promise that resolves once the camera has been closed. Triggers the {@tag onPhotoCameraClosed} shout once closed.
+     *
+     * @example Close the photo camera
+     * await os.closePhotoCamera();
+     * 
+     * @dochash actions/camera
+     * @docname os.closePhotoCamera
+     */
+    closePhotoCamera(): Promise<void>;
+
+    /**
+     * Opens the photo camera for the user to take a single photo. Returns a promise that resolves with the taken photo. Triggers the {@tag onPhotoCameraOpened} shout once opened.
+     *
+     * While open, each time the user takes a photo the system will send a {@tag @onPhotoCaptured} shout. Optionally accepts which camera to use for scanning. (front/back)
+     *
+     * @param options the options that should be used for the photo camera.
+     *
+     * @example Prompt the user to take a single photo.
+     * const photo = await os.capturePhoto();
+     *
+     * @example Take a single photo, defaulting to the front-facing camera.
+     * await os.capturePhoto({
+     *     cameraType: "front"
+     * });
+     *
+     * @dochash actions/camera
+     * @doctitle Camera Actions
+     * @docsidebar Camera
+     * @docdescription Actions for taking photos.
+     * @docname os.capturePhoto
+     */
+    capturePhoto(options?: OpenPhotoCameraOptions): Promise<Photo>;
 
     /**
      * Shows the given barcode.

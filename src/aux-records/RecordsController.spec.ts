@@ -1169,6 +1169,72 @@ describe('RecordsController', () => {
             });
         });
     });
+
+    describe('listRecords()', () => {
+        beforeEach(async () => {
+            await store.addRecord({
+                name: 'record1',
+                ownerId: 'userId',
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            await store.addRecord({
+                name: 'record2',
+                ownerId: 'userId',
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            await store.addRecord({
+                name: 'record3',
+                ownerId: 'userId',
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            await store.addRecord({
+                name: 'record4',
+                ownerId: 'otherUserId',
+                secretHashes: [],
+                secretSalt: '',
+            });
+        });
+
+        it('should return all records owned by the given user', async () => {
+            const result = await manager.listRecords('userId');
+
+            expect(result).toEqual({
+                success: true,
+                records: [
+                    {
+                        name: 'record1',
+                        ownerId: 'userId',
+                    },
+                    {
+                        name: 'record2',
+                        ownerId: 'userId',
+                    },
+                    {
+                        name: 'record3',
+                        ownerId: 'userId',
+                    },
+                ],
+            });
+        });
+
+        it('should return a not_supported error if the store does not support listing records', async () => {
+            (store as any).listRecordsByOwnerId = null;
+
+            const result = await manager.listRecords('userId');
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+        });
+    });
 });
 
 describe('formatV1RecordKey()', () => {

@@ -88,15 +88,24 @@ export interface EraseDataStoreResult {
     errorMessage?: string;
 }
 
-export interface ListDataStoreResult {
-    success: boolean;
-    items?: {
-        data: any;
-        address: string;
-        markers?: string[];
-    }[];
-    errorCode?: ServerError;
-    errorMessage?: string;
+export type ListDataStoreResult = ListDataStoreSuccess | ListDataStoreFailure;
+
+export interface ListDataStoreSuccess {
+    success: true;
+    items: ListedDataStoreItem[];
+    totalCount: number;
+}
+
+export interface ListDataStoreFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export interface ListedDataStoreItem {
+    data: any;
+    address: string;
+    markers?: string[];
 }
 
 /**

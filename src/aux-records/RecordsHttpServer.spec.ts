@@ -2190,6 +2190,150 @@ describe('RecordsHttpServer', () => {
         testRateLimit('GET', `/api/v2/records/events/count`);
     });
 
+    describe('GET /api/v2/records/events/list', () => {
+        let events: any[];
+        beforeEach(async () => {
+            events = [];
+            for (let i = 0; i < 20; i++) {
+                const name = `test${i.toString().padStart(2, '0')}`;
+                await eventsController.addCount(recordKey, name, i, userId);
+                events.push({
+                    eventName: name,
+                    count: i,
+                    markers: [PUBLIC_READ_MARKER],
+                });
+            }
+        });
+
+        it('should get a list of events', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    events: events.slice(0, 10),
+                    totalCount: 20,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return the events that are listed after the given event name', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/list?recordName=${recordName}&eventName=${'test05'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    events: events.slice(6, 16),
+                    totalCount: 20,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an empty list if the inst doesnt have permission', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/list?recordName=${recordName}&instances=inst`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    events: [],
+                    totalCount: 20,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should get a list of events if the inst and user have permission', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+                ['inst']: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/list?recordName=${recordName}&instances=inst`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    events: events.slice(0, 10),
+                    totalCount: 20,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result if recordName is omitted', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/list?eventName=${'testEvent'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName is required.',
+                            path: ['recordName'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testRateLimit('GET', `/api/v2/records/events/list`);
+    });
+
     describe('POST /api/v2/records/events', () => {
         beforeEach(async () => {
             await eventsController.updateEvent({
@@ -3512,7 +3656,7 @@ describe('RecordsHttpServer', () => {
                 subjectId: userId,
                 sizeInBytes: 10,
                 description: 'description',
-                url: `${recordName}/${hash}.json`,
+                url: `http://localhost:9191/${recordName}/${hash}.json`,
                 uploaded: false,
                 markers: [PUBLIC_READ_MARKER],
             });
@@ -3572,7 +3716,7 @@ describe('RecordsHttpServer', () => {
                 subjectId: null,
                 sizeInBytes: 10,
                 description: 'description',
-                url: `${recordName}/${hash}.json`,
+                url: `http://localhost:9191/${recordName}/${hash}.json`,
                 uploaded: false,
                 markers: [PUBLIC_READ_MARKER],
             });
@@ -3627,7 +3771,7 @@ describe('RecordsHttpServer', () => {
                 subjectId: userId,
                 sizeInBytes: 10,
                 description: 'description',
-                url: `${recordName}/${hash}.json`,
+                url: `http://localhost:9191/${recordName}/${hash}.json`,
                 uploaded: false,
                 markers: ['secret'],
             });
@@ -4115,6 +4259,291 @@ describe('RecordsHttpServer', () => {
         testRateLimit('GET', `/api/v2/records/file`);
     });
 
+    describe('GET /api/v2/records/file/list', () => {
+        beforeEach(async () => {
+            await filesStore.addFileRecord(
+                recordName,
+                'test1.txt',
+                userId,
+                userId,
+                10,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+            await filesStore.addFileRecord(
+                recordName,
+                'test2.txt',
+                userId,
+                userId,
+                10,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+            await filesStore.addFileRecord(
+                recordName,
+                'test3.txt',
+                userId,
+                userId,
+                10,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+            await filesStore.setFileRecordAsUploaded(recordName, 'test1.txt');
+            await filesStore.setFileRecordAsUploaded(recordName, 'test2.txt');
+            await filesStore.setFileRecordAsUploaded(recordName, 'test3.txt');
+        });
+
+        it('should return a list of files', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    files: [
+                        {
+                            fileName: 'test1.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test1.txt',
+                            uploaded: true,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'test2.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test2.txt',
+                            uploaded: true,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'test3.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test3.txt',
+                            uploaded: true,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                    totalCount: 3,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should be able to list files by name', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file/list?recordName=${recordName}&fileName=test2`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    files: [
+                        {
+                            fileName: 'test2.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test2.txt',
+                            uploaded: true,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'test3.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test3.txt',
+                            uploaded: true,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                    totalCount: 3,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should list what the user can access', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set(['developer']),
+            };
+
+            policyStore.policies[recordName] = {
+                ['secret']: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'file.list',
+                                role: 'developer',
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+
+            await filesStore.updateFileRecord(recordName, 'test1.txt', [
+                'secret',
+            ]);
+            await filesStore.updateFileRecord(recordName, 'test3.txt', [
+                'secret',
+            ]);
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    files: [
+                        {
+                            fileName: 'test1.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test1.txt',
+                            uploaded: true,
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'test3.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test3.txt',
+                            uploaded: true,
+                            markers: ['secret'],
+                        },
+                    ],
+                    totalCount: 3,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should list what the inst can access', async () => {
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+                ['inst']: new Set(['developer']),
+            };
+
+            policyStore.policies[recordName] = {
+                ['secret']: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'file.list',
+                                role: 'developer',
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+            await filesStore.updateFileRecord(recordName, 'test1.txt', [
+                'secret',
+            ]);
+            await filesStore.updateFileRecord(recordName, 'test3.txt', [
+                'secret',
+            ]);
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file/list?recordName=${recordName}&instances=${'inst'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    files: [
+                        {
+                            fileName: 'test1.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test1.txt',
+                            uploaded: true,
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'test3.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test3.txt',
+                            uploaded: true,
+                            markers: ['secret'],
+                        },
+                    ],
+                    totalCount: 3,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a recordName', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file/list?fileName=testAddress`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName is required.',
+                            path: ['recordName'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/file/list?recordName=${recordName}`,
+                apiHeaders
+            )
+        );
+    });
+
     describe('PUT /api/v2/records/file', () => {
         let fileName: string;
         let fileUrl: string;
@@ -4208,7 +4637,7 @@ describe('RecordsHttpServer', () => {
                 subjectId: userId,
                 sizeInBytes: 10,
                 description: 'desc',
-                url: `${recordName}/${fileName}`,
+                url: `http://localhost:9191/${recordName}/${fileName}`,
                 uploaded: false,
                 markers: ['other'],
             });
@@ -4254,7 +4683,7 @@ describe('RecordsHttpServer', () => {
                 subjectId: userId,
                 sizeInBytes: 10,
                 description: 'desc',
-                url: `${recordName}/${fileName}`,
+                url: `http://localhost:9191/${recordName}/${fileName}`,
                 uploaded: false,
                 markers: ['other'],
             });
@@ -5048,6 +5477,7 @@ describe('RecordsHttpServer', () => {
                             markers: [PUBLIC_READ_MARKER],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: corsHeaders(defaultHeaders['origin']),
             });
@@ -5078,6 +5508,7 @@ describe('RecordsHttpServer', () => {
                             markers: [PUBLIC_READ_MARKER],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: corsHeaders(defaultHeaders['origin']),
             });
@@ -5145,6 +5576,7 @@ describe('RecordsHttpServer', () => {
                             markers: ['secret'],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: corsHeaders(apiHeaders['origin']),
             });
@@ -5201,6 +5633,7 @@ describe('RecordsHttpServer', () => {
                             markers: [PUBLIC_READ_MARKER],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: corsHeaders(apiHeaders['origin']),
             });
@@ -5679,6 +6112,71 @@ describe('RecordsHttpServer', () => {
                 defaultHeaders
             )
         );
+    });
+
+    describe('GET /api/v2/records/list', () => {
+        beforeEach(async () => {
+            await recordsStore.addRecord({
+                name: 'test0',
+                ownerId: 'otherUserId',
+                secretHashes: [],
+                secretSalt: '',
+            });
+            await recordsStore.addRecord({
+                name: 'test1',
+                ownerId: userId,
+                secretHashes: [],
+                secretSalt: '',
+            });
+            await recordsStore.addRecord({
+                name: 'test2',
+                ownerId: userId,
+                secretHashes: [],
+                secretSalt: '',
+            });
+            await recordsStore.addRecord({
+                name: 'test3',
+                ownerId: userId,
+                secretHashes: [],
+                secretSalt: '',
+            });
+            await recordsStore.addRecord({
+                name: 'test4',
+                ownerId: 'otherUserId',
+                secretHashes: [],
+                secretSalt: '',
+            });
+        });
+
+        it('should return the list of records for the user', async () => {
+            const result = await server.handleRequest(
+                httpGet('/api/v2/records/list', apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    records: [
+                        {
+                            name: 'test1',
+                            ownerId: userId,
+                        },
+                        {
+                            name: 'test2',
+                            ownerId: userId,
+                        },
+                        {
+                            name: 'test3',
+                            ownerId: userId,
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testAuthorization(() => httpGet('/api/v2/records/list', apiHeaders));
     });
 
     describe('OPTIONS /api/v2/records', () => {
@@ -6547,6 +7045,7 @@ describe('RecordsHttpServer', () => {
                             markers: [ACCOUNT_MARKER],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: apiCorsHeaders,
             });
@@ -6592,6 +7091,7 @@ describe('RecordsHttpServer', () => {
                             markers: [ACCOUNT_MARKER],
                         },
                     ],
+                    totalCount: 2,
                 },
                 headers: apiCorsHeaders,
             });
@@ -7036,10 +7536,10 @@ describe('RecordsHttpServer', () => {
             };
         });
 
-        it('should list the roles for the given inst', async () => {
+        it('should list the role assignments in the record', async () => {
             const result = await server.handleRequest(
                 httpGet(
-                    `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}`,
                     apiHeaders
                 )
             );
@@ -7049,6 +7549,22 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: true,
                     assignments: [
+                        {
+                            type: 'user',
+                            userId: 'testId',
+                            role: {
+                                role: 'abc',
+                                expireTimeMs: null,
+                            },
+                        },
+                        {
+                            type: 'user',
+                            userId: userId,
+                            role: {
+                                role: ADMIN_ROLE_NAME,
+                                expireTimeMs: null,
+                            },
+                        },
                         {
                             type: 'user',
                             userId: 'testId',
@@ -7065,7 +7581,44 @@ describe('RecordsHttpServer', () => {
                                 expireTimeMs: null,
                             },
                         },
+                        {
+                            type: 'user',
+                            userId: 'testId2',
+                            role: {
+                                role: 'role2',
+                                expireTimeMs: null,
+                            },
+                        },
                     ],
+                    totalCount: 5,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should list the role assignments after the given startingRole', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}&startingRole=${'role1'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    assignments: [
+                        {
+                            type: 'user',
+                            userId: 'testId2',
+                            role: {
+                                role: 'role2',
+                                expireTimeMs: null,
+                            },
+                        },
+                    ],
+                    totalCount: 5,
                 },
                 headers: apiCorsHeaders,
             });
@@ -7076,7 +7629,7 @@ describe('RecordsHttpServer', () => {
 
             const result = await server.handleRequest(
                 httpGet(
-                    `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}`,
                     apiHeaders
                 )
             );
@@ -7104,7 +7657,7 @@ describe('RecordsHttpServer', () => {
         it('should deny the request if the inst is not authorized', async () => {
             const result = await server.handleRequest(
                 httpGet(
-                    `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}&instances=${'inst'}`,
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}&instances=${'inst'}`,
                     apiHeaders
                 )
             );
@@ -7131,10 +7684,7 @@ describe('RecordsHttpServer', () => {
 
         it('should return an unacceptable_request result when not given a recordName', async () => {
             const result = await server.handleRequest(
-                httpGet(
-                    `/api/v2/records/role/assignments/list?role=${'role1'}`,
-                    apiHeaders
-                )
+                httpGet(`/api/v2/records/role/assignments/list`, apiHeaders)
             );
 
             expectResponseBodyToEqual(result, {
@@ -7158,53 +7708,167 @@ describe('RecordsHttpServer', () => {
             });
         });
 
-        it('should return an unacceptable_request result when not given a role', async () => {
-            const result = await server.handleRequest(
-                httpGet(
-                    `/api/v2/records/role/assignments/list?recordName=${recordName}`,
-                    apiHeaders
-                )
-            );
-
-            expectResponseBodyToEqual(result, {
-                statusCode: 400,
-                body: {
-                    success: false,
-                    errorCode: 'unacceptable_request',
-                    errorMessage:
-                        'The request was invalid. One or more fields were invalid.',
-                    issues: [
-                        {
-                            code: 'invalid_type',
-                            expected: 'string',
-                            message: 'role is required.',
-                            path: ['role'],
-                            received: 'undefined',
-                        },
-                    ],
-                },
-                headers: apiCorsHeaders,
-            });
-        });
-
         testOrigin(
             'GET',
-            `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`
+            `/api/v2/records/role/assignments/list?recordName=${recordName}`
         );
         testAuthorization(
             () =>
                 httpGet(
-                    `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}`,
                     apiHeaders
                 ),
             'The user is not logged in. A session key must be provided for this operation.'
         );
         testRateLimit(() =>
             httpGet(
-                `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                `/api/v2/records/role/assignments/list?recordName=${recordName}`,
                 defaultHeaders
             )
         );
+
+        describe('?role', () => {
+            it('should list the roles for the given inst', async () => {
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        assignments: [
+                            {
+                                type: 'user',
+                                userId: 'testId',
+                                role: {
+                                    role: 'role1',
+                                    expireTimeMs: null,
+                                },
+                            },
+                            {
+                                type: 'user',
+                                userId: 'testId2',
+                                role: {
+                                    role: 'role1',
+                                    expireTimeMs: null,
+                                },
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+
+            it('should deny the request if the user is not authorized', async () => {
+                delete policyStore.roles[recordName][userId];
+
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            id: userId,
+                            kind: 'user',
+                            marker: 'account',
+                            permission: 'role.list',
+                            role: null,
+                            type: 'missing_permission',
+                        },
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+
+            it('should deny the request if the inst is not authorized', async () => {
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}&instances=${'inst'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            id: 'inst',
+                            kind: 'inst',
+                            marker: 'account',
+                            permission: 'role.list',
+                            role: null,
+                            type: 'missing_permission',
+                        },
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+
+            it('should return an unacceptable_request result when not given a recordName', async () => {
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/records/role/assignments/list?role=${'role1'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 400,
+                    body: {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'The request was invalid. One or more fields were invalid.',
+                        issues: [
+                            {
+                                code: 'invalid_type',
+                                expected: 'string',
+                                message: 'recordName is required.',
+                                path: ['recordName'],
+                                received: 'undefined',
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+
+            testOrigin(
+                'GET',
+                `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`
+            );
+            testAuthorization(
+                () =>
+                    httpGet(
+                        `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                        apiHeaders
+                    ),
+                'The user is not logged in. A session key must be provided for this operation.'
+            );
+            testRateLimit(() =>
+                httpGet(
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                    defaultHeaders
+                )
+            );
+        });
     });
 
     describe('POST /api/v2/records/role/grant', () => {
@@ -7906,6 +8570,28 @@ describe('RecordsHttpServer', () => {
                     errorCode: 'unacceptable_session_key',
                     errorMessage:
                         'The given session key is invalid. It must be a correctly formatted string.',
+                }),
+                headers: {
+                    'Access-Control-Allow-Origin': request.headers.origin,
+                    'Access-Control-Allow-Headers':
+                        'Content-Type, Authorization',
+                },
+            });
+        });
+
+        it('should return a 403 status code when the session key is invalid', async () => {
+            let request = getRequest();
+            request.headers['authorization'] =
+                'Bearer ' +
+                formatV1SessionKey(userId, 'sessionId', 'wrong', 9999999999);
+            const result = await server.handleRequest(request);
+
+            expect(result).toEqual({
+                statusCode: 403,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: 'The session key is invalid.',
                 }),
                 headers: {
                     'Access-Control-Allow-Origin': request.headers.origin,

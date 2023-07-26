@@ -158,6 +158,7 @@
             <upload-server-modal></upload-server-modal>
             <imu-portal :streamImu="streamImu"></imu-portal>
             <image-classifier></image-classifier>
+            <photo-camera></photo-camera>
             <bot-tooltips></bot-tooltips>
             <wake-lock></wake-lock>
 

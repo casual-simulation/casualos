@@ -5368,6 +5368,58 @@ describe('AuxRuntime', () => {
                     const bot = runtime.currentState['test3'];
                     expect(bot.tags.calledCount).toBe(1);
                 });
+
+                describe('timers', () => {
+                    beforeAll(() => {
+                        jest.useFakeTimers();
+                    });
+
+                    beforeEach(() => {
+                        jest.clearAllTimers();
+                    });
+
+                    afterAll(() => {
+                        jest.useRealTimers();
+                    });
+
+                    it('should disable onError for listeners that have thrown a lot of errors', () => {
+                        runtime.repeatedErrorLimit = 2;
+
+                        let errors: ScriptError[] = [];
+                        runtime.onErrors.subscribe((e) => errors.push(...e));
+
+                        runtime.stateUpdated(
+                            stateUpdatedEvent({
+                                test1: createBot('test1', {
+                                    error: '@throw new Error("My Error")',
+                                }),
+                                test3: createBot('test3', {
+                                    calledCount: 0,
+                                    onError:
+                                        '@tags.calledCount += 1; setTimeout(() => { shout("error"); } );',
+                                }),
+                            })
+                        );
+
+                        runtime.process([action('error')]);
+
+                        const bot = runtime.currentState['test3'];
+                        expect(bot.tags.calledCount).toBe(1);
+
+                        jest.runOnlyPendingTimers();
+
+                        expect(bot.tags.calledCount).toBe(2);
+
+                        jest.runOnlyPendingTimers();
+
+                        // should not call onError again because of the limit
+                        expect(bot.tags.calledCount).toBe(2);
+                    });
+
+                    it('should default to a repeated error limit of 1000', () => {
+                        expect(runtime.repeatedErrorLimit).toBe(1000);
+                    });
+                });
             });
 
             describe('register_builtin_portal', () => {

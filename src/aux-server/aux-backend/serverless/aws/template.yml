@@ -82,6 +82,11 @@ Resources:
                     Properties:
                         Path: /api/v2/records/key
                         Method: POST
+                ListRecords:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/list
+                        Method: GET
                 RecordData:
                     Type: Api
                     Properties:
@@ -132,6 +137,11 @@ Resources:
                     Properties:
                         Path: /api/v2/records/file
                         Method: GET
+                ListFiles:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/file/list
+                        Method: GET
                 UpdateFile:
                     Type: Api
                     Properties:
@@ -152,6 +162,11 @@ Resources:
                     Properties:
                         Path: /api/v2/records/events
                         Method: POST
+                ListEvents:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records/events/list
+                        Method: GET
                 MarkFileUploaded:
                     Type: S3
                     Properties:

@@ -8,6 +8,7 @@ import {
     UserPolicy,
     doesSubjectMatchPolicy,
     isValidUserPolicy,
+    ListDataStoreFailure,
 } from './DataRecordsStore';
 import {
     RecordsController,
@@ -386,7 +387,8 @@ export class DataRecordsController {
             return {
                 success: true,
                 recordName: context.context.recordName,
-                items: authorizeResult.allowedDataItems as ListDataSuccess['items'],
+                items: authorizeResult.allowedDataItems as ListedData[],
+                totalCount: result2.totalCount,
             };
         } catch (err) {
             console.error(
@@ -771,11 +773,18 @@ export interface ListDataSuccess {
     /**
      * The items that were listed.
      */
-    items: {
-        data: any;
-        address: string;
-        markers: string[];
-    }[];
+    items: ListedData[];
+
+    /**
+     * The total number of items in the record.
+     */
+    totalCount: number;
+}
+
+export interface ListedData {
+    data: any;
+    address: string;
+    markers: string[];
 }
 
 /**
@@ -790,7 +799,7 @@ export interface ListDataFailure {
     success: false;
     errorCode:
         | ServerError
-        | ListDataStoreResult['errorCode']
+        | ListDataStoreFailure['errorCode']
         | AuthorizeDenied['errorCode']
         | 'not_supported';
     errorMessage: string;

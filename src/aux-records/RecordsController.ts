@@ -1,4 +1,8 @@
-import { PublicRecordKeyPolicy, RecordsStore } from './RecordsStore';
+import {
+    ListedRecord,
+    PublicRecordKeyPolicy,
+    RecordsStore,
+} from './RecordsStore';
 import { toBase64String, fromBase64String } from './Utils';
 import {
     createRandomPassword,
@@ -8,7 +12,12 @@ import {
 } from '@casual-simulation/crypto';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
-import { NotLoggedInError, ServerError } from './Errors';
+import {
+    NotAuthorizedError,
+    NotLoggedInError,
+    NotSupportedError,
+    ServerError,
+} from './Errors';
 import type { ValidateSessionKeyFailure } from './AuthController';
 import { AuthStore } from './AuthStore';
 
@@ -375,6 +384,37 @@ export class RecordsController {
         }
     }
 
+    /**
+     * Gets the list of records that the user with the given ID owns.
+     * @param userId The ID of the user.
+     */
+    async listRecords(userId: string): Promise<ListRecordsResult> {
+        try {
+            if (!this._store.listRecordsByOwnerId) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+            const records = await this._store.listRecordsByOwnerId(userId);
+            return {
+                success: true,
+                records: records,
+            };
+        } catch (err) {
+            console.log(
+                '[RecordsController] [listRecords] Error listing records: ',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     private _createSalt(): string {
         return fromByteArray(randomBytes(16));
     }
@@ -526,6 +566,43 @@ export interface ValidateRecordNameSuccess {
 export interface ValidateRecordNameFailure {
     success: false;
     errorCode: ValidatePublicRecordKeyFailure['errorCode'];
+    errorMessage: string;
+}
+
+/**
+ * The possible results of a "list records" operation.
+ */
+export type ListRecordsResult = ListRecordsSuccess | ListRecordsFailure;
+
+/**
+ * Defines an interface that represents a successful "list records" result.
+ */
+export interface ListRecordsSuccess {
+    success: true;
+
+    /**
+     * The list of records.
+     */
+    records: ListedRecord[];
+}
+
+/**
+ * Defines an interface that represents a failed "list records" result.
+ */
+export interface ListRecordsFailure {
+    success: false;
+    /**
+     * The type of error that occurred.
+     */
+    errorCode:
+        | NotLoggedInError
+        | NotAuthorizedError
+        | NotSupportedError
+        | ServerError;
+
+    /**
+     * The error message.
+     */
     errorMessage: string;
 }
 

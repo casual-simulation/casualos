@@ -7,7 +7,7 @@ import {
     PresignFileReadFailure,
     GetFileRecordFailure,
 } from './FileRecordsStore';
-import { NotLoggedInError, ServerError } from './Errors';
+import { NotLoggedInError, NotSupportedError, ServerError } from './Errors';
 import {
     RecordsController,
     ValidatePublicRecordKeyFailure,
@@ -373,6 +373,100 @@ export class FileRecordsController {
         } catch (err) {
             console.error(
                 '[FileRecordsController] An error occurred while reading a file:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to list the files that are available in the given record.
+     * @param recordKeyOrRecordName The name of the record or the record key of the record.
+     * @param fileName The file name that the listing should start at. If null, then the listing will start with the first file in the record.
+     * @param userId The ID of the user who is retrieving the data. If null, then it is assumed that the user is not logged in.
+     * @param instances The instances that are loaded.
+     */
+    async listFiles(
+        recordKeyOrRecordName: string,
+        fileName: string | null,
+        userId?: string,
+        instances?: string[]
+    ): Promise<ListFilesResult> {
+        try {
+            if (!this._store.listUploadedFiles) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+
+            const baseRequest = {
+                recordKeyOrRecordName,
+                userId: userId,
+                instances,
+            };
+            const context = await this._policies.constructAuthorizationContext(
+                baseRequest
+            );
+
+            if (context.success === false) {
+                return context;
+            }
+
+            const result2 = await this._store.listUploadedFiles(
+                context.context.recordName,
+                fileName
+            );
+
+            if (result2.success === false) {
+                return {
+                    success: false,
+                    errorCode: result2.errorCode,
+                    errorMessage: result2.errorMessage,
+                };
+            }
+
+            const files = result2.files;
+            const authorizeResult =
+                await this._policies.authorizeRequestUsingContext(
+                    context.context,
+                    {
+                        action: 'file.list',
+                        ...baseRequest,
+                        fileItems: files.map((i) => ({
+                            fileName: i.fileName,
+                            fileSizeInBytes: i.sizeInBytes,
+                            fileMimeType: getType(i.fileName),
+                            markers: i.markers ?? [PUBLIC_READ_MARKER],
+                            original: i,
+                        })),
+                    }
+                );
+
+            if (authorizeResult.allowed === false) {
+                return returnAuthorizationResult(authorizeResult);
+            }
+
+            if (!authorizeResult.allowedFileItems) {
+                throw new Error('allowedFileItems is null!');
+            }
+
+            return {
+                success: true,
+                recordName: context.context.recordName,
+                files: authorizeResult.allowedFileItems.map(
+                    (f) => (f as any).original
+                ),
+                totalCount: result2.totalCount,
+            };
+        } catch (err) {
+            console.log(
+                '[FileRecordsController] An error occurred while listing files:',
                 err
             );
             return {
@@ -754,6 +848,40 @@ export interface ReadFileFailure {
         | PresignFileReadFailure['errorCode']
         | GetFileRecordFailure['errorCode']
         | AuthorizeDenied['errorCode'];
+    errorMessage: string;
+}
+
+export type ListFilesResult = ListFilesSuccess | ListFilesFailure;
+
+export interface ListFilesSuccess {
+    success: true;
+    recordName: string;
+    files: ListedFile[];
+
+    /**
+     * The total number of files in the record.
+     */
+    totalCount: number;
+}
+
+export interface ListedFile {
+    fileName: string;
+    url: string;
+    sizeInBytes: number;
+    description: string;
+    markers: string[];
+    uploaded: boolean;
+}
+
+export interface ListFilesFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | ValidatePublicRecordKeyFailure['errorCode']
+        | PresignFileReadFailure['errorCode']
+        | GetFileRecordFailure['errorCode']
+        | AuthorizeDenied['errorCode']
+        | NotSupportedError;
     errorMessage: string;
 }
 

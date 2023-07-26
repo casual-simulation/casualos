@@ -39,10 +39,12 @@ module.exports = {
                         'actions/barcodes',
                         'actions/bot-filters',
                         'actions/bytes',
+                        'actions/camera',
                         'actions/crypto',
                         'actions/data',
                         'actions/debuggers',
                         'actions/event',
+                        'actions/experimental',
                         'actions/files',
                         'actions/math',
                         'actions/mods',
@@ -60,6 +62,7 @@ module.exports = {
                     label: 'Types',
                     items: [
                         'types/animation',
+                        'types/camera',
                         'types/core',
                         {
                             type: 'category',
@@ -70,6 +73,7 @@ module.exports = {
                                 'types/debuggers/pausable-debugger',
                             ]
                         },
+                        'types/experimental',
                         {
                             type: 'category',
                             label: 'Math',

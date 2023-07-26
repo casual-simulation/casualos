@@ -1,0 +1,7 @@
+video {
+    object-fit: contain;
+}
+
+.mirror {
+    transform: rotateY(180deg);
+}

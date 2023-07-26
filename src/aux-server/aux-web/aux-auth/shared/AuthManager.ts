@@ -1,9 +1,18 @@
 import axios from 'axios';
 import { Subject, BehaviorSubject, Observable, from } from 'rxjs';
 import { AppMetadata } from '../../../aux-backend/shared/AuthMetadata';
-import {
+import type {
     CreatePublicRecordKeyResult,
     PublicRecordKeyPolicy,
+    ListDataResult,
+    ListedRecord,
+    ListRecordsResult,
+    ListFilesResult,
+    EraseFileResult,
+    EraseDataResult,
+    ListUserPoliciesResult,
+    ListEventsResult,
+    ListRoleAssignmentsResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -238,6 +247,187 @@ export class AuthManager {
             }
             return null;
         }
+    }
+
+    async listRecords(): Promise<ListedRecord[]> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records/list`);
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as ListRecordsResult;
+        if (result.success === true) {
+            return result.records;
+        } else {
+            if (result.errorCode === 'not_supported') {
+                return [];
+            }
+        }
+
+        return null;
+    }
+
+    async listData(recordName: string, startingAddress?: string) {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records/data/list`);
+
+        url.searchParams.set('recordName', recordName);
+        if (startingAddress) {
+            url.searchParams.set('address', startingAddress);
+        }
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as ListDataResult;
+        if (result.success === true) {
+            return result;
+        } else {
+            if (result.errorCode === 'not_supported') {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    async listFiles(recordName: string, startingFileName?: string) {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records/file/list`);
+
+        url.searchParams.set('recordName', recordName);
+        if (startingFileName) {
+            url.searchParams.set('fileName', startingFileName);
+        }
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as ListFilesResult;
+        if (result.success === true) {
+            return result;
+        } else {
+            if (result.errorCode === 'not_supported') {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    async eraseFile(
+        recordKeyOrName: string,
+        fileUrl: string
+    ): Promise<boolean> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records/file`);
+
+        const response = await axios.delete(url.href, {
+            headers: this._authenticationHeaders(),
+            data: {
+                recordKey: recordKeyOrName,
+                fileUrl: fileUrl,
+            },
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as EraseFileResult;
+        return result.success === true;
+    }
+
+    async eraseData(
+        recordKeyOrName: string,
+        address: string
+    ): Promise<boolean> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records/data`);
+
+        const response = await axios.delete(url.href, {
+            headers: this._authenticationHeaders(),
+            data: {
+                recordKey: recordKeyOrName,
+                address: address,
+            },
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as EraseDataResult;
+        return result.success === true;
+    }
+
+    async listPolicies(recordName: string, startingMarker?: string) {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records/policy/list`);
+
+        url.searchParams.set('recordName', recordName);
+        if (startingMarker) {
+            url.searchParams.set('startingMarker', startingMarker);
+        }
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as ListUserPoliciesResult;
+        if (result.success === true) {
+            return result;
+        }
+
+        return null;
+    }
+
+    async listRoleAssignments(recordName: string, startingRole?: string) {
+        const url = new URL(
+            `${this.apiEndpoint}/api/v2/records/role/assignments/list`
+        );
+
+        url.searchParams.set('recordName', recordName);
+        if (startingRole) {
+            url.searchParams.set('startingRole', startingRole);
+        }
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as ListRoleAssignmentsResult;
+        if (result.success === true) {
+            return result;
+        } else {
+            if (result.errorCode === 'not_supported') {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    async listEvents(recordName: string, startingEventName?: string) {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records/events/list`);
+
+        url.searchParams.set('recordName', recordName);
+        if (startingEventName) {
+            url.searchParams.set('eventName', startingEventName);
+        }
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as ListEventsResult;
+        if (result.success === true) {
+            return result;
+        } else {
+            if (result.errorCode === 'not_supported') {
+                return null;
+            }
+        }
+
+        return null;
     }
 
     async manageSubscriptions(

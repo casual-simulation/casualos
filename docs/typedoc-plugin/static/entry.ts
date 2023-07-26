@@ -62,6 +62,8 @@ export {
     DebuggerFunctionLocation,
     DebuggerVariable,
     AttachDebuggerOptions,
+    TweenOptions,
+    SpeakTextApiOptions,
 
     PseudoRandomNumberGenerator,
 } from '../../../src/aux-common/runtime/AuxLibrary';
@@ -100,7 +102,14 @@ export {
     RoomTrackOptions,
     RoomRemoteOptions,
     SetRoomTrackOptions,
-    RegisterPrefixOptions
+    RegisterPrefixOptions,
+
+    Recording,
+    RecordedFile,
+    RecordingOptions,
+    SyntheticVoice,
+    OpenPhotoCameraOptions,
+    Photo,
 } from '../../../src/aux-common/bots/BotEvents';
 export { 
     RuntimeBot,
@@ -142,10 +151,12 @@ export {
     ReadFilePermission,
     UpdateFilePermission,
     DeleteFilePermission,
+    ListFilePermission,
 
     IncrementEventPermission,
     CountEventPermission,
     UpdateEventPermission,
+    ListEventPermission,
 
     GrantRolePermission,
     RevokeRolePermission,
