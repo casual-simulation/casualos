@@ -134,7 +134,14 @@ export {
     AuxDevice
 } from '../../../src/aux-common/runtime/AuxDevice';
 export { InstUpdate } from '../../../src/aux-common/bots/StoredAux';
+export {
+    GenericError,
+    CasualOSError
+} from '../../../src/aux-common/runtime/CasualOSError';
 
+export {
+    AIChatMessage,
+} from '../../../src/aux-records/AIChatInterface';
 export {
     CreatePublicRecordKeyResult,
     CreatePublicRecordKeySuccess,
