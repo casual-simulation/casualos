@@ -1296,6 +1296,55 @@ describe('AuthController', () => {
                         errorMessage: INVALID_KEY_ERROR_MESSAGE,
                     });
                 });
+
+                it('should return the User ID if given a valid key', async () => {
+                    await authStore.saveUser({
+                        id: 'myid',
+                        email: 'email',
+                        phoneNumber: 'phonenumber',
+                        allSessionRevokeTimeMs: undefined,
+                        currentLoginRequestId: undefined,
+                        subscriptionId: 'sub_2',
+                        subscriptionStatus: 'active',
+                    });
+
+                    const requestId = 'requestId';
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    const userId = 'myid';
+
+                    const sessionKey = formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        code,
+                        200
+                    );
+
+                    await authStore.saveSession({
+                        requestId,
+                        sessionId,
+                        secretHash: hashPasswordWithSalt(code, sessionId),
+                        expireTimeMs: 200,
+                        grantedTimeMs: 100,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    const result = await controller.validateSessionKey(
+                        sessionKey
+                    );
+
+                    expect(result).toEqual({
+                        success: true,
+                        userId: userId,
+                        sessionId: sessionId,
+                        subscriptionTier: 'alpha',
+                        subscriptionId: 'sub_2',
+                    });
+                });
             });
 
             describe('v2 hashes', () => {
@@ -1376,6 +1425,58 @@ describe('AuthController', () => {
                         success: false,
                         errorCode: 'invalid_key',
                         errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    });
+                });
+
+                it('should include the users subscription tier', async () => {
+                    await authStore.saveUser({
+                        id: 'myid',
+                        email: 'email',
+                        phoneNumber: 'phonenumber',
+                        allSessionRevokeTimeMs: undefined,
+                        currentLoginRequestId: undefined,
+                        subscriptionId: 'sub_2',
+                        subscriptionStatus: 'active',
+                    });
+
+                    const requestId = 'requestId';
+                    const sessionId = toBase64String('sessionId');
+                    const code = 'code';
+                    const userId = 'myid';
+
+                    const sessionKey = formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        code,
+                        200
+                    );
+
+                    await authStore.saveSession({
+                        requestId,
+                        sessionId,
+                        secretHash: hashHighEntropyPasswordWithSalt(
+                            code,
+                            sessionId
+                        ),
+                        expireTimeMs: 200,
+                        grantedTimeMs: 100,
+                        previousSessionId: null,
+                        nextSessionId: null,
+                        revokeTimeMs: null,
+                        userId,
+                        ipAddress: '127.0.0.1',
+                    });
+
+                    const result = await controller.validateSessionKey(
+                        sessionKey
+                    );
+
+                    expect(result).toEqual({
+                        success: true,
+                        userId: userId,
+                        sessionId: sessionId,
+                        subscriptionTier: 'alpha',
+                        subscriptionId: 'sub_2',
                     });
                 });
             });
