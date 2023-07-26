@@ -640,6 +640,10 @@ export class Server {
             }
         }
 
+        if (options.openai && options.ai) {
+            builder.useOpenAI();
+        }
+
         const { server, filesController, mongoDatabase } =
             await builder.buildAsync();
         const filesCollection =

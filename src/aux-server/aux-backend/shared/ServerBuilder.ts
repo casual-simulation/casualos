@@ -16,6 +16,8 @@ import {
     RecordsStore,
     SubscriptionController,
     Record,
+    OpenAIChatInterface,
+    AIChatInterface,
 } from '@casual-simulation/aux-records';
 import {
     DynamoDBAuthStore,
@@ -74,6 +76,10 @@ import {
     PrismaPolicyStore,
     PrismaRecordsStore,
 } from '../prisma';
+import {
+    AIConfiguration,
+    AIController,
+} from '@casual-simulation/aux-records/AIController';
 
 export class ServerBuilder {
     private _docClient: DocumentClient;
@@ -108,6 +114,10 @@ export class ServerBuilder {
     private _subscriptionConfig: SubscriptionConfiguration | null = null;
     private _subscriptionController: SubscriptionController;
     private _stripe: StripeIntegration;
+
+    private _chatInterface: AIChatInterface = null;
+    private _aiConfiguration: AIConfiguration = null;
+    private _aiController: AIController;
 
     private _rateLimitController: RateLimitController;
 
@@ -544,6 +554,42 @@ export class ServerBuilder {
         return this;
     }
 
+    useOpenAI(
+        options: Pick<BuilderOptions, 'openai' | 'ai'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using OpenAI.');
+        if (!options.openai) {
+            throw new Error('OpenAI options must be provided.');
+        }
+        if (!options.ai) {
+            throw new Error('AI options must be provided.');
+        }
+
+        if (options.ai.chat?.provider === 'openai') {
+            console.log('[ServerBuilder] Using OpenAI Chat.');
+            this._chatInterface = new OpenAIChatInterface({
+                apiKey: options.openai.apiKey,
+                maxTokens: options.openai.maxTokens,
+            });
+        }
+
+        this._aiConfiguration = {
+            chat: null,
+        };
+
+        if (this._chatInterface && options.ai.chat) {
+            this._aiConfiguration.chat = {
+                interface: this._chatInterface,
+                options: {
+                    allowedChatModels: options.ai.chat.allowedModels,
+                    allowedChatSubscriptionTiers:
+                        options.ai.chat.allowedSubscriptionTiers,
+                },
+            };
+        }
+        return this;
+    }
+
     async buildAsync() {
         const actions = sortBy(this._actions, (a) => a.priority);
 
@@ -641,6 +687,10 @@ export class ServerBuilder {
             );
         }
 
+        if (this._aiConfiguration) {
+            this._aiController = new AIController(this._aiConfiguration);
+        }
+
         const server = new RecordsHttpServer(
             this._allowedAccountOrigins,
             this._allowedApiOrigins,
@@ -653,7 +703,8 @@ export class ServerBuilder {
             this._filesController,
             this._subscriptionController,
             this._rateLimitController,
-            this._policyController
+            this._policyController,
+            this._aiController
         );
 
         return {
@@ -801,6 +852,24 @@ const prismaSchema = z.object({
     options: z.object({}).passthrough().optional(),
 });
 
+const openAiSchema = z.object({
+    apiKey: z.string().nonempty(),
+    maxTokens: z.number().positive().optional(),
+});
+
+const aiSchema = z.object({
+    chat: z
+        .object({
+            provider: z.literal('openai'),
+            allowedModels: z.array(z.string().nonempty()),
+            allowedSubscriptionTiers: z.union([
+                z.literal(true),
+                z.array(z.string().nonempty()),
+            ]),
+        })
+        .optional(),
+});
+
 export const optionsSchema = z.object({
     dynamodb: dynamoDbSchema.optional(),
     s3: s3Schema.optional(),
@@ -811,6 +880,8 @@ export const optionsSchema = z.object({
     ses: sesSchema.optional(),
     redis: redisSchema.optional(),
     rateLimit: rateLimitSchema.optional(),
+    openai: openAiSchema.optional(),
+    ai: aiSchema.optional(),
 
     subscriptions: subscriptionConfigSchema.optional(),
     stripe: stripeSchema.optional(),
