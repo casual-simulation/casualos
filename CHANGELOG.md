@@ -6,12 +6,19 @@
 
 ### :rocket: Improvements
 
--   Added the `ai.chat()` function as an easy way to interface with [OpenAI's Chat API](https://platform.openai.com/docs/guides/gpt/chat-completions-api).
+-   Added the `ai.chat()` and `ai.generateSkybox()` functions as an easy way to interface with [OpenAI's Chat API](https://platform.openai.com/docs/guides/gpt/chat-completions-api) and [Blockade Lab's API](https://api-documentation.blockadelabs.com/api).
     -   When configured on the server, users will have the ability to interface with an OpenAI GPT model without having to manage or store their own OpenAI API Key.
+    -   They will also be able to interface with Blockade Lab's API without having to manage their own API key.
     -   `ai.chat()` accepts two parameters:
         -   `message` - This is the message (string or object) or list of messages (objects) that the AI model should respond to.
         -   `options` - Is optional and are the options that should be used for the operation.
         -   Returns a promise that resolves when the AI has responded to the message(s). The resolved value will be a string if `message` was a string. Otherwise, it will be an object.
+        -   See the documentation for more info.
+    -   `ai.generateSkybox()` accepts three parameters:
+        -   `prompt` - This is the prompt that tells the AI what the generated skybox should look like.
+        -   `negativePrompt` - Is optional and tells the AI what the generated skybox should not look like.
+        -   `options` - Is optional and are the options that should be used for the operation.
+        -   Returns a promise that resolves when the AI has generated the skybox. The resolved value will be a string containing the URL that the generated image is stored at.
         -   See the documentation for more info.
     -   (DevOps Only) To configure AI Chat features, use the following `SERVER_CONFIG` properties:
         -   `openai` - This should be an object with the following properties:
