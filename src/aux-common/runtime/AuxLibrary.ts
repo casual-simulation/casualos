@@ -333,7 +333,6 @@ import {
     openPhotoCamera as calcOpenPhotoCamera,
     OpenPhotoCameraOptions,
     Photo,
-    AIChatMessage,
     AIChatOptions,
     aiChat,
 } from '../bots';
@@ -413,7 +412,10 @@ import {
     GrantRoleResult,
     RevokeRoleResult,
 } from '@casual-simulation/aux-records';
-import type { AvailablePermissions } from '@casual-simulation/aux-records';
+import type {
+    AIChatMessage,
+    AvailablePermissions,
+} from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
 import * as hooks from 'preact/hooks';
