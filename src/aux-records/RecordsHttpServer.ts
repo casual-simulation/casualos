@@ -1424,7 +1424,7 @@ export class RecordsHttpServer {
         }
 
         const schema = z.object({
-            model: z.string().nonempty(),
+            model: z.string().nonempty().optional(),
             messages: z.array(AI_CHAT_MESSAGE_SCHEMA).nonempty(),
             instances: z.array(z.string()).nonempty().optional(),
             temperature: z.number().min(0).max(1).optional(),

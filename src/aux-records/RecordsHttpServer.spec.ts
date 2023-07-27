@@ -248,6 +248,7 @@ describe('RecordsHttpServer', () => {
             chat: {
                 interface: chatInterface,
                 options: {
+                    defaultModel: 'default-model',
                     allowedChatModels: ['model-1', 'model-2'],
                     allowedChatSubscriptionTiers: ['beta'],
                 },
@@ -8577,6 +8578,56 @@ describe('RecordsHttpServer', () => {
                     ],
                 },
                 headers: apiCorsHeaders,
+            });
+        });
+
+        it('should support using a default model', async () => {
+            chatInterface.chat.mockResolvedValueOnce({
+                choices: [
+                    {
+                        role: 'assistant',
+                        content: 'hi!',
+                    },
+                ],
+            });
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/chat`,
+                    JSON.stringify({
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    choices: [
+                        {
+                            role: 'assistant',
+                            content: 'hi!',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+            expect(chatInterface.chat).toHaveBeenCalledWith({
+                model: 'default-model',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'hello',
+                    },
+                ],
+                userId,
             });
         });
 

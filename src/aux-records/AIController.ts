@@ -19,6 +19,11 @@ export interface AIChatConfiguration {
 
 export interface AIChatOptions {
     /**
+     * The model that should be used when none is specified in a request.
+     */
+    defaultModel: string;
+
+    /**
      * The list of allowed models that are allowed to be used for chat.
      */
     allowedChatModels: string[];
@@ -101,7 +106,10 @@ export class AIController {
                 }
             }
 
-            if (!this._allowedChatModels.has(request.model)) {
+            if (
+                !!request.model &&
+                !this._allowedChatModels.has(request.model)
+            ) {
                 return {
                     success: false,
                     errorCode: 'invalid_model',
@@ -111,7 +119,7 @@ export class AIController {
 
             const result = await this._chat.chat({
                 messages: request.messages,
-                model: request.model,
+                model: request.model ?? this._chatOptions.defaultModel,
                 temperature: request.temperature,
                 userId: request.userId,
             });
@@ -143,7 +151,7 @@ export interface AIChatRequest {
     /**
      * The model that should be used.
      */
-    model: string;
+    model?: string;
 
     /**
      * The ID of the currently logged in user.

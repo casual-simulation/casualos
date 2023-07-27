@@ -26,6 +26,7 @@ describe('AIController', () => {
             chat: {
                 interface: chatInterface,
                 options: {
+                    defaultModel: 'default-model',
                     allowedChatModels: ['test-model1', 'test-model2'],
                     allowedChatSubscriptionTiers: ['test-tier'],
                 },
@@ -72,6 +73,54 @@ describe('AIController', () => {
             });
             expect(chatInterface.chat).toBeCalledWith({
                 model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId: 'test-user',
+            });
+        });
+
+        it('should use the default model if none is specified', async () => {
+            chatInterface.chat.mockReturnValueOnce(
+                Promise.resolve({
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            stopReason: 'stop',
+                        },
+                    ],
+                })
+            );
+
+            const result = await controller.chat({
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                choices: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                        stopReason: 'stop',
+                    },
+                ],
+            });
+            expect(chatInterface.chat).toBeCalledWith({
+                model: 'default-model',
                 messages: [
                     {
                         role: 'user',
@@ -194,6 +243,7 @@ describe('AIController', () => {
                 chat: {
                     interface: chatInterface,
                     options: {
+                        defaultModel: 'default-model',
                         allowedChatModels: ['test-model1', 'test-model2'],
                         allowedChatSubscriptionTiers: true,
                     },

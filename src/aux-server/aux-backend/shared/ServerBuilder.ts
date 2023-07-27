@@ -581,6 +581,7 @@ export class ServerBuilder {
             this._aiConfiguration.chat = {
                 interface: this._chatInterface,
                 options: {
+                    defaultModel: options.ai.chat.defaultModel,
                     allowedChatModels: options.ai.chat.allowedModels,
                     allowedChatSubscriptionTiers:
                         options.ai.chat.allowedSubscriptionTiers,
@@ -861,6 +862,7 @@ const aiSchema = z.object({
     chat: z
         .object({
             provider: z.literal('openai'),
+            defaultModel: z.string().nonempty(),
             allowedModels: z.array(z.string().nonempty()),
             allowedSubscriptionTiers: z.union([
                 z.literal(true),

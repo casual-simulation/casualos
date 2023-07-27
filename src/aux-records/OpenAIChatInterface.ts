@@ -3,7 +3,7 @@ import {
     AIChatInterfaceRequest,
     AIChatInterfaceResponse,
     AIChatMessage,
-} from 'AIChatInterface';
+} from './AIChatInterface';
 import axios from 'axios';
 
 export interface OpenAIChatOptions {
