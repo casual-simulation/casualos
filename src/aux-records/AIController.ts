@@ -6,10 +6,14 @@ import {
     ServerError,
 } from './Errors';
 import { AIChatInterface, AIChatMessage } from './AIChatInterface';
-import { config } from 'process';
+import {
+    AIGenerateSkyboxInterface,
+    AIGenerateSkyboxInterfaceBlockadeLabsOptions,
+} from './AIGenerateSkyboxInterface';
 
 export interface AIConfiguration {
     chat: AIChatConfiguration | null;
+    generateSkybox: AIGenerateSkyboxConfiguration | null;
 }
 
 export interface AIChatConfiguration {
@@ -30,8 +34,26 @@ export interface AIChatOptions {
 
     /**
      * The list of subscription tiers that are allowed to be used for chat.
+     *
+     * - `true` indicates that all users are allowed, regardless of their subscription tier or if they are even subscribed.
+     * - An array of strings indicates that only users with the given subscription tiers are allowed.
      */
     allowedChatSubscriptionTiers: true | string[];
+}
+
+export interface AIGenerateSkyboxConfiguration {
+    interface: AIGenerateSkyboxInterface;
+    options: AIGenerateSkyboxOptions;
+}
+
+export interface AIGenerateSkyboxOptions {
+    /**
+     * The list of subscription tiers that are allowed to be used for generate skybox.
+     *
+     * - `true` indicates that all users are allowed, regardless of their subscription tier or if they are even subscribed.
+     * - An array of strings indicates that only users with the given subscription tiers are allowed.
+     */
+    allowedSubscriptionTiers: true | string[];
 }
 
 /**
@@ -41,8 +63,12 @@ export class AIController {
     private _chat: AIChatInterface | null;
     private _chatOptions: AIChatOptions;
 
+    private _generateSkybox: AIGenerateSkyboxInterface | null;
+
     private _allowedChatModels: Set<string>;
     private _allowedChatSubscriptionTiers: true | Set<string>;
+
+    private _allowedGenerateSkyboxSubscriptionTiers: true | Set<string>;
 
     constructor(configuration: AIConfiguration) {
         if (configuration.chat) {
@@ -55,6 +81,15 @@ export class AIController {
                 typeof options.allowedChatSubscriptionTiers === 'boolean'
                     ? options.allowedChatSubscriptionTiers
                     : new Set(options.allowedChatSubscriptionTiers);
+        }
+
+        if (configuration.generateSkybox) {
+            this._generateSkybox = configuration.generateSkybox.interface;
+            const options = configuration.generateSkybox.options;
+            this._allowedGenerateSkyboxSubscriptionTiers =
+                typeof options.allowedSubscriptionTiers === 'boolean'
+                    ? options.allowedSubscriptionTiers
+                    : new Set(options.allowedSubscriptionTiers);
         }
     }
 
@@ -77,9 +112,9 @@ export class AIController {
             }
 
             if (
-                this._allowedChatSubscriptionTiers !== true &&
-                !this._allowedChatSubscriptionTiers.has(
-                    request.userSubscriptionTier
+                !this._matchesSubscriptionTiers(
+                    request.userSubscriptionTier,
+                    this._allowedChatSubscriptionTiers
                 )
             ) {
                 if (!request.userSubscriptionTier) {
@@ -89,7 +124,8 @@ export class AIController {
                         errorMessage:
                             'The user must be subscribed in order to use this operation.',
                         allowedSubscriptionTiers: [
-                            ...this._allowedChatSubscriptionTiers,
+                            ...(this
+                                ._allowedChatSubscriptionTiers as Set<string>),
                         ],
                     };
                 } else {
@@ -99,7 +135,8 @@ export class AIController {
                         errorMessage:
                             'This operation is not available to the user at their current subscription tier.',
                         allowedSubscriptionTiers: [
-                            ...this._allowedChatSubscriptionTiers,
+                            ...(this
+                                ._allowedChatSubscriptionTiers as Set<string>),
                         ],
                         currentSubscriptionTier: request.userSubscriptionTier,
                     };
@@ -140,6 +177,94 @@ export class AIController {
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    async generateSkybox(
+        request: AIGenerateSkyboxRequest
+    ): Promise<AIGenerateSkyboxResponse> {
+        try {
+            if (!this._generateSkybox) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+
+            if (!request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                };
+            }
+
+            if (
+                !this._matchesSubscriptionTiers(
+                    request.userSubscriptionTier,
+                    this._allowedGenerateSkyboxSubscriptionTiers
+                )
+            ) {
+                if (!request.userSubscriptionTier) {
+                    return {
+                        success: false,
+                        errorCode: 'not_subscribed',
+                        errorMessage:
+                            'The user must be subscribed in order to use this operation.',
+                        allowedSubscriptionTiers: [
+                            ...(this
+                                ._allowedGenerateSkyboxSubscriptionTiers as Set<string>),
+                        ],
+                    };
+                } else {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_subscription_tier',
+                        errorMessage:
+                            'This operation is not available to the user at their current subscription tier.',
+                        allowedSubscriptionTiers: [
+                            ...(this
+                                ._allowedGenerateSkyboxSubscriptionTiers as Set<string>),
+                        ],
+                        currentSubscriptionTier: request.userSubscriptionTier,
+                    };
+                }
+            }
+
+            const result = await this._generateSkybox.generateSkybox({
+                prompt: request.prompt,
+                negativePrompt: request.negativePrompt,
+                blockadeLabs: request.blockadeLabs,
+            });
+
+            if (result.success === true) {
+                return {
+                    success: true,
+                    fileUrl: result.fileUrl,
+                    thumbnailUrl: result.thumbnailUrl,
+                };
+            } else {
+                return result;
+            }
+        } catch (err) {
+            console.error(
+                '[AIController] Error handling generate skybox request:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    private _matchesSubscriptionTiers(
+        tier: string,
+        allowedTiers: true | Set<string>
+    ): boolean {
+        return allowedTiers === true || allowedTiers.has(tier);
     }
 }
 
@@ -216,6 +341,58 @@ export interface AIChatFailure {
         | InvalidSubscriptionTierError
         | NotSupportedError
         | 'invalid_model';
+    errorMessage: string;
+
+    allowedSubscriptionTiers?: string[];
+    currentSubscriptionTier?: string;
+}
+
+export interface AIGenerateSkyboxRequest {
+    /**
+     * The prompt that should be used to generate the skybox.
+     */
+    prompt: string;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The subscription tier of the user.
+     * Should be null if the user is not logged in or if they do not have a subscription.
+     */
+    userSubscriptionTier: string;
+
+    /**
+     * The negative prompt for the skybox.
+     */
+    negativePrompt?: string;
+
+    /**
+     * Options specific to blockade labs.
+     */
+    blockadeLabs?: AIGenerateSkyboxInterfaceBlockadeLabsOptions;
+}
+
+export type AIGenerateSkyboxResponse =
+    | AIGenerateSkyboxSuccess
+    | AIGenerateSkyboxFailure;
+
+export interface AIGenerateSkyboxSuccess {
+    success: true;
+    fileUrl: string;
+    thumbnailUrl: string;
+}
+
+export interface AIGenerateSkyboxFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotSubscribedError
+        | InvalidSubscriptionTierError
+        | NotSupportedError;
     errorMessage: string;
 
     allowedSubscriptionTiers?: string[];

@@ -263,7 +263,8 @@ export type AsyncActions =
     | AttachRuntimeAction
     | DetachRuntimeAction
     | OpenPhotoCameraAction
-    | AIChatAction;
+    | AIChatAction
+    | AIGenerateSkyboxAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -749,6 +750,71 @@ export interface AIChatOptions extends RecordActionOptions {
      * Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
      */
     frequencyPenalty?: number;
+}
+
+/**
+ * An event that is used to generate a skybox using AI.
+ *
+ * @dochash types/ai
+ * @docname AIGenerateSkyboxAction
+ */
+export interface AIGenerateSkyboxAction extends AsyncAction {
+    type: 'ai_generate_skybox';
+
+    /**
+     * The prompt to use for the skybox.
+     *
+     * Describes things that you want the skybox to look like.
+     */
+    prompt: string;
+
+    /**
+     * The negative prompt to use for the skybox.
+     *
+     * Describes the things that you don't want the skybox to look like.
+     */
+    negativePrompt?: string;
+
+    /**
+     * The options that should be included in the request.
+     */
+    options: AIGenerateSkyboxOptions;
+}
+
+/**
+ * Defines an interface that represents options for {@link ai.generateSkybox-string}.
+ *
+ * @dochash types/ai
+ * @docname AIGenerateSkyboxOptions
+ */
+export interface AIGenerateSkyboxOptions extends RecordActionOptions {
+    /**
+     * Options that are specific to blockade-labs.
+     */
+    blockadeLabs?: AIGenerateSkyboxBlockadeLabsOptions;
+}
+
+/**
+ * Options that are specific to Blockade Labs implementations for {@link ai.generateSkybox-string}.
+ *
+ * @dochash types/ai
+ * @docname AIGenerateSkyboxOptions
+ */
+export interface AIGenerateSkyboxBlockadeLabsOptions {
+    /**
+     * The pre-defined style ID for the skybox.
+     */
+    skyboxStyleId?: number;
+
+    /**
+     * The ID of a previously generated skybox.
+     */
+    remixImagineId?: number;
+
+    /**
+     * The random seed to use for generating the skybox.
+     */
+    seed?: number;
 }
 
 /**
@@ -5276,6 +5342,28 @@ export function aiChat(
     return {
         type: 'ai_chat',
         messages,
+        options: options ?? {},
+        taskId,
+    };
+}
+
+/**
+ * Creates a new AIGenerateSkyboxAction.
+ * @param prompt The prompt that describes what the generated skybox should look like.
+ * @param negativePrompt The negative prompt that describes what the generated skybox should not look like.
+ * @param options The options for the skybox.
+ * @param taskId The ID of the async task.
+ */
+export function aiGenerateSkybox(
+    prompt: string,
+    negativePrompt: string | null | undefined,
+    options?: AIGenerateSkyboxOptions,
+    taskId?: number | string
+): AIGenerateSkyboxAction {
+    return {
+        type: 'ai_generate_skybox',
+        prompt,
+        negativePrompt,
         options: options ?? {},
         taskId,
     };

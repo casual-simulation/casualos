@@ -51,6 +51,10 @@ import {
     AIChatInterfaceRequest,
     AIChatInterfaceResponse,
 } from './AIChatInterface';
+import {
+    AIGenerateSkyboxInterfaceRequest,
+    AIGenerateSkyboxInterfaceResponse,
+} from './AIGenerateSkyboxInterface';
 
 console.log = jest.fn();
 
@@ -97,6 +101,12 @@ describe('RecordsHttpServer', () => {
         chat: jest.Mock<
             Promise<AIChatInterfaceResponse>,
             [AIChatInterfaceRequest]
+        >;
+    };
+    let skyboxInterface: {
+        generateSkybox: jest.Mock<
+            Promise<AIGenerateSkyboxInterfaceResponse>,
+            [AIGenerateSkyboxInterfaceRequest]
         >;
     };
 
@@ -244,6 +254,9 @@ describe('RecordsHttpServer', () => {
         chatInterface = {
             chat: jest.fn(),
         };
+        skyboxInterface = {
+            generateSkybox: jest.fn(),
+        };
         aiController = new AIController({
             chat: {
                 interface: chatInterface,
@@ -251,6 +264,12 @@ describe('RecordsHttpServer', () => {
                     defaultModel: 'default-model',
                     allowedChatModels: ['model-1', 'model-2'],
                     allowedChatSubscriptionTiers: ['beta'],
+                },
+            },
+            generateSkybox: {
+                interface: skyboxInterface,
+                options: {
+                    allowedSubscriptionTiers: ['beta'],
                 },
             },
         });
@@ -8668,6 +8687,123 @@ describe('RecordsHttpServer', () => {
                             content: 'hello',
                         },
                     ],
+                }),
+                apiHeaders
+            )
+        );
+    });
+
+    describe('POST /api/v2/ai/skybox', () => {
+        beforeEach(async () => {
+            const u = await authStore.findUser(userId);
+            await authStore.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+        });
+
+        it('should return a not_supported result if the server has a null AI controller', async () => {
+            server = new RecordsHttpServer(
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                null as any,
+                policyController,
+                null
+            );
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/skybox`,
+                    JSON.stringify({
+                        prompt: 'a blue sky',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'AI features are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should call the AI skybox interface', async () => {
+            skyboxInterface.generateSkybox.mockResolvedValueOnce({
+                success: true,
+                fileUrl: 'file',
+                thumbnailUrl: 'thumb',
+            });
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/skybox`,
+                    JSON.stringify({
+                        prompt: 'a blue sky',
+                        negativePrompt: 'a red sky',
+                        blockadeLabs: {
+                            skyboxStyleId: 1,
+                            remixImagineId: 2,
+                            seed: 3,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    fileUrl: 'file',
+                    thumbnailUrl: 'thumb',
+                },
+                headers: apiCorsHeaders,
+            });
+            expect(skyboxInterface.generateSkybox).toHaveBeenCalledWith({
+                prompt: 'a blue sky',
+                negativePrompt: 'a red sky',
+                blockadeLabs: {
+                    skyboxStyleId: 1,
+                    remixImagineId: 2,
+                    seed: 3,
+                },
+            });
+        });
+
+        testOrigin('POST', `/api/v2/ai/skybox`, () =>
+            JSON.stringify({
+                prompt: 'test',
+            })
+        );
+        testAuthorization(() =>
+            httpPost(
+                `/api/v2/ai/skybox`,
+                JSON.stringify({
+                    prompt: 'test',
+                }),
+                apiHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/ai/skybox`,
+                JSON.stringify({
+                    prompt: 'test',
                 }),
                 apiHeaders
             )

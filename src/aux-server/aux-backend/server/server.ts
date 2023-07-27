@@ -640,8 +640,8 @@ export class Server {
             }
         }
 
-        if (options.openai && options.ai) {
-            builder.useOpenAI();
+        if (options.ai) {
+            builder.useAI();
         }
 
         const { server, filesController, mongoDatabase } =

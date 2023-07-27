@@ -98,8 +98,8 @@ if (config.rateLimit && config.rateLimit.windowMs && config.rateLimit.maxHits) {
     builder.useRedisRateLimit();
 }
 
-if (config.openai && config.ai) {
-    builder.useOpenAI();
+if (config.ai) {
+    builder.useAI();
 }
 
 const { server, filesStore } = builder.build();
