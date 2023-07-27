@@ -1431,6 +1431,7 @@ export class RecordsHttpServer {
             topP: z.number().optional(),
             presencePenalty: z.number().min(-2).max(2).optional(),
             frequencyPenalty: z.number().min(-2).max(2).optional(),
+            stopWords: z.array(z.string()).max(4).optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);

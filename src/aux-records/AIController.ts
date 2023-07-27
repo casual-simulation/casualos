@@ -124,6 +124,7 @@ export class AIController {
                 topP: request.topP,
                 frequencyPenalty: request.frequencyPenalty,
                 presencePenalty: request.presencePenalty,
+                stopWords: request.stopWords,
                 userId: request.userId,
             });
 
@@ -190,6 +191,13 @@ export interface AIChatRequest {
      * Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
      */
     frequencyPenalty?: number;
+
+    /**
+     * The list of stop words that should be used.
+     *
+     * If the AI generates a sequence of tokens that match one of the given words, then it will stop generating tokens.
+     */
+    stopWords?: string[];
 }
 
 export type AIChatResponse = AIChatSuccess | AIChatFailure;

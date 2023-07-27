@@ -50,6 +50,13 @@ export interface AIChatInterfaceRequest {
     frequencyPenalty?: number;
 
     /**
+     * The list of stop words that should be used.
+     *
+     * If the AI generates a sequence of tokens that match one of the given words, then it will stop generating tokens.
+     */
+    stopWords?: string[];
+
+    /**
      * The ID of the user that is making the request.
      */
     userId: string;
