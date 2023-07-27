@@ -282,11 +282,6 @@ Resources:
                     Properties:
                         Path: /api/stripeWebhook
                         Method: POST
-                KeepWarm:
-                    Type: Schedule
-                    Properties:
-                        Schedule: 'rate(5 minutes)'
-                        Description: Event to keep the function always warm
     HandleRecordsLogGroup:
         Type: AWS::Logs::LogGroup
         Properties:
