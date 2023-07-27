@@ -227,6 +227,7 @@ import {
     getFile,
     openPhotoCamera,
     aiChat,
+    aiGenerateSkybox,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2621,6 +2622,125 @@ describe('AuxLibrary', () => {
                         errorMessage: 'This operation is not supported.',
                     })
                 );
+            });
+        });
+
+        describe('ai.generateSkybox()', () => {
+            it('should emit a AIGenerateSkyboxAction', () => {
+                const promise: any =
+                    library.api.ai.generateSkybox('cartoon clouds');
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    undefined,
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support negative prompts', () => {
+                const promise: any = library.api.ai.generateSkybox(
+                    'cartoon clouds',
+                    'realistic'
+                );
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    'realistic',
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support request objects', () => {
+                const promise: any = library.api.ai.generateSkybox({
+                    prompt: 'cartoon clouds',
+                    negativePrompt: 'realistic',
+                });
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    'realistic',
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should resolve with the address that was generated', async () => {
+                let result: string | null = null;
+                const promise: any =
+                    library.api.ai.generateSkybox('cartoon clouds');
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    undefined,
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        fileUrl: 'file_url',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toBe('file_url');
+            });
+
+            it('should resolve with the resulting object', async () => {
+                let result: any = null;
+                const promise: any = library.api.ai.generateSkybox({
+                    prompt: 'cartoon clouds',
+                });
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    undefined,
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        fileUrl: 'file_url',
+                        thumbnailUrl: 'thumbnail_url',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual({
+                    success: true,
+                    fileUrl: 'file_url',
+                    thumbnailUrl: 'thumbnail_url',
+                });
             });
         });
 

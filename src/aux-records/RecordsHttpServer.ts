@@ -671,6 +671,15 @@ export class RecordsHttpServer {
                 await this._aiChat(request),
                 this._allowedApiOrigins
             );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/ai/skybox'
+        ) {
+            return formatResponse(
+                request,
+                await this._aiSkybox(request),
+                this._allowedApiOrigins
+            );
         } else if (request.method === 'OPTIONS') {
             return formatResponse(
                 request,
@@ -1454,6 +1463,68 @@ export class RecordsHttpServer {
             ...options,
             model,
             messages: messages as AIChatMessage[],
+            userId: sessionKeyValidation.userId,
+            userSubscriptionTier: sessionKeyValidation.subscriptionTier,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _aiSkybox(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (!this._aiController) {
+            return returnResult(AI_NOT_SUPPORTED_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            prompt: z.string().nonempty(),
+            negativePrompt: z.string().nonempty().optional(),
+            blockadeLabs: z
+                .object({
+                    skyboxStyleId: z.number().optional(),
+                    remixImagineId: z.number().optional(),
+                    seed: z.number().optional(),
+                })
+                .optional(),
+            instances: z.array(z.string()).nonempty().optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { prompt, negativePrompt, instances, blockadeLabs } =
+            parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._aiController.generateSkybox({
+            prompt,
+            negativePrompt,
+            blockadeLabs,
             userId: sessionKeyValidation.userId,
             userSubscriptionTier: sessionKeyValidation.subscriptionTier,
         });

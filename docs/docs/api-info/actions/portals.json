@@ -5,11 +5,11 @@
     "pageSidebarLabel": "Portals",
     "contents": [
         {
-            "id": 789,
+            "id": 797,
             "order": 9999,
             "name": "os.closeCircleWipe",
             "reflection": {
-                "id": 789,
+                "id": 797,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -56,7 +56,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 790,
+                        "id": 798,
                         "name": "options",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -138,11 +138,11 @@
             "group": "10-circle-wipe"
         },
         {
-            "id": 793,
+            "id": 801,
             "order": 9999,
             "name": "os.openCircleWipe",
             "reflection": {
-                "id": 793,
+                "id": 801,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -189,7 +189,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 794,
+                        "id": 802,
                         "name": "options",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -271,11 +271,11 @@
             "group": "10-circle-wipe"
         },
         {
-            "id": 707,
+            "id": 715,
             "order": 9999,
             "name": "os.getCurrentDimension",
             "reflection": {
-                "id": 707,
+                "id": 715,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -370,11 +370,11 @@
             "group": "10-config-values"
         },
         {
-            "id": 713,
+            "id": 721,
             "order": 9999,
             "name": "os.getCurrentInst",
             "reflection": {
-                "id": 713,
+                "id": 721,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -438,11 +438,11 @@
             "group": "10-config-values"
         },
         {
-            "id": 726,
+            "id": 734,
             "order": 9999,
             "name": "os.getDimensionalDepth",
             "reflection": {
-                "id": 726,
+                "id": 734,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -475,7 +475,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 727,
+                        "id": 735,
                         "name": "dimension",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -524,11 +524,11 @@
             "group": "10-config-values"
         },
         {
-            "id": 716,
+            "id": 724,
             "order": 9999,
             "name": "os.getMenuDimension",
             "reflection": {
-                "id": 716,
+                "id": 724,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -593,11 +593,11 @@
             "group": "10-config-values"
         },
         {
-            "id": 719,
+            "id": 727,
             "order": 9999,
             "name": "os.getMiniPortalDimension",
             "reflection": {
-                "id": 719,
+                "id": 727,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -662,11 +662,11 @@
             "group": "10-config-values"
         },
         {
-            "id": 722,
+            "id": 730,
             "order": 9999,
             "name": "os.getPortalDimension",
             "reflection": {
-                "id": 722,
+                "id": 730,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -703,7 +703,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 723,
+                        "id": 731,
                         "name": "portal",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -757,11 +757,11 @@
             "group": "10-config-values"
         },
         {
-            "id": 781,
+            "id": 789,
             "order": 9999,
             "name": "os.hasBotInMiniPortal",
             "reflection": {
-                "id": 781,
+                "id": 789,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -793,7 +793,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 782,
+                        "id": 790,
                         "name": "bots",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -807,14 +807,14 @@
                             "types": [
                                 {
                                     "type": "reference",
-                                    "id": 2709,
+                                    "id": 2734,
                                     "name": "Bot"
                                 },
                                 {
                                     "type": "array",
                                     "elementType": {
                                         "type": "reference",
-                                        "id": 2709,
+                                        "id": 2734,
                                         "name": "Bot"
                                     }
                                 }
@@ -856,11 +856,11 @@
             "group": "10-config-values"
         },
         {
-            "id": 825,
+            "id": 833,
             "order": 9999,
             "name": "os.inSheet",
             "reflection": {
-                "id": 825,
+                "id": 833,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -924,11 +924,11 @@
             "group": "10-config-values"
         },
         {
-            "id": 703,
+            "id": 711,
             "order": 9999,
             "name": "os.isInDimension",
             "reflection": {
-                "id": 703,
+                "id": 711,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -960,7 +960,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 704,
+                        "id": 712,
                         "name": "dimension",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -1009,11 +1009,11 @@
             "group": "10-config-values"
         },
         {
-            "id": 464,
+            "id": 472,
             "order": 9999,
             "name": "os.exitFullscreenMode",
             "reflection": {
-                "id": 464,
+                "id": 472,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -1077,11 +1077,11 @@
             "group": "10-fullscreen"
         },
         {
-            "id": 461,
+            "id": 469,
             "order": 9999,
             "name": "os.requestFullscreenMode",
             "reflection": {
-                "id": 461,
+                "id": 469,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -1146,11 +1146,11 @@
             "group": "10-fullscreen"
         },
         {
-            "id": 750,
+            "id": 758,
             "order": 9999,
             "name": "os.goToDimension",
             "reflection": {
-                "id": 750,
+                "id": 758,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -1182,7 +1182,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 751,
+                        "id": 759,
                         "name": "dimension",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -1231,11 +1231,11 @@
             "group": "10-go-to"
         },
         {
-            "id": 754,
+            "id": 762,
             "order": 9999,
             "name": "os.goToURL",
             "reflection": {
-                "id": 754,
+                "id": 762,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -1267,7 +1267,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 755,
+                        "id": 763,
                         "name": "url",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -1316,11 +1316,11 @@
             "group": "10-go-to"
         },
         {
-            "id": 758,
+            "id": 766,
             "order": 9999,
             "name": "os.openURL",
             "reflection": {
-                "id": 758,
+                "id": 766,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -1352,7 +1352,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 759,
+                        "id": 767,
                         "name": "url",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -1401,11 +1401,11 @@
             "group": "10-go-to"
         },
         {
-            "id": 865,
+            "id": 873,
             "order": 9999,
             "name": "os.getInputList",
             "reflection": {
-                "id": 865,
+                "id": 873,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -1472,11 +1472,11 @@
             "group": "10-input"
         },
         {
-            "id": 860,
+            "id": 868,
             "order": 9999,
             "name": "os.getInputState",
             "reflection": {
-                "id": 860,
+                "id": 868,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -1513,7 +1513,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 861,
+                        "id": 869,
                         "name": "controller",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -1528,7 +1528,7 @@
                         }
                     },
                     {
-                        "id": 862,
+                        "id": 870,
                         "name": "button",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -1595,11 +1595,11 @@
             "group": "10-input"
         },
         {
-            "id": 828,
+            "id": 836,
             "order": 9999,
             "name": "os.getCameraPosition",
             "reflection": {
-                "id": 828,
+                "id": 836,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -1636,7 +1636,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 829,
+                        "id": 837,
                         "name": "portal",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -1663,7 +1663,7 @@
                 ],
                 "type": {
                     "type": "reference",
-                    "id": 3198,
+                    "id": 3223,
                     "name": "Vector3"
                 }
             },
@@ -1701,11 +1701,11 @@
             "group": "10-positions"
         },
         {
-            "id": 832,
+            "id": 840,
             "order": 9999,
             "name": "os.getCameraRotation",
             "reflection": {
-                "id": 832,
+                "id": 840,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -1742,7 +1742,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 833,
+                        "id": 841,
                         "name": "portal",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -1770,14 +1770,14 @@
                 "type": {
                     "type": "reflection",
                     "declaration": {
-                        "id": 834,
+                        "id": 842,
                         "name": "__type",
                         "kind": 65536,
                         "kindString": "Type literal",
                         "flags": {},
                         "children": [
                             {
-                                "id": 835,
+                                "id": 843,
                                 "name": "x",
                                 "kind": 1024,
                                 "kindString": "Property",
@@ -1785,7 +1785,7 @@
                                 "sources": [
                                     {
                                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                        "line": 14993,
+                                        "line": 15146,
                                         "character": 8
                                     }
                                 ],
@@ -1795,7 +1795,7 @@
                                 }
                             },
                             {
-                                "id": 836,
+                                "id": 844,
                                 "name": "y",
                                 "kind": 1024,
                                 "kindString": "Property",
@@ -1803,7 +1803,7 @@
                                 "sources": [
                                     {
                                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                        "line": 14994,
+                                        "line": 15147,
                                         "character": 8
                                     }
                                 ],
@@ -1813,7 +1813,7 @@
                                 }
                             },
                             {
-                                "id": 837,
+                                "id": 845,
                                 "name": "z",
                                 "kind": 1024,
                                 "kindString": "Property",
@@ -1821,7 +1821,7 @@
                                 "sources": [
                                     {
                                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                        "line": 14995,
+                                        "line": 15148,
                                         "character": 8
                                     }
                                 ],
@@ -1836,16 +1836,16 @@
                                 "title": "Properties",
                                 "kind": 1024,
                                 "children": [
-                                    835,
-                                    836,
-                                    837
+                                    843,
+                                    844,
+                                    845
                                 ]
                             }
                         ],
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 14992,
+                                "line": 15145,
                                 "character": 70
                             }
                         ]
@@ -1886,11 +1886,11 @@
             "group": "10-positions"
         },
         {
-            "id": 840,
+            "id": 848,
             "order": 9999,
             "name": "os.getFocusPoint",
             "reflection": {
-                "id": 840,
+                "id": 848,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -1928,7 +1928,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 841,
+                        "id": 849,
                         "name": "portal",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -1955,7 +1955,7 @@
                 ],
                 "type": {
                     "type": "reference",
-                    "id": 3198,
+                    "id": 3223,
                     "name": "Vector3"
                 }
             },
@@ -1993,11 +1993,11 @@
             "group": "10-positions"
         },
         {
-            "id": 856,
+            "id": 864,
             "order": 9999,
             "name": "os.getPointerDirection",
             "reflection": {
-                "id": 856,
+                "id": 864,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -2040,7 +2040,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 857,
+                        "id": 865,
                         "name": "pointer",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -2071,7 +2071,7 @@
                 ],
                 "type": {
                     "type": "reference",
-                    "id": 3198,
+                    "id": 3223,
                     "name": "Vector3"
                 }
             },
@@ -2114,11 +2114,11 @@
             "group": "10-positions"
         },
         {
-            "id": 844,
+            "id": 852,
             "order": 9999,
             "name": "os.getPointerPosition",
             "reflection": {
-                "id": 844,
+                "id": 852,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -2155,7 +2155,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 845,
+                        "id": 853,
                         "name": "pointer",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -2186,7 +2186,7 @@
                 ],
                 "type": {
                     "type": "reference",
-                    "id": 3198,
+                    "id": 3223,
                     "name": "Vector3"
                 }
             },
@@ -2224,11 +2224,11 @@
             "group": "10-positions"
         },
         {
-            "id": 848,
+            "id": 856,
             "order": 9999,
             "name": "os.getPointerRotation",
             "reflection": {
-                "id": 848,
+                "id": 856,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -2265,7 +2265,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 849,
+                        "id": 857,
                         "name": "pointer",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -2297,14 +2297,14 @@
                 "type": {
                     "type": "reflection",
                     "declaration": {
-                        "id": 850,
+                        "id": 858,
                         "name": "__type",
                         "kind": 65536,
                         "kindString": "Type literal",
                         "flags": {},
                         "children": [
                             {
-                                "id": 851,
+                                "id": 859,
                                 "name": "x",
                                 "kind": 1024,
                                 "kindString": "Property",
@@ -2312,7 +2312,7 @@
                                 "sources": [
                                     {
                                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                        "line": 15088,
+                                        "line": 15241,
                                         "character": 9
                                     }
                                 ],
@@ -2322,7 +2322,7 @@
                                 }
                             },
                             {
-                                "id": 852,
+                                "id": 860,
                                 "name": "y",
                                 "kind": 1024,
                                 "kindString": "Property",
@@ -2330,7 +2330,7 @@
                                 "sources": [
                                     {
                                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                        "line": 15088,
+                                        "line": 15241,
                                         "character": 20
                                     }
                                 ],
@@ -2340,7 +2340,7 @@
                                 }
                             },
                             {
-                                "id": 853,
+                                "id": 861,
                                 "name": "z",
                                 "kind": 1024,
                                 "kindString": "Property",
@@ -2348,7 +2348,7 @@
                                 "sources": [
                                     {
                                         "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                        "line": 15088,
+                                        "line": 15241,
                                         "character": 31
                                     }
                                 ],
@@ -2363,16 +2363,16 @@
                                 "title": "Properties",
                                 "kind": 1024,
                                 "children": [
-                                    851,
-                                    852,
-                                    853
+                                    859,
+                                    860,
+                                    861
                                 ]
                             }
                         ],
                         "sources": [
                             {
                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                "line": 15088,
+                                "line": 15241,
                                 "character": 7
                             }
                         ]
@@ -2413,11 +2413,11 @@
             "group": "10-positions"
         },
         {
-            "id": 576,
+            "id": 584,
             "order": 9999,
             "name": "os.disablePointOfView",
             "reflection": {
-                "id": 576,
+                "id": 584,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -2481,11 +2481,11 @@
             "group": "10-pov"
         },
         {
-            "id": 567,
+            "id": 575,
             "order": 9999,
             "name": "os.enablePointOfView",
             "reflection": {
-                "id": 567,
+                "id": 575,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -2528,7 +2528,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 568,
+                        "id": 576,
                         "name": "center",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -2540,14 +2540,14 @@
                         "type": {
                             "type": "reflection",
                             "declaration": {
-                                "id": 569,
+                                "id": 577,
                                 "name": "__type",
                                 "kind": 65536,
                                 "kindString": "Type literal",
                                 "flags": {},
                                 "children": [
                                     {
-                                        "id": 570,
+                                        "id": 578,
                                         "name": "x",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -2555,7 +2555,7 @@
                                         "sources": [
                                             {
                                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                                "line": 5621,
+                                                "line": 5774,
                                                 "character": 18
                                             }
                                         ],
@@ -2565,7 +2565,7 @@
                                         }
                                     },
                                     {
-                                        "id": 571,
+                                        "id": 579,
                                         "name": "y",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -2573,7 +2573,7 @@
                                         "sources": [
                                             {
                                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                                "line": 5621,
+                                                "line": 5774,
                                                 "character": 29
                                             }
                                         ],
@@ -2583,7 +2583,7 @@
                                         }
                                     },
                                     {
-                                        "id": 572,
+                                        "id": 580,
                                         "name": "z",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -2591,7 +2591,7 @@
                                         "sources": [
                                             {
                                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                                "line": 5621,
+                                                "line": 5774,
                                                 "character": 40
                                             }
                                         ],
@@ -2606,9 +2606,9 @@
                                         "title": "Properties",
                                         "kind": 1024,
                                         "children": [
-                                            570,
-                                            571,
-                                            572
+                                            578,
+                                            579,
+                                            580
                                         ]
                                     }
                                 ]
@@ -2617,7 +2617,7 @@
                         "defaultValue": "..."
                     },
                     {
-                        "id": 573,
+                        "id": 581,
                         "name": "imu",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -2678,11 +2678,11 @@
             "group": "10-pov"
         },
         {
-            "id": 1202,
+            "id": 1210,
             "order": 9999,
             "name": "os.calculateRayFromCamera",
             "reflection": {
-                "id": 1202,
+                "id": 1210,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -2719,7 +2719,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 1203,
+                        "id": 1211,
                         "name": "portal",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -2751,7 +2751,7 @@
                         }
                     },
                     {
-                        "id": 1204,
+                        "id": 1212,
                         "name": "viewportCoordinates",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -2762,7 +2762,7 @@
                         },
                         "type": {
                             "type": "reference",
-                            "id": 3141,
+                            "id": 3166,
                             "name": "Vector2"
                         }
                     }
@@ -2772,7 +2772,7 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "id": 2187,
+                            "id": 2195,
                             "name": "RaycastRay"
                         }
                     ],
@@ -2815,11 +2815,11 @@
             "group": "10-raycast"
         },
         {
-            "id": 1196,
+            "id": 1204,
             "order": 9999,
             "name": "os.raycast",
             "reflection": {
-                "id": 1196,
+                "id": 1204,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -2856,7 +2856,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 1197,
+                        "id": 1205,
                         "name": "portal",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -2888,7 +2888,7 @@
                         }
                     },
                     {
-                        "id": 1198,
+                        "id": 1206,
                         "name": "origin",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -2899,12 +2899,12 @@
                         },
                         "type": {
                             "type": "reference",
-                            "id": 3198,
+                            "id": 3223,
                             "name": "Vector3"
                         }
                     },
                     {
-                        "id": 1199,
+                        "id": 1207,
                         "name": "direction",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -2915,7 +2915,7 @@
                         },
                         "type": {
                             "type": "reference",
-                            "id": 3198,
+                            "id": 3223,
                             "name": "Vector3"
                         }
                     }
@@ -2925,7 +2925,7 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "id": 2184,
+                            "id": 2192,
                             "name": "RaycastResult"
                         }
                     ],
@@ -2968,11 +2968,11 @@
             "group": "10-raycast"
         },
         {
-            "id": 1191,
+            "id": 1199,
             "order": 9999,
             "name": "os.raycastFromCamera",
             "reflection": {
-                "id": 1191,
+                "id": 1199,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -3009,7 +3009,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 1192,
+                        "id": 1200,
                         "name": "portal",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -3041,7 +3041,7 @@
                         }
                     },
                     {
-                        "id": 1193,
+                        "id": 1201,
                         "name": "viewportCoordinates",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -3052,7 +3052,7 @@
                         },
                         "type": {
                             "type": "reference",
-                            "id": 3141,
+                            "id": 3166,
                             "name": "Vector2"
                         }
                     }
@@ -3062,7 +3062,7 @@
                     "typeArguments": [
                         {
                             "type": "reference",
-                            "id": 2184,
+                            "id": 2192,
                             "name": "RaycastResult"
                         }
                     ],
@@ -3105,11 +3105,11 @@
             "group": "10-raycast"
         },
         {
-            "id": 746,
+            "id": 754,
             "order": 9999,
             "name": "os.showConfirm",
             "reflection": {
-                "id": 746,
+                "id": 754,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -3147,7 +3147,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 747,
+                        "id": 755,
                         "name": "options",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -3158,7 +3158,7 @@
                         },
                         "type": {
                             "type": "reference",
-                            "id": 2606,
+                            "id": 2621,
                             "name": "ShowConfirmOptions"
                         }
                     }
@@ -3210,11 +3210,11 @@
             "group": "10-showInput"
         },
         {
-            "id": 736,
+            "id": 744,
             "order": 9999,
             "name": "os.showInput",
             "reflection": {
-                "id": 736,
+                "id": 744,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -3292,7 +3292,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 737,
+                        "id": 745,
                         "name": "currentValue",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -3309,7 +3309,7 @@
                         }
                     },
                     {
-                        "id": 738,
+                        "id": 746,
                         "name": "options",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -3325,7 +3325,7 @@
                             "typeArguments": [
                                 {
                                     "type": "reference",
-                                    "id": 2597,
+                                    "id": 2612,
                                     "name": "ShowInputOptions"
                                 }
                             ],
@@ -3422,11 +3422,11 @@
             "group": "10-showInput"
         },
         {
-            "id": 730,
+            "id": 738,
             "order": 9999,
             "name": "os.showInputForTag",
             "reflection": {
-                "id": 730,
+                "id": 738,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -3473,7 +3473,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 731,
+                        "id": 739,
                         "name": "bot",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -3491,14 +3491,14 @@
                                 },
                                 {
                                     "type": "reference",
-                                    "id": 2709,
+                                    "id": 2734,
                                     "name": "Bot"
                                 }
                             ]
                         }
                     },
                     {
-                        "id": 732,
+                        "id": 740,
                         "name": "tag",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -3513,7 +3513,7 @@
                         }
                     },
                     {
-                        "id": 733,
+                        "id": 741,
                         "name": "options",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -3529,7 +3529,7 @@
                             "typeArguments": [
                                 {
                                     "type": "reference",
-                                    "id": 2597,
+                                    "id": 2612,
                                     "name": "ShowInputOptions"
                                 }
                             ],
@@ -3588,11 +3588,11 @@
             "group": "10-showInput"
         },
         {
-            "id": 452,
+            "id": 460,
             "order": 9999,
             "name": "os.hideTips",
             "reflection": {
-                "id": 452,
+                "id": 460,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -3624,7 +3624,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 453,
+                        "id": 461,
                         "name": "tipIds",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -3695,11 +3695,11 @@
             "group": "10-tip"
         },
         {
-            "id": 445,
+            "id": 453,
             "order": 9999,
             "name": "os.tip",
             "reflection": {
-                "id": 445,
+                "id": 453,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -3747,7 +3747,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 446,
+                        "id": 454,
                         "name": "message",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -3786,7 +3786,7 @@
                         }
                     },
                     {
-                        "id": 447,
+                        "id": 455,
                         "name": "pixelX",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -3803,7 +3803,7 @@
                         }
                     },
                     {
-                        "id": 448,
+                        "id": 456,
                         "name": "pixelY",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -3820,7 +3820,7 @@
                         }
                     },
                     {
-                        "id": 449,
+                        "id": 457,
                         "name": "duration",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -3894,11 +3894,11 @@
             "group": "10-tip"
         },
         {
-            "id": 810,
+            "id": 818,
             "order": 9999,
             "name": "os.addBotDropGrid",
             "reflection": {
-                "id": 810,
+                "id": 818,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -3956,7 +3956,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 811,
+                        "id": 819,
                         "name": "bot",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -3974,14 +3974,14 @@
                                 },
                                 {
                                     "type": "reference",
-                                    "id": 2709,
+                                    "id": 2734,
                                     "name": "Bot"
                                 }
                             ]
                         }
                     },
                     {
-                        "id": 812,
+                        "id": 820,
                         "name": "targets",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -3996,7 +3996,7 @@
                             "type": "array",
                             "elementType": {
                                 "type": "reference",
-                                "id": 2159,
+                                "id": 2167,
                                 "name": "SnapGridTarget"
                             }
                         }
@@ -4061,11 +4061,11 @@
             "group": null
         },
         {
-            "id": 801,
+            "id": 809,
             "order": 9999,
             "name": "os.addBotDropSnap",
             "reflection": {
-                "id": 801,
+                "id": 809,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -4108,7 +4108,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 802,
+                        "id": 810,
                         "name": "bot",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -4126,14 +4126,14 @@
                                 },
                                 {
                                     "type": "reference",
-                                    "id": 2709,
+                                    "id": 2734,
                                     "name": "Bot"
                                 }
                             ]
                         }
                     },
                     {
-                        "id": 803,
+                        "id": 811,
                         "name": "targets",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -4148,7 +4148,7 @@
                             "type": "array",
                             "elementType": {
                                 "type": "reference",
-                                "id": 2563,
+                                "id": 2578,
                                 "name": "SnapTarget"
                             }
                         }
@@ -4198,11 +4198,11 @@
             "group": null
         },
         {
-            "id": 806,
+            "id": 814,
             "order": 9999,
             "name": "os.addDropGrid",
             "reflection": {
-                "id": 806,
+                "id": 814,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -4260,7 +4260,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 807,
+                        "id": 815,
                         "name": "targets",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -4275,7 +4275,7 @@
                             "type": "array",
                             "elementType": {
                                 "type": "reference",
-                                "id": 2159,
+                                "id": 2167,
                                 "name": "SnapGridTarget"
                             }
                         }
@@ -4340,11 +4340,11 @@
             "group": null
         },
         {
-            "id": 797,
+            "id": 805,
             "order": 9999,
             "name": "os.addDropSnap",
             "reflection": {
-                "id": 797,
+                "id": 805,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -4392,7 +4392,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 798,
+                        "id": 806,
                         "name": "targets",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -4407,7 +4407,7 @@
                             "type": "array",
                             "elementType": {
                                 "type": "reference",
-                                "id": 2563,
+                                "id": 2578,
                                 "name": "SnapTarget"
                             }
                         }
@@ -4462,11 +4462,11 @@
             "group": null
         },
         {
-            "id": 815,
+            "id": 823,
             "order": 9999,
             "name": "os.enableCustomDragging",
             "reflection": {
-                "id": 815,
+                "id": 823,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -4521,11 +4521,11 @@
             "group": null
         },
         {
-            "id": 493,
+            "id": 501,
             "order": 9999,
             "name": "os.focusOn-bot",
             "reflection": {
-                "id": 493,
+                "id": 501,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -4593,7 +4593,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 494,
+                        "id": 502,
                         "name": "bot",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -4607,14 +4607,14 @@
                                 },
                                 {
                                     "type": "reference",
-                                    "id": 2709,
+                                    "id": 2734,
                                     "name": "Bot"
                                 }
                             ]
                         }
                     },
                     {
-                        "id": 495,
+                        "id": 503,
                         "name": "options",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -4627,7 +4627,7 @@
                         },
                         "type": {
                             "type": "reference",
-                            "id": 2574,
+                            "id": 2589,
                             "name": "FocusOnOptions"
                         }
                     }
@@ -4709,11 +4709,11 @@
             "group": null
         },
         {
-            "id": 498,
+            "id": 506,
             "order": 9999,
             "name": "os.focusOn-position",
             "reflection": {
-                "id": 498,
+                "id": 506,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -4751,7 +4751,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 499,
+                        "id": 507,
                         "name": "position",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -4759,14 +4759,14 @@
                         "type": {
                             "type": "reflection",
                             "declaration": {
-                                "id": 500,
+                                "id": 508,
                                 "name": "__type",
                                 "kind": 65536,
                                 "kindString": "Type literal",
                                 "flags": {},
                                 "children": [
                                     {
-                                        "id": 501,
+                                        "id": 509,
                                         "name": "x",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -4774,7 +4774,7 @@
                                         "sources": [
                                             {
                                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                                "line": 5226,
+                                                "line": 5379,
                                                 "character": 20
                                             }
                                         ],
@@ -4784,7 +4784,7 @@
                                         }
                                     },
                                     {
-                                        "id": 502,
+                                        "id": 510,
                                         "name": "y",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -4792,7 +4792,7 @@
                                         "sources": [
                                             {
                                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                                "line": 5226,
+                                                "line": 5379,
                                                 "character": 31
                                             }
                                         ],
@@ -4802,7 +4802,7 @@
                                         }
                                     },
                                     {
-                                        "id": 503,
+                                        "id": 511,
                                         "name": "z",
                                         "kind": 1024,
                                         "kindString": "Property",
@@ -4812,7 +4812,7 @@
                                         "sources": [
                                             {
                                                 "fileName": "src/aux-common/runtime/AuxLibrary.ts",
-                                                "line": 5226,
+                                                "line": 5379,
                                                 "character": 42
                                             }
                                         ],
@@ -4827,9 +4827,9 @@
                                         "title": "Properties",
                                         "kind": 1024,
                                         "children": [
-                                            501,
-                                            502,
-                                            503
+                                            509,
+                                            510,
+                                            511
                                         ]
                                     }
                                 ]
@@ -4837,7 +4837,7 @@
                         }
                     },
                     {
-                        "id": 504,
+                        "id": 512,
                         "name": "options",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -4850,7 +4850,7 @@
                         },
                         "type": {
                             "type": "reference",
-                            "id": 2574,
+                            "id": 2589,
                             "name": "FocusOnOptions"
                         }
                     }
@@ -4902,11 +4902,11 @@
             "group": null
         },
         {
-            "id": 699,
+            "id": 707,
             "order": 9999,
             "name": "os.replaceDragBot",
             "reflection": {
-                "id": 699,
+                "id": 707,
                 "name": "__type",
                 "kind": 4096,
                 "kindString": "Call signature",
@@ -4934,7 +4934,7 @@
                 },
                 "parameters": [
                     {
-                        "id": 700,
+                        "id": 708,
                         "name": "bot",
                         "kind": 32768,
                         "kindString": "Parameter",
@@ -4945,7 +4945,7 @@
                         },
                         "type": {
                             "type": "reference",
-                            "id": 2709,
+                            "id": 2734,
                             "name": "Bot"
                         }
                     }
@@ -4981,317 +4981,323 @@
     ],
     "references": {
         "CasualOSError": "types/error",
-        "id-2885": "CasualOSError",
+        "id-2910": "CasualOSError",
         "Quaternion": "types/math/rotations",
-        "id-3275": "Quaternion",
+        "id-3300": "Quaternion",
         "Rotation": "types/math/rotations",
-        "id-3307": "Rotation",
+        "id-3332": "Rotation",
         "Vector2": "types/math/vectors",
-        "id-3141": "Vector2",
+        "id-3166": "Vector2",
         "Vector3": "types/math/vectors",
-        "id-3198": "Vector3",
+        "id-3223": "Vector3",
         "AIChatMessage": "types/ai",
-        "id-2904": "AIChatMessage",
+        "id-2929": "AIChatMessage",
         "AIChatOptions": "types/ai",
-        "id-2705": "AIChatOptions",
+        "id-2720": "AIChatOptions",
+        "AIGenerateSkyboxOptions": "types/ai",
+        "id-2730": "AIGenerateSkyboxOptions",
+        "AIGenerateSkyboxRequest": "types/ai",
+        "id-2526": "AIGenerateSkyboxRequest",
+        "AIGenerateSkyboxResult": "types/ai",
+        "id-2530": "AIGenerateSkyboxResult",
         "AddCountFailure": "types/records/events",
-        "id-3088": "AddCountFailure",
+        "id-3113": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3083": "AddCountSuccess",
+        "id-3108": "AddCountSuccess",
         "AnimateTagOptions": "types/animation",
-        "id-2123": "AnimateTagOptions",
+        "id-2131": "AnimateTagOptions",
         "AttachDebuggerOptions": "types/debuggers/common",
-        "id-2498": "AttachDebuggerOptions",
+        "id-2506": "AttachDebuggerOptions",
         "CasualOSDevice": "types/os",
-        "id-2873": "CasualOSDevice",
+        "id-2898": "CasualOSDevice",
         "CasualOSVersion": "types/os",
-        "id-2865": "CasualOSVersion",
+        "id-2890": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
-        "id-3353": "AxisAndAngle",
+        "id-3378": "AxisAndAngle",
         "BotTagMasks": "types/core",
-        "id-2842": "BotTagMasks",
+        "id-2867": "BotTagMasks",
         "BotTags": "types/core",
-        "id-2757": "BotTags",
+        "id-2782": "BotTags",
         "BotState": "types/core",
-        "id-2855": "BotState",
+        "id-2880": "BotState",
         "CompiledBotListeners": "types/core",
-        "id-2836": "CompiledBotListeners",
+        "id-2861": "CompiledBotListeners",
         "ConvertGeolocationToWhat3WordsOptions": "types/os",
-        "id-2540": "ConvertGeolocationToWhat3WordsOptions",
+        "id-2555": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-2915": "CreatePublicRecordKeyFailure",
+        "id-2940": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-2911": "CreatePublicRecordKeySuccess",
+        "id-2936": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
-        "id-2451": "DebuggerCallFrame",
+        "id-2459": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
-        "id-2486": "DebuggerFunctionLocation",
+        "id-2494": "DebuggerFunctionLocation",
         "DebuggerPause": "types/debuggers/common",
-        "id-2480": "DebuggerPause",
+        "id-2488": "DebuggerPause",
         "DebuggerTagMaskUpdate": "types/debuggers/common",
-        "id-2459": "DebuggerTagMaskUpdate",
+        "id-2467": "DebuggerTagMaskUpdate",
         "DebuggerTagUpdate": "types/debuggers/common",
-        "id-2465": "DebuggerTagUpdate",
+        "id-2473": "DebuggerTagUpdate",
         "DebuggerVariable": "types/debuggers/common",
-        "id-2492": "DebuggerVariable",
+        "id-2500": "DebuggerVariable",
         "Easing": "types/animation",
-        "id-2520": "Easing",
+        "id-2535": "Easing",
         "EnableXROptions": "types/os",
-        "id-2614": "EnableXROptions",
+        "id-2629": "EnableXROptions",
         "EraseDataFailure": "types/records/data",
-        "id-3059": "EraseDataFailure",
+        "id-3084": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-3055": "EraseDataSuccess",
+        "id-3080": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3078": "EraseFileFailure",
+        "id-3103": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3074": "EraseFileSuccess",
+        "id-3099": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
-        "id-3356": "EulerAnglesRotation",
+        "id-3381": "EulerAnglesRotation",
         "FocusOnOptions": "types/os",
-        "id-2574": "FocusOnOptions",
+        "id-2589": "FocusOnOptions",
         "FocusOnRotation": "types/os",
-        "id-2586": "FocusOnRotation",
+        "id-2601": "FocusOnRotation",
         "FormAnimationData": "types/os",
-        "id-2632": "FormAnimationData",
+        "id-2647": "FormAnimationData",
         "FromToRotation": "types/math/rotations",
-        "id-3350": "FromToRotation",
+        "id-3375": "FromToRotation",
         "GenericError": "types/error",
-        "id-2882": "GenericError",
+        "id-2907": "GenericError",
         "GetCountFailure": "types/records/events",
-        "id-3099": "GetCountFailure",
+        "id-3124": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3093": "GetCountSuccess",
+        "id-3118": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-3050": "GetDataFailure",
+        "id-3075": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-3041": "GetDataSuccess",
+        "id-3066": "GetDataSuccess",
         "GetRoomOptionsFailure": "types/os",
-        "id-2213": "GetRoomOptionsFailure",
+        "id-2221": "GetRoomOptionsFailure",
         "GetRoomOptionsSuccess": "types/os",
-        "id-2209": "GetRoomOptionsSuccess",
+        "id-2217": "GetRoomOptionsSuccess",
         "GetRoomRemoteOptionsFailure": "types/os",
-        "id-2256": "GetRoomRemoteOptionsFailure",
+        "id-2264": "GetRoomRemoteOptionsFailure",
         "GetRoomRemoteOptionsSuccess": "types/os",
-        "id-2251": "GetRoomRemoteOptionsSuccess",
+        "id-2259": "GetRoomRemoteOptionsSuccess",
         "GetRoomTrackOptionsFailure": "types/os",
-        "id-2232": "GetRoomTrackOptionsFailure",
+        "id-2240": "GetRoomTrackOptionsFailure",
         "GetRoomTrackOptionsSuccess": "types/os",
-        "id-2227": "GetRoomTrackOptionsSuccess",
+        "id-2235": "GetRoomTrackOptionsSuccess",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3127": "GrantMarkerPermissionFailure",
+        "id-3152": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3125": "GrantMarkerPermissionSuccess",
+        "id-3150": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3113": "GrantRoleFailure",
+        "id-3138": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3111": "GrantRoleSuccess",
+        "id-3136": "GrantRoleSuccess",
         "ImageClassifierOptions": "types/os",
-        "id-2592": "ImageClassifierOptions",
+        "id-2607": "ImageClassifierOptions",
         "InstUpdate": "types/os",
-        "id-2878": "InstUpdate",
+        "id-2903": "InstUpdate",
         "JoinRoomFailure": "types/os",
-        "id-2194": "JoinRoomFailure",
+        "id-2202": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os",
-        "id-2191": "JoinRoomSuccess",
+        "id-2199": "JoinRoomSuccess",
         "LeaveRoomFailure": "types/os",
-        "id-2203": "LeaveRoomFailure",
+        "id-2211": "LeaveRoomFailure",
         "LeaveRoomSuccess": "types/os",
-        "id-2200": "LeaveRoomSuccess",
+        "id-2208": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3069": "ListDataFailure",
+        "id-3094": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3064": "ListDataSuccess",
+        "id-3089": "ListDataSuccess",
         "LookRotation": "types/math/rotations",
-        "id-3373": "LookRotation",
+        "id-3398": "LookRotation",
         "MediaPermissionOptions": "types/os",
-        "id-2611": "MediaPermissionOptions",
+        "id-2626": "MediaPermissionOptions",
         "Debugger": "types/debuggers/debugger",
-        "id-2263": "Debugger",
+        "id-2271": "Debugger",
         "NormalDebuggerOptions": "types/debuggers/common",
-        "id-2470": "NormalDebuggerOptions",
+        "id-2478": "NormalDebuggerOptions",
         "PhotoCameraOptions": "types/camera",
-        "id-2689": "PhotoCameraOptions",
+        "id-2704": "PhotoCameraOptions",
         "ParsedBotLink": "types/core",
-        "id-2861": "ParsedBotLink",
+        "id-2886": "ParsedBotLink",
         "PartialBotState": "types/core",
-        "id-2858": "PartialBotState",
+        "id-2883": "PartialBotState",
         "PausableDebugger": "types/debuggers/pausable-debugger",
-        "id-2319": "PausableDebugger",
+        "id-2327": "PausableDebugger",
         "PausableDebuggerOptions": "types/debuggers/common",
-        "id-2475": "PausableDebuggerOptions",
+        "id-2483": "PausableDebuggerOptions",
         "PauseTrigger": "types/debuggers/common",
-        "id-2438": "PauseTrigger",
+        "id-2446": "PauseTrigger",
         "PauseTriggerOptions": "types/debuggers/common",
-        "id-2446": "PauseTriggerOptions",
+        "id-2454": "PauseTriggerOptions",
         "Photo": "types/camera",
-        "id-2701": "Photo",
+        "id-2716": "Photo",
         "PossiblePauseTriggerLocation": "types/debuggers/common",
-        "id-2433": "PossiblePauseTriggerLocation",
+        "id-2441": "PossiblePauseTriggerLocation",
         "PseudoRandomNumberGenerator": "types/core",
-        "id-2507": "PseudoRandomNumberGenerator",
+        "id-2515": "PseudoRandomNumberGenerator",
         "QuaternionRotation": "types/math/rotations",
-        "id-3366": "QuaternionRotation",
+        "id-3391": "QuaternionRotation",
         "RaycastRay": "types/os",
-        "id-2187": "RaycastRay",
+        "id-2195": "RaycastRay",
         "RaycastResult": "types/os",
-        "id-2184": "RaycastResult",
+        "id-2192": "RaycastResult",
         "RecordActionOptions": "types/records/extra",
-        "id-2523": "RecordActionOptions",
+        "id-2538": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-3036": "RecordDataFailure",
+        "id-3061": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-3032": "RecordDataSuccess",
+        "id-3057": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
-        "id-2154": "RecordFileFailure",
+        "id-2162": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
-        "id-2150": "RecordFileSuccess",
+        "id-2158": "RecordFileSuccess",
         "RecordedFile": "types/experimental",
-        "id-2676": "RecordedFile",
+        "id-2691": "RecordedFile",
         "Recording": "types/experimental",
-        "id-2674": "Recording",
+        "id-2689": "Recording",
         "RecordingOptions": "types/experimental",
-        "id-2681": "RecordingOptions",
+        "id-2696": "RecordingOptions",
         "RegisterPrefixOptions": "types/core",
-        "id-2671": "RegisterPrefixOptions",
+        "id-2686": "RegisterPrefixOptions",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3134": "RevokeMarkerPermissionFailure",
+        "id-3159": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3132": "RevokeMarkerPermissionSuccess",
+        "id-3157": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3120": "RevokeRoleFailure",
+        "id-3145": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3118": "RevokeRoleSuccess",
+        "id-3143": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os",
-        "id-2637": "RoomJoinOptions",
+        "id-2652": "RoomJoinOptions",
         "RoomOptions": "types/os",
-        "id-2646": "RoomOptions",
+        "id-2661": "RoomOptions",
         "RoomRemoteOptions": "types/os",
-        "id-2662": "RoomRemoteOptions",
+        "id-2677": "RoomRemoteOptions",
         "RoomTrackOptions": "types/os",
-        "id-2650": "RoomTrackOptions",
+        "id-2665": "RoomTrackOptions",
         "RuntimeBot": "types/core",
-        "id-2709": "RuntimeBot",
+        "id-2734": "RuntimeBot",
         "RuntimeBotLinks": "types/core",
-        "id-2848": "RuntimeBotLinks",
+        "id-2873": "RuntimeBotLinks",
         "RuntimeBotVars": "types/core",
-        "id-2845": "RuntimeBotVars",
+        "id-2870": "RuntimeBotVars",
         "SequenceRotation": "types/math/rotations",
-        "id-3364": "SequenceRotation",
+        "id-3389": "SequenceRotation",
         "SetRoomOptionsSuccess": "types/os",
-        "id-2218": "SetRoomOptionsSuccess",
+        "id-2226": "SetRoomOptionsSuccess",
         "SetRoomTrackOptions": "types/os",
-        "id-2668": "SetRoomTrackOptions",
+        "id-2683": "SetRoomTrackOptions",
         "SetRoomTrackOptionsFailure": "types/os",
-        "id-2244": "SetRoomTrackOptionsFailure",
+        "id-2252": "SetRoomTrackOptionsFailure",
         "SetRoomTrackOptionsSuccess": "types/os",
-        "id-2239": "SetRoomTrackOptionsSuccess",
+        "id-2247": "SetRoomTrackOptionsSuccess",
         "ShareOptions": "types/os",
-        "id-2570": "ShareOptions",
+        "id-2585": "ShareOptions",
         "ShowChatOptions": "types/os",
-        "id-2564": "ShowChatOptions",
+        "id-2579": "ShowChatOptions",
         "ShowConfirmOptions": "types/os",
-        "id-2606": "ShowConfirmOptions",
+        "id-2621": "ShowConfirmOptions",
         "ShowInputOptions": "types/os",
-        "id-2597": "ShowInputOptions",
+        "id-2612": "ShowInputOptions",
         "SnapAxis": "types/os",
-        "id-2544": "SnapAxis",
+        "id-2559": "SnapAxis",
         "SnapGridTarget": "types/os",
-        "id-2159": "SnapGridTarget",
+        "id-2167": "SnapGridTarget",
         "SnapPoint": "types/os",
-        "id-2556": "SnapPoint",
+        "id-2571": "SnapPoint",
         "SpeakTextOptions": "types/experimental",
-        "id-2503": "SpeakTextOptions",
+        "id-2511": "SpeakTextOptions",
         "StartFormAnimationOptions": "types/os",
-        "id-2616": "StartFormAnimationOptions",
+        "id-2631": "StartFormAnimationOptions",
         "StopFormAnimationOptions": "types/os",
-        "id-2629": "StopFormAnimationOptions",
+        "id-2644": "StopFormAnimationOptions",
         "SuccessfulGeolocation": "types/os",
-        "id-2526": "SuccessfulGeolocation",
+        "id-2541": "SuccessfulGeolocation",
         "SyntheticVoice": "types/experimental",
-        "id-2685": "SyntheticVoice",
+        "id-2700": "SyntheticVoice",
         "TweenOptions": "types/experimental",
-        "id-2500": "TweenOptions",
+        "id-2508": "TweenOptions",
         "UnsuccessfulGeolocation": "types/os",
-        "id-2536": "UnsuccessfulGeolocation",
+        "id-2551": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3106": "UpdateEventRecordFailure",
+        "id-3131": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3104": "UpdateEventRecordSuccess",
+        "id-3129": "UpdateEventRecordSuccess",
         "UploadedFile": "types/os",
-        "id-2180": "UploadedFile",
+        "id-2188": "UploadedFile",
         "WebhookOptions": "types/web",
-        "id-2104": "WebhookOptions",
+        "id-2112": "WebhookOptions",
         "WebhookResult": "types/web",
-        "id-2116": "WebhookResult",
+        "id-2124": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3082": "AddCountResult",
+        "id-3107": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-2920": "AvailablePermissions",
+        "id-2945": "AvailablePermissions",
         "BarcodeFormat": "types/os",
-        "id-2591": "BarcodeFormat",
+        "id-2606": "BarcodeFormat",
         "BotFilter": "types/core",
-        "id-2138": "BotFilter",
+        "id-2146": "BotFilter",
         "BotSpace": "types/core",
-        "id-2832": "BotSpace",
+        "id-2857": "BotSpace",
         "CameraType": "types/os",
-        "id-2590": "CameraType",
+        "id-2605": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-2910": "CreatePublicRecordKeyResult",
+        "id-2935": "CreatePublicRecordKeyResult",
         "EaseMode": "types/animation",
-        "id-2519": "EaseMode",
+        "id-2534": "EaseMode",
         "EaseType": "types/animation",
-        "id-2518": "EaseType",
+        "id-2533": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-3054": "EraseDataResult",
+        "id-3079": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3073": "EraseFileResult",
+        "id-3098": "EraseFileResult",
         "Geolocation": "types/os",
-        "id-2525": "Geolocation",
+        "id-2540": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3092": "GetCountResult",
+        "id-3117": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-3040": "GetDataResult",
+        "id-3065": "GetDataResult",
         "GetRoomOptionsResult": "types/os",
-        "id-2208": "GetRoomOptionsResult",
+        "id-2216": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os",
-        "id-2250": "GetRoomRemoteOptionsResult",
+        "id-2258": "GetRoomRemoteOptionsResult",
         "GetRoomTrackOptionsResult": "types/os",
-        "id-2226": "GetRoomTrackOptionsResult",
+        "id-2234": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3124": "GrantMarkerPermissionResult",
+        "id-3149": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3110": "GrantRoleResult",
+        "id-3135": "GrantRoleResult",
         "JoinRoomResult": "types/os",
-        "id-2190": "JoinRoomResult",
+        "id-2198": "JoinRoomResult",
         "LeaveRoomResult": "types/os",
-        "id-2199": "LeaveRoomResult",
+        "id-2207": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3063": "ListDataResult",
+        "id-3088": "ListDataResult",
         "Mod": "types/core",
-        "id-2133": "Mod",
+        "id-2141": "Mod",
         "PortalType": "types/core",
-        "id-2864": "PortalType",
+        "id-2889": "PortalType",
         "PossiblePauseTriggerStates": "types/debuggers/common",
-        "id-2437": "PossiblePauseTriggerStates",
+        "id-2445": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-3031": "RecordDataResult",
+        "id-3056": "RecordDataResult",
         "RecordFileResult": "types/records/files",
-        "id-2149": "RecordFileResult",
+        "id-2157": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3131": "RevokeMarkerPermissionResult",
+        "id-3156": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3117": "RevokeRoleResult",
+        "id-3142": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os",
-        "id-2217": "SetRoomOptionsResult",
+        "id-2225": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os",
-        "id-2238": "SetRoomTrackOptionsResult",
+        "id-2246": "SetRoomTrackOptionsResult",
         "SnapTarget": "types/os",
-        "id-2563": "SnapTarget",
+        "id-2578": "SnapTarget",
         "TagFilter": "types/core",
-        "id-2134": "TagFilter",
+        "id-2142": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3103": "UpdateEventRecordResult",
+        "id-3128": "UpdateEventRecordResult",
         "animateTag-byOptions": "actions/utility",
         "id-364": "animateTag-byOptions",
         "getbot-tag": "actions/data",
@@ -5319,15 +5325,19 @@
         "whisper": "actions/event",
         "id-263": "whisper",
         "action.perform": "actions/event",
-        "id-1613": "action.perform",
+        "id-1621": "action.perform",
         "action.reject": "actions/event",
-        "id-1617": "action.reject",
+        "id-1625": "action.reject",
         "ai.chat-string": "actions/ai",
         "id-423": "ai.chat-string",
         "ai.chat-message": "actions/ai",
         "id-426": "ai.chat-message",
         "ai.chat-messages": "actions/ai",
         "id-429": "ai.chat-messages",
+        "ai.generateSkybox-string": "actions/ai",
+        "id-434": "ai.generateSkybox-string",
+        "ai.generateSkybox-request": "actions/ai",
+        "id-438": "ai.generateSkybox-request",
         "applyDiffToSnapshot": "actions/data",
         "id-83": "applyDiffToSnapshot",
         "applyMod": "actions/mods",
@@ -5349,51 +5359,51 @@
         "byTag": "actions/bot-filters",
         "id-276": "byTag",
         "bytes.fromBase64String": "actions/bytes",
-        "id-1837": "bytes.fromBase64String",
+        "id-1845": "bytes.fromBase64String",
         "bytes.fromHexString": "actions/bytes",
-        "id-1845": "bytes.fromHexString",
+        "id-1853": "bytes.fromHexString",
         "bytes.toBase64String": "actions/bytes",
-        "id-1833": "bytes.toBase64String",
+        "id-1841": "bytes.toBase64String",
         "bytes.toHexString": "actions/bytes",
-        "id-1841": "bytes.toHexString",
+        "id-1849": "bytes.toHexString",
         "clearAnimations": "actions/utility",
         "id-378": "clearAnimations",
         "clearTagMasks": "actions/data",
         "id-106": "clearTagMasks",
         "crypto.hash-raw": "actions/crypto",
-        "id-1851": "crypto.hash-raw",
+        "id-1859": "crypto.hash-raw",
         "crypto.hash-string": "actions/crypto",
-        "id-1857": "crypto.hash-string",
+        "id-1865": "crypto.hash-string",
         "crypto.hmac-raw": "actions/crypto",
-        "id-1888": "crypto.hmac-raw",
+        "id-1896": "crypto.hmac-raw",
         "crypto.hmac-string": "actions/crypto",
-        "id-1881": "crypto.hmac-string",
+        "id-1889": "crypto.hmac-string",
         "crypto.asymmetric.decrypt": "actions/crypto",
-        "id-1946": "crypto.asymmetric.decrypt",
+        "id-1954": "crypto.asymmetric.decrypt",
         "crypto.asymmetric.encrypt": "actions/crypto",
-        "id-1941": "crypto.asymmetric.encrypt",
+        "id-1949": "crypto.asymmetric.encrypt",
         "crypto.asymmetric.isEncrypted": "actions/crypto",
-        "id-1952": "crypto.asymmetric.isEncrypted",
+        "id-1960": "crypto.asymmetric.isEncrypted",
         "crypto.asymmetric.isKeypair": "actions/crypto",
-        "id-1937": "crypto.asymmetric.isKeypair",
+        "id-1945": "crypto.asymmetric.isKeypair",
         "crypto.asymmetric.keypair": "actions/crypto",
-        "id-1933": "crypto.asymmetric.keypair",
+        "id-1941": "crypto.asymmetric.keypair",
         "crypto.encrypt": "actions/crypto",
-        "id-1917": "crypto.encrypt",
+        "id-1925": "crypto.encrypt",
         "crypto.hmacSha256": "actions/crypto",
-        "id-1907": "crypto.hmacSha256",
+        "id-1915": "crypto.hmacSha256",
         "crypto.hmacSha512": "actions/crypto",
-        "id-1912": "crypto.hmacSha512",
+        "id-1920": "crypto.hmacSha512",
         "crypto.isEncrypted": "actions/crypto",
-        "id-1927": "crypto.isEncrypted",
+        "id-1935": "crypto.isEncrypted",
         "crypto.keypair": "actions/crypto",
-        "id-1956": "crypto.keypair",
+        "id-1964": "crypto.keypair",
         "crypto.sha256": "actions/crypto",
-        "id-1873": "crypto.sha256",
+        "id-1881": "crypto.sha256",
         "crypto.sha512": "actions/crypto",
-        "id-1877": "crypto.sha512",
+        "id-1885": "crypto.sha512",
         "crypto.sign": "actions/crypto",
-        "id-1960": "crypto.sign",
+        "id-1968": "crypto.sign",
         "deleteTagMaskText": "actions/data",
         "id-133": "deleteTagMaskText",
         "deleteTagText": "actions/data",
@@ -5403,25 +5413,25 @@
         "either": "actions/bot-filters",
         "id-318": "either",
         "os.beginAudioRecording": "actions/audio",
-        "id-1671": "os.beginAudioRecording",
+        "id-1679": "os.beginAudioRecording",
         "experiment.beginRecording": "actions/experimental",
-        "id-1678": "experiment.beginRecording",
+        "id-1686": "experiment.beginRecording",
         "os.endAudioRecording": "actions/audio",
-        "id-1675": "os.endAudioRecording",
+        "id-1683": "os.endAudioRecording",
         "experiment.endRecording": "actions/experimental",
-        "id-1682": "experiment.endRecording",
+        "id-1690": "experiment.endRecording",
         "experiment.getAnchorPointPosition": "actions/experimental",
-        "id-1661": "experiment.getAnchorPointPosition",
+        "id-1669": "experiment.getAnchorPointPosition",
         "experiment.getVoices": "actions/experimental",
-        "id-1690": "experiment.getVoices",
+        "id-1698": "experiment.getVoices",
         "experiment.localFormAnimation": "actions/experimental",
-        "id-1634": "experiment.localFormAnimation",
+        "id-1642": "experiment.localFormAnimation",
         "experiment.localPositionTween": "actions/experimental",
-        "id-1639": "experiment.localPositionTween",
+        "id-1647": "experiment.localPositionTween",
         "experiment.localRotationTween": "actions/experimental",
-        "id-1650": "experiment.localRotationTween",
+        "id-1658": "experiment.localRotationTween",
         "experiment.speakText": "actions/experimental",
-        "id-1685": "experiment.speakText",
+        "id-1693": "experiment.speakText",
         "getBotLinks": "actions/data",
         "id-194": "getBotLinks",
         "getBotPosition": "actions/data",
@@ -5453,363 +5463,363 @@
         "insertTagText": "actions/data",
         "id-111": "insertTagText",
         "math.abs": "actions/math",
-        "id-1707": "math.abs",
+        "id-1715": "math.abs",
         "math.addVectors": "actions/math",
-        "id-1777": "math.addVectors",
+        "id-1785": "math.addVectors",
         "math.areClose": "actions/math",
-        "id-1808": "math.areClose",
+        "id-1816": "math.areClose",
         "math.avg": "actions/math",
-        "id-1699": "math.avg",
+        "id-1707": "math.avg",
         "math.degreesToRadians": "actions/math",
-        "id-1733": "math.degreesToRadians",
+        "id-1741": "math.degreesToRadians",
         "math.getAnchorPointOffset": "actions/math",
-        "id-1773": "math.getAnchorPointOffset",
+        "id-1781": "math.getAnchorPointOffset",
         "math.getForwardDirection": "actions/math",
-        "id-1741": "math.getForwardDirection",
+        "id-1749": "math.getForwardDirection",
         "math.getSeededRandomNumberGenerator": "actions/math",
-        "id-1715": "math.getSeededRandomNumberGenerator",
+        "id-1723": "math.getSeededRandomNumberGenerator",
         "math.intersectPlane": "actions/math",
-        "id-1750": "math.intersectPlane",
+        "id-1758": "math.intersectPlane",
         "math.negateVector": "actions/math",
-        "id-1787": "math.negateVector",
+        "id-1795": "math.negateVector",
         "math.normalizeVector": "actions/math",
-        "id-1792": "math.normalizeVector",
+        "id-1800": "math.normalizeVector",
         "math.radiansToDegrees": "actions/math",
-        "id-1737": "math.radiansToDegrees",
+        "id-1745": "math.radiansToDegrees",
         "math.random": "actions/math",
-        "id-1728": "math.random",
+        "id-1736": "math.random",
         "math.randomInt": "actions/math",
-        "id-1723": "math.randomInt",
+        "id-1731": "math.randomInt",
         "math.scaleVector": "actions/math",
-        "id-1802": "math.scaleVector",
+        "id-1810": "math.scaleVector",
         "math.setRandomSeed": "actions/math",
-        "id-1719": "math.setRandomSeed",
+        "id-1727": "math.setRandomSeed",
         "math.sqrt": "actions/math",
-        "id-1703": "math.sqrt",
+        "id-1711": "math.sqrt",
         "math.stdDev": "actions/math",
-        "id-1711": "math.stdDev",
+        "id-1719": "math.stdDev",
         "math.subtractVectors": "actions/math",
-        "id-1782": "math.subtractVectors",
+        "id-1790": "math.subtractVectors",
         "math.sum": "actions/math",
-        "id-1695": "math.sum",
+        "id-1703": "math.sum",
         "math.vectorLength": "actions/math",
-        "id-1797": "math.vectorLength",
+        "id-1805": "math.vectorLength",
         "neighboring": "actions/bot-filters",
         "id-304": "neighboring",
         "not": "actions/bot-filters",
         "id-325": "not",
         "os.attachDebugger": "actions/debuggers",
-        "id-1311": "os.attachDebugger",
+        "id-1319": "os.attachDebugger",
         "os.createDebugger-normal": "actions/debuggers",
-        "id-1300": "os.createDebugger-normal",
+        "id-1308": "os.createDebugger-normal",
         "os.createDebugger-pausable": "actions/debuggers",
-        "id-1304": "os.createDebugger-pausable",
+        "id-1312": "os.createDebugger-pausable",
         "os.focusOn-bot": "actions/portals",
-        "id-493": "os.focusOn-bot",
+        "id-501": "os.focusOn-bot",
         "os.focusOn-position": "actions/portals",
-        "id-498": "os.focusOn-position",
+        "id-506": "os.focusOn-position",
         "os.getExecutingDebugger": "actions/debuggers",
-        "id-1308": "os.getExecutingDebugger",
+        "id-1316": "os.getExecutingDebugger",
         "showChat-options": "actions/os",
-        "id-520": "showChat-options",
+        "id-528": "showChat-options",
         "showChat-placeholder": "actions/os",
-        "id-516": "showChat-placeholder",
+        "id-524": "showChat-placeholder",
         "os.showInput": "actions/portals",
-        "id-736": "os.showInput",
+        "id-744": "os.showInput",
         "os.addBotDropGrid": "actions/portals",
-        "id-810": "os.addBotDropGrid",
+        "id-818": "os.addBotDropGrid",
         "os.addBotDropSnap": "actions/portals",
-        "id-801": "os.addBotDropSnap",
+        "id-809": "os.addBotDropSnap",
         "os.addDropGrid": "actions/portals",
-        "id-806": "os.addDropGrid",
+        "id-814": "os.addDropGrid",
         "os.addDropSnap": "actions/portals",
-        "id-797": "os.addDropSnap",
+        "id-805": "os.addDropSnap",
         "os.applyUpdatesToInst": "actions/os",
-        "id-1254": "os.applyUpdatesToInst",
+        "id-1262": "os.applyUpdatesToInst",
         "os.arSupported": "actions/xr",
-        "id-561": "os.arSupported",
+        "id-569": "os.arSupported",
         "os.bufferFormAddressGLTF": "actions/animations",
-        "id-1207": "os.bufferFormAddressGLTF",
+        "id-1215": "os.bufferFormAddressGLTF",
         "os.bufferSound": "actions/audio",
-        "id-773": "os.bufferSound",
+        "id-781": "os.bufferSound",
         "os.calculateRayFromCamera": "actions/portals",
-        "id-1202": "os.calculateRayFromCamera",
+        "id-1210": "os.calculateRayFromCamera",
         "os.cancelSound": "actions/audio",
-        "id-777": "os.cancelSound",
+        "id-785": "os.cancelSound",
         "os.capturePhoto": "actions/camera",
-        "id-656": "os.capturePhoto",
+        "id-664": "os.capturePhoto",
         "os.closeBarcodeScanner": "actions/barcodes",
-        "id-634": "os.closeBarcodeScanner",
+        "id-642": "os.closeBarcodeScanner",
         "os.closeCircleWipe": "actions/portals",
-        "id-789": "os.closeCircleWipe",
+        "id-797": "os.closeCircleWipe",
         "os.closeImageClassifier": "actions/image-classification",
-        "id-649": "os.closeImageClassifier",
+        "id-657": "os.closeImageClassifier",
         "os.closePhotoCamera": "actions/camera",
-        "id-660": "os.closePhotoCamera",
+        "id-668": "os.closePhotoCamera",
         "os.closeQRCodeScanner": "actions/barcodes",
-        "id-620": "os.closeQRCodeScanner",
+        "id-628": "os.closeQRCodeScanner",
         "os.compileApp": "actions/app",
-        "id-924": "os.compileApp",
+        "id-932": "os.compileApp",
         "os.convertGeolocationToWhat3Words": "actions/os",
-        "id-1187": "os.convertGeolocationToWhat3Words",
+        "id-1195": "os.convertGeolocationToWhat3Words",
         "os.countEvents": "actions/records",
-        "id-1181": "os.countEvents",
+        "id-1189": "os.countEvents",
         "os.createInitializationUpdate": "actions/os",
-        "id-1250": "os.createInitializationUpdate",
+        "id-1258": "os.createInitializationUpdate",
         "os.device": "actions/os",
-        "id-538": "os.device",
+        "id-546": "os.device",
         "os.disableAR": "actions/xr",
-        "id-551": "os.disableAR",
+        "id-559": "os.disableAR",
         "os.disablePointOfView": "actions/portals",
-        "id-576": "os.disablePointOfView",
+        "id-584": "os.disablePointOfView",
         "os.disableVR": "actions/xr",
-        "id-558": "os.disableVR",
+        "id-566": "os.disableVR",
         "os.disableWakeLock": "actions/os",
-        "id-582": "os.disableWakeLock",
+        "id-590": "os.disableWakeLock",
         "os.download": "actions/files",
-        "id-588": "os.download",
+        "id-596": "os.download",
         "os.downloadBots": "actions/files",
-        "id-594": "os.downloadBots",
+        "id-602": "os.downloadBots",
         "os.downloadBotsAsInitialzationUpdate": "actions/files",
-        "id-599": "os.downloadBotsAsInitialzationUpdate",
+        "id-607": "os.downloadBotsAsInitialzationUpdate",
         "os.downloadInst": "actions/files",
-        "id-607": "os.downloadInst",
+        "id-615": "os.downloadInst",
         "os.enableAR": "actions/xr",
-        "id-547": "os.enableAR",
+        "id-555": "os.enableAR",
         "os.enableCustomDragging": "actions/portals",
-        "id-815": "os.enableCustomDragging",
+        "id-823": "os.enableCustomDragging",
         "os.enablePointOfView": "actions/portals",
-        "id-567": "os.enablePointOfView",
+        "id-575": "os.enablePointOfView",
         "os.enableVR": "actions/xr",
-        "id-554": "os.enableVR",
+        "id-562": "os.enableVR",
         "os.eraseData": "actions/records",
-        "id-1124": "os.eraseData",
+        "id-1132": "os.eraseData",
         "os.eraseManualApprovalData": "actions/records",
-        "id-1130": "os.eraseManualApprovalData",
+        "id-1138": "os.eraseManualApprovalData",
         "os.exitFullscreenMode": "actions/portals",
-        "id-464": "os.exitFullscreenMode",
+        "id-472": "os.exitFullscreenMode",
         "os.getAverageFrameRate": "actions/os",
-        "id-872": "os.getAverageFrameRate",
+        "id-880": "os.getAverageFrameRate",
         "os.getCameraPosition": "actions/portals",
-        "id-828": "os.getCameraPosition",
+        "id-836": "os.getCameraPosition",
         "os.getCameraRotation": "actions/portals",
-        "id-832": "os.getCameraRotation",
+        "id-840": "os.getCameraRotation",
         "os.getCurrentDimension": "actions/portals",
-        "id-707": "os.getCurrentDimension",
+        "id-715": "os.getCurrentDimension",
         "os.getCurrentInst": "actions/portals",
-        "id-713": "os.getCurrentInst",
+        "id-721": "os.getCurrentInst",
         "os.getCurrentInstUpdate": "actions/os",
-        "id-1258": "os.getCurrentInstUpdate",
+        "id-1266": "os.getCurrentInstUpdate",
         "os.getData": "actions/records",
-        "id-1106": "os.getData",
+        "id-1114": "os.getData",
         "os.getDimensionalDepth": "actions/portals",
-        "id-726": "os.getDimensionalDepth",
+        "id-734": "os.getDimensionalDepth",
         "os.getFocusPoint": "actions/portals",
-        "id-840": "os.getFocusPoint",
+        "id-848": "os.getFocusPoint",
         "os.getGeolocation": "actions/os",
-        "id-822": "os.getGeolocation",
+        "id-830": "os.getGeolocation",
         "os.getInputList": "actions/portals",
-        "id-865": "os.getInputList",
+        "id-873": "os.getInputList",
         "os.getInputState": "actions/portals",
-        "id-860": "os.getInputState",
+        "id-868": "os.getInputState",
         "os.getInstStateFromUpdates": "actions/os",
-        "id-1246": "os.getInstStateFromUpdates",
+        "id-1254": "os.getInstStateFromUpdates",
         "os.getManualApprovalData": "actions/records",
-        "id-1112": "os.getManualApprovalData",
+        "id-1120": "os.getManualApprovalData",
         "os.getMediaPermission": "actions/os",
-        "id-868": "os.getMediaPermission",
+        "id-876": "os.getMediaPermission",
         "os.getMenuDimension": "actions/portals",
-        "id-716": "os.getMenuDimension",
+        "id-724": "os.getMenuDimension",
         "os.getMiniPortalDimension": "actions/portals",
-        "id-719": "os.getMiniPortalDimension",
+        "id-727": "os.getMiniPortalDimension",
         "os.getPointerDirection": "actions/portals",
-        "id-856": "os.getPointerDirection",
+        "id-864": "os.getPointerDirection",
         "os.getPointerPosition": "actions/portals",
-        "id-844": "os.getPointerPosition",
+        "id-852": "os.getPointerPosition",
         "os.getPointerRotation": "actions/portals",
-        "id-848": "os.getPointerRotation",
+        "id-856": "os.getPointerRotation",
         "os.getPortalDimension": "actions/portals",
-        "id-722": "os.getPortalDimension",
+        "id-730": "os.getPortalDimension",
         "os.getPublicRecordKey": "actions/records",
-        "id-1031": "os.getPublicRecordKey",
+        "id-1039": "os.getPublicRecordKey",
         "os.getRoomOptions": "actions/rooms",
-        "id-890": "os.getRoomOptions",
+        "id-898": "os.getRoomOptions",
         "os.getRoomRemoteOptions": "actions/rooms",
-        "id-905": "os.getRoomRemoteOptions",
+        "id-913": "os.getRoomRemoteOptions",
         "os.getRoomTrackOptions": "actions/rooms",
-        "id-894": "os.getRoomTrackOptions",
+        "id-902": "os.getRoomTrackOptions",
         "os.getSubjectlessPublicRecordKey": "actions/records",
-        "id-1035": "os.getSubjectlessPublicRecordKey",
+        "id-1043": "os.getSubjectlessPublicRecordKey",
         "os.getWakeLockConfiguration": "actions/os",
-        "id-585": "os.getWakeLockConfiguration",
+        "id-593": "os.getWakeLockConfiguration",
         "os.goToDimension": "actions/portals",
-        "id-750": "os.goToDimension",
+        "id-758": "os.goToDimension",
         "os.goToURL": "actions/portals",
-        "id-754": "os.goToURL",
+        "id-762": "os.goToURL",
         "os.grantInstAdminPermission": "actions/records",
-        "id-1053": "os.grantInstAdminPermission",
+        "id-1061": "os.grantInstAdminPermission",
         "os.grantInstRole": "actions/records",
-        "id-1073": "os.grantInstRole",
+        "id-1081": "os.grantInstRole",
         "os.grantRecordMarkerPermission": "actions/records",
-        "id-1039": "os.grantRecordMarkerPermission",
+        "id-1047": "os.grantRecordMarkerPermission",
         "os.grantUserRole": "actions/records",
-        "id-1058": "os.grantUserRole",
+        "id-1066": "os.grantUserRole",
         "os.hasBotInMiniPortal": "actions/portals",
-        "id-781": "os.hasBotInMiniPortal",
+        "id-789": "os.hasBotInMiniPortal",
         "os.hideBarcode": "actions/barcodes",
-        "id-642": "os.hideBarcode",
+        "id-650": "os.hideBarcode",
         "os.hideChat": "actions/os",
-        "id-528": "os.hideChat",
+        "id-536": "os.hideChat",
         "os.hideHtml": "actions/os",
-        "id-471": "os.hideHtml",
+        "id-479": "os.hideHtml",
         "os.hideQRCode": "actions/barcodes",
-        "id-627": "os.hideQRCode",
+        "id-635": "os.hideQRCode",
         "os.hideTips": "actions/portals",
-        "id-452": "os.hideTips",
+        "id-460": "os.hideTips",
         "os.importAUX": "actions/files",
-        "id-691": "os.importAUX",
+        "id-699": "os.importAUX",
         "os.inSheet": "actions/portals",
-        "id-825": "os.inSheet",
+        "id-833": "os.inSheet",
         "os.instStatuses": "actions/os",
-        "id-1275": "os.instStatuses",
+        "id-1283": "os.instStatuses",
         "os.instances": "actions/os",
-        "id-1265": "os.instances",
+        "id-1273": "os.instances",
         "os.isCollaborative": "actions/os",
-        "id-541": "os.isCollaborative",
+        "id-549": "os.isCollaborative",
         "os.isInDimension": "actions/portals",
-        "id-703": "os.isInDimension",
+        "id-711": "os.isInDimension",
         "os.isRecordKey": "actions/records",
-        "id-1088": "os.isRecordKey",
+        "id-1096": "os.isRecordKey",
         "os.joinRoom": "actions/rooms",
-        "id-875": "os.joinRoom",
+        "id-883": "os.joinRoom",
         "os.leaveRoom": "actions/rooms",
-        "id-880": "os.leaveRoom",
+        "id-888": "os.leaveRoom",
         "os.listBuiltinTags": "actions/app",
-        "id-1025": "os.listBuiltinTags",
+        "id-1033": "os.listBuiltinTags",
         "os.listData": "actions/records",
-        "id-1118": "os.listData",
+        "id-1126": "os.listData",
         "os.listFormAnimations": "actions/animations",
-        "id-1222": "os.listFormAnimations",
+        "id-1230": "os.listFormAnimations",
         "os.listInstUpdates": "actions/os",
-        "id-1243": "os.listInstUpdates",
+        "id-1251": "os.listInstUpdates",
         "os.loadInst": "actions/os",
-        "id-683": "os.loadInst",
+        "id-691": "os.loadInst",
         "os.log": "actions/os",
-        "id-818": "os.log",
+        "id-826": "os.log",
         "os.meetCommand": "actions/os",
-        "id-1288": "os.meetCommand",
+        "id-1296": "os.meetCommand",
         "os.meetFunction": "actions/os",
-        "id-1293": "os.meetFunction",
+        "id-1301": "os.meetFunction",
         "os.openBarcodeScanner": "actions/barcodes",
-        "id-630": "os.openBarcodeScanner",
+        "id-638": "os.openBarcodeScanner",
         "os.openCircleWipe": "actions/portals",
-        "id-793": "os.openCircleWipe",
+        "id-801": "os.openCircleWipe",
         "os.openDevConsole": "actions/os",
-        "id-762": "os.openDevConsole",
+        "id-770": "os.openDevConsole",
         "os.openImageClassifier": "actions/image-classification",
-        "id-645": "os.openImageClassifier",
+        "id-653": "os.openImageClassifier",
         "os.openPhotoCamera": "actions/camera",
-        "id-652": "os.openPhotoCamera",
+        "id-660": "os.openPhotoCamera",
         "os.openQRCodeScanner": "actions/barcodes",
-        "id-616": "os.openQRCodeScanner",
+        "id-624": "os.openQRCodeScanner",
         "os.openURL": "actions/portals",
-        "id-758": "os.openURL",
+        "id-766": "os.openURL",
         "os.parseBotsFromData": "actions/files",
-        "id-695": "os.parseBotsFromData",
+        "id-703": "os.parseBotsFromData",
         "os.playSound": "actions/audio",
-        "id-769": "os.playSound",
+        "id-777": "os.playSound",
         "os.raycast": "actions/portals",
-        "id-1196": "os.raycast",
+        "id-1204": "os.raycast",
         "os.raycastFromCamera": "actions/portals",
-        "id-1191": "os.raycastFromCamera",
+        "id-1199": "os.raycastFromCamera",
         "os.recordData": "actions/records",
-        "id-1092": "os.recordData",
+        "id-1100": "os.recordData",
         "os.recordEvent": "actions/records",
-        "id-1175": "os.recordEvent",
+        "id-1183": "os.recordEvent",
         "os.recordFile": "actions/records",
-        "id-1136": "os.recordFile",
+        "id-1144": "os.recordFile",
         "os.recordManualApprovalData": "actions/records",
-        "id-1099": "os.recordManualApprovalData",
+        "id-1107": "os.recordManualApprovalData",
         "os.registerApp": "actions/app",
-        "id-915": "os.registerApp",
+        "id-923": "os.registerApp",
         "os.registerTagPrefix": "actions/app",
-        "id-910": "os.registerTagPrefix",
+        "id-918": "os.registerTagPrefix",
         "os.remoteCount": "actions/os",
-        "id-1268": "os.remoteCount",
+        "id-1276": "os.remoteCount",
         "os.remotes": "actions/os",
-        "id-1240": "os.remotes",
+        "id-1248": "os.remotes",
         "os.replaceDragBot": "actions/portals",
-        "id-699": "os.replaceDragBot",
+        "id-707": "os.replaceDragBot",
         "os.requestAuthBot": "actions/records",
-        "id-1028": "os.requestAuthBot",
+        "id-1036": "os.requestAuthBot",
         "os.requestFullscreenMode": "actions/portals",
-        "id-461": "os.requestFullscreenMode",
+        "id-469": "os.requestFullscreenMode",
         "os.requestWakeLock": "actions/os",
-        "id-579": "os.requestWakeLock",
+        "id-587": "os.requestWakeLock",
         "os.revokeInstRole": "actions/records",
-        "id-1081": "os.revokeInstRole",
+        "id-1089": "os.revokeInstRole",
         "os.revokeRecordMarkerPermission": "actions/records",
-        "id-1046": "os.revokeRecordMarkerPermission",
+        "id-1054": "os.revokeRecordMarkerPermission",
         "os.revokeUserRole": "actions/records",
-        "id-1066": "os.revokeUserRole",
+        "id-1074": "os.revokeUserRole",
         "os.run": "actions/os",
-        "id-531": "os.run",
+        "id-539": "os.run",
         "os.setClipboard": "actions/os",
-        "id-474": "os.setClipboard",
+        "id-482": "os.setClipboard",
         "os.setRoomOptions": "actions/rooms",
-        "id-885": "os.setRoomOptions",
+        "id-893": "os.setRoomOptions",
         "os.setRoomTrackOptions": "actions/rooms",
-        "id-899": "os.setRoomTrackOptions",
+        "id-907": "os.setRoomTrackOptions",
         "os.share": "actions/os",
-        "id-785": "os.share",
+        "id-793": "os.share",
         "os.showBarcode": "actions/barcodes",
-        "id-637": "os.showBarcode",
+        "id-645": "os.showBarcode",
         "os.showConfirm": "actions/portals",
-        "id-746": "os.showConfirm",
+        "id-754": "os.showConfirm",
         "os.showHtml": "actions/os",
-        "id-467": "os.showHtml",
+        "id-475": "os.showHtml",
         "os.showInputForTag": "actions/portals",
-        "id-730": "os.showInputForTag",
+        "id-738": "os.showInputForTag",
         "os.showJoinCode": "actions/barcodes",
-        "id-456": "os.showJoinCode",
+        "id-464": "os.showJoinCode",
         "os.showQRCode": "actions/barcodes",
-        "id-623": "os.showQRCode",
+        "id-631": "os.showQRCode",
         "os.showUploadAuxFile": "actions/files",
-        "id-610": "os.showUploadAuxFile",
+        "id-618": "os.showUploadAuxFile",
         "os.showUploadFiles": "actions/files",
-        "id-613": "os.showUploadFiles",
+        "id-621": "os.showUploadFiles",
         "os.sleep": "actions/os",
-        "id-436": "os.sleep",
+        "id-444": "os.sleep",
         "os.startFormAnimation": "actions/animations",
-        "id-1211": "os.startFormAnimation",
+        "id-1219": "os.startFormAnimation",
         "os.stopFormAnimation": "actions/animations",
-        "id-1217": "os.stopFormAnimation",
+        "id-1225": "os.stopFormAnimation",
         "os.tip": "actions/portals",
-        "id-445": "os.tip",
+        "id-453": "os.tip",
         "os.toast": "actions/os",
-        "id-440": "os.toast",
+        "id-448": "os.toast",
         "os.totalRemoteCount": "actions/os",
-        "id-1272": "os.totalRemoteCount",
+        "id-1280": "os.totalRemoteCount",
         "os.unloadInst": "actions/os",
-        "id-687": "os.unloadInst",
+        "id-695": "os.unloadInst",
         "os.unregisterApp": "actions/app",
-        "id-920": "os.unregisterApp",
+        "id-928": "os.unregisterApp",
         "os.version": "actions/os",
-        "id-535": "os.version",
+        "id-543": "os.version",
         "os.vrSupported": "actions/xr",
-        "id-564": "os.vrSupported",
+        "id-572": "os.vrSupported",
         "os.agreedUponTime": "actions/time",
-        "id-664": "os.agreedUponTime",
+        "id-672": "os.agreedUponTime",
         "os.deadReckoningTime": "actions/time",
-        "id-672": "os.deadReckoningTime",
+        "id-680": "os.deadReckoningTime",
         "os.instLatency": "actions/time",
-        "id-666": "os.instLatency",
+        "id-674": "os.instLatency",
         "os.instTimeOffset": "actions/time",
-        "id-668": "os.instTimeOffset",
+        "id-676": "os.instTimeOffset",
         "os.instTimeOffsetSpread": "actions/time",
-        "id-670": "os.instTimeOffsetSpread",
+        "id-678": "os.instTimeOffsetSpread",
         "os.localTime": "actions/time",
-        "id-662": "os.localTime",
+        "id-670": "os.localTime",
         "removeTags": "actions/data",
         "id-141": "removeTags",
         "renameTag": "actions/data",
@@ -5825,11 +5835,11 @@
         "uuid": "actions/data",
         "id-355": "uuid",
         "web.get": "actions/web",
-        "id-2003": "web.get",
+        "id-2011": "web.get",
         "web.hook": "actions/web",
-        "id-2014": "web.hook",
+        "id-2022": "web.hook",
         "web.post": "actions/web",
-        "id-2008": "web.post",
+        "id-2016": "web.post",
         "configBot": "actions/os",
         "id-418": "configBot"
     }

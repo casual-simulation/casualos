@@ -66,6 +66,8 @@ export {
     SpeakTextApiOptions,
 
     PseudoRandomNumberGenerator,
+    AIGenerateSkyboxRequest,
+    AIGenerateSkyboxResult,
 } from '../../../src/aux-common/runtime/AuxLibrary';
 export { 
     EaseType,
@@ -110,7 +112,11 @@ export {
     SyntheticVoice,
     OpenPhotoCameraOptions,
     Photo,
+    
     AIChatOptions,
+
+    AIGenerateSkyboxOptions,
+    AIGenerateSkyboxBlockadeLabsOptions,
 } from '../../../src/aux-common/bots/BotEvents';
 export { 
     RuntimeBot,

@@ -335,6 +335,9 @@ import {
     Photo,
     AIChatOptions,
     aiChat,
+    AIGenerateSkyboxOptions,
+    aiGenerateSkybox,
+    AIGenerateSkyboxAction,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -703,6 +706,47 @@ export interface WebhookOptions {
      * The number of miliseconds to wait between retry requests.
      */
     retryAfterMs?: number;
+}
+
+/**
+ * Defines an interface that represents a request for {@link ai.generateSkybox-request}.
+ *
+ * @dochash types/ai
+ * @docname AIGenerateSkyboxRequest
+ */
+export interface AIGenerateSkyboxRequest {
+    /**
+     * The prompt that describes what the generated skybox should look like.
+     */
+    prompt: string;
+
+    /**
+     * The prompt that that describes what the generated skybox should avoid looking like.
+     */
+    negativePrompt?: string;
+
+    /**
+     * The options that should be included in the request.
+     */
+    options?: AIGenerateSkyboxOptions;
+}
+
+/**
+ * Defines an interface that represents the result from {@link ai.generateSkybox-request}.
+ *
+ * @dochash types/ai
+ * @docname AIGenerateSkyboxResult
+ */
+export interface AIGenerateSkyboxResult {
+    /**
+     * The URL that the generated skybox is located at.
+     */
+    fileUrl: string;
+
+    /**
+     * The URL that the thumbnail for the generated skybox is located at.
+     */
+    thumbnailUrl?: string;
 }
 
 /**
@@ -3025,6 +3069,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
             ai: {
                 chat,
+                generateSkybox,
             },
 
             os: {
@@ -4866,6 +4911,109 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 return choice?.content;
             }
             return choice;
+        });
+        (final as any)[ORIGINAL_OBJECT] = action;
+        return final;
+    }
+
+    /**
+     * Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given prompt.
+     *
+     * Returns a promise that resolves with a URL to the generated image that can be used as the {@tag formAddress} of a bot that has {@tag form} set to `skybox`.
+     *
+     * @param prompt the string that describes what the skybox should look like.
+     * @param negativePrompt the string that describes what the skybox should avoid looking like.
+     * @param options the additional options that should be used.
+     *
+     * @example Generate a skybox from a prompt.
+     * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.");
+     * masks.formAddress = skybox;
+     *
+     * @example Generate a skybox from a prompt and a negative prompt
+     * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.", "A skybox with a red sky and brown grass.");
+     * masks.formAddress = skybox;
+     *
+     * @dochash actions/ai
+     * @docname ai.generateSkybox
+     * @docid ai.generateSkybox-string
+     */
+    function generateSkybox(
+        prompt: string,
+        negativePrompt?: string,
+        options?: AIGenerateSkyboxOptions
+    ): Promise<string>;
+
+    /**
+     * Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given request object.
+     *
+     * Returns a promise that resolves with an object that contains a URL to the generated image that can be used as the {@tag formAddress} of a bot that has {@tag form} set to `skybox`.
+     *
+     * @param request the request object that describes what the skybox should look like.
+     *
+     * @example Generate a skybox from a prompt.
+     * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.");
+     * masks.formAddress = skybox;
+     *
+     * @example Generate a skybox from a prompt and a negative prompt
+     * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.", "A skybox with a red sky and brown grass.");
+     * masks.formAddress = skybox;
+     *
+     * @dochash actions/ai
+     * @docname ai.generateSkybox
+     * @docid ai.generateSkybox-request
+     */
+    function generateSkybox(
+        request: AIGenerateSkyboxRequest
+    ): Promise<AIGenerateSkyboxResult>;
+
+    /**
+     * Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given request object.
+     *
+     * Returns a promise that resolves with an object that contains a URL to the generated image that can be used as the {@tag formAddress} of a bot that has {@tag form} set to `skybox`.
+     *
+     * @param request the request object that describes what the skybox should look like.
+     * @param negativePrompt the string that describes what the skybox should avoid looking like.
+     * @param options the additional options that should be used.
+     *
+     * @example Generate a skybox from a prompt.
+     * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.");
+     * masks.formAddress = skybox;
+     *
+     * @example Generate a skybox from a prompt and a negative prompt
+     * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.", "A skybox with a red sky and brown grass.");
+     * masks.formAddress = skybox;
+     */
+    function generateSkybox(
+        prompt: string | AIGenerateSkyboxRequest,
+        negativePrompt?: string,
+        options?: AIGenerateSkyboxOptions
+    ): Promise<string | AIGenerateSkyboxResult> {
+        const task = context.createTask();
+
+        const returnObject = typeof prompt === 'object';
+        let action: AIGenerateSkyboxAction;
+        if (typeof prompt === 'object') {
+            action = aiGenerateSkybox(
+                prompt.prompt,
+                prompt.negativePrompt,
+                prompt.options,
+                task.taskId
+            );
+        } else {
+            action = aiGenerateSkybox(
+                prompt,
+                negativePrompt,
+                options,
+                task.taskId
+            );
+        }
+
+        const final = addAsyncResultAction(task, action).then((result) => {
+            if (returnObject) {
+                return result;
+            } else {
+                return result.fileUrl;
+            }
         });
         (final as any)[ORIGINAL_OBJECT] = action;
         return final;
