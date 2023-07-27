@@ -495,6 +495,8 @@ describe('getStatusCode()', () => {
         ['user_is_banned', 403] as const,
         ['rate_limit_exceeded', 429] as const,
         ['not_authorized', 403] as const,
+        ['not_subscribed', 403] as const,
+        ['invalid_subscription_tier', 403] as const,
     ];
 
     it.each(cases)('should map error code %s to %s', (code, expectedStatus) => {
