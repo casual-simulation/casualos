@@ -1,5 +1,29 @@
 # CasualOS Changelog
 
+## V3.2.2
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the `ai.chat()` function as an easy way to interface with [OpenAI's Chat API](https://platform.openai.com/docs/guides/gpt/chat-completions-api).
+    -   When configured on the server, users will have the ability to interface with an OpenAI GPT model without having to manage or store their own OpenAI API Key.
+    -   `ai.chat()` accepts two parameters:
+        -   `message` - This is the message (string or object) or list of messages (objects) that the AI model should respond to.
+        -   `options` - Is optional and are the options that should be used for the operation.
+        -   Returns a promise that resolves when the AI has responded to the message(s). The resolved value will be a string if `message` was a string. Otherwise, it will be an object.
+        -   See the documentation for more info.
+    -   (DevOps Only) To configure AI Chat features, use the following `SERVER_CONFIG` properties:
+        -   `openai` - This should be an object with the following properties:
+            -   `apiKey` - The OpenAI API Key that should be used for requests.
+            -   `maxTokens` - The maximum number of tokens that can be used in a request. If omitted, then there is no limit.
+        -   `ai` - This should be an object with the following properties:
+            -   `chat` - Optional. If omitted, then AI Chat features will be disabled. It should be an object with the following properties:
+                -   `provider` - Set this to `"openai"`. This tells the server to use OpenAI for `ai.chat()`.
+                -   `defaultModel` - Set this to the model that should be used by default. For OpenAI, see this [list of supported models](https://platform.openai.com/docs/models/model-endpoint-compatibility).
+                -   `allowedModels` - The array of model names that are allowed to be used by `ai.chat()`.
+                -   `allowedSubscriptionTiers` - The array of subscription tiers that enable `ai.chat()` for a user. If a user is not subscribed to one of the listed tiers, then they will not be allowed to use `ai.chat()`. Set this to `true` to allow all subscription tiers.
+
 ## V3.2.1
 
 #### Date: 7/26/2023
