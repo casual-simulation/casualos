@@ -1427,7 +1427,10 @@ export class RecordsHttpServer {
             model: z.string().nonempty().optional(),
             messages: z.array(AI_CHAT_MESSAGE_SCHEMA).nonempty(),
             instances: z.array(z.string()).nonempty().optional(),
-            temperature: z.number().min(0).max(1).optional(),
+            temperature: z.number().min(0).max(2).optional(),
+            topP: z.number().optional(),
+            presencePenalty: z.number().min(-2).max(2).optional(),
+            frequencyPenalty: z.number().min(-2).max(2).optional(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);
@@ -1436,7 +1439,7 @@ export class RecordsHttpServer {
             return returnZodError(parseResult.error);
         }
 
-        const { model, messages, temperature, instances } = parseResult.data;
+        const { model, messages, instances, ...options } = parseResult.data;
 
         const sessionKeyValidation = await this._validateSessionKey(request);
         if (sessionKeyValidation.success === false) {
@@ -1447,9 +1450,9 @@ export class RecordsHttpServer {
         }
 
         const result = await this._aiController.chat({
+            ...options,
             model,
             messages: messages as AIChatMessage[],
-            temperature: temperature,
             userId: sessionKeyValidation.userId,
             userSubscriptionTier: sessionKeyValidation.subscriptionTier,
         });

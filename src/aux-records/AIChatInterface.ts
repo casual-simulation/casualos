@@ -31,6 +31,25 @@ export interface AIChatInterfaceRequest {
     temperature: number;
 
     /**
+     * The nucleus sampling probability.
+     */
+    topP?: number;
+
+    /**
+     * The presence penalty.
+     *
+     * Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.
+     */
+    presencePenalty?: number;
+
+    /**
+     * The frequency penalty.
+     *
+     * Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+     */
+    frequencyPenalty?: number;
+
+    /**
      * The ID of the user that is making the request.
      */
     userId: string;
