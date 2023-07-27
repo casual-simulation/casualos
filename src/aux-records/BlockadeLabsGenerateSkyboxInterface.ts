@@ -47,19 +47,31 @@ export class BlockadeLabsGenerateSkyboxInterface
             }
         }
 
+        console.log(
+            `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox]: Generating skybox...`
+        );
         const response = await axios.post(
-            'https://www.blockadelabs.com/api/v1/skybox',
+            'https://backend.blockadelabs.com/api/v1/skybox',
             params,
             {}
         );
 
         const id: number = response.data.id;
-        for (let i = 0; i < 3; i++) {
-            const seconds = i === 0 ? 1 : i === 1 ? 2 : 10;
+        console.log(
+            `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}]: ID recieved.`
+        );
+        for (let i = 0; i < 4; i++) {
+            const seconds = i === 0 ? 10 : i === 1 ? 20 : i === 2 ? 40 : 60;
 
+            console.log(
+                `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}]: Waiting ${seconds} seconds...`
+            );
             await wait(seconds);
             const status = await this._downloadStatus(id);
 
+            console.log(
+                `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}]: Status: ${status.status}`
+            );
             if (isFinished(status)) {
                 if (isError(status)) {
                     return {
@@ -68,6 +80,9 @@ export class BlockadeLabsGenerateSkyboxInterface
                         errorMessage: status.error_message,
                     };
                 } else {
+                    console.log(
+                        `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}]: Skybox Generated.`
+                    );
                     return {
                         success: true,
                         fileUrl: status.file_url,
@@ -76,6 +91,10 @@ export class BlockadeLabsGenerateSkyboxInterface
                 }
             }
         }
+
+        console.error(
+            `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}] Timed out.`
+        );
 
         return {
             success: false,
@@ -88,9 +107,14 @@ export class BlockadeLabsGenerateSkyboxInterface
         id: number
     ): Promise<BlockadeLabsSkyboxStatus> {
         const response = await axios.get(
-            `https://backend.blockadelabs.com/api/v1/imagine/requests/${id}`
+            `https://backend.blockadelabs.com/api/v1/imagine/requests/${id}`,
+            {
+                headers: {
+                    'x-api-key': this._options.apiKey,
+                },
+            }
         );
-        return response.data;
+        return response.data.request;
     }
 }
 
