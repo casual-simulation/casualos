@@ -17,12 +17,17 @@
         -   `openai` - This should be an object with the following properties:
             -   `apiKey` - The OpenAI API Key that should be used for requests.
             -   `maxTokens` - The maximum number of tokens that can be used in a request. If omitted, then there is no limit.
+        -   `blockadeLabs` - This should be an object with the following properties:
+            -   `apiKey` - The Blockade Labs API Key that should be used for requests.
         -   `ai` - This should be an object with the following properties:
             -   `chat` - Optional. If omitted, then AI Chat features will be disabled. It should be an object with the following properties:
                 -   `provider` - Set this to `"openai"`. This tells the server to use OpenAI for `ai.chat()`.
                 -   `defaultModel` - Set this to the model that should be used by default. For OpenAI, see this [list of supported models](https://platform.openai.com/docs/models/model-endpoint-compatibility).
                 -   `allowedModels` - The array of model names that are allowed to be used by `ai.chat()`.
-                -   `allowedSubscriptionTiers` - The array of subscription tiers that enable `ai.chat()` for a user. If a user is not subscribed to one of the listed tiers, then they will not be allowed to use `ai.chat()`. Set this to `true` to allow all subscription tiers.
+                -   `allowedSubscriptionTiers` - The array of subscription tiers that enable `ai.chat()` for a user. If a user is not subscribed to one of the listed tiers, then they will not be allowed to use `ai.chat()`. Set this to `true` to allow all users (even ones that are not subscribed).
+            -   `generateSkybox` - Optional. If omitted, then AI Skybox features will be disabled. It should be an object with the following properties:
+                -   `provider` - Set this to `"blockadeLabs"`. This tells the server to use Blockade Labs for `ai.generateSkybox()`.
+                -   `allowedSubscriptionTiers` - The array of subscription tiers that enable `ai.generateSkybox()` for a user. If a user is not subscribed to one of the listed tiers, then they will not be allowed to use `ai.generateSkybox()`. Set this to `true` to allow all users (even ones that are not subscribed).
 
 ## V3.2.1
 
