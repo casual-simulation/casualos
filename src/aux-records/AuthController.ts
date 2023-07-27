@@ -608,11 +608,17 @@ export class AuthController {
                 }
             }
 
+            const { subscriptionId, subscriptionTier } =
+                this._getSubscriptionInfo(userInfo);
+
             return {
                 success: true,
                 userId: session.userId,
                 sessionId: session.sessionId,
                 allSessionsRevokedTimeMs: userInfo.allSessionRevokeTimeMs,
+
+                subscriptionId: subscriptionId ?? undefined,
+                subscriptionTier: subscriptionTier ?? undefined,
             };
         } catch (err) {
             console.error(
@@ -1012,14 +1018,45 @@ export class AuthController {
                 );
             }
 
-            const hasActiveSubscription =
-                this._forceAllowSubscriptionFeatures ||
-                isActiveSubscription(result.subscriptionStatus);
+            const { hasActiveSubscription, subscriptionTier: tier } =
+                this._getSubscriptionInfo(result);
 
-            let sub: SubscriptionConfiguration['subscriptions'][0];
-            if (result.subscriptionId) {
+            return {
+                success: true,
+                userId: result.id,
+                name: result.name,
+                email: result.email,
+                phoneNumber: result.phoneNumber,
+                avatarPortraitUrl: result.avatarPortraitUrl,
+                avatarUrl: result.avatarUrl,
+                hasActiveSubscription: hasActiveSubscription,
+                subscriptionTier: hasActiveSubscription ? tier : null,
+                openAiKey: hasActiveSubscription ? result.openAiKey : null,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error ocurred while getting user info',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    private _getSubscriptionInfo(user: AuthUser) {
+        const hasActiveSubscription =
+            this._forceAllowSubscriptionFeatures ||
+            isActiveSubscription(user.subscriptionStatus);
+
+        let tier: string = null;
+        let sub: SubscriptionConfiguration['subscriptions'][0] = null;
+        if (hasActiveSubscription) {
+            if (user.subscriptionId) {
                 sub = this._subscriptionConfig?.subscriptions.find(
-                    (s) => s.id === result.subscriptionId
+                    (s) => s.id === user.subscriptionId
                 );
             }
             if (!sub) {
@@ -1042,34 +1079,17 @@ export class AuthController {
                 }
             }
 
-            let tier = 'beta';
+            tier = 'beta';
             if (sub && sub.tier) {
                 tier = sub.tier;
             }
-
-            return {
-                success: true,
-                userId: result.id,
-                name: result.name,
-                email: result.email,
-                phoneNumber: result.phoneNumber,
-                avatarPortraitUrl: result.avatarPortraitUrl,
-                avatarUrl: result.avatarUrl,
-                hasActiveSubscription,
-                subscriptionTier: hasActiveSubscription ? tier : null,
-                openAiKey: hasActiveSubscription ? result.openAiKey : null,
-            };
-        } catch (err) {
-            console.error(
-                '[AuthController] Error ocurred while getting user info',
-                err
-            );
-            return {
-                success: false,
-                errorCode: 'server_error',
-                errorMessage: 'A server error occurred.',
-            };
         }
+
+        return {
+            hasActiveSubscription,
+            subscriptionId: sub?.id,
+            subscriptionTier: tier,
+        };
     }
 
     /**
@@ -1369,6 +1389,16 @@ export interface ValidateSessionKeySuccess {
     sessionId: string;
 
     allSessionsRevokedTimeMs?: number;
+
+    /**
+     * The subscription ID for the user.
+     */
+    subscriptionTier?: string;
+
+    /**
+     * The ID of the subscription that the user is subscribed to.
+     */
+    subscriptionId?: string;
 }
 
 export interface ValidateSessionKeyFailure {

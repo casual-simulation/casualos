@@ -226,6 +226,7 @@ import {
     getCurrentInstUpdate,
     getFile,
     openPhotoCamera,
+    aiChat,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -300,6 +301,7 @@ import {
 } from '../partitions/PartitionUtils';
 import { YjsPartitionImpl } from '../partitions';
 import { applyUpdate } from 'yjs';
+import { CasualOSError } from './CasualOSError';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -2376,6 +2378,250 @@ describe('AuxLibrary', () => {
             bot2 = createDummyRuntimeBot('test2');
 
             addToContext(context, bot1, bot2);
+        });
+
+        describe('ai.chat()', () => {
+            it('should emit a AIChatAction', () => {
+                const promise: any = library.api.ai.chat('hello, world!');
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support message objects', () => {
+                const promise: any = library.api.ai.chat({
+                    role: 'user',
+                    content: 'hello, world!',
+                });
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support message arrays', () => {
+                const promise: any = library.api.ai.chat([
+                    {
+                        role: 'system',
+                        content: 'You are a helpful assistant.',
+                    },
+                    {
+                        role: 'user',
+                        content: 'hello, world!',
+                    },
+                ]);
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'system',
+                            content: 'You are a helpful assistant.',
+                        },
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', () => {
+                const promise: any = library.api.ai.chat(
+                    [
+                        {
+                            role: 'system',
+                            content: 'You are a helpful assistant.',
+                        },
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    {
+                        preferredModel: 'gpt-3.5-turbo',
+                        temperature: 0.5,
+                    }
+                );
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'system',
+                            content: 'You are a helpful assistant.',
+                        },
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    {
+                        preferredModel: 'gpt-3.5-turbo',
+                        temperature: 0.5,
+                    },
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return the first chat choice', async () => {
+                let result: any;
+                const promise: any = library.api.ai.chat({
+                    role: 'user',
+                    content: 'hello, world!',
+                });
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello to you!',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual({
+                    role: 'assistant',
+                    content: 'Hello to you!',
+                    finishReason: 'stop',
+                });
+            });
+
+            it('should return a string when a string was given', async () => {
+                let result: any;
+                const promise: any = library.api.ai.chat('hello, world!');
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello to you!',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual('Hello to you!');
+            });
+
+            it('should throw a CasualOSError when not successful', async () => {
+                let result: any;
+                let error: any;
+                const promise: any = library.api.ai.chat('hello, world!');
+
+                promise.then(
+                    (r: any) => (result = r),
+                    (err: any) => (error = err)
+                );
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'This operation is not supported.',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toBeUndefined();
+                expect(error).toEqual(
+                    new CasualOSError({
+                        errorCode: 'not_supported',
+                        errorMessage: 'This operation is not supported.',
+                    })
+                );
+            });
         });
 
         describe('os.toast()', () => {

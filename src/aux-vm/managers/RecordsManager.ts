@@ -26,6 +26,7 @@ import {
     GrantRoleAction,
     RevokeRoleAction,
     GetFileAction,
+    AIChatAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -176,6 +177,8 @@ export class RecordsManager {
                 this._grantRole(event);
             } else if (event.type === 'revoke_role') {
                 this._revokeRole(event);
+            } else if (event.type === 'ai_chat') {
+                this._aiChat(event);
             }
         }
     }
@@ -1242,6 +1245,60 @@ export class RecordsManager {
         }
     }
 
+    private async _aiChat(event: AIChatAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            if (!info.token) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_logged_in',
+                            errorMessage: 'The user is not logged in.',
+                        })
+                    );
+                }
+                return;
+            }
+
+            const { endpoint, ...rest } = event.options;
+            let requestData: any = {
+                messages: event.messages,
+                options: rest,
+            };
+
+            if (hasValue(this._helper.inst)) {
+                requestData.instances = [this._helper.inst];
+            }
+
+            const result: AxiosResponse<RecordDataResult> = await axios.post(
+                await this._publishUrl(info.auth, '/api/v2/ai/chat'),
+                requestData,
+                {
+                    ...this._axiosOptions,
+                    headers: info.headers,
+                }
+            );
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error sending chat message:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
     private async _resolveInfoForEvent(
         event:
             | RecordFileAction
@@ -1257,12 +1314,14 @@ export class RecordsManager {
             | RevokeRecordMarkerPermissionAction
             | GrantInstAdminPermissionAction
             | GrantRoleAction
-            | RevokeRoleAction,
+            | RevokeRoleAction
+            | AIChatAction,
         authenticateIfNotLoggedIn: boolean = true
     ): Promise<{
         error: boolean;
         auth: AuthHelperInterface;
         headers: { [key: string]: string };
+        token: string;
     }> {
         const auth = this._getAuthFromEvent(event.options);
 
@@ -1280,10 +1339,11 @@ export class RecordsManager {
                 error: true,
                 auth: null,
                 headers: null,
+                token: null,
             };
         }
 
-        let token: string;
+        let token: string = null;
         let headers: { [key: string]: string } = {};
         if ('recordKey' in event && isRecordKey(event.recordKey)) {
             const policy = await auth.getRecordKeyPolicy(event.recordKey);
@@ -1307,6 +1367,7 @@ export class RecordsManager {
                         error: true,
                         auth: null,
                         headers: null,
+                        token: null,
                     };
                 }
 
@@ -1323,6 +1384,7 @@ export class RecordsManager {
             error: false,
             auth,
             headers,
+            token,
         };
     }
 

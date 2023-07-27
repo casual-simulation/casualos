@@ -98,6 +98,10 @@ if (config.rateLimit && config.rateLimit.windowMs && config.rateLimit.maxHits) {
     builder.useRedisRateLimit();
 }
 
+if (config.openai && config.ai) {
+    builder.useOpenAI();
+}
+
 const { server, filesStore } = builder.build();
 
 async function handleEventBridgeEvent(event: EventBridgeEvent<any, any>) {

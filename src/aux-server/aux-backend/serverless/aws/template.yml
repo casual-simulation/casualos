@@ -272,6 +272,11 @@ Resources:
                     Properties:
                         Path: /api/{userId}/subscription/manage
                         Method: POST
+                AiChat:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/ai/chat
+                        Method: POST
                 StripeWebhook:
                     Type: Api
                     Properties:

@@ -29,3 +29,6 @@ export * from './PolicyController';
 export * from './PolicyPermissions';
 export * from './PolicyStore';
 export * from './MemoryPolicyStore';
+
+export * from './AIChatInterface';
+export * from './OpenAIChatInterface';
