@@ -227,6 +227,7 @@ import {
     getFile,
     openPhotoCamera,
     aiChat,
+    aiGenerateSkybox,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2620,6 +2621,86 @@ describe('AuxLibrary', () => {
                         errorCode: 'not_supported',
                         errorMessage: 'This operation is not supported.',
                     })
+                );
+            });
+        });
+
+        describe('ai.generateSkybox()', () => {
+            it('should emit a AIGenerateSkyboxAction', () => {
+                const promise: any =
+                    library.api.ai.generateSkybox('cartoon clouds');
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    undefined,
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support negative prompts', () => {
+                const promise: any = library.api.ai.generateSkybox(
+                    'cartoon clouds',
+                    'realistic'
+                );
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    'realistic',
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support request objects', () => {
+                const promise: any = library.api.ai.generateSkybox({
+                    prompt: 'cartoon clouds',
+                    negativePrompt: 'realistic',
+                });
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    'realistic',
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should resolve with the address that was generated', () => {
+                let result: string;
+                const promise: any =
+                    library.api.ai.generateSkybox('cartoon clouds');
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    undefined,
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        skybox: {
+                            id: 123,
+                        },
+                    },
+                    false
                 );
             });
         });

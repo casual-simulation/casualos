@@ -110,7 +110,11 @@ export {
     SyntheticVoice,
     OpenPhotoCameraOptions,
     Photo,
+    
     AIChatOptions,
+
+    AIGenerateSkyboxOptions,
+    AIGenerateSkyboxBlockadeLabsOptions
 } from '../../../src/aux-common/bots/BotEvents';
 export { 
     RuntimeBot,
