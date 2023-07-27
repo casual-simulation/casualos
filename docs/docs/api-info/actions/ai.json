@@ -1,509 +1,387 @@
 {
-    "hash": "types/records/key",
-    "pageTitle": "Record Key Types",
-    "pageDescription": "Types that are used for actions that manage record keys.",
-    "pageSidebarLabel": "Record Keys",
+    "hash": "actions/ai",
+    "pageTitle": "AI Actions",
+    "pageDescription": "AI actions are functions that make it easier to work with the AI.",
+    "pageSidebarLabel": "AI",
     "contents": [
         {
-            "id": 2910,
-            "order": 0,
-            "name": "CreatePublicRecordKeyResult",
+            "id": 426,
+            "order": 9999,
+            "name": "ai.chat-message",
             "reflection": {
-                "id": 2910,
-                "name": "CreatePublicRecordKeyResult",
-                "kind": 4194304,
-                "kindString": "Type alias",
+                "id": 426,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that represents the result of a \"create public record key\" operation.",
+                    "shortText": "Sends a chat message to the AI.\nReturns a promise that contains the response from the AI.\nThrows a [`CasualOSError`](ref:CasualOSError) if an error occurs while sending the message.",
+                    "text": "This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.\n",
                     "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Send a message to the AI and log the response.\nconst response = await ai.chat({\n    role: \"user\",\n    content: \"Hello!\"\n});\nconsole.log(`${response.role}: ${response.content}`);\n"
+                        },
                         {
                             "tag": "dochash",
                             "paramName": "",
-                            "text": "types/records/key"
+                            "text": "actions/ai"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "ai.chat"
+                        },
+                        {
+                            "tag": "docid",
+                            "paramName": "",
+                            "text": "ai.chat-message\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 427,
+                        "name": "message",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The message that should be sent to the AI.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2904,
+                            "name": "AIChatMessage"
+                        }
+                    },
+                    {
+                        "id": 428,
+                        "name": "options",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The options that should be used.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2705,
+                            "name": "AIChatOptions"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 2904,
+                            "name": "AIChatMessage"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Sends a chat message to the AI.\nReturns a promise that contains the response from the AI.\nThrows a {@link CasualOSError} if an error occurs while sending the message.",
+                "text": "This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Send a message to the AI and log the response.\nconst response = await ai.chat({\n    role: \"user\",\n    content: \"Hello!\"\n});\nconsole.log(`${response.role}: ${response.content}`);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/ai"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "ai.chat"
+                    },
+                    {
+                        "tagName": "docid",
+                        "paramName": "",
+                        "text": "ai.chat-message\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 429,
+            "order": 9999,
+            "name": "ai.chat-messages",
+            "reflection": {
+                "id": 429,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Sends a chat message to the AI.\nReturns a promise that contains the response from the AI.\nThrows a [`CasualOSError`](ref:CasualOSError) if an error occurs while sending the message.",
+                    "text": "This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Send a message to the AI and log the response.\nconst response = await ai.chat([\n     {\n         role: \"system\",\n         content: \"You are a helpful assistant.\"\n     },\n    {\n         role: \"user\",\n         content: \"Hello!\"\n    }\n]);\nconsole.log(`${response.role}: ${response.content}`);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Build a basic chat bot.\nconst messages = [\n     {\n         role: \"system\",\n         content: \"You are a helpful assistant.\"\n     },\n];\n\nwhile(true) {\n     const userInput = await os.showInput();\n     if (!userInput) {\n         break;\n     }\n     messages.push({\n         role: \"user\",\n         content: userInput\n     });\n\n     const response = await ai.chat(messages);\n     messages.push(response);\n     os.toast(response.content);\n}\n\nos.toast(\"Goodbye!\");\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/ai"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "ai.chat"
+                        },
+                        {
+                            "tag": "docid",
+                            "paramName": "",
+                            "text": "ai.chat-messages\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 430,
+                        "name": "messages",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "reference",
+                                "id": 2904,
+                                "name": "AIChatMessage"
+                            }
+                        }
+                    },
+                    {
+                        "id": 431,
+                        "name": "options",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The options that should be used.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2705,
+                            "name": "AIChatOptions"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "typeArguments": [
+                        {
+                            "type": "reference",
+                            "id": 2904,
+                            "name": "AIChatMessage"
+                        }
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
+                }
+            },
+            "comment": {
+                "shortText": "Sends a chat message to the AI.\nReturns a promise that contains the response from the AI.\nThrows a {@link CasualOSError} if an error occurs while sending the message.",
+                "text": "This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Send a message to the AI and log the response.\nconst response = await ai.chat([\n     {\n         role: \"system\",\n         content: \"You are a helpful assistant.\"\n     },\n    {\n         role: \"user\",\n         content: \"Hello!\"\n    }\n]);\nconsole.log(`${response.role}: ${response.content}`);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Build a basic chat bot.\nconst messages = [\n     {\n         role: \"system\",\n         content: \"You are a helpful assistant.\"\n     },\n];\n\nwhile(true) {\n     const userInput = await os.showInput();\n     if (!userInput) {\n         break;\n     }\n     messages.push({\n         role: \"user\",\n         content: userInput\n     });\n\n     const response = await ai.chat(messages);\n     messages.push(response);\n     os.toast(response.content);\n}\n\nos.toast(\"Goodbye!\");\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/ai"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "ai.chat"
+                    },
+                    {
+                        "tagName": "docid",
+                        "paramName": "",
+                        "text": "ai.chat-messages\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 423,
+            "order": 9999,
+            "name": "ai.chat-string",
+            "reflection": {
+                "id": 423,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Sends a chat message to the AI.\nReturns a promise that contains the response from the AI.\nThrows a [`CasualOSError`](ref:CasualOSError) if an error occurs while sending the message.",
+                    "text": "This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Send a message to the AI and log the response.\nconst response = await ai.chat(\"Hello!\");\nconsole.log(response);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/ai"
                         },
                         {
                             "tag": "doctitle",
                             "paramName": "",
-                            "text": "Record Key Types"
+                            "text": "AI Actions"
                         },
                         {
                             "tag": "docsidebar",
                             "paramName": "",
-                            "text": "Record Keys"
+                            "text": "AI"
                         },
                         {
                             "tag": "docdescription",
                             "paramName": "",
-                            "text": "Types that are used for actions that manage record keys."
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-key"
-                        },
-                        {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "0"
+                            "text": "AI actions are functions that make it easier to work with the AI."
                         },
                         {
                             "tag": "docname",
                             "paramName": "",
-                            "text": "CreatePublicRecordKeyResult\n"
+                            "text": "ai.chat"
+                        },
+                        {
+                            "tag": "docid",
+                            "paramName": "",
+                            "text": "ai.chat-string\n"
                         }
                     ]
                 },
-                "sources": [
+                "parameters": [
                     {
-                        "fileName": "src/aux-records/RecordsController.ts",
-                        "line": 485,
-                        "character": 12
+                        "id": 424,
+                        "name": "message",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The message that should be sent to the AI.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 425,
+                        "name": "options",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "The options that should be used.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2705,
+                            "name": "AIChatOptions"
+                        }
                     }
                 ],
                 "type": {
-                    "type": "union",
-                    "types": [
+                    "type": "reference",
+                    "typeArguments": [
                         {
-                            "type": "reference",
-                            "id": 2911,
-                            "name": "CreatePublicRecordKeySuccess"
-                        },
-                        {
-                            "type": "reference",
-                            "id": 2915,
-                            "name": "CreatePublicRecordKeyFailure"
+                            "type": "intrinsic",
+                            "name": "string"
                         }
-                    ]
+                    ],
+                    "qualifiedName": "Promise",
+                    "package": "typescript",
+                    "name": "Promise"
                 }
             },
             "comment": {
-                "shortText": "Defines an interface that represents the result of a \"create public record key\" operation.",
-                "text": "",
+                "shortText": "Sends a chat message to the AI.\nReturns a promise that contains the response from the AI.\nThrows a {@link CasualOSError} if an error occurs while sending the message.",
+                "text": "This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.\n",
                 "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Send a message to the AI and log the response.\nconst response = await ai.chat(\"Hello!\");\nconsole.log(response);\n"
+                    },
                     {
                         "tagName": "dochash",
                         "paramName": "",
-                        "text": "types/records/key"
+                        "text": "actions/ai"
                     },
                     {
                         "tagName": "doctitle",
                         "paramName": "",
-                        "text": "Record Key Types"
+                        "text": "AI Actions"
                     },
                     {
                         "tagName": "docsidebar",
                         "paramName": "",
-                        "text": "Record Keys"
+                        "text": "AI"
                     },
                     {
                         "tagName": "docdescription",
                         "paramName": "",
-                        "text": "Types that are used for actions that manage record keys."
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "01-key"
-                    },
-                    {
-                        "tagName": "docorder",
-                        "paramName": "",
-                        "text": "0"
+                        "text": "AI actions are functions that make it easier to work with the AI."
                     },
                     {
                         "tagName": "docname",
                         "paramName": "",
-                        "text": "CreatePublicRecordKeyResult\n"
+                        "text": "ai.chat"
+                    },
+                    {
+                        "tagName": "docid",
+                        "paramName": "",
+                        "text": "ai.chat-string\n"
                     }
                 ]
             },
-            "group": "01-key"
-        },
-        {
-            "id": 2911,
-            "order": 1,
-            "name": "CreatePublicRecordKeySuccess",
-            "reflection": {
-                "id": 2911,
-                "name": "CreatePublicRecordKeySuccess",
-                "kind": 256,
-                "kindString": "Interface",
-                "flags": {},
-                "comment": {
-                    "shortText": "Defines an interface that represents a successful \"create public record key\" result.",
-                    "tags": [
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/key"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-key"
-                        },
-                        {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "1"
-                        },
-                        {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "CreatePublicRecordKeySuccess\n"
-                        }
-                    ]
-                },
-                "children": [
-                    {
-                        "id": 2913,
-                        "name": "recordKey",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "The key that was created.",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/RecordsController.ts",
-                                "line": 506,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "intrinsic",
-                            "name": "string"
-                        }
-                    },
-                    {
-                        "id": 2914,
-                        "name": "recordName",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "The name of the record the key was created for.",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/RecordsController.ts",
-                                "line": 511,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "intrinsic",
-                            "name": "string"
-                        }
-                    },
-                    {
-                        "id": 2912,
-                        "name": "success",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "Whether the operation was successful.",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/RecordsController.ts",
-                                "line": 501,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "literal",
-                            "value": true
-                        }
-                    }
-                ],
-                "groups": [
-                    {
-                        "title": "Properties",
-                        "kind": 1024,
-                        "children": [
-                            2913,
-                            2914,
-                            2912
-                        ]
-                    }
-                ],
-                "sources": [
-                    {
-                        "fileName": "src/aux-records/RecordsController.ts",
-                        "line": 497,
-                        "character": 17
-                    }
-                ]
-            },
-            "comment": {
-                "shortText": "Defines an interface that represents a successful \"create public record key\" result.",
-                "text": "",
-                "tags": [
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "types/records/key"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "01-key"
-                    },
-                    {
-                        "tagName": "docorder",
-                        "paramName": "",
-                        "text": "1"
-                    },
-                    {
-                        "tagName": "docname",
-                        "paramName": "",
-                        "text": "CreatePublicRecordKeySuccess\n"
-                    }
-                ]
-            },
-            "group": "01-key"
-        },
-        {
-            "id": 2915,
-            "order": 2,
-            "name": "CreatePublicRecordKeyFailure",
-            "reflection": {
-                "id": 2915,
-                "name": "CreatePublicRecordKeyFailure",
-                "kind": 256,
-                "kindString": "Interface",
-                "flags": {},
-                "comment": {
-                    "shortText": "Defines an interface that represents a failed \"create public record key\" result.",
-                    "tags": [
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/key"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-key"
-                        },
-                        {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "2"
-                        },
-                        {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "CreatePublicRecordKeyFailure\n"
-                        }
-                    ]
-                },
-                "children": [
-                    {
-                        "id": 2917,
-                        "name": "errorCode",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "The type of error that occurred.",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/RecordsController.ts",
-                                "line": 531,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "union",
-                            "types": [
-                                {
-                                    "type": "literal",
-                                    "value": "server_error"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "not_logged_in"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "not_supported"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "unauthorized_to_create_record_key"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "unacceptable_session_key"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "invalid_key"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "session_expired"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "user_is_banned"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "invalid_policy"
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "id": 2918,
-                        "name": "errorMessage",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "The error message.",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/RecordsController.ts",
-                                "line": 542,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "intrinsic",
-                            "name": "string"
-                        }
-                    },
-                    {
-                        "id": 2919,
-                        "name": "errorReason",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "The unique reason as to why the error occurred.",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/RecordsController.ts",
-                                "line": 547,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "union",
-                            "types": [
-                                {
-                                    "type": "literal",
-                                    "value": "server_error"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "not_logged_in"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "not_supported"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "invalid_policy"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "user_denied"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "record_owned_by_different_user"
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "id": 2916,
-                        "name": "success",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "Whether the operation was successful.",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/RecordsController.ts",
-                                "line": 526,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "literal",
-                            "value": false
-                        }
-                    }
-                ],
-                "groups": [
-                    {
-                        "title": "Properties",
-                        "kind": 1024,
-                        "children": [
-                            2917,
-                            2918,
-                            2919,
-                            2916
-                        ]
-                    }
-                ],
-                "sources": [
-                    {
-                        "fileName": "src/aux-records/RecordsController.ts",
-                        "line": 522,
-                        "character": 17
-                    }
-                ]
-            },
-            "comment": {
-                "shortText": "Defines an interface that represents a failed \"create public record key\" result.",
-                "text": "",
-                "tags": [
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "types/records/key"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "01-key"
-                    },
-                    {
-                        "tagName": "docorder",
-                        "paramName": "",
-                        "text": "2"
-                    },
-                    {
-                        "tagName": "docname",
-                        "paramName": "",
-                        "text": "CreatePublicRecordKeyFailure\n"
-                    }
-                ]
-            },
-            "group": "01-key"
+            "group": null
         }
     ],
     "references": {

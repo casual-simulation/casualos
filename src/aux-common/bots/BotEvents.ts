@@ -24,7 +24,10 @@ import {
 } from '@casual-simulation/causal-trees';
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
-import type { RecordFileFailure } from '@casual-simulation/aux-records';
+import type {
+    AIChatMessage,
+    RecordFileFailure,
+} from '@casual-simulation/aux-records';
 import { AuxRuntime } from '../runtime/AuxRuntime';
 import { InstUpdate } from './StoredAux';
 
@@ -259,7 +262,8 @@ export type AsyncActions =
     | HtmlAppMethodCallAction
     | AttachRuntimeAction
     | DetachRuntimeAction
-    | OpenPhotoCameraAction;
+    | OpenPhotoCameraAction
+    | AIChatAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -679,6 +683,72 @@ export interface ShellAction extends Action {
      * The script that should be run.
      */
     script: string;
+}
+
+/**
+ * An event that is used to chat with an AI.
+ */
+export interface AIChatAction extends AsyncAction {
+    type: 'ai_chat';
+
+    /**
+     * The options for the action.
+     */
+    options: AIChatOptions;
+
+    /**
+     * The list of messages comprising the conversation so far.
+     */
+    messages: AIChatMessage[];
+}
+
+/**
+ * Defines an interface that represents options for {@link ai.chat-string}.
+ *
+ * @dochash types/ai
+ * @doctitle AI Types
+ * @docsidebar AI
+ * @docdescription Types that are used in AI actions.
+ * @docname AIChatOptions
+ */
+export interface AIChatOptions extends RecordActionOptions {
+    /**
+     * The model that should be used.
+     *
+     * If not specified, then a default will be used.
+     *
+     * Currently, the following models are supported:
+     *
+     * - `gpt-4`
+     * - `gpt-3.5-turbo`
+     */
+    preferredModel?: 'gpt-4' | 'gpt-3.5-turbo';
+
+    /**
+     * The temperature that should be used.
+     *
+     * If not specified, then a default will be used.
+     */
+    temperature?: number;
+
+    /**
+     * The nucleus sampling probability.
+     */
+    topP?: number;
+
+    /**
+     * The presence penalty.
+     *
+     * Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.
+     */
+    presencePenalty?: number;
+
+    /**
+     * The frequency penalty.
+     *
+     * Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+     */
+    frequencyPenalty?: number;
 }
 
 /**
@@ -5188,6 +5258,26 @@ export function toast(
         type: 'show_toast',
         message: message,
         duration: 2000,
+    };
+}
+
+/**
+ * Creates a new AIChatAction.
+ *
+ * @param messages The messages to include in the chat.
+ * @param options The options for the chat.
+ * @param taskId The ID of the async task.
+ */
+export function aiChat(
+    messages: AIChatMessage[],
+    options?: AIChatOptions,
+    taskId?: number | string
+): AIChatAction {
+    return {
+        type: 'ai_chat',
+        messages,
+        options: options ?? {},
+        taskId,
     };
 }
 

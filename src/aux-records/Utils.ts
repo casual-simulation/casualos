@@ -393,6 +393,10 @@ export function getStatusCode(
             return 429;
         } else if (response.errorCode === 'not_authorized') {
             return 403;
+        } else if (response.errorCode === 'not_subscribed') {
+            return 403;
+        } else if (response.errorCode === 'invalid_subscription_tier') {
+            return 403;
         } else {
             return 400;
         }

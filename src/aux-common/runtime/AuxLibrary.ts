@@ -333,6 +333,8 @@ import {
     openPhotoCamera as calcOpenPhotoCamera,
     OpenPhotoCameraOptions,
     Photo,
+    AIChatOptions,
+    aiChat,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -410,7 +412,10 @@ import {
     GrantRoleResult,
     RevokeRoleResult,
 } from '@casual-simulation/aux-records';
-import type { AvailablePermissions } from '@casual-simulation/aux-records';
+import type {
+    AIChatMessage,
+    AvailablePermissions,
+} from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
 import * as hooks from 'preact/hooks';
@@ -432,6 +437,7 @@ import {
     mergeInstUpdates as calcMergeInstUpdates,
 } from '../partitions/PartitionUtils';
 import type { AxiosResponse, AxiosError } from 'axios';
+import { CasualOSError } from './CasualOSError';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -3017,6 +3023,10 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 return null;
             },
 
+            ai: {
+                chat,
+            },
+
             os: {
                 [UNCOPIABLE]: true,
 
@@ -4723,6 +4733,143 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     }
 
     // Actions
+
+    /**
+     * Sends a chat message to the AI.
+     * Returns a promise that contains the response from the AI.
+     * Throws a {@link CasualOSError} if an error occurs while sending the message.
+     *
+     * This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.
+     *
+     * @param message The message that should be sent to the AI.
+     * @param options The options that should be used.
+     *
+     * @example Send a message to the AI and log the response.
+     * const response = await ai.chat("Hello!");
+     * console.log(response);
+     *
+     * @dochash actions/ai
+     * @doctitle AI Actions
+     * @docsidebar AI
+     * @docdescription AI actions are functions that make it easier to work with the AI.
+     * @docname ai.chat
+     * @docid ai.chat-string
+     */
+    function chat(message: string, options?: AIChatOptions): Promise<string>;
+
+    /**
+     * Sends a chat message to the AI.
+     * Returns a promise that contains the response from the AI.
+     * Throws a {@link CasualOSError} if an error occurs while sending the message.
+     *
+     * This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.
+     *
+     * @param message The message that should be sent to the AI.
+     * @param options The options that should be used.
+     *
+     * @example Send a message to the AI and log the response.
+     * const response = await ai.chat({
+     *     role: "user",
+     *     content: "Hello!"
+     * });
+     * console.log(`${response.role}: ${response.content}`);
+     *
+     * @dochash actions/ai
+     * @docname ai.chat
+     * @docid ai.chat-message
+     */
+    function chat(
+        message: AIChatMessage,
+        options?: AIChatOptions
+    ): Promise<AIChatMessage>;
+
+    /**
+     * Sends a chat message to the AI.
+     * Returns a promise that contains the response from the AI.
+     * Throws a {@link CasualOSError} if an error occurs while sending the message.
+     *
+     * This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.
+     *
+     * @param message The message that should be sent to the AI.
+     * @param options The options that should be used.
+     *
+     * @example Send a message to the AI and log the response.
+     * const response = await ai.chat([
+     *      {
+     *          role: "system",
+     *          content: "You are a helpful assistant."
+     *      },
+     *     {
+     *          role: "user",
+     *          content: "Hello!"
+     *     }
+     * ]);
+     * console.log(`${response.role}: ${response.content}`);
+     *
+     * @example Build a basic chat bot.
+     * const messages = [
+     *      {
+     *          role: "system",
+     *          content: "You are a helpful assistant."
+     *      },
+     * ];
+     *
+     * while(true) {
+     *      const userInput = await os.showInput();
+     *      if (!userInput) {
+     *          break;
+     *      }
+     *      messages.push({
+     *          role: "user",
+     *          content: userInput
+     *      });
+     *
+     *      const response = await ai.chat(messages);
+     *      messages.push(response);
+     *      os.toast(response.content);
+     * }
+     *
+     * os.toast("Goodbye!");
+     *
+     * @dochash actions/ai
+     * @docname ai.chat
+     * @docid ai.chat-messages
+     */
+    function chat(
+        messages: AIChatMessage[],
+        options?: AIChatOptions
+    ): Promise<AIChatMessage>;
+
+    function chat(
+        messages: string | AIChatMessage | AIChatMessage[],
+        options?: AIChatOptions
+    ): Promise<AIChatMessage | string> {
+        const task = context.createTask();
+
+        const returnString = typeof messages === 'string';
+        const inputMessages: AIChatMessage[] = [];
+        if (typeof messages === 'string') {
+            inputMessages.push({
+                role: 'user',
+                content: messages,
+            });
+        } else if (Array.isArray(messages)) {
+            inputMessages.push(...messages);
+        } else if (typeof messages === 'object') {
+            inputMessages.push(messages);
+        }
+
+        const action = aiChat(inputMessages, options, task.taskId);
+        const final = addAsyncResultAction(task, action).then((result) => {
+            const choice = result.choices[0];
+            if (returnString) {
+                return choice?.content;
+            }
+            return choice;
+        });
+        (final as any)[ORIGINAL_OBJECT] = action;
+        return final;
+    }
 
     /**
      * Shows a temporary "toast" notification to the player at the bottom of the screen with the given message.
@@ -15522,6 +15669,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let promise = task.promise;
         (<any>promise)[ORIGINAL_OBJECT] = action;
         return promise;
+    }
+
+    async function addAsyncResultAction<T extends AsyncActions>(
+        task: AsyncTask,
+        action: T
+    ) {
+        const result = await addAsyncAction(task, action);
+        if (!result.success) {
+            throw new CasualOSError(result);
+        }
+        return result;
     }
 
     function getVersion1DownloadState(state: BotsState): StoredAuxVersion1 {

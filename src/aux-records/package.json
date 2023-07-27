@@ -41,6 +41,7 @@
         "@casual-simulation/rate-limit-redis": "^3.1.29",
         "livekit-server-sdk": "1.0.2",
         "tweetnacl": "1.0.3",
-        "zod": "3.21.4"
+        "zod": "3.21.4",
+        "axios": "0.25.0"
     }
 }

@@ -1,372 +1,534 @@
 {
-    "hash": "types/records/key",
-    "pageTitle": "Record Key Types",
-    "pageDescription": "Types that are used for actions that manage record keys.",
-    "pageSidebarLabel": "Record Keys",
+    "hash": "types/error",
+    "pageTitle": "Error Types",
+    "pageDescription": "Types that contain information about errors that can occur in CasualOS.",
+    "pageSidebarLabel": "Error",
     "contents": [
         {
-            "id": 2910,
-            "order": 0,
-            "name": "CreatePublicRecordKeyResult",
+            "id": 2885,
+            "order": 9999,
+            "name": "CasualOSError",
             "reflection": {
-                "id": 2910,
-                "name": "CreatePublicRecordKeyResult",
-                "kind": 4194304,
-                "kindString": "Type alias",
+                "id": 2885,
+                "name": "CasualOSError",
+                "kind": 128,
+                "kindString": "Class",
                 "flags": {},
                 "comment": {
-                    "shortText": "Defines an interface that represents the result of a \"create public record key\" operation.",
+                    "shortText": "Defines a class that represents a generic CasualOS error.",
                     "tags": [
                         {
                             "tag": "dochash",
                             "paramName": "",
-                            "text": "types/records/key"
+                            "text": "types/error"
                         },
                         {
                             "tag": "doctitle",
                             "paramName": "",
-                            "text": "Record Key Types"
+                            "text": "Error Types"
                         },
                         {
                             "tag": "docsidebar",
                             "paramName": "",
-                            "text": "Record Keys"
+                            "text": "Error"
                         },
                         {
                             "tag": "docdescription",
                             "paramName": "",
-                            "text": "Types that are used for actions that manage record keys."
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-key"
-                        },
-                        {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "0"
+                            "text": "Types that contain information about errors that can occur in CasualOS."
                         },
                         {
                             "tag": "docname",
                             "paramName": "",
-                            "text": "CreatePublicRecordKeyResult\n"
-                        }
-                    ]
-                },
-                "sources": [
-                    {
-                        "fileName": "src/aux-records/RecordsController.ts",
-                        "line": 485,
-                        "character": 12
-                    }
-                ],
-                "type": {
-                    "type": "union",
-                    "types": [
-                        {
-                            "type": "reference",
-                            "id": 2911,
-                            "name": "CreatePublicRecordKeySuccess"
-                        },
-                        {
-                            "type": "reference",
-                            "id": 2915,
-                            "name": "CreatePublicRecordKeyFailure"
-                        }
-                    ]
-                }
-            },
-            "comment": {
-                "shortText": "Defines an interface that represents the result of a \"create public record key\" operation.",
-                "text": "",
-                "tags": [
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "types/records/key"
-                    },
-                    {
-                        "tagName": "doctitle",
-                        "paramName": "",
-                        "text": "Record Key Types"
-                    },
-                    {
-                        "tagName": "docsidebar",
-                        "paramName": "",
-                        "text": "Record Keys"
-                    },
-                    {
-                        "tagName": "docdescription",
-                        "paramName": "",
-                        "text": "Types that are used for actions that manage record keys."
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "01-key"
-                    },
-                    {
-                        "tagName": "docorder",
-                        "paramName": "",
-                        "text": "0"
-                    },
-                    {
-                        "tagName": "docname",
-                        "paramName": "",
-                        "text": "CreatePublicRecordKeyResult\n"
-                    }
-                ]
-            },
-            "group": "01-key"
-        },
-        {
-            "id": 2911,
-            "order": 1,
-            "name": "CreatePublicRecordKeySuccess",
-            "reflection": {
-                "id": 2911,
-                "name": "CreatePublicRecordKeySuccess",
-                "kind": 256,
-                "kindString": "Interface",
-                "flags": {},
-                "comment": {
-                    "shortText": "Defines an interface that represents a successful \"create public record key\" result.",
-                    "tags": [
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/key"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-key"
-                        },
-                        {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "1"
-                        },
-                        {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "CreatePublicRecordKeySuccess\n"
+                            "text": "CasualOSError\n"
                         }
                     ]
                 },
                 "children": [
                     {
-                        "id": 2913,
-                        "name": "recordKey",
-                        "kind": 1024,
-                        "kindString": "Property",
+                        "id": 2896,
+                        "name": "constructor",
+                        "kind": 512,
+                        "kindString": "Constructor",
                         "flags": {},
-                        "comment": {
-                            "shortText": "The key that was created.",
-                            "tags": []
-                        },
                         "sources": [
                             {
-                                "fileName": "src/aux-records/RecordsController.ts",
-                                "line": 506,
+                                "fileName": "src/aux-common/runtime/CasualOSError.ts",
+                                "line": 39,
                                 "character": 4
                             }
                         ],
-                        "type": {
-                            "type": "intrinsic",
-                            "name": "string"
-                        }
-                    },
-                    {
-                        "id": 2914,
-                        "name": "recordName",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "The name of the record the key was created for.",
-                            "tags": []
-                        },
-                        "sources": [
+                        "signatures": [
                             {
-                                "fileName": "src/aux-records/RecordsController.ts",
-                                "line": 511,
-                                "character": 4
+                                "id": 2897,
+                                "name": "new CasualOSError",
+                                "kind": 16384,
+                                "kindString": "Constructor signature",
+                                "flags": {},
+                                "parameters": [
+                                    {
+                                        "id": 2898,
+                                        "name": "error",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "type": {
+                                            "type": "union",
+                                            "types": [
+                                                {
+                                                    "type": "intrinsic",
+                                                    "name": "string"
+                                                },
+                                                {
+                                                    "type": "reference",
+                                                    "id": 2882,
+                                                    "name": "GenericError"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "id": 2885,
+                                    "name": "CasualOSError"
+                                },
+                                "overwrites": {
+                                    "type": "reference",
+                                    "name": "Error.constructor"
+                                }
                             }
                         ],
-                        "type": {
-                            "type": "intrinsic",
-                            "name": "string"
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "Error.constructor"
                         }
                     },
                     {
-                        "id": 2912,
-                        "name": "success",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "Whether the operation was successful.",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/RecordsController.ts",
-                                "line": 501,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "literal",
-                            "value": true
-                        }
-                    }
-                ],
-                "groups": [
-                    {
-                        "title": "Properties",
-                        "kind": 1024,
-                        "children": [
-                            2913,
-                            2914,
-                            2912
-                        ]
-                    }
-                ],
-                "sources": [
-                    {
-                        "fileName": "src/aux-records/RecordsController.ts",
-                        "line": 497,
-                        "character": 17
-                    }
-                ]
-            },
-            "comment": {
-                "shortText": "Defines an interface that represents a successful \"create public record key\" result.",
-                "text": "",
-                "tags": [
-                    {
-                        "tagName": "dochash",
-                        "paramName": "",
-                        "text": "types/records/key"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "01-key"
-                    },
-                    {
-                        "tagName": "docorder",
-                        "paramName": "",
-                        "text": "1"
-                    },
-                    {
-                        "tagName": "docname",
-                        "paramName": "",
-                        "text": "CreatePublicRecordKeySuccess\n"
-                    }
-                ]
-            },
-            "group": "01-key"
-        },
-        {
-            "id": 2915,
-            "order": 2,
-            "name": "CreatePublicRecordKeyFailure",
-            "reflection": {
-                "id": 2915,
-                "name": "CreatePublicRecordKeyFailure",
-                "kind": 256,
-                "kindString": "Interface",
-                "flags": {},
-                "comment": {
-                    "shortText": "Defines an interface that represents a failed \"create public record key\" result.",
-                    "tags": [
-                        {
-                            "tag": "dochash",
-                            "paramName": "",
-                            "text": "types/records/key"
-                        },
-                        {
-                            "tag": "docgroup",
-                            "paramName": "",
-                            "text": "01-key"
-                        },
-                        {
-                            "tag": "docorder",
-                            "paramName": "",
-                            "text": "2"
-                        },
-                        {
-                            "tag": "docname",
-                            "paramName": "",
-                            "text": "CreatePublicRecordKeyFailure\n"
-                        }
-                    ]
-                },
-                "children": [
-                    {
-                        "id": 2917,
+                        "id": 2899,
                         "name": "errorCode",
                         "kind": 1024,
                         "kindString": "Property",
                         "flags": {},
                         "comment": {
-                            "shortText": "The type of error that occurred.",
+                            "shortText": "The error code that occurred.",
                             "tags": []
                         },
                         "sources": [
                             {
-                                "fileName": "src/aux-records/RecordsController.ts",
-                                "line": 531,
+                                "fileName": "src/aux-common/runtime/CasualOSError.ts",
+                                "line": 32,
                                 "character": 4
                             }
                         ],
                         "type": {
-                            "type": "union",
-                            "types": [
-                                {
-                                    "type": "literal",
-                                    "value": "server_error"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "not_logged_in"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "not_supported"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "unauthorized_to_create_record_key"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "unacceptable_session_key"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "invalid_key"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "session_expired"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "user_is_banned"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "invalid_policy"
-                                }
-                            ]
+                            "type": "intrinsic",
+                            "name": "string"
                         }
                     },
                     {
-                        "id": 2918,
+                        "id": 2900,
+                        "name": "errorMessage",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The error message that occurred.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/runtime/CasualOSError.ts",
+                                "line": 37,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2902,
+                        "name": "message",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isExternal": true
+                        },
+                        "sources": [
+                            {
+                                "fileName": "docs/node_modules/typescript/lib/lib.es5.d.ts",
+                                "line": 1023,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Error.message"
+                        }
+                    },
+                    {
+                        "id": 2901,
+                        "name": "name",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isExternal": true
+                        },
+                        "sources": [
+                            {
+                                "fileName": "docs/node_modules/typescript/lib/lib.es5.d.ts",
+                                "line": 1022,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Error.name"
+                        }
+                    },
+                    {
+                        "id": 2903,
+                        "name": "stack",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isExternal": true,
+                            "isOptional": true
+                        },
+                        "sources": [
+                            {
+                                "fileName": "docs/node_modules/typescript/lib/lib.es5.d.ts",
+                                "line": 1024,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Error.stack"
+                        }
+                    },
+                    {
+                        "id": 2890,
+                        "name": "prepareStackTrace",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isStatic": true,
+                            "isExternal": true,
+                            "isOptional": true
+                        },
+                        "sources": [
+                            {
+                                "fileName": "node_modules/@types/node/ts4.8/globals.d.ts",
+                                "line": 11,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "reflection",
+                            "declaration": {
+                                "id": 2891,
+                                "name": "__type",
+                                "kind": 65536,
+                                "kindString": "Type literal",
+                                "flags": {},
+                                "signatures": [
+                                    {
+                                        "id": 2892,
+                                        "name": "__type",
+                                        "kind": 4096,
+                                        "kindString": "Call signature",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "Optional override for formatting stack traces",
+                                            "tags": [
+                                                {
+                                                    "tag": "see",
+                                                    "paramName": "",
+                                                    "text": "https://v8.dev/docs/stack-trace-api#customizing-stack-traces\n"
+                                                }
+                                            ]
+                                        },
+                                        "parameters": [
+                                            {
+                                                "id": 2893,
+                                                "name": "err",
+                                                "kind": 32768,
+                                                "kindString": "Parameter",
+                                                "flags": {},
+                                                "type": {
+                                                    "type": "reference",
+                                                    "qualifiedName": "Error",
+                                                    "package": "typescript",
+                                                    "name": "Error"
+                                                }
+                                            },
+                                            {
+                                                "id": 2894,
+                                                "name": "stackTraces",
+                                                "kind": 32768,
+                                                "kindString": "Parameter",
+                                                "flags": {},
+                                                "type": {
+                                                    "type": "array",
+                                                    "elementType": {
+                                                        "type": "reference",
+                                                        "qualifiedName": "NodeJS.CallSite",
+                                                        "package": "@types/node",
+                                                        "name": "CallSite"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "any"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Error.prepareStackTrace"
+                        }
+                    },
+                    {
+                        "id": 2895,
+                        "name": "stackTraceLimit",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {
+                            "isStatic": true,
+                            "isExternal": true
+                        },
+                        "sources": [
+                            {
+                                "fileName": "node_modules/@types/node/ts4.8/globals.d.ts",
+                                "line": 13,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Error.stackTraceLimit"
+                        }
+                    },
+                    {
+                        "id": 2886,
+                        "name": "captureStackTrace",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {
+                            "isStatic": true,
+                            "isExternal": true
+                        },
+                        "signatures": [
+                            {
+                                "id": 2887,
+                                "name": "captureStackTrace",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {
+                                    "isExternal": true
+                                },
+                                "comment": {
+                                    "shortText": "Create .stack property on a target object",
+                                    "tags": []
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 2888,
+                                        "name": "targetObject",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {
+                                            "isExternal": true
+                                        },
+                                        "type": {
+                                            "type": "intrinsic",
+                                            "name": "object"
+                                        }
+                                    },
+                                    {
+                                        "id": 2889,
+                                        "name": "constructorOpt",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {
+                                            "isExternal": true,
+                                            "isOptional": true
+                                        },
+                                        "type": {
+                                            "type": "reference",
+                                            "qualifiedName": "Function",
+                                            "package": "typescript",
+                                            "name": "Function"
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "void"
+                                },
+                                "inheritedFrom": {
+                                    "type": "reference",
+                                    "name": "Error.captureStackTrace"
+                                }
+                            }
+                        ],
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "Error.captureStackTrace"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Constructors",
+                        "kind": 512,
+                        "children": [
+                            2896
+                        ]
+                    },
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2899,
+                            2900,
+                            2902,
+                            2901,
+                            2903,
+                            2890,
+                            2895
+                        ]
+                    },
+                    {
+                        "title": "Methods",
+                        "kind": 2048,
+                        "children": [
+                            2886
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/runtime/CasualOSError.ts",
+                        "line": 28,
+                        "character": 13
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "qualifiedName": "Error",
+                        "package": "typescript",
+                        "name": "Error"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines a class that represents a generic CasualOS error.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "types/error"
+                    },
+                    {
+                        "tagName": "doctitle",
+                        "paramName": "",
+                        "text": "Error Types"
+                    },
+                    {
+                        "tagName": "docsidebar",
+                        "paramName": "",
+                        "text": "Error"
+                    },
+                    {
+                        "tagName": "docdescription",
+                        "paramName": "",
+                        "text": "Types that contain information about errors that can occur in CasualOS."
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "CasualOSError\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 2882,
+            "order": 9999,
+            "name": "GenericError",
+            "reflection": {
+                "id": 2882,
+                "name": "GenericError",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines an interface that represents a generic error.",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "types/error"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "GenericError\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2883,
+                        "name": "errorCode",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The error code.",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/runtime/CasualOSError.ts",
+                                "line": 11,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 2884,
                         "name": "errorMessage",
                         "kind": 1024,
                         "kindString": "Property",
@@ -377,83 +539,14 @@
                         },
                         "sources": [
                             {
-                                "fileName": "src/aux-records/RecordsController.ts",
-                                "line": 542,
+                                "fileName": "src/aux-common/runtime/CasualOSError.ts",
+                                "line": 16,
                                 "character": 4
                             }
                         ],
                         "type": {
                             "type": "intrinsic",
                             "name": "string"
-                        }
-                    },
-                    {
-                        "id": 2919,
-                        "name": "errorReason",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "The unique reason as to why the error occurred.",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/RecordsController.ts",
-                                "line": 547,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "union",
-                            "types": [
-                                {
-                                    "type": "literal",
-                                    "value": "server_error"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "not_logged_in"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "not_supported"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "invalid_policy"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "user_denied"
-                                },
-                                {
-                                    "type": "literal",
-                                    "value": "record_owned_by_different_user"
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "id": 2916,
-                        "name": "success",
-                        "kind": 1024,
-                        "kindString": "Property",
-                        "flags": {},
-                        "comment": {
-                            "shortText": "Whether the operation was successful.",
-                            "tags": []
-                        },
-                        "sources": [
-                            {
-                                "fileName": "src/aux-records/RecordsController.ts",
-                                "line": 526,
-                                "character": 4
-                            }
-                        ],
-                        "type": {
-                            "type": "literal",
-                            "value": false
                         }
                     }
                 ],
@@ -462,48 +555,36 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2917,
-                            2918,
-                            2919,
-                            2916
+                            2883,
+                            2884
                         ]
                     }
                 ],
                 "sources": [
                     {
-                        "fileName": "src/aux-records/RecordsController.ts",
-                        "line": 522,
+                        "fileName": "src/aux-common/runtime/CasualOSError.ts",
+                        "line": 7,
                         "character": 17
                     }
                 ]
             },
             "comment": {
-                "shortText": "Defines an interface that represents a failed \"create public record key\" result.",
+                "shortText": "Defines an interface that represents a generic error.",
                 "text": "",
                 "tags": [
                     {
                         "tagName": "dochash",
                         "paramName": "",
-                        "text": "types/records/key"
-                    },
-                    {
-                        "tagName": "docgroup",
-                        "paramName": "",
-                        "text": "01-key"
-                    },
-                    {
-                        "tagName": "docorder",
-                        "paramName": "",
-                        "text": "2"
+                        "text": "types/error"
                     },
                     {
                         "tagName": "docname",
                         "paramName": "",
-                        "text": "CreatePublicRecordKeyFailure\n"
+                        "text": "GenericError\n"
                     }
                 ]
             },
-            "group": "01-key"
+            "group": null
         }
     ],
     "references": {
