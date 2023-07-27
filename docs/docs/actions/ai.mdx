@@ -1,0 +1,29 @@
+---
+id: ai
+title: AI Actions
+sidebar_label: AI
+description: AI actions are functions that make it easier to work with the AI.
+---
+
+import Doc from '@site/docs/api-info/actions/ai.json'
+import { 
+    objectTableOfContents,
+    ObjectMembers,
+    classTableOfContents,
+    setLinkMap,
+    DebugObject,
+    getReturnType,
+    getProperty,
+    RenderTree,
+    getTypeReferences,
+    ApiContents,
+    apiTableOfContents
+} from '@site/util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />

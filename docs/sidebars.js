@@ -33,9 +33,10 @@ module.exports = {
                     type: 'category',
                     label: 'Actions',
                     items: [
-                        'actions/audio',
+                        'actions/ai',
                         'actions/animations',
                         'actions/app',
+                        'actions/audio',
                         'actions/barcodes',
                         'actions/bot-filters',
                         'actions/bytes',
@@ -61,6 +62,7 @@ module.exports = {
                     type: 'category',
                     label: 'Types',
                     items: [
+                        'types/ai',
                         'types/animation',
                         'types/camera',
                         'types/core',
@@ -73,6 +75,7 @@ module.exports = {
                                 'types/debuggers/pausable-debugger',
                             ]
                         },
+                        'types/error',
                         'types/experimental',
                         {
                             type: 'category',

@@ -687,12 +687,6 @@ export interface ShellAction extends Action {
 
 /**
  * An event that is used to chat with an AI.
- *
- * @dochash types/ai
- * @doctitle AI Types
- * @docsidebar AI
- * @docdescription Types that are used in AI actions.
- * @docname AIChatAction
  */
 export interface AIChatAction extends AsyncAction {
     type: 'ai_chat';
@@ -709,9 +703,12 @@ export interface AIChatAction extends AsyncAction {
 }
 
 /**
- * Defines an interface that represents options for {@link ai.chat}.
+ * Defines an interface that represents options for {@link ai.chat-string}.
  *
  * @dochash types/ai
+ * @doctitle AI Types
+ * @docsidebar AI
+ * @docdescription Types that are used in AI actions.
  * @docname AIChatOptions
  */
 export interface AIChatOptions extends RecordActionOptions {

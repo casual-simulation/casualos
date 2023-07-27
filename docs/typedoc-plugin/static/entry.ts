@@ -110,6 +110,7 @@ export {
     SyntheticVoice,
     OpenPhotoCameraOptions,
     Photo,
+    AIChatOptions,
 } from '../../../src/aux-common/bots/BotEvents';
 export { 
     RuntimeBot,
