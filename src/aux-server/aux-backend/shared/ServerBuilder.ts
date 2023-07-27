@@ -18,6 +18,7 @@ import {
     Record,
     OpenAIChatInterface,
     AIChatInterface,
+    BlockadeLabsGenerateSkyboxInterface,
 } from '@casual-simulation/aux-records';
 import {
     DynamoDBAuthStore,
@@ -139,6 +140,7 @@ export class ServerBuilder {
         priority: number;
         action: () => Promise<void>;
     }[] = [];
+    private _generateSkyboxInterface: BlockadeLabsGenerateSkyboxInterface;
 
     private get _forceAllowAllSubscriptionFeatures() {
         return !this._stripe;
@@ -554,18 +556,16 @@ export class ServerBuilder {
         return this;
     }
 
-    useOpenAI(
-        options: Pick<BuilderOptions, 'openai' | 'ai'> = this._options
+    useAI(
+        options: Pick<BuilderOptions, 'openai' | 'ai' | 'blockadeLabs'> = this
+            ._options
     ): this {
-        console.log('[ServerBuilder] Using OpenAI.');
-        if (!options.openai) {
-            throw new Error('OpenAI options must be provided.');
-        }
+        console.log('[ServerBuilder] Using AI.');
         if (!options.ai) {
             throw new Error('AI options must be provided.');
         }
 
-        if (options.ai.chat?.provider === 'openai') {
+        if (options.openai && options.ai.chat?.provider === 'openai') {
             console.log('[ServerBuilder] Using OpenAI Chat.');
             this._chatInterface = new OpenAIChatInterface({
                 apiKey: options.openai.apiKey,
@@ -573,8 +573,22 @@ export class ServerBuilder {
             });
         }
 
+        if (
+            options.blockadeLabs &&
+            options.ai.generateSkybox?.provider === 'blockadeLabs'
+        ) {
+            console.log(
+                '[ServerBuilder] Using Blockade Labs Skybox Generation.'
+            );
+            this._generateSkyboxInterface =
+                new BlockadeLabsGenerateSkyboxInterface({
+                    apiKey: options.blockadeLabs.apiKey,
+                });
+        }
+
         this._aiConfiguration = {
             chat: null,
+            generateSkybox: null,
         };
 
         if (this._chatInterface && options.ai.chat) {
@@ -585,6 +599,15 @@ export class ServerBuilder {
                     allowedChatModels: options.ai.chat.allowedModels,
                     allowedChatSubscriptionTiers:
                         options.ai.chat.allowedSubscriptionTiers,
+                },
+            };
+        }
+        if (this._generateSkyboxInterface && options.ai.generateSkybox) {
+            this._aiConfiguration.generateSkybox = {
+                interface: this._generateSkyboxInterface,
+                options: {
+                    allowedSubscriptionTiers:
+                        options.ai.generateSkybox.allowedSubscriptionTiers,
                 },
             };
         }
@@ -858,12 +881,25 @@ const openAiSchema = z.object({
     maxTokens: z.number().positive().optional(),
 });
 
+const blockadeLabsSchema = z.object({
+    apiKey: z.string().nonempty(),
+});
+
 const aiSchema = z.object({
     chat: z
         .object({
             provider: z.literal('openai'),
             defaultModel: z.string().nonempty(),
             allowedModels: z.array(z.string().nonempty()),
+            allowedSubscriptionTiers: z.union([
+                z.literal(true),
+                z.array(z.string().nonempty()),
+            ]),
+        })
+        .optional(),
+    generateSkybox: z
+        .object({
+            provider: z.literal('blockadeLabs'),
             allowedSubscriptionTiers: z.union([
                 z.literal(true),
                 z.array(z.string().nonempty()),
@@ -883,6 +919,7 @@ export const optionsSchema = z.object({
     redis: redisSchema.optional(),
     rateLimit: rateLimitSchema.optional(),
     openai: openAiSchema.optional(),
+    blockadeLabs: blockadeLabsSchema.optional(),
     ai: aiSchema.optional(),
 
     subscriptions: subscriptionConfigSchema.optional(),

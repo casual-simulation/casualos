@@ -3,6 +3,10 @@ import {
     AIChatInterfaceRequest,
     AIChatInterfaceResponse,
 } from './AIChatInterface';
+import {
+    AIGenerateSkyboxInterfaceResponse,
+    AIGenerateSkyboxInterfaceRequest,
+} from './AIGenerateSkyboxInterface';
 import { AIController } from './AIController';
 
 describe('AIController', () => {
@@ -11,6 +15,12 @@ describe('AIController', () => {
         chat: jest.Mock<
             Promise<AIChatInterfaceResponse>,
             [AIChatInterfaceRequest]
+        >;
+    };
+    let generateSkyboxInterface: {
+        generateSkybox: jest.Mock<
+            Promise<AIGenerateSkyboxInterfaceResponse>,
+            [AIGenerateSkyboxInterfaceRequest]
         >;
     };
     let userId: string;
@@ -22,6 +32,9 @@ describe('AIController', () => {
         chatInterface = {
             chat: jest.fn(),
         };
+        generateSkyboxInterface = {
+            generateSkybox: jest.fn(),
+        };
         controller = new AIController({
             chat: {
                 interface: chatInterface,
@@ -29,6 +42,12 @@ describe('AIController', () => {
                     defaultModel: 'default-model',
                     allowedChatModels: ['test-model1', 'test-model2'],
                     allowedChatSubscriptionTiers: ['test-tier'],
+                },
+            },
+            generateSkybox: {
+                interface: generateSkyboxInterface,
+                options: {
+                    allowedSubscriptionTiers: ['test-tier'],
                 },
             },
         });
@@ -248,6 +267,7 @@ describe('AIController', () => {
                         allowedChatSubscriptionTiers: true,
                     },
                 },
+                generateSkybox: null,
             });
 
             const result = await controller.chat({
@@ -289,6 +309,7 @@ describe('AIController', () => {
         it('should return a not_supported result if no chat configuration is provided', async () => {
             controller = new AIController({
                 chat: null,
+                generateSkybox: null,
             });
 
             const result = await controller.chat({
@@ -308,6 +329,138 @@ describe('AIController', () => {
                 success: false,
                 errorCode: 'not_supported',
                 errorMessage: 'This operation is not supported.',
+            });
+        });
+    });
+
+    describe('generateSkybox()', () => {
+        it('should return the result from the generateSkybox interface', async () => {
+            generateSkyboxInterface.generateSkybox.mockReturnValueOnce(
+                Promise.resolve({
+                    success: true,
+                    fileUrl: 'test-file-url',
+                    thumbnailUrl: 'test-thumbnail-url',
+                })
+            );
+
+            const result = await controller.generateSkybox({
+                prompt: 'test',
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                fileUrl: 'test-file-url',
+                thumbnailUrl: 'test-thumbnail-url',
+            });
+            expect(generateSkyboxInterface.generateSkybox).toBeCalledWith({
+                prompt: 'test',
+            });
+        });
+
+        it('should return a not_supported result if no generateSkybox configuration is provided', async () => {
+            controller = new AIController({
+                generateSkybox: null,
+                chat: null,
+            });
+
+            const result = await controller.generateSkybox({
+                prompt: 'test',
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+        });
+
+        it('should return a not_logged_in result if the given a null userId', async () => {
+            const result = await controller.generateSkybox({
+                prompt: 'test',
+                userId: null as any,
+                userSubscriptionTier,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_logged_in',
+                errorMessage:
+                    'The user must be logged in. Please provide a sessionKey or a recordKey.',
+            });
+            expect(generateSkyboxInterface.generateSkybox).not.toBeCalled();
+        });
+
+        it('should return a not_subscribed result if the given a null userSubscriptionTier', async () => {
+            const result = await controller.generateSkybox({
+                prompt: 'test',
+                userId,
+                userSubscriptionTier: null as any,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_subscribed',
+                errorMessage:
+                    'The user must be subscribed in order to use this operation.',
+                allowedSubscriptionTiers: ['test-tier'],
+            });
+            expect(generateSkyboxInterface.generateSkybox).not.toBeCalled();
+        });
+
+        it('should return an invalid_subscription_tier result if the given a subscription tier that is not allowed', async () => {
+            const result = await controller.generateSkybox({
+                prompt: 'test',
+                userId,
+                userSubscriptionTier: 'wrong-tier',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_subscription_tier',
+                errorMessage:
+                    'This operation is not available to the user at their current subscription tier.',
+                currentSubscriptionTier: 'wrong-tier',
+                allowedSubscriptionTiers: ['test-tier'],
+            });
+            expect(generateSkyboxInterface.generateSkybox).not.toBeCalled();
+        });
+
+        it('should work when the controller is configured to allow all subscription tiers and the user does not have a subscription', async () => {
+            generateSkyboxInterface.generateSkybox.mockReturnValueOnce(
+                Promise.resolve({
+                    success: true,
+                    fileUrl: 'test-file-url',
+                    thumbnailUrl: 'test-thumbnail-url',
+                })
+            );
+
+            controller = new AIController({
+                chat: null,
+                generateSkybox: {
+                    interface: generateSkyboxInterface,
+                    options: {
+                        allowedSubscriptionTiers: true,
+                    },
+                },
+            });
+
+            const result = await controller.generateSkybox({
+                prompt: 'test',
+                userId,
+                userSubscriptionTier: null as any,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                fileUrl: 'test-file-url',
+                thumbnailUrl: 'test-thumbnail-url',
+            });
+            expect(generateSkyboxInterface.generateSkybox).toBeCalledWith({
+                prompt: 'test',
             });
         });
     });

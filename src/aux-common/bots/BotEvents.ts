@@ -263,7 +263,8 @@ export type AsyncActions =
     | AttachRuntimeAction
     | DetachRuntimeAction
     | OpenPhotoCameraAction
-    | AIChatAction;
+    | AIChatAction
+    | AIGenerateSkyboxAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.

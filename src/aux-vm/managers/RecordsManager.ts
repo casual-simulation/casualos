@@ -27,6 +27,7 @@ import {
     RevokeRoleAction,
     GetFileAction,
     AIChatAction,
+    AIGenerateSkyboxAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -54,6 +55,10 @@ import stringify from '@casual-simulation/fast-json-stable-stringify';
 import '@casual-simulation/aux-common/runtime/BlobPolyfill';
 import { Observable, Subject } from 'rxjs';
 import { DateTime } from 'luxon';
+import {
+    AIChatResponse,
+    AIGenerateSkyboxResponse,
+} from '@casual-simulation/aux-records/AIController';
 
 /**
  * The list of headers that JavaScript applications are not allowed to set by themselves.
@@ -179,6 +184,8 @@ export class RecordsManager {
                 this._revokeRole(event);
             } else if (event.type === 'ai_chat') {
                 this._aiChat(event);
+            } else if (event.type === 'ai_generate_skybox') {
+                this._aiGenerateSkybox(event);
             }
         }
     }
@@ -1276,7 +1283,7 @@ export class RecordsManager {
                 requestData.instances = [this._helper.inst];
             }
 
-            const result: AxiosResponse<RecordDataResult> = await axios.post(
+            const result: AxiosResponse<AIChatResponse> = await axios.post(
                 await this._publishUrl(info.auth, '/api/v2/ai/chat'),
                 requestData,
                 {
@@ -1291,6 +1298,62 @@ export class RecordsManager {
             }
         } catch (e) {
             console.error('[RecordsManager] Error sending chat message:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _aiGenerateSkybox(event: AIGenerateSkyboxAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            if (!info.token) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_logged_in',
+                            errorMessage: 'The user is not logged in.',
+                        })
+                    );
+                }
+                return;
+            }
+
+            const { endpoint, blockadeLabs, ...rest } = event.options;
+            let requestData: any = {
+                prompt: event.prompt,
+                negativePrompt: event.negativePrompt,
+                blockadeLabs: blockadeLabs,
+            };
+
+            if (hasValue(this._helper.inst)) {
+                requestData.instances = [this._helper.inst];
+            }
+
+            const result: AxiosResponse<AIGenerateSkyboxResponse> =
+                await axios.post(
+                    await this._publishUrl(info.auth, '/api/v2/ai/skybox'),
+                    requestData,
+                    {
+                        ...this._axiosOptions,
+                        headers: info.headers,
+                    }
+                );
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error generating skybox:', e);
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
                     asyncError(event.taskId, e.toString())
@@ -1315,7 +1378,8 @@ export class RecordsManager {
             | GrantInstAdminPermissionAction
             | GrantRoleAction
             | RevokeRoleAction
-            | AIChatAction,
+            | AIChatAction
+            | AIGenerateSkyboxAction,
         authenticateIfNotLoggedIn: boolean = true
     ): Promise<{
         error: boolean;

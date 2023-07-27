@@ -2675,8 +2675,8 @@ describe('AuxLibrary', () => {
                 expect(context.actions).toEqual([expected]);
             });
 
-            it('should resolve with the address that was generated', () => {
-                let result: string;
+            it('should resolve with the address that was generated', async () => {
+                let result: string | null = null;
                 const promise: any =
                     library.api.ai.generateSkybox('cartoon clouds');
 
@@ -2696,12 +2696,51 @@ describe('AuxLibrary', () => {
                     expected.taskId,
                     {
                         success: true,
-                        skybox: {
-                            id: 123,
-                        },
+                        fileUrl: 'file_url',
                     },
                     false
                 );
+
+                await waitAsync();
+
+                expect(result).toBe('file_url');
+            });
+
+            it('should resolve with the resulting object', async () => {
+                let result: any = null;
+                const promise: any = library.api.ai.generateSkybox({
+                    prompt: 'cartoon clouds',
+                });
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    undefined,
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        fileUrl: 'file_url',
+                        thumbnailUrl: 'thumbnail_url',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual({
+                    success: true,
+                    fileUrl: 'file_url',
+                    thumbnailUrl: 'thumbnail_url',
+                });
             });
         });
 

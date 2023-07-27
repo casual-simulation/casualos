@@ -277,6 +277,11 @@ Resources:
                     Properties:
                         Path: /api/v2/ai/chat
                         Method: POST
+                AiGenerateSkybox:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/ai/skybox
+                        Method: POST
                 StripeWebhook:
                     Type: Api
                     Properties:

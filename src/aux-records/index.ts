@@ -32,3 +32,5 @@ export * from './MemoryPolicyStore';
 
 export * from './AIChatInterface';
 export * from './OpenAIChatInterface';
+export * from './AIGenerateSkyboxInterface';
+export * from './BlockadeLabsGenerateSkyboxInterface';
