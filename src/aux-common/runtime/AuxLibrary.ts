@@ -4846,6 +4846,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     ): Promise<AIChatMessage | string> {
         const task = context.createTask();
 
+        const returnString = typeof messages === 'string';
         const inputMessages: AIChatMessage[] = [];
         if (typeof messages === 'string') {
             inputMessages.push({
@@ -4860,7 +4861,11 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
         const action = aiChat(inputMessages, options, task.taskId);
         const final = addAsyncResultAction(task, action).then((result) => {
-            return result.choices[0];
+            const choice = result.choices[0];
+            if (returnString) {
+                return choice?.content;
+            }
+            return choice;
         });
         (final as any)[ORIGINAL_OBJECT] = action;
         return final;

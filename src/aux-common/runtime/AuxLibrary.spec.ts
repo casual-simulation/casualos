@@ -2493,7 +2493,10 @@ describe('AuxLibrary', () => {
 
             it('should return the first chat choice', async () => {
                 let result: any;
-                const promise: any = library.api.ai.chat('hello, world!');
+                const promise: any = library.api.ai.chat({
+                    role: 'user',
+                    content: 'hello, world!',
+                });
 
                 promise.then((r: any) => (result = r));
 
@@ -2533,6 +2536,46 @@ describe('AuxLibrary', () => {
                     content: 'Hello to you!',
                     finishReason: 'stop',
                 });
+            });
+
+            it('should return a string when a string was given', async () => {
+                let result: any;
+                const promise: any = library.api.ai.chat('hello, world!');
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello to you!',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual('Hello to you!');
             });
 
             it('should throw a CasualOSError when not successful', async () => {
