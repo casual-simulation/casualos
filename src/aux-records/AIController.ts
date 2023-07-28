@@ -10,10 +10,12 @@ import {
     AIGenerateSkyboxInterface,
     AIGenerateSkyboxInterfaceBlockadeLabsOptions,
 } from './AIGenerateSkyboxInterface';
+import { AIGeneratedImage, AIImageInterface } from './AIImageInterface';
 
 export interface AIConfiguration {
     chat: AIChatConfiguration | null;
     generateSkybox: AIGenerateSkyboxConfiguration | null;
+    images: AIGenerateImageConfiguration | null;
 }
 
 export interface AIChatConfiguration {
@@ -56,6 +58,69 @@ export interface AIGenerateSkyboxOptions {
     allowedSubscriptionTiers: true | string[];
 }
 
+export interface AIGenerateImageConfiguration {
+    interfaces: {
+        [provider: string]: AIImageInterface;
+    };
+    options: AIGenerateImageOptions;
+}
+
+export interface AIGenerateImageOptions {
+    /**
+     * The model that should be used when none is specified in a request.
+     */
+    defaultModel: string;
+
+    /**
+     * The width that should be used for images that don't specify a width.
+     */
+    defaultWidth: number;
+
+    /**
+     * The height that should be used for images that don't specify a height.
+     */
+    defaultHeight: number;
+
+    /**
+     * The maximum width that can be requested.
+     */
+    maxWidth: number;
+
+    /**
+     * The maximum height that can be requested.
+     */
+    maxHeight: number;
+
+    /**
+     * The maximum number of diffusion steps that can be requested.
+     */
+    maxSteps: number;
+
+    /**
+     * The maximum number of images that can be requested.
+     */
+    maxImages: number;
+
+    /**
+     * The list of models grouped by their respective providers.
+     */
+    allowedModels: {
+        [provider: string]: string[];
+    };
+
+    /**
+     * The list of subscription tiers that are allowed to be used for generate image.
+     *
+     * - `true` indicates that all users are allowed, regardless of their subscription tier or if they are even subscribed.
+     * - An array of strings indicates that only users with the given subscription tiers are allowed.
+     */
+    allowedSubscriptionTiers: true | string[];
+}
+
+export interface AIImageProviders {
+    [provider: string]: AIImageInterface;
+}
+
 /**
  * Defines a class that is able to handle AI requests.
  */
@@ -69,6 +134,11 @@ export class AIController {
     private _allowedChatSubscriptionTiers: true | Set<string>;
 
     private _allowedGenerateSkyboxSubscriptionTiers: true | Set<string>;
+
+    private _imageProviders: AIImageProviders;
+    private _allowedImageModels: Map<string, string>;
+    private _allowedImageSubscriptionTiers: true | Set<string>;
+    private _imageOptions: AIGenerateImageOptions;
 
     constructor(configuration: AIConfiguration) {
         if (configuration.chat) {
@@ -90,6 +160,23 @@ export class AIController {
                 typeof options.allowedSubscriptionTiers === 'boolean'
                     ? options.allowedSubscriptionTiers
                     : new Set(options.allowedSubscriptionTiers);
+        }
+
+        if (configuration.images) {
+            this._imageProviders = configuration.images.interfaces;
+            const options = configuration.images.options;
+            this._imageOptions = options;
+            this._allowedImageSubscriptionTiers =
+                typeof options.allowedSubscriptionTiers === 'boolean'
+                    ? options.allowedSubscriptionTiers
+                    : new Set(options.allowedSubscriptionTiers);
+
+            this._allowedImageModels = new Map();
+            for (let provider in options.allowedModels) {
+                for (let model of options.allowedModels[provider]) {
+                    this._allowedImageModels.set(model, provider);
+                }
+            }
         }
     }
 
@@ -337,6 +424,124 @@ export class AIController {
         }
     }
 
+    async generateImage(
+        request: AIGenerateImageRequest
+    ): Promise<AIGenerateImageResponse> {
+        try {
+            if (!this._imageProviders) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+
+            if (!request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                };
+            }
+
+            if (
+                !this._matchesSubscriptionTiers(
+                    request.userSubscriptionTier,
+                    this._allowedImageSubscriptionTiers
+                )
+            ) {
+                if (!request.userSubscriptionTier) {
+                    return {
+                        success: false,
+                        errorCode: 'not_subscribed',
+                        errorMessage:
+                            'The user must be subscribed in order to use this operation.',
+                        allowedSubscriptionTiers: [
+                            ...(this
+                                ._allowedImageSubscriptionTiers as Set<string>),
+                        ],
+                    };
+                } else {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_subscription_tier',
+                        errorMessage:
+                            'This operation is not available to the user at their current subscription tier.',
+                        allowedSubscriptionTiers: [
+                            ...(this
+                                ._allowedImageSubscriptionTiers as Set<string>),
+                        ],
+                        currentSubscriptionTier: request.userSubscriptionTier,
+                    };
+                }
+            }
+
+            const model = request.model ?? this._imageOptions.defaultModel;
+
+            if (!this._allowedImageModels.has(model)) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_model',
+                    errorMessage: `The given model is not allowed for images.`,
+                };
+            }
+            const providerId = this._allowedImageModels.get(model);
+            const provider = this._imageProviders[providerId];
+
+            if (!provider) {
+                return {
+                    success: false,
+                    errorCode: 'invalid_model',
+                    errorMessage: `The given model is not allowed for images.`,
+                };
+            }
+
+            const result = await provider.generateImage({
+                model,
+                prompt: request.prompt,
+                negativePrompt: request.negativePrompt,
+                width: Math.min(
+                    request.width ?? this._imageOptions.defaultWidth,
+                    this._imageOptions.maxWidth
+                ),
+                height: Math.min(
+                    request.height ?? this._imageOptions.defaultHeight,
+                    this._imageOptions.maxHeight
+                ),
+                numberOfImages: Math.min(
+                    request.numberOfImages ?? 1,
+                    this._imageOptions.maxImages
+                ),
+                seed: request.seed,
+                steps: Math.min(
+                    request.steps ?? 30,
+                    this._imageOptions.maxSteps
+                ),
+                cfgScale: request.cfgScale,
+                sampler: request.sampler,
+                clipGuidancePreset: request.clipGuidancePreset,
+                stylePreset: request.stylePreset,
+                userId: request.userId,
+            });
+
+            return {
+                success: true,
+                images: result.images,
+            };
+        } catch (err) {
+            console.error(
+                '[AIController] Error handling generate image request:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     private _matchesSubscriptionTiers(
         tier: string,
         allowedTiers: true | Set<string>
@@ -510,6 +715,108 @@ export interface AIGetSkyboxFailure {
         | NotSubscribedError
         | InvalidSubscriptionTierError
         | NotSupportedError;
+    errorMessage: string;
+
+    allowedSubscriptionTiers?: string[];
+    currentSubscriptionTier?: string;
+}
+
+export interface AIGenerateImageRequest {
+    /**
+     * The ID of the user that is making the request.
+     */
+    userId: string;
+
+    /**
+     * The subscription tier of the user.
+     * Should be null if the user is not logged in or if they do not have a subscription.
+     */
+    userSubscriptionTier: string;
+
+    /**
+     * The description of what the generated image(s) should look like.
+     */
+    prompt: string;
+
+    /**
+     * The description of what the generated image(s) should not look like.
+     */
+    negativePrompt?: string;
+
+    /**
+     * The model that should be used to generate the image(s).
+     */
+    model?: string;
+
+    /**
+     * The desired width of the image(s) in pixels.
+     */
+    width?: number;
+
+    /**
+     * The desired height of the image(s) in pixels.
+     */
+    height?: number;
+
+    /**
+     * The number of images that should be generated.
+     */
+    numberOfImages?: number;
+
+    /**
+     * The random noise seed that should be used.
+     */
+    seed?: number;
+
+    /**
+     * The number of diffusion steps to run.
+     */
+    steps?: number;
+
+    /**
+     * How strictly the diffusion process adheres to the prompt text.
+     * Higher values keep the image closer to the prompt.
+     */
+    cfgScale?: number;
+
+    /**
+     * The sampler to use for the diffusion process.
+     */
+    sampler?: string;
+
+    /**
+     * The clip guidance preset.
+     */
+    clipGuidancePreset?: string;
+
+    /**
+     * The style preset that should be used to guide the image model torwards a specific style.
+     */
+    stylePreset?: string;
+}
+
+export type AIGenerateImageResponse =
+    | AIGenerateImageSuccess
+    | AIGenerateImageFailure;
+
+export interface AIGenerateImageSuccess {
+    success: true;
+
+    /**
+     * The list of images that were generated.
+     */
+    images: AIGeneratedImage[];
+}
+
+export interface AIGenerateImageFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotSubscribedError
+        | InvalidSubscriptionTierError
+        | NotSupportedError
+        | 'invalid_model';
     errorMessage: string;
 
     allowedSubscriptionTiers?: string[];

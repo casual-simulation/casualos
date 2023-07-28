@@ -885,6 +885,10 @@ const blockadeLabsSchema = z.object({
     apiKey: z.string().nonempty(),
 });
 
+const stabilityAiSchema = z.object({
+    apiKey: z.string().nonempty(),
+});
+
 const aiSchema = z.object({
     chat: z
         .object({
@@ -900,6 +904,25 @@ const aiSchema = z.object({
     generateSkybox: z
         .object({
             provider: z.literal('blockadeLabs'),
+            allowedSubscriptionTiers: z.union([
+                z.literal(true),
+                z.array(z.string().nonempty()),
+            ]),
+        })
+        .optional(),
+    images: z
+        .object({
+            defaultModel: z.string(),
+            defaultWidth: z.number().int().positive(),
+            defaultHeight: z.number().int().positive(),
+            maxWidth: z.number().int().positive().optional(),
+            maxHeight: z.number().int().positive().optional(),
+            maxSteps: z.number().int().positive().optional(),
+            maxImages: z.number().int().positive().optional(),
+            allowedModels: z.object({
+                openai: z.array(z.string().nonempty()).optional(),
+                stabilityai: z.array(z.string().nonempty()).optional(),
+            }),
             allowedSubscriptionTiers: z.union([
                 z.literal(true),
                 z.array(z.string().nonempty()),

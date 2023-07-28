@@ -8,6 +8,10 @@ import {
     AIGenerateSkyboxInterfaceRequest,
     AIGetSkyboxInterfaceResponse,
 } from './AIGenerateSkyboxInterface';
+import {
+    AIGenerateImageInterfaceRequest,
+    AIGenerateImageInterfaceResponse,
+} from './AIImageInterface';
 import { AIController } from './AIController';
 
 describe('AIController', () => {
@@ -25,6 +29,12 @@ describe('AIController', () => {
         >;
         getSkybox: jest.Mock<Promise<AIGetSkyboxInterfaceResponse>, [string]>;
     };
+    let generateImageInterface: {
+        generateImage: jest.Mock<
+            Promise<AIGenerateImageInterfaceResponse>,
+            [AIGenerateImageInterfaceRequest]
+        >;
+    };
     let userId: string;
     let userSubscriptionTier: string;
 
@@ -38,6 +48,9 @@ describe('AIController', () => {
             generateSkybox: jest.fn(),
             getSkybox: jest.fn(),
         };
+        generateImageInterface = {
+            generateImage: jest.fn(),
+        };
         controller = new AIController({
             chat: {
                 interface: chatInterface,
@@ -50,6 +63,25 @@ describe('AIController', () => {
             generateSkybox: {
                 interface: generateSkyboxInterface,
                 options: {
+                    allowedSubscriptionTiers: ['test-tier'],
+                },
+            },
+            images: {
+                interfaces: {
+                    openai: generateImageInterface,
+                },
+                options: {
+                    defaultModel: 'openai',
+                    defaultWidth: 512,
+                    defaultHeight: 512,
+                    maxWidth: 1024,
+                    maxHeight: 1024,
+                    maxSteps: 50,
+                    maxImages: 3,
+                    allowedModels: {
+                        openai: ['openai'],
+                        stabilityai: ['stable-diffusion-xl-1024-v1-0'],
+                    },
                     allowedSubscriptionTiers: ['test-tier'],
                 },
             },
@@ -271,6 +303,7 @@ describe('AIController', () => {
                     },
                 },
                 generateSkybox: null,
+                images: null,
             });
 
             const result = await controller.chat({
@@ -313,6 +346,7 @@ describe('AIController', () => {
             controller = new AIController({
                 chat: null,
                 generateSkybox: null,
+                images: null,
             });
 
             const result = await controller.chat({
@@ -364,6 +398,7 @@ describe('AIController', () => {
             controller = new AIController({
                 generateSkybox: null,
                 chat: null,
+                images: null,
             });
 
             const result = await controller.generateSkybox({
@@ -446,6 +481,7 @@ describe('AIController', () => {
                         allowedSubscriptionTiers: true,
                     },
                 },
+                images: null,
             });
 
             const result = await controller.generateSkybox({
@@ -496,6 +532,7 @@ describe('AIController', () => {
             controller = new AIController({
                 generateSkybox: null,
                 chat: null,
+                images: null,
             });
 
             const result = await controller.getSkybox({
@@ -580,6 +617,7 @@ describe('AIController', () => {
                         allowedSubscriptionTiers: true,
                     },
                 },
+                images: null,
             });
 
             const result = await controller.getSkybox({
@@ -597,6 +635,251 @@ describe('AIController', () => {
             expect(generateSkyboxInterface.getSkybox).toBeCalledWith(
                 'test-skybox-id'
             );
+        });
+    });
+
+    describe('generateImage()', () => {
+        it('should return the result from the generateImage interface', async () => {
+            generateImageInterface.generateImage.mockReturnValueOnce(
+                Promise.resolve({
+                    images: [
+                        {
+                            base64: 'base64',
+                            seed: 123,
+                        },
+                    ],
+                })
+            );
+
+            const result = await controller.generateImage({
+                prompt: 'test',
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                images: [
+                    {
+                        base64: 'base64',
+                        seed: 123,
+                    },
+                ],
+            });
+            expect(generateImageInterface.generateImage).toBeCalledWith({
+                prompt: 'test',
+                model: 'openai',
+                width: 512,
+                height: 512,
+                numberOfImages: 1,
+                steps: 30,
+                userId: 'test-user',
+            });
+        });
+
+        it('should use the provider associated with the given model type', async () => {
+            let otherInterface: {
+                generateImage: jest.Mock<
+                    Promise<AIGenerateImageInterfaceResponse>,
+                    [AIGenerateImageInterfaceRequest]
+                >;
+            } = {
+                generateImage: jest.fn(),
+            };
+
+            controller = new AIController({
+                chat: null,
+                generateSkybox: null,
+                images: {
+                    interfaces: {
+                        openai: generateImageInterface,
+                        other: otherInterface,
+                    },
+                    options: {
+                        defaultModel: 'openai',
+                        defaultWidth: 512,
+                        defaultHeight: 512,
+                        maxWidth: 1024,
+                        maxHeight: 1024,
+                        maxSteps: 50,
+                        maxImages: 3,
+                        allowedModels: {
+                            openai: ['openai'],
+                            other: ['otherModel'],
+                        },
+                        allowedSubscriptionTiers: ['test-tier'],
+                    },
+                },
+            });
+
+            otherInterface.generateImage.mockReturnValueOnce(
+                Promise.resolve({
+                    images: [
+                        {
+                            base64: 'base64',
+                            seed: 123,
+                        },
+                    ],
+                })
+            );
+
+            const result = await controller.generateImage({
+                model: 'otherModel',
+                prompt: 'test',
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                images: [
+                    {
+                        base64: 'base64',
+                        seed: 123,
+                    },
+                ],
+            });
+            expect(otherInterface.generateImage).toBeCalledWith({
+                prompt: 'test',
+                model: 'otherModel',
+                width: 512,
+                height: 512,
+                numberOfImages: 1,
+                steps: 30,
+                userId: 'test-user',
+            });
+        });
+
+        it('should return a not_supported result if no images configuration is provided', async () => {
+            controller = new AIController({
+                generateSkybox: null,
+                chat: null,
+                images: null,
+            });
+
+            const result = await controller.generateImage({
+                prompt: 'prompt',
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'This operation is not supported.',
+            });
+        });
+
+        it('should return a not_logged_in result if the given a null userId', async () => {
+            const result = await controller.generateImage({
+                prompt: 'test',
+                userId: null as any,
+                userSubscriptionTier,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_logged_in',
+                errorMessage:
+                    'The user must be logged in. Please provide a sessionKey or a recordKey.',
+            });
+            expect(generateImageInterface.generateImage).not.toBeCalled();
+        });
+
+        it('should return a not_subscribed result if the given a null userSubscriptionTier', async () => {
+            const result = await controller.generateImage({
+                prompt: 'test',
+                userId,
+                userSubscriptionTier: null as any,
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_subscribed',
+                errorMessage:
+                    'The user must be subscribed in order to use this operation.',
+                allowedSubscriptionTiers: ['test-tier'],
+            });
+            expect(generateImageInterface.generateImage).not.toBeCalled();
+        });
+
+        it('should return an invalid_subscription_tier result if the given a subscription tier that is not allowed', async () => {
+            const result = await controller.generateImage({
+                prompt: 'test',
+                userId,
+                userSubscriptionTier: 'wrong-tier',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'invalid_subscription_tier',
+                errorMessage:
+                    'This operation is not available to the user at their current subscription tier.',
+                currentSubscriptionTier: 'wrong-tier',
+                allowedSubscriptionTiers: ['test-tier'],
+            });
+            expect(generateImageInterface.generateImage).not.toBeCalled();
+        });
+
+        it('should work when the controller is configured to allow all subscription tiers and the user does not have a subscription', async () => {
+            generateImageInterface.generateImage.mockReturnValueOnce(
+                Promise.resolve({
+                    images: [
+                        {
+                            base64: 'base64',
+                            seed: 123,
+                        },
+                    ],
+                })
+            );
+
+            controller = new AIController({
+                chat: null,
+                generateSkybox: null,
+                images: {
+                    interfaces: {
+                        openai: generateImageInterface,
+                    },
+                    options: {
+                        defaultModel: 'openai',
+                        defaultWidth: 512,
+                        defaultHeight: 512,
+                        maxWidth: 1024,
+                        maxHeight: 1024,
+                        maxSteps: 50,
+                        maxImages: 3,
+                        allowedModels: {
+                            openai: ['openai'],
+                        },
+                        allowedSubscriptionTiers: true,
+                    },
+                },
+            });
+
+            const result = await controller.generateImage({
+                prompt: 'test',
+                userId,
+                userSubscriptionTier: null as any,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                images: [
+                    {
+                        base64: 'base64',
+                        seed: 123,
+                    },
+                ],
+            });
+            expect(generateImageInterface.generateImage).toBeCalledWith({
+                prompt: 'test',
+                model: 'openai',
+                width: 512,
+                height: 512,
+                numberOfImages: 1,
+                steps: 30,
+                userId: 'test-user',
+            });
         });
     });
 });

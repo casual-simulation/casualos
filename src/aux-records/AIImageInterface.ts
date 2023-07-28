@@ -53,7 +53,7 @@ export interface AIGenerateImageInterfaceRequest {
     steps?: number;
 
     /**
-     * How strictly the diffusion process adhers to the prompt text.
+     * How strictly the diffusion process adheres to the prompt text.
      * Higher values keep the image closer to the prompt.
      */
     cfgScale?: number;
