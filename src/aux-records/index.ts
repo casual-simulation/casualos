@@ -34,3 +34,7 @@ export * from './AIChatInterface';
 export * from './OpenAIChatInterface';
 export * from './AIGenerateSkyboxInterface';
 export * from './BlockadeLabsGenerateSkyboxInterface';
+
+export * from './AIImageInterface';
+export * from './OpenAIImageInterface';
+export * from './StabilityAIImageInterface';
