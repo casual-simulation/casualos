@@ -33,6 +33,7 @@ import {
     asyncError,
     aiChat,
     aiGenerateSkybox,
+    aiGenerateImage,
 } from '@casual-simulation/aux-common';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -6141,6 +6142,276 @@ describe('RecordsManager', () => {
 
                 records.handleEvents([
                     aiGenerateSkybox('prompt', undefined, undefined, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage: 'The user is not logged in.',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+        });
+
+        describe('ai_generate_image', () => {
+            beforeEach(() => {
+                authMock.getRecordKeyPolicy.mockResolvedValue('subjectfull');
+                require('axios').__reset();
+            });
+
+            it('should make a POST request to /api/v2/ai/image', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'data',
+                            },
+                        ],
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiGenerateImage(
+                        {
+                            prompt: 'a blue bridge',
+                        },
+                        undefined,
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/ai/image',
+                    {
+                        prompt: 'a blue bridge',
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'data',
+                            },
+                        ],
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should include the inst', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'data',
+                            },
+                        ],
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                vm.id = 'testId';
+
+                records.handleEvents([
+                    aiGenerateImage(
+                        {
+                            prompt: 'a blue bridge',
+                        },
+                        undefined,
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/ai/image',
+                    {
+                        prompt: 'a blue bridge',
+                        instances: ['testId'],
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'data',
+                            },
+                        ],
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should support custom endpoints', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'data',
+                            },
+                        ],
+                    },
+                });
+
+                customAuthMock.isAuthenticated.mockResolvedValueOnce(true);
+                customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiGenerateImage(
+                        {
+                            prompt: 'a blue bridge',
+                        },
+                        {
+                            endpoint: 'http://localhost:9999',
+                        },
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:9999/api/v2/ai/image',
+                    {
+                        prompt: 'a blue bridge',
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'data',
+                            },
+                        ],
+                    }),
+                ]);
+                expect(customAuthMock.isAuthenticated).toBeCalled();
+                expect(customAuthMock.authenticate).not.toBeCalled();
+                expect(customAuthMock.getAuthToken).toBeCalled();
+            });
+
+            it('should attempt to login if not authenticated', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'data',
+                            },
+                        ],
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiGenerateImage(
+                        {
+                            prompt: 'a blue bridge',
+                        },
+                        undefined,
+                        1
+                    ),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastPost()).toEqual([
+                    'http://localhost:3002/api/v2/ai/image',
+                    {
+                        prompt: 'a blue bridge',
+                    },
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'data',
+                            },
+                        ],
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should return a not_logged_in error if there is no token', async () => {
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+
+                records.handleEvents([
+                    aiGenerateImage(
+                        {
+                            prompt: 'a blue bridge',
+                        },
+                        undefined,
+                        1
+                    ),
                 ]);
 
                 await waitAsync();

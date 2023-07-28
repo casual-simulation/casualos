@@ -338,6 +338,9 @@ import {
     AIGenerateSkyboxOptions,
     aiGenerateSkybox,
     AIGenerateSkyboxAction,
+    AIGenerateImageOptions,
+    AIGenerateImageAction,
+    aiGenerateImage,
 } from '../bots';
 import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
 import {
@@ -441,6 +444,10 @@ import {
 } from '../partitions/PartitionUtils';
 import type { AxiosResponse, AxiosError } from 'axios';
 import { CasualOSError } from './CasualOSError';
+import {
+    AIGenerateImageResponse,
+    AIGenerateImageSuccess,
+} from '@casual-simulation/aux-records/AIController';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -3070,6 +3077,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             ai: {
                 chat,
                 generateSkybox,
+                generateImage,
             },
 
             os: {
@@ -5015,6 +5023,106 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 return result.fileUrl;
             }
         });
+        (final as any)[ORIGINAL_OBJECT] = action;
+        return final;
+    }
+
+    /**
+     * Generates an image from the given prompt.
+     *
+     * Returns a promise that resolves with the Base64 data of the generated image that can be used as the {@tag formAddress} of a bot.
+     *
+     * @param prompt the string that describes what the image should look like.
+     * @param negativePrompt the string that describes what the image should avoid looking like.
+     * @param options the additional options that should be used.
+     *
+     * @example Generate an image from a prompt.
+     * const image = await ai.generateImage("An oil painting of a grassy field.");
+     * masks.formAddress = image;
+     *
+     * @example Generate a image from a prompt and a negative prompt
+     * const image = await ai.generateSkybox("An oil painting of a grassy field.", "realistic");
+     * masks.formAddress = image;
+     *
+     * @dochash actions/ai
+     * @docname ai.generateImage
+     * @docid ai.generateImage-string
+     */
+    function generateImage(
+        prompt: string,
+        negativePrompt?: string,
+        options?: AIGenerateImageOptions & RecordActionOptions
+    ): Promise<string>;
+
+    /**
+     * Generates an image from the given prompt.
+     *
+     * Returns a promise that resolves with the Base64 data of the generated image that can be used as the {@tag formAddress} of a bot.
+     *
+     * @param request the request object that describes what the image should look like.
+     * @param options the options for the request.
+     *
+     * @example Generate an image from a prompt.
+     * const image = await ai.generateImage({
+     *     prompt: "An oil painting of a grassy field.",
+     * });
+     * masks.formAddress = image;
+     *
+     * @example Generate a image from a prompt and a negative prompt
+     * const image = await ai.generateSkybox({
+     *     prompt: "An oil painting of a grassy field.",
+     *     negativePrompt: "realistic"
+     * });
+     * masks.formAddress = image;
+     *
+     * @dochash actions/ai
+     * @docname ai.generateImage
+     * @docid ai.generateImage-request
+     */
+    function generateImage(
+        request: AIGenerateImageOptions,
+        options?: RecordActionOptions
+    ): Promise<AIGenerateImageSuccess>;
+
+    function generateImage(
+        prompt: string | AIGenerateImageOptions,
+        negativePrompt?: string | RecordActionOptions,
+        options?: RecordActionOptions
+    ): Promise<string | AIGenerateImageSuccess> {
+        const task = context.createTask();
+
+        const returnObject = typeof prompt === 'object';
+        let action: AIGenerateImageAction;
+        if (typeof prompt === 'object') {
+            action = aiGenerateImage(
+                prompt,
+                negativePrompt as RecordActionOptions,
+                task.taskId
+            );
+        } else {
+            let { endpoint, ...parameters } = options;
+            action = aiGenerateImage(
+                {
+                    ...parameters,
+                    prompt,
+                    negativePrompt: negativePrompt as string,
+                },
+                {
+                    endpoint,
+                },
+                task.taskId
+            );
+        }
+
+        const final = addAsyncResultAction(task, action).then(
+            (result: AIGenerateImageSuccess) => {
+                if (returnObject) {
+                    return result;
+                } else {
+                    return result.images[0].base64;
+                }
+            }
+        );
         (final as any)[ORIGINAL_OBJECT] = action;
         return final;
     }

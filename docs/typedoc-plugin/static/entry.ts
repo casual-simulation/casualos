@@ -117,6 +117,8 @@ export {
 
     AIGenerateSkyboxOptions,
     AIGenerateSkyboxBlockadeLabsOptions,
+
+    AIGenerateImageOptions
 } from '../../../src/aux-common/bots/BotEvents';
 export { 
     RuntimeBot,

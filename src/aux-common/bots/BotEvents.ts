@@ -264,7 +264,8 @@ export type AsyncActions =
     | DetachRuntimeAction
     | OpenPhotoCameraAction
     | AIChatAction
-    | AIGenerateSkyboxAction;
+    | AIGenerateSkyboxAction
+    | AIGenerateImageAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -815,6 +816,89 @@ export interface AIGenerateSkyboxBlockadeLabsOptions {
      * The random seed to use for generating the skybox.
      */
     seed?: number;
+}
+
+/**
+ * An event that is used to generate an image using AI.
+ */
+export interface AIGenerateImageAction
+    extends AsyncAction,
+        AIGenerateImageOptions {
+    type: 'ai_generate_image';
+
+    /**
+     * The options for the action.
+     */
+    options: RecordActionOptions;
+}
+
+/**
+ * Defines an interface that represents options for {@link ai.generateImage-string}.
+ *
+ * @dochash types/ai
+ * @docname AIGenerateImageOptions
+ */
+export interface AIGenerateImageOptions {
+    /**
+     * The description of what the generated image(s) should look like.
+     */
+    prompt: string;
+
+    /**
+     * The description of what the generated image(s) should not look like.
+     */
+    negativePrompt?: string;
+
+    /**
+     * The model that should be used to generate the image(s).
+     */
+    model?: string;
+
+    /**
+     * The desired width of the image(s) in pixels.
+     */
+    width?: number;
+
+    /**
+     * The desired height of the image(s) in pixels.
+     */
+    height?: number;
+
+    /**
+     * The number of images that should be generated.
+     */
+    numberOfImages?: number;
+
+    /**
+     * The random noise seed that should be used.
+     */
+    seed?: number;
+
+    /**
+     * The number of diffusion steps to run.
+     */
+    steps?: number;
+
+    /**
+     * How strictly the diffusion process adheres to the prompt text.
+     * Higher values keep the image closer to the prompt.
+     */
+    cfgScale?: number;
+
+    /**
+     * The sampler to use for the diffusion process.
+     */
+    sampler?: string;
+
+    /**
+     * The clip guidance preset.
+     */
+    clipGuidancePreset?: string;
+
+    /**
+     * The style preset that should be used to guide the image model torwards a specific style.
+     */
+    stylePreset?: string;
 }
 
 /**
@@ -5364,6 +5448,24 @@ export function aiGenerateSkybox(
         type: 'ai_generate_skybox',
         prompt,
         negativePrompt,
+        options: options ?? {},
+        taskId,
+    };
+}
+
+/**
+ * Creates a new AIGenerateImageAction.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function aiGenerateImage(
+    parameters: AIGenerateImageOptions,
+    options?: RecordActionOptions,
+    taskId?: number | string
+): AIGenerateImageAction {
+    return {
+        type: 'ai_generate_image',
+        ...parameters,
         options: options ?? {},
         taskId,
     };

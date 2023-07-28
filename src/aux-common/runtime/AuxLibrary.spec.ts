@@ -228,6 +228,7 @@ import {
     openPhotoCamera,
     aiChat,
     aiGenerateSkybox,
+    aiGenerateImage,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2740,6 +2741,142 @@ describe('AuxLibrary', () => {
                     success: true,
                     fileUrl: 'file_url',
                     thumbnailUrl: 'thumbnail_url',
+                });
+            });
+        });
+
+        describe('ai.generateImage()', () => {
+            it('should emit a AIGenerateImageAction', () => {
+                const promise: any =
+                    library.api.ai.generateImage('cartoon clouds');
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support negative prompts', () => {
+                const promise: any = library.api.ai.generateImage(
+                    'cartoon clouds',
+                    'realistic'
+                );
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                        negativePrompt: 'realistic',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support request objects', () => {
+                const promise: any = library.api.ai.generateImage({
+                    prompt: 'cartoon clouds',
+                    negativePrompt: 'realistic',
+                });
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                        negativePrompt: 'realistic',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should resolve with the data that was generated', async () => {
+                let result: string | null = null;
+                const promise: any =
+                    library.api.ai.generateImage('cartoon clouds');
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'base64',
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toBe('base64');
+            });
+
+            it('should resolve with the resulting object', async () => {
+                let result: any = null;
+                const promise: any = library.api.ai.generateImage({
+                    prompt: 'cartoon clouds',
+                });
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'base64',
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual({
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                        },
+                    ],
                 });
             });
         });
