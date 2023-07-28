@@ -680,6 +680,15 @@ export class RecordsHttpServer {
                 await this._aiSkybox(request),
                 this._allowedApiOrigins
             );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/ai/skybox'
+        ) {
+            return formatResponse(
+                request,
+                await this._aiGetSkybox(request),
+                this._allowedApiOrigins
+            );
         } else if (request.method === 'OPTIONS') {
             return formatResponse(
                 request,
@@ -1525,6 +1534,47 @@ export class RecordsHttpServer {
             prompt,
             negativePrompt,
             blockadeLabs,
+            userId: sessionKeyValidation.userId,
+            userSubscriptionTier: sessionKeyValidation.subscriptionTier,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _aiGetSkybox(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (!this._aiController) {
+            return returnResult(AI_NOT_SUPPORTED_RESULT);
+        }
+
+        const schema = z.object({
+            skyboxId: z.string().nonempty(),
+            instances: z.array(z.string()).nonempty().optional(),
+        });
+
+        const parseResult = schema.safeParse(request.query);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { skyboxId, instances } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._aiController.getSkybox({
+            skyboxId,
             userId: sessionKeyValidation.userId,
             userSubscriptionTier: sessionKeyValidation.subscriptionTier,
         });

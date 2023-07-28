@@ -54,6 +54,7 @@ import {
 import {
     AIGenerateSkyboxInterfaceRequest,
     AIGenerateSkyboxInterfaceResponse,
+    AIGetSkyboxInterfaceResponse,
 } from './AIGenerateSkyboxInterface';
 
 console.log = jest.fn();
@@ -108,6 +109,7 @@ describe('RecordsHttpServer', () => {
             Promise<AIGenerateSkyboxInterfaceResponse>,
             [AIGenerateSkyboxInterfaceRequest]
         >;
+        getSkybox: jest.Mock<Promise<AIGetSkyboxInterfaceResponse>, [string]>;
     };
 
     let stripe: StripeInterface;
@@ -256,6 +258,7 @@ describe('RecordsHttpServer', () => {
         };
         skyboxInterface = {
             generateSkybox: jest.fn(),
+            getSkybox: jest.fn(),
         };
         aiController = new AIController({
             chat: {
@@ -8745,8 +8748,7 @@ describe('RecordsHttpServer', () => {
         it('should call the AI skybox interface', async () => {
             skyboxInterface.generateSkybox.mockResolvedValueOnce({
                 success: true,
-                fileUrl: 'file',
-                thumbnailUrl: 'thumb',
+                skyboxId: 'skybox-id',
             });
 
             const result = await server.handleRequest(
@@ -8769,8 +8771,7 @@ describe('RecordsHttpServer', () => {
                 statusCode: 200,
                 body: {
                     success: true,
-                    fileUrl: 'file',
-                    thumbnailUrl: 'thumb',
+                    skyboxId: 'skybox-id',
                 },
                 headers: apiCorsHeaders,
             });
@@ -8807,6 +8808,83 @@ describe('RecordsHttpServer', () => {
                 }),
                 apiHeaders
             )
+        );
+    });
+
+    describe('GET /api/v2/ai/skybox', () => {
+        beforeEach(async () => {
+            const u = await authStore.findUser(userId);
+            await authStore.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+        });
+
+        it('should return a not_supported result if the server has a null AI controller', async () => {
+            server = new RecordsHttpServer(
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                null as any,
+                policyController,
+                null
+            );
+
+            const result = await server.handleRequest(
+                httpGet(`/api/v2/ai/skybox`, apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'AI features are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should call the AI skybox interface', async () => {
+            skyboxInterface.getSkybox.mockResolvedValueOnce({
+                success: true,
+                status: 'generated',
+                fileUrl: 'file-url',
+                thumbnailUrl: 'thumbnail-url',
+            });
+
+            const result = await server.handleRequest(
+                httpGet(`/api/v2/ai/skybox?skyboxId=${'skybox-id'}`, apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    status: 'generated',
+                    fileUrl: 'file-url',
+                    thumbnailUrl: 'thumbnail-url',
+                },
+                headers: apiCorsHeaders,
+            });
+            expect(skyboxInterface.getSkybox).toHaveBeenCalledWith('skybox-id');
+        });
+
+        testOrigin('GET', `/api/v2/ai/skybox?skyboxId=test-skybox`);
+        testAuthorization(() =>
+            httpGet(`/api/v2/ai/skybox?skyboxId=test-skybox`, apiHeaders)
+        );
+        testRateLimit(() =>
+            httpGet(`/api/v2/ai/skybox?skyboxId=test-skybox`, apiHeaders)
         );
     });
 

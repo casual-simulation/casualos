@@ -282,6 +282,11 @@ Resources:
                     Properties:
                         Path: /api/v2/ai/skybox
                         Method: POST
+                AiGetSkybox:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/ai/skybox
+                        Method: GET
                 StripeWebhook:
                     Type: Api
                     Properties:
