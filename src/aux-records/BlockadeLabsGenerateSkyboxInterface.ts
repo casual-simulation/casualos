@@ -172,11 +172,3 @@ function isFinished(status: BlockadeLabsSkyboxStatus): boolean {
 function isError(status: BlockadeLabsSkyboxStatus): boolean {
     return status.status === 'error' || status.status === 'abort';
 }
-
-function wait(seconds: number): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-        setTimeout(() => {
-            resolve();
-        }, seconds * 1000);
-    });
-}

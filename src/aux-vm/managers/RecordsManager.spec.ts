@@ -157,7 +157,8 @@ describe('RecordsManager', () => {
                 authOrigin: 'http://localhost:3002',
             },
             helper,
-            authFactory
+            authFactory,
+            true
         );
     });
 
@@ -5743,15 +5744,33 @@ describe('RecordsManager', () => {
 
         describe('ai_generate_skybox', () => {
             beforeEach(() => {
+                jest.useFakeTimers();
                 require('axios').__reset();
             });
 
+            afterEach(() => {
+                jest.useRealTimers();
+            });
+
             it('should make a POST request to /api/v2/ai/skybox', async () => {
-                setResponse({
+                setNextResponse({
                     data: {
                         success: true,
-                        fileUrl: 'test',
-                        thumbnailUrl: 'thumb',
+                        skyboxId: 'skybox-id',
+                    },
+                });
+                setNextResponse({
+                    data: {
+                        success: true,
+                        status: 'pending',
+                    },
+                });
+                setNextResponse({
+                    data: {
+                        success: true,
+                        status: 'generated',
+                        fileUrl: 'file-url',
+                        thumbnailUrl: 'thumb-url',
                     },
                 });
 
@@ -5764,26 +5783,48 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v2/ai/skybox',
-                    {
-                        prompt: 'prompt',
-                    },
-                    {
-                        validateStatus: expect.any(Function),
-                        headers: {
-                            Authorization: 'Bearer authToken',
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/ai/skybox',
+                        {
+                            prompt: 'prompt',
                         },
-                    },
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'get',
+                        'http://localhost:3002/api/v2/ai/skybox?skyboxId=skybox-id',
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'get',
+                        'http://localhost:3002/api/v2/ai/skybox?skyboxId=skybox-id',
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
                 ]);
-
-                await waitAsync();
 
                 expect(vm.events).toEqual([
                     asyncResult(1, {
                         success: true,
-                        fileUrl: 'test',
-                        thumbnailUrl: 'thumb',
+                        status: 'generated',
+                        fileUrl: 'file-url',
+                        thumbnailUrl: 'thumb-url',
                     }),
                 ]);
                 expect(authMock.isAuthenticated).toBeCalled();
@@ -5792,11 +5833,24 @@ describe('RecordsManager', () => {
             });
 
             it('should include the inst', async () => {
-                setResponse({
+                setNextResponse({
                     data: {
                         success: true,
-                        fileUrl: 'test',
-                        thumbnailUrl: 'thumb',
+                        skyboxId: 'skybox-id',
+                    },
+                });
+                setNextResponse({
+                    data: {
+                        success: true,
+                        status: 'pending',
+                    },
+                });
+                setNextResponse({
+                    data: {
+                        success: true,
+                        status: 'generated',
+                        fileUrl: 'file-url',
+                        thumbnailUrl: 'thumb-url',
                     },
                 });
 
@@ -5811,18 +5865,41 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v2/ai/skybox',
-                    {
-                        prompt: 'prompt',
-                        instances: ['testId'],
-                    },
-                    {
-                        validateStatus: expect.any(Function),
-                        headers: {
-                            Authorization: 'Bearer authToken',
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/ai/skybox',
+                        {
+                            prompt: 'prompt',
+                            instances: ['testId'],
                         },
-                    },
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'get',
+                        'http://localhost:3002/api/v2/ai/skybox?skyboxId=skybox-id&instances=testId',
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'get',
+                        'http://localhost:3002/api/v2/ai/skybox?skyboxId=skybox-id&instances=testId',
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
                 ]);
 
                 await waitAsync();
@@ -5830,8 +5907,9 @@ describe('RecordsManager', () => {
                 expect(vm.events).toEqual([
                     asyncResult(1, {
                         success: true,
-                        fileUrl: 'test',
-                        thumbnailUrl: 'thumb',
+                        status: 'generated',
+                        fileUrl: 'file-url',
+                        thumbnailUrl: 'thumb-url',
                     }),
                 ]);
                 expect(authMock.isAuthenticated).toBeCalled();
@@ -5840,11 +5918,24 @@ describe('RecordsManager', () => {
             });
 
             it('should support custom endpoints', async () => {
-                setResponse({
+                setNextResponse({
                     data: {
                         success: true,
-                        fileUrl: 'test',
-                        thumbnailUrl: 'thumb',
+                        skyboxId: 'skybox-id',
+                    },
+                });
+                setNextResponse({
+                    data: {
+                        success: true,
+                        status: 'pending',
+                    },
+                });
+                setNextResponse({
+                    data: {
+                        success: true,
+                        status: 'generated',
+                        fileUrl: 'file-url',
+                        thumbnailUrl: 'thumb-url',
                     },
                 });
 
@@ -5864,17 +5955,40 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:9999/api/v2/ai/skybox',
-                    {
-                        prompt: 'prompt',
-                    },
-                    {
-                        validateStatus: expect.any(Function),
-                        headers: {
-                            Authorization: 'Bearer authToken',
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:9999/api/v2/ai/skybox',
+                        {
+                            prompt: 'prompt',
                         },
-                    },
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'get',
+                        'http://localhost:9999/api/v2/ai/skybox?skyboxId=skybox-id',
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'get',
+                        'http://localhost:9999/api/v2/ai/skybox?skyboxId=skybox-id',
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
                 ]);
 
                 await waitAsync();
@@ -5882,8 +5996,9 @@ describe('RecordsManager', () => {
                 expect(vm.events).toEqual([
                     asyncResult(1, {
                         success: true,
-                        fileUrl: 'test',
-                        thumbnailUrl: 'thumb',
+                        status: 'generated',
+                        fileUrl: 'file-url',
+                        thumbnailUrl: 'thumb-url',
                     }),
                 ]);
                 expect(customAuthMock.isAuthenticated).toBeCalled();
@@ -5892,11 +6007,24 @@ describe('RecordsManager', () => {
             });
 
             it('should attempt to login if not authenticated', async () => {
-                setResponse({
+                setNextResponse({
                     data: {
                         success: true,
-                        fileUrl: 'test',
-                        thumbnailUrl: 'thumb',
+                        skyboxId: 'skybox-id',
+                    },
+                });
+                setNextResponse({
+                    data: {
+                        success: true,
+                        status: 'pending',
+                    },
+                });
+                setNextResponse({
+                    data: {
+                        success: true,
+                        status: 'generated',
+                        fileUrl: 'file-url',
+                        thumbnailUrl: 'thumb-url',
                     },
                 });
 
@@ -5910,17 +6038,40 @@ describe('RecordsManager', () => {
 
                 await waitAsync();
 
-                expect(getLastPost()).toEqual([
-                    'http://localhost:3002/api/v2/ai/skybox',
-                    {
-                        prompt: 'prompt',
-                    },
-                    {
-                        validateStatus: expect.any(Function),
-                        headers: {
-                            Authorization: 'Bearer authToken',
+                expect(getRequests()).toEqual([
+                    [
+                        'post',
+                        'http://localhost:3002/api/v2/ai/skybox',
+                        {
+                            prompt: 'prompt',
                         },
-                    },
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'get',
+                        'http://localhost:3002/api/v2/ai/skybox?skyboxId=skybox-id',
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
+                    [
+                        'get',
+                        'http://localhost:3002/api/v2/ai/skybox?skyboxId=skybox-id',
+                        {
+                            validateStatus: expect.any(Function),
+                            headers: {
+                                Authorization: 'Bearer authToken',
+                            },
+                        },
+                    ],
                 ]);
 
                 await waitAsync();
@@ -5928,12 +6079,58 @@ describe('RecordsManager', () => {
                 expect(vm.events).toEqual([
                     asyncResult(1, {
                         success: true,
-                        fileUrl: 'test',
-                        thumbnailUrl: 'thumb',
+                        status: 'generated',
+                        fileUrl: 'file-url',
+                        thumbnailUrl: 'thumb-url',
                     }),
                 ]);
                 expect(authMock.isAuthenticated).toBeCalled();
                 expect(authMock.authenticate).toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should return a server_error if unable to retrieve the image after 10 attempts', async () => {
+                setNextResponse({
+                    data: {
+                        success: true,
+                        skyboxId: 'skybox-id',
+                    },
+                });
+                for (let i = 0; i < 10; i++) {
+                    setNextResponse({
+                        data: {
+                            success: true,
+                            status: 'pending',
+                        },
+                    });
+                }
+                setNextResponse({
+                    data: {
+                        success: true,
+                        status: 'generated',
+                        fileUrl: 'file-url',
+                        thumbnailUrl: 'thumb-url',
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(true);
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    aiGenerateSkybox('prompt', undefined, undefined, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'The request timed out.',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).not.toBeCalled();
                 expect(authMock.getAuthToken).toBeCalled();
             });
 

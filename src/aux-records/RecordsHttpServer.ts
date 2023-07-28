@@ -1553,8 +1553,20 @@ export class RecordsHttpServer {
         }
 
         const schema = z.object({
-            skyboxId: z.string().nonempty(),
-            instances: z.array(z.string()).nonempty().optional(),
+            skyboxId: z
+                .string({
+                    invalid_type_error: 'skyboxId must be a string.',
+                    required_error: 'skyboxId is required.',
+                })
+                .nonempty('skyboxId must not be empty'),
+            instances: z
+                .string({
+                    invalid_type_error: 'instances must be a string.',
+                    required_error: 'instances is required.',
+                })
+                .nonempty('instances must not be empty')
+                .optional()
+                .transform((value) => parseInstancesList(value)),
         });
 
         const parseResult = schema.safeParse(request.query);
