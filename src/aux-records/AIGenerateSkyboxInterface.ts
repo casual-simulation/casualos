@@ -11,6 +11,12 @@ export interface AIGenerateSkyboxInterface {
     generateSkybox(
         request: AIGenerateSkyboxInterfaceRequest
     ): Promise<AIGenerateSkyboxInterfaceResponse>;
+
+    /**
+     * Attempts to get the skybox with the given ID.
+     * @param skyboxId The ID of the skybox.
+     */
+    getSkybox(skyboxId: string): Promise<AIGetSkyboxInterfaceResponse>;
 }
 
 export interface AIGenerateSkyboxInterfaceRequest {
@@ -61,17 +67,29 @@ export interface AIGenerateSkyboxInterfaceResponseSuccess {
     success: true;
 
     /**
-     * The URL of the file that was generated.
+     * The ID of the skybox.
      */
-    fileUrl: string;
-
-    /**
-     * The URL of the thumbnail for the file.
-     */
-    thumbnailUrl?: string;
+    skyboxId: string;
 }
 
 export interface AIGenerateSkyboxInterfaceResponseFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
+export type AIGetSkyboxInterfaceResponse =
+    | AIGetSkyboxInterfaceResponseSuccess
+    | AIGetSkyboxInterfaceResponseFailure;
+
+export interface AIGetSkyboxInterfaceResponseSuccess {
+    success: true;
+    status: 'pending' | 'generated';
+    fileUrl: string | null;
+    thumbnailUrl: string | null;
+}
+
+export interface AIGetSkyboxInterfaceResponseFailure {
     success: false;
     errorCode: ServerError;
     errorMessage: string;

@@ -241,6 +241,83 @@ export class AIController {
             if (result.success === true) {
                 return {
                     success: true,
+                    skyboxId: result.skyboxId,
+                };
+            } else {
+                return result;
+            }
+        } catch (err) {
+            console.error(
+                '[AIController] Error handling generate skybox request:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async getSkybox(request: AIGetSkyboxRequest): Promise<AIGetSkyboxResponse> {
+        try {
+            if (!this._generateSkybox) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+
+            if (!request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in. Please provide a sessionKey or a recordKey.',
+                };
+            }
+
+            if (
+                !this._matchesSubscriptionTiers(
+                    request.userSubscriptionTier,
+                    this._allowedGenerateSkyboxSubscriptionTiers
+                )
+            ) {
+                if (!request.userSubscriptionTier) {
+                    return {
+                        success: false,
+                        errorCode: 'not_subscribed',
+                        errorMessage:
+                            'The user must be subscribed in order to use this operation.',
+                        allowedSubscriptionTiers: [
+                            ...(this
+                                ._allowedGenerateSkyboxSubscriptionTiers as Set<string>),
+                        ],
+                    };
+                } else {
+                    return {
+                        success: false,
+                        errorCode: 'invalid_subscription_tier',
+                        errorMessage:
+                            'This operation is not available to the user at their current subscription tier.',
+                        allowedSubscriptionTiers: [
+                            ...(this
+                                ._allowedGenerateSkyboxSubscriptionTiers as Set<string>),
+                        ],
+                        currentSubscriptionTier: request.userSubscriptionTier,
+                    };
+                }
+            }
+
+            const result = await this._generateSkybox.getSkybox(
+                request.skyboxId
+            );
+
+            if (result.success === true) {
+                return {
+                    success: true,
+                    status: result.status,
                     fileUrl: result.fileUrl,
                     thumbnailUrl: result.thumbnailUrl,
                 };
@@ -249,7 +326,7 @@ export class AIController {
             }
         } catch (err) {
             console.error(
-                '[AIController] Error handling generate skybox request:',
+                '[AIController] Error handling get skybox request:',
                 err
             );
             return {
@@ -381,11 +458,51 @@ export type AIGenerateSkyboxResponse =
 
 export interface AIGenerateSkyboxSuccess {
     success: true;
-    fileUrl: string;
-    thumbnailUrl: string;
+    skyboxId: string;
 }
 
 export interface AIGenerateSkyboxFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotSubscribedError
+        | InvalidSubscriptionTierError
+        | NotSupportedError;
+    errorMessage: string;
+
+    allowedSubscriptionTiers?: string[];
+    currentSubscriptionTier?: string;
+}
+
+export interface AIGetSkyboxRequest {
+    /**
+     * The ID of the skybox.
+     */
+    skyboxId: string;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The subscription tier of the user.
+     * Should be null if the user is not logged in or if they do not have a subscription.
+     */
+    userSubscriptionTier: string;
+}
+
+export type AIGetSkyboxResponse = AIGetSkyboxSuccess | AIGetSkyboxFailure;
+
+export interface AIGetSkyboxSuccess {
+    success: true;
+    status: 'pending' | 'generated';
+    fileUrl?: string;
+    thumbnailUrl?: string;
+}
+
+export interface AIGetSkyboxFailure {
     success: false;
     errorCode:
         | ServerError

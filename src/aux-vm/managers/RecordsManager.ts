@@ -58,6 +58,7 @@ import { DateTime } from 'luxon';
 import {
     AIChatResponse,
     AIGenerateSkyboxResponse,
+    AIGetSkyboxResponse,
 } from '@casual-simulation/aux-records/AIController';
 
 /**
@@ -93,6 +94,7 @@ export class RecordsManager {
     private _onSetRoomOptions: Subject<SetRoomOptions> = new Subject();
     private _onGetRoomOptions: Subject<GetRoomOptions> = new Subject();
     private _axiosOptions: AxiosRequestConfig<any>;
+    private _skipTimers: boolean = false;
 
     /**
      * Gets an observable that resolves whenever a room_join event has been received.
@@ -131,7 +133,8 @@ export class RecordsManager {
     constructor(
         config: AuxConfigParameters,
         helper: BotHelper,
-        authFactory: (endpoint: string) => AuthHelperInterface
+        authFactory: (endpoint: string) => AuthHelperInterface,
+        skipTimers: boolean = false
     ) {
         this._config = config;
         this._helper = helper;
@@ -142,6 +145,7 @@ export class RecordsManager {
                 return status < 500;
             },
         };
+        this._skipTimers = skipTimers;
     }
 
     handleEvents(events: BotAction[]): void {
@@ -1334,22 +1338,85 @@ export class RecordsManager {
                 blockadeLabs: blockadeLabs,
             };
 
+            let instances: string[];
             if (hasValue(this._helper.inst)) {
-                requestData.instances = [this._helper.inst];
+                instances = [this._helper.inst];
             }
 
             const result: AxiosResponse<AIGenerateSkyboxResponse> =
                 await axios.post(
                     await this._publishUrl(info.auth, '/api/v2/ai/skybox'),
-                    requestData,
+                    {
+                        ...requestData,
+                        instances,
+                    },
                     {
                         ...this._axiosOptions,
                         headers: info.headers,
                     }
                 );
+
+            if (!result.data.success) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, result.data)
+                    );
+                }
+                return;
+            }
+
+            const skyboxId = result.data.skyboxId;
+            for (let i = 0; i < 10; i++) {
+                if (!this._skipTimers) {
+                    const seconds =
+                        i === 0
+                            ? 1
+                            : i === 1
+                            ? 4
+                            : i === 2
+                            ? 4
+                            : i === 3
+                            ? 8
+                            : i === 4
+                            ? 16
+                            : i === 5
+                            ? 32
+                            : 32;
+
+                    await wait(seconds);
+                }
+
+                const getResult: AxiosResponse<AIGetSkyboxResponse> =
+                    await axios.get(
+                        await this._publishUrl(info.auth, '/api/v2/ai/skybox', {
+                            skyboxId: result.data.skyboxId,
+                            instances,
+                        }),
+                        {
+                            ...this._axiosOptions,
+                            headers: info.headers,
+                        }
+                    );
+
+                if (getResult.data.success) {
+                    if (getResult.data.status === 'generated') {
+                        if (hasValue(event.taskId)) {
+                            this._helper.transaction(
+                                asyncResult(event.taskId, getResult.data)
+                            );
+                        }
+                        return;
+                    }
+                }
+            }
+
             if (hasValue(event.taskId)) {
                 this._helper.transaction(
-                    asyncResult(event.taskId, result.data)
+                    asyncResult(event.taskId, {
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'The request timed out.',
+                    })
                 );
             }
         } catch (e) {
@@ -1594,4 +1661,12 @@ export interface RoomAction<T> {
      * @param errorMessage The error that occurred.
      */
     reject(errorCode: string, errorMessage: string): void;
+}
+
+function wait(seconds: number): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        setTimeout(() => {
+            resolve();
+        }, seconds * 1000);
+    });
 }

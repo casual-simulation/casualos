@@ -2,6 +2,7 @@ import {
     AIGenerateSkyboxInterface,
     AIGenerateSkyboxInterfaceRequest,
     AIGenerateSkyboxInterfaceResponse,
+    AIGetSkyboxInterfaceResponse,
 } from './AIGenerateSkyboxInterface';
 import axios from 'axios';
 
@@ -60,46 +61,70 @@ export class BlockadeLabsGenerateSkyboxInterface
         console.log(
             `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}]: ID recieved.`
         );
-        for (let i = 0; i < 4; i++) {
-            const seconds = i === 0 ? 10 : i === 1 ? 20 : i === 2 ? 40 : 60;
-
-            console.log(
-                `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}]: Waiting ${seconds} seconds...`
-            );
-            await wait(seconds);
-            const status = await this._downloadStatus(id);
-
-            console.log(
-                `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}]: Status: ${status.status}`
-            );
-            if (isFinished(status)) {
-                if (isError(status)) {
-                    return {
-                        success: false,
-                        errorCode: 'server_error',
-                        errorMessage: status.error_message,
-                    };
-                } else {
-                    console.log(
-                        `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}]: Skybox Generated.`
-                    );
-                    return {
-                        success: true,
-                        fileUrl: status.file_url,
-                        thumbnailUrl: status.thumb_url,
-                    };
-                }
-            }
-        }
-
-        console.error(
-            `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}] Timed out.`
-        );
-
         return {
-            success: false,
-            errorCode: 'server_error',
-            errorMessage: 'The request timed out.',
+            success: true,
+            skyboxId: String(id),
+        };
+
+        // for (let i = 0; i < 4; i++) {
+        //     const seconds = i === 0 ? 10 : i === 1 ? 20 : i === 2 ? 40 : 60;
+
+        //     console.log(
+        //         `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}]: Waiting ${seconds} seconds...`
+        //     );
+        //     await wait(seconds);
+        //     const status = await this._downloadStatus(id);
+
+        //     console.log(
+        //         `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}]: Status: ${status.status}`
+        //     );
+        //     if (isFinished(status)) {
+        //         if (isError(status)) {
+        //             return {
+        //                 success: false,
+        //                 errorCode: 'server_error',
+        //                 errorMessage: status.error_message,
+        //             };
+        //         } else {
+        //             console.log(
+        //                 `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}]: Skybox Generated.`
+        //             );
+        //             return {
+        //                 success: true,
+        //                 fileUrl: status.file_url,
+        //                 thumbnailUrl: status.thumb_url,
+        //             };
+        //         }
+        //     }
+        // }
+
+        // console.error(
+        //     `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}] Timed out.`
+        // );
+
+        // return {
+        //     success: false,
+        //     errorCode: 'server_error',
+        //     errorMessage: 'The request timed out.',
+        // };
+    }
+
+    async getSkybox(skyboxId: string): Promise<AIGetSkyboxInterfaceResponse> {
+        console.log(
+            `[BlockadeLabsGenerateSkyboxInterface] [getSkybox]: Getting skybox status...`
+        );
+        const id: number = parseInt(skyboxId);
+        const status = await this._downloadStatus(id);
+
+        console.log(
+            `[BlockadeLabsGenerateSkyboxInterface] [getSkybox] [${id}]: Status recieved:`,
+            status
+        );
+        return {
+            success: true,
+            status: isFinished(status) ? 'generated' : 'pending',
+            fileUrl: status.file_url,
+            thumbnailUrl: status.thumb_url,
         };
     }
 
@@ -146,12 +171,4 @@ function isFinished(status: BlockadeLabsSkyboxStatus): boolean {
 
 function isError(status: BlockadeLabsSkyboxStatus): boolean {
     return status.status === 'error' || status.status === 'abort';
-}
-
-function wait(seconds: number): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-        setTimeout(() => {
-            resolve();
-        }, seconds * 1000);
-    });
 }
