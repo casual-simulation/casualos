@@ -689,6 +689,15 @@ export class RecordsHttpServer {
                 await this._aiGetSkybox(request),
                 this._allowedApiOrigins
             );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/ai/image'
+        ) {
+            return formatResponse(
+                request,
+                await this._aiGenerateImage(request),
+                this._allowedApiOrigins
+            );
         } else if (request.method === 'OPTIONS') {
             return formatResponse(
                 request,
@@ -1587,6 +1596,104 @@ export class RecordsHttpServer {
 
         const result = await this._aiController.getSkybox({
             skyboxId,
+            userId: sessionKeyValidation.userId,
+            userSubscriptionTier: sessionKeyValidation.subscriptionTier,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _aiGenerateImage(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (!this._aiController) {
+            return returnResult(AI_NOT_SUPPORTED_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            prompt: z
+                .string({
+                    invalid_type_error: 'prompt must be a string.',
+                    required_error: 'prompt is required.',
+                })
+                .nonempty('prompt must not be empty'),
+            model: z
+                .string({
+                    invalid_type_error: 'model must be a string.',
+                    required_error: 'model is required.',
+                })
+                .nonempty('model must not be empty')
+                .optional(),
+            negativePrompt: z.string().nonempty().optional(),
+            width: z.number().positive().int().optional(),
+            height: z.number().positive().int().optional(),
+            seed: z.number().positive().int().optional(),
+            numberOfImages: z.number().positive().int().optional(),
+            steps: z.number().positive().int().optional(),
+            sampler: z.string().nonempty().optional(),
+            cfgScale: z.number().min(0).int().optional(),
+            clipGuidancePreset: z.string().nonempty().optional(),
+            stylePreset: z.string().nonempty().optional(),
+            instances: z.array(z.string().nonempty()).optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const {
+            prompt,
+            model,
+            negativePrompt,
+            width,
+            height,
+            seed,
+            numberOfImages,
+            steps,
+            sampler,
+            cfgScale,
+            clipGuidancePreset,
+            stylePreset,
+            instances,
+        } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._aiController.generateImage({
+            model,
+            prompt,
+            negativePrompt,
+            width,
+            height,
+            seed,
+            numberOfImages,
+            steps,
+            sampler,
+            cfgScale,
+            clipGuidancePreset,
+            stylePreset,
             userId: sessionKeyValidation.userId,
             userSubscriptionTier: sessionKeyValidation.subscriptionTier,
         });
