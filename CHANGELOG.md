@@ -35,6 +35,13 @@
             -   `generateSkybox` - Optional. If omitted, then AI Skybox features will be disabled. It should be an object with the following properties:
                 -   `provider` - Set this to `"blockadeLabs"`. This tells the server to use Blockade Labs for `ai.generateSkybox()`.
                 -   `allowedSubscriptionTiers` - The array of subscription tiers that enable `ai.generateSkybox()` for a user. If a user is not subscribed to one of the listed tiers, then they will not be allowed to use `ai.generateSkybox()`. Set this to `true` to allow all users (even ones that are not subscribed).
+-   Added the `bytes.toBase64Url(data, mimeType?)` and `bytes.fromBase64Url(url)` functions.
+    -   These functions are useful working with [Data URLs](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) from binary data or a Base 64 string.
+    -   `bytes.toBase64Url(data, mimeType?)` - Creates a Data URL using the given binary data or Base 64 string, and includes the given MIME Type in the output.
+        -   `data` - Is a `Uint8Array` or `string` and is the data that should be included in the URL.
+        -   `mimeType` - Is optional, and is the MIME Type that the data represents.
+    -   `bytes.fromBase64Url(url)` - Creates a `Blob` from the given data URL. The resulting blob will have a `type` matching the MIME Type stored in the Data URL, and binary data equal to the decoded base 64.
+        -   `url` - The string representing the data URL.
 
 ## V3.2.1
 
