@@ -98,6 +98,10 @@ if (config.rateLimit && config.rateLimit.windowMs && config.rateLimit.maxHits) {
     builder.useRedisRateLimit();
 }
 
+if (config.ai) {
+    builder.useAI();
+}
+
 const { server, filesStore } = builder.build();
 
 async function handleEventBridgeEvent(event: EventBridgeEvent<any, any>) {

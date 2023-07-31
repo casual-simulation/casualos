@@ -640,6 +640,10 @@ export class Server {
             }
         }
 
+        if (options.ai) {
+            builder.useAI();
+        }
+
         const { server, filesController, mongoDatabase } =
             await builder.buildAsync();
         const filesCollection =

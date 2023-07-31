@@ -24,7 +24,10 @@ import {
 } from '@casual-simulation/causal-trees';
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
-import type { RecordFileFailure } from '@casual-simulation/aux-records';
+import type {
+    AIChatMessage,
+    RecordFileFailure,
+} from '@casual-simulation/aux-records';
 import { AuxRuntime } from '../runtime/AuxRuntime';
 import { InstUpdate } from './StoredAux';
 
@@ -259,7 +262,10 @@ export type AsyncActions =
     | HtmlAppMethodCallAction
     | AttachRuntimeAction
     | DetachRuntimeAction
-    | OpenPhotoCameraAction;
+    | OpenPhotoCameraAction
+    | AIChatAction
+    | AIGenerateSkyboxAction
+    | AIGenerateImageAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -679,6 +685,220 @@ export interface ShellAction extends Action {
      * The script that should be run.
      */
     script: string;
+}
+
+/**
+ * An event that is used to chat with an AI.
+ */
+export interface AIChatAction extends AsyncAction {
+    type: 'ai_chat';
+
+    /**
+     * The options for the action.
+     */
+    options: AIChatOptions;
+
+    /**
+     * The list of messages comprising the conversation so far.
+     */
+    messages: AIChatMessage[];
+}
+
+/**
+ * Defines an interface that represents options for {@link ai.chat-string}.
+ *
+ * @dochash types/ai
+ * @doctitle AI Types
+ * @docsidebar AI
+ * @docdescription Types that are used in AI actions.
+ * @docname AIChatOptions
+ */
+export interface AIChatOptions extends RecordActionOptions {
+    /**
+     * The model that should be used.
+     *
+     * If not specified, then a default will be used.
+     *
+     * Currently, the following models are supported:
+     *
+     * - `gpt-4`
+     * - `gpt-3.5-turbo`
+     */
+    preferredModel?: 'gpt-4' | 'gpt-3.5-turbo';
+
+    /**
+     * The temperature that should be used.
+     *
+     * If not specified, then a default will be used.
+     */
+    temperature?: number;
+
+    /**
+     * The nucleus sampling probability.
+     */
+    topP?: number;
+
+    /**
+     * The presence penalty.
+     *
+     * Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.
+     */
+    presencePenalty?: number;
+
+    /**
+     * The frequency penalty.
+     *
+     * Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+     */
+    frequencyPenalty?: number;
+}
+
+/**
+ * An event that is used to generate a skybox using AI.
+ *
+ * @dochash types/ai
+ * @docname AIGenerateSkyboxAction
+ */
+export interface AIGenerateSkyboxAction extends AsyncAction {
+    type: 'ai_generate_skybox';
+
+    /**
+     * The prompt to use for the skybox.
+     *
+     * Describes things that you want the skybox to look like.
+     */
+    prompt: string;
+
+    /**
+     * The negative prompt to use for the skybox.
+     *
+     * Describes the things that you don't want the skybox to look like.
+     */
+    negativePrompt?: string;
+
+    /**
+     * The options that should be included in the request.
+     */
+    options: AIGenerateSkyboxOptions;
+}
+
+/**
+ * Defines an interface that represents options for {@link ai.generateSkybox-string}.
+ *
+ * @dochash types/ai
+ * @docname AIGenerateSkyboxOptions
+ */
+export interface AIGenerateSkyboxOptions extends RecordActionOptions {
+    /**
+     * Options that are specific to blockade-labs.
+     */
+    blockadeLabs?: AIGenerateSkyboxBlockadeLabsOptions;
+}
+
+/**
+ * Options that are specific to Blockade Labs implementations for {@link ai.generateSkybox-string}.
+ *
+ * @dochash types/ai
+ * @docname AIGenerateSkyboxOptions
+ */
+export interface AIGenerateSkyboxBlockadeLabsOptions {
+    /**
+     * The pre-defined style ID for the skybox.
+     */
+    skyboxStyleId?: number;
+
+    /**
+     * The ID of a previously generated skybox.
+     */
+    remixImagineId?: number;
+
+    /**
+     * The random seed to use for generating the skybox.
+     */
+    seed?: number;
+}
+
+/**
+ * An event that is used to generate an image using AI.
+ */
+export interface AIGenerateImageAction
+    extends AsyncAction,
+        AIGenerateImageOptions {
+    type: 'ai_generate_image';
+
+    /**
+     * The options for the action.
+     */
+    options: RecordActionOptions;
+}
+
+/**
+ * Defines an interface that represents options for {@link ai.generateImage-string}.
+ *
+ * @dochash types/ai
+ * @docname AIGenerateImageOptions
+ */
+export interface AIGenerateImageOptions {
+    /**
+     * The description of what the generated image(s) should look like.
+     */
+    prompt: string;
+
+    /**
+     * The description of what the generated image(s) should not look like.
+     */
+    negativePrompt?: string;
+
+    /**
+     * The model that should be used to generate the image(s).
+     */
+    model?: string;
+
+    /**
+     * The desired width of the image(s) in pixels.
+     */
+    width?: number;
+
+    /**
+     * The desired height of the image(s) in pixels.
+     */
+    height?: number;
+
+    /**
+     * The number of images that should be generated.
+     */
+    numberOfImages?: number;
+
+    /**
+     * The random noise seed that should be used.
+     */
+    seed?: number;
+
+    /**
+     * The number of diffusion steps to run.
+     */
+    steps?: number;
+
+    /**
+     * How strictly the diffusion process adheres to the prompt text.
+     * Higher values keep the image closer to the prompt.
+     */
+    cfgScale?: number;
+
+    /**
+     * The sampler to use for the diffusion process.
+     */
+    sampler?: string;
+
+    /**
+     * The clip guidance preset.
+     */
+    clipGuidancePreset?: string;
+
+    /**
+     * The style preset that should be used to guide the image model torwards a specific style.
+     */
+    stylePreset?: string;
 }
 
 /**
@@ -5188,6 +5408,66 @@ export function toast(
         type: 'show_toast',
         message: message,
         duration: 2000,
+    };
+}
+
+/**
+ * Creates a new AIChatAction.
+ *
+ * @param messages The messages to include in the chat.
+ * @param options The options for the chat.
+ * @param taskId The ID of the async task.
+ */
+export function aiChat(
+    messages: AIChatMessage[],
+    options?: AIChatOptions,
+    taskId?: number | string
+): AIChatAction {
+    return {
+        type: 'ai_chat',
+        messages,
+        options: options ?? {},
+        taskId,
+    };
+}
+
+/**
+ * Creates a new AIGenerateSkyboxAction.
+ * @param prompt The prompt that describes what the generated skybox should look like.
+ * @param negativePrompt The negative prompt that describes what the generated skybox should not look like.
+ * @param options The options for the skybox.
+ * @param taskId The ID of the async task.
+ */
+export function aiGenerateSkybox(
+    prompt: string,
+    negativePrompt: string | null | undefined,
+    options?: AIGenerateSkyboxOptions,
+    taskId?: number | string
+): AIGenerateSkyboxAction {
+    return {
+        type: 'ai_generate_skybox',
+        prompt,
+        negativePrompt,
+        options: options ?? {},
+        taskId,
+    };
+}
+
+/**
+ * Creates a new AIGenerateImageAction.
+ * @param options The options.
+ * @param taskId The ID of the async task.
+ */
+export function aiGenerateImage(
+    parameters: AIGenerateImageOptions,
+    options?: RecordActionOptions,
+    taskId?: number | string
+): AIGenerateImageAction {
+    return {
+        type: 'ai_generate_image',
+        ...parameters,
+        options: options ?? {},
+        taskId,
     };
 }
 

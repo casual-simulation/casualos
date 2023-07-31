@@ -66,6 +66,11 @@ export {
     SpeakTextApiOptions,
 
     PseudoRandomNumberGenerator,
+    AIGenerateSkyboxRequest,
+    AIGenerateSkyboxResult,
+
+    AIGenerateImageAPISuccess,
+    AIGeneratedImageAPI,
 } from '../../../src/aux-common/runtime/AuxLibrary';
 export { 
     EaseType,
@@ -110,6 +115,13 @@ export {
     SyntheticVoice,
     OpenPhotoCameraOptions,
     Photo,
+    
+    AIChatOptions,
+
+    AIGenerateSkyboxOptions,
+    AIGenerateSkyboxBlockadeLabsOptions,
+
+    AIGenerateImageOptions
 } from '../../../src/aux-common/bots/BotEvents';
 export { 
     RuntimeBot,
@@ -134,7 +146,14 @@ export {
     AuxDevice
 } from '../../../src/aux-common/runtime/AuxDevice';
 export { InstUpdate } from '../../../src/aux-common/bots/StoredAux';
+export {
+    GenericError,
+    CasualOSError
+} from '../../../src/aux-common/runtime/CasualOSError';
 
+export {
+    AIChatMessage,
+} from '../../../src/aux-records/AIChatInterface';
 export {
     CreatePublicRecordKeyResult,
     CreatePublicRecordKeySuccess,

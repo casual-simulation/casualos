@@ -28,6 +28,8 @@ import { PublicRecordKeyPolicy } from './RecordsStore';
 import { RateLimitController } from './RateLimitController';
 import { AVAILABLE_PERMISSIONS_VALIDATION } from './PolicyPermissions';
 import { PolicyController } from './PolicyController';
+import { AIController } from './AIController';
+import { AIChatMessage, AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
 
 /**
  * Defines an interface for a generic HTTP request.
@@ -153,6 +155,12 @@ const SUBSCRIPTIONS_NOT_SUPPORTED_RESULT = {
     errorMessage: 'Subscriptions are not supported by this server.',
 };
 
+const AI_NOT_SUPPORTED_RESULT = {
+    success: false,
+    errorCode: 'not_supported',
+    errorMessage: 'AI features are not supported by this server.',
+};
+
 /**
  * The Zod validation for record keys.
  */
@@ -213,6 +221,7 @@ export class RecordsHttpServer {
     private _manualData: DataRecordsController;
     private _files: FileRecordsController;
     private _subscriptions: SubscriptionController | null;
+    private _aiController: AIController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -238,7 +247,8 @@ export class RecordsHttpServer {
         filesController: FileRecordsController,
         subscriptionController: SubscriptionController | null,
         rateLimitController: RateLimitController,
-        policyController: PolicyController
+        policyController: PolicyController,
+        aiController: AIController | null
     ) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -252,6 +262,7 @@ export class RecordsHttpServer {
         this._subscriptions = subscriptionController;
         this._rateLimit = rateLimitController;
         this._policyController = policyController;
+        this._aiController = aiController;
     }
 
     /**
@@ -649,6 +660,42 @@ export class RecordsHttpServer {
             return formatResponse(
                 request,
                 await this._roleRevoke(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/ai/chat'
+        ) {
+            return formatResponse(
+                request,
+                await this._aiChat(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/ai/skybox'
+        ) {
+            return formatResponse(
+                request,
+                await this._aiSkybox(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/ai/skybox'
+        ) {
+            return formatResponse(
+                request,
+                await this._aiGetSkybox(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/ai/image'
+        ) {
+            return formatResponse(
+                request,
+                await this._aiGenerateImage(request),
                 this._allowedApiOrigins
             );
         } else if (request.method === 'OPTIONS') {
@@ -1378,6 +1425,278 @@ export class RecordsHttpServer {
             },
             instances
         );
+
+        return returnResult(result);
+    }
+
+    private async _aiChat(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (!this._aiController) {
+            return returnResult(AI_NOT_SUPPORTED_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            model: z.string().nonempty().optional(),
+            messages: z.array(AI_CHAT_MESSAGE_SCHEMA).nonempty(),
+            instances: z.array(z.string()).nonempty().optional(),
+            temperature: z.number().min(0).max(2).optional(),
+            topP: z.number().optional(),
+            presencePenalty: z.number().min(-2).max(2).optional(),
+            frequencyPenalty: z.number().min(-2).max(2).optional(),
+            stopWords: z.array(z.string()).max(4).optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { model, messages, instances, ...options } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._aiController.chat({
+            ...options,
+            model,
+            messages: messages as AIChatMessage[],
+            userId: sessionKeyValidation.userId,
+            userSubscriptionTier: sessionKeyValidation.subscriptionTier,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _aiSkybox(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (!this._aiController) {
+            return returnResult(AI_NOT_SUPPORTED_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            prompt: z.string().nonempty(),
+            negativePrompt: z.string().nonempty().optional(),
+            blockadeLabs: z
+                .object({
+                    skyboxStyleId: z.number().optional(),
+                    remixImagineId: z.number().optional(),
+                    seed: z.number().optional(),
+                })
+                .optional(),
+            instances: z.array(z.string()).nonempty().optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { prompt, negativePrompt, instances, blockadeLabs } =
+            parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._aiController.generateSkybox({
+            prompt,
+            negativePrompt,
+            blockadeLabs,
+            userId: sessionKeyValidation.userId,
+            userSubscriptionTier: sessionKeyValidation.subscriptionTier,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _aiGetSkybox(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (!this._aiController) {
+            return returnResult(AI_NOT_SUPPORTED_RESULT);
+        }
+
+        const schema = z.object({
+            skyboxId: z
+                .string({
+                    invalid_type_error: 'skyboxId must be a string.',
+                    required_error: 'skyboxId is required.',
+                })
+                .nonempty('skyboxId must not be empty'),
+            instances: z
+                .string({
+                    invalid_type_error: 'instances must be a string.',
+                    required_error: 'instances is required.',
+                })
+                .nonempty('instances must not be empty')
+                .optional()
+                .transform((value) => parseInstancesList(value)),
+        });
+
+        const parseResult = schema.safeParse(request.query);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { skyboxId, instances } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._aiController.getSkybox({
+            skyboxId,
+            userId: sessionKeyValidation.userId,
+            userSubscriptionTier: sessionKeyValidation.subscriptionTier,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _aiGenerateImage(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (!this._aiController) {
+            return returnResult(AI_NOT_SUPPORTED_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            prompt: z
+                .string({
+                    invalid_type_error: 'prompt must be a string.',
+                    required_error: 'prompt is required.',
+                })
+                .nonempty('prompt must not be empty'),
+            model: z
+                .string({
+                    invalid_type_error: 'model must be a string.',
+                    required_error: 'model is required.',
+                })
+                .nonempty('model must not be empty')
+                .optional(),
+            negativePrompt: z.string().nonempty().optional(),
+            width: z.number().positive().int().optional(),
+            height: z.number().positive().int().optional(),
+            seed: z.number().positive().int().optional(),
+            numberOfImages: z.number().positive().int().optional(),
+            steps: z.number().positive().int().optional(),
+            sampler: z.string().nonempty().optional(),
+            cfgScale: z.number().min(0).int().optional(),
+            clipGuidancePreset: z.string().nonempty().optional(),
+            stylePreset: z.string().nonempty().optional(),
+            instances: z.array(z.string().nonempty()).optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const {
+            prompt,
+            model,
+            negativePrompt,
+            width,
+            height,
+            seed,
+            numberOfImages,
+            steps,
+            sampler,
+            cfgScale,
+            clipGuidancePreset,
+            stylePreset,
+            instances,
+        } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._aiController.generateImage({
+            model,
+            prompt,
+            negativePrompt,
+            width,
+            height,
+            seed,
+            numberOfImages,
+            steps,
+            sampler,
+            cfgScale,
+            clipGuidancePreset,
+            stylePreset,
+            userId: sessionKeyValidation.userId,
+            userSubscriptionTier: sessionKeyValidation.subscriptionTier,
+        });
 
         return returnResult(result);
     }

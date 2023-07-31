@@ -46,6 +46,20 @@ import { RateLimitController } from './RateLimitController';
 import { MemoryRateLimiter } from './MemoryRateLimiter';
 import { RateLimiter } from '@casual-simulation/rate-limit-redis';
 import { createTestUser } from './TestUtils';
+import { AIController } from './AIController';
+import {
+    AIChatInterfaceRequest,
+    AIChatInterfaceResponse,
+} from './AIChatInterface';
+import {
+    AIGenerateSkyboxInterfaceRequest,
+    AIGenerateSkyboxInterfaceResponse,
+    AIGetSkyboxInterfaceResponse,
+} from './AIGenerateSkyboxInterface';
+import {
+    AIGenerateImageInterfaceRequest,
+    AIGenerateImageInterfaceResponse,
+} from './AIImageInterface';
 
 console.log = jest.fn();
 
@@ -85,6 +99,27 @@ describe('RecordsHttpServer', () => {
         createCustomer: jest.Mock<any>;
         listActiveSubscriptionsForCustomer: jest.Mock<any>;
         constructWebhookEvent: jest.Mock<any>;
+    };
+
+    let aiController: AIController;
+    let chatInterface: {
+        chat: jest.Mock<
+            Promise<AIChatInterfaceResponse>,
+            [AIChatInterfaceRequest]
+        >;
+    };
+    let skyboxInterface: {
+        generateSkybox: jest.Mock<
+            Promise<AIGenerateSkyboxInterfaceResponse>,
+            [AIGenerateSkyboxInterfaceRequest]
+        >;
+        getSkybox: jest.Mock<Promise<AIGetSkyboxInterfaceResponse>, [string]>;
+    };
+    let imageInterface: {
+        generateImage: jest.Mock<
+            Promise<AIGenerateImageInterfaceResponse>,
+            [AIGenerateImageInterfaceRequest]
+        >;
     };
 
     let stripe: StripeInterface;
@@ -228,6 +263,51 @@ describe('RecordsHttpServer', () => {
             subscriptionConfig
         );
 
+        chatInterface = {
+            chat: jest.fn(),
+        };
+        skyboxInterface = {
+            generateSkybox: jest.fn(),
+            getSkybox: jest.fn(),
+        };
+        imageInterface = {
+            generateImage: jest.fn(),
+        };
+        aiController = new AIController({
+            chat: {
+                interface: chatInterface,
+                options: {
+                    defaultModel: 'default-model',
+                    allowedChatModels: ['model-1', 'model-2'],
+                    allowedChatSubscriptionTiers: ['beta'],
+                },
+            },
+            generateSkybox: {
+                interface: skyboxInterface,
+                options: {
+                    allowedSubscriptionTiers: ['beta'],
+                },
+            },
+            images: {
+                interfaces: {
+                    openai: imageInterface,
+                },
+                options: {
+                    allowedModels: {
+                        openai: ['model-1', 'model-2'],
+                    },
+                    allowedSubscriptionTiers: ['beta'],
+                    defaultHeight: 512,
+                    defaultWidth: 512,
+                    maxHeight: 1024,
+                    maxWidth: 1024,
+                    defaultModel: 'model-1',
+                    maxImages: 3,
+                    maxSteps: 50,
+                },
+            },
+        });
+
         server = new RecordsHttpServer(
             allowedAccountOrigins,
             allowedApiOrigins,
@@ -240,7 +320,8 @@ describe('RecordsHttpServer', () => {
             filesController,
             subscriptionController,
             rateLimitController,
-            policyController
+            policyController,
+            aiController
         );
         defaultHeaders = {
             origin: 'test.com',
@@ -8457,6 +8538,507 @@ describe('RecordsHttpServer', () => {
         );
     });
 
+    describe('POST /api/v2/ai/chat', () => {
+        beforeEach(async () => {
+            const u = await authStore.findUser(userId);
+            await authStore.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+        });
+
+        it('should return a not_supported result if the server has a null AI controller', async () => {
+            server = new RecordsHttpServer(
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                null as any,
+                policyController,
+                null
+            );
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/chat`,
+                    JSON.stringify({
+                        model: 'model-1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'AI features are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should call the AI chat interface', async () => {
+            chatInterface.chat.mockResolvedValueOnce({
+                choices: [
+                    {
+                        role: 'assistant',
+                        content: 'hi!',
+                    },
+                ],
+            });
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/chat`,
+                    JSON.stringify({
+                        model: 'model-1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    choices: [
+                        {
+                            role: 'assistant',
+                            content: 'hi!',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should support using a default model', async () => {
+            chatInterface.chat.mockResolvedValueOnce({
+                choices: [
+                    {
+                        role: 'assistant',
+                        content: 'hi!',
+                    },
+                ],
+            });
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/chat`,
+                    JSON.stringify({
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    choices: [
+                        {
+                            role: 'assistant',
+                            content: 'hi!',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+            expect(chatInterface.chat).toHaveBeenCalledWith({
+                model: 'default-model',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'hello',
+                    },
+                ],
+                userId,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/ai/chat`, () =>
+            JSON.stringify({
+                model: 'model-1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'hello',
+                    },
+                ],
+            })
+        );
+        testAuthorization(() =>
+            httpPost(
+                `/api/v2/ai/chat`,
+                JSON.stringify({
+                    model: 'model-1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'hello',
+                        },
+                    ],
+                }),
+                apiHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/ai/chat`,
+                JSON.stringify({
+                    model: 'model-1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'hello',
+                        },
+                    ],
+                }),
+                apiHeaders
+            )
+        );
+    });
+
+    describe('POST /api/v2/ai/skybox', () => {
+        beforeEach(async () => {
+            const u = await authStore.findUser(userId);
+            await authStore.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+        });
+
+        it('should return a not_supported result if the server has a null AI controller', async () => {
+            server = new RecordsHttpServer(
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                null as any,
+                policyController,
+                null
+            );
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/skybox`,
+                    JSON.stringify({
+                        prompt: 'a blue sky',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'AI features are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should call the AI skybox interface', async () => {
+            skyboxInterface.generateSkybox.mockResolvedValueOnce({
+                success: true,
+                skyboxId: 'skybox-id',
+            });
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/skybox`,
+                    JSON.stringify({
+                        prompt: 'a blue sky',
+                        negativePrompt: 'a red sky',
+                        blockadeLabs: {
+                            skyboxStyleId: 1,
+                            remixImagineId: 2,
+                            seed: 3,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    skyboxId: 'skybox-id',
+                },
+                headers: apiCorsHeaders,
+            });
+            expect(skyboxInterface.generateSkybox).toHaveBeenCalledWith({
+                prompt: 'a blue sky',
+                negativePrompt: 'a red sky',
+                blockadeLabs: {
+                    skyboxStyleId: 1,
+                    remixImagineId: 2,
+                    seed: 3,
+                },
+            });
+        });
+
+        testOrigin('POST', `/api/v2/ai/skybox`, () =>
+            JSON.stringify({
+                prompt: 'test',
+            })
+        );
+        testAuthorization(() =>
+            httpPost(
+                `/api/v2/ai/skybox`,
+                JSON.stringify({
+                    prompt: 'test',
+                }),
+                apiHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/ai/skybox`,
+                JSON.stringify({
+                    prompt: 'test',
+                }),
+                apiHeaders
+            )
+        );
+    });
+
+    describe('GET /api/v2/ai/skybox', () => {
+        beforeEach(async () => {
+            const u = await authStore.findUser(userId);
+            await authStore.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+        });
+
+        it('should return a not_supported result if the server has a null AI controller', async () => {
+            server = new RecordsHttpServer(
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                null as any,
+                policyController,
+                null
+            );
+
+            const result = await server.handleRequest(
+                httpGet(`/api/v2/ai/skybox`, apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'AI features are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should call the AI skybox interface', async () => {
+            skyboxInterface.getSkybox.mockResolvedValueOnce({
+                success: true,
+                status: 'generated',
+                fileUrl: 'file-url',
+                thumbnailUrl: 'thumbnail-url',
+            });
+
+            const result = await server.handleRequest(
+                httpGet(`/api/v2/ai/skybox?skyboxId=${'skybox-id'}`, apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    status: 'generated',
+                    fileUrl: 'file-url',
+                    thumbnailUrl: 'thumbnail-url',
+                },
+                headers: apiCorsHeaders,
+            });
+            expect(skyboxInterface.getSkybox).toHaveBeenCalledWith('skybox-id');
+        });
+
+        testOrigin('GET', `/api/v2/ai/skybox?skyboxId=test-skybox`);
+        testAuthorization(() =>
+            httpGet(`/api/v2/ai/skybox?skyboxId=test-skybox`, apiHeaders)
+        );
+        testRateLimit(() =>
+            httpGet(`/api/v2/ai/skybox?skyboxId=test-skybox`, apiHeaders)
+        );
+    });
+
+    describe('POST /api/v2/ai/image', () => {
+        beforeEach(async () => {
+            const u = await authStore.findUser(userId);
+            await authStore.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+        });
+
+        it('should return a not_supported result if the server has a null AI controller', async () => {
+            server = new RecordsHttpServer(
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                null as any,
+                policyController,
+                null
+            );
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/image`,
+                    JSON.stringify({
+                        prompt: 'a blue sky',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'AI features are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should call the AI image interface', async () => {
+            imageInterface.generateImage.mockResolvedValueOnce({
+                images: [
+                    {
+                        base64: 'base64',
+                        mimeType: 'image/png',
+                    },
+                ],
+            });
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/image`,
+                    JSON.stringify({
+                        prompt: 'a rabbit riding a bycicle',
+                        negativePrompt: 'ugly, incorrect, wrong',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                            mimeType: 'image/png',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+            expect(imageInterface.generateImage).toHaveBeenCalledWith({
+                model: 'model-1',
+                prompt: 'a rabbit riding a bycicle',
+                negativePrompt: 'ugly, incorrect, wrong',
+                width: 512,
+                height: 512,
+                steps: 30,
+                numberOfImages: 1,
+                userId,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/ai/image`, () =>
+            JSON.stringify({
+                prompt: 'test',
+            })
+        );
+        testAuthorization(() =>
+            httpPost(
+                `/api/v2/ai/image`,
+                JSON.stringify({
+                    prompt: 'test',
+                }),
+                apiHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/ai/image`,
+                JSON.stringify({
+                    prompt: 'test',
+                }),
+                apiHeaders
+            )
+        );
+    });
+
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
         const result = await server.handleRequest(
             httpRequest('GET', `/api/missing`, null)
@@ -8720,7 +9302,8 @@ describe('RecordsHttpServer', () => {
                 filesController,
                 subscriptionController,
                 null as any,
-                policyController
+                policyController,
+                aiController
             );
 
             await rateLimiter.increment(ip, 100);

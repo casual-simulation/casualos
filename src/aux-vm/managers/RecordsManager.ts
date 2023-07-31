@@ -26,6 +26,9 @@ import {
     GrantRoleAction,
     RevokeRoleAction,
     GetFileAction,
+    AIChatAction,
+    AIGenerateSkyboxAction,
+    AIGenerateImageAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -53,6 +56,12 @@ import stringify from '@casual-simulation/fast-json-stable-stringify';
 import '@casual-simulation/aux-common/runtime/BlobPolyfill';
 import { Observable, Subject } from 'rxjs';
 import { DateTime } from 'luxon';
+import {
+    AIChatResponse,
+    AIGenerateImageResponse,
+    AIGenerateSkyboxResponse,
+    AIGetSkyboxResponse,
+} from '@casual-simulation/aux-records/AIController';
 
 /**
  * The list of headers that JavaScript applications are not allowed to set by themselves.
@@ -87,6 +96,7 @@ export class RecordsManager {
     private _onSetRoomOptions: Subject<SetRoomOptions> = new Subject();
     private _onGetRoomOptions: Subject<GetRoomOptions> = new Subject();
     private _axiosOptions: AxiosRequestConfig<any>;
+    private _skipTimers: boolean = false;
 
     /**
      * Gets an observable that resolves whenever a room_join event has been received.
@@ -125,7 +135,8 @@ export class RecordsManager {
     constructor(
         config: AuxConfigParameters,
         helper: BotHelper,
-        authFactory: (endpoint: string) => AuthHelperInterface
+        authFactory: (endpoint: string) => AuthHelperInterface,
+        skipTimers: boolean = false
     ) {
         this._config = config;
         this._helper = helper;
@@ -136,6 +147,7 @@ export class RecordsManager {
                 return status < 500;
             },
         };
+        this._skipTimers = skipTimers;
     }
 
     handleEvents(events: BotAction[]): void {
@@ -176,6 +188,12 @@ export class RecordsManager {
                 this._grantRole(event);
             } else if (event.type === 'revoke_role') {
                 this._revokeRole(event);
+            } else if (event.type === 'ai_chat') {
+                this._aiChat(event);
+            } else if (event.type === 'ai_generate_skybox') {
+                this._aiGenerateSkybox(event);
+            } else if (event.type === 'ai_generate_image') {
+                this._aiGenerateImage(event);
             }
         }
     }
@@ -1242,6 +1260,238 @@ export class RecordsManager {
         }
     }
 
+    private async _aiChat(event: AIChatAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            if (!info.token) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_logged_in',
+                            errorMessage: 'The user is not logged in.',
+                        })
+                    );
+                }
+                return;
+            }
+
+            const { endpoint, ...rest } = event.options;
+            let requestData: any = {
+                messages: event.messages,
+                options: rest,
+            };
+
+            if (hasValue(this._helper.inst)) {
+                requestData.instances = [this._helper.inst];
+            }
+
+            const result: AxiosResponse<AIChatResponse> = await axios.post(
+                await this._publishUrl(info.auth, '/api/v2/ai/chat'),
+                requestData,
+                {
+                    ...this._axiosOptions,
+                    headers: info.headers,
+                }
+            );
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error sending chat message:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _aiGenerateSkybox(event: AIGenerateSkyboxAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            if (!info.token) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_logged_in',
+                            errorMessage: 'The user is not logged in.',
+                        })
+                    );
+                }
+                return;
+            }
+
+            const { endpoint, blockadeLabs, ...rest } = event.options;
+            let requestData: any = {
+                prompt: event.prompt,
+                negativePrompt: event.negativePrompt,
+                blockadeLabs: blockadeLabs,
+            };
+
+            let instances: string[];
+            if (hasValue(this._helper.inst)) {
+                instances = [this._helper.inst];
+            }
+
+            const result: AxiosResponse<AIGenerateSkyboxResponse> =
+                await axios.post(
+                    await this._publishUrl(info.auth, '/api/v2/ai/skybox'),
+                    {
+                        ...requestData,
+                        instances,
+                    },
+                    {
+                        ...this._axiosOptions,
+                        headers: info.headers,
+                    }
+                );
+
+            if (!result.data.success) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, result.data)
+                    );
+                }
+                return;
+            }
+
+            const skyboxId = result.data.skyboxId;
+            for (let i = 0; i < 10; i++) {
+                if (!this._skipTimers) {
+                    const seconds =
+                        i === 0
+                            ? 1
+                            : i === 1
+                            ? 4
+                            : i === 2
+                            ? 4
+                            : i === 3
+                            ? 8
+                            : i === 4
+                            ? 16
+                            : i === 5
+                            ? 32
+                            : 32;
+
+                    await wait(seconds);
+                }
+
+                const getResult: AxiosResponse<AIGetSkyboxResponse> =
+                    await axios.get(
+                        await this._publishUrl(info.auth, '/api/v2/ai/skybox', {
+                            skyboxId: result.data.skyboxId,
+                            instances,
+                        }),
+                        {
+                            ...this._axiosOptions,
+                            headers: info.headers,
+                        }
+                    );
+
+                if (getResult.data.success) {
+                    if (getResult.data.status === 'generated') {
+                        if (hasValue(event.taskId)) {
+                            this._helper.transaction(
+                                asyncResult(event.taskId, getResult.data)
+                            );
+                        }
+                        return;
+                    }
+                }
+            }
+
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, {
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'The request timed out.',
+                    })
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error generating skybox:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
+    private async _aiGenerateImage(event: AIGenerateImageAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            if (!info.token) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_logged_in',
+                            errorMessage: 'The user is not logged in.',
+                        })
+                    );
+                }
+                return;
+            }
+
+            const { taskId, type, options, ...rest } = event;
+            let requestData: any = {
+                ...rest,
+            };
+
+            let instances: string[];
+            if (hasValue(this._helper.inst)) {
+                instances = [this._helper.inst];
+            }
+
+            const result: AxiosResponse<AIGenerateImageResponse> =
+                await axios.post(
+                    await this._publishUrl(info.auth, '/api/v2/ai/image'),
+                    {
+                        ...requestData,
+                        instances,
+                    },
+                    {
+                        ...this._axiosOptions,
+                        headers: info.headers,
+                    }
+                );
+
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error generating skybox:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
     private async _resolveInfoForEvent(
         event:
             | RecordFileAction
@@ -1257,12 +1507,16 @@ export class RecordsManager {
             | RevokeRecordMarkerPermissionAction
             | GrantInstAdminPermissionAction
             | GrantRoleAction
-            | RevokeRoleAction,
+            | RevokeRoleAction
+            | AIChatAction
+            | AIGenerateSkyboxAction
+            | AIGenerateImageAction,
         authenticateIfNotLoggedIn: boolean = true
     ): Promise<{
         error: boolean;
         auth: AuthHelperInterface;
         headers: { [key: string]: string };
+        token: string;
     }> {
         const auth = this._getAuthFromEvent(event.options);
 
@@ -1280,10 +1534,11 @@ export class RecordsManager {
                 error: true,
                 auth: null,
                 headers: null,
+                token: null,
             };
         }
 
-        let token: string;
+        let token: string = null;
         let headers: { [key: string]: string } = {};
         if ('recordKey' in event && isRecordKey(event.recordKey)) {
             const policy = await auth.getRecordKeyPolicy(event.recordKey);
@@ -1307,6 +1562,7 @@ export class RecordsManager {
                         error: true,
                         auth: null,
                         headers: null,
+                        token: null,
                     };
                 }
 
@@ -1323,6 +1579,7 @@ export class RecordsManager {
             error: false,
             auth,
             headers,
+            token,
         };
     }
 
@@ -1468,4 +1725,12 @@ export interface RoomAction<T> {
      * @param errorMessage The error that occurred.
      */
     reject(errorCode: string, errorMessage: string): void;
+}
+
+function wait(seconds: number): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        setTimeout(() => {
+            resolve();
+        }, seconds * 1000);
+    });
 }

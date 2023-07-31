@@ -226,6 +226,9 @@ import {
     getCurrentInstUpdate,
     getFile,
     openPhotoCamera,
+    aiChat,
+    aiGenerateSkybox,
+    aiGenerateImage,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -300,6 +303,7 @@ import {
 } from '../partitions/PartitionUtils';
 import { YjsPartitionImpl } from '../partitions';
 import { applyUpdate } from 'yjs';
+import { CasualOSError } from './CasualOSError';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -2376,6 +2380,509 @@ describe('AuxLibrary', () => {
             bot2 = createDummyRuntimeBot('test2');
 
             addToContext(context, bot1, bot2);
+        });
+
+        describe('ai.chat()', () => {
+            it('should emit a AIChatAction', () => {
+                const promise: any = library.api.ai.chat('hello, world!');
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support message objects', () => {
+                const promise: any = library.api.ai.chat({
+                    role: 'user',
+                    content: 'hello, world!',
+                });
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support message arrays', () => {
+                const promise: any = library.api.ai.chat([
+                    {
+                        role: 'system',
+                        content: 'You are a helpful assistant.',
+                    },
+                    {
+                        role: 'user',
+                        content: 'hello, world!',
+                    },
+                ]);
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'system',
+                            content: 'You are a helpful assistant.',
+                        },
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', () => {
+                const promise: any = library.api.ai.chat(
+                    [
+                        {
+                            role: 'system',
+                            content: 'You are a helpful assistant.',
+                        },
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    {
+                        preferredModel: 'gpt-3.5-turbo',
+                        temperature: 0.5,
+                    }
+                );
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'system',
+                            content: 'You are a helpful assistant.',
+                        },
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    {
+                        preferredModel: 'gpt-3.5-turbo',
+                        temperature: 0.5,
+                    },
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return the first chat choice', async () => {
+                let result: any;
+                const promise: any = library.api.ai.chat({
+                    role: 'user',
+                    content: 'hello, world!',
+                });
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello to you!',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual({
+                    role: 'assistant',
+                    content: 'Hello to you!',
+                    finishReason: 'stop',
+                });
+            });
+
+            it('should return a string when a string was given', async () => {
+                let result: any;
+                const promise: any = library.api.ai.chat('hello, world!');
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello to you!',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual('Hello to you!');
+            });
+
+            it('should throw a CasualOSError when not successful', async () => {
+                let result: any;
+                let error: any;
+                const promise: any = library.api.ai.chat('hello, world!');
+
+                promise.then(
+                    (r: any) => (result = r),
+                    (err: any) => (error = err)
+                );
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'This operation is not supported.',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toBeUndefined();
+                expect(error).toEqual(
+                    new CasualOSError({
+                        errorCode: 'not_supported',
+                        errorMessage: 'This operation is not supported.',
+                    })
+                );
+            });
+        });
+
+        describe('ai.generateSkybox()', () => {
+            it('should emit a AIGenerateSkyboxAction', () => {
+                const promise: any =
+                    library.api.ai.generateSkybox('cartoon clouds');
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    undefined,
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support negative prompts', () => {
+                const promise: any = library.api.ai.generateSkybox(
+                    'cartoon clouds',
+                    'realistic'
+                );
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    'realistic',
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support request objects', () => {
+                const promise: any = library.api.ai.generateSkybox({
+                    prompt: 'cartoon clouds',
+                    negativePrompt: 'realistic',
+                });
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    'realistic',
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should resolve with the address that was generated', async () => {
+                let result: string | null = null;
+                const promise: any =
+                    library.api.ai.generateSkybox('cartoon clouds');
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    undefined,
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        fileUrl: 'file_url',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toBe('file_url');
+            });
+
+            it('should resolve with the resulting object', async () => {
+                let result: any = null;
+                const promise: any = library.api.ai.generateSkybox({
+                    prompt: 'cartoon clouds',
+                });
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    undefined,
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        fileUrl: 'file_url',
+                        thumbnailUrl: 'thumbnail_url',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual({
+                    success: true,
+                    fileUrl: 'file_url',
+                    thumbnailUrl: 'thumbnail_url',
+                });
+            });
+        });
+
+        describe('ai.generateImage()', () => {
+            it('should emit a AIGenerateImageAction', () => {
+                const promise: any =
+                    library.api.ai.generateImage('cartoon clouds');
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support negative prompts', () => {
+                const promise: any = library.api.ai.generateImage(
+                    'cartoon clouds',
+                    'realistic'
+                );
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                        negativePrompt: 'realistic',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support request objects', () => {
+                const promise: any = library.api.ai.generateImage({
+                    prompt: 'cartoon clouds',
+                    negativePrompt: 'realistic',
+                });
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                        negativePrompt: 'realistic',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should resolve with the data that was generated', async () => {
+                let result: string | null = null;
+                const promise: any =
+                    library.api.ai.generateImage('cartoon clouds');
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'base64',
+                                mimeType: 'image/png',
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toBe('data:image/png;base64,base64');
+            });
+
+            it('should resolve with the resulting object', async () => {
+                let result: any = null;
+                const promise: any = library.api.ai.generateImage({
+                    prompt: 'cartoon clouds',
+                });
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'base64',
+                                mimeType: 'image/jpeg',
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual({
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                            url: 'data:image/jpeg;base64,base64',
+                            mimeType: 'image/jpeg',
+                        },
+                    ],
+                });
+            });
         });
 
         describe('os.toast()', () => {
@@ -17804,6 +18311,55 @@ describe('AuxLibrary', () => {
         it('should convert the given hex to bytes', () => {
             expect(library.api.bytes.fromHexString('0102030405')).toEqual(
                 new Uint8Array([1, 2, 3, 4, 5])
+            );
+        });
+    });
+
+    describe('bytes.toBase64Url()', () => {
+        it('should convert the given value to a base64 data string', () => {
+            expect(
+                library.api.bytes.toBase64Url(new Uint8Array([1, 2, 3, 4, 5]))
+            ).toBe('data:image/png;base64,AQIDBAU=');
+        });
+
+        it('should support base64 strings', () => {
+            expect(library.api.bytes.toBase64Url('AQIDBAU=')).toBe(
+                'data:image/png;base64,AQIDBAU='
+            );
+        });
+
+        it('should use the given MIME Type', () => {
+            expect(
+                library.api.bytes.toBase64Url(
+                    new Uint8Array([1, 2, 3, 4, 5]),
+                    'image/jpeg'
+                )
+            ).toBe('data:image/jpeg;base64,AQIDBAU=');
+        });
+    });
+
+    describe('bytes.fromBase64Url()', () => {
+        it('should convert the given base64 data string into a blob', () => {
+            expect(
+                library.api.bytes.fromBase64Url(
+                    'data:image/png;base64,AQIDBAU='
+                )
+            ).toEqual(
+                new Blob([new Uint8Array([1, 2, 3, 4, 5])], {
+                    type: 'image/png',
+                })
+            );
+        });
+
+        it('should use the given MIME Type', () => {
+            expect(
+                library.api.bytes.fromBase64Url(
+                    'data:image/jpeg;base64,AQIDBAU='
+                )
+            ).toEqual(
+                new Blob([new Uint8Array([1, 2, 3, 4, 5])], {
+                    type: 'image/jpeg',
+                })
             );
         });
     });

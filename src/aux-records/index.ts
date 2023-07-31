@@ -29,3 +29,12 @@ export * from './PolicyController';
 export * from './PolicyPermissions';
 export * from './PolicyStore';
 export * from './MemoryPolicyStore';
+
+export * from './AIChatInterface';
+export * from './OpenAIChatInterface';
+export * from './AIGenerateSkyboxInterface';
+export * from './BlockadeLabsGenerateSkyboxInterface';
+
+export * from './AIImageInterface';
+export * from './OpenAIImageInterface';
+export * from './StabilityAIImageInterface';

@@ -333,8 +333,24 @@ import {
     openPhotoCamera as calcOpenPhotoCamera,
     OpenPhotoCameraOptions,
     Photo,
+    AIChatOptions,
+    aiChat,
+    AIGenerateSkyboxOptions,
+    aiGenerateSkybox,
+    AIGenerateSkyboxAction,
+    AIGenerateImageOptions,
+    AIGenerateImageAction,
+    aiGenerateImage,
 } from '../bots';
-import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
+import {
+    sortBy,
+    every,
+    cloneDeep,
+    union,
+    isEqual,
+    flatMap,
+    indexOf,
+} from 'lodash';
 import {
     remote as calcRemote,
     DeviceSelector,
@@ -410,7 +426,10 @@ import {
     GrantRoleResult,
     RevokeRoleResult,
 } from '@casual-simulation/aux-records';
-import type { AvailablePermissions } from '@casual-simulation/aux-records';
+import type {
+    AIChatMessage,
+    AvailablePermissions,
+} from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
 import * as hooks from 'preact/hooks';
@@ -432,6 +451,11 @@ import {
     mergeInstUpdates as calcMergeInstUpdates,
 } from '../partitions/PartitionUtils';
 import type { AxiosResponse, AxiosError } from 'axios';
+import { CasualOSError } from './CasualOSError';
+import {
+    AIGenerateImageResponse,
+    AIGenerateImageSuccess,
+} from '@casual-simulation/aux-records/AIController';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -697,6 +721,89 @@ export interface WebhookOptions {
      * The number of miliseconds to wait between retry requests.
      */
     retryAfterMs?: number;
+}
+
+/**
+ * Defines an interface that represents a request for {@link ai.generateSkybox-request}.
+ *
+ * @dochash types/ai
+ * @docname AIGenerateSkyboxRequest
+ */
+export interface AIGenerateSkyboxRequest {
+    /**
+     * The prompt that describes what the generated skybox should look like.
+     */
+    prompt: string;
+
+    /**
+     * The prompt that that describes what the generated skybox should avoid looking like.
+     */
+    negativePrompt?: string;
+
+    /**
+     * The options that should be included in the request.
+     */
+    options?: AIGenerateSkyboxOptions;
+}
+
+/**
+ * Defines an interface that represents the result from {@link ai.generateSkybox-request}.
+ *
+ * @dochash types/ai
+ * @docname AIGenerateSkyboxResult
+ */
+export interface AIGenerateSkyboxResult {
+    /**
+     * The URL that the generated skybox is located at.
+     */
+    fileUrl: string;
+
+    /**
+     * The URL that the thumbnail for the generated skybox is located at.
+     */
+    thumbnailUrl?: string;
+}
+
+/**
+ * Defines an interface that represents a result from {@link ai.generateImage-request}.
+ * @dochash types/ai
+ * @docname AIGenerateImageSuccess
+ */
+export interface AIGenerateImageAPISuccess {
+    success: true;
+
+    /**
+     * The list of images that were generated.
+     */
+    images: AIGeneratedImageAPI[];
+}
+
+/**
+ * Defines an interface that represents an AI generated image.
+ *
+ * @dochash types/ai
+ * @docname AIGeneratedImage
+ */
+export interface AIGeneratedImageAPI {
+    /**
+     * The base64 encoded image.
+     */
+    base64: string;
+
+    /**
+     * The URL that can be used to display the image.
+     */
+    url: string;
+
+    /**
+     * The seed of the generated image.
+     */
+    seed?: number;
+
+    /**
+     * The MIME Type of the image data.
+     */
+    mimeType: string;
 }
 
 /**
@@ -3017,6 +3124,12 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 return null;
             },
 
+            ai: {
+                chat,
+                generateSkybox,
+                generateImage,
+            },
+
             os: {
                 [UNCOPIABLE]: true,
 
@@ -3443,6 +3556,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 fromBase64String,
                 toHexString,
                 fromHexString,
+                toBase64Url,
+                fromBase64Url,
             },
 
             crypto: {
@@ -4722,7 +4837,414 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         return utilFromHexString(hex);
     }
 
+    /**
+     * Converts the given bytes into a string that contains the [Base64](https://en.wikipedia.org/wiki/Base64) [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) representation of the given data.
+     * @param bytes The data that should be converted to a Base64 Data URL. If given a string, then it should be valid Base 64 data.
+     * @param mimeType The [MIME Type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) of the data.
+     * If omitted, then `image/png` will be used.
+     *
+     * @example Convert some bytes to a base 64 image/png data URL
+     * const data = bytes.toBase64Url(new Uint8Array([ 255, 254, 253 ]));
+     *
+     * @example Convert a base 64 string to a text/plain base 64 data URL
+     * const data = bytes.toBase64Url('aGVsbG8=', 'text/plain'); // "hello" encoded in Base64
+     *
+     * @dochash actions/bytes
+     * @docname bytes.toBase64Url
+     */
+    function toBase64Url(
+        bytes: Uint8Array | string,
+        mimeType?: string
+    ): string {
+        let base64: string =
+            typeof bytes === 'string' ? bytes : toBase64String(bytes);
+        return `data:${mimeType || 'image/png'};base64,${base64}`;
+    }
+
+    /**
+     * Converts the given [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) into a blob object.
+     *
+     * Returns a blob that contains the binary data. Returns null if the URL is not a valid Data URL.
+     *
+     * @param url The URL.
+     *
+     * @example Convert a data URL to a blob
+     * const blob = bytes.fromBase64Url('data:image/png;base64,aGVsbG8='); // "hello" encoded in Base64
+     *
+     * @dochash actions/bytes
+     * @docname bytes.fromBase64Url
+     */
+    function fromBase64Url(url: string): Blob {
+        const indexOfData = url.indexOf('data:');
+        if (indexOfData !== 0) {
+            return null;
+        }
+
+        const withoutData = url.slice(indexOfData + 5);
+        const indexOfSemiColon = withoutData.indexOf(';');
+        const mimeType = withoutData.slice(0, indexOfSemiColon);
+        const parameters = withoutData.slice(indexOfSemiColon + 1);
+        const indexOfBase64 = parameters.indexOf('base64,');
+        if (indexOfBase64 < 0) {
+            return null;
+        }
+        const base64 = parameters.slice(indexOfBase64 + 7);
+        const bytes = fromBase64String(base64);
+        return new Blob([bytes], { type: mimeType });
+    }
+
     // Actions
+
+    /**
+     * Sends a chat message to the AI.
+     * Returns a promise that contains the response from the AI.
+     * Throws a {@link CasualOSError} if an error occurs while sending the message.
+     *
+     * This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.
+     *
+     * @param message The message that should be sent to the AI.
+     * @param options The options that should be used.
+     *
+     * @example Send a message to the AI and log the response.
+     * const response = await ai.chat("Hello!");
+     * console.log(response);
+     *
+     * @dochash actions/ai
+     * @doctitle AI Actions
+     * @docsidebar AI
+     * @docdescription AI actions are functions that make it easier to work with the AI.
+     * @docname ai.chat
+     * @docid ai.chat-string
+     */
+    function chat(message: string, options?: AIChatOptions): Promise<string>;
+
+    /**
+     * Sends a chat message to the AI.
+     * Returns a promise that contains the response from the AI.
+     * Throws a {@link CasualOSError} if an error occurs while sending the message.
+     *
+     * This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.
+     *
+     * @param message The message that should be sent to the AI.
+     * @param options The options that should be used.
+     *
+     * @example Send a message to the AI and log the response.
+     * const response = await ai.chat({
+     *     role: "user",
+     *     content: "Hello!"
+     * });
+     * console.log(`${response.role}: ${response.content}`);
+     *
+     * @dochash actions/ai
+     * @docname ai.chat
+     * @docid ai.chat-message
+     */
+    function chat(
+        message: AIChatMessage,
+        options?: AIChatOptions
+    ): Promise<AIChatMessage>;
+
+    /**
+     * Sends a chat message to the AI.
+     * Returns a promise that contains the response from the AI.
+     * Throws a {@link CasualOSError} if an error occurs while sending the message.
+     *
+     * This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.
+     *
+     * @param message The message that should be sent to the AI.
+     * @param options The options that should be used.
+     *
+     * @example Send a message to the AI and log the response.
+     * const response = await ai.chat([
+     *      {
+     *          role: "system",
+     *          content: "You are a helpful assistant."
+     *      },
+     *     {
+     *          role: "user",
+     *          content: "Hello!"
+     *     }
+     * ]);
+     * console.log(`${response.role}: ${response.content}`);
+     *
+     * @example Build a basic chat bot.
+     * const messages = [
+     *      {
+     *          role: "system",
+     *          content: "You are a helpful assistant."
+     *      },
+     * ];
+     *
+     * while(true) {
+     *      const userInput = await os.showInput();
+     *      if (!userInput) {
+     *          break;
+     *      }
+     *      messages.push({
+     *          role: "user",
+     *          content: userInput
+     *      });
+     *
+     *      const response = await ai.chat(messages);
+     *      messages.push(response);
+     *      os.toast(response.content);
+     * }
+     *
+     * os.toast("Goodbye!");
+     *
+     * @dochash actions/ai
+     * @docname ai.chat
+     * @docid ai.chat-messages
+     */
+    function chat(
+        messages: AIChatMessage[],
+        options?: AIChatOptions
+    ): Promise<AIChatMessage>;
+
+    function chat(
+        messages: string | AIChatMessage | AIChatMessage[],
+        options?: AIChatOptions
+    ): Promise<AIChatMessage | string> {
+        const task = context.createTask();
+
+        const returnString = typeof messages === 'string';
+        const inputMessages: AIChatMessage[] = [];
+        if (typeof messages === 'string') {
+            inputMessages.push({
+                role: 'user',
+                content: messages,
+            });
+        } else if (Array.isArray(messages)) {
+            inputMessages.push(...messages);
+        } else if (typeof messages === 'object') {
+            inputMessages.push(messages);
+        }
+
+        const action = aiChat(inputMessages, options, task.taskId);
+        const final = addAsyncResultAction(task, action).then((result) => {
+            const choice = result.choices[0];
+            if (returnString) {
+                return choice?.content;
+            }
+            return choice;
+        });
+        (final as any)[ORIGINAL_OBJECT] = action;
+        return final;
+    }
+
+    /**
+     * Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given prompt.
+     *
+     * Returns a promise that resolves with a URL to the generated image that can be used as the {@tag formAddress} of a bot that has {@tag form} set to `skybox`.
+     *
+     * @param prompt the string that describes what the skybox should look like.
+     * @param negativePrompt the string that describes what the skybox should avoid looking like.
+     * @param options the additional options that should be used.
+     *
+     * @example Generate a skybox from a prompt.
+     * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.");
+     * masks.formAddress = skybox;
+     *
+     * @example Generate a skybox from a prompt and a negative prompt
+     * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.", "A skybox with a red sky and brown grass.");
+     * masks.formAddress = skybox;
+     *
+     * @dochash actions/ai
+     * @docname ai.generateSkybox
+     * @docid ai.generateSkybox-string
+     */
+    function generateSkybox(
+        prompt: string,
+        negativePrompt?: string,
+        options?: AIGenerateSkyboxOptions
+    ): Promise<string>;
+
+    /**
+     * Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given request object.
+     *
+     * Returns a promise that resolves with an object that contains a URL to the generated image that can be used as the {@tag formAddress} of a bot that has {@tag form} set to `skybox`.
+     *
+     * @param request the request object that describes what the skybox should look like.
+     *
+     * @example Generate a skybox from a prompt.
+     * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.");
+     * masks.formAddress = skybox;
+     *
+     * @example Generate a skybox from a prompt and a negative prompt
+     * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.", "A skybox with a red sky and brown grass.");
+     * masks.formAddress = skybox;
+     *
+     * @dochash actions/ai
+     * @docname ai.generateSkybox
+     * @docid ai.generateSkybox-request
+     */
+    function generateSkybox(
+        request: AIGenerateSkyboxRequest
+    ): Promise<AIGenerateSkyboxResult>;
+
+    /**
+     * Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given request object.
+     *
+     * Returns a promise that resolves with an object that contains a URL to the generated image that can be used as the {@tag formAddress} of a bot that has {@tag form} set to `skybox`.
+     *
+     * @param request the request object that describes what the skybox should look like.
+     * @param negativePrompt the string that describes what the skybox should avoid looking like.
+     * @param options the additional options that should be used.
+     *
+     * @example Generate a skybox from a prompt.
+     * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.");
+     * masks.formAddress = skybox;
+     *
+     * @example Generate a skybox from a prompt and a negative prompt
+     * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.", "A skybox with a red sky and brown grass.");
+     * masks.formAddress = skybox;
+     */
+    function generateSkybox(
+        prompt: string | AIGenerateSkyboxRequest,
+        negativePrompt?: string,
+        options?: AIGenerateSkyboxOptions
+    ): Promise<string | AIGenerateSkyboxResult> {
+        const task = context.createTask();
+
+        const returnObject = typeof prompt === 'object';
+        let action: AIGenerateSkyboxAction;
+        if (typeof prompt === 'object') {
+            action = aiGenerateSkybox(
+                prompt.prompt,
+                prompt.negativePrompt,
+                prompt.options,
+                task.taskId
+            );
+        } else {
+            action = aiGenerateSkybox(
+                prompt,
+                negativePrompt,
+                options,
+                task.taskId
+            );
+        }
+
+        const final = addAsyncResultAction(task, action).then((result) => {
+            if (returnObject) {
+                return result;
+            } else {
+                return result.fileUrl;
+            }
+        });
+        (final as any)[ORIGINAL_OBJECT] = action;
+        return final;
+    }
+
+    /**
+     * Generates an image from the given prompt.
+     *
+     * Returns a promise that resolves with the Base64 data of the generated image that can be used as the {@tag formAddress} of a bot.
+     *
+     * @param prompt the string that describes what the image should look like.
+     * @param negativePrompt the string that describes what the image should avoid looking like.
+     * @param options the additional options that should be used.
+     *
+     * @example Generate an image from a prompt.
+     * const image = await ai.generateImage("An oil painting of a grassy field.");
+     * masks.formAddress = image;
+     *
+     * @example Generate a image from a prompt and a negative prompt
+     * const image = await ai.generateSkybox("An oil painting of a grassy field.", "realistic");
+     * masks.formAddress = image;
+     *
+     * @dochash actions/ai
+     * @docname ai.generateImage
+     * @docid ai.generateImage-string
+     */
+    function generateImage(
+        prompt: string,
+        negativePrompt?: string,
+        options?: AIGenerateImageOptions & RecordActionOptions
+    ): Promise<string>;
+
+    /**
+     * Generates an image from the given prompt.
+     *
+     * Returns a promise that resolves with the Base64 data of the generated image that can be used as the {@tag formAddress} of a bot.
+     *
+     * @param request the request object that describes what the image should look like.
+     * @param options the options for the request.
+     *
+     * @example Generate an image from a prompt.
+     * const image = await ai.generateImage({
+     *     prompt: "An oil painting of a grassy field.",
+     * });
+     * masks.formAddress = image;
+     *
+     * @example Generate a image from a prompt and a negative prompt
+     * const image = await ai.generateSkybox({
+     *     prompt: "An oil painting of a grassy field.",
+     *     negativePrompt: "realistic"
+     * });
+     * masks.formAddress = image;
+     *
+     * @dochash actions/ai
+     * @docname ai.generateImage
+     * @docid ai.generateImage-request
+     */
+    function generateImage(
+        request: AIGenerateImageOptions,
+        options?: RecordActionOptions
+    ): Promise<AIGenerateImageAPISuccess>;
+
+    function generateImage(
+        prompt: string | AIGenerateImageOptions,
+        negativePrompt?: string | RecordActionOptions,
+        options?: RecordActionOptions
+    ): Promise<string | AIGenerateImageAPISuccess> {
+        const task = context.createTask();
+
+        const returnObject = typeof prompt === 'object';
+        let action: AIGenerateImageAction;
+        if (typeof prompt === 'object') {
+            action = aiGenerateImage(
+                prompt,
+                negativePrompt as RecordActionOptions,
+                task.taskId
+            );
+        } else {
+            let { endpoint, ...parameters } = options ?? {};
+            action = aiGenerateImage(
+                {
+                    ...parameters,
+                    prompt,
+                    negativePrompt: negativePrompt as string,
+                },
+                {
+                    endpoint,
+                },
+                task.taskId
+            );
+        }
+
+        const final = addAsyncResultAction(task, action).then(
+            (result: AIGenerateImageSuccess) => {
+                if (returnObject) {
+                    return {
+                        ...result,
+                        images: result.images.map((image) => ({
+                            ...image,
+                            url: toBase64Url(
+                                image.base64,
+                                image.mimeType ?? 'image/png'
+                            ),
+                        })),
+                    };
+                } else {
+                    const image = result.images[0];
+                    const base64 = image.base64;
+                    return toBase64Url(base64, image.mimeType ?? 'image/png');
+                }
+            }
+        );
+        (final as any)[ORIGINAL_OBJECT] = action;
+        return final;
+    }
 
     /**
      * Shows a temporary "toast" notification to the player at the bottom of the screen with the given message.
@@ -15522,6 +16044,17 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         let promise = task.promise;
         (<any>promise)[ORIGINAL_OBJECT] = action;
         return promise;
+    }
+
+    async function addAsyncResultAction<T extends AsyncActions>(
+        task: AsyncTask,
+        action: T
+    ) {
+        const result = await addAsyncAction(task, action);
+        if (!result.success) {
+            throw new CasualOSError(result);
+        }
+        return result;
     }
 
     function getVersion1DownloadState(state: BotsState): StoredAuxVersion1 {

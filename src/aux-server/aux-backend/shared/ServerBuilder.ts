@@ -16,6 +16,11 @@ import {
     RecordsStore,
     SubscriptionController,
     Record,
+    OpenAIChatInterface,
+    AIChatInterface,
+    BlockadeLabsGenerateSkyboxInterface,
+    OpenAIImageInterface,
+    StabilityAIImageInterface,
 } from '@casual-simulation/aux-records';
 import {
     DynamoDBAuthStore,
@@ -74,6 +79,11 @@ import {
     PrismaPolicyStore,
     PrismaRecordsStore,
 } from '../prisma';
+import {
+    AIConfiguration,
+    AIController,
+    AIGenerateImageConfiguration,
+} from '@casual-simulation/aux-records/AIController';
 
 export class ServerBuilder {
     private _docClient: DocumentClient;
@@ -109,6 +119,10 @@ export class ServerBuilder {
     private _subscriptionController: SubscriptionController;
     private _stripe: StripeIntegration;
 
+    private _chatInterface: AIChatInterface = null;
+    private _aiConfiguration: AIConfiguration = null;
+    private _aiController: AIController;
+
     private _rateLimitController: RateLimitController;
 
     private _allowedAccountOrigins: Set<string> = new Set([
@@ -129,6 +143,8 @@ export class ServerBuilder {
         priority: number;
         action: () => Promise<void>;
     }[] = [];
+    private _generateSkyboxInterface: BlockadeLabsGenerateSkyboxInterface;
+    private _imagesInterfaces: AIGenerateImageConfiguration['interfaces'];
 
     private get _forceAllowAllSubscriptionFeatures() {
         return !this._stripe;
@@ -544,6 +560,110 @@ export class ServerBuilder {
         return this;
     }
 
+    useAI(
+        options: Pick<
+            BuilderOptions,
+            'openai' | 'ai' | 'blockadeLabs' | 'stabilityai'
+        > = this._options
+    ): this {
+        console.log('[ServerBuilder] Using AI.');
+        if (!options.ai) {
+            throw new Error('AI options must be provided.');
+        }
+
+        if (options.openai && options.ai.chat?.provider === 'openai') {
+            console.log('[ServerBuilder] Using OpenAI Chat.');
+            this._chatInterface = new OpenAIChatInterface({
+                apiKey: options.openai.apiKey,
+                maxTokens: options.openai.maxTokens,
+            });
+        }
+
+        if (
+            options.blockadeLabs &&
+            options.ai.generateSkybox?.provider === 'blockadeLabs'
+        ) {
+            console.log(
+                '[ServerBuilder] Using Blockade Labs Skybox Generation.'
+            );
+            this._generateSkyboxInterface =
+                new BlockadeLabsGenerateSkyboxInterface({
+                    apiKey: options.blockadeLabs.apiKey,
+                });
+        }
+
+        if (options.ai.images) {
+            this._imagesInterfaces = {};
+            if (options.ai.images?.allowedModels?.openai && options.openai) {
+                console.log('[ServerBuilder] Using OpenAI Images.');
+                this._imagesInterfaces.openai = new OpenAIImageInterface({
+                    apiKey: options.openai.apiKey,
+                    defaultWidth: options.ai.images.defaultWidth,
+                    defaultHeight: options.ai.images.defaultHeight,
+                });
+            }
+
+            if (
+                options.ai.images?.allowedModels?.stabilityai &&
+                options.stabilityai
+            ) {
+                console.log('[ServerBuilder] Using StabilityAI Images.');
+
+                this._imagesInterfaces.stabilityai =
+                    new StabilityAIImageInterface({
+                        apiKey: options.stabilityai.apiKey,
+                        defaultWidth: options.ai.images.defaultWidth,
+                        defaultHeight: options.ai.images.defaultHeight,
+                    });
+            }
+        }
+
+        this._aiConfiguration = {
+            chat: null,
+            generateSkybox: null,
+            images: null,
+        };
+
+        if (this._chatInterface && options.ai.chat) {
+            this._aiConfiguration.chat = {
+                interface: this._chatInterface,
+                options: {
+                    defaultModel: options.ai.chat.defaultModel,
+                    allowedChatModels: options.ai.chat.allowedModels,
+                    allowedChatSubscriptionTiers:
+                        options.ai.chat.allowedSubscriptionTiers,
+                },
+            };
+        }
+        if (this._generateSkyboxInterface && options.ai.generateSkybox) {
+            this._aiConfiguration.generateSkybox = {
+                interface: this._generateSkyboxInterface,
+                options: {
+                    allowedSubscriptionTiers:
+                        options.ai.generateSkybox.allowedSubscriptionTiers,
+                },
+            };
+        }
+        if (this._imagesInterfaces && options.ai.images) {
+            const images = options.ai.images;
+            this._aiConfiguration.images = {
+                interfaces: this._imagesInterfaces,
+                options: {
+                    allowedModels: images.allowedModels,
+                    allowedSubscriptionTiers: images.allowedSubscriptionTiers,
+                    defaultHeight: images.defaultHeight,
+                    defaultWidth: images.defaultWidth,
+                    maxHeight: images.maxHeight,
+                    maxWidth: images.maxWidth,
+                    defaultModel: images.defaultModel,
+                    maxImages: images.maxImages,
+                    maxSteps: images.maxSteps,
+                },
+            };
+        }
+        return this;
+    }
+
     async buildAsync() {
         const actions = sortBy(this._actions, (a) => a.priority);
 
@@ -641,6 +761,10 @@ export class ServerBuilder {
             );
         }
 
+        if (this._aiConfiguration) {
+            this._aiController = new AIController(this._aiConfiguration);
+        }
+
         const server = new RecordsHttpServer(
             this._allowedAccountOrigins,
             this._allowedApiOrigins,
@@ -653,7 +777,8 @@ export class ServerBuilder {
             this._filesController,
             this._subscriptionController,
             this._rateLimitController,
-            this._policyController
+            this._policyController,
+            this._aiController
         );
 
         return {
@@ -801,6 +926,61 @@ const prismaSchema = z.object({
     options: z.object({}).passthrough().optional(),
 });
 
+const openAiSchema = z.object({
+    apiKey: z.string().nonempty(),
+    maxTokens: z.number().positive().optional(),
+});
+
+const blockadeLabsSchema = z.object({
+    apiKey: z.string().nonempty(),
+});
+
+const stabilityAiSchema = z.object({
+    apiKey: z.string().nonempty(),
+});
+
+const aiSchema = z.object({
+    chat: z
+        .object({
+            provider: z.literal('openai'),
+            defaultModel: z.string().nonempty(),
+            allowedModels: z.array(z.string().nonempty()),
+            allowedSubscriptionTiers: z.union([
+                z.literal(true),
+                z.array(z.string().nonempty()),
+            ]),
+        })
+        .optional(),
+    generateSkybox: z
+        .object({
+            provider: z.literal('blockadeLabs'),
+            allowedSubscriptionTiers: z.union([
+                z.literal(true),
+                z.array(z.string().nonempty()),
+            ]),
+        })
+        .optional(),
+    images: z
+        .object({
+            defaultModel: z.string(),
+            defaultWidth: z.number().int().positive(),
+            defaultHeight: z.number().int().positive(),
+            maxWidth: z.number().int().positive().optional(),
+            maxHeight: z.number().int().positive().optional(),
+            maxSteps: z.number().int().positive().optional(),
+            maxImages: z.number().int().positive().optional(),
+            allowedModels: z.object({
+                openai: z.array(z.string().nonempty()).optional(),
+                stabilityai: z.array(z.string().nonempty()).optional(),
+            }),
+            allowedSubscriptionTiers: z.union([
+                z.literal(true),
+                z.array(z.string().nonempty()),
+            ]),
+        })
+        .optional(),
+});
+
 export const optionsSchema = z.object({
     dynamodb: dynamoDbSchema.optional(),
     s3: s3Schema.optional(),
@@ -811,6 +991,10 @@ export const optionsSchema = z.object({
     ses: sesSchema.optional(),
     redis: redisSchema.optional(),
     rateLimit: rateLimitSchema.optional(),
+    openai: openAiSchema.optional(),
+    blockadeLabs: blockadeLabsSchema.optional(),
+    stabilityai: stabilityAiSchema.optional(),
+    ai: aiSchema.optional(),
 
     subscriptions: subscriptionConfigSchema.optional(),
     stripe: stripeSchema.optional(),

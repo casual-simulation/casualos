@@ -5,11 +5,11 @@
     "pageSidebarLabel": "Permissions",
     "contents": [
         {
-            "id": 2956,
+            "id": 3079,
             "order": 9999,
             "name": "AssignPolicyPermission",
             "reflection": {
-                "id": 2956,
+                "id": 3079,
                 "name": "AssignPolicyPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -26,7 +26,7 @@
                 },
                 "children": [
                     {
-                        "id": 2958,
+                        "id": 3081,
                         "name": "policies",
                         "kind": 1024,
                         "kindString": "Property",
@@ -39,7 +39,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 390,
+                                "line": 428,
                                 "character": 4
                             }
                         ],
@@ -62,7 +62,7 @@
                         }
                     },
                     {
-                        "id": 2959,
+                        "id": 3082,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -75,7 +75,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -98,7 +98,7 @@
                         }
                     },
                     {
-                        "id": 2957,
+                        "id": 3080,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -106,7 +106,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 487,
+                                "line": 525,
                                 "character": 4
                             }
                         ],
@@ -125,16 +125,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2958,
-                            2959,
-                            2957
+                            3081,
+                            3082,
+                            3080
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 486,
+                        "line": 524,
                         "character": 17
                     }
                 ],
@@ -159,11 +159,11 @@
             "group": null
         },
         {
-            "id": 2870,
+            "id": 2984,
             "order": 9999,
             "name": "AvailablePermissions",
             "reflection": {
-                "id": 2870,
+                "id": 2984,
                 "name": "AvailablePermissions",
                 "kind": 4194304,
                 "kindString": "Type alias",
@@ -210,117 +210,127 @@
                     "types": [
                         {
                             "type": "reference",
-                            "id": 2871,
+                            "id": 2985,
                             "name": "CreateDataPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2875,
+                            "id": 2989,
                             "name": "ReadDataPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2879,
+                            "id": 2993,
                             "name": "UpdateDataPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2887,
+                            "id": 3001,
                             "name": "DeleteDataPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2883,
+                            "id": 2997,
                             "name": "ListDataPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2891,
+                            "id": 3005,
                             "name": "CreateFilePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2896,
+                            "id": 3010,
                             "name": "ReadFilePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2901,
+                            "id": 3025,
+                            "name": "ListFilePermission"
+                        },
+                        {
+                            "type": "reference",
+                            "id": 3015,
                             "name": "UpdateFilePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2906,
+                            "id": 3020,
                             "name": "DeleteFilePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2911,
+                            "id": 3030,
                             "name": "IncrementEventPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2915,
+                            "id": 3034,
                             "name": "CountEventPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2919,
+                            "id": 3038,
                             "name": "UpdateEventPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2964,
+                            "id": 3042,
+                            "name": "ListEventPermission"
+                        },
+                        {
+                            "type": "reference",
+                            "id": 3087,
                             "name": "ReadPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2948,
+                            "id": 3071,
                             "name": "GrantPermissionToPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2952,
+                            "id": 3075,
                             "name": "RevokePermissionFromPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2968,
+                            "id": 3091,
                             "name": "ListPoliciesPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2956,
+                            "id": 3079,
                             "name": "AssignPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2960,
+                            "id": 3083,
                             "name": "UnassignPolicyPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2923,
+                            "id": 3046,
                             "name": "GrantRolePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2930,
+                            "id": 3053,
                             "name": "RevokeRolePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2936,
+                            "id": 3059,
                             "name": "ReadRolePermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2944,
+                            "id": 3067,
                             "name": "ListRolesPermission"
                         },
                         {
                             "type": "reference",
-                            "id": 2940,
+                            "id": 3063,
                             "name": "UpdateRolePermission"
                         },
                         {
@@ -364,11 +374,11 @@
             "group": null
         },
         {
-            "id": 2915,
+            "id": 3034,
             "order": 9999,
             "name": "CountEventPermission",
             "reflection": {
-                "id": 2915,
+                "id": 3034,
                 "name": "CountEventPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -385,7 +395,7 @@
                 },
                 "children": [
                     {
-                        "id": 2917,
+                        "id": 3036,
                         "name": "events",
                         "kind": 1024,
                         "kindString": "Property",
@@ -398,7 +408,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 316,
+                                "line": 336,
                                 "character": 4
                             }
                         ],
@@ -421,7 +431,7 @@
                         }
                     },
                     {
-                        "id": 2918,
+                        "id": 3037,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -434,7 +444,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -457,7 +467,7 @@
                         }
                     },
                     {
-                        "id": 2916,
+                        "id": 3035,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -465,7 +475,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 349,
+                                "line": 369,
                                 "character": 4
                             }
                         ],
@@ -484,16 +494,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2917,
-                            2918,
-                            2916
+                            3036,
+                            3037,
+                            3035
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 348,
+                        "line": 368,
                         "character": 17
                     }
                 ],
@@ -518,11 +528,11 @@
             "group": null
         },
         {
-            "id": 2871,
+            "id": 2985,
             "order": 9999,
             "name": "CreateDataPermission",
             "reflection": {
-                "id": 2871,
+                "id": 2985,
                 "name": "CreateDataPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -539,7 +549,7 @@
                 },
                 "children": [
                     {
-                        "id": 2873,
+                        "id": 2987,
                         "name": "addresses",
                         "kind": 1024,
                         "kindString": "Property",
@@ -552,7 +562,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 106,
+                                "line": 110,
                                 "character": 4
                             }
                         ],
@@ -575,7 +585,7 @@
                         }
                     },
                     {
-                        "id": 2874,
+                        "id": 2988,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -588,7 +598,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -611,7 +621,7 @@
                         }
                     },
                     {
-                        "id": 2872,
+                        "id": 2986,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -619,7 +629,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 122,
+                                "line": 126,
                                 "character": 4
                             }
                         ],
@@ -638,16 +648,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2873,
-                            2874,
-                            2872
+                            2987,
+                            2988,
+                            2986
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 121,
+                        "line": 125,
                         "character": 17
                     }
                 ],
@@ -672,11 +682,11 @@
             "group": null
         },
         {
-            "id": 2891,
+            "id": 3005,
             "order": 9999,
             "name": "CreateFilePermission",
             "reflection": {
-                "id": 2891,
+                "id": 3005,
                 "name": "CreateFilePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -693,7 +703,7 @@
                 },
                 "children": [
                     {
-                        "id": 2894,
+                        "id": 3008,
                         "name": "allowedMimeTypes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -707,7 +717,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 221,
+                                "line": 225,
                                 "character": 4
                             }
                         ],
@@ -733,7 +743,7 @@
                         }
                     },
                     {
-                        "id": 2893,
+                        "id": 3007,
                         "name": "maxFileSizeInBytes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -747,7 +757,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 214,
+                                "line": 218,
                                 "character": 4
                             }
                         ],
@@ -761,7 +771,7 @@
                         }
                     },
                     {
-                        "id": 2895,
+                        "id": 3009,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -774,7 +784,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -797,7 +807,7 @@
                         }
                     },
                     {
-                        "id": 2892,
+                        "id": 3006,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -805,7 +815,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 239,
+                                "line": 243,
                                 "character": 4
                             }
                         ],
@@ -824,17 +834,17 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2894,
-                            2893,
-                            2895,
-                            2892
+                            3008,
+                            3007,
+                            3009,
+                            3006
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 238,
+                        "line": 242,
                         "character": 17
                     }
                 ],
@@ -859,11 +869,11 @@
             "group": null
         },
         {
-            "id": 2887,
+            "id": 3001,
             "order": 9999,
             "name": "DeleteDataPermission",
             "reflection": {
-                "id": 2887,
+                "id": 3001,
                 "name": "DeleteDataPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -880,7 +890,7 @@
                 },
                 "children": [
                     {
-                        "id": 2889,
+                        "id": 3003,
                         "name": "addresses",
                         "kind": 1024,
                         "kindString": "Property",
@@ -893,7 +903,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 106,
+                                "line": 110,
                                 "character": 4
                             }
                         ],
@@ -916,7 +926,7 @@
                         }
                     },
                     {
-                        "id": 2890,
+                        "id": 3004,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -929,7 +939,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -952,7 +962,7 @@
                         }
                     },
                     {
-                        "id": 2888,
+                        "id": 3002,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -960,7 +970,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 176,
+                                "line": 180,
                                 "character": 4
                             }
                         ],
@@ -979,16 +989,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2889,
-                            2890,
-                            2888
+                            3003,
+                            3004,
+                            3002
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 175,
+                        "line": 179,
                         "character": 17
                     }
                 ],
@@ -1013,11 +1023,11 @@
             "group": null
         },
         {
-            "id": 2906,
+            "id": 3020,
             "order": 9999,
             "name": "DeleteFilePermission",
             "reflection": {
-                "id": 2906,
+                "id": 3020,
                 "name": "DeleteFilePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1034,7 +1044,7 @@
                 },
                 "children": [
                     {
-                        "id": 2909,
+                        "id": 3023,
                         "name": "allowedMimeTypes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1048,7 +1058,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 221,
+                                "line": 225,
                                 "character": 4
                             }
                         ],
@@ -1074,7 +1084,7 @@
                         }
                     },
                     {
-                        "id": 2908,
+                        "id": 3022,
                         "name": "maxFileSizeInBytes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1088,7 +1098,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 214,
+                                "line": 218,
                                 "character": 4
                             }
                         ],
@@ -1102,7 +1112,7 @@
                         }
                     },
                     {
-                        "id": 2910,
+                        "id": 3024,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1115,7 +1125,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -1138,7 +1148,7 @@
                         }
                     },
                     {
-                        "id": 2907,
+                        "id": 3021,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1146,7 +1156,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 294,
+                                "line": 314,
                                 "character": 4
                             }
                         ],
@@ -1165,17 +1175,17 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2909,
-                            2908,
-                            2910,
-                            2907
+                            3023,
+                            3022,
+                            3024,
+                            3021
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 293,
+                        "line": 313,
                         "character": 17
                     }
                 ],
@@ -1200,11 +1210,11 @@
             "group": null
         },
         {
-            "id": 2948,
+            "id": 3071,
             "order": 9999,
             "name": "GrantPermissionToPolicyPermission",
             "reflection": {
-                "id": 2948,
+                "id": 3071,
                 "name": "GrantPermissionToPolicyPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1221,7 +1231,7 @@
                 },
                 "children": [
                     {
-                        "id": 2950,
+                        "id": 3073,
                         "name": "policies",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1234,7 +1244,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 390,
+                                "line": 428,
                                 "character": 4
                             }
                         ],
@@ -1257,7 +1267,7 @@
                         }
                     },
                     {
-                        "id": 2951,
+                        "id": 3074,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1270,7 +1280,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -1293,7 +1303,7 @@
                         }
                     },
                     {
-                        "id": 2949,
+                        "id": 3072,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1301,7 +1311,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 444,
+                                "line": 482,
                                 "character": 4
                             }
                         ],
@@ -1320,16 +1330,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2950,
-                            2951,
-                            2949
+                            3073,
+                            3074,
+                            3072
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 443,
+                        "line": 481,
                         "character": 17
                     }
                 ],
@@ -1354,11 +1364,11 @@
             "group": null
         },
         {
-            "id": 2923,
+            "id": 3046,
             "order": 9999,
             "name": "GrantRolePermission",
             "reflection": {
-                "id": 2923,
+                "id": 3046,
                 "name": "GrantRolePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1375,7 +1385,7 @@
                 },
                 "children": [
                     {
-                        "id": 2926,
+                        "id": 3049,
                         "name": "instances",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1387,7 +1397,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 558,
+                                "line": 596,
                                 "character": 4
                             }
                         ],
@@ -1406,7 +1416,7 @@
                         }
                     },
                     {
-                        "id": 2927,
+                        "id": 3050,
                         "name": "maxDurationMs",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1420,7 +1430,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 564,
+                                "line": 602,
                                 "character": 4
                             }
                         ],
@@ -1430,7 +1440,7 @@
                         }
                     },
                     {
-                        "id": 2929,
+                        "id": 3052,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1443,7 +1453,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -1466,7 +1476,7 @@
                         }
                     },
                     {
-                        "id": 2928,
+                        "id": 3051,
                         "name": "roles",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1479,7 +1489,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 527,
+                                "line": 565,
                                 "character": 4
                             }
                         ],
@@ -1502,7 +1512,7 @@
                         }
                     },
                     {
-                        "id": 2924,
+                        "id": 3047,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1510,7 +1520,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 542,
+                                "line": 580,
                                 "character": 4
                             }
                         ],
@@ -1524,7 +1534,7 @@
                         }
                     },
                     {
-                        "id": 2925,
+                        "id": 3048,
                         "name": "userIds",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1536,7 +1546,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 550,
+                                "line": 588,
                                 "character": 4
                             }
                         ],
@@ -1563,19 +1573,19 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2926,
-                            2927,
-                            2929,
-                            2928,
-                            2924,
-                            2925
+                            3049,
+                            3050,
+                            3052,
+                            3051,
+                            3047,
+                            3048
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 541,
+                        "line": 579,
                         "character": 17
                     }
                 ],
@@ -1600,11 +1610,11 @@
             "group": null
         },
         {
-            "id": 2911,
+            "id": 3030,
             "order": 9999,
             "name": "IncrementEventPermission",
             "reflection": {
-                "id": 2911,
+                "id": 3030,
                 "name": "IncrementEventPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1621,7 +1631,7 @@
                 },
                 "children": [
                     {
-                        "id": 2913,
+                        "id": 3032,
                         "name": "events",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1634,7 +1644,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 316,
+                                "line": 336,
                                 "character": 4
                             }
                         ],
@@ -1657,7 +1667,7 @@
                         }
                     },
                     {
-                        "id": 2914,
+                        "id": 3033,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1670,7 +1680,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -1693,7 +1703,7 @@
                         }
                     },
                     {
-                        "id": 2912,
+                        "id": 3031,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1701,7 +1711,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 331,
+                                "line": 351,
                                 "character": 4
                             }
                         ],
@@ -1720,16 +1730,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2913,
-                            2914,
-                            2912
+                            3032,
+                            3033,
+                            3031
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 330,
+                        "line": 350,
                         "character": 17
                     }
                 ],
@@ -1754,11 +1764,11 @@
             "group": null
         },
         {
-            "id": 2883,
+            "id": 2997,
             "order": 9999,
             "name": "ListDataPermission",
             "reflection": {
-                "id": 2883,
+                "id": 2997,
                 "name": "ListDataPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1775,7 +1785,7 @@
                 },
                 "children": [
                     {
-                        "id": 2885,
+                        "id": 2999,
                         "name": "addresses",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1788,7 +1798,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 106,
+                                "line": 110,
                                 "character": 4
                             }
                         ],
@@ -1811,7 +1821,7 @@
                         }
                     },
                     {
-                        "id": 2886,
+                        "id": 3000,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1824,7 +1834,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -1847,7 +1857,7 @@
                         }
                     },
                     {
-                        "id": 2884,
+                        "id": 2998,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1855,7 +1865,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 194,
+                                "line": 198,
                                 "character": 4
                             }
                         ],
@@ -1874,16 +1884,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2885,
-                            2886,
-                            2884
+                            2999,
+                            3000,
+                            2998
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 193,
+                        "line": 197,
                         "character": 17
                     }
                 ],
@@ -1908,11 +1918,165 @@
             "group": null
         },
         {
-            "id": 2968,
+            "id": 3042,
+            "order": 9999,
+            "name": "ListEventPermission",
+            "reflection": {
+                "id": 3042,
+                "name": "ListEventPermission",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": {},
+                "comment": {
+                    "shortText": "Defines an interface that describes a permission to be able to list events in a record.",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "types/permissions\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 3044,
+                        "name": "events",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The events that can be manipulated.",
+                            "text": "If true, then all events are allowed.\nIf a string, then it should be a Regular Expression that matches only events that are allowed to be created.\n",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/PolicyPermissions.ts",
+                                "line": 336,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": true
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "EventPermission.events"
+                        }
+                    },
+                    {
+                        "id": 3045,
+                        "name": "role",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The role that this permission is can be performed by.",
+                            "text": "If true, then the permission is valid for all roles. (everyone)\nIf a string, then the permission is valid for that specific role.\n",
+                            "tags": []
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/PolicyPermissions.ts",
+                                "line": 90,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "literal",
+                                    "value": true
+                                }
+                            ]
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "EventPermission.role"
+                        }
+                    },
+                    {
+                        "id": 3043,
+                        "name": "type",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": {},
+                        "sources": [
+                            {
+                                "fileName": "src/aux-records/PolicyPermissions.ts",
+                                "line": 406,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "literal",
+                            "value": "event.list"
+                        },
+                        "overwrites": {
+                            "type": "reference",
+                            "name": "EventPermission.type"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            3044,
+                            3045,
+                            3043
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-records/PolicyPermissions.ts",
+                        "line": 405,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "EventPermission"
+                    }
+                ]
+            },
+            "comment": {
+                "shortText": "Defines an interface that describes a permission to be able to list events in a record.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "types/permissions\n"
+                    }
+                ]
+            },
+            "group": null
+        },
+        {
+            "id": 3091,
             "order": 9999,
             "name": "ListPoliciesPermission",
             "reflection": {
-                "id": 2968,
+                "id": 3091,
                 "name": "ListPoliciesPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -1929,7 +2093,7 @@
                 },
                 "children": [
                     {
-                        "id": 2970,
+                        "id": 3093,
                         "name": "policies",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1942,7 +2106,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 390,
+                                "line": 428,
                                 "character": 4
                             }
                         ],
@@ -1965,7 +2129,7 @@
                         }
                     },
                     {
-                        "id": 2971,
+                        "id": 3094,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -1978,7 +2142,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -2001,7 +2165,7 @@
                         }
                     },
                     {
-                        "id": 2969,
+                        "id": 3092,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2009,7 +2173,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 426,
+                                "line": 464,
                                 "character": 4
                             }
                         ],
@@ -2028,16 +2192,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2970,
-                            2971,
-                            2969
+                            3093,
+                            3094,
+                            3092
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 425,
+                        "line": 463,
                         "character": 17
                     }
                 ],
@@ -2062,11 +2226,11 @@
             "group": null
         },
         {
-            "id": 2944,
+            "id": 3067,
             "order": 9999,
             "name": "ListRolesPermission",
             "reflection": {
-                "id": 2944,
+                "id": 3067,
                 "name": "ListRolesPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2083,7 +2247,7 @@
                 },
                 "children": [
                     {
-                        "id": 2947,
+                        "id": 3070,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2096,7 +2260,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -2119,7 +2283,7 @@
                         }
                     },
                     {
-                        "id": 2946,
+                        "id": 3069,
                         "name": "roles",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2132,7 +2296,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 527,
+                                "line": 565,
                                 "character": 4
                             }
                         ],
@@ -2155,7 +2319,7 @@
                         }
                     },
                     {
-                        "id": 2945,
+                        "id": 3068,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2163,7 +2327,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 652,
+                                "line": 695,
                                 "character": 4
                             }
                         ],
@@ -2182,16 +2346,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2947,
-                            2946,
-                            2945
+                            3070,
+                            3069,
+                            3068
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 651,
+                        "line": 694,
                         "character": 17
                     }
                 ],
@@ -2216,11 +2380,11 @@
             "group": null
         },
         {
-            "id": 2875,
+            "id": 2989,
             "order": 9999,
             "name": "ReadDataPermission",
             "reflection": {
-                "id": 2875,
+                "id": 2989,
                 "name": "ReadDataPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2237,7 +2401,7 @@
                 },
                 "children": [
                     {
-                        "id": 2877,
+                        "id": 2991,
                         "name": "addresses",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2250,7 +2414,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 106,
+                                "line": 110,
                                 "character": 4
                             }
                         ],
@@ -2273,7 +2437,7 @@
                         }
                     },
                     {
-                        "id": 2878,
+                        "id": 2992,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2286,7 +2450,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -2309,7 +2473,7 @@
                         }
                     },
                     {
-                        "id": 2876,
+                        "id": 2990,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2317,7 +2481,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 140,
+                                "line": 144,
                                 "character": 4
                             }
                         ],
@@ -2336,16 +2500,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2877,
-                            2878,
-                            2876
+                            2991,
+                            2992,
+                            2990
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 139,
+                        "line": 143,
                         "character": 17
                     }
                 ],
@@ -2370,11 +2534,11 @@
             "group": null
         },
         {
-            "id": 2896,
+            "id": 3010,
             "order": 9999,
             "name": "ReadFilePermission",
             "reflection": {
-                "id": 2896,
+                "id": 3010,
                 "name": "ReadFilePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2391,7 +2555,7 @@
                 },
                 "children": [
                     {
-                        "id": 2899,
+                        "id": 3013,
                         "name": "allowedMimeTypes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2405,7 +2569,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 221,
+                                "line": 225,
                                 "character": 4
                             }
                         ],
@@ -2431,7 +2595,7 @@
                         }
                     },
                     {
-                        "id": 2898,
+                        "id": 3012,
                         "name": "maxFileSizeInBytes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2445,7 +2609,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 214,
+                                "line": 218,
                                 "character": 4
                             }
                         ],
@@ -2459,7 +2623,7 @@
                         }
                     },
                     {
-                        "id": 2900,
+                        "id": 3014,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2472,7 +2636,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -2495,7 +2659,7 @@
                         }
                     },
                     {
-                        "id": 2897,
+                        "id": 3011,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2503,7 +2667,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 257,
+                                "line": 261,
                                 "character": 4
                             }
                         ],
@@ -2522,17 +2686,17 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2899,
-                            2898,
-                            2900,
-                            2897
+                            3013,
+                            3012,
+                            3014,
+                            3011
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 256,
+                        "line": 260,
                         "character": 17
                     }
                 ],
@@ -2557,11 +2721,11 @@
             "group": null
         },
         {
-            "id": 2964,
+            "id": 3087,
             "order": 9999,
             "name": "ReadPolicyPermission",
             "reflection": {
-                "id": 2964,
+                "id": 3087,
                 "name": "ReadPolicyPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2578,7 +2742,7 @@
                 },
                 "children": [
                     {
-                        "id": 2966,
+                        "id": 3089,
                         "name": "policies",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2591,7 +2755,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 390,
+                                "line": 428,
                                 "character": 4
                             }
                         ],
@@ -2614,7 +2778,7 @@
                         }
                     },
                     {
-                        "id": 2967,
+                        "id": 3090,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2627,7 +2791,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -2650,7 +2814,7 @@
                         }
                     },
                     {
-                        "id": 2965,
+                        "id": 3088,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2658,7 +2822,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 408,
+                                "line": 446,
                                 "character": 4
                             }
                         ],
@@ -2677,16 +2841,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2966,
-                            2967,
-                            2965
+                            3089,
+                            3090,
+                            3088
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 407,
+                        "line": 445,
                         "character": 17
                     }
                 ],
@@ -2711,11 +2875,11 @@
             "group": null
         },
         {
-            "id": 2936,
+            "id": 3059,
             "order": 9999,
             "name": "ReadRolePermission",
             "reflection": {
-                "id": 2936,
+                "id": 3059,
                 "name": "ReadRolePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2732,7 +2896,7 @@
                 },
                 "children": [
                     {
-                        "id": 2939,
+                        "id": 3062,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2745,7 +2909,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -2768,7 +2932,7 @@
                         }
                     },
                     {
-                        "id": 2938,
+                        "id": 3061,
                         "name": "roles",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2781,7 +2945,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 527,
+                                "line": 565,
                                 "character": 4
                             }
                         ],
@@ -2804,7 +2968,7 @@
                         }
                     },
                     {
-                        "id": 2937,
+                        "id": 3060,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2812,7 +2976,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 616,
+                                "line": 659,
                                 "character": 4
                             }
                         ],
@@ -2831,16 +2995,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2939,
-                            2938,
-                            2937
+                            3062,
+                            3061,
+                            3060
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 615,
+                        "line": 658,
                         "character": 17
                     }
                 ],
@@ -2865,11 +3029,11 @@
             "group": null
         },
         {
-            "id": 2952,
+            "id": 3075,
             "order": 9999,
             "name": "RevokePermissionFromPolicyPermission",
             "reflection": {
-                "id": 2952,
+                "id": 3075,
                 "name": "RevokePermissionFromPolicyPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -2886,7 +3050,7 @@
                 },
                 "children": [
                     {
-                        "id": 2954,
+                        "id": 3077,
                         "name": "policies",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2899,7 +3063,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 390,
+                                "line": 428,
                                 "character": 4
                             }
                         ],
@@ -2922,7 +3086,7 @@
                         }
                     },
                     {
-                        "id": 2955,
+                        "id": 3078,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2935,7 +3099,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -2958,7 +3122,7 @@
                         }
                     },
                     {
-                        "id": 2953,
+                        "id": 3076,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -2966,7 +3130,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 465,
+                                "line": 503,
                                 "character": 4
                             }
                         ],
@@ -2985,16 +3149,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2954,
-                            2955,
-                            2953
+                            3077,
+                            3078,
+                            3076
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 464,
+                        "line": 502,
                         "character": 17
                     }
                 ],
@@ -3019,11 +3183,11 @@
             "group": null
         },
         {
-            "id": 2930,
+            "id": 3053,
             "order": 9999,
             "name": "RevokeRolePermission",
             "reflection": {
-                "id": 2930,
+                "id": 3053,
                 "name": "RevokeRolePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3040,7 +3204,7 @@
                 },
                 "children": [
                     {
-                        "id": 2933,
+                        "id": 3056,
                         "name": "instances",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3052,7 +3216,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 598,
+                                "line": 639,
                                 "character": 4
                             }
                         ],
@@ -3071,7 +3235,7 @@
                         }
                     },
                     {
-                        "id": 2935,
+                        "id": 3058,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3084,7 +3248,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -3107,7 +3271,7 @@
                         }
                     },
                     {
-                        "id": 2934,
+                        "id": 3057,
                         "name": "roles",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3120,7 +3284,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 527,
+                                "line": 565,
                                 "character": 4
                             }
                         ],
@@ -3143,7 +3307,7 @@
                         }
                     },
                     {
-                        "id": 2931,
+                        "id": 3054,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3151,7 +3315,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 582,
+                                "line": 623,
                                 "character": 4
                             }
                         ],
@@ -3165,7 +3329,7 @@
                         }
                     },
                     {
-                        "id": 2932,
+                        "id": 3055,
                         "name": "userIds",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3177,7 +3341,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 590,
+                                "line": 631,
                                 "character": 4
                             }
                         ],
@@ -3204,18 +3368,18 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2933,
-                            2935,
-                            2934,
-                            2931,
-                            2932
+                            3056,
+                            3058,
+                            3057,
+                            3054,
+                            3055
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 581,
+                        "line": 622,
                         "character": 17
                     }
                 ],
@@ -3240,11 +3404,11 @@
             "group": null
         },
         {
-            "id": 2960,
+            "id": 3083,
             "order": 9999,
             "name": "UnassignPolicyPermission",
             "reflection": {
-                "id": 2960,
+                "id": 3083,
                 "name": "UnassignPolicyPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3261,7 +3425,7 @@
                 },
                 "children": [
                     {
-                        "id": 2962,
+                        "id": 3085,
                         "name": "policies",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3274,7 +3438,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 390,
+                                "line": 428,
                                 "character": 4
                             }
                         ],
@@ -3297,7 +3461,7 @@
                         }
                     },
                     {
-                        "id": 2963,
+                        "id": 3086,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3310,7 +3474,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -3333,7 +3497,7 @@
                         }
                     },
                     {
-                        "id": 2961,
+                        "id": 3084,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3341,7 +3505,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 505,
+                                "line": 543,
                                 "character": 4
                             }
                         ],
@@ -3360,16 +3524,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2962,
-                            2963,
-                            2961
+                            3085,
+                            3086,
+                            3084
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 504,
+                        "line": 542,
                         "character": 17
                     }
                 ],
@@ -3394,11 +3558,11 @@
             "group": null
         },
         {
-            "id": 2879,
+            "id": 2993,
             "order": 9999,
             "name": "UpdateDataPermission",
             "reflection": {
-                "id": 2879,
+                "id": 2993,
                 "name": "UpdateDataPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3415,7 +3579,7 @@
                 },
                 "children": [
                     {
-                        "id": 2881,
+                        "id": 2995,
                         "name": "addresses",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3428,7 +3592,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 106,
+                                "line": 110,
                                 "character": 4
                             }
                         ],
@@ -3451,7 +3615,7 @@
                         }
                     },
                     {
-                        "id": 2882,
+                        "id": 2996,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3464,7 +3628,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -3487,7 +3651,7 @@
                         }
                     },
                     {
-                        "id": 2880,
+                        "id": 2994,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3495,7 +3659,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 158,
+                                "line": 162,
                                 "character": 4
                             }
                         ],
@@ -3514,16 +3678,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2881,
-                            2882,
-                            2880
+                            2995,
+                            2996,
+                            2994
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 157,
+                        "line": 161,
                         "character": 17
                     }
                 ],
@@ -3548,11 +3712,11 @@
             "group": null
         },
         {
-            "id": 2919,
+            "id": 3038,
             "order": 9999,
             "name": "UpdateEventPermission",
             "reflection": {
-                "id": 2919,
+                "id": 3038,
                 "name": "UpdateEventPermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3569,7 +3733,7 @@
                 },
                 "children": [
                     {
-                        "id": 2921,
+                        "id": 3040,
                         "name": "events",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3582,7 +3746,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 316,
+                                "line": 336,
                                 "character": 4
                             }
                         ],
@@ -3605,7 +3769,7 @@
                         }
                     },
                     {
-                        "id": 2922,
+                        "id": 3041,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3618,7 +3782,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -3641,7 +3805,7 @@
                         }
                     },
                     {
-                        "id": 2920,
+                        "id": 3039,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3649,7 +3813,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 368,
+                                "line": 388,
                                 "character": 4
                             }
                         ],
@@ -3668,16 +3832,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2921,
-                            2922,
-                            2920
+                            3040,
+                            3041,
+                            3039
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 367,
+                        "line": 387,
                         "character": 17
                     }
                 ],
@@ -3702,11 +3866,11 @@
             "group": null
         },
         {
-            "id": 2901,
+            "id": 3015,
             "order": 9999,
             "name": "UpdateFilePermission",
             "reflection": {
-                "id": 2901,
+                "id": 3015,
                 "name": "UpdateFilePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3723,7 +3887,7 @@
                 },
                 "children": [
                     {
-                        "id": 2904,
+                        "id": 3018,
                         "name": "allowedMimeTypes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3737,7 +3901,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 221,
+                                "line": 225,
                                 "character": 4
                             }
                         ],
@@ -3763,7 +3927,7 @@
                         }
                     },
                     {
-                        "id": 2903,
+                        "id": 3017,
                         "name": "maxFileSizeInBytes",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3777,7 +3941,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 214,
+                                "line": 218,
                                 "character": 4
                             }
                         ],
@@ -3791,7 +3955,7 @@
                         }
                     },
                     {
-                        "id": 2905,
+                        "id": 3019,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3804,7 +3968,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -3827,7 +3991,7 @@
                         }
                     },
                     {
-                        "id": 2902,
+                        "id": 3016,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3835,7 +3999,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 276,
+                                "line": 296,
                                 "character": 4
                             }
                         ],
@@ -3854,17 +4018,17 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2904,
-                            2903,
-                            2905,
-                            2902
+                            3018,
+                            3017,
+                            3019,
+                            3016
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 275,
+                        "line": 295,
                         "character": 17
                     }
                 ],
@@ -3889,11 +4053,11 @@
             "group": null
         },
         {
-            "id": 2940,
+            "id": 3063,
             "order": 9999,
             "name": "UpdateRolePermission",
             "reflection": {
-                "id": 2940,
+                "id": 3063,
                 "name": "UpdateRolePermission",
                 "kind": 256,
                 "kindString": "Interface",
@@ -3910,7 +4074,7 @@
                 },
                 "children": [
                     {
-                        "id": 2943,
+                        "id": 3066,
                         "name": "role",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3923,7 +4087,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 86,
+                                "line": 90,
                                 "character": 4
                             }
                         ],
@@ -3946,7 +4110,7 @@
                         }
                     },
                     {
-                        "id": 2942,
+                        "id": 3065,
                         "name": "roles",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3959,7 +4123,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 527,
+                                "line": 565,
                                 "character": 4
                             }
                         ],
@@ -3982,7 +4146,7 @@
                         }
                     },
                     {
-                        "id": 2941,
+                        "id": 3064,
                         "name": "type",
                         "kind": 1024,
                         "kindString": "Property",
@@ -3990,7 +4154,7 @@
                         "sources": [
                             {
                                 "fileName": "src/aux-records/PolicyPermissions.ts",
-                                "line": 634,
+                                "line": 677,
                                 "character": 4
                             }
                         ],
@@ -4009,16 +4173,16 @@
                         "title": "Properties",
                         "kind": 1024,
                         "children": [
-                            2943,
-                            2942,
-                            2941
+                            3066,
+                            3065,
+                            3064
                         ]
                     }
                 ],
                 "sources": [
                     {
                         "fileName": "src/aux-records/PolicyPermissions.ts",
-                        "line": 633,
+                        "line": 676,
                         "character": 17
                     }
                 ],
@@ -4044,310 +4208,330 @@
         }
     ],
     "references": {
+        "CasualOSError": "types/error",
+        "id-2949": "CasualOSError",
         "Quaternion": "types/math/rotations",
-        "id-3219": "Quaternion",
+        "id-3339": "Quaternion",
         "Rotation": "types/math/rotations",
-        "id-3251": "Rotation",
+        "id-3371": "Rotation",
         "Vector2": "types/math/vectors",
-        "id-3085": "Vector2",
+        "id-3205": "Vector2",
         "Vector3": "types/math/vectors",
-        "id-3142": "Vector3",
+        "id-3262": "Vector3",
+        "AIChatMessage": "types/ai",
+        "id-2968": "AIChatMessage",
+        "AIChatOptions": "types/ai",
+        "id-2746": "AIChatOptions",
+        "AIGenerateImageSuccess": "types/ai",
+        "id-2551": "AIGenerateImageSuccess",
+        "AIGenerateImageOptions": "types/ai",
+        "id-2760": "AIGenerateImageOptions",
+        "AIGenerateSkyboxOptions": "types/ai",
+        "id-2756": "AIGenerateSkyboxOptions",
+        "AIGenerateSkyboxRequest": "types/ai",
+        "id-2544": "AIGenerateSkyboxRequest",
+        "AIGenerateSkyboxResult": "types/ai",
+        "id-2548": "AIGenerateSkyboxResult",
+        "AIGeneratedImage": "types/ai",
+        "id-2554": "AIGeneratedImage",
         "AddCountFailure": "types/records/events",
-        "id-3032": "AddCountFailure",
+        "id-3152": "AddCountFailure",
         "AddCountSuccess": "types/records/events",
-        "id-3027": "AddCountSuccess",
+        "id-3147": "AddCountSuccess",
         "AnimateTagOptions": "types/animation",
-        "id-2110": "AnimateTagOptions",
+        "id-2149": "AnimateTagOptions",
         "AttachDebuggerOptions": "types/debuggers/common",
-        "id-2485": "AttachDebuggerOptions",
+        "id-2524": "AttachDebuggerOptions",
         "CasualOSDevice": "types/os",
-        "id-2851": "CasualOSDevice",
+        "id-2937": "CasualOSDevice",
         "CasualOSVersion": "types/os",
-        "id-2843": "CasualOSVersion",
+        "id-2929": "CasualOSVersion",
         "AxisAndAngle": "types/math/rotations",
-        "id-3297": "AxisAndAngle",
+        "id-3417": "AxisAndAngle",
         "BotTagMasks": "types/core",
-        "id-2820": "BotTagMasks",
+        "id-2906": "BotTagMasks",
         "BotTags": "types/core",
-        "id-2735": "BotTags",
+        "id-2821": "BotTags",
         "BotState": "types/core",
-        "id-2833": "BotState",
+        "id-2919": "BotState",
         "CompiledBotListeners": "types/core",
-        "id-2814": "CompiledBotListeners",
+        "id-2900": "CompiledBotListeners",
         "ConvertGeolocationToWhat3WordsOptions": "types/os",
-        "id-2527": "ConvertGeolocationToWhat3WordsOptions",
+        "id-2581": "ConvertGeolocationToWhat3WordsOptions",
         "CreatePublicRecordKeyFailure": "types/records/key",
-        "id-2865": "CreatePublicRecordKeyFailure",
+        "id-2979": "CreatePublicRecordKeyFailure",
         "CreatePublicRecordKeySuccess": "types/records/key",
-        "id-2861": "CreatePublicRecordKeySuccess",
+        "id-2975": "CreatePublicRecordKeySuccess",
         "DebuggerCallFrame": "types/debuggers/common",
-        "id-2438": "DebuggerCallFrame",
+        "id-2477": "DebuggerCallFrame",
         "DebuggerFunctionLocation": "types/debuggers/common",
-        "id-2473": "DebuggerFunctionLocation",
+        "id-2512": "DebuggerFunctionLocation",
         "DebuggerPause": "types/debuggers/common",
-        "id-2467": "DebuggerPause",
+        "id-2506": "DebuggerPause",
         "DebuggerTagMaskUpdate": "types/debuggers/common",
-        "id-2446": "DebuggerTagMaskUpdate",
+        "id-2485": "DebuggerTagMaskUpdate",
         "DebuggerTagUpdate": "types/debuggers/common",
-        "id-2452": "DebuggerTagUpdate",
+        "id-2491": "DebuggerTagUpdate",
         "DebuggerVariable": "types/debuggers/common",
-        "id-2479": "DebuggerVariable",
+        "id-2518": "DebuggerVariable",
         "Easing": "types/animation",
-        "id-2507": "Easing",
+        "id-2561": "Easing",
         "EnableXROptions": "types/os",
-        "id-2601": "EnableXROptions",
+        "id-2655": "EnableXROptions",
         "EraseDataFailure": "types/records/data",
-        "id-3000": "EraseDataFailure",
+        "id-3123": "EraseDataFailure",
         "EraseDataSuccess": "types/records/data",
-        "id-2996": "EraseDataSuccess",
+        "id-3119": "EraseDataSuccess",
         "EraseFileFailure": "types/records/files",
-        "id-3022": "EraseFileFailure",
+        "id-3142": "EraseFileFailure",
         "EraseFileSuccess": "types/records/files",
-        "id-3018": "EraseFileSuccess",
+        "id-3138": "EraseFileSuccess",
         "EulerAnglesRotation": "types/math/rotations",
-        "id-3300": "EulerAnglesRotation",
+        "id-3420": "EulerAnglesRotation",
         "FocusOnOptions": "types/os",
-        "id-2561": "FocusOnOptions",
+        "id-2615": "FocusOnOptions",
         "FocusOnRotation": "types/os",
-        "id-2573": "FocusOnRotation",
+        "id-2627": "FocusOnRotation",
         "FormAnimationData": "types/os",
-        "id-2619": "FormAnimationData",
+        "id-2673": "FormAnimationData",
         "FromToRotation": "types/math/rotations",
-        "id-3294": "FromToRotation",
+        "id-3414": "FromToRotation",
+        "GenericError": "types/error",
+        "id-2946": "GenericError",
         "GetCountFailure": "types/records/events",
-        "id-3043": "GetCountFailure",
+        "id-3163": "GetCountFailure",
         "GetCountSuccess": "types/records/events",
-        "id-3037": "GetCountSuccess",
+        "id-3157": "GetCountSuccess",
         "GetDataFailure": "types/records/data",
-        "id-2991": "GetDataFailure",
+        "id-3114": "GetDataFailure",
         "GetDataSuccess": "types/records/data",
-        "id-2982": "GetDataSuccess",
+        "id-3105": "GetDataSuccess",
         "GetRoomOptionsFailure": "types/os",
-        "id-2200": "GetRoomOptionsFailure",
+        "id-2239": "GetRoomOptionsFailure",
         "GetRoomOptionsSuccess": "types/os",
-        "id-2196": "GetRoomOptionsSuccess",
+        "id-2235": "GetRoomOptionsSuccess",
         "GetRoomRemoteOptionsFailure": "types/os",
-        "id-2243": "GetRoomRemoteOptionsFailure",
+        "id-2282": "GetRoomRemoteOptionsFailure",
         "GetRoomRemoteOptionsSuccess": "types/os",
-        "id-2238": "GetRoomRemoteOptionsSuccess",
+        "id-2277": "GetRoomRemoteOptionsSuccess",
         "GetRoomTrackOptionsFailure": "types/os",
-        "id-2219": "GetRoomTrackOptionsFailure",
+        "id-2258": "GetRoomTrackOptionsFailure",
         "GetRoomTrackOptionsSuccess": "types/os",
-        "id-2214": "GetRoomTrackOptionsSuccess",
+        "id-2253": "GetRoomTrackOptionsSuccess",
         "GrantMarkerPermissionFailure": "types/records/policies",
-        "id-3071": "GrantMarkerPermissionFailure",
+        "id-3191": "GrantMarkerPermissionFailure",
         "GrantMarkerPermissionSuccess": "types/records/policies",
-        "id-3069": "GrantMarkerPermissionSuccess",
+        "id-3189": "GrantMarkerPermissionSuccess",
         "GrantRoleFailure": "types/records/roles",
-        "id-3057": "GrantRoleFailure",
+        "id-3177": "GrantRoleFailure",
         "GrantRoleSuccess": "types/records/roles",
-        "id-3055": "GrantRoleSuccess",
+        "id-3175": "GrantRoleSuccess",
         "ImageClassifierOptions": "types/os",
-        "id-2579": "ImageClassifierOptions",
+        "id-2633": "ImageClassifierOptions",
         "InstUpdate": "types/os",
-        "id-2856": "InstUpdate",
+        "id-2942": "InstUpdate",
         "JoinRoomFailure": "types/os",
-        "id-2181": "JoinRoomFailure",
+        "id-2220": "JoinRoomFailure",
         "JoinRoomSuccess": "types/os",
-        "id-2178": "JoinRoomSuccess",
+        "id-2217": "JoinRoomSuccess",
         "LeaveRoomFailure": "types/os",
-        "id-2190": "LeaveRoomFailure",
+        "id-2229": "LeaveRoomFailure",
         "LeaveRoomSuccess": "types/os",
-        "id-2187": "LeaveRoomSuccess",
+        "id-2226": "LeaveRoomSuccess",
         "ListDataFailure": "types/records/data",
-        "id-3013": "ListDataFailure",
+        "id-3133": "ListDataFailure",
         "ListDataSuccess": "types/records/data",
-        "id-3005": "ListDataSuccess",
+        "id-3128": "ListDataSuccess",
         "LookRotation": "types/math/rotations",
-        "id-3317": "LookRotation",
+        "id-3437": "LookRotation",
         "MediaPermissionOptions": "types/os",
-        "id-2598": "MediaPermissionOptions",
+        "id-2652": "MediaPermissionOptions",
         "Debugger": "types/debuggers/debugger",
-        "id-2250": "Debugger",
+        "id-2289": "Debugger",
         "NormalDebuggerOptions": "types/debuggers/common",
-        "id-2457": "NormalDebuggerOptions",
+        "id-2496": "NormalDebuggerOptions",
         "PhotoCameraOptions": "types/camera",
-        "id-2676": "PhotoCameraOptions",
+        "id-2730": "PhotoCameraOptions",
         "ParsedBotLink": "types/core",
-        "id-2839": "ParsedBotLink",
+        "id-2925": "ParsedBotLink",
         "PartialBotState": "types/core",
-        "id-2836": "PartialBotState",
+        "id-2922": "PartialBotState",
         "PausableDebugger": "types/debuggers/pausable-debugger",
-        "id-2306": "PausableDebugger",
+        "id-2345": "PausableDebugger",
         "PausableDebuggerOptions": "types/debuggers/common",
-        "id-2462": "PausableDebuggerOptions",
+        "id-2501": "PausableDebuggerOptions",
         "PauseTrigger": "types/debuggers/common",
-        "id-2425": "PauseTrigger",
+        "id-2464": "PauseTrigger",
         "PauseTriggerOptions": "types/debuggers/common",
-        "id-2433": "PauseTriggerOptions",
+        "id-2472": "PauseTriggerOptions",
         "Photo": "types/camera",
-        "id-2683": "Photo",
+        "id-2742": "Photo",
         "PossiblePauseTriggerLocation": "types/debuggers/common",
-        "id-2420": "PossiblePauseTriggerLocation",
+        "id-2459": "PossiblePauseTriggerLocation",
         "PseudoRandomNumberGenerator": "types/core",
-        "id-2494": "PseudoRandomNumberGenerator",
+        "id-2533": "PseudoRandomNumberGenerator",
         "QuaternionRotation": "types/math/rotations",
-        "id-3310": "QuaternionRotation",
+        "id-3430": "QuaternionRotation",
         "RaycastRay": "types/os",
-        "id-2174": "RaycastRay",
+        "id-2213": "RaycastRay",
         "RaycastResult": "types/os",
-        "id-2171": "RaycastResult",
+        "id-2210": "RaycastResult",
         "RecordActionOptions": "types/records/extra",
-        "id-2510": "RecordActionOptions",
+        "id-2564": "RecordActionOptions",
         "RecordDataFailure": "types/records/data",
-        "id-2977": "RecordDataFailure",
+        "id-3100": "RecordDataFailure",
         "RecordDataSuccess": "types/records/data",
-        "id-2973": "RecordDataSuccess",
+        "id-3096": "RecordDataSuccess",
         "RecordFileFailure": "types/records/files",
-        "id-2141": "RecordFileFailure",
+        "id-2180": "RecordFileFailure",
         "RecordFileSuccess": "types/records/files",
-        "id-2137": "RecordFileSuccess",
+        "id-2176": "RecordFileSuccess",
         "RecordedFile": "types/experimental",
-        "id-2663": "RecordedFile",
+        "id-2717": "RecordedFile",
         "Recording": "types/experimental",
-        "id-2661": "Recording",
+        "id-2715": "Recording",
         "RecordingOptions": "types/experimental",
-        "id-2668": "RecordingOptions",
+        "id-2722": "RecordingOptions",
         "RegisterPrefixOptions": "types/core",
-        "id-2658": "RegisterPrefixOptions",
+        "id-2712": "RegisterPrefixOptions",
         "RevokeMarkerPermissionFailure": "types/records/policies",
-        "id-3078": "RevokeMarkerPermissionFailure",
+        "id-3198": "RevokeMarkerPermissionFailure",
         "RevokeMarkerPermissionSuccess": "types/records/policies",
-        "id-3076": "RevokeMarkerPermissionSuccess",
+        "id-3196": "RevokeMarkerPermissionSuccess",
         "RevokeRoleFailure": "types/records/roles",
-        "id-3064": "RevokeRoleFailure",
+        "id-3184": "RevokeRoleFailure",
         "RevokeRoleSuccess": "types/records/roles",
-        "id-3062": "RevokeRoleSuccess",
+        "id-3182": "RevokeRoleSuccess",
         "RoomJoinOptions": "types/os",
-        "id-2624": "RoomJoinOptions",
+        "id-2678": "RoomJoinOptions",
         "RoomOptions": "types/os",
-        "id-2633": "RoomOptions",
+        "id-2687": "RoomOptions",
         "RoomRemoteOptions": "types/os",
-        "id-2649": "RoomRemoteOptions",
+        "id-2703": "RoomRemoteOptions",
         "RoomTrackOptions": "types/os",
-        "id-2637": "RoomTrackOptions",
+        "id-2691": "RoomTrackOptions",
         "RuntimeBot": "types/core",
-        "id-2687": "RuntimeBot",
+        "id-2773": "RuntimeBot",
         "RuntimeBotLinks": "types/core",
-        "id-2826": "RuntimeBotLinks",
+        "id-2912": "RuntimeBotLinks",
         "RuntimeBotVars": "types/core",
-        "id-2823": "RuntimeBotVars",
+        "id-2909": "RuntimeBotVars",
         "SequenceRotation": "types/math/rotations",
-        "id-3308": "SequenceRotation",
+        "id-3428": "SequenceRotation",
         "SetRoomOptionsSuccess": "types/os",
-        "id-2205": "SetRoomOptionsSuccess",
+        "id-2244": "SetRoomOptionsSuccess",
         "SetRoomTrackOptions": "types/os",
-        "id-2655": "SetRoomTrackOptions",
+        "id-2709": "SetRoomTrackOptions",
         "SetRoomTrackOptionsFailure": "types/os",
-        "id-2231": "SetRoomTrackOptionsFailure",
+        "id-2270": "SetRoomTrackOptionsFailure",
         "SetRoomTrackOptionsSuccess": "types/os",
-        "id-2226": "SetRoomTrackOptionsSuccess",
+        "id-2265": "SetRoomTrackOptionsSuccess",
         "ShareOptions": "types/os",
-        "id-2557": "ShareOptions",
+        "id-2611": "ShareOptions",
         "ShowChatOptions": "types/os",
-        "id-2551": "ShowChatOptions",
+        "id-2605": "ShowChatOptions",
         "ShowConfirmOptions": "types/os",
-        "id-2593": "ShowConfirmOptions",
+        "id-2647": "ShowConfirmOptions",
         "ShowInputOptions": "types/os",
-        "id-2584": "ShowInputOptions",
+        "id-2638": "ShowInputOptions",
         "SnapAxis": "types/os",
-        "id-2531": "SnapAxis",
+        "id-2585": "SnapAxis",
         "SnapGridTarget": "types/os",
-        "id-2146": "SnapGridTarget",
+        "id-2185": "SnapGridTarget",
         "SnapPoint": "types/os",
-        "id-2543": "SnapPoint",
+        "id-2597": "SnapPoint",
         "SpeakTextOptions": "types/experimental",
-        "id-2490": "SpeakTextOptions",
+        "id-2529": "SpeakTextOptions",
         "StartFormAnimationOptions": "types/os",
-        "id-2603": "StartFormAnimationOptions",
+        "id-2657": "StartFormAnimationOptions",
         "StopFormAnimationOptions": "types/os",
-        "id-2616": "StopFormAnimationOptions",
+        "id-2670": "StopFormAnimationOptions",
         "SuccessfulGeolocation": "types/os",
-        "id-2513": "SuccessfulGeolocation",
+        "id-2567": "SuccessfulGeolocation",
         "SyntheticVoice": "types/experimental",
-        "id-2672": "SyntheticVoice",
+        "id-2726": "SyntheticVoice",
         "TweenOptions": "types/experimental",
-        "id-2487": "TweenOptions",
+        "id-2526": "TweenOptions",
         "UnsuccessfulGeolocation": "types/os",
-        "id-2523": "UnsuccessfulGeolocation",
+        "id-2577": "UnsuccessfulGeolocation",
         "UpdateEventRecordFailure": "types/records/events",
-        "id-3050": "UpdateEventRecordFailure",
+        "id-3170": "UpdateEventRecordFailure",
         "UpdateEventRecordSuccess": "types/records/events",
-        "id-3048": "UpdateEventRecordSuccess",
+        "id-3168": "UpdateEventRecordSuccess",
         "UploadedFile": "types/os",
-        "id-2167": "UploadedFile",
+        "id-2206": "UploadedFile",
         "WebhookOptions": "types/web",
-        "id-2091": "WebhookOptions",
+        "id-2130": "WebhookOptions",
         "WebhookResult": "types/web",
-        "id-2103": "WebhookResult",
+        "id-2142": "WebhookResult",
         "AddCountResult": "types/records/events",
-        "id-3026": "AddCountResult",
+        "id-3146": "AddCountResult",
         "AvailablePermissions": "types/permissions",
-        "id-2870": "AvailablePermissions",
+        "id-2984": "AvailablePermissions",
         "BarcodeFormat": "types/os",
-        "id-2578": "BarcodeFormat",
+        "id-2632": "BarcodeFormat",
         "BotFilter": "types/core",
-        "id-2125": "BotFilter",
+        "id-2164": "BotFilter",
         "BotSpace": "types/core",
-        "id-2810": "BotSpace",
+        "id-2896": "BotSpace",
         "CameraType": "types/os",
-        "id-2577": "CameraType",
+        "id-2631": "CameraType",
         "CreatePublicRecordKeyResult": "types/records/key",
-        "id-2860": "CreatePublicRecordKeyResult",
+        "id-2974": "CreatePublicRecordKeyResult",
         "EaseMode": "types/animation",
-        "id-2506": "EaseMode",
+        "id-2560": "EaseMode",
         "EaseType": "types/animation",
-        "id-2505": "EaseType",
+        "id-2559": "EaseType",
         "EraseDataResult": "types/records/data",
-        "id-2995": "EraseDataResult",
+        "id-3118": "EraseDataResult",
         "EraseFileResult": "types/records/files",
-        "id-3017": "EraseFileResult",
+        "id-3137": "EraseFileResult",
         "Geolocation": "types/os",
-        "id-2512": "Geolocation",
+        "id-2566": "Geolocation",
         "GetCountResult": "types/records/events",
-        "id-3036": "GetCountResult",
+        "id-3156": "GetCountResult",
         "GetDataResult": "types/records/data",
-        "id-2981": "GetDataResult",
+        "id-3104": "GetDataResult",
         "GetRoomOptionsResult": "types/os",
-        "id-2195": "GetRoomOptionsResult",
+        "id-2234": "GetRoomOptionsResult",
         "GetRoomRemoteOptionsResult": "types/os",
-        "id-2237": "GetRoomRemoteOptionsResult",
+        "id-2276": "GetRoomRemoteOptionsResult",
         "GetRoomTrackOptionsResult": "types/os",
-        "id-2213": "GetRoomTrackOptionsResult",
+        "id-2252": "GetRoomTrackOptionsResult",
         "GrantMarkerPermissionResult": "types/records/policies",
-        "id-3068": "GrantMarkerPermissionResult",
+        "id-3188": "GrantMarkerPermissionResult",
         "GrantRoleResult": "types/records/roles",
-        "id-3054": "GrantRoleResult",
+        "id-3174": "GrantRoleResult",
         "JoinRoomResult": "types/os",
-        "id-2177": "JoinRoomResult",
+        "id-2216": "JoinRoomResult",
         "LeaveRoomResult": "types/os",
-        "id-2186": "LeaveRoomResult",
+        "id-2225": "LeaveRoomResult",
         "ListDataResult": "types/records/data",
-        "id-3004": "ListDataResult",
+        "id-3127": "ListDataResult",
         "Mod": "types/core",
-        "id-2120": "Mod",
+        "id-2159": "Mod",
         "PortalType": "types/core",
-        "id-2842": "PortalType",
+        "id-2928": "PortalType",
         "PossiblePauseTriggerStates": "types/debuggers/common",
-        "id-2424": "PossiblePauseTriggerStates",
+        "id-2463": "PossiblePauseTriggerStates",
         "RecordDataResult": "types/records/data",
-        "id-2972": "RecordDataResult",
+        "id-3095": "RecordDataResult",
         "RecordFileResult": "types/records/files",
-        "id-2136": "RecordFileResult",
+        "id-2175": "RecordFileResult",
         "RevokeMarkerPermissionResult": "types/records/policies",
-        "id-3075": "RevokeMarkerPermissionResult",
+        "id-3195": "RevokeMarkerPermissionResult",
         "RevokeRoleResult": "types/records/roles",
-        "id-3061": "RevokeRoleResult",
+        "id-3181": "RevokeRoleResult",
         "SetRoomOptionsResult": "types/os",
-        "id-2204": "SetRoomOptionsResult",
+        "id-2243": "SetRoomOptionsResult",
         "SetRoomTrackOptionsResult": "types/os",
-        "id-2225": "SetRoomTrackOptionsResult",
+        "id-2264": "SetRoomTrackOptionsResult",
         "SnapTarget": "types/os",
-        "id-2550": "SnapTarget",
+        "id-2604": "SnapTarget",
         "TagFilter": "types/core",
-        "id-2121": "TagFilter",
+        "id-2160": "TagFilter",
         "UpdateEventRecordResult": "types/records/events",
-        "id-3047": "UpdateEventRecordResult",
+        "id-3167": "UpdateEventRecordResult",
         "animateTag-byOptions": "actions/utility",
         "id-364": "animateTag-byOptions",
         "getbot-tag": "actions/data",
@@ -4375,9 +4559,23 @@
         "whisper": "actions/event",
         "id-263": "whisper",
         "action.perform": "actions/event",
-        "id-1600": "action.perform",
+        "id-1630": "action.perform",
         "action.reject": "actions/event",
-        "id-1604": "action.reject",
+        "id-1634": "action.reject",
+        "ai.chat-string": "actions/ai",
+        "id-423": "ai.chat-string",
+        "ai.chat-message": "actions/ai",
+        "id-426": "ai.chat-message",
+        "ai.chat-messages": "actions/ai",
+        "id-429": "ai.chat-messages",
+        "ai.generateImage-string": "actions/ai",
+        "id-442": "ai.generateImage-string",
+        "ai.generateImage-request": "actions/ai",
+        "id-446": "ai.generateImage-request",
+        "ai.generateSkybox-string": "actions/ai",
+        "id-434": "ai.generateSkybox-string",
+        "ai.generateSkybox-request": "actions/ai",
+        "id-438": "ai.generateSkybox-request",
         "applyDiffToSnapshot": "actions/data",
         "id-83": "applyDiffToSnapshot",
         "applyMod": "actions/mods",
@@ -4399,51 +4597,55 @@
         "byTag": "actions/bot-filters",
         "id-276": "byTag",
         "bytes.fromBase64String": "actions/bytes",
-        "id-1824": "bytes.fromBase64String",
+        "id-1854": "bytes.fromBase64String",
+        "bytes.fromBase64Url": "actions/bytes",
+        "id-1871": "bytes.fromBase64Url",
         "bytes.fromHexString": "actions/bytes",
-        "id-1832": "bytes.fromHexString",
+        "id-1862": "bytes.fromHexString",
         "bytes.toBase64String": "actions/bytes",
-        "id-1820": "bytes.toBase64String",
+        "id-1850": "bytes.toBase64String",
+        "bytes.toBase64Url": "actions/bytes",
+        "id-1866": "bytes.toBase64Url",
         "bytes.toHexString": "actions/bytes",
-        "id-1828": "bytes.toHexString",
+        "id-1858": "bytes.toHexString",
         "clearAnimations": "actions/utility",
         "id-378": "clearAnimations",
         "clearTagMasks": "actions/data",
         "id-106": "clearTagMasks",
         "crypto.hash-raw": "actions/crypto",
-        "id-1838": "crypto.hash-raw",
+        "id-1877": "crypto.hash-raw",
         "crypto.hash-string": "actions/crypto",
-        "id-1844": "crypto.hash-string",
+        "id-1883": "crypto.hash-string",
         "crypto.hmac-raw": "actions/crypto",
-        "id-1875": "crypto.hmac-raw",
+        "id-1914": "crypto.hmac-raw",
         "crypto.hmac-string": "actions/crypto",
-        "id-1868": "crypto.hmac-string",
+        "id-1907": "crypto.hmac-string",
         "crypto.asymmetric.decrypt": "actions/crypto",
-        "id-1933": "crypto.asymmetric.decrypt",
+        "id-1972": "crypto.asymmetric.decrypt",
         "crypto.asymmetric.encrypt": "actions/crypto",
-        "id-1928": "crypto.asymmetric.encrypt",
+        "id-1967": "crypto.asymmetric.encrypt",
         "crypto.asymmetric.isEncrypted": "actions/crypto",
-        "id-1939": "crypto.asymmetric.isEncrypted",
+        "id-1978": "crypto.asymmetric.isEncrypted",
         "crypto.asymmetric.isKeypair": "actions/crypto",
-        "id-1924": "crypto.asymmetric.isKeypair",
+        "id-1963": "crypto.asymmetric.isKeypair",
         "crypto.asymmetric.keypair": "actions/crypto",
-        "id-1920": "crypto.asymmetric.keypair",
+        "id-1959": "crypto.asymmetric.keypair",
         "crypto.encrypt": "actions/crypto",
-        "id-1904": "crypto.encrypt",
+        "id-1943": "crypto.encrypt",
         "crypto.hmacSha256": "actions/crypto",
-        "id-1894": "crypto.hmacSha256",
+        "id-1933": "crypto.hmacSha256",
         "crypto.hmacSha512": "actions/crypto",
-        "id-1899": "crypto.hmacSha512",
+        "id-1938": "crypto.hmacSha512",
         "crypto.isEncrypted": "actions/crypto",
-        "id-1914": "crypto.isEncrypted",
+        "id-1953": "crypto.isEncrypted",
         "crypto.keypair": "actions/crypto",
-        "id-1943": "crypto.keypair",
+        "id-1982": "crypto.keypair",
         "crypto.sha256": "actions/crypto",
-        "id-1860": "crypto.sha256",
+        "id-1899": "crypto.sha256",
         "crypto.sha512": "actions/crypto",
-        "id-1864": "crypto.sha512",
+        "id-1903": "crypto.sha512",
         "crypto.sign": "actions/crypto",
-        "id-1947": "crypto.sign",
+        "id-1986": "crypto.sign",
         "deleteTagMaskText": "actions/data",
         "id-133": "deleteTagMaskText",
         "deleteTagText": "actions/data",
@@ -4453,25 +4655,25 @@
         "either": "actions/bot-filters",
         "id-318": "either",
         "os.beginAudioRecording": "actions/audio",
-        "id-1658": "os.beginAudioRecording",
+        "id-1688": "os.beginAudioRecording",
         "experiment.beginRecording": "actions/experimental",
-        "id-1665": "experiment.beginRecording",
+        "id-1695": "experiment.beginRecording",
         "os.endAudioRecording": "actions/audio",
-        "id-1662": "os.endAudioRecording",
+        "id-1692": "os.endAudioRecording",
         "experiment.endRecording": "actions/experimental",
-        "id-1669": "experiment.endRecording",
+        "id-1699": "experiment.endRecording",
         "experiment.getAnchorPointPosition": "actions/experimental",
-        "id-1648": "experiment.getAnchorPointPosition",
+        "id-1678": "experiment.getAnchorPointPosition",
         "experiment.getVoices": "actions/experimental",
-        "id-1677": "experiment.getVoices",
+        "id-1707": "experiment.getVoices",
         "experiment.localFormAnimation": "actions/experimental",
-        "id-1621": "experiment.localFormAnimation",
+        "id-1651": "experiment.localFormAnimation",
         "experiment.localPositionTween": "actions/experimental",
-        "id-1626": "experiment.localPositionTween",
+        "id-1656": "experiment.localPositionTween",
         "experiment.localRotationTween": "actions/experimental",
-        "id-1637": "experiment.localRotationTween",
+        "id-1667": "experiment.localRotationTween",
         "experiment.speakText": "actions/experimental",
-        "id-1672": "experiment.speakText",
+        "id-1702": "experiment.speakText",
         "getBotLinks": "actions/data",
         "id-194": "getBotLinks",
         "getBotPosition": "actions/data",
@@ -4503,363 +4705,363 @@
         "insertTagText": "actions/data",
         "id-111": "insertTagText",
         "math.abs": "actions/math",
-        "id-1694": "math.abs",
+        "id-1724": "math.abs",
         "math.addVectors": "actions/math",
-        "id-1764": "math.addVectors",
+        "id-1794": "math.addVectors",
         "math.areClose": "actions/math",
-        "id-1795": "math.areClose",
+        "id-1825": "math.areClose",
         "math.avg": "actions/math",
-        "id-1686": "math.avg",
+        "id-1716": "math.avg",
         "math.degreesToRadians": "actions/math",
-        "id-1720": "math.degreesToRadians",
+        "id-1750": "math.degreesToRadians",
         "math.getAnchorPointOffset": "actions/math",
-        "id-1760": "math.getAnchorPointOffset",
+        "id-1790": "math.getAnchorPointOffset",
         "math.getForwardDirection": "actions/math",
-        "id-1728": "math.getForwardDirection",
+        "id-1758": "math.getForwardDirection",
         "math.getSeededRandomNumberGenerator": "actions/math",
-        "id-1702": "math.getSeededRandomNumberGenerator",
+        "id-1732": "math.getSeededRandomNumberGenerator",
         "math.intersectPlane": "actions/math",
-        "id-1737": "math.intersectPlane",
+        "id-1767": "math.intersectPlane",
         "math.negateVector": "actions/math",
-        "id-1774": "math.negateVector",
+        "id-1804": "math.negateVector",
         "math.normalizeVector": "actions/math",
-        "id-1779": "math.normalizeVector",
+        "id-1809": "math.normalizeVector",
         "math.radiansToDegrees": "actions/math",
-        "id-1724": "math.radiansToDegrees",
+        "id-1754": "math.radiansToDegrees",
         "math.random": "actions/math",
-        "id-1715": "math.random",
+        "id-1745": "math.random",
         "math.randomInt": "actions/math",
-        "id-1710": "math.randomInt",
+        "id-1740": "math.randomInt",
         "math.scaleVector": "actions/math",
-        "id-1789": "math.scaleVector",
+        "id-1819": "math.scaleVector",
         "math.setRandomSeed": "actions/math",
-        "id-1706": "math.setRandomSeed",
+        "id-1736": "math.setRandomSeed",
         "math.sqrt": "actions/math",
-        "id-1690": "math.sqrt",
+        "id-1720": "math.sqrt",
         "math.stdDev": "actions/math",
-        "id-1698": "math.stdDev",
+        "id-1728": "math.stdDev",
         "math.subtractVectors": "actions/math",
-        "id-1769": "math.subtractVectors",
+        "id-1799": "math.subtractVectors",
         "math.sum": "actions/math",
-        "id-1682": "math.sum",
+        "id-1712": "math.sum",
         "math.vectorLength": "actions/math",
-        "id-1784": "math.vectorLength",
+        "id-1814": "math.vectorLength",
         "neighboring": "actions/bot-filters",
         "id-304": "neighboring",
         "not": "actions/bot-filters",
         "id-325": "not",
         "os.attachDebugger": "actions/debuggers",
-        "id-1298": "os.attachDebugger",
+        "id-1328": "os.attachDebugger",
         "os.createDebugger-normal": "actions/debuggers",
-        "id-1287": "os.createDebugger-normal",
+        "id-1317": "os.createDebugger-normal",
         "os.createDebugger-pausable": "actions/debuggers",
-        "id-1291": "os.createDebugger-pausable",
+        "id-1321": "os.createDebugger-pausable",
         "os.focusOn-bot": "actions/portals",
-        "id-480": "os.focusOn-bot",
+        "id-510": "os.focusOn-bot",
         "os.focusOn-position": "actions/portals",
-        "id-485": "os.focusOn-position",
+        "id-515": "os.focusOn-position",
         "os.getExecutingDebugger": "actions/debuggers",
-        "id-1295": "os.getExecutingDebugger",
+        "id-1325": "os.getExecutingDebugger",
         "showChat-options": "actions/os",
-        "id-507": "showChat-options",
+        "id-537": "showChat-options",
         "showChat-placeholder": "actions/os",
-        "id-503": "showChat-placeholder",
+        "id-533": "showChat-placeholder",
         "os.showInput": "actions/portals",
-        "id-723": "os.showInput",
+        "id-753": "os.showInput",
         "os.addBotDropGrid": "actions/portals",
-        "id-797": "os.addBotDropGrid",
+        "id-827": "os.addBotDropGrid",
         "os.addBotDropSnap": "actions/portals",
-        "id-788": "os.addBotDropSnap",
+        "id-818": "os.addBotDropSnap",
         "os.addDropGrid": "actions/portals",
-        "id-793": "os.addDropGrid",
+        "id-823": "os.addDropGrid",
         "os.addDropSnap": "actions/portals",
-        "id-784": "os.addDropSnap",
+        "id-814": "os.addDropSnap",
         "os.applyUpdatesToInst": "actions/os",
-        "id-1241": "os.applyUpdatesToInst",
+        "id-1271": "os.applyUpdatesToInst",
         "os.arSupported": "actions/xr",
-        "id-548": "os.arSupported",
+        "id-578": "os.arSupported",
         "os.bufferFormAddressGLTF": "actions/animations",
-        "id-1194": "os.bufferFormAddressGLTF",
+        "id-1224": "os.bufferFormAddressGLTF",
         "os.bufferSound": "actions/audio",
-        "id-760": "os.bufferSound",
+        "id-790": "os.bufferSound",
         "os.calculateRayFromCamera": "actions/portals",
-        "id-1189": "os.calculateRayFromCamera",
+        "id-1219": "os.calculateRayFromCamera",
         "os.cancelSound": "actions/audio",
-        "id-764": "os.cancelSound",
+        "id-794": "os.cancelSound",
         "os.capturePhoto": "actions/camera",
-        "id-643": "os.capturePhoto",
+        "id-673": "os.capturePhoto",
         "os.closeBarcodeScanner": "actions/barcodes",
-        "id-621": "os.closeBarcodeScanner",
+        "id-651": "os.closeBarcodeScanner",
         "os.closeCircleWipe": "actions/portals",
-        "id-776": "os.closeCircleWipe",
+        "id-806": "os.closeCircleWipe",
         "os.closeImageClassifier": "actions/image-classification",
-        "id-636": "os.closeImageClassifier",
+        "id-666": "os.closeImageClassifier",
         "os.closePhotoCamera": "actions/camera",
-        "id-647": "os.closePhotoCamera",
+        "id-677": "os.closePhotoCamera",
         "os.closeQRCodeScanner": "actions/barcodes",
-        "id-607": "os.closeQRCodeScanner",
+        "id-637": "os.closeQRCodeScanner",
         "os.compileApp": "actions/app",
-        "id-911": "os.compileApp",
+        "id-941": "os.compileApp",
         "os.convertGeolocationToWhat3Words": "actions/os",
-        "id-1174": "os.convertGeolocationToWhat3Words",
+        "id-1204": "os.convertGeolocationToWhat3Words",
         "os.countEvents": "actions/records",
-        "id-1168": "os.countEvents",
+        "id-1198": "os.countEvents",
         "os.createInitializationUpdate": "actions/os",
-        "id-1237": "os.createInitializationUpdate",
+        "id-1267": "os.createInitializationUpdate",
         "os.device": "actions/os",
-        "id-525": "os.device",
+        "id-555": "os.device",
         "os.disableAR": "actions/xr",
-        "id-538": "os.disableAR",
+        "id-568": "os.disableAR",
         "os.disablePointOfView": "actions/portals",
-        "id-563": "os.disablePointOfView",
+        "id-593": "os.disablePointOfView",
         "os.disableVR": "actions/xr",
-        "id-545": "os.disableVR",
+        "id-575": "os.disableVR",
         "os.disableWakeLock": "actions/os",
-        "id-569": "os.disableWakeLock",
+        "id-599": "os.disableWakeLock",
         "os.download": "actions/files",
-        "id-575": "os.download",
+        "id-605": "os.download",
         "os.downloadBots": "actions/files",
-        "id-581": "os.downloadBots",
+        "id-611": "os.downloadBots",
         "os.downloadBotsAsInitialzationUpdate": "actions/files",
-        "id-586": "os.downloadBotsAsInitialzationUpdate",
+        "id-616": "os.downloadBotsAsInitialzationUpdate",
         "os.downloadInst": "actions/files",
-        "id-594": "os.downloadInst",
+        "id-624": "os.downloadInst",
         "os.enableAR": "actions/xr",
-        "id-534": "os.enableAR",
+        "id-564": "os.enableAR",
         "os.enableCustomDragging": "actions/portals",
-        "id-802": "os.enableCustomDragging",
+        "id-832": "os.enableCustomDragging",
         "os.enablePointOfView": "actions/portals",
-        "id-554": "os.enablePointOfView",
+        "id-584": "os.enablePointOfView",
         "os.enableVR": "actions/xr",
-        "id-541": "os.enableVR",
+        "id-571": "os.enableVR",
         "os.eraseData": "actions/records",
-        "id-1111": "os.eraseData",
+        "id-1141": "os.eraseData",
         "os.eraseManualApprovalData": "actions/records",
-        "id-1117": "os.eraseManualApprovalData",
+        "id-1147": "os.eraseManualApprovalData",
         "os.exitFullscreenMode": "actions/portals",
-        "id-451": "os.exitFullscreenMode",
+        "id-481": "os.exitFullscreenMode",
         "os.getAverageFrameRate": "actions/os",
-        "id-859": "os.getAverageFrameRate",
+        "id-889": "os.getAverageFrameRate",
         "os.getCameraPosition": "actions/portals",
-        "id-815": "os.getCameraPosition",
+        "id-845": "os.getCameraPosition",
         "os.getCameraRotation": "actions/portals",
-        "id-819": "os.getCameraRotation",
+        "id-849": "os.getCameraRotation",
         "os.getCurrentDimension": "actions/portals",
-        "id-694": "os.getCurrentDimension",
+        "id-724": "os.getCurrentDimension",
         "os.getCurrentInst": "actions/portals",
-        "id-700": "os.getCurrentInst",
+        "id-730": "os.getCurrentInst",
         "os.getCurrentInstUpdate": "actions/os",
-        "id-1245": "os.getCurrentInstUpdate",
+        "id-1275": "os.getCurrentInstUpdate",
         "os.getData": "actions/records",
-        "id-1093": "os.getData",
+        "id-1123": "os.getData",
         "os.getDimensionalDepth": "actions/portals",
-        "id-713": "os.getDimensionalDepth",
+        "id-743": "os.getDimensionalDepth",
         "os.getFocusPoint": "actions/portals",
-        "id-827": "os.getFocusPoint",
+        "id-857": "os.getFocusPoint",
         "os.getGeolocation": "actions/os",
-        "id-809": "os.getGeolocation",
+        "id-839": "os.getGeolocation",
         "os.getInputList": "actions/portals",
-        "id-852": "os.getInputList",
+        "id-882": "os.getInputList",
         "os.getInputState": "actions/portals",
-        "id-847": "os.getInputState",
+        "id-877": "os.getInputState",
         "os.getInstStateFromUpdates": "actions/os",
-        "id-1233": "os.getInstStateFromUpdates",
+        "id-1263": "os.getInstStateFromUpdates",
         "os.getManualApprovalData": "actions/records",
-        "id-1099": "os.getManualApprovalData",
+        "id-1129": "os.getManualApprovalData",
         "os.getMediaPermission": "actions/os",
-        "id-855": "os.getMediaPermission",
+        "id-885": "os.getMediaPermission",
         "os.getMenuDimension": "actions/portals",
-        "id-703": "os.getMenuDimension",
+        "id-733": "os.getMenuDimension",
         "os.getMiniPortalDimension": "actions/portals",
-        "id-706": "os.getMiniPortalDimension",
+        "id-736": "os.getMiniPortalDimension",
         "os.getPointerDirection": "actions/portals",
-        "id-843": "os.getPointerDirection",
+        "id-873": "os.getPointerDirection",
         "os.getPointerPosition": "actions/portals",
-        "id-831": "os.getPointerPosition",
+        "id-861": "os.getPointerPosition",
         "os.getPointerRotation": "actions/portals",
-        "id-835": "os.getPointerRotation",
+        "id-865": "os.getPointerRotation",
         "os.getPortalDimension": "actions/portals",
-        "id-709": "os.getPortalDimension",
+        "id-739": "os.getPortalDimension",
         "os.getPublicRecordKey": "actions/records",
-        "id-1018": "os.getPublicRecordKey",
+        "id-1048": "os.getPublicRecordKey",
         "os.getRoomOptions": "actions/rooms",
-        "id-877": "os.getRoomOptions",
+        "id-907": "os.getRoomOptions",
         "os.getRoomRemoteOptions": "actions/rooms",
-        "id-892": "os.getRoomRemoteOptions",
+        "id-922": "os.getRoomRemoteOptions",
         "os.getRoomTrackOptions": "actions/rooms",
-        "id-881": "os.getRoomTrackOptions",
+        "id-911": "os.getRoomTrackOptions",
         "os.getSubjectlessPublicRecordKey": "actions/records",
-        "id-1022": "os.getSubjectlessPublicRecordKey",
+        "id-1052": "os.getSubjectlessPublicRecordKey",
         "os.getWakeLockConfiguration": "actions/os",
-        "id-572": "os.getWakeLockConfiguration",
+        "id-602": "os.getWakeLockConfiguration",
         "os.goToDimension": "actions/portals",
-        "id-737": "os.goToDimension",
+        "id-767": "os.goToDimension",
         "os.goToURL": "actions/portals",
-        "id-741": "os.goToURL",
+        "id-771": "os.goToURL",
         "os.grantInstAdminPermission": "actions/records",
-        "id-1040": "os.grantInstAdminPermission",
+        "id-1070": "os.grantInstAdminPermission",
         "os.grantInstRole": "actions/records",
-        "id-1060": "os.grantInstRole",
+        "id-1090": "os.grantInstRole",
         "os.grantRecordMarkerPermission": "actions/records",
-        "id-1026": "os.grantRecordMarkerPermission",
+        "id-1056": "os.grantRecordMarkerPermission",
         "os.grantUserRole": "actions/records",
-        "id-1045": "os.grantUserRole",
+        "id-1075": "os.grantUserRole",
         "os.hasBotInMiniPortal": "actions/portals",
-        "id-768": "os.hasBotInMiniPortal",
+        "id-798": "os.hasBotInMiniPortal",
         "os.hideBarcode": "actions/barcodes",
-        "id-629": "os.hideBarcode",
+        "id-659": "os.hideBarcode",
         "os.hideChat": "actions/os",
-        "id-515": "os.hideChat",
+        "id-545": "os.hideChat",
         "os.hideHtml": "actions/os",
-        "id-458": "os.hideHtml",
+        "id-488": "os.hideHtml",
         "os.hideQRCode": "actions/barcodes",
-        "id-614": "os.hideQRCode",
+        "id-644": "os.hideQRCode",
         "os.hideTips": "actions/portals",
-        "id-439": "os.hideTips",
+        "id-469": "os.hideTips",
         "os.importAUX": "actions/files",
-        "id-678": "os.importAUX",
+        "id-708": "os.importAUX",
         "os.inSheet": "actions/portals",
-        "id-812": "os.inSheet",
+        "id-842": "os.inSheet",
         "os.instStatuses": "actions/os",
-        "id-1262": "os.instStatuses",
+        "id-1292": "os.instStatuses",
         "os.instances": "actions/os",
-        "id-1252": "os.instances",
+        "id-1282": "os.instances",
         "os.isCollaborative": "actions/os",
-        "id-528": "os.isCollaborative",
+        "id-558": "os.isCollaborative",
         "os.isInDimension": "actions/portals",
-        "id-690": "os.isInDimension",
+        "id-720": "os.isInDimension",
         "os.isRecordKey": "actions/records",
-        "id-1075": "os.isRecordKey",
+        "id-1105": "os.isRecordKey",
         "os.joinRoom": "actions/rooms",
-        "id-862": "os.joinRoom",
+        "id-892": "os.joinRoom",
         "os.leaveRoom": "actions/rooms",
-        "id-867": "os.leaveRoom",
+        "id-897": "os.leaveRoom",
         "os.listBuiltinTags": "actions/app",
-        "id-1012": "os.listBuiltinTags",
+        "id-1042": "os.listBuiltinTags",
         "os.listData": "actions/records",
-        "id-1105": "os.listData",
+        "id-1135": "os.listData",
         "os.listFormAnimations": "actions/animations",
-        "id-1209": "os.listFormAnimations",
+        "id-1239": "os.listFormAnimations",
         "os.listInstUpdates": "actions/os",
-        "id-1230": "os.listInstUpdates",
+        "id-1260": "os.listInstUpdates",
         "os.loadInst": "actions/os",
-        "id-670": "os.loadInst",
+        "id-700": "os.loadInst",
         "os.log": "actions/os",
-        "id-805": "os.log",
+        "id-835": "os.log",
         "os.meetCommand": "actions/os",
-        "id-1275": "os.meetCommand",
+        "id-1305": "os.meetCommand",
         "os.meetFunction": "actions/os",
-        "id-1280": "os.meetFunction",
+        "id-1310": "os.meetFunction",
         "os.openBarcodeScanner": "actions/barcodes",
-        "id-617": "os.openBarcodeScanner",
+        "id-647": "os.openBarcodeScanner",
         "os.openCircleWipe": "actions/portals",
-        "id-780": "os.openCircleWipe",
+        "id-810": "os.openCircleWipe",
         "os.openDevConsole": "actions/os",
-        "id-749": "os.openDevConsole",
+        "id-779": "os.openDevConsole",
         "os.openImageClassifier": "actions/image-classification",
-        "id-632": "os.openImageClassifier",
+        "id-662": "os.openImageClassifier",
         "os.openPhotoCamera": "actions/camera",
-        "id-639": "os.openPhotoCamera",
+        "id-669": "os.openPhotoCamera",
         "os.openQRCodeScanner": "actions/barcodes",
-        "id-603": "os.openQRCodeScanner",
+        "id-633": "os.openQRCodeScanner",
         "os.openURL": "actions/portals",
-        "id-745": "os.openURL",
+        "id-775": "os.openURL",
         "os.parseBotsFromData": "actions/files",
-        "id-682": "os.parseBotsFromData",
+        "id-712": "os.parseBotsFromData",
         "os.playSound": "actions/audio",
-        "id-756": "os.playSound",
+        "id-786": "os.playSound",
         "os.raycast": "actions/portals",
-        "id-1183": "os.raycast",
+        "id-1213": "os.raycast",
         "os.raycastFromCamera": "actions/portals",
-        "id-1178": "os.raycastFromCamera",
+        "id-1208": "os.raycastFromCamera",
         "os.recordData": "actions/records",
-        "id-1079": "os.recordData",
+        "id-1109": "os.recordData",
         "os.recordEvent": "actions/records",
-        "id-1162": "os.recordEvent",
+        "id-1192": "os.recordEvent",
         "os.recordFile": "actions/records",
-        "id-1123": "os.recordFile",
+        "id-1153": "os.recordFile",
         "os.recordManualApprovalData": "actions/records",
-        "id-1086": "os.recordManualApprovalData",
+        "id-1116": "os.recordManualApprovalData",
         "os.registerApp": "actions/app",
-        "id-902": "os.registerApp",
+        "id-932": "os.registerApp",
         "os.registerTagPrefix": "actions/app",
-        "id-897": "os.registerTagPrefix",
+        "id-927": "os.registerTagPrefix",
         "os.remoteCount": "actions/os",
-        "id-1255": "os.remoteCount",
+        "id-1285": "os.remoteCount",
         "os.remotes": "actions/os",
-        "id-1227": "os.remotes",
+        "id-1257": "os.remotes",
         "os.replaceDragBot": "actions/portals",
-        "id-686": "os.replaceDragBot",
+        "id-716": "os.replaceDragBot",
         "os.requestAuthBot": "actions/records",
-        "id-1015": "os.requestAuthBot",
+        "id-1045": "os.requestAuthBot",
         "os.requestFullscreenMode": "actions/portals",
-        "id-448": "os.requestFullscreenMode",
+        "id-478": "os.requestFullscreenMode",
         "os.requestWakeLock": "actions/os",
-        "id-566": "os.requestWakeLock",
+        "id-596": "os.requestWakeLock",
         "os.revokeInstRole": "actions/records",
-        "id-1068": "os.revokeInstRole",
+        "id-1098": "os.revokeInstRole",
         "os.revokeRecordMarkerPermission": "actions/records",
-        "id-1033": "os.revokeRecordMarkerPermission",
+        "id-1063": "os.revokeRecordMarkerPermission",
         "os.revokeUserRole": "actions/records",
-        "id-1053": "os.revokeUserRole",
+        "id-1083": "os.revokeUserRole",
         "os.run": "actions/os",
-        "id-518": "os.run",
+        "id-548": "os.run",
         "os.setClipboard": "actions/os",
-        "id-461": "os.setClipboard",
+        "id-491": "os.setClipboard",
         "os.setRoomOptions": "actions/rooms",
-        "id-872": "os.setRoomOptions",
+        "id-902": "os.setRoomOptions",
         "os.setRoomTrackOptions": "actions/rooms",
-        "id-886": "os.setRoomTrackOptions",
+        "id-916": "os.setRoomTrackOptions",
         "os.share": "actions/os",
-        "id-772": "os.share",
+        "id-802": "os.share",
         "os.showBarcode": "actions/barcodes",
-        "id-624": "os.showBarcode",
+        "id-654": "os.showBarcode",
         "os.showConfirm": "actions/portals",
-        "id-733": "os.showConfirm",
+        "id-763": "os.showConfirm",
         "os.showHtml": "actions/os",
-        "id-454": "os.showHtml",
+        "id-484": "os.showHtml",
         "os.showInputForTag": "actions/portals",
-        "id-717": "os.showInputForTag",
+        "id-747": "os.showInputForTag",
         "os.showJoinCode": "actions/barcodes",
-        "id-443": "os.showJoinCode",
+        "id-473": "os.showJoinCode",
         "os.showQRCode": "actions/barcodes",
-        "id-610": "os.showQRCode",
+        "id-640": "os.showQRCode",
         "os.showUploadAuxFile": "actions/files",
-        "id-597": "os.showUploadAuxFile",
+        "id-627": "os.showUploadAuxFile",
         "os.showUploadFiles": "actions/files",
-        "id-600": "os.showUploadFiles",
+        "id-630": "os.showUploadFiles",
         "os.sleep": "actions/os",
-        "id-423": "os.sleep",
+        "id-453": "os.sleep",
         "os.startFormAnimation": "actions/animations",
-        "id-1198": "os.startFormAnimation",
+        "id-1228": "os.startFormAnimation",
         "os.stopFormAnimation": "actions/animations",
-        "id-1204": "os.stopFormAnimation",
+        "id-1234": "os.stopFormAnimation",
         "os.tip": "actions/portals",
-        "id-432": "os.tip",
+        "id-462": "os.tip",
         "os.toast": "actions/os",
-        "id-427": "os.toast",
+        "id-457": "os.toast",
         "os.totalRemoteCount": "actions/os",
-        "id-1259": "os.totalRemoteCount",
+        "id-1289": "os.totalRemoteCount",
         "os.unloadInst": "actions/os",
-        "id-674": "os.unloadInst",
+        "id-704": "os.unloadInst",
         "os.unregisterApp": "actions/app",
-        "id-907": "os.unregisterApp",
+        "id-937": "os.unregisterApp",
         "os.version": "actions/os",
-        "id-522": "os.version",
+        "id-552": "os.version",
         "os.vrSupported": "actions/xr",
-        "id-551": "os.vrSupported",
+        "id-581": "os.vrSupported",
         "os.agreedUponTime": "actions/time",
-        "id-651": "os.agreedUponTime",
+        "id-681": "os.agreedUponTime",
         "os.deadReckoningTime": "actions/time",
-        "id-659": "os.deadReckoningTime",
+        "id-689": "os.deadReckoningTime",
         "os.instLatency": "actions/time",
-        "id-653": "os.instLatency",
+        "id-683": "os.instLatency",
         "os.instTimeOffset": "actions/time",
-        "id-655": "os.instTimeOffset",
+        "id-685": "os.instTimeOffset",
         "os.instTimeOffsetSpread": "actions/time",
-        "id-657": "os.instTimeOffsetSpread",
+        "id-687": "os.instTimeOffsetSpread",
         "os.localTime": "actions/time",
-        "id-649": "os.localTime",
+        "id-679": "os.localTime",
         "removeTags": "actions/data",
         "id-141": "removeTags",
         "renameTag": "actions/data",
@@ -4875,11 +5077,11 @@
         "uuid": "actions/data",
         "id-355": "uuid",
         "web.get": "actions/web",
-        "id-1990": "web.get",
+        "id-2029": "web.get",
         "web.hook": "actions/web",
-        "id-2001": "web.hook",
+        "id-2040": "web.hook",
         "web.post": "actions/web",
-        "id-1995": "web.post",
+        "id-2034": "web.post",
         "configBot": "actions/os",
         "id-418": "configBot"
     }
