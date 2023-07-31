@@ -32,26 +32,9 @@
                                 <md-icon>description</md-icon>
                                 <span class="md-list-item-text">{{ record.label }}</span>
                             </md-list-item>
-                            <!-- <md-list-item class="md-inset" :to='{ name: "dataRecords" }'>
-                                <md-icon>list</md-icon>
-                                <span class="md-list-item-text">Data</span>
+                            <md-list-item v-if="!records || records.length === 0" class="md-inset">
+                                <strong class="md-list-item-text">No Records</strong>
                             </md-list-item>
-                            <md-list-item class="md-inset" :to='{ name: "fileRecords" }'>
-                                <md-icon>article</md-icon>
-                                <span class="md-list-item-text">Files</span>
-                            </md-list-item>
-                            <md-list-item class="md-inset" :to='{ name: "eventRecords" }'>
-                                <md-icon>bar_chart</md-icon>
-                                <span class="md-list-item-text">Events</span>
-                            </md-list-item>
-                            <md-list-item class="md-inset" :to='{ name: "policies" }'>
-                                <md-icon>document_scanner</md-icon>
-                                <span class="md-list-item-text">Policies</span>
-                            </md-list-item>
-                            <md-list-item class="md-inset" :to='{ name: "roles" }'>
-                                <md-icon>admin_panel_settings</md-icon>
-                                <span class="md-list-item-text">Roles</span>
-                            </md-list-item> -->
                             <md-list-item v-if="loadingRecords" class="md-inset">
                                 <md-progress-spinner
                                     md-mode="indeterminate"
