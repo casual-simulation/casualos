@@ -3104,6 +3104,7 @@ export class RecordsHttpServer {
                 intervalLength: s.intervalLength,
                 intervalCost: s.intervalCost,
                 currency: s.currency,
+                featureList: s.featureList,
             })),
             purchasableSubscriptions: result.purchasableSubscriptions.map(
                 (s) => ({

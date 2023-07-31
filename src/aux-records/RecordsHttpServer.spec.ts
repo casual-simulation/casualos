@@ -904,6 +904,7 @@ describe('RecordsHttpServer', () => {
                             intervalLength: 1,
                             intervalCost: 123,
                             currency: 'usd',
+                            featureList: ['Feature 1', 'Feature 2'],
                         },
                     ],
                     purchasableSubscriptions: [],
