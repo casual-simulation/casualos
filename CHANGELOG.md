@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.2.3
+
+#### Date: TBD
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where incorrect subscription features would be shown after a user subscribed.
+
 ## V3.2.2
 
 #### Date: 7/31/2023
