@@ -72,6 +72,7 @@ export class OpenAIImageInterface implements AIImageInterface {
 
         const images: AIGeneratedImage[] = result.data.data.map((d: any) => ({
             base64: d.b64_json,
+            mimeType: 'image/png',
         }));
 
         return {

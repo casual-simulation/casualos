@@ -2825,6 +2825,7 @@ describe('AuxLibrary', () => {
                         images: [
                             {
                                 base64: 'base64',
+                                mimeType: 'image/png',
                             },
                         ],
                     },
@@ -2833,7 +2834,7 @@ describe('AuxLibrary', () => {
 
                 await waitAsync();
 
-                expect(result).toBe('base64');
+                expect(result).toBe('data:image/png;base64,base64');
             });
 
             it('should resolve with the resulting object', async () => {
@@ -2862,6 +2863,7 @@ describe('AuxLibrary', () => {
                         images: [
                             {
                                 base64: 'base64',
+                                mimeType: 'image/jpeg',
                             },
                         ],
                     },
@@ -2875,6 +2877,7 @@ describe('AuxLibrary', () => {
                     images: [
                         {
                             base64: 'base64',
+                            url: 'data:image/jpeg;base64,base64',
                         },
                     ],
                 });
@@ -18359,6 +18362,7 @@ describe('AuxLibrary', () => {
             );
         });
     });
+
     const sha256Cases = [
         [
             ['hello'],

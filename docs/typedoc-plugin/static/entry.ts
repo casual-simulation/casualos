@@ -68,6 +68,9 @@ export {
     PseudoRandomNumberGenerator,
     AIGenerateSkyboxRequest,
     AIGenerateSkyboxResult,
+
+    AIGenerateImageAPISuccess,
+    AIGeneratedImageAPI,
 } from '../../../src/aux-common/runtime/AuxLibrary';
 export { 
     EaseType,

@@ -342,7 +342,15 @@ import {
     AIGenerateImageAction,
     aiGenerateImage,
 } from '../bots';
-import { sortBy, every, cloneDeep, union, isEqual, flatMap } from 'lodash';
+import {
+    sortBy,
+    every,
+    cloneDeep,
+    union,
+    isEqual,
+    flatMap,
+    indexOf,
+} from 'lodash';
 import {
     remote as calcRemote,
     DeviceSelector,
@@ -754,6 +762,48 @@ export interface AIGenerateSkyboxResult {
      * The URL that the thumbnail for the generated skybox is located at.
      */
     thumbnailUrl?: string;
+}
+
+/**
+ * Defines an interface that represents a result from {@link ai.generateImage-request}.
+ * @dochash types/ai
+ * @docname AIGenerateImageSuccess
+ */
+export interface AIGenerateImageAPISuccess {
+    success: true;
+
+    /**
+     * The list of images that were generated.
+     */
+    images: AIGeneratedImageAPI[];
+}
+
+/**
+ * Defines an interface that represents an AI generated image.
+ *
+ * @dochash types/ai
+ * @docname AIGeneratedImage
+ */
+export interface AIGeneratedImageAPI {
+    /**
+     * The base64 encoded image.
+     */
+    base64: string;
+
+    /**
+     * The URL that can be used to display the image.
+     */
+    url: string;
+
+    /**
+     * The seed of the generated image.
+     */
+    seed?: number;
+
+    /**
+     * The MIME Type of the image data.
+     */
+    mimeType: string;
 }
 
 /**
@@ -5140,13 +5190,13 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
     function generateImage(
         request: AIGenerateImageOptions,
         options?: RecordActionOptions
-    ): Promise<AIGenerateImageSuccess>;
+    ): Promise<AIGenerateImageAPISuccess>;
 
     function generateImage(
         prompt: string | AIGenerateImageOptions,
         negativePrompt?: string | RecordActionOptions,
         options?: RecordActionOptions
-    ): Promise<string | AIGenerateImageSuccess> {
+    ): Promise<string | AIGenerateImageAPISuccess> {
         const task = context.createTask();
 
         const returnObject = typeof prompt === 'object';
@@ -5158,7 +5208,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 task.taskId
             );
         } else {
-            let { endpoint, ...parameters } = options;
+            let { endpoint, ...parameters } = options ?? {};
             action = aiGenerateImage(
                 {
                     ...parameters,
@@ -5175,9 +5225,20 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const final = addAsyncResultAction(task, action).then(
             (result: AIGenerateImageSuccess) => {
                 if (returnObject) {
-                    return result;
+                    return {
+                        ...result,
+                        images: result.images.map((image) => ({
+                            ...image,
+                            url: toBase64Url(
+                                image.base64,
+                                image.mimeType ?? 'image/png'
+                            ),
+                        })),
+                    };
                 } else {
-                    return result.images[0].base64;
+                    const image = result.images[0];
+                    const base64 = image.base64;
+                    return toBase64Url(base64, image.mimeType ?? 'image/png');
                 }
             }
         );

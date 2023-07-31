@@ -10006,6 +10006,11 @@ export interface AIGenerateImageOptions {
     stylePreset?: string;
 }
 
+/**
+ * Defines an interface that represents a result from {@link ai.generateImage-request}.
+ * @dochash types/ai
+ * @docname AIGenerateImageSuccess
+ */
 export interface AIGenerateImageSuccess {
     success: true;
 
@@ -10015,11 +10020,23 @@ export interface AIGenerateImageSuccess {
     images: AIGeneratedImage[];
 }
 
+
+/**
+ * Defines an interface that represents an AI generated image.
+ * 
+ * @dochash types/ai
+ * @docname AIGeneratedImage
+ */
 export interface AIGeneratedImage {
     /**
      * The base64 encoded image.
      */
     base64: string;
+
+    /**
+     * The URL that can be used to display the image.
+     */
+    url: string;
 
     /**
      * The seed of the generated image.

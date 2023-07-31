@@ -88,6 +88,7 @@ export class StabilityAIImageInterface implements AIImageInterface {
         const images: AIGeneratedImage[] = flatMap(result.data, (a) =>
             a.map((d: any) => ({
                 base64: d.base64,
+                mimeType: 'image/png',
                 seed: d.seed,
             }))
         );
