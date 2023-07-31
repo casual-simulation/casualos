@@ -82,11 +82,6 @@ export default class AuthHome extends Vue {
         this._sub?.unsubscribe();
     }
 
-    saveEmail() {
-        // TODO: Handle errors
-        authManager.changeEmail(this.metadata.email);
-    }
-
     @Watch('metadata.name')
     updateName() {
         if (this.originalName === this.metadata.name) {
