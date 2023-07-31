@@ -8996,6 +8996,7 @@ describe('RecordsHttpServer', () => {
                     images: [
                         {
                             base64: 'base64',
+                            mimeType: 'image/png',
                         },
                     ],
                 },
