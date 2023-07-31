@@ -3506,6 +3506,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                 fromBase64String,
                 toHexString,
                 fromHexString,
+                toBase64Url,
+                fromBase64Url,
             },
 
             crypto: {
@@ -4783,6 +4785,62 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
      */
     function fromHexString(hex: string): Uint8Array {
         return utilFromHexString(hex);
+    }
+
+    /**
+     * Converts the given bytes into a string that contains the [Base64](https://en.wikipedia.org/wiki/Base64) [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) representation of the given data.
+     * @param bytes The data that should be converted to a Base64 Data URL. If given a string, then it should be valid Base 64 data.
+     * @param mimeType The [MIME Type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) of the data.
+     * If omitted, then `image/png` will be used.
+     *
+     * @example Convert some bytes to a base 64 image/png data URL
+     * const data = bytes.toBase64Url(new Uint8Array([ 255, 254, 253 ]));
+     *
+     * @example Convert a base 64 string to a text/plain base 64 data URL
+     * const data = bytes.toBase64Url('aGVsbG8=', 'text/plain'); // "hello" encoded in Base64
+     *
+     * @dochash actions/bytes
+     * @docname bytes.toBase64Url
+     */
+    function toBase64Url(
+        bytes: Uint8Array | string,
+        mimeType?: string
+    ): string {
+        let base64: string =
+            typeof bytes === 'string' ? bytes : toBase64String(bytes);
+        return `data:${mimeType || 'image/png'};base64,${base64}`;
+    }
+
+    /**
+     * Converts the given [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) into a blob object.
+     *
+     * Returns a blob that contains the binary data. Returns null if the URL is not a valid Data URL.
+     *
+     * @param url The URL.
+     *
+     * @example Convert a data URL to a blob
+     * const blob = bytes.fromBase64Url('data:image/png;base64,aGVsbG8='); // "hello" encoded in Base64
+     *
+     * @dochash actions/bytes
+     * @docname bytes.fromBase64Url
+     */
+    function fromBase64Url(url: string): Blob {
+        const indexOfData = url.indexOf('data:');
+        if (indexOfData !== 0) {
+            return null;
+        }
+
+        const withoutData = url.slice(indexOfData + 5);
+        const indexOfSemiColon = withoutData.indexOf(';');
+        const mimeType = withoutData.slice(0, indexOfSemiColon);
+        const parameters = withoutData.slice(indexOfSemiColon + 1);
+        const indexOfBase64 = parameters.indexOf('base64,');
+        if (indexOfBase64 < 0) {
+            return null;
+        }
+        const base64 = parameters.slice(indexOfBase64 + 7);
+        const bytes = fromBase64String(base64);
+        return new Blob([bytes], { type: mimeType });
     }
 
     // Actions

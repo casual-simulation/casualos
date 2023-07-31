@@ -18311,6 +18311,54 @@ describe('AuxLibrary', () => {
         });
     });
 
+    describe('bytes.toBase64Url()', () => {
+        it('should convert the given value to a base64 data string', () => {
+            expect(
+                library.api.bytes.toBase64Url(new Uint8Array([1, 2, 3, 4, 5]))
+            ).toBe('data:image/png;base64,AQIDBAU=');
+        });
+
+        it('should support base64 strings', () => {
+            expect(library.api.bytes.toBase64Url('AQIDBAU=')).toBe(
+                'data:image/png;base64,AQIDBAU='
+            );
+        });
+
+        it('should use the given MIME Type', () => {
+            expect(
+                library.api.bytes.toBase64Url(
+                    new Uint8Array([1, 2, 3, 4, 5]),
+                    'image/jpeg'
+                )
+            ).toBe('data:image/jpeg;base64,AQIDBAU=');
+        });
+    });
+
+    describe('bytes.fromBase64Url()', () => {
+        it('should convert the given base64 data string into a blob', () => {
+            expect(
+                library.api.bytes.fromBase64Url(
+                    'data:image/png;base64,AQIDBAU='
+                )
+            ).toEqual(
+                new Blob([new Uint8Array([1, 2, 3, 4, 5])], {
+                    type: 'image/png',
+                })
+            );
+        });
+
+        it('should use the given MIME Type', () => {
+            expect(
+                library.api.bytes.fromBase64Url(
+                    'data:image/jpeg;base64,AQIDBAU='
+                )
+            ).toEqual(
+                new Blob([new Uint8Array([1, 2, 3, 4, 5])], {
+                    type: 'image/jpeg',
+                })
+            );
+        });
+    });
     const sha256Cases = [
         [
             ['hello'],

@@ -12587,6 +12587,38 @@ interface Bytes {
      * @param hex The hexadecimal string.
      */
     fromHexString(hex: string): Uint8Array;
+
+    /**
+     * Converts the given bytes into a string that contains the [Base64](https://en.wikipedia.org/wiki/Base64) [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) representation of the given data.
+     * @param bytes The data that should be converted to a Base64 Data URL. If given a string, then it should be valid Base 64 data.
+     * @param mimeType The [MIME Type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) of the data.
+     * If omitted, then `image/png` will be used.
+     * 
+     * @example Convert some bytes to a base 64 image/png data URL
+     * const data = bytes.toBase64Url(new Uint8Array([ 255, 254, 253 ]));
+     * 
+     * @example Convert a base 64 string to a text/plain base 64 data URL
+     * const data = bytes.toBase64Url('aGVsbG8=', 'text/plain'); // "hello" encoded in Base64
+     * 
+     * @dochash actions/bytes
+     * @docname bytes.toBase64Url
+     */
+    toBase64Url(bytes: Uint8Array | string, mimeType?: string): string;
+
+    /**
+     * Converts the given [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) into a blob object.
+     * 
+     * Returns a blob that contains the binary data. Returns null if the URL is not a valid Data URL.
+     * 
+     * @param url The URL.
+     * 
+     * @example Convert a data URL to a blob
+     * const blob = bytes.fromBase64Url('data:image/png;base64,aGVsbG8='); // "hello" encoded in Base64
+     * 
+     * @dochash actions/bytes
+     * @docname bytes.fromBase64Url
+     */
+    fromBase64Url(url: string): Blob;
 }
 
 interface Crypto {
