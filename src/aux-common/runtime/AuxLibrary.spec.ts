@@ -228,6 +228,7 @@ import {
     openPhotoCamera,
     aiChat,
     aiGenerateSkybox,
+    aiGenerateImage,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -2740,6 +2741,146 @@ describe('AuxLibrary', () => {
                     success: true,
                     fileUrl: 'file_url',
                     thumbnailUrl: 'thumbnail_url',
+                });
+            });
+        });
+
+        describe('ai.generateImage()', () => {
+            it('should emit a AIGenerateImageAction', () => {
+                const promise: any =
+                    library.api.ai.generateImage('cartoon clouds');
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support negative prompts', () => {
+                const promise: any = library.api.ai.generateImage(
+                    'cartoon clouds',
+                    'realistic'
+                );
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                        negativePrompt: 'realistic',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support request objects', () => {
+                const promise: any = library.api.ai.generateImage({
+                    prompt: 'cartoon clouds',
+                    negativePrompt: 'realistic',
+                });
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                        negativePrompt: 'realistic',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should resolve with the data that was generated', async () => {
+                let result: string | null = null;
+                const promise: any =
+                    library.api.ai.generateImage('cartoon clouds');
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'base64',
+                                mimeType: 'image/png',
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toBe('data:image/png;base64,base64');
+            });
+
+            it('should resolve with the resulting object', async () => {
+                let result: any = null;
+                const promise: any = library.api.ai.generateImage({
+                    prompt: 'cartoon clouds',
+                });
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'base64',
+                                mimeType: 'image/jpeg',
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual({
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                            url: 'data:image/jpeg;base64,base64',
+                            mimeType: 'image/jpeg',
+                        },
+                    ],
                 });
             });
         });
@@ -18170,6 +18311,55 @@ describe('AuxLibrary', () => {
         it('should convert the given hex to bytes', () => {
             expect(library.api.bytes.fromHexString('0102030405')).toEqual(
                 new Uint8Array([1, 2, 3, 4, 5])
+            );
+        });
+    });
+
+    describe('bytes.toBase64Url()', () => {
+        it('should convert the given value to a base64 data string', () => {
+            expect(
+                library.api.bytes.toBase64Url(new Uint8Array([1, 2, 3, 4, 5]))
+            ).toBe('data:image/png;base64,AQIDBAU=');
+        });
+
+        it('should support base64 strings', () => {
+            expect(library.api.bytes.toBase64Url('AQIDBAU=')).toBe(
+                'data:image/png;base64,AQIDBAU='
+            );
+        });
+
+        it('should use the given MIME Type', () => {
+            expect(
+                library.api.bytes.toBase64Url(
+                    new Uint8Array([1, 2, 3, 4, 5]),
+                    'image/jpeg'
+                )
+            ).toBe('data:image/jpeg;base64,AQIDBAU=');
+        });
+    });
+
+    describe('bytes.fromBase64Url()', () => {
+        it('should convert the given base64 data string into a blob', () => {
+            expect(
+                library.api.bytes.fromBase64Url(
+                    'data:image/png;base64,AQIDBAU='
+                )
+            ).toEqual(
+                new Blob([new Uint8Array([1, 2, 3, 4, 5])], {
+                    type: 'image/png',
+                })
+            );
+        });
+
+        it('should use the given MIME Type', () => {
+            expect(
+                library.api.bytes.fromBase64Url(
+                    'data:image/jpeg;base64,AQIDBAU='
+                )
+            ).toEqual(
+                new Blob([new Uint8Array([1, 2, 3, 4, 5])], {
+                    type: 'image/jpeg',
+                })
             );
         });
     });

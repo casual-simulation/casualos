@@ -28,6 +28,7 @@ import {
     GetFileAction,
     AIChatAction,
     AIGenerateSkyboxAction,
+    AIGenerateImageAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -57,6 +58,7 @@ import { Observable, Subject } from 'rxjs';
 import { DateTime } from 'luxon';
 import {
     AIChatResponse,
+    AIGenerateImageResponse,
     AIGenerateSkyboxResponse,
     AIGetSkyboxResponse,
 } from '@casual-simulation/aux-records/AIController';
@@ -190,6 +192,8 @@ export class RecordsManager {
                 this._aiChat(event);
             } else if (event.type === 'ai_generate_skybox') {
                 this._aiGenerateSkybox(event);
+            } else if (event.type === 'ai_generate_image') {
+                this._aiGenerateImage(event);
             }
         }
     }
@@ -1429,6 +1433,65 @@ export class RecordsManager {
         }
     }
 
+    private async _aiGenerateImage(event: AIGenerateImageAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            if (!info.token) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_logged_in',
+                            errorMessage: 'The user is not logged in.',
+                        })
+                    );
+                }
+                return;
+            }
+
+            const { taskId, type, options, ...rest } = event;
+            let requestData: any = {
+                ...rest,
+            };
+
+            let instances: string[];
+            if (hasValue(this._helper.inst)) {
+                instances = [this._helper.inst];
+            }
+
+            const result: AxiosResponse<AIGenerateImageResponse> =
+                await axios.post(
+                    await this._publishUrl(info.auth, '/api/v2/ai/image'),
+                    {
+                        ...requestData,
+                        instances,
+                    },
+                    {
+                        ...this._axiosOptions,
+                        headers: info.headers,
+                    }
+                );
+
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error generating skybox:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
     private async _resolveInfoForEvent(
         event:
             | RecordFileAction
@@ -1446,7 +1509,8 @@ export class RecordsManager {
             | GrantRoleAction
             | RevokeRoleAction
             | AIChatAction
-            | AIGenerateSkyboxAction,
+            | AIGenerateSkyboxAction
+            | AIGenerateImageAction,
         authenticateIfNotLoggedIn: boolean = true
     ): Promise<{
         error: boolean;

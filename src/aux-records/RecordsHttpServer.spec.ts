@@ -56,6 +56,10 @@ import {
     AIGenerateSkyboxInterfaceResponse,
     AIGetSkyboxInterfaceResponse,
 } from './AIGenerateSkyboxInterface';
+import {
+    AIGenerateImageInterfaceRequest,
+    AIGenerateImageInterfaceResponse,
+} from './AIImageInterface';
 
 console.log = jest.fn();
 
@@ -110,6 +114,12 @@ describe('RecordsHttpServer', () => {
             [AIGenerateSkyboxInterfaceRequest]
         >;
         getSkybox: jest.Mock<Promise<AIGetSkyboxInterfaceResponse>, [string]>;
+    };
+    let imageInterface: {
+        generateImage: jest.Mock<
+            Promise<AIGenerateImageInterfaceResponse>,
+            [AIGenerateImageInterfaceRequest]
+        >;
     };
 
     let stripe: StripeInterface;
@@ -260,6 +270,9 @@ describe('RecordsHttpServer', () => {
             generateSkybox: jest.fn(),
             getSkybox: jest.fn(),
         };
+        imageInterface = {
+            generateImage: jest.fn(),
+        };
         aiController = new AIController({
             chat: {
                 interface: chatInterface,
@@ -273,6 +286,24 @@ describe('RecordsHttpServer', () => {
                 interface: skyboxInterface,
                 options: {
                     allowedSubscriptionTiers: ['beta'],
+                },
+            },
+            images: {
+                interfaces: {
+                    openai: imageInterface,
+                },
+                options: {
+                    allowedModels: {
+                        openai: ['model-1', 'model-2'],
+                    },
+                    allowedSubscriptionTiers: ['beta'],
+                    defaultHeight: 512,
+                    defaultWidth: 512,
+                    maxHeight: 1024,
+                    maxWidth: 1024,
+                    defaultModel: 'model-1',
+                    maxImages: 3,
+                    maxSteps: 50,
                 },
             },
         });
@@ -8885,6 +8916,125 @@ describe('RecordsHttpServer', () => {
         );
         testRateLimit(() =>
             httpGet(`/api/v2/ai/skybox?skyboxId=test-skybox`, apiHeaders)
+        );
+    });
+
+    describe('POST /api/v2/ai/image', () => {
+        beforeEach(async () => {
+            const u = await authStore.findUser(userId);
+            await authStore.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+        });
+
+        it('should return a not_supported result if the server has a null AI controller', async () => {
+            server = new RecordsHttpServer(
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                null as any,
+                policyController,
+                null
+            );
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/image`,
+                    JSON.stringify({
+                        prompt: 'a blue sky',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'AI features are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should call the AI image interface', async () => {
+            imageInterface.generateImage.mockResolvedValueOnce({
+                images: [
+                    {
+                        base64: 'base64',
+                        mimeType: 'image/png',
+                    },
+                ],
+            });
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/image`,
+                    JSON.stringify({
+                        prompt: 'a rabbit riding a bycicle',
+                        negativePrompt: 'ugly, incorrect, wrong',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+            expect(imageInterface.generateImage).toHaveBeenCalledWith({
+                model: 'model-1',
+                prompt: 'a rabbit riding a bycicle',
+                negativePrompt: 'ugly, incorrect, wrong',
+                width: 512,
+                height: 512,
+                steps: 30,
+                numberOfImages: 1,
+                userId,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/ai/image`, () =>
+            JSON.stringify({
+                prompt: 'test',
+            })
+        );
+        testAuthorization(() =>
+            httpPost(
+                `/api/v2/ai/image`,
+                JSON.stringify({
+                    prompt: 'test',
+                }),
+                apiHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/ai/image`,
+                JSON.stringify({
+                    prompt: 'test',
+                }),
+                apiHeaders
+            )
         );
     });
 

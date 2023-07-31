@@ -9936,6 +9936,114 @@ export interface AIGenerateSkyboxResult {
     thumbnailUrl?: string;
 }
 
+
+/**
+ * Defines an interface that represents options for {@link ai.generateImage-string}.
+ * 
+ * @dochash types/ai
+ * @docname AIGenerateImageOptions
+ */
+export interface AIGenerateImageOptions {
+    /**
+     * The description of what the generated image(s) should look like.
+     */
+    prompt: string;
+
+    /**
+     * The description of what the generated image(s) should not look like.
+     */
+    negativePrompt?: string;
+
+    /**
+     * The model that should be used to generate the image(s).
+     */
+    model?: string;
+
+    /**
+     * The desired width of the image(s) in pixels.
+     */
+    width?: number;
+
+    /**
+     * The desired height of the image(s) in pixels.
+     */
+    height?: number;
+
+    /**
+     * The number of images that should be generated.
+     */
+    numberOfImages?: number;
+
+    /**
+     * The random noise seed that should be used.
+     */
+    seed?: number;
+
+    /**
+     * The number of diffusion steps to run.
+     */
+    steps?: number;
+
+    /**
+     * How strictly the diffusion process adheres to the prompt text.
+     * Higher values keep the image closer to the prompt.
+     */
+    cfgScale?: number;
+
+    /**
+     * The sampler to use for the diffusion process.
+     */
+    sampler?: string;
+
+    /**
+     * The clip guidance preset.
+     */
+    clipGuidancePreset?: string;
+
+    /**
+     * The style preset that should be used to guide the image model torwards a specific style.
+     */
+    stylePreset?: string;
+}
+
+/**
+ * Defines an interface that represents a result from {@link ai.generateImage-request}.
+ * @dochash types/ai
+ * @docname AIGenerateImageSuccess
+ */
+export interface AIGenerateImageSuccess {
+    success: true;
+
+    /**
+     * The list of images that were generated.
+     */
+    images: AIGeneratedImage[];
+}
+
+
+/**
+ * Defines an interface that represents an AI generated image.
+ * 
+ * @dochash types/ai
+ * @docname AIGeneratedImage
+ */
+export interface AIGeneratedImage {
+    /**
+     * The base64 encoded image.
+     */
+    base64: string;
+
+    /**
+     * The URL that can be used to display the image.
+     */
+    url: string;
+
+    /**
+     * The seed of the generated image.
+     */
+    seed?: number;
+}
+
 interface Ai {
     /**
      * Sends a chat message to the AI.
@@ -10166,6 +10274,69 @@ interface Ai {
      * @docid ai.generateSkybox-request
      */
     generateSkybox(prompt: string | AIGenerateSkyboxRequest, negativePrompt?: string, options?: AIGenerateSkyboxOptions): Promise<string | AIGenerateSkyboxResult>
+
+    /**
+     * Generates an image from the given prompt.
+     *
+     * Returns a promise that resolves with the Base64 data of the generated image that can be used as the {@tag formAddress} of a bot.
+     *
+     * @param prompt the string that describes what the image should look like.
+     * @param negativePrompt the string that describes what the image should avoid looking like.
+     * @param options the additional options that should be used.
+     *
+     * @example Generate an image from a prompt.
+     * const image = await ai.generateImage("An oil painting of a grassy field.");
+     * masks.formAddress = image;
+     *
+     * @example Generate a image from a prompt and a negative prompt
+     * const image = await ai.generateSkybox("An oil painting of a grassy field.", "realistic");
+     * masks.formAddress = image;
+     *
+     * @dochash actions/ai
+     * @docname ai.generateImage
+     * @docid ai.generateImage-string
+     */
+    generateImage(
+        prompt: string,
+        negativePrompt?: string,
+        options?: AIGenerateSkyboxOptions & RecordActionOptions
+    ): Promise<string>;
+
+    /**
+     * Generates an image from the given prompt.
+     *
+     * Returns a promise that resolves with the Base64 data of the generated image that can be used as the {@tag formAddress} of a bot.
+     *
+     * @param request the request object that describes what the image should look like.
+     * @param options the options for the request.
+     *
+     * @example Generate an image from a prompt.
+     * const image = await ai.generateImage({
+     *     prompt: "An oil painting of a grassy field.",
+     * });
+     * masks.formAddress = image;
+     *
+     * @example Generate a image from a prompt and a negative prompt
+     * const image = await ai.generateSkybox({
+     *     prompt: "An oil painting of a grassy field.",
+     *     negativePrompt: "realistic"
+     * });
+     * masks.formAddress = image;
+     *
+     * @dochash actions/ai
+     * @docname ai.generateImage
+     * @docid ai.generateImage-request
+     */
+    generateImage(
+        request: AIGenerateImageOptions,
+        options?: RecordActionOptions
+    ): Promise<AIGenerateImageSuccess>;
+
+    generateImage(
+        prompt: string | AIGenerateImageOptions,
+        negativePrompt?: string | RecordActionOptions,
+        options?: RecordActionOptions
+    ): Promise<string | AIGenerateImageSuccess>;
 }
 
 interface Os {
@@ -12433,6 +12604,38 @@ interface Bytes {
      * @param hex The hexadecimal string.
      */
     fromHexString(hex: string): Uint8Array;
+
+    /**
+     * Converts the given bytes into a string that contains the [Base64](https://en.wikipedia.org/wiki/Base64) [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) representation of the given data.
+     * @param bytes The data that should be converted to a Base64 Data URL. If given a string, then it should be valid Base 64 data.
+     * @param mimeType The [MIME Type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) of the data.
+     * If omitted, then `image/png` will be used.
+     * 
+     * @example Convert some bytes to a base 64 image/png data URL
+     * const data = bytes.toBase64Url(new Uint8Array([ 255, 254, 253 ]));
+     * 
+     * @example Convert a base 64 string to a text/plain base 64 data URL
+     * const data = bytes.toBase64Url('aGVsbG8=', 'text/plain'); // "hello" encoded in Base64
+     * 
+     * @dochash actions/bytes
+     * @docname bytes.toBase64Url
+     */
+    toBase64Url(bytes: Uint8Array | string, mimeType?: string): string;
+
+    /**
+     * Converts the given [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) into a blob object.
+     * 
+     * Returns a blob that contains the binary data. Returns null if the URL is not a valid Data URL.
+     * 
+     * @param url The URL.
+     * 
+     * @example Convert a data URL to a blob
+     * const blob = bytes.fromBase64Url('data:image/png;base64,aGVsbG8='); // "hello" encoded in Base64
+     * 
+     * @dochash actions/bytes
+     * @docname bytes.fromBase64Url
+     */
+    fromBase64Url(url: string): Blob;
 }
 
 interface Crypto {

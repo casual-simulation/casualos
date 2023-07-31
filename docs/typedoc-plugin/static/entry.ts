@@ -68,6 +68,9 @@ export {
     PseudoRandomNumberGenerator,
     AIGenerateSkyboxRequest,
     AIGenerateSkyboxResult,
+
+    AIGenerateImageAPISuccess,
+    AIGeneratedImageAPI,
 } from '../../../src/aux-common/runtime/AuxLibrary';
 export { 
     EaseType,
@@ -117,6 +120,8 @@ export {
 
     AIGenerateSkyboxOptions,
     AIGenerateSkyboxBlockadeLabsOptions,
+
+    AIGenerateImageOptions
 } from '../../../src/aux-common/bots/BotEvents';
 export { 
     RuntimeBot,
