@@ -19,6 +19,7 @@ To deploy this project to AWS Lambda, follow these steps:
     - For "Origin domain", choose the S3 buckets that you created above. (One per distribution)
     - Configure "Origin access" so that CloudFront has access to the bucket. (Choose an option - it's not particularly important for the bucket to be private, but it may be nice to have to prevent abuse)
     - Configure the default cache behavior to "Redirect HTTP to HTTPS" and use the "CachingOptimized" policy.
+    - Configure each distrubution to return `/index.html` when a HTTP `403` error code occurs.
     - Remember the IDs of the distributions.
 3. Setup a CockroachDB database.
     - You can do this either through the [AWS Marketplace](https://aws.amazon.com/marketplace/pp/prodview-3zbkzekdohwly?ref_=unifiedsearch) or the [Cockroach Labs website](https://www.cockroachlabs.com/).

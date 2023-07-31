@@ -16,7 +16,7 @@
                         ></md-input>
                     </md-field>
                 </div>
-                <div class="button-field">
+                <div class="button-field" v-if="metadata.email">
                     <md-field class="md-disabled">
                         <label for="email">Email</label>
                         <md-input
@@ -24,13 +24,11 @@
                             v-model="metadata.email"
                             type="text"
                             placeholder="Email"
+                            disabled
                         ></md-input>
                     </md-field>
-                    <md-button v-show="metadata.email !== originalEmail" @click="saveEmail()"
-                        >Save Email</md-button
-                    >
                 </div>
-                <div class="button-field">
+                <div class="button-field" v-if="metadata.phone">
                     <md-field class="md-disabled">
                         <label for="phone">Phone</label>
                         <md-input

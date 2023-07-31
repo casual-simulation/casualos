@@ -312,6 +312,82 @@ describe('SubscriptionController', () => {
             });
         });
 
+        it('should include the feature list for the active subscription', async () => {
+            await authStore.saveUser({
+                ...user,
+                stripeCustomerId: 'stripe_customer',
+            });
+            user = await authStore.findUserByAddress(
+                'test@example.com',
+                'email'
+            );
+            expect(user.stripeCustomerId).toBe('stripe_customer');
+
+            stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                {
+                    subscriptions: [
+                        {
+                            id: 'subscription_id',
+                            status: 'active',
+                            start_date: 123,
+                            ended_at: null,
+                            cancel_at: null,
+                            canceled_at: null,
+                            current_period_start: 456,
+                            current_period_end: 999,
+                            items: [
+                                {
+                                    id: 'item_id',
+                                    price: {
+                                        id: 'price_id',
+                                        interval: 'month',
+                                        interval_count: 1,
+                                        currency: 'usd',
+                                        unit_amount: 123,
+
+                                        product: {
+                                            id: 'product_1_id',
+                                            name: 'Product Name',
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                }
+            );
+
+            const result = await controller.getSubscriptionStatus({
+                sessionKey,
+                userId,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                userId,
+                publishableKey: 'publishable_key',
+                subscriptions: [
+                    {
+                        active: true,
+                        statusCode: 'active',
+                        productName: 'Product Name',
+                        startDate: 123,
+                        endedDate: null,
+                        cancelDate: null,
+                        canceledDate: null,
+                        currentPeriodStart: 456,
+                        currentPeriodEnd: 999,
+                        renewalInterval: 'month',
+                        intervalLength: 1,
+                        intervalCost: 123,
+                        currency: 'usd',
+                        featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
+                    },
+                ],
+                purchasableSubscriptions: [],
+            });
+        });
+
         it('should return a invalid_key result if given the wrong sessionKey', async () => {
             const result = await controller.getSubscriptionStatus({
                 sessionKey: formatV1SessionKey(

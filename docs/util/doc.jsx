@@ -805,6 +805,12 @@ function TypeLink({ type, references, isInUnionOrArray }) {
         return 'object';
         // return '' + JSON.stringify(type);
         // return <>Dynamic</>
+    } else if(type.type ==='intersection') {
+        const types = type.types.map((t, index) => <>
+            {index > 0 ? ' & ' : ''}
+            <TypeLink type={t} references={references} isInUnionOrArray={true} />
+        </>);
+        return types;
     } else {
         return '' + JSON.stringify(type);
     }

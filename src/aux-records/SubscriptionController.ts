@@ -98,6 +98,16 @@ export class SubscriptionController {
             const subscriptions: SubscriptionStatus[] =
                 listResult.subscriptions.map((s) => {
                     const item = s.items[0];
+                    const subscriptionInfo = this._config.subscriptions.find(
+                        (sub) => {
+                            return sub.eligibleProducts.some(
+                                (p) => p === item.price.product.id
+                            );
+                        }
+                    );
+
+                    const featureList = subscriptionInfo?.featureList;
+
                     return {
                         active: s.status === 'active',
                         statusCode: s.status,
@@ -112,6 +122,7 @@ export class SubscriptionController {
                         intervalCost: item.price.unit_amount,
                         currency: item.price.currency,
                         productName: item.price.product.name,
+                        featureList,
                     };
                 });
 
@@ -822,6 +833,11 @@ export interface SubscriptionStatus {
      * The currency that was used.
      */
     currency: string;
+
+    /**
+     * The feature list for the subscription.
+     */
+    featureList?: string[];
 }
 
 export interface PurchasableSubscription {
