@@ -2878,6 +2878,7 @@ describe('AuxLibrary', () => {
                         {
                             base64: 'base64',
                             url: 'data:image/jpeg;base64,base64',
+                            mimeType: 'image/jpeg',
                         },
                     ],
                 });

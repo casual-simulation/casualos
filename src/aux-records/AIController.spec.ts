@@ -646,6 +646,7 @@ describe('AIController', () => {
                         {
                             base64: 'base64',
                             seed: 123,
+                            mimeType: 'image/png',
                         },
                     ],
                 })
@@ -663,6 +664,7 @@ describe('AIController', () => {
                     {
                         base64: 'base64',
                         seed: 123,
+                        mimeType: 'image/png',
                     },
                 ],
             });
@@ -718,6 +720,7 @@ describe('AIController', () => {
                         {
                             base64: 'base64',
                             seed: 123,
+                            mimeType: 'image/png',
                         },
                     ],
                 })
@@ -736,6 +739,7 @@ describe('AIController', () => {
                     {
                         base64: 'base64',
                         seed: 123,
+                        mimeType: 'image/png',
                     },
                 ],
             });
@@ -828,6 +832,7 @@ describe('AIController', () => {
                         {
                             base64: 'base64',
                             seed: 123,
+                            mimeType: 'image/png',
                         },
                     ],
                 })
@@ -868,6 +873,7 @@ describe('AIController', () => {
                     {
                         base64: 'base64',
                         seed: 123,
+                        mimeType: 'image/png',
                     },
                 ],
             });
