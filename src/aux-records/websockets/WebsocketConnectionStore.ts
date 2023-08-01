@@ -109,12 +109,12 @@ export interface DeviceConnection {
     /**
      * The server-created ID of the connection.
      */
-    connectionId: string;
+    serverConnectionId: string;
 
     /**
-     * The session ID of the device connection.
+     * The client-created ID of the connection.
      */
-    sessionId: string;
+    clientConnectionId: string;
 
     /**
      * The ID of the user that the connection is associated with.

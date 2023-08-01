@@ -9,13 +9,17 @@ import {
     StoredAux,
 } from '@casual-simulation/aux-common/bots';
 import { YjsPartitionImpl } from '@casual-simulation/aux-common/partitions';
-// import { ApiaryAtomStore } from './ApiaryAtomStore';
+import { WebsocketMessenger, CONNECTION_COUNT } from './WebsocketMessenger';
 import {
-    ApiaryConnectionStore,
-    DeviceConnection,
-} from './ApiaryConnectionStore';
-import { ApiaryMessenger, DEVICE_COUNT } from './ApiaryMessenger';
-import { MessagePacket } from './Events';
+    device,
+    deviceError,
+    deviceResult,
+    DeviceSelector,
+    MessagePacket,
+    RemoteAction,
+    RemoteActionError,
+    RemoteActionResult,
+} from './Events';
 import {
     AddUpdatesEvent,
     ADD_UPDATES,
@@ -27,14 +31,27 @@ import {
 } from './ExtraEvents';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { applyUpdate, mergeUpdates } from 'yjs';
+import {
+    DeviceConnection,
+    WebsocketConnectionStore,
+} from './WebsocketConnectionStore';
+import { UpdatesStore } from '@casual-simulation/causal-trees/core2';
+import {
+    CONNECTED_TO_BRANCH,
+    DISCONNECTED_FROM_BRANCH,
+    RATE_LIMIT_EXCEEDED,
+    RateLimitExceededEvent,
+    RECEIVE_EVENT,
+    SendRemoteActionEvent,
+} from './WebsocketEvents';
+import { ConnectionInfo } from './ConnectionInfo';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
  */
 export class ApiaryCausalRepoServer {
-    private _atomStore: ApiaryAtomStore;
-    private _connectionStore: ApiaryConnectionStore;
-    private _messenger: ApiaryMessenger;
+    private _connectionStore: WebsocketConnectionStore;
+    private _messenger: WebsocketMessenger;
     private _updatesStore: UpdatesStore;
 
     /**
@@ -49,13 +66,11 @@ export class ApiaryCausalRepoServer {
     }
 
     constructor(
-        connectionStore: ApiaryConnectionStore,
-        atomStore: ApiaryAtomStore,
-        messenger: ApiaryMessenger,
+        connectionStore: WebsocketConnectionStore,
+        messenger: WebsocketMessenger,
         updatesStore: UpdatesStore
     ) {
         this._connectionStore = connectionStore;
-        this._atomStore = atomStore;
         this._messenger = messenger;
         this._updatesStore = updatesStore;
     }
@@ -80,9 +95,6 @@ export class ApiaryCausalRepoServer {
 
                     if (count <= 0) {
                         // unload namespace
-                        await this._atomStore.clearNamespace(
-                            connection.namespace
-                        );
                         await this._updatesStore.clearUpdates(
                             connection.namespace
                         );
@@ -96,13 +108,13 @@ export class ApiaryCausalRepoServer {
                     );
 
                 await this._messenger.sendMessage(
-                    watchingDevices.map((d) => d.connectionId),
+                    watchingDevices.map((d) => d.serverConnectionId),
                     {
-                        name: DEVICE_DISCONNECTED_FROM_BRANCH,
+                        name: DISCONNECTED_FROM_BRANCH,
                         data: {
                             broadcast: false,
                             branch: branch,
-                            device: deviceInfo(connection),
+                            connection: connectionInfo(connection),
                         },
                     }
                 );
@@ -135,76 +147,42 @@ export class ApiaryCausalRepoServer {
         }
         await this._connectionStore.saveNamespaceConnection({
             ...connection,
-            connectionId: connectionId,
+            serverConnectionId: connectionId,
             namespace: namespace,
             temporary: event.temporary || false,
         });
 
-        if (event.protocol === 'updates') {
-            const updates = await this._updatesStore.getUpdates(namespace);
-            const watchingDevices =
-                await this._connectionStore.getConnectionsByNamespace(
-                    watchBranchNamespace(event.branch)
-                );
-
-            console.log(
-                `[CausalRepoServer] [${event.branch}] [${connectionId}] Connected.`
+        const updates = await this._updatesStore.getUpdates(namespace);
+        const watchingDevices =
+            await this._connectionStore.getConnectionsByNamespace(
+                watchBranchNamespace(event.branch)
             );
-            const promises = [
-                this._messenger.sendMessage(
-                    watchingDevices.map((d) => d.connectionId),
-                    {
-                        name: DEVICE_CONNECTED_TO_BRANCH,
-                        data: {
-                            broadcast: false,
-                            branch: event,
-                            device: deviceInfo(connection),
-                        },
-                    }
-                ),
-                this._messenger.sendMessage([connection.connectionId], {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: event.branch,
-                        updates: updates.updates,
-                        initial: true,
-                    },
-                }),
-            ];
-            await Promise.all(promises);
-        } else {
-            const atoms = await this._atomStore.loadAtoms(namespace);
-            const watchingDevices =
-                await this._connectionStore.getConnectionsByNamespace(
-                    watchBranchNamespace(event.branch)
-                );
 
-            console.log(
-                `[CausalRepoServer] [${event.branch}] [${connectionId}] Connected.`
-            );
-            const promises = [
-                this._messenger.sendMessage(
-                    watchingDevices.map((d) => d.connectionId),
-                    {
-                        name: DEVICE_CONNECTED_TO_BRANCH,
-                        data: {
-                            broadcast: false,
-                            branch: event,
-                            device: deviceInfo(connection),
-                        },
-                    }
-                ),
-                this._messenger.sendMessage([connection.connectionId], {
-                    name: ADD_ATOMS,
+        console.log(
+            `[CausalRepoServer] [${event.branch}] [${connectionId}] Connected.`
+        );
+        const promises = [
+            this._messenger.sendMessage(
+                watchingDevices.map((d) => d.serverConnectionId),
+                {
+                    name: CONNECTED_TO_BRANCH,
                     data: {
-                        branch: event.branch,
-                        atoms: atoms,
-                        initial: true,
+                        broadcast: false,
+                        branch: event,
+                        connection: connectionInfo(connection),
                     },
-                }),
-            ];
-            await Promise.all(promises);
-        }
+                }
+            ),
+            this._messenger.sendMessage([connection.serverConnectionId], {
+                name: ADD_UPDATES,
+                data: {
+                    branch: event.branch,
+                    updates: updates.updates,
+                    initial: true,
+                },
+            }),
+        ];
+        await Promise.all(promises);
     }
 
     async unwatchBranch(connectionId: string, branch: string) {
@@ -235,7 +213,6 @@ export class ApiaryCausalRepoServer {
                         namespace
                     );
                 if (count <= 0) {
-                    await this._atomStore.clearNamespace(connection.namespace);
                     await this._updatesStore.clearUpdates(connection.namespace);
                 }
             }
@@ -246,78 +223,17 @@ export class ApiaryCausalRepoServer {
                 );
 
             await this._messenger.sendMessage(
-                watchingDevices.map((d) => d.connectionId),
+                watchingDevices.map((d) => d.serverConnectionId),
                 {
-                    name: DEVICE_DISCONNECTED_FROM_BRANCH,
+                    name: DISCONNECTED_FROM_BRANCH,
                     data: {
                         broadcast: false,
                         branch: branch,
-                        device: deviceInfo(connection),
+                        connection: connectionInfo(connection),
                     },
                 }
             );
         }
-    }
-
-    async addAtoms(connectionId: string, event: AddAtomsEvent) {
-        if (!event) {
-            console.warn(
-                '[CasualRepoServer] Trying to add atoms with a null event!'
-            );
-            return;
-        }
-
-        const namespace = branchNamespace(event.branch);
-
-        console.log(
-            `[CausalRepoServer] [${namespace}] [${connectionId}] Add Atoms`
-        );
-
-        if (event.atoms) {
-            await this._atomStore.saveAtoms(namespace, event.atoms);
-        }
-        if (event.removedAtoms) {
-            await this._atomStore.deleteAtoms(namespace, event.removedAtoms);
-        }
-
-        const hasAdded = event.atoms && event.atoms.length > 0;
-        const hasRemoved = event.removedAtoms && event.removedAtoms.length > 0;
-        if (hasAdded || hasRemoved) {
-            const connectedDevices =
-                await this._connectionStore.getConnectionsByNamespace(
-                    namespace
-                );
-
-            let ret: AddAtomsEvent = {
-                branch: event.branch,
-            };
-
-            if (hasAdded) {
-                ret.atoms = event.atoms;
-            }
-            if (hasRemoved) {
-                ret.removedAtoms = event.removedAtoms;
-            }
-
-            await this._messenger.sendMessage(
-                connectedDevices.map((c) => c.connectionId),
-                {
-                    name: ADD_ATOMS,
-                    data: ret,
-                },
-                connectionId
-            );
-        }
-
-        const addedAtomHashes = (event.atoms || []).map((a) => a.hash);
-        const removedAtomHashes = event.removedAtoms || [];
-        await this._messenger.sendMessage([connectionId], {
-            name: ATOMS_RECEIVED,
-            data: {
-                branch: event.branch,
-                hashes: [...addedAtomHashes, ...removedAtomHashes],
-            },
-        });
     }
 
     async addUpdates(connectionId: string, event: AddUpdatesEvent) {
@@ -411,7 +327,7 @@ export class ApiaryCausalRepoServer {
             };
 
             await this._messenger.sendMessage(
-                connectedDevices.map((c) => c.connectionId),
+                connectedDevices.map((c) => c.serverConnectionId),
                 {
                     name: ADD_UPDATES,
                     data: ret,
@@ -445,50 +361,13 @@ export class ApiaryCausalRepoServer {
 
         if (event.action.type === 'remote') {
             const action = event.action.event as BotAction;
-            if (action.type === 'setup_server') {
-                // Process setup_story
-                const namespace = branchNamespace(action.channel);
-
-                const count = await this._atomStore.countAtoms(namespace);
-                if (count <= 0) {
-                    console.log(
-                        `[CasualRepoServer] [${namespace}] Setting up channel...`
-                    );
-
-                    const tree = auxTree();
-                    const result = applyEvents(
-                        tree,
-                        [
-                            botAdded(
-                                createBot(
-                                    undefined,
-                                    isBot(action.botOrMod)
-                                        ? action.botOrMod.tags
-                                        : action.botOrMod
-                                )
-                            ),
-                        ],
-                        'shared'
-                    );
-
-                    const atoms = result.tree.weave.getAtoms();
-
-                    await this._atomStore.saveAtoms(namespace, atoms);
-                } else {
-                    console.log(
-                        `[CasualRepoServer] [${namespace}] Skipping setup because channel already exists.`
-                    );
-                }
-
-                return;
-            }
         }
 
         let finalAction: RemoteAction | RemoteActionResult | RemoteActionError;
         if (
             event.action.deviceId ||
-            event.action.sessionId ||
-            event.action.username ||
+            event.action.connectionId ||
+            event.action.userId ||
             (typeof event.action.broadcast !== 'undefined' &&
                 event.action.broadcast !== null)
         ) {
@@ -504,7 +383,7 @@ export class ApiaryCausalRepoServer {
             if (randomDevice) {
                 finalAction = {
                     ...event.action,
-                    sessionId: randomDevice.sessionId,
+                    connectionId: randomDevice.clientConnectionId,
                 };
             }
         }
@@ -522,24 +401,24 @@ export class ApiaryCausalRepoServer {
         const dEvent =
             finalAction.type === 'remote'
                 ? device(
-                      deviceInfo(currentConnection),
+                      connectionInfo(currentConnection),
                       finalAction.event,
                       finalAction.taskId
                   )
                 : finalAction.type === 'remote_result'
                 ? deviceResult(
-                      deviceInfo(currentConnection),
+                      connectionInfo(currentConnection),
                       finalAction.result,
                       finalAction.taskId
                   )
                 : deviceError(
-                      deviceInfo(currentConnection),
+                      connectionInfo(currentConnection),
                       finalAction.error,
                       finalAction.taskId
                   );
 
         await this._messenger.sendMessage(
-            targetedDevices.map((c) => c.connectionId),
+            targetedDevices.map((c) => c.serverConnectionId),
             {
                 name: RECEIVE_EVENT,
                 data: {
@@ -566,7 +445,7 @@ export class ApiaryCausalRepoServer {
         }
         await this._connectionStore.saveNamespaceConnection({
             ...connection,
-            connectionId: connectionId,
+            serverConnectionId: connectionId,
             namespace: namespace,
             temporary: true,
         });
@@ -577,14 +456,14 @@ export class ApiaryCausalRepoServer {
             );
         const promises = currentDevices.map((device) =>
             this._messenger.sendMessage([connectionId], {
-                name: DEVICE_CONNECTED_TO_BRANCH,
+                name: CONNECTED_TO_BRANCH,
                 data: {
                     broadcast: false,
                     branch: {
                         branch: branch,
                         temporary: device.temporary,
                     },
-                    device: deviceInfo(device),
+                    connection: connectionInfo(device),
                 },
             })
         );
@@ -600,7 +479,7 @@ export class ApiaryCausalRepoServer {
         );
     }
 
-    async deviceCount(connectionId: string, branch: string) {
+    async deviceCount(connectionId: string, branch: string | null) {
         const count =
             typeof branch !== 'undefined' && branch !== null
                 ? await this._connectionStore.countConnectionsByNamespace(
@@ -609,7 +488,7 @@ export class ApiaryCausalRepoServer {
                 : await this._connectionStore.countConnections();
 
         await this._messenger.sendMessage([connectionId], {
-            name: DEVICE_COUNT,
+            name: CONNECTION_COUNT,
             data: {
                 branch,
                 count: count,
@@ -659,7 +538,7 @@ export class ApiaryCausalRepoServer {
 
         const updates = await this._updatesStore.getUpdates(namespace);
 
-        this._messenger.sendMessage([connection.connectionId], {
+        this._messenger.sendMessage([connection.serverConnectionId], {
             name: ADD_UPDATES,
             data: {
                 branch: branch,
@@ -685,11 +564,11 @@ export class ApiaryCausalRepoServer {
         data: object
     ): Promise<number> {
         const namespace = branchNamespace(branch);
-        const count = await this._atomStore.countAtoms(namespace);
+        // const count = await this._updatesStore..countAtoms(namespace);
 
-        if (count <= 0) {
-            return 404;
-        }
+        // if (count <= 0) {
+        //     return 404;
+        // }
 
         const connectedDevices =
             await this._connectionStore.getConnectionsByNamespace(namespace);
@@ -721,7 +600,7 @@ export class ApiaryCausalRepoServer {
             data,
         });
 
-        await this._messenger.sendMessage([randomDevice.connectionId], {
+        await this._messenger.sendMessage([randomDevice.serverConnectionId], {
             name: RECEIVE_EVENT,
             data: {
                 branch: branch,
@@ -783,14 +662,11 @@ export class ApiaryCausalRepoServer {
     }
 }
 
-export function deviceInfo(device: DeviceConnection): DeviceInfo {
+export function connectionInfo(device: DeviceConnection): ConnectionInfo {
     return {
-        claims: {
-            [SESSION_ID_CLAIM]: device.sessionId,
-            [USERNAME_CLAIM]: device.username,
-            [DEVICE_ID_CLAIM]: device.username,
-        },
-        roles: [],
+        connectionId: device.clientConnectionId,
+        deviceId: device.userId,
+        userId: device.userId,
     };
 }
 
@@ -806,11 +682,11 @@ export function isEventForDevice(
     if (event.broadcast === true) {
         return true;
     }
-    if (event.username === device.username) {
+    if (event.userId === device.userId) {
         return true;
-    } else if (event.sessionId === device.sessionId) {
+    } else if (event.connectionId === device.clientConnectionId) {
         return true;
-    } else if (event.deviceId === device.username) {
+    } else if (event.deviceId === device.userId) {
         return true;
     }
     return false;

@@ -5206,7 +5206,7 @@ export function transaction(events: BotAction[]): TransactionAction {
 export function action(
     eventName: string,
     botIds: string[] | null = null,
-    userId: string = null,
+    userId: string | null = null,
     arg?: any,
     sortIds: boolean = true
 ): ShoutAction {

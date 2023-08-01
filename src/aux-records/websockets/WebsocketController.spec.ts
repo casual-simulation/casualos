@@ -1,9 +1,9 @@
 import {
     branchNamespace,
     ApiaryCausalRepoServer,
-    deviceInfo,
     isEventForDevice,
-} from './ApiaryCausalRepoServer';
+    connectionInfo,
+} from './WebsocketController';
 import {
     ADD_ATOMS,
     atom,
@@ -21,23 +21,10 @@ import {
     WATCH_BRANCH_DEVICES,
     MemoryUpdatesStore,
 } from '@casual-simulation/causal-trees/core2';
-import { MemoryApiaryConnectionStore } from './MemoryApiaryConnectionStore';
-import { MemoryApiaryAtomStore } from './MemoryApiaryAtomStore';
-import { DeviceConnection } from './ApiaryConnectionStore';
-import { MemoryApiaryMessenger } from './MemoryApiaryMessenger';
-import {
-    device,
-    deviceError,
-    DeviceInfo,
-    deviceResult,
-    DEVICE_ID_CLAIM,
-    remote,
-    remoteError,
-    remoteResult,
-    SESSION_ID_CLAIM,
-    USERNAME_CLAIM,
-    RATE_LIMIT_EXCEEDED,
-} from '@casual-simulation/causal-trees';
+import { MemoryWebsocketConnectionStore } from './MemoryWebsocketConnectionStore';
+import { DeviceConnection } from './WebsocketConnectionStore';
+import { MemoryWebsocketMessenger } from './MemoryWebsocketMessenger';
+import { RATE_LIMIT_EXCEEDED } from '@casual-simulation/causal-trees';
 import {
     action,
     botAdded,
@@ -57,11 +44,19 @@ import {
     createYjsPartition,
     YjsPartitionImpl,
 } from '@casual-simulation/aux-common/partitions/YjsPartition';
-import { DEVICE_COUNT } from './ApiaryMessenger';
+import { CONNECTION_COUNT } from './WebsocketMessenger';
 import { ADD_UPDATES, UPDATES_RECEIVED, SYNC_TIME } from './ExtraEvents';
 import { encodeStateAsUpdate } from 'yjs';
 import { fromByteArray } from 'base64-js';
 import { getStateFromUpdates } from '@casual-simulation/aux-common/partitions/PartitionUtils';
+import {
+    device,
+    deviceError,
+    deviceResult,
+    remote,
+    remoteError,
+    remoteResult,
+} from './Events';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -70,39 +65,37 @@ console.log = jest.fn();
 console.error = jest.fn();
 
 const device1Info: DeviceConnection = {
-    username: 'device1',
-    connectionId: 'device1',
-    sessionId: 'device1',
+    userId: 'device1',
+    serverConnectionId: 'device1',
+    clientConnectionId: 'client-device1',
     token: 'device1',
 };
 const device2Info: DeviceConnection = {
-    username: 'device2',
-    connectionId: 'device2',
-    sessionId: 'device2',
+    userId: 'device2',
+    serverConnectionId: 'device2',
+    clientConnectionId: 'client-device2',
     token: 'device2',
 };
 const device3Info: DeviceConnection = {
-    username: 'device3',
-    connectionId: 'device3',
-    sessionId: 'device3',
+    userId: 'device3',
+    serverConnectionId: 'device3',
+    clientConnectionId: 'client-device3',
     token: 'device3',
 };
 const device4Info: DeviceConnection = {
-    username: 'device4',
-    connectionId: 'device4',
-    sessionId: 'device4',
+    userId: 'device4',
+    serverConnectionId: 'device4',
+    clientConnectionId: 'client-device4',
     token: 'device4',
 };
 
 describe('ApiaryCausalRepoServer', () => {
     let server: ApiaryCausalRepoServer;
-    let atomStore: MemoryApiaryAtomStore;
-    let connectionStore: MemoryApiaryConnectionStore;
-    let messenger: MemoryApiaryMessenger;
+    let connectionStore: MemoryWebsocketConnectionStore;
+    let messenger: MemoryWebsocketMessenger;
     let updateStore: MemoryUpdatesStore;
 
     beforeEach(() => {
-        atomStore.reset();
         connectionStore.reset();
         messenger.reset();
         updateStore.reset();
@@ -111,13 +104,11 @@ describe('ApiaryCausalRepoServer', () => {
     // We initialize the server once for all the tests
     // because it should only rely on the stores for cross-request data.
     beforeAll(() => {
-        atomStore = new MemoryApiaryAtomStore();
-        connectionStore = new MemoryApiaryConnectionStore();
-        messenger = new MemoryApiaryMessenger();
+        connectionStore = new MemoryWebsocketConnectionStore();
+        messenger = new MemoryWebsocketMessenger();
         updateStore = new MemoryUpdatesStore();
         server = new ApiaryCausalRepoServer(
             connectionStore,
-            atomStore,
             messenger,
             updateStore
         );
@@ -128,7 +119,7 @@ describe('ApiaryCausalRepoServer', () => {
             await server.connect(device1Info);
 
             const connection = await connectionStore.getConnection(
-                device1Info.connectionId
+                device1Info.serverConnectionId
             );
             expect(connection).toEqual(device1Info);
         });
@@ -146,65 +137,31 @@ describe('ApiaryCausalRepoServer', () => {
             expect(connection).toBeUndefined();
         });
 
-        it('should delete temporary atoms when all devices have left the branch', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
-
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-            const a3 = atom(atomId('a', 3), a2, {});
-            const a4 = atom(atomId('a', 4), a3, {});
-
-            await server.watchBranch(device1Info.connectionId, {
-                branch: 'testBranch',
-                temporary: true,
-            });
-
-            await server.watchBranch(device2Info.connectionId, {
-                branch: 'testBranch',
-                temporary: true,
-            });
-
-            await server.addAtoms(device2Info.connectionId, {
-                branch: 'testBranch',
-                atoms: [a1, a2, a3, a4],
-            });
-
-            await server.unwatchBranch(device1Info.connectionId, 'testBranch');
-
-            expect(
-                await atomStore.loadAtoms(branchNamespace('testBranch'))
-            ).toEqual([a1, a2, a3, a4]);
-
-            await server.disconnect(device2Info.connectionId);
-
-            expect(
-                await atomStore.loadAtoms(branchNamespace('testBranch'))
-            ).toEqual([]);
-        });
-
         it('should delete temporary updates when all devices have left the branch', async () => {
             await server.connect(device1Info);
             await server.connect(device2Info);
 
-            await server.watchBranch(device1Info.connectionId, {
+            await server.watchBranch(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 protocol: 'updates',
                 temporary: true,
             });
 
-            await server.watchBranch(device2Info.connectionId, {
+            await server.watchBranch(device2Info.serverConnectionId, {
                 branch: 'testBranch',
                 protocol: 'updates',
                 temporary: true,
             });
 
-            await server.addUpdates(device2Info.connectionId, {
+            await server.addUpdates(device2Info.serverConnectionId, {
                 branch: 'testBranch',
                 updates: ['111', '222'],
             });
 
-            await server.unwatchBranch(device1Info.connectionId, 'testBranch');
+            await server.unwatchBranch(
+                device1Info.serverConnectionId,
+                'testBranch'
+            );
 
             expect(
                 await updateStore.getUpdates(branchNamespace('testBranch'))
@@ -213,7 +170,7 @@ describe('ApiaryCausalRepoServer', () => {
                 timestamps: [expect.any(Number), expect.any(Number)],
             });
 
-            await server.disconnect(device2Info.connectionId);
+            await server.disconnect(device2Info.serverConnectionId);
 
             expect(
                 await updateStore.getUpdates(branchNamespace('testBranch'))
@@ -225,360 +182,6 @@ describe('ApiaryCausalRepoServer', () => {
     });
 
     describe(WATCH_BRANCH, () => {
-        it('should load the given branch and send the current atoms', async () => {
-            await server.connect(device1Info);
-
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-            await atomStore.saveAtoms(branchNamespace('testBranch'), [a1, a2]);
-
-            await server.watchBranch(device1Info.connectionId, {
-                branch: 'testBranch',
-            });
-
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [a1, a2],
-                        initial: true, // should include whether this event includes the initial data.
-                    },
-                },
-            ]);
-        });
-
-        it('should create a new orphan branch if the branch name does not exist', async () => {
-            await server.connect(device1Info);
-
-            await server.watchBranch(device1Info.connectionId, {
-                branch: 'doesNotExist',
-            });
-
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'doesNotExist',
-                        atoms: [],
-                        initial: true, // should include whether this event includes the initial data.
-                    },
-                },
-            ]);
-        });
-
-        it('should be able to accept multiple requests to watch a branch at a time', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
-
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-            await atomStore.saveAtoms(branchNamespace('testBranch'), [a1, a2]);
-
-            const watchBranch1 = server.watchBranch(device1Info.connectionId, {
-                branch: 'testBranch',
-            });
-            const watchBranch2 = server.watchBranch(device2Info.connectionId, {
-                branch: 'testBranch',
-            });
-
-            await Promise.all([watchBranch1, watchBranch2]);
-
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [a1, a2],
-                        initial: true,
-                    },
-                },
-            ]);
-            expect(messenger.getMessages(device2Info.connectionId)).toEqual([
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [a1, a2],
-                        initial: true,
-                    },
-                },
-            ]);
-        });
-
-        it('should be able to load, unload, and reload the branch', async () => {
-            await server.connect(device1Info);
-
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-            await atomStore.saveAtoms(branchNamespace('testBranch'), [a1, a2]);
-
-            await server.watchBranch(device1Info.connectionId, {
-                branch: 'testBranch',
-            });
-
-            await server.disconnect(device1Info.connectionId);
-
-            await server.connect(device1Info);
-
-            await server.watchBranch(device1Info.connectionId, {
-                branch: 'testBranch',
-            });
-
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [a1, a2],
-                        initial: true,
-                    },
-                },
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [a1, a2],
-                        initial: true,
-                    },
-                },
-            ]);
-        });
-
-        describe('temp', () => {
-            it('should load the branch like normal if it is temporary', async () => {
-                await server.connect(device1Info);
-
-                const a1 = atom(atomId('a', 1), null, {});
-                const a2 = atom(atomId('a', 2), a1, {});
-                await atomStore.saveAtoms(branchNamespace('testBranch'), [
-                    a1,
-                    a2,
-                ]);
-
-                await server.watchBranch(device1Info.connectionId, {
-                    branch: 'testBranch',
-                    temporary: true,
-                });
-
-                expect(messenger.getMessages(device1Info.connectionId)).toEqual(
-                    [
-                        {
-                            name: ADD_ATOMS,
-                            data: {
-                                branch: 'testBranch',
-                                atoms: [a1, a2],
-                                initial: true,
-                            },
-                        },
-                    ]
-                );
-            });
-            it('should load the atoms that were added to the branch by another device', async () => {
-                await server.connect(device1Info);
-                await server.connect(device2Info);
-                await server.connect(device3Info);
-
-                const a1 = atom(atomId('a', 1), null, {});
-                const a2 = atom(atomId('a', 2), a1, {});
-
-                await server.watchBranch(device1Info.connectionId, {
-                    branch: 'testBranch',
-                    temporary: true,
-                });
-
-                await server.addAtoms(device2Info.connectionId, {
-                    branch: 'testBranch',
-                    atoms: [a1, a2],
-                });
-
-                await server.watchBranch(device3Info.connectionId, {
-                    branch: 'testBranch',
-                    temporary: true,
-                });
-
-                expect(messenger.getMessages(device1Info.connectionId)).toEqual(
-                    [
-                        {
-                            name: ADD_ATOMS,
-                            data: {
-                                branch: 'testBranch',
-                                atoms: [],
-                                initial: true,
-                            },
-                        },
-                        {
-                            name: ADD_ATOMS,
-                            data: {
-                                branch: 'testBranch',
-                                atoms: [a1, a2],
-                            },
-                        },
-                    ]
-                );
-
-                expect(messenger.getMessages(device2Info.connectionId)).toEqual(
-                    [
-                        {
-                            name: ATOMS_RECEIVED,
-                            data: {
-                                branch: 'testBranch',
-                                hashes: [a1.hash, a2.hash],
-                            },
-                        },
-                    ]
-                );
-
-                expect(messenger.getMessages(device3Info.connectionId)).toEqual(
-                    [
-                        {
-                            name: ADD_ATOMS,
-                            data: {
-                                branch: 'testBranch',
-                                atoms: [a1, a2],
-                                initial: true,
-                            },
-                        },
-                    ]
-                );
-            });
-
-            it('should delete the atoms once all devices have disconnected', async () => {
-                await server.connect(device1Info);
-                await server.connect(device2Info);
-                await server.connect(device3Info);
-
-                const a1 = atom(atomId('a', 1), null, {});
-                const a2 = atom(atomId('a', 2), a1, {});
-
-                await server.watchBranch(device1Info.connectionId, {
-                    branch: 'testBranch',
-                    temporary: true,
-                });
-
-                await server.addAtoms(device2Info.connectionId, {
-                    branch: 'testBranch',
-                    atoms: [a1, a2],
-                });
-
-                await server.watchBranch(device3Info.connectionId, {
-                    branch: 'testBranch',
-                    temporary: true,
-                });
-
-                let atoms = await atomStore.loadAtoms(
-                    branchNamespace('testBranch')
-                );
-                expect(atoms).toEqual([a1, a2]);
-
-                await server.disconnect(device1Info.connectionId);
-
-                atoms = await atomStore.loadAtoms(
-                    branchNamespace('testBranch')
-                );
-                expect(atoms).toEqual([a1, a2]);
-
-                await server.disconnect(device2Info.connectionId);
-
-                atoms = await atomStore.loadAtoms(
-                    branchNamespace('testBranch')
-                );
-                expect(atoms).toEqual([a1, a2]);
-
-                await server.disconnect(device3Info.connectionId);
-
-                atoms = await atomStore.loadAtoms(
-                    branchNamespace('testBranch')
-                );
-                expect(atoms).toEqual([]);
-            });
-
-            it('should not send a add_atoms event to the device that added the atoms', async () => {
-                await server.connect(device1Info);
-
-                const a1 = atom(atomId('a', 1), null, {});
-                const a2 = atom(atomId('a', 2), a1, {});
-
-                await server.watchBranch(device1Info.connectionId, {
-                    branch: 'testBranch',
-                });
-
-                await server.addAtoms(device1Info.connectionId, {
-                    branch: 'testBranch',
-                    atoms: [a1, a2],
-                });
-
-                expect(messenger.getMessages(device1Info.connectionId)).toEqual(
-                    [
-                        {
-                            name: ADD_ATOMS,
-                            data: {
-                                branch: 'testBranch',
-                                atoms: [],
-                                initial: true,
-                            },
-                        },
-                        {
-                            name: ATOMS_RECEIVED,
-                            data: {
-                                branch: 'testBranch',
-                                hashes: [a1.hash, a2.hash],
-                            },
-                        },
-                    ]
-                );
-            });
-
-            it('should be able to load a temporary branch immediately after loading a persistent branch', async () => {
-                await server.connect(device1Info);
-
-                const a1 = atom(atomId('a', 1), null, {});
-                const a2 = atom(atomId('a', 2), a1, {});
-
-                await server.watchBranch(device1Info.connectionId, {
-                    branch: 'persistentBranch',
-                });
-
-                await server.watchBranch(device1Info.connectionId, {
-                    branch: 'tempBranch',
-                    temporary: true,
-                });
-
-                await server.addAtoms(device1Info.connectionId, {
-                    branch: 'tempBranch',
-                    atoms: [a1, a2],
-                });
-
-                expect(messenger.getMessages(device1Info.connectionId)).toEqual(
-                    [
-                        {
-                            name: ADD_ATOMS,
-                            data: {
-                                branch: 'persistentBranch',
-                                atoms: [],
-                                initial: true,
-                            },
-                        },
-                        {
-                            name: ADD_ATOMS,
-                            data: {
-                                branch: 'tempBranch',
-                                atoms: [],
-                                initial: true,
-                            },
-                        },
-                        {
-                            name: ATOMS_RECEIVED,
-                            data: {
-                                branch: 'tempBranch',
-                                hashes: [a1.hash, a2.hash],
-                            },
-                        },
-                    ]
-                );
-            });
-        });
-
         describe('updates', () => {
             it('should load the given branch and send the current updates', async () => {
                 await server.connect(device1Info);
@@ -588,45 +191,45 @@ describe('ApiaryCausalRepoServer', () => {
                     '456',
                 ]);
 
-                await server.watchBranch(device1Info.connectionId, {
+                await server.watchBranch(device1Info.serverConnectionId, {
                     branch: 'testBranch',
                     protocol: 'updates',
                 });
 
-                expect(messenger.getMessages(device1Info.connectionId)).toEqual(
-                    [
-                        {
-                            name: ADD_UPDATES,
-                            data: {
-                                branch: 'testBranch',
-                                updates: ['123', '456'],
-                                initial: true, // should include whether this event includes the initial data.
-                            },
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        name: ADD_UPDATES,
+                        data: {
+                            branch: 'testBranch',
+                            updates: ['123', '456'],
+                            initial: true, // should include whether this event includes the initial data.
                         },
-                    ]
-                );
+                    },
+                ]);
             });
 
             it('should create a new orphan branch if the branch name does not exist', async () => {
                 await server.connect(device1Info);
 
-                await server.watchBranch(device1Info.connectionId, {
+                await server.watchBranch(device1Info.serverConnectionId, {
                     branch: 'doesNotExist',
                     protocol: 'updates',
                 });
 
-                expect(messenger.getMessages(device1Info.connectionId)).toEqual(
-                    [
-                        {
-                            name: ADD_UPDATES,
-                            data: {
-                                branch: 'doesNotExist',
-                                updates: [] as string[],
-                                initial: true,
-                            },
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        name: ADD_UPDATES,
+                        data: {
+                            branch: 'doesNotExist',
+                            updates: [] as string[],
+                            initial: true,
                         },
-                    ]
-                );
+                    },
+                ]);
             });
 
             describe('temp', () => {
@@ -638,14 +241,14 @@ describe('ApiaryCausalRepoServer', () => {
                         ['111', '222']
                     );
 
-                    await server.watchBranch(device1Info.connectionId, {
+                    await server.watchBranch(device1Info.serverConnectionId, {
                         branch: 'testBranch',
                         temporary: true,
                         protocol: 'updates',
                     });
 
                     expect(
-                        messenger.getMessages(device1Info.connectionId)
+                        messenger.getMessages(device1Info.serverConnectionId)
                     ).toEqual([
                         {
                             name: ADD_UPDATES,
@@ -663,25 +266,25 @@ describe('ApiaryCausalRepoServer', () => {
                     await server.connect(device2Info);
                     await server.connect(device3Info);
 
-                    await server.watchBranch(device1Info.connectionId, {
+                    await server.watchBranch(device1Info.serverConnectionId, {
                         branch: 'testBranch',
                         protocol: 'updates',
                         temporary: true,
                     });
 
-                    await server.addUpdates(device1Info.connectionId, {
+                    await server.addUpdates(device1Info.serverConnectionId, {
                         branch: 'testBranch',
                         updates: ['abc', 'def'],
                     });
 
-                    await server.watchBranch(device3Info.connectionId, {
+                    await server.watchBranch(device3Info.serverConnectionId, {
                         branch: 'testBranch',
                         protocol: 'updates',
                         temporary: true,
                     });
 
                     expect(
-                        messenger.getMessages(device3Info.connectionId)
+                        messenger.getMessages(device3Info.serverConnectionId)
                     ).toEqual([
                         {
                             name: ADD_UPDATES,
@@ -697,283 +300,76 @@ describe('ApiaryCausalRepoServer', () => {
         });
     });
 
-    // describe(GET_BRANCH, () => {
-    //     it('should load the given branch and send the current atoms', async () => {
-    //         server.init();
-
-    //         const device = new MemoryConnection(device1Info);
-    //         const getBranch = new Subject<string>();
-    //         device.events.set(GET_BRANCH, getBranch);
-
-    //         connections.connection.next(device);
-
-    //         const a1 = atom(atomId('a', 1), null, {});
-    //         const a2 = atom(atomId('a', 2), a1, {});
-
-    //         const idx = index(a1, a2);
-    //         const c = commit('message', new Date(2019, 9, 4), idx, null);
-    //         const b = branch('testBranch', c);
-
-    //         await storeData(store, 'testBranch', idx.data.hash, [
-    //             a1,
-    //             a2,
-    //             idx,
-    //             c,
-    //         ]);
-    //         await updateBranch(store, b);
-
-    //         getBranch.next('testBranch');
-
-    //         await waitAsync();
-
-    //         expect(device.messages).toEqual([
-    //             {
-    //                 name: ADD_ATOMS,
-    //                 data: {
-    //                     branch: 'testBranch',
-    //                     atoms: [a1, a2],
-    //                 },
-    //             },
-    //         ]);
-    //     });
-
-    //     it('should create a new orphan branch if the branch name does not exist', async () => {
-    //         server.init();
-
-    //         const device = new MemoryConnection(device1Info);
-    //         const getBranch = new Subject<string>();
-    //         device.events.set(GET_BRANCH, getBranch);
-
-    //         connections.connection.next(device);
-
-    //         await waitAsync();
-
-    //         getBranch.next('testBranch');
-
-    //         await waitAsync();
-
-    //         expect(device.messages).toEqual([
-    //             {
-    //                 name: ADD_ATOMS,
-    //                 data: {
-    //                     branch: 'testBranch',
-    //                     atoms: [],
-    //                 },
-    //             },
-    //         ]);
-    //     });
-
-    //     it('should not send additional atoms that were added after the GET_BRANCH call', async () => {
-    //         server.init();
-
-    //         const device = new MemoryConnection(device1Info);
-    //         const device2 = new MemoryConnection(device2Info);
-    //         const getBranch = new Subject<string>();
-    //         const addAtoms = new Subject<AddAtomsEvent>();
-    //         device.events.set(GET_BRANCH, getBranch);
-    //         device2.events.set(ADD_ATOMS, addAtoms);
-
-    //         connections.connection.next(device);
-    //         connections.connection.next(device2);
-
-    //         const a1 = atom(atomId('a', 1), null, {});
-    //         const a2 = atom(atomId('a', 2), a1, {});
-    //         const b1 = atom(atomId('b', 1), null, {});
-
-    //         const idx = index(a1, a2);
-    //         const c = commit('message', new Date(2019, 9, 4), idx, null);
-    //         const b = branch('testBranch', c);
-
-    //         await storeData(store, 'testBranch', idx.data.hash, [
-    //             a1,
-    //             a2,
-    //             idx,
-    //             c,
-    //         ]);
-    //         await updateBranch(store, b);
-
-    //         getBranch.next('testBranch');
-
-    //         await waitAsync();
-
-    //         addAtoms.next({
-    //             branch: 'testBranch',
-    //             atoms: [b1],
-    //         });
-
-    //         await waitAsync();
-
-    //         expect(device.messages).toEqual([
-    //             {
-    //                 name: ADD_ATOMS,
-    //                 data: {
-    //                     branch: 'testBranch',
-    //                     atoms: [a1, a2],
-    //                 },
-    //             },
-    //         ]);
-    //     });
-    // });
-
     describe(UNWATCH_BRANCH, () => {
-        it('should stop sending new atoms to devices that have left a branch', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
-
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-            const a3 = atom(atomId('a', 3), a2, {});
-            const a4 = atom(atomId('a', 4), a3, {});
-
-            await server.watchBranch(device1Info.connectionId, {
-                branch: 'testBranch',
-            });
-
-            await server.addAtoms(device2Info.connectionId, {
-                branch: 'testBranch',
-                atoms: [a1, a2],
-            });
-
-            await server.unwatchBranch(device1Info.connectionId, 'testBranch');
-
-            await server.addAtoms(device2Info.connectionId, {
-                branch: 'testBranch',
-                atoms: [a3, a4],
-            });
-
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [],
-                        initial: true,
-                    },
-                },
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [a1, a2],
-                    },
-                },
-            ]);
-        });
-
-        it('should do nothing if the branch is already unloaded', async () => {
-            await server.connect(device1Info);
-
-            await server.unwatchBranch(device1Info.connectionId, 'testBranch');
-
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([]);
-        });
-
-        it('should delete temporary atoms when all devices have left the branch', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
-
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-            const a3 = atom(atomId('a', 3), a2, {});
-            const a4 = atom(atomId('a', 4), a3, {});
-
-            await server.watchBranch(device1Info.connectionId, {
-                branch: 'testBranch',
-                temporary: true,
-            });
-
-            await server.watchBranch(device2Info.connectionId, {
-                branch: 'testBranch',
-                temporary: true,
-            });
-
-            await server.addAtoms(device2Info.connectionId, {
-                branch: 'testBranch',
-                atoms: [a1, a2, a3, a4],
-            });
-
-            await server.unwatchBranch(device1Info.connectionId, 'testBranch');
-
-            expect(
-                await atomStore.loadAtoms(branchNamespace('testBranch'))
-            ).toEqual([a1, a2, a3, a4]);
-
-            await server.unwatchBranch(device2Info.connectionId, 'testBranch');
-
-            expect(
-                await atomStore.loadAtoms(branchNamespace('testBranch'))
-            ).toEqual([]);
-        });
-
         describe('updates', () => {
             it('should stop sending new atoms to devices that have left a branch', async () => {
                 await server.connect(device1Info);
                 await server.connect(device2Info);
 
-                await server.watchBranch(device1Info.connectionId, {
+                await server.watchBranch(device1Info.serverConnectionId, {
                     branch: 'testBranch',
                     protocol: 'updates',
                 });
 
-                await server.addUpdates(device2Info.connectionId, {
+                await server.addUpdates(device2Info.serverConnectionId, {
                     branch: 'testBranch',
                     updates: ['111', '222'],
                 });
 
                 await server.unwatchBranch(
-                    device1Info.connectionId,
+                    device1Info.serverConnectionId,
                     'testBranch'
                 );
 
-                await server.addUpdates(device2Info.connectionId, {
+                await server.addUpdates(device2Info.serverConnectionId, {
                     branch: 'testBranch',
                     updates: ['333', '444'],
                 });
 
-                expect(messenger.getMessages(device1Info.connectionId)).toEqual(
-                    [
-                        {
-                            name: ADD_UPDATES,
-                            data: {
-                                branch: 'testBranch',
-                                updates: [],
-                                initial: true,
-                            },
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        name: ADD_UPDATES,
+                        data: {
+                            branch: 'testBranch',
+                            updates: [],
+                            initial: true,
                         },
-                        {
-                            name: ADD_UPDATES,
-                            data: {
-                                branch: 'testBranch',
-                                updates: ['111', '222'],
-                            },
+                    },
+                    {
+                        name: ADD_UPDATES,
+                        data: {
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
                         },
-                    ]
-                );
+                    },
+                ]);
             });
 
             it('should delete temporary updates when all devices have left the branch', async () => {
                 await server.connect(device1Info);
                 await server.connect(device2Info);
 
-                await server.watchBranch(device1Info.connectionId, {
+                await server.watchBranch(device1Info.serverConnectionId, {
                     branch: 'testBranch',
                     temporary: true,
                     protocol: 'updates',
                 });
 
-                await server.watchBranch(device2Info.connectionId, {
+                await server.watchBranch(device2Info.serverConnectionId, {
                     branch: 'testBranch',
                     temporary: true,
                     protocol: 'updates',
                 });
 
-                await server.addUpdates(device2Info.connectionId, {
+                await server.addUpdates(device2Info.serverConnectionId, {
                     branch: 'testBranch',
                     updates: ['111', '222'],
                 });
 
                 await server.unwatchBranch(
-                    device1Info.connectionId,
+                    device1Info.serverConnectionId,
                     'testBranch'
                 );
 
@@ -985,7 +381,7 @@ describe('ApiaryCausalRepoServer', () => {
                 });
 
                 await server.unwatchBranch(
-                    device2Info.connectionId,
+                    device2Info.serverConnectionId,
                     'testBranch'
                 );
 
@@ -1016,15 +412,20 @@ describe('ApiaryCausalRepoServer', () => {
             await server.connect(device1Info);
 
             mockedNow.mockReturnValue(100);
-            await server.addUpdates(device1Info.connectionId, {
+            await server.addUpdates(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 updates: ['111', '222'],
                 updateId: 0,
             });
 
-            await server.getUpdates(device1Info.connectionId, 'testBranch');
+            await server.getUpdates(
+                device1Info.serverConnectionId,
+                'testBranch'
+            );
 
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([
                 // Server should send a atoms received event
                 // back indicating which atoms it processed
                 {
@@ -1050,21 +451,26 @@ describe('ApiaryCausalRepoServer', () => {
             await server.connect(device1Info);
 
             mockedNow.mockReturnValue(100);
-            await server.addUpdates(device1Info.connectionId, {
+            await server.addUpdates(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 updates: ['111', '222'],
                 updateId: 0,
             });
 
-            await server.getUpdates(device1Info.connectionId, 'testBranch');
+            await server.getUpdates(
+                device1Info.serverConnectionId,
+                'testBranch'
+            );
 
-            await server.addUpdates(device1Info.connectionId, {
+            await server.addUpdates(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 updates: ['333'],
                 updateId: 1,
             });
 
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([
                 // Server should send a atoms received event
                 // back indicating which atoms it processed
                 {
@@ -1097,864 +503,11 @@ describe('ApiaryCausalRepoServer', () => {
         });
     });
 
-    describe(ADD_ATOMS, () => {
-        it('should add the given atoms to the given branch', async () => {
-            await server.connect(device1Info);
-
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-            const a3 = atom(atomId('a', 3), a2, {});
-
-            await server.addAtoms(device1Info.connectionId, {
-                branch: 'testBranch',
-                atoms: [a3],
-            });
-
-            await atomStore.saveAtoms(branchNamespace('testBranch'), [a1, a2]);
-
-            await server.watchBranch(device1Info.connectionId, {
-                branch: 'testBranch',
-            });
-
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
-                // Server should send a atoms received event
-                // back indicating which atoms it processed
-                {
-                    name: ATOMS_RECEIVED,
-                    data: {
-                        branch: 'testBranch',
-                        hashes: [a3.hash],
-                    },
-                },
-
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [a1, a2, a3],
-                        initial: true,
-                    },
-                },
-            ]);
-        });
-
-        // it('should not add atoms that violate cardinality', async () => {
-        //     server.init();
-
-        //     const device = new MemoryConnection(device1Info);
-        //     const addAtoms = new Subject<AddAtomsEvent>();
-        //     device.events.set(ADD_ATOMS, addAtoms);
-
-        //     const joinBranch = new Subject<WatchBranchEvent>();
-        //     device.events.set(WATCH_BRANCH, joinBranch);
-
-        //     connections.connection.next(device);
-
-        //     const a1 = atom(
-        //         atomId('a', 1, undefined, { group: 'abc', number: 1 }),
-        //         null,
-        //         {}
-        //     );
-        //     const a2 = atom(
-        //         atomId('a', 2, undefined, { group: 'abc', number: 1 }),
-        //         null,
-        //         {}
-        //     );
-
-        //     const idx = index();
-        //     const c = commit('message', new Date(2019, 9, 4), idx, null);
-        //     const b = branch('testBranch', c);
-
-        //     await storeData(store, 'testBranch', idx.data.hash, [idx, c]);
-        //     await updateBranch(store, b);
-
-        //     addAtoms.next({
-        //         branch: 'testBranch',
-        //         atoms: [a1, a2],
-        //     });
-
-        //     await waitAsync();
-
-        //     joinBranch.next({
-        //         branch: 'testBranch',
-        //     });
-
-        //     await waitAsync();
-
-        //     expect(device.messages).toEqual([
-        //         // Server should send a atoms received event
-        //         // back indicating which atoms it processed
-        //         {
-        //             name: ATOMS_RECEIVED,
-        //             data: {
-        //                 branch: 'testBranch',
-        //                 hashes: [a1.hash, a2.hash],
-        //             },
-        //         },
-
-        //         {
-        //             name: ADD_ATOMS,
-        //             data: {
-        //                 branch: 'testBranch',
-        //                 atoms: [a1],
-        //             },
-        //         },
-        //     ]);
-        // });
-
-        it('should notify all other devices connected to the branch', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
-            await server.connect(device3Info);
-
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-            const a3 = atom(atomId('a', 3), a2, {});
-
-            await atomStore.saveAtoms(branchNamespace('testBranch'), [a1, a2]);
-
-            await server.watchBranch(device2Info.connectionId, {
-                branch: 'testBranch',
-            });
-
-            await server.watchBranch(device3Info.connectionId, {
-                branch: 'testBranch',
-            });
-
-            await server.addAtoms(device1Info.connectionId, {
-                branch: 'testBranch',
-                atoms: [a3],
-            });
-
-            expect(messenger.getMessages(device2Info.connectionId)).toEqual([
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [a1, a2],
-                        initial: true,
-                    },
-                },
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [a3],
-                    },
-                },
-            ]);
-
-            expect(messenger.getMessages(device3Info.connectionId)).toEqual([
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [a1, a2],
-                        initial: true,
-                    },
-                },
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [a3],
-                    },
-                },
-            ]);
-        });
-
-        it('should not notify the device that sent the new atoms', async () => {
-            await server.connect(device1Info);
-
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-            const a3 = atom(atomId('a', 3), a2, {});
-            await atomStore.saveAtoms(branchNamespace('testBranch'), [a1, a2]);
-
-            await server.watchBranch(device1Info.connectionId, {
-                branch: 'testBranch',
-            });
-
-            await server.addAtoms(device1Info.connectionId, {
-                branch: 'testBranch',
-                atoms: [a3],
-            });
-
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [a1, a2],
-                        initial: true,
-                    },
-                },
-
-                // Server should send a atoms received event
-                // back indicating which atoms it processed
-                {
-                    name: ATOMS_RECEIVED,
-                    data: {
-                        branch: 'testBranch',
-                        hashes: [a3.hash],
-                    },
-                },
-            ]);
-        });
-
-        it('should immediately store the added atoms', async () => {
-            await server.connect(device1Info);
-
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-            const a3 = atom(atomId('a', 3), a2, {});
-
-            await server.addAtoms(device1Info.connectionId, {
-                branch: 'testBranch',
-                atoms: [a3],
-            });
-
-            const atoms = await atomStore.loadAtoms(
-                branchNamespace('testBranch')
-            );
-
-            expect(atoms).toEqual([a3]);
-        });
-
-        it('should remove the given atoms from the given branch', async () => {
-            await server.connect(device1Info);
-
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-            const a3 = atom(atomId('a', 3), a2, {});
-
-            await atomStore.saveAtoms(branchNamespace('testBranch'), [
-                a1,
-                a2,
-                a3,
-            ]);
-
-            await server.addAtoms(device1Info.connectionId, {
-                branch: 'testBranch',
-                removedAtoms: [a3.hash],
-            });
-
-            const atoms = await atomStore.loadAtoms(
-                branchNamespace('testBranch')
-            );
-
-            expect(atoms).toEqual([a1, a2]);
-
-            await server.watchBranch(device1Info.connectionId, {
-                branch: 'testBranch',
-            });
-
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
-                // Server should send a atoms received event
-                // back indicating which atoms it processed
-                {
-                    name: ATOMS_RECEIVED,
-                    data: {
-                        branch: 'testBranch',
-                        hashes: [a3.hash],
-                    },
-                },
-
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [a1, a2],
-                        initial: true,
-                    },
-                },
-            ]);
-        });
-
-        // it('should not remove the given atoms if they are part of a cardinality tree', async () => {
-        //     server.init();
-
-        //     const device = new MemoryConnection(device1Info);
-        //     const removeAtoms = new Subject<AddAtomsEvent>();
-        //     device.events.set(ADD_ATOMS, removeAtoms);
-
-        //     const joinBranch = new Subject<WatchBranchEvent>();
-        //     device.events.set(WATCH_BRANCH, joinBranch);
-
-        //     connections.connection.next(device);
-
-        //     const a1 = atom(
-        //         atomId('a', 1, undefined, { group: 'abc', number: 1 }),
-        //         null,
-        //         {}
-        //     );
-        //     const a2 = atom(atomId('a', 2), a1, {});
-        //     const a3 = atom(atomId('a', 3), a2, {});
-
-        //     const idx = index(a1, a2, a3);
-        //     const c = commit('message', new Date(2019, 9, 4), idx, null);
-        //     const b = branch('testBranch', c);
-
-        //     await storeData(store, 'testBranch', idx.data.hash, [
-        //         a1,
-        //         a2,
-        //         a3,
-        //         idx,
-        //         c,
-        //     ]);
-        //     await updateBranch(store, b);
-
-        //     removeAtoms.next({
-        //         branch: 'testBranch',
-        //         removedAtoms: [a3.hash],
-        //     });
-
-        //     await waitAsync();
-
-        //     joinBranch.next({
-        //         branch: 'testBranch',
-        //     });
-
-        //     await waitAsync();
-
-        //     expect(device.messages).toEqual([
-        //         // Server should send a atoms received event
-        //         // back indicating which atoms it processed
-        //         {
-        //             name: ATOMS_RECEIVED,
-        //             data: {
-        //                 branch: 'testBranch',
-        //                 hashes: [a3.hash],
-        //             },
-        //         },
-
-        //         {
-        //             name: ADD_ATOMS,
-        //             data: {
-        //                 branch: 'testBranch',
-        //                 atoms: [a1, a2, a3],
-        //             },
-        //         },
-        //     ]);
-        // });
-
-        it('should notify all other devices connected to the branch', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
-            await server.connect(device3Info);
-
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-            const a3 = atom(atomId('a', 3), a2, {});
-
-            await atomStore.saveAtoms(branchNamespace('testBranch'), [
-                a1,
-                a2,
-                a3,
-            ]);
-
-            await server.watchBranch(device2Info.connectionId, {
-                branch: 'testBranch',
-            });
-
-            await server.watchBranch(device3Info.connectionId, {
-                branch: 'testBranch',
-            });
-
-            await server.addAtoms(device1Info.connectionId, {
-                branch: 'testBranch',
-                removedAtoms: [a3.hash],
-            });
-
-            expect(messenger.getMessages(device2Info.connectionId)).toEqual([
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [a1, a2, a3],
-                        initial: true,
-                    },
-                },
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        removedAtoms: [a3.hash],
-                    },
-                },
-            ]);
-
-            expect(messenger.getMessages(device3Info.connectionId)).toEqual([
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [a1, a2, a3],
-                        initial: true,
-                    },
-                },
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        removedAtoms: [a3.hash],
-                    },
-                },
-            ]);
-        });
-
-        it('should not notify the device that removed the atoms', async () => {
-            await server.connect(device1Info);
-
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-            const a3 = atom(atomId('a', 3), a2, {});
-
-            await atomStore.saveAtoms(branchNamespace('testBranch'), [
-                a1,
-                a2,
-                a3,
-            ]);
-
-            await server.watchBranch(device1Info.connectionId, {
-                branch: 'testBranch',
-            });
-
-            await server.addAtoms(device1Info.connectionId, {
-                branch: 'testBranch',
-                removedAtoms: [a3.hash],
-            });
-
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [a1, a2, a3],
-                        initial: true,
-                    },
-                },
-
-                // Server should send a atoms received event
-                // back indicating which atoms it processed
-                {
-                    name: ATOMS_RECEIVED,
-                    data: {
-                        branch: 'testBranch',
-                        hashes: [a3.hash],
-                    },
-                },
-            ]);
-        });
-
-        it('should not send atoms that were already removed', async () => {
-            await server.connect(device1Info);
-
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-            const a3 = atom(atomId('a', 3), a2, {});
-
-            await atomStore.saveAtoms(branchNamespace('testBranch'), [
-                a1,
-                a2,
-                a3,
-            ]);
-
-            await server.watchBranch(device1Info.connectionId, {
-                branch: 'testBranch',
-            });
-
-            await server.addAtoms(device1Info.connectionId, {
-                branch: 'testBranch',
-                removedAtoms: [a3.hash],
-            });
-
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [a1, a2, a3],
-                        initial: true,
-                    },
-                },
-
-                // Server should send a atoms received event
-                // back indicating which atoms it processed
-                {
-                    name: ATOMS_RECEIVED,
-                    data: {
-                        branch: 'testBranch',
-                        hashes: [a3.hash],
-                    },
-                },
-            ]);
-        });
-
-        it('should ignore when given an event with a null branch', async () => {
-            await server.connect(device1Info);
-
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-            const a3 = atom(atomId('a', 3), a2, {});
-
-            await server.addAtoms(device1Info.connectionId, {
-                branch: null,
-                atoms: [a3],
-            });
-        });
-
-        it('should not crash if adding atoms to a branch that does not exist', async () => {
-            await server.connect(device1Info);
-
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-            const a3 = atom(atomId('a', 3), a2, {});
-
-            await server.addAtoms(device1Info.connectionId, {
-                branch: 'abc',
-                atoms: [a3],
-            });
-
-            expect(await atomStore.loadAtoms(branchNamespace('abc'))).toEqual([
-                a3,
-            ]);
-        });
-
-        // describe('temp', () => {
-        //     it('should not store the given atoms with the current branch', async () => {
-        //         server.init();
-
-        //         const device = new MemoryConnection(device1Info);
-        //         const addAtoms = new Subject<AddAtomsEvent>();
-        //         device.events.set(ADD_ATOMS, addAtoms);
-
-        //         const joinBranch = new Subject<WatchBranchEvent>();
-        //         device.events.set(WATCH_BRANCH, joinBranch);
-
-        //         connections.connection.next(device);
-
-        //         await waitAsync();
-
-        //         joinBranch.next({
-        //             branch: '@testBranch',
-        //             temporary: true,
-        //         });
-
-        //         const a1 = atom(atomId('a', 1), null, {});
-        //         const a2 = atom(atomId('a', 2), a1, {});
-        //         const a3 = atom(atomId('a', 3), a2, {});
-
-        //         const idx = index(a1, a2);
-        //         const c = commit('message', new Date(2019, 9, 4), idx, null);
-        //         const b = branch('@testBranch', c);
-
-        //         await storeData(store, '@testBranch', idx.data.hash, [
-        //             a1,
-        //             a2,
-        //             idx,
-        //             c,
-        //         ]);
-        //         await updateBranch(store, b);
-
-        //         addAtoms.next({
-        //             branch: '@testBranch',
-        //             atoms: [a3],
-        //         });
-
-        //         await waitAsync();
-
-        //         const [repoAtom] = await store.getObjects('@testBranch', [
-        //             a3.hash,
-        //         ]);
-        //         expect(repoAtom).toBeFalsy();
-        //     });
-
-        //     it('should notify all other devices connected to the branch', async () => {
-        //         server.init();
-
-        //         const device = new MemoryConnection(device1Info);
-        //         const addAtoms = new Subject<AddAtomsEvent>();
-        //         device.events.set(ADD_ATOMS, addAtoms);
-
-        //         const device2 = new MemoryConnection(device2Info);
-        //         const joinBranch2 = new Subject<WatchBranchEvent>();
-        //         device2.events.set(WATCH_BRANCH, joinBranch2);
-
-        //         const device3 = new MemoryConnection(device3Info);
-        //         const joinBranch3 = new Subject<WatchBranchEvent>();
-        //         device3.events.set(WATCH_BRANCH, joinBranch3);
-
-        //         connections.connection.next(device);
-        //         connections.connection.next(device2);
-        //         connections.connection.next(device3);
-
-        //         await waitAsync();
-
-        //         const a1 = atom(atomId('a', 1), null, {});
-
-        //         joinBranch2.next({
-        //             branch: '@testBranch',
-        //             temporary: true,
-        //         });
-        //         joinBranch3.next({
-        //             branch: '@testBranch',
-        //             temporary: true,
-        //         });
-
-        //         await waitAsync();
-
-        //         addAtoms.next({
-        //             branch: '@testBranch',
-        //             atoms: [a1],
-        //         });
-
-        //         await waitAsync();
-
-        //         expect(device2.messages).toEqual([
-        //             {
-        //                 name: ADD_ATOMS,
-        //                 data: {
-        //                     branch: '@testBranch',
-        //                     atoms: [],
-        //                 },
-        //             },
-        //             {
-        //                 name: ADD_ATOMS,
-        //                 data: {
-        //                     branch: '@testBranch',
-        //                     atoms: [a1],
-        //                 },
-        //             },
-        //         ]);
-
-        //         expect(device3.messages).toEqual([
-        //             {
-        //                 name: ADD_ATOMS,
-        //                 data: {
-        //                     branch: '@testBranch',
-        //                     atoms: [],
-        //                 },
-        //             },
-        //             {
-        //                 name: ADD_ATOMS,
-        //                 data: {
-        //                     branch: '@testBranch',
-        //                     atoms: [a1],
-        //                 },
-        //             },
-        //         ]);
-        //     });
-        // });
-
-        // it('should prevent adding atoms to a branch that has a password', async () => {
-        //     server.init();
-
-        //     const device = new MemoryConnection(device1Info);
-        //     const addAtoms = new Subject<AddAtomsEvent>();
-        //     device.events.set(ADD_ATOMS, addAtoms);
-
-        //     const joinBranch = new Subject<WatchBranchEvent>();
-        //     device.events.set(WATCH_BRANCH, joinBranch);
-
-        //     connections.connection.next(device);
-
-        //     const a1 = atom(atomId('a', 1), null, {});
-        //     const a2 = atom(atomId('a', 2), a1, {});
-        //     const a3 = atom(atomId('a', 3), a2, {});
-
-        //     const idx = index(a1, a2);
-        //     const c = commit('message', new Date(2019, 9, 4), idx, null);
-        //     const b = branch('testBranch', c);
-        //     const hash1 = hashPassword('password');
-        //     const settings = branchSettings('testBranch', hash1);
-        //     await store.saveSettings(settings);
-
-        //     await storeData(store, 'testBranch', idx.data.hash, [
-        //         a1,
-        //         a2,
-        //         idx,
-        //         c,
-        //     ]);
-        //     await updateBranch(store, b);
-
-        //     addAtoms.next({
-        //         branch: 'testBranch',
-        //         atoms: [a3],
-        //     });
-
-        //     await waitAsync();
-
-        //     const repoAtom = await store.getObject(a3.hash);
-        //     expect(repoAtom).toBe(null);
-
-        //     expect(device.messages).toEqual([
-        //         // Server should send a atoms received event
-        //         // back indicating which atoms it processed
-        //         // in this case, no atoms were accepted
-        //         {
-        //             name: ATOMS_RECEIVED,
-        //             data: {
-        //                 branch: 'testBranch',
-        //                 hashes: [],
-        //             },
-        //         },
-        //     ]);
-        // });
-
-        // it('should allow adding atoms to a branch that has a password when authenticated', async () => {
-        //     server.init();
-
-        //     const device = new MemoryConnection(device1Info);
-        //     const addAtoms = new Subject<AddAtomsEvent>();
-        //     const authenticate = new Subject<AuthenticateBranchWritesEvent>();
-        //     device.events.set(ADD_ATOMS, addAtoms);
-        //     device.events.set(AUTHENTICATE_BRANCH_WRITES, authenticate);
-
-        //     const joinBranch = new Subject<WatchBranchEvent>();
-        //     device.events.set(WATCH_BRANCH, joinBranch);
-
-        //     connections.connection.next(device);
-
-        //     const a1 = atom(atomId('a', 1), null, {});
-        //     const a2 = atom(atomId('a', 2), a1, {});
-        //     const a3 = atom(atomId('a', 3), a2, {});
-
-        //     const idx = index(a1, a2);
-        //     const c = commit('message', new Date(2019, 9, 4), idx, null);
-        //     const b = branch('testBranch', c);
-        //     const hash1 = hashPassword('password');
-        //     const settings = branchSettings('testBranch', hash1);
-        //     await store.saveSettings(settings);
-
-        //     await storeData(store, 'testBranch', idx.data.hash, [
-        //         a1,
-        //         a2,
-        //         idx,
-        //         c,
-        //     ]);
-        //     await updateBranch(store, b);
-
-        //     joinBranch.next({
-        //         branch: 'testBranch',
-        //     });
-
-        //     await waitAsync();
-
-        //     authenticate.next({
-        //         branch: 'testBranch',
-        //         password: 'password',
-        //     });
-
-        //     await waitAsync();
-
-        //     addAtoms.next({
-        //         branch: 'testBranch',
-        //         atoms: [a3],
-        //     });
-
-        //     await waitAsync();
-
-        //     const repoAtom = await store.getObject(a3.hash);
-        //     expect(repoAtom).toEqual({
-        //         type: 'atom',
-        //         data: a3,
-        //     });
-
-        //     expect(device.messages.slice(2)).toEqual([
-        //         // Server should send a atoms received event
-        //         // back indicating which atoms it processed
-        //         // in this case, no atoms were accepted
-        //         {
-        //             name: ATOMS_RECEIVED,
-        //             data: {
-        //                 branch: 'testBranch',
-        //                 hashes: [a3.hash],
-        //             },
-        //         },
-        //     ]);
-        // });
-
-        // it('should remember that the device is authenticated if the device authenticates without watching', async () => {
-        //     server.init();
-
-        //     const device = new MemoryConnection(device1Info);
-        //     const addAtoms = new Subject<AddAtomsEvent>();
-        //     const authenticate = new Subject<AuthenticateBranchWritesEvent>();
-        //     device.events.set(ADD_ATOMS, addAtoms);
-        //     device.events.set(AUTHENTICATE_BRANCH_WRITES, authenticate);
-
-        //     const joinBranch = new Subject<WatchBranchEvent>();
-        //     device.events.set(WATCH_BRANCH, joinBranch);
-
-        //     connections.connection.next(device);
-
-        //     const a1 = atom(atomId('a', 1), null, {});
-        //     const a2 = atom(atomId('a', 2), a1, {});
-        //     const a3 = atom(atomId('a', 3), a2, {});
-
-        //     const idx = index(a1, a2);
-        //     const c = commit('message', new Date(2019, 9, 4), idx, null);
-        //     const b = branch('testBranch', c);
-        //     const hash1 = hashPassword('password');
-        //     const settings = branchSettings('testBranch', hash1);
-        //     await store.saveSettings(settings);
-
-        //     await storeData(store, 'testBranch', idx.data.hash, [
-        //         a1,
-        //         a2,
-        //         idx,
-        //         c,
-        //     ]);
-        //     await updateBranch(store, b);
-
-        //     authenticate.next({
-        //         branch: 'testBranch',
-        //         password: 'password',
-        //     });
-
-        //     await waitAsync();
-
-        //     addAtoms.next({
-        //         branch: 'testBranch',
-        //         atoms: [a3],
-        //     });
-
-        //     await waitAsync();
-
-        //     const repoAtom = await store.getObject(a3.hash);
-        //     expect(repoAtom).toEqual({
-        //         type: 'atom',
-        //         data: a3,
-        //     });
-
-        //     expect(device.messages).toEqual([
-        //         {
-        //             name: AUTHENTICATED_TO_BRANCH,
-        //             data: {
-        //                 branch: 'testBranch',
-        //                 authenticated: true,
-        //             },
-        //         },
-        //         // Server should send a atoms received event
-        //         // back indicating which atoms it processed
-        //         // in this case, no atoms were accepted
-        //         {
-        //             name: ATOMS_RECEIVED,
-        //             data: {
-        //                 branch: 'testBranch',
-        //                 hashes: [a3.hash],
-        //             },
-        //         },
-        //     ]);
-        // });
-    });
-
     describe(ADD_UPDATES, () => {
         it('should add the given updates to the given branch', async () => {
             await server.connect(device1Info);
 
-            await server.addUpdates(device1Info.connectionId, {
+            await server.addUpdates(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 updates: ['111', '222'],
                 updateId: 0,
@@ -1964,12 +517,14 @@ describe('ApiaryCausalRepoServer', () => {
                 '333',
             ]);
 
-            await server.watchBranch(device1Info.connectionId, {
+            await server.watchBranch(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 protocol: 'updates',
             });
 
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([
                 // Server should send a atoms received event
                 // back indicating which atoms it processed
                 {
@@ -2001,22 +556,24 @@ describe('ApiaryCausalRepoServer', () => {
                 '222',
             ]);
 
-            await server.watchBranch(device2Info.connectionId, {
+            await server.watchBranch(device2Info.serverConnectionId, {
                 branch: 'testBranch',
                 protocol: 'updates',
             });
 
-            await server.watchBranch(device3Info.connectionId, {
+            await server.watchBranch(device3Info.serverConnectionId, {
                 branch: 'testBranch',
                 protocol: 'updates',
             });
 
-            await server.addUpdates(device1Info.connectionId, {
+            await server.addUpdates(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 updates: ['333'],
             });
 
-            expect(messenger.getMessages(device2Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device2Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: ADD_UPDATES,
                     data: {
@@ -2034,7 +591,9 @@ describe('ApiaryCausalRepoServer', () => {
                 },
             ]);
 
-            expect(messenger.getMessages(device3Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device3Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: ADD_UPDATES,
                     data: {
@@ -2061,18 +620,20 @@ describe('ApiaryCausalRepoServer', () => {
                 '222',
             ]);
 
-            await server.watchBranch(device1Info.connectionId, {
+            await server.watchBranch(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 protocol: 'updates',
             });
 
-            await server.addUpdates(device1Info.connectionId, {
+            await server.addUpdates(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 updates: ['333'],
                 updateId: 0,
             });
 
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: ADD_UPDATES,
                     data: {
@@ -2097,7 +658,7 @@ describe('ApiaryCausalRepoServer', () => {
         it('should immediately store the added atoms', async () => {
             await server.connect(device1Info);
 
-            await server.addUpdates(device1Info.connectionId, {
+            await server.addUpdates(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 updates: ['111', '222'],
                 updateId: 0,
@@ -2116,8 +677,8 @@ describe('ApiaryCausalRepoServer', () => {
         it('should ignore when given an event with a null branch', async () => {
             await server.connect(device1Info);
 
-            await server.addUpdates(device1Info.connectionId, {
-                branch: null,
+            await server.addUpdates(device1Info.serverConnectionId, {
+                branch: null as any,
                 updates: ['111'],
             });
         });
@@ -2125,7 +686,7 @@ describe('ApiaryCausalRepoServer', () => {
         it('should not crash if adding atoms to a branch that does not exist', async () => {
             await server.connect(device1Info);
 
-            await server.addUpdates(device1Info.connectionId, {
+            await server.addUpdates(device1Info.serverConnectionId, {
                 branch: 'abc',
                 updates: ['111'],
             });
@@ -2143,7 +704,7 @@ describe('ApiaryCausalRepoServer', () => {
 
             await server.connect(device1Info);
 
-            await server.addUpdates(device1Info.connectionId, {
+            await server.addUpdates(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 updates: ['111', '222'],
                 updateId: 0,
@@ -2158,7 +719,9 @@ describe('ApiaryCausalRepoServer', () => {
                 timestamps: [],
             });
 
-            const messages = messenger.getMessages(device1Info.connectionId);
+            const messages = messenger.getMessages(
+                device1Info.serverConnectionId
+            );
             expect(messages).toEqual([
                 {
                     name: UPDATES_RECEIVED,
@@ -2210,7 +773,7 @@ describe('ApiaryCausalRepoServer', () => {
 
             await server.connect(device1Info);
 
-            await server.addUpdates(device1Info.connectionId, {
+            await server.addUpdates(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 updates: [update],
                 updateId: 0,
@@ -2253,7 +816,7 @@ describe('ApiaryCausalRepoServer', () => {
                 }),
             });
 
-            await server.addUpdates(device1Info.connectionId, {
+            await server.addUpdates(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 updates: [update2],
                 updateId: 1,
@@ -2289,7 +852,9 @@ describe('ApiaryCausalRepoServer', () => {
                 }),
             });
 
-            const messages = messenger.getMessages(device1Info.connectionId);
+            const messages = messenger.getMessages(
+                device1Info.serverConnectionId
+            );
             expect(messages).toEqual([
                 {
                     name: UPDATES_RECEIVED,
@@ -2315,27 +880,29 @@ describe('ApiaryCausalRepoServer', () => {
             await server.connect(device2Info);
             await server.connect(device3Info);
 
-            await server.watchBranch(device2Info.connectionId, {
+            await server.watchBranch(device2Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            await server.watchBranch(device3Info.connectionId, {
+            await server.watchBranch(device3Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            await server.sendEvent(device1Info.connectionId, {
+            await server.sendEvent(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 action: remote(
                     {
                         type: 'abc',
                     },
                     {
-                        sessionId: device3Info.sessionId,
+                        connectionId: device3Info.clientConnectionId,
                     }
                 ),
             });
 
-            expect(messenger.getMessages(device2Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device2Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: ADD_ATOMS,
                     data: {
@@ -2345,7 +912,9 @@ describe('ApiaryCausalRepoServer', () => {
                     },
                 },
             ]);
-            expect(messenger.getMessages(device3Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device3Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: ADD_ATOMS,
                     data: {
@@ -2358,7 +927,7 @@ describe('ApiaryCausalRepoServer', () => {
                     name: RECEIVE_EVENT,
                     data: {
                         branch: 'testBranch',
-                        action: device(deviceInfo(device1Info), {
+                        action: device(connectionInfo(device1Info), {
                             type: 'abc',
                         }),
                     },
@@ -2374,22 +943,24 @@ describe('ApiaryCausalRepoServer', () => {
             const randomMock = (Math.random = jest.fn());
             randomMock.mockReturnValueOnce(1 / 2);
 
-            await server.watchBranch(device2Info.connectionId, {
+            await server.watchBranch(device2Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            await server.watchBranch(device3Info.connectionId, {
+            await server.watchBranch(device3Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            await server.sendEvent(device1Info.connectionId, {
+            await server.sendEvent(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 action: remote({
                     type: 'abc',
                 }),
             });
 
-            expect(messenger.getMessages(device2Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device2Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: ADD_ATOMS,
                     data: {
@@ -2399,7 +970,9 @@ describe('ApiaryCausalRepoServer', () => {
                     },
                 },
             ]);
-            expect(messenger.getMessages(device3Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device3Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: ADD_ATOMS,
                     data: {
@@ -2412,7 +985,7 @@ describe('ApiaryCausalRepoServer', () => {
                     name: RECEIVE_EVENT,
                     data: {
                         branch: 'testBranch',
-                        action: device(deviceInfo(device1Info), {
+                        action: device(connectionInfo(device1Info), {
                             type: 'abc',
                         }),
                     },
@@ -2425,15 +998,15 @@ describe('ApiaryCausalRepoServer', () => {
             await server.connect(device2Info);
             await server.connect(device3Info);
 
-            await server.watchBranch(device1Info.connectionId, {
+            await server.watchBranch(device1Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            await server.watchBranch(device3Info.connectionId, {
+            await server.watchBranch(device3Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            await server.sendEvent(device1Info.connectionId, {
+            await server.sendEvent(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 action: remote(
                     {
@@ -2445,7 +1018,9 @@ describe('ApiaryCausalRepoServer', () => {
                 ),
             });
 
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: ADD_ATOMS,
                     data: {
@@ -2458,14 +1033,18 @@ describe('ApiaryCausalRepoServer', () => {
                     name: RECEIVE_EVENT,
                     data: {
                         branch: 'testBranch',
-                        action: device(deviceInfo(device1Info), {
+                        action: device(connectionInfo(device1Info), {
                             type: 'abc',
                         }),
                     },
                 },
             ]);
-            expect(messenger.getMessages(device2Info.connectionId)).toEqual([]);
-            expect(messenger.getMessages(device3Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device2Info.serverConnectionId)
+            ).toEqual([]);
+            expect(
+                messenger.getMessages(device3Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: ADD_ATOMS,
                     data: {
@@ -2478,7 +1057,7 @@ describe('ApiaryCausalRepoServer', () => {
                     name: RECEIVE_EVENT,
                     data: {
                         branch: 'testBranch',
-                        action: device(deviceInfo(device1Info), {
+                        action: device(connectionInfo(device1Info), {
                             type: 'abc',
                         }),
                     },
@@ -2491,29 +1070,31 @@ describe('ApiaryCausalRepoServer', () => {
             await server.connect(device2Info);
             await server.connect(device3Info);
 
-            await server.watchBranch(device2Info.connectionId, {
+            await server.watchBranch(device2Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            await server.watchBranch(device3Info.connectionId, {
+            await server.watchBranch(device3Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            await server.sendEvent(device1Info.connectionId, {
+            await server.sendEvent(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 action: remote(
                     {
                         type: 'abc',
                     },
                     {
-                        sessionId: device3Info.sessionId,
+                        connectionId: device3Info.clientConnectionId,
                     },
                     undefined,
                     'task1'
                 ),
             });
 
-            expect(messenger.getMessages(device2Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device2Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: ADD_ATOMS,
                     data: {
@@ -2524,7 +1105,9 @@ describe('ApiaryCausalRepoServer', () => {
                 },
             ]);
 
-            expect(messenger.getMessages(device3Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device3Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: ADD_ATOMS,
                     data: {
@@ -2538,7 +1121,7 @@ describe('ApiaryCausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         action: device(
-                            deviceInfo(device1Info),
+                            connectionInfo(device1Info),
                             {
                                 type: 'abc',
                             },
@@ -2554,26 +1137,28 @@ describe('ApiaryCausalRepoServer', () => {
             await server.connect(device2Info);
             await server.connect(device3Info);
 
-            await server.watchBranch(device2Info.connectionId, {
+            await server.watchBranch(device2Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            await server.watchBranch(device3Info.connectionId, {
+            await server.watchBranch(device3Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            await server.sendEvent(device1Info.connectionId, {
+            await server.sendEvent(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 action: remoteResult(
                     'data',
                     {
-                        sessionId: device3Info.sessionId,
+                        connectionId: device3Info.clientConnectionId,
                     },
                     'task1'
                 ),
             });
 
-            expect(messenger.getMessages(device2Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device2Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: ADD_ATOMS,
                     data: {
@@ -2583,7 +1168,9 @@ describe('ApiaryCausalRepoServer', () => {
                     },
                 },
             ]);
-            expect(messenger.getMessages(device3Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device3Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: ADD_ATOMS,
                     data: {
@@ -2597,7 +1184,7 @@ describe('ApiaryCausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         action: deviceResult(
-                            deviceInfo(device1Info),
+                            connectionInfo(device1Info),
                             'data',
                             'task1'
                         ),
@@ -2611,26 +1198,28 @@ describe('ApiaryCausalRepoServer', () => {
             await server.connect(device2Info);
             await server.connect(device3Info);
 
-            await server.watchBranch(device2Info.connectionId, {
+            await server.watchBranch(device2Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            await server.watchBranch(device3Info.connectionId, {
+            await server.watchBranch(device3Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            await server.sendEvent(device1Info.connectionId, {
+            await server.sendEvent(device1Info.serverConnectionId, {
                 branch: 'testBranch',
                 action: remoteError(
                     'data',
                     {
-                        sessionId: device3Info.sessionId,
+                        connectionId: device3Info.clientConnectionId,
                     },
                     'task1'
                 ),
             });
 
-            expect(messenger.getMessages(device2Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device2Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: ADD_ATOMS,
                     data: {
@@ -2640,7 +1229,9 @@ describe('ApiaryCausalRepoServer', () => {
                     },
                 },
             ]);
-            expect(messenger.getMessages(device3Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device3Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: ADD_ATOMS,
                     data: {
@@ -2654,150 +1245,13 @@ describe('ApiaryCausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         action: deviceError(
-                            deviceInfo(device1Info),
+                            connectionInfo(device1Info),
                             'data',
                             'task1'
                         ),
                     },
                 },
             ]);
-        });
-
-        describe('setup_story', () => {
-            it('should intercept setup_story actions and add the given atoms to the branch', async () => {
-                await server.connect(device1Info);
-
-                uuidMock
-                    .mockReturnValueOnce('siteId')
-                    .mockReturnValueOnce('botId');
-                await server.sendEvent(device1Info.connectionId, {
-                    branch: 'testBranch',
-                    action: remote(
-                        setupServer(
-                            'otherBranch',
-                            createBot('test', {
-                                abc: 'def',
-                            })
-                        )
-                    ),
-                });
-
-                const atoms = await atomStore.loadAtoms('/branch/otherBranch');
-
-                const bot1 = atom(atomId('siteId', 1), null, bot('botId'));
-                const tag1 = atom(atomId('siteId', 2), bot1, tag('abc'));
-                const val1 = atom(atomId('siteId', 3), tag1, value('def'));
-
-                expect(atoms).toEqual([bot1, tag1, val1]);
-            });
-
-            it('should support bot mods', async () => {
-                await server.connect(device1Info);
-
-                uuidMock
-                    .mockReturnValueOnce('siteId')
-                    .mockReturnValueOnce('botId');
-                await server.sendEvent(device1Info.connectionId, {
-                    branch: 'testBranch',
-                    action: remote(
-                        setupServer('otherBranch', {
-                            abc: 'def',
-                        })
-                    ),
-                });
-
-                const atoms = await atomStore.loadAtoms('/branch/otherBranch');
-
-                const bot1 = atom(atomId('siteId', 1), null, bot('botId'));
-                const tag1 = atom(atomId('siteId', 2), bot1, tag('abc'));
-                const val1 = atom(atomId('siteId', 3), tag1, value('def'));
-
-                expect(atoms).toEqual([bot1, tag1, val1]);
-            });
-
-            it('should do nothing if the namespace already has atoms in it', async () => {
-                await server.connect(device1Info);
-
-                uuidMock
-                    .mockReturnValueOnce('siteId')
-                    .mockReturnValueOnce('botId');
-
-                const a1 = atom(atomId('a', 1), null, bot('test1'));
-
-                await atomStore.saveAtoms('/branch/otherBranch', [a1]);
-
-                await server.sendEvent(device1Info.connectionId, {
-                    branch: 'testBranch',
-                    action: remote(
-                        setupServer('otherBranch', {
-                            abc: 'def',
-                        })
-                    ),
-                });
-
-                const atoms = await atomStore.loadAtoms('/branch/otherBranch');
-
-                expect(atoms).toEqual([a1]);
-            });
-
-            it('should not send the event to other players', async () => {
-                await server.connect(device1Info);
-                await server.connect(device2Info);
-
-                await server.watchBranch(device1Info.connectionId, {
-                    branch: 'testBranch',
-                });
-
-                await server.watchBranch(device2Info.connectionId, {
-                    branch: 'testBranch',
-                });
-
-                uuidMock
-                    .mockReturnValueOnce('siteId')
-                    .mockReturnValueOnce('botId');
-
-                await server.sendEvent(device1Info.connectionId, {
-                    branch: 'testBranch',
-                    action: remote(
-                        setupServer('otherBranch', {
-                            abc: 'def',
-                        })
-                    ),
-                });
-
-                const atoms = await atomStore.loadAtoms('/branch/otherBranch');
-
-                const bot1 = atom(atomId('siteId', 1), null, bot('botId'));
-                const tag1 = atom(atomId('siteId', 2), bot1, tag('abc'));
-                const val1 = atom(atomId('siteId', 3), tag1, value('def'));
-
-                expect(atoms).toEqual([bot1, tag1, val1]);
-
-                expect(messenger.getMessages(device1Info.connectionId)).toEqual(
-                    [
-                        {
-                            name: ADD_ATOMS,
-                            data: {
-                                atoms: [],
-                                branch: 'testBranch',
-                                initial: true,
-                            },
-                        },
-                    ]
-                );
-                expect(messenger.getMessages(device2Info.connectionId)).toEqual(
-                    [
-                        {
-                            name: ADD_ATOMS,
-                            data: {
-                                atoms: [],
-                                branch: 'testBranch',
-                                initial: true,
-                            },
-                        },
-                    ]
-                );
-            });
         });
     });
 
@@ -2807,15 +1261,17 @@ describe('ApiaryCausalRepoServer', () => {
             await server.connect(device2Info);
 
             await server.watchBranchDevices(
-                device1Info.connectionId,
+                device1Info.serverConnectionId,
                 'testBranch'
             );
 
-            await server.watchBranch(device2Info.connectionId, {
+            await server.watchBranch(device2Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
@@ -2823,7 +1279,7 @@ describe('ApiaryCausalRepoServer', () => {
                         branch: {
                             branch: 'testBranch',
                         },
-                        device: deviceInfo(device2Info),
+                        device: connectionInfo(device2Info),
                     },
                 },
             ]);
@@ -2834,17 +1290,22 @@ describe('ApiaryCausalRepoServer', () => {
             await server.connect(device2Info);
 
             await server.watchBranchDevices(
-                device1Info.connectionId,
+                device1Info.serverConnectionId,
                 'testBranch'
             );
 
-            await server.watchBranch(device2Info.connectionId, {
+            await server.watchBranch(device2Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            await server.unwatchBranch(device2Info.connectionId, 'testBranch');
+            await server.unwatchBranch(
+                device2Info.serverConnectionId,
+                'testBranch'
+            );
 
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
@@ -2852,7 +1313,7 @@ describe('ApiaryCausalRepoServer', () => {
                         branch: {
                             branch: 'testBranch',
                         },
-                        device: deviceInfo(device2Info),
+                        device: connectionInfo(device2Info),
                     },
                 },
                 {
@@ -2860,7 +1321,7 @@ describe('ApiaryCausalRepoServer', () => {
                     data: {
                         broadcast: false,
                         branch: 'testBranch',
-                        device: deviceInfo(device2Info),
+                        device: connectionInfo(device2Info),
                     },
                 },
             ]);
@@ -2871,17 +1332,19 @@ describe('ApiaryCausalRepoServer', () => {
             await server.connect(device2Info);
 
             await server.watchBranchDevices(
-                device1Info.connectionId,
+                device1Info.serverConnectionId,
                 'testBranch'
             );
 
-            await server.watchBranch(device2Info.connectionId, {
+            await server.watchBranch(device2Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            await server.disconnect(device2Info.connectionId);
+            await server.disconnect(device2Info.serverConnectionId);
 
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
@@ -2889,7 +1352,7 @@ describe('ApiaryCausalRepoServer', () => {
                         branch: {
                             branch: 'testBranch',
                         },
-                        device: deviceInfo(device2Info),
+                        device: connectionInfo(device2Info),
                     },
                 },
                 {
@@ -2897,7 +1360,7 @@ describe('ApiaryCausalRepoServer', () => {
                     data: {
                         broadcast: false,
                         branch: 'testBranch',
-                        device: deviceInfo(device2Info),
+                        device: connectionInfo(device2Info),
                     },
                 },
             ]);
@@ -2909,24 +1372,26 @@ describe('ApiaryCausalRepoServer', () => {
             await server.connect(device3Info);
             await server.connect(device4Info);
 
-            await server.watchBranch(device2Info.connectionId, {
+            await server.watchBranch(device2Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            await server.watchBranch(device3Info.connectionId, {
+            await server.watchBranch(device3Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            await server.watchBranch(device4Info.connectionId, {
+            await server.watchBranch(device4Info.serverConnectionId, {
                 branch: 'testBranch2',
             });
 
             await server.watchBranchDevices(
-                device1Info.connectionId,
+                device1Info.serverConnectionId,
                 'testBranch'
             );
 
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
@@ -2935,7 +1400,7 @@ describe('ApiaryCausalRepoServer', () => {
                             branch: 'testBranch',
                             temporary: false,
                         },
-                        device: deviceInfo(device2Info),
+                        device: connectionInfo(device2Info),
                     },
                 },
                 {
@@ -2946,7 +1411,7 @@ describe('ApiaryCausalRepoServer', () => {
                             branch: 'testBranch',
                             temporary: false,
                         },
-                        device: deviceInfo(device3Info),
+                        device: connectionInfo(device3Info),
                     },
                 },
             ]);
@@ -2957,16 +1422,18 @@ describe('ApiaryCausalRepoServer', () => {
             await server.connect(device2Info);
 
             await server.watchBranchDevices(
-                device1Info.connectionId,
+                device1Info.serverConnectionId,
                 'testBranch'
             );
 
-            await server.watchBranch(device2Info.connectionId, {
+            await server.watchBranch(device2Info.serverConnectionId, {
                 branch: 'testBranch',
                 temporary: true,
             });
 
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
@@ -2975,7 +1442,7 @@ describe('ApiaryCausalRepoServer', () => {
                             branch: 'testBranch',
                             temporary: true,
                         },
-                        device: deviceInfo(device2Info),
+                        device: connectionInfo(device2Info),
                     },
                 },
             ]);
@@ -2988,19 +1455,21 @@ describe('ApiaryCausalRepoServer', () => {
             await server.connect(device2Info);
 
             await server.watchBranchDevices(
-                device1Info.connectionId,
+                device1Info.serverConnectionId,
                 'testBranch'
             );
             await server.unwatchBranchDevices(
-                device1Info.connectionId,
+                device1Info.serverConnectionId,
                 'testBranch'
             );
 
-            await server.watchBranch(device2Info.connectionId, {
+            await server.watchBranch(device2Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([]);
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([]);
         });
 
         it('should stop watching when the device disconnects', async () => {
@@ -3008,32 +1477,36 @@ describe('ApiaryCausalRepoServer', () => {
             await server.connect(device2Info);
 
             await server.watchBranchDevices(
-                device1Info.connectionId,
+                device1Info.serverConnectionId,
                 'testBranch'
             );
 
-            await server.disconnect(device1Info.connectionId);
+            await server.disconnect(device1Info.serverConnectionId);
 
             await server.connect(device1Info);
 
-            await server.watchBranch(device2Info.connectionId, {
+            await server.watchBranch(device2Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([]);
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([]);
         });
     });
 
-    describe(DEVICE_COUNT, () => {
+    describe(CONNECTION_COUNT, () => {
         it('should send a response with the number of devices', async () => {
             await server.connect(device1Info);
             await server.connect(device2Info);
 
-            await server.deviceCount(device1Info.connectionId, null);
+            await server.deviceCount(device1Info.serverConnectionId, null);
 
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([
                 {
-                    name: DEVICE_COUNT,
+                    name: CONNECTION_COUNT,
                     data: {
                         branch: null,
                         count: 2,
@@ -3047,18 +1520,23 @@ describe('ApiaryCausalRepoServer', () => {
             await server.connect(device2Info);
             await server.connect(device3Info);
 
-            await server.watchBranch(device2Info.connectionId, {
+            await server.watchBranch(device2Info.serverConnectionId, {
                 branch: 'testBranch',
             });
-            await server.watchBranch(device3Info.connectionId, {
+            await server.watchBranch(device3Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
-            await server.deviceCount(device1Info.connectionId, 'testBranch');
+            await server.deviceCount(
+                device1Info.serverConnectionId,
+                'testBranch'
+            );
 
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([
                 {
-                    name: DEVICE_COUNT,
+                    name: CONNECTION_COUNT,
                     data: {
                         branch: 'testBranch',
                         count: 2,
@@ -3088,7 +1566,7 @@ describe('ApiaryCausalRepoServer', () => {
             now.mockReturnValueOnce(1000).mockReturnValueOnce(2000);
 
             await server.syncTime(
-                device1Info.connectionId,
+                device1Info.serverConnectionId,
                 {
                     id: 1,
                     clientRequestTime: 123,
@@ -3096,7 +1574,9 @@ describe('ApiaryCausalRepoServer', () => {
                 500
             );
 
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: SYNC_TIME,
                     data: {
@@ -3157,587 +1637,6 @@ describe('ApiaryCausalRepoServer', () => {
         });
     });
 
-    // describe(BRANCH_INFO, () => {
-    //     it('should send a response with false when the given branch does not exist', async () => {
-    //         server.init();
-
-    //         const device = new MemoryConnection(device1Info);
-    //         const branchInfo = new Subject<string>();
-    //         device.events.set(BRANCH_INFO, branchInfo);
-
-    //         connections.connection.next(device);
-    //         await waitAsync();
-
-    //         branchInfo.next('testBranch');
-    //         await waitAsync();
-
-    //         expect(device.messages).toEqual([
-    //             {
-    //                 name: BRANCH_INFO,
-    //                 data: {
-    //                     branch: 'testBranch',
-    //                     exists: false,
-    //                 },
-    //             },
-    //         ]);
-    //     });
-
-    //     it('should send a response with true when the given branch exists', async () => {
-    //         server.init();
-
-    //         const device = new MemoryConnection(device1Info);
-    //         const branchInfo = new Subject<string>();
-    //         device.events.set(BRANCH_INFO, branchInfo);
-
-    //         connections.connection.next(device);
-    //         await waitAsync();
-
-    //         const a1 = atom(atomId('a', 1), null, {});
-    //         const a2 = atom(atomId('a', 2), a1, {});
-
-    //         const idx = index(a1, a2);
-    //         const c = commit('message', new Date(2019, 9, 4), idx, null);
-    //         const b = branch('testBranch', c);
-
-    //         await storeData(store, 'testBranch', idx.data.hash, [
-    //             a1,
-    //             a2,
-    //             idx,
-    //             c,
-    //         ]);
-    //         await updateBranch(store, b);
-
-    //         branchInfo.next('testBranch');
-    //         await waitAsync();
-
-    //         expect(device.messages).toEqual([
-    //             {
-    //                 name: BRANCH_INFO,
-    //                 data: {
-    //                     branch: 'testBranch',
-    //                     exists: true,
-    //                 },
-    //             },
-    //         ]);
-    //     });
-    // });
-
-    // describe(BRANCHES, () => {
-    //     it('should send a response with the list of branch names', async () => {
-    //         server.init();
-
-    //         const device = new MemoryConnection(device1Info);
-    //         const branches = new Subject<void>();
-    //         device.events.set(BRANCHES, branches);
-
-    //         connections.connection.next(device);
-    //         await waitAsync();
-
-    //         const a1 = atom(atomId('a', 1), null, {});
-    //         const a2 = atom(atomId('a', 2), a1, {});
-
-    //         const idx = index(a1, a2);
-    //         const c = commit('message', new Date(2019, 9, 4), idx, null);
-    //         const b1 = branch('testBranch', c);
-    //         const b2 = branch('testBranch2', c);
-
-    //         await storeData(store, 'testBranch', idx.data.hash, [
-    //             a1,
-    //             a2,
-    //             idx,
-    //             c,
-    //         ]);
-    //         await updateBranch(store, b1);
-    //         await updateBranch(store, b2);
-
-    //         branches.next();
-    //         await waitAsync();
-
-    //         expect(device.messages).toEqual([
-    //             {
-    //                 name: BRANCHES,
-    //                 data: {
-    //                     branches: ['testBranch', 'testBranch2'],
-    //                 },
-    //             },
-    //         ]);
-    //     });
-    // });
-
-    // describe(BRANCHES_STATUS, () => {
-    //     it('should send a response with info about each branch', async () => {
-    //         server.init();
-
-    //         const device = new MemoryConnection(device1Info);
-    //         const branches = new Subject<void>();
-    //         device.events.set(BRANCHES_STATUS, branches);
-
-    //         connections.connection.next(device);
-    //         await waitAsync();
-
-    //         const a1 = atom(atomId('a', 1), null, {});
-    //         const a2 = atom(atomId('a', 2), a1, {});
-
-    //         const idx = index(a1, a2);
-    //         const c = commit('message', new Date(2019, 9, 4), idx, null);
-    //         const b1 = branch('testBranch', c);
-    //         const b2 = branch('testBranch2', c, new Date(2019, 9, 5));
-    //         const b3 = branch('testBranch3', c, new Date(2019, 9, 6));
-
-    //         await storeData(store, 'testBranch', idx.data.hash, [
-    //             a1,
-    //             a2,
-    //             idx,
-    //             c,
-    //         ]);
-    //         await updateBranch(store, b1);
-    //         await updateBranch(store, b2);
-    //         await updateBranch(store, b3);
-
-    //         branches.next();
-    //         await waitAsync();
-
-    //         expect(device.messages).toEqual([
-    //             {
-    //                 name: BRANCHES_STATUS,
-    //                 data: {
-    //                     // should be sorted from most recently updated to least
-    //                     // recently updated.
-    //                     branches: [
-    //                         {
-    //                             branch: 'testBranch3',
-    //                             lastUpdateTime: new Date(2019, 9, 6),
-    //                         },
-    //                         {
-    //                             branch: 'testBranch2',
-    //                             lastUpdateTime: new Date(2019, 9, 5),
-    //                         },
-    //                         {
-    //                             branch: 'testBranch',
-    //                             lastUpdateTime: null,
-    //                         },
-    //                     ],
-    //                 },
-    //             },
-    //         ]);
-    //     });
-    // });
-
-    // describe(SET_BRANCH_PASSWORD, () => {
-    //     it('should change the password if given the previous password', async () => {
-    //         server.init();
-
-    //         const device = new MemoryConnection(device1Info);
-    //         const setPassword = new Subject<SetBranchPasswordEvent>();
-    //         device.events.set(SET_BRANCH_PASSWORD, setPassword);
-
-    //         connections.connection.next(device);
-    //         await waitAsync();
-
-    //         const a1 = atom(atomId('a', 1), null, {});
-    //         const a2 = atom(atomId('a', 2), a1, {});
-
-    //         const idx = index(a1, a2);
-    //         const c = commit('message', new Date(2019, 9, 4), idx, null);
-    //         const b1 = branch('testBranch', c);
-    //         const hash1 = hashPassword('password1');
-    //         const settings = branchSettings('testBranch', hash1);
-    //         await store.saveSettings(settings);
-
-    //         await storeData(store, 'testBranch', idx.data.hash, [
-    //             a1,
-    //             a2,
-    //             idx,
-    //             c,
-    //         ]);
-    //         await updateBranch(store, b1);
-
-    //         setPassword.next({
-    //             branch: 'testBranch',
-    //             oldPassword: 'password1',
-    //             newPassword: 'newPassword',
-    //         });
-
-    //         await waitAsync();
-
-    //         const storedSettings = await store.getBranchSettings('testBranch');
-
-    //         expect(
-    //             verifyPassword('newPassword', storedSettings.passwordHash)
-    //         ).toBe(true);
-    //     });
-
-    //     it('should be able to set the password of a branch that doesnt have a password by using 3342 as the old password', async () => {
-    //         server.init();
-
-    //         const device = new MemoryConnection(device1Info);
-    //         const setPassword = new Subject<SetBranchPasswordEvent>();
-    //         device.events.set(SET_BRANCH_PASSWORD, setPassword);
-
-    //         connections.connection.next(device);
-    //         await waitAsync();
-
-    //         const a1 = atom(atomId('a', 1), null, {});
-    //         const a2 = atom(atomId('a', 2), a1, {});
-
-    //         const idx = index(a1, a2);
-    //         const c = commit('message', new Date(2019, 9, 4), idx, null);
-    //         const b1 = branch('testBranch', c);
-
-    //         await storeData(store, 'testBranch', idx.data.hash, [
-    //             a1,
-    //             a2,
-    //             idx,
-    //             c,
-    //         ]);
-    //         await updateBranch(store, b1);
-
-    //         setPassword.next({
-    //             branch: 'testBranch',
-    //             oldPassword: '3342',
-    //             newPassword: 'newPassword',
-    //         });
-
-    //         await waitAsync();
-
-    //         const storedSettings = await store.getBranchSettings('testBranch');
-
-    //         expect(
-    //             verifyPassword('newPassword', storedSettings.passwordHash)
-    //         ).toBe(true);
-    //     });
-
-    //     it('should not be able to set the password of a branch if the old password is wrong', async () => {
-    //         server.init();
-
-    //         const device = new MemoryConnection(device1Info);
-    //         const setPassword = new Subject<SetBranchPasswordEvent>();
-    //         device.events.set(SET_BRANCH_PASSWORD, setPassword);
-
-    //         connections.connection.next(device);
-    //         await waitAsync();
-
-    //         const a1 = atom(atomId('a', 1), null, {});
-    //         const a2 = atom(atomId('a', 2), a1, {});
-
-    //         const idx = index(a1, a2);
-    //         const c = commit('message', new Date(2019, 9, 4), idx, null);
-    //         const b1 = branch('testBranch', c);
-    //         const hash1 = hashPassword('password1');
-    //         const settings = branchSettings('testBranch', hash1);
-    //         await store.saveSettings(settings);
-
-    //         await storeData(store, 'testBranch', idx.data.hash, [
-    //             a1,
-    //             a2,
-    //             idx,
-    //             c,
-    //         ]);
-    //         await updateBranch(store, b1);
-
-    //         setPassword.next({
-    //             branch: 'testBranch',
-    //             oldPassword: 'wrong',
-    //             newPassword: 'newPassword',
-    //         });
-
-    //         await waitAsync();
-
-    //         const storedSettings = await store.getBranchSettings('testBranch');
-
-    //         expect(
-    //             verifyPassword('newPassword', storedSettings.passwordHash)
-    //         ).toBe(false);
-    //     });
-
-    //     it('should not allow adding atoms when the password was changed while authenticated', async () => {
-    //         server.init();
-
-    //         const device = new MemoryConnection(device1Info);
-    //         const device2 = new MemoryConnection(device2Info);
-
-    //         const addAtoms = new Subject<AddAtomsEvent>();
-    //         const authenticate = new Subject<AuthenticateBranchWritesEvent>();
-    //         const setPassword = new Subject<SetBranchPasswordEvent>();
-    //         const joinBranch = new Subject<WatchBranchEvent>();
-    //         device.events.set(ADD_ATOMS, addAtoms);
-    //         device.events.set(AUTHENTICATE_BRANCH_WRITES, authenticate);
-    //         device.events.set(WATCH_BRANCH, joinBranch);
-
-    //         device2.events.set(SET_BRANCH_PASSWORD, setPassword);
-
-    //         connections.connection.next(device);
-    //         connections.connection.next(device2);
-
-    //         const a1 = atom(atomId('a', 1), null, {});
-    //         const a2 = atom(atomId('a', 2), a1, {});
-    //         const a3 = atom(atomId('a', 3), a2, {});
-
-    //         const idx = index(a1, a2);
-    //         const c = commit('message', new Date(2019, 9, 4), idx, null);
-    //         const hash1 = hashPassword('password');
-    //         const settings = branchSettings('testBranch', hash1);
-    //         await store.saveSettings(settings);
-    //         const b = branch('testBranch', c);
-
-    //         await storeData(store, 'testBranch', idx.data.hash, [
-    //             a1,
-    //             a2,
-    //             idx,
-    //             c,
-    //         ]);
-    //         await updateBranch(store, b);
-
-    //         joinBranch.next({
-    //             branch: 'testBranch',
-    //         });
-
-    //         await waitAsync();
-
-    //         authenticate.next({
-    //             branch: 'testBranch',
-    //             password: 'password',
-    //         });
-
-    //         await waitAsync();
-
-    //         setPassword.next({
-    //             branch: 'testBranch',
-    //             oldPassword: 'password',
-    //             newPassword: 'different',
-    //         });
-
-    //         await waitAsync();
-
-    //         addAtoms.next({
-    //             branch: 'testBranch',
-    //             atoms: [a3],
-    //         });
-
-    //         await waitAsync();
-
-    //         const repoAtom = await store.getObject(a3.hash);
-    //         expect(repoAtom).toEqual(null);
-
-    //         expect(device.messages.slice(1)).toEqual([
-    //             {
-    //                 name: AUTHENTICATED_TO_BRANCH,
-    //                 data: {
-    //                     branch: 'testBranch',
-    //                     authenticated: true,
-    //                 },
-    //             },
-
-    //             // Disconnected because the password changed
-    //             {
-    //                 name: AUTHENTICATED_TO_BRANCH,
-    //                 data: {
-    //                     branch: 'testBranch',
-    //                     authenticated: false,
-    //                 },
-    //             },
-    //             // Server should send a atoms received event
-    //             // back indicating which atoms it processed
-    //             // in this case, no atoms were accepted
-    //             {
-    //                 name: ATOMS_RECEIVED,
-    //                 data: {
-    //                     branch: 'testBranch',
-    //                     hashes: [],
-    //                 },
-    //             },
-    //         ]);
-    //     });
-    // });
-
-    // describe(AUTHENTICATE_BRANCH_WRITES, () => {
-    //     it('should respond with an message indicating that the password was wrong', async () => {
-    //         server.init();
-
-    //         const device = new MemoryConnection(device1Info);
-    //         const authenticate = new Subject<AuthenticateBranchWritesEvent>();
-    //         device.events.set(AUTHENTICATE_BRANCH_WRITES, authenticate);
-
-    //         connections.connection.next(device);
-    //         await waitAsync();
-
-    //         const a1 = atom(atomId('a', 1), null, {});
-    //         const a2 = atom(atomId('a', 2), a1, {});
-
-    //         const idx = index(a1, a2);
-    //         const c = commit('message', new Date(2019, 9, 4), idx, null);
-    //         const b1 = branch('testBranch', c);
-    //         const hash1 = hashPassword('password1');
-    //         const settings = branchSettings('testBranch', hash1);
-    //         await store.saveSettings(settings);
-
-    //         await storeData(store, 'testBranch', idx.data.hash, [
-    //             a1,
-    //             a2,
-    //             idx,
-    //             c,
-    //         ]);
-    //         await updateBranch(store, b1);
-
-    //         authenticate.next({
-    //             branch: 'testBranch',
-    //             password: 'wrong',
-    //         });
-
-    //         await waitAsync();
-
-    //         expect(device.messages).toEqual([
-    //             {
-    //                 name: AUTHENTICATED_TO_BRANCH,
-    //                 data: {
-    //                     branch: 'testBranch',
-    //                     authenticated: false,
-    //                 },
-    //             },
-    //         ]);
-    //     });
-
-    //     it('should be able to authenticate to branches without passwords by using 3342 as the password', async () => {
-    //         server.init();
-
-    //         const device = new MemoryConnection(device1Info);
-    //         const authenticate = new Subject<AuthenticateBranchWritesEvent>();
-    //         device.events.set(AUTHENTICATE_BRANCH_WRITES, authenticate);
-
-    //         connections.connection.next(device);
-    //         await waitAsync();
-
-    //         const a1 = atom(atomId('a', 1), null, {});
-    //         const a2 = atom(atomId('a', 2), a1, {});
-
-    //         const idx = index(a1, a2);
-    //         const c = commit('message', new Date(2019, 9, 4), idx, null);
-    //         const b1 = branch('testBranch', c);
-
-    //         await storeData(store, 'testBranch', idx.data.hash, [
-    //             a1,
-    //             a2,
-    //             idx,
-    //             c,
-    //         ]);
-    //         await updateBranch(store, b1);
-
-    //         authenticate.next({
-    //             branch: 'testBranch',
-    //             password: '3342',
-    //         });
-
-    //         await waitAsync();
-
-    //         expect(device.messages).toEqual([
-    //             {
-    //                 name: AUTHENTICATED_TO_BRANCH,
-    //                 data: {
-    //                     branch: 'testBranch',
-    //                     authenticated: true,
-    //                 },
-    //             },
-    //         ]);
-    //     });
-    // });
-
-    // describe(DEVICES, () => {
-    //     it('should send a response with the list of devices', async () => {
-    //         server.init();
-
-    //         const device = new MemoryConnection(device1Info);
-    //         const device2 = new MemoryConnection(device2Info);
-    //         const devices = new Subject<string>();
-    //         device.events.set(DEVICES, devices);
-
-    //         connections.connection.next(device);
-    //         connections.connection.next(device2);
-    //         await waitAsync();
-
-    //         devices.next(null);
-    //         await waitAsync();
-
-    //         expect(device.messages).toEqual([
-    //             {
-    //                 name: DEVICES,
-    //                 data: {
-    //                     devices: [device1Info, device2Info],
-    //                 },
-    //             },
-    //         ]);
-    //     });
-
-    //     it('should send a response with the list of devices that are connected to the given branch', async () => {
-    //         server.init();
-
-    //         const device = new MemoryConnection(device1Info);
-    //         const device2 = new MemoryConnection(device2Info);
-    //         const device3 = new MemoryConnection(device3Info);
-    //         const devices = new Subject<string>();
-    //         const watchBranch2 = new Subject<WatchBranchEvent>();
-    //         const watchBranch3 = new Subject<WatchBranchEvent>();
-    //         device.events.set(DEVICES, devices);
-    //         device2.events.set(WATCH_BRANCH, watchBranch2);
-    //         device3.events.set(WATCH_BRANCH, watchBranch3);
-
-    //         connections.connection.next(device);
-    //         connections.connection.next(device2);
-    //         connections.connection.next(device3);
-
-    //         await waitAsync();
-
-    //         const a1 = atom(atomId('a', 1), null, {});
-    //         const a2 = atom(atomId('a', 2), a1, {});
-    //         const a3 = atom(atomId('a', 3), a2, {});
-    //         const a4 = atom(atomId('a', 4), a2, {});
-    //         const a5 = atom(atomId('a', 5), a2, {});
-    //         const a6 = atom(atomId('a', 6), a2, {});
-
-    //         const idx1 = index(a1, a2, a3);
-    //         const idx2 = index(a1, a2, a4, a5);
-    //         const c1 = commit('message', new Date(2019, 9, 4), idx1, null);
-    //         const c2 = commit('message2', new Date(2019, 9, 4), idx2, c1);
-    //         const b = branch('testBranch', c2);
-
-    //         await storeData(store, 'testBranch', idx1.data.hash, [
-    //             a1,
-    //             a2,
-    //             a3,
-    //             idx1,
-    //         ]);
-    //         await storeData(store, 'testBranch', idx2.data.hash, [
-    //             a1,
-    //             a2,
-    //             a4,
-    //             a5,
-    //             idx2,
-    //         ]);
-    //         await storeData(store, 'testBranch', null, [c1, c2]);
-    //         await updateBranch(store, b);
-
-    //         watchBranch2.next({
-    //             branch: 'testBranch',
-    //         });
-    //         watchBranch3.next({
-    //             branch: 'testBranch',
-    //         });
-
-    //         await waitAsync();
-
-    //         devices.next('testBranch');
-    //         await waitAsync();
-
-    //         expect(device.messages).toEqual([
-    //             {
-    //                 name: DEVICES,
-    //                 data: {
-    //                     devices: [device2Info, device3Info],
-    //                 },
-    //             },
-    //         ]);
-    //     });
-    // });
-
     describe('webhook()', () => {
         it('should return 200 if the webhook is handled', async () => {
             const randomMock = (Math.random = jest.fn());
@@ -3745,12 +1644,7 @@ describe('ApiaryCausalRepoServer', () => {
 
             await server.connect(device1Info);
 
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-
-            await atomStore.saveAtoms(branchNamespace('testBranch'), [a1, a2]);
-
-            await server.watchBranch(device1Info.connectionId, {
+            await server.watchBranch(device1Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
@@ -3767,15 +1661,9 @@ describe('ApiaryCausalRepoServer', () => {
             );
 
             expect(result).toEqual(200);
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
-                {
-                    name: ADD_ATOMS,
-                    data: {
-                        branch: 'testBranch',
-                        atoms: [a1, a2],
-                        initial: true,
-                    },
-                },
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: RECEIVE_EVENT,
                     data: {
@@ -3801,7 +1689,7 @@ describe('ApiaryCausalRepoServer', () => {
 
             await server.connect(device1Info);
 
-            await server.watchBranch(device1Info.connectionId, {
+            await server.watchBranch(device1Info.serverConnectionId, {
                 branch: 'testBranch',
             });
 
@@ -3818,7 +1706,9 @@ describe('ApiaryCausalRepoServer', () => {
             );
 
             expect(result).toEqual(404);
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: ADD_ATOMS,
                     data: {
@@ -3836,11 +1726,6 @@ describe('ApiaryCausalRepoServer', () => {
 
             await server.connect(device1Info);
 
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-
-            await atomStore.saveAtoms(branchNamespace('testBranch'), [a1, a2]);
-
             const result = await server.webhook(
                 'testBranch',
                 'method',
@@ -3854,7 +1739,9 @@ describe('ApiaryCausalRepoServer', () => {
             );
 
             expect(result).toEqual(503);
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([]);
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([]);
         });
     });
 
@@ -3868,9 +1755,9 @@ describe('ApiaryCausalRepoServer', () => {
             'should return %s if the username %s',
             (expected, desc, deviceUsername, eventUsername) => {
                 let device: DeviceConnection = {
-                    connectionId: 'connection',
-                    username: deviceUsername,
-                    sessionId: 'sessionId',
+                    serverConnectionId: 'connection',
+                    clientConnectionId: 'sessionId',
+                    userId: deviceUsername,
                     token: 'abc',
                 };
 
@@ -3896,10 +1783,10 @@ describe('ApiaryCausalRepoServer', () => {
             'should return %s if the session ID %s',
             (expected, desc, deviceSessionId, eventSessionId) => {
                 let device: DeviceConnection = {
-                    connectionId: 'connection',
-                    username: 'username',
+                    serverConnectionId: 'connection',
+                    clientConnectionId: deviceSessionId,
+                    userId: 'username',
                     token: 'abc',
-                    sessionId: deviceSessionId,
                 };
 
                 expect(
@@ -3924,9 +1811,9 @@ describe('ApiaryCausalRepoServer', () => {
             'should return %s if the device ID %s',
             (expected, desc, deviceId, eventDeviceId) => {
                 let device: DeviceConnection = {
-                    connectionId: 'connection',
-                    username: deviceId,
-                    sessionId: 'sessionId',
+                    serverConnectionId: 'connection',
+                    clientConnectionId: 'sessionId',
+                    userId: deviceId,
                     token: 'abc',
                 };
 
@@ -3945,9 +1832,9 @@ describe('ApiaryCausalRepoServer', () => {
 
         it('should return true if broadcast is true', () => {
             let device: DeviceConnection = {
-                connectionId: 'connection',
-                username: 'username',
-                sessionId: 'sessionId',
+                serverConnectionId: 'connection',
+                clientConnectionId: 'sessionId',
+                userId: 'username',
                 token: 'abc',
             };
             expect(
@@ -3966,12 +1853,14 @@ describe('ApiaryCausalRepoServer', () => {
     describe('rateLimitExceeded()', () => {
         it('should send a message to the device', async () => {
             await server.rateLimitExceeded(
-                device1Info.connectionId,
+                device1Info.serverConnectionId,
                 1000,
                 10,
                 123
             );
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: RATE_LIMIT_EXCEEDED,
                     data: {
@@ -3984,7 +1873,7 @@ describe('ApiaryCausalRepoServer', () => {
             // Should store the last time the rate limit was exceeded by the connection
             const time =
                 await connectionStore.getConnectionRateLimitExceededTime(
-                    device1Info.connectionId
+                    device1Info.serverConnectionId
                 );
 
             expect(time).toBe(123);
@@ -3992,22 +1881,24 @@ describe('ApiaryCausalRepoServer', () => {
 
         it('should not send a message if the rate limit was recently exceeded', async () => {
             await connectionStore.setConnectionRateLimitExceededTime(
-                device1Info.connectionId,
+                device1Info.serverConnectionId,
                 123
             );
 
             await server.rateLimitExceeded(
-                device1Info.connectionId,
+                device1Info.serverConnectionId,
                 1000,
                 10,
                 200
             );
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([]);
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([]);
 
             // Should store the last time the rate limit was exceeded by the connection
             const time =
                 await connectionStore.getConnectionRateLimitExceededTime(
-                    device1Info.connectionId
+                    device1Info.serverConnectionId
                 );
 
             expect(time).toBe(200);
@@ -4015,17 +1906,19 @@ describe('ApiaryCausalRepoServer', () => {
 
         it('should send a message if it has been a second since the last time the limit was exceeded', async () => {
             await connectionStore.setConnectionRateLimitExceededTime(
-                device1Info.connectionId,
+                device1Info.serverConnectionId,
                 1000
             );
 
             await server.rateLimitExceeded(
-                device1Info.connectionId,
+                device1Info.serverConnectionId,
                 1000,
                 10,
                 2000
             );
-            expect(messenger.getMessages(device1Info.connectionId)).toEqual([
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([
                 {
                     name: RATE_LIMIT_EXCEEDED,
                     data: {
@@ -4038,7 +1931,7 @@ describe('ApiaryCausalRepoServer', () => {
             // Should store the last time the rate limit was exceeded by the connection
             const time =
                 await connectionStore.getConnectionRateLimitExceededTime(
-                    device1Info.connectionId
+                    device1Info.serverConnectionId
                 );
 
             expect(time).toBe(2000);
