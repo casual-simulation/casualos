@@ -12,7 +12,7 @@ import {
     RateLimitController,
     RecordKey,
     RecordsController,
-    RecordsHttpServer,
+    RecordsServer,
     RecordsStore,
     SubscriptionController,
     Record,
@@ -765,7 +765,7 @@ export class ServerBuilder {
             this._aiController = new AIController(this._aiConfiguration);
         }
 
-        const server = new RecordsHttpServer(
+        const server = new RecordsServer(
             this._allowedAccountOrigins,
             this._allowedApiOrigins,
             this._authController,

@@ -4,11 +4,11 @@ import {
     GenericPathParameters,
     GenericQueryStringParameters,
     parseAuthorization,
-    RecordsHttpServer,
+    RecordsServer,
     validateOrigin,
     getSessionKey,
     GenericHttpResponse,
-} from './RecordsHttpServer';
+} from './RecordsServer';
 import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import { MemoryAuthStore } from './MemoryAuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
@@ -63,11 +63,11 @@ import {
 
 console.log = jest.fn();
 
-describe('RecordsHttpServer', () => {
+describe('RecordsServer', () => {
     let authStore: MemoryAuthStore;
     let authMessenger: MemoryAuthMessenger;
     let authController: AuthController;
-    let server: RecordsHttpServer;
+    let server: RecordsServer;
     let defaultHeaders: GenericHttpHeaders;
     let authenticatedHeaders: GenericHttpHeaders;
     let apiHeaders: GenericHttpHeaders;
@@ -308,7 +308,7 @@ describe('RecordsHttpServer', () => {
             },
         });
 
-        server = new RecordsHttpServer(
+        server = new RecordsServer(
             allowedAccountOrigins,
             allowedApiOrigins,
             authController,
@@ -8550,7 +8550,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should return a not_supported result if the server has a null AI controller', async () => {
-            server = new RecordsHttpServer(
+            server = new RecordsServer(
                 allowedAccountOrigins,
                 allowedApiOrigins,
                 authController,
@@ -8739,7 +8739,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should return a not_supported result if the server has a null AI controller', async () => {
-            server = new RecordsHttpServer(
+            server = new RecordsServer(
                 allowedAccountOrigins,
                 allowedApiOrigins,
                 authController,
@@ -8854,7 +8854,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should return a not_supported result if the server has a null AI controller', async () => {
-            server = new RecordsHttpServer(
+            server = new RecordsServer(
                 allowedAccountOrigins,
                 allowedApiOrigins,
                 authController,
@@ -8931,7 +8931,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should return a not_supported result if the server has a null AI controller', async () => {
-            server = new RecordsHttpServer(
+            server = new RecordsServer(
                 allowedAccountOrigins,
                 allowedApiOrigins,
                 authController,
@@ -9291,7 +9291,7 @@ describe('RecordsHttpServer', () => {
                 now: 0,
             });
 
-            server = new RecordsHttpServer(
+            server = new RecordsServer(
                 allowedAccountOrigins,
                 allowedApiOrigins,
                 authController,

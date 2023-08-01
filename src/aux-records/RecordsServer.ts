@@ -212,7 +212,7 @@ const MARKERS_VALIDATION = z
 /**
  * Defines a class that represents a generic HTTP server suitable for Records HTTP Requests.
  */
-export class RecordsHttpServer {
+export class RecordsServer {
     private _auth: AuthController;
     private _livekit: LivekitController;
     private _records: RecordsController;
@@ -296,7 +296,7 @@ export class RecordsHttpServer {
                     );
                 } else {
                     console.log(
-                        '[RecordsHttpServer] Rate limit check failed. Allowing request to continue.'
+                        '[RecordsServer] Rate limit check failed. Allowing request to continue.'
                     );
                 }
             }
@@ -729,7 +729,7 @@ export class RecordsHttpServer {
                 body = decoder.decode(request.body);
             } catch (err) {
                 console.log(
-                    '[RecordsHttpServer] Unable to decode request body!',
+                    '[RecordsServer] Unable to decode request body!',
                     err
                 );
                 return returnResult({
