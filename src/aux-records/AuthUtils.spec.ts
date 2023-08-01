@@ -1,3 +1,4 @@
+import { connect } from 'http2';
 import {
     formatV1OpenAiKey,
     formatV1SessionKey,
@@ -6,6 +7,12 @@ import {
     parseSessionKey,
     randomCode,
     RANDOM_CODE_LENGTH,
+    formatV1ConnectionKey,
+    parseConnectionKey,
+    formatV1ConnectionToken,
+    parseConnectionToken,
+    generateV1ConnectionToken,
+    parseV1ConnectionToken,
 } from './AuthUtils';
 import { toBase64String } from './Utils';
 
@@ -139,5 +146,231 @@ describe('parseOpenAIKey()', () => {
         expect(parseOpenAiKey(123 as any)).toEqual(null);
         expect(parseOpenAiKey('vAI2.hello')).toEqual(null);
         expect(parseOpenAiKey('')).toEqual(null);
+    });
+});
+
+describe('formatV1ConnectionKey()', () => {
+    it('should combine the given user id, session id, and password', () => {
+        const result = formatV1ConnectionKey(
+            'userId',
+            'sessionId',
+            'password',
+            123
+        );
+
+        const [version, userId, sessionId, password, expireTime] =
+            result.split('.');
+
+        expect(version).toBe('vCK1');
+        expect(userId).toBe(toBase64String('userId'));
+        expect(sessionId).toBe(toBase64String('sessionId'));
+        expect(password).toBe(toBase64String('password'));
+        expect(expireTime).toBe(toBase64String('123'));
+    });
+});
+
+describe('parseConnectionKey()', () => {
+    describe('v1', () => {
+        it('should parse the given key into the userId, sessionId, password, and expire time', () => {
+            const key = formatV1ConnectionKey(
+                'userId',
+                'sessionId',
+                'password',
+                123
+            );
+            const [userId, sessionId, password, expireTime] =
+                parseConnectionKey(key);
+
+            expect(userId).toBe('userId');
+            expect(sessionId).toBe('sessionId');
+            expect(password).toBe('password');
+            expect(expireTime).toBe(123);
+        });
+
+        it('should return null if given an empty string', () => {
+            const result = parseConnectionKey('');
+
+            expect(result).toBe(null);
+        });
+
+        it('should return null if given a string with the wrong version', () => {
+            const result = parseConnectionKey('vK1');
+
+            expect(result).toBe(null);
+        });
+
+        it('should return null if given a string with no data', () => {
+            const result = parseConnectionKey('vCK1.');
+
+            expect(result).toBe(null);
+        });
+
+        it('should return null if given a string with no session ID', () => {
+            const result = parseConnectionKey(
+                `vCK1.${toBase64String('userId')}`
+            );
+
+            expect(result).toBe(null);
+        });
+
+        it('should return null if given a string with no session password', () => {
+            const result = parseConnectionKey(
+                `vCK1.${toBase64String('userId')}.${toBase64String(
+                    'sessionId'
+                )}`
+            );
+
+            expect(result).toBe(null);
+        });
+
+        it('should return null if given a string with no expire time', () => {
+            const result = parseConnectionKey(
+                `vCK1.${toBase64String('userId')}.${toBase64String(
+                    'sessionId'
+                )}.${toBase64String('password')}`
+            );
+
+            expect(result).toBe(null);
+        });
+
+        it('should return null if given a null key', () => {
+            const result = parseConnectionKey(null);
+
+            expect(result).toBe(null);
+        });
+    });
+});
+
+describe('formatV1ConnectionToken()', () => {
+    it('should combine the given user id, session id, and password', () => {
+        const result = formatV1ConnectionToken(
+            'userId',
+            'sessionId',
+            'hmac',
+            'connectionId',
+            'deviceId'
+        );
+
+        const [version, userId, sessionId, hmac, connectionId, deviceId] =
+            result.split('.');
+
+        expect(version).toBe('vCT1');
+        expect(userId).toBe(toBase64String('userId'));
+        expect(sessionId).toBe(toBase64String('sessionId'));
+        expect(hmac).toBe(toBase64String('hmac'));
+        expect(connectionId).toBe(toBase64String('connectionId'));
+        expect(deviceId).toBe(toBase64String('deviceId'));
+    });
+});
+
+describe('parseConnectionToken()', () => {
+    describe('v1', () => {
+        it('should parse the given key into the userId, sessionId, hash, connectionId, and deviceId', () => {
+            const key = formatV1ConnectionToken(
+                'userId',
+                'sessionId',
+                'hash',
+                'connectionId',
+                'deviceId'
+            );
+            const [userId, sessionId, hash, connectionId, deviceId] =
+                parseConnectionToken(key);
+
+            expect(userId).toBe('userId');
+            expect(sessionId).toBe('sessionId');
+            expect(hash).toBe('hash');
+            expect(connectionId).toBe('connectionId');
+            expect(deviceId).toBe('deviceId');
+        });
+
+        it('should return null if given an empty string', () => {
+            const result = parseConnectionToken('');
+
+            expect(result).toBe(null);
+        });
+
+        it('should return null if given a string with the wrong version', () => {
+            const result = parseConnectionToken('vT1');
+
+            expect(result).toBe(null);
+        });
+
+        it('should return null if given a string with no data', () => {
+            const result = parseConnectionToken('vCT1.');
+
+            expect(result).toBe(null);
+        });
+
+        it('should return null if given a string with no session ID', () => {
+            const result = parseConnectionToken(
+                `vCT1.${toBase64String('userId')}`
+            );
+
+            expect(result).toBe(null);
+        });
+
+        it('should return null if given a string with no hash', () => {
+            const result = parseConnectionToken(
+                `vCT1.${toBase64String('userId')}.${toBase64String(
+                    'sessionId'
+                )}`
+            );
+
+            expect(result).toBe(null);
+        });
+
+        it('should return null if given a string with no connection ID', () => {
+            const result = parseConnectionToken(
+                `vCT1.${toBase64String('userId')}.${toBase64String(
+                    'sessionId'
+                )}.${toBase64String('password')}`
+            );
+
+            expect(result).toBe(null);
+        });
+
+        it('should return null if given a string with no device ID', () => {
+            const result = parseConnectionToken(
+                `vCT1.${toBase64String('userId')}.${toBase64String(
+                    'sessionId'
+                )}.${toBase64String('password')}.${toBase64String(
+                    'connectionId'
+                )}`
+            );
+
+            expect(result).toBe(null);
+        });
+
+        it('should return null if given a null key', () => {
+            const result = parseConnectionToken(null);
+
+            expect(result).toBe(null);
+        });
+    });
+});
+
+describe('generateV1ConnectionToken()', () => {
+    it('should generate a connection token from the given connection key', () => {
+        const key = formatV1ConnectionKey(
+            'userId',
+            'sessionId',
+            'password',
+            123
+        );
+
+        const result = generateV1ConnectionToken(
+            key,
+            'connectionId',
+            'deviceId'
+        );
+
+        const [userId, sessionId, password, connectionId, deviceId] =
+            parseV1ConnectionToken(result);
+
+        expect(userId).toBe(toBase64String('userId'));
+        expect(sessionId).toBe(toBase64String('sessionId'));
+        expect(password).toBe(expect.any(String));
+        expect(connectionId).toBe(toBase64String('connectionId'));
+        expect(deviceId).toBe(toBase64String('deviceId'));
     });
 });
