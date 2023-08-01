@@ -1,10 +1,12 @@
 import { AuxPartitionRealtimeEditModeProvider } from './AuxPartitionRealtimeEditModeProvider';
-import { AuxPartitions } from './AuxPartition';
-import { RealtimeEditMode } from '../runtime/RuntimeBot';
-import { createMemoryPartition } from './MemoryPartition';
-import { createBot } from '../bots/BotCalculations';
-import { createBotClientPartition } from './BotPartition';
-import { MemoryBotClient } from './MemoryBotClient';
+import { RealtimeEditMode } from './RuntimeBot';
+import {
+    createBot,
+    AuxPartitions,
+    createMemoryPartition,
+    createBotClientPartition,
+    MemoryBotClient,
+} from '@casual-simulation/aux-common';
 
 describe('AuxPartitionRealtimeEditModeProvider', () => {
     let partitions: AuxPartitions;

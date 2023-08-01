@@ -53,7 +53,7 @@ import {
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
-import '@casual-simulation/aux-common/runtime/BlobPolyfill';
+import '@casual-simulation/aux-runtime/runtime/BlobPolyfill';
 import { Observable, Subject } from 'rxjs';
 import { DateTime } from 'luxon';
 import {

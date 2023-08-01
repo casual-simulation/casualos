@@ -8,7 +8,7 @@ import {
     CompiledBotListeners,
     RuntimeBot,
     BotAction,
-} from '../bots';
+} from '@casual-simulation/aux-common/bots';
 import { v4 as uuid } from 'uuid';
 import type {
     Breakpoint,

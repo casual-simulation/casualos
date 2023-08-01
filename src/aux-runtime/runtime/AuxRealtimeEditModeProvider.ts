@@ -14,8 +14,8 @@ export type SpaceRealtimeEditModeMap = Map<string, RealtimeEditMode>;
 /**
  * The default map between bot spaces and realtime edit modes.
  */
-export const DEFAULT_SPACE_REALTIME_EDIT_MODE_MAP: SpaceRealtimeEditModeMap = new Map(
-    [
+export const DEFAULT_SPACE_REALTIME_EDIT_MODE_MAP: SpaceRealtimeEditModeMap =
+    new Map([
         ['shared', RealtimeEditMode.Immediate],
         ['local', RealtimeEditMode.Immediate],
         ['tempLocal', RealtimeEditMode.Immediate],
@@ -23,8 +23,7 @@ export const DEFAULT_SPACE_REALTIME_EDIT_MODE_MAP: SpaceRealtimeEditModeMap = ne
         ['admin', RealtimeEditMode.Delayed],
         ['certified', RealtimeEditMode.None],
         ['bootstrap', RealtimeEditMode.None],
-    ]
-);
+    ]);
 
 /**
  * Gets the realtime edit mode for the given space and map.
@@ -50,7 +49,8 @@ export interface AuxRealtimeEditModeProvider {
 }
 
 export class DefaultRealtimeEditModeProvider
-    implements AuxRealtimeEditModeProvider {
+    implements AuxRealtimeEditModeProvider
+{
     private _map: SpaceRealtimeEditModeMap;
 
     constructor(

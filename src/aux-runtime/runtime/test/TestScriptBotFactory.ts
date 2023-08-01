@@ -9,7 +9,7 @@ import {
     RuntimeBot,
     hasValue,
     BotAction,
-} from '../../bots';
+} from '@casual-simulation/aux-common/bots';
 import {
     createRuntimeBot,
     RuntimeBotInterface,
@@ -18,7 +18,10 @@ import {
 } from '../RuntimeBot';
 import { createCompiledBot, CompiledBot } from '../CompiledBot';
 import { pickBy } from 'lodash';
-import { applyTagEdit, isTagEdit } from '../../aux-format-2';
+import {
+    applyTagEdit,
+    isTagEdit,
+} from '@casual-simulation/aux-common/aux-format-2';
 
 export class TestScriptBotFactory implements RuntimeBotFactory {
     createRuntimeBot(bot: Bot): RuntimeBot {

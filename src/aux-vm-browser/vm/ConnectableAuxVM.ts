@@ -1,10 +1,12 @@
 import {
     BotAction,
-    LocalActions,
-    RuntimeStateVersion,
     StateUpdatedEvent,
     StoredAux,
 } from '@casual-simulation/aux-common';
+import {
+    RuntimeActions,
+    RuntimeStateVersion,
+} from '@casual-simulation/aux-runtime';
 import {
     AuxVM,
     AuxChannel,
@@ -22,7 +24,7 @@ import { Observable, Subject, Subscription } from 'rxjs';
  * Gets an AUX VM that is able to communicate with a proxied aux channel.
  */
 export class ConnectableAuxVM implements AuxVM {
-    private _localEvents: Subject<LocalActions[]>;
+    private _localEvents: Subject<RuntimeActions[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -44,7 +46,7 @@ export class ConnectableAuxVM implements AuxVM {
     constructor(id: string, port: MessagePort) {
         this.id = id;
         this._proxy = wrap(port);
-        this._localEvents = new Subject<LocalActions[]>();
+        this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._versionUpdated = new Subject<RuntimeStateVersion>();
@@ -105,7 +107,7 @@ export class ConnectableAuxVM implements AuxVM {
     /**
      * The observable list of events that should be produced locally.
      */
-    get localEvents(): Observable<LocalActions[]> {
+    get localEvents(): Observable<RuntimeActions[]> {
         return this._localEvents;
     }
 

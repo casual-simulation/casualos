@@ -12,7 +12,6 @@ import {
     createOtherPlayersClientPartition,
     createYjsPartition,
     createRemoteClientYjsPartition,
-    AuxRuntime,
 } from '@casual-simulation/aux-common';
 import {
     AuxConfig,
@@ -29,6 +28,7 @@ import {
 } from '../partitions';
 import { TimeSyncController } from '@casual-simulation/timesync';
 import { AuxSubChannel } from '@casual-simulation/aux-vm/vm';
+import { AuxRuntime } from '@casual-simulation/aux-runtime';
 
 export interface RemoteAuxChannelOptions extends AuxChannelOptions {}
 

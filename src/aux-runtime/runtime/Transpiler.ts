@@ -14,7 +14,7 @@ import {
     createAbsolutePositionFromStateVector,
     createRelativePositionFromStateVector,
     getClock,
-} from '../yjs/YjsHelpers';
+} from '@casual-simulation/aux-common/yjs/YjsHelpers';
 import { VersionVector } from '@casual-simulation/causal-trees';
 
 /**

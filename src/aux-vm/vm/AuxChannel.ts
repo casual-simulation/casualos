@@ -1,20 +1,17 @@
 import {
-    LocalActions,
     BotAction,
     StateUpdatedEvent,
-    RuntimeStateVersion,
     StoredAux,
 } from '@casual-simulation/aux-common';
-import {
-    StatusUpdate,
-    DeviceAction,
-    CurrentVersion,
-    VersionVector,
-} from '@casual-simulation/causal-trees';
+import { StatusUpdate, DeviceAction } from '@casual-simulation/causal-trees';
 import { AuxConfig } from './AuxConfig';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
 import { Observable, SubscriptionLike } from 'rxjs';
+import {
+    RuntimeActions,
+    RuntimeStateVersion,
+} from '@casual-simulation/aux-runtime';
 
 /**
  * Defines an interface for the static members of an AUX.
@@ -39,7 +36,7 @@ export interface AuxChannel extends SubscriptionLike {
     /**
      * The observable that should be triggered whenever a local event is emitted from the AUX.
      */
-    onLocalEvents: Observable<LocalActions[]>;
+    onLocalEvents: Observable<RuntimeActions[]>;
 
     /**
      * The observable that should be triggered whenever the bots state is updated.
@@ -82,7 +79,7 @@ export interface AuxChannel extends SubscriptionLike {
      * @param onSubChannelRemoved The callback that should be triggered whenever a sub channel is removed.
      */
     init(
-        onLocalEvents?: (events: LocalActions[]) => void,
+        onLocalEvents?: (events: RuntimeActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
@@ -103,7 +100,7 @@ export interface AuxChannel extends SubscriptionLike {
      * @param onSubChannelRemoved The callback that should be triggered whenever a sub channel is removed.
      */
     initAndWait(
-        onLocalEvents?: (events: LocalActions[]) => void,
+        onLocalEvents?: (events: RuntimeActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
@@ -124,7 +121,7 @@ export interface AuxChannel extends SubscriptionLike {
      * @param onSubChannelRemoved The callback that should be triggered whenever a sub channel is removed.
      */
     registerListeners(
-        onLocalEvents?: (events: LocalActions[]) => void,
+        onLocalEvents?: (events: RuntimeActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,

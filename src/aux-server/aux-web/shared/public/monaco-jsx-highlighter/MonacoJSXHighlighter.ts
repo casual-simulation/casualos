@@ -1,7 +1,7 @@
 import * as monaco from '../../MonacoLibs';
-import { Transpiler } from '@casual-simulation/aux-common';
 import { reject } from 'lodash';
 import estraverse from 'estraverse';
+import { Transpiler } from '@casual-simulation/aux-runtime';
 
 const defaultOptions = {
     isHighlightGlyph: false,

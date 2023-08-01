@@ -12,20 +12,14 @@ import {
     AuxPartition,
     PartitionConfig,
     iteratePartitions,
-    AuxRuntime,
     BotSpace,
-    realtimeStrategyToRealtimeEditMode,
-    AuxPartitionRealtimeEditModeProvider,
     LoadSpaceAction,
     hasValue,
     asyncResult,
     addDebugApi,
-    RuntimeStateVersion,
     stateUpdatedEvent,
     registerBuiltinPortal,
     defineGlobalBot,
-    isPromise,
-    AttachRuntimeAction,
     createPrecalculatedBot,
     merge,
     BotTagMasks,
@@ -33,12 +27,21 @@ import {
     asyncError,
     botAdded,
     botUpdated,
-    TagMapper,
     createBot,
     getBotSpace,
-    DetachRuntimeAction,
     StoredAux,
 } from '@casual-simulation/aux-common';
+import {
+    realtimeStrategyToRealtimeEditMode,
+    AuxPartitionRealtimeEditModeProvider,
+    AuxRuntime,
+    isPromise,
+    AttachRuntimeAction,
+    DetachRuntimeAction,
+    TagMapper,
+    RuntimeStateVersion,
+    RuntimeActions,
+} from '@casual-simulation/aux-runtime';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig, buildVersionNumber } from './AuxConfig';
 import {
@@ -81,7 +84,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     private _subChannels: { channel: BaseAuxChannel; id: string }[];
     private _user: AuxUser;
-    private _onLocalEvents: Subject<LocalActions[]>;
+    private _onLocalEvents: Subject<RuntimeActions[]>;
     private _onDeviceEvents: Subject<DeviceAction[]>;
     private _onStateUpdated: Subject<StateUpdatedEvent>;
     private _onVersionUpdated: Subject<RuntimeStateVersion>;
@@ -186,7 +189,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async init(
-        onLocalEvents?: (events: LocalActions[]) => void,
+        onLocalEvents?: (events: RuntimeActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
@@ -226,7 +229,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async initAndWait(
-        onLocalEvents?: (events: LocalActions[]) => void,
+        onLocalEvents?: (events: RuntimeActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
@@ -252,7 +255,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async registerListeners(
-        onLocalEvents?: (events: LocalActions[]) => void,
+        onLocalEvents?: (events: RuntimeActions[]) => void,
         onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onVersionUpdated?: (version: RuntimeStateVersion) => void,
@@ -708,7 +711,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return runtime;
     }
 
-    protected _handleLocalEvents(e: LocalActions[]) {
+    protected _handleLocalEvents(e: RuntimeActions[]) {
         for (let event of e) {
             if (event.type === 'load_space') {
                 this._loadPartition(event.space, event.config, event);

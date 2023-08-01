@@ -2,7 +2,6 @@ import {
     LocalActions,
     BotAction,
     StateUpdatedEvent,
-    RuntimeStateVersion,
     StoredAux,
 } from '@casual-simulation/aux-common';
 import { StatusUpdate, DeviceAction } from '@casual-simulation/causal-trees';
@@ -11,6 +10,10 @@ import { Initable } from '../managers/Initable';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
 import { ChannelActionResult } from './AuxChannel';
+import {
+    RuntimeActions,
+    RuntimeStateVersion,
+} from '@casual-simulation/aux-runtime';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -24,7 +27,7 @@ export interface AuxVM extends Initable {
     /**
      * Gets the observable list of local events from the simulation.
      */
-    localEvents: Observable<LocalActions[]>;
+    localEvents: Observable<RuntimeActions[]>;
 
     /**
      * Gets the observable list of device events from the simulation.

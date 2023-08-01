@@ -11,8 +11,6 @@ import {
     hasTagOrMask,
     getTagValueForSpace,
     hasValue,
-    RuntimeStateVersion,
-    updateRuntimeVersion,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable, SubscriptionLike, never } from 'rxjs';
 import {
@@ -33,6 +31,10 @@ import {
     TagEditOp,
 } from '@casual-simulation/aux-common/aux-format-2';
 import { VersionVector } from '@casual-simulation/causal-trees';
+import {
+    RuntimeStateVersion,
+    updateRuntimeVersion,
+} from '@casual-simulation/aux-runtime';
 
 /**
  * Defines an interface that contains information about an updated bot.

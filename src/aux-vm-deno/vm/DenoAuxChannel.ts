@@ -4,7 +4,6 @@ import {
     createAuxPartition,
     PartitionConfig,
     AuxPartition,
-    AuxRuntime,
 } from '@casual-simulation/aux-common';
 import { SERVER_ROLE, DeviceAction } from '@casual-simulation/causal-trees';
 import {
@@ -15,6 +14,7 @@ import {
 } from '@casual-simulation/aux-vm';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client';
 import { proxy } from 'comlink';
+import { AuxRuntime } from '@casual-simulation/aux-runtime';
 
 export class DenoAuxChannel extends RemoteAuxChannel {
     constructor(defaultHost: string, user: AuxUser, config: AuxConfig) {

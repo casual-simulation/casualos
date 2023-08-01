@@ -5,12 +5,12 @@ import {
     asyncError,
     asyncResult,
     BotCalculationContext,
-    getEasing,
     hasValue,
     FocusOnOptions,
     Easing,
     EaseType,
     realNumberOrDefault,
+    getEasing,
 } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { CameraRig } from '../scene/CameraRigFactory';

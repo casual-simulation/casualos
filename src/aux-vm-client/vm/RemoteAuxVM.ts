@@ -1,7 +1,6 @@
 import {
     LocalActions,
     StateUpdatedEvent,
-    RuntimeStateVersion,
     BotAction,
     StoredAux,
 } from '@casual-simulation/aux-common';
@@ -22,12 +21,16 @@ import {
 } from '@casual-simulation/causal-trees';
 import { Observable, Subject } from 'rxjs';
 import { proxy, Remote, createEndpoint } from 'comlink';
+import {
+    RuntimeActions,
+    RuntimeStateVersion,
+} from '@casual-simulation/aux-runtime';
 
 /**
  * Defines a VM that is able to wrap a remote aux channel.
  */
 export class RemoteAuxVM implements AuxVM {
-    private _localEvents: Subject<LocalActions[]>;
+    private _localEvents: Subject<RuntimeActions[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -55,7 +58,7 @@ export class RemoteAuxVM implements AuxVM {
      * Creates a new Simulation VM.
      */
     constructor(channel: Remote<AuxChannel>) {
-        this._localEvents = new Subject<LocalActions[]>();
+        this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._versionUpdated = new Subject<RuntimeStateVersion>();
@@ -109,7 +112,7 @@ export class RemoteAuxVM implements AuxVM {
     /**
      * The observable list of events that should be produced locally.
      */
-    get localEvents(): Observable<LocalActions[]> {
+    get localEvents(): Observable<RuntimeActions[]> {
         return this._localEvents;
     }
 

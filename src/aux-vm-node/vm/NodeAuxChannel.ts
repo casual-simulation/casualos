@@ -9,10 +9,10 @@ import {
     createAuxPartition,
     createMemoryPartition,
     createCausalRepoPartition,
-    AuxRuntime,
 } from '@casual-simulation/aux-common';
 import { AuxConfig, BaseAuxChannel, AuxUser } from '@casual-simulation/aux-vm';
 import { Observable, Subject } from 'rxjs';
+import { AuxRuntime } from '@casual-simulation/aux-runtime';
 
 export class NodeAuxChannel extends BaseAuxChannel {
     private _remoteEvents: Subject<RemoteAction[]>;

@@ -8,12 +8,14 @@
         "composite": true,
         "incremental": true
     },
-    "include": ["**/*.ts"],
-    "exclude": ["node_modules", "lib", "**/*.spec.ts"],
+    "include": ["**/*.ts", "../aux-server/typings/**/*"],
+    "exclude": ["node_modules", "lib", "**/*.spec.ts", "partitions/test/**/*"],
     "references": [
         { "path": "../aux-common" },
-        { "path": "../aux-runtime" },
         { "path": "../aux-records" },
-        { "path": "../timesync" }
+        { "path": "../causal-trees" },
+        { "path": "../crypto" },
+        { "path": "../fast-json-stable-stringify" },
+        { "path": "../expect" }
     ]
 }

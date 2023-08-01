@@ -1,5 +1,5 @@
 import { Doc, Text } from 'yjs';
-import { DNA_TAG_PREFIX } from '..';
+import { DNA_TAG_PREFIX } from '@casual-simulation/aux-common';
 import {
     Transpiler,
     anyArgument,

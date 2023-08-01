@@ -47,7 +47,7 @@ import {
 import {
     ensureBotIsSerializable,
     ensureTagIsSerializable,
-} from '@casual-simulation/aux-common/runtime/Utils';
+} from '@casual-simulation/aux-common/partitions/PartitionUtils';
 import { v4 as uuid } from 'uuid';
 
 export class LocalStoragePartitionImpl implements LocalStoragePartition {

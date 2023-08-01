@@ -1,5 +1,5 @@
 import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
-import { mergeVersions } from '../aux-format-2';
+import { mergeVersions } from '@casual-simulation/aux-common/aux-format-2';
 
 /**
  * Defines an interface that represents the state version of a aux runtime.

@@ -22,7 +22,6 @@ import {
     AuxPartitions,
     AuxPartition,
     getPartitionState,
-    AuxRuntime,
     createPrecalculatedContext,
     PrecalculatedBot,
     BotCalculationContext,
@@ -32,7 +31,6 @@ import {
     botRemoved,
     BotTagMasks,
     isBot,
-    RanOutOfEnergyError,
     StoredAux,
     getBotsStateFromStoredAux,
     StoredAuxVersion1,
@@ -47,7 +45,12 @@ import { Subject } from 'rxjs';
 import { union, sortBy, pick, transform } from 'lodash';
 import { BaseHelper } from '../managers/BaseHelper';
 import { AuxUser } from '../AuxUser';
-import { CompiledBot } from '@casual-simulation/aux-common/runtime/CompiledBot';
+import {
+    AuxRuntime,
+    CompiledBot,
+    RuntimeActions,
+    RanOutOfEnergyError,
+} from '@casual-simulation/aux-runtime';
 import { concatMap, tap } from 'rxjs/operators';
 
 /**
@@ -58,7 +61,7 @@ export class AuxHelper extends BaseHelper<Bot> {
     private static readonly _debug = false;
     private _partitions: AuxPartitions;
     private _runtime: AuxRuntime;
-    private _localEvents: Subject<LocalActions[]>;
+    private _localEvents: Subject<RuntimeActions[]>;
     private _remoteEvents: Subject<RemoteActions[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _partitionStates: Map<string, BotsState>;
@@ -79,7 +82,7 @@ export class AuxHelper extends BaseHelper<Bot> {
      */
     constructor(partitions: AuxPartitions, runtime: AuxRuntime) {
         super();
-        this._localEvents = new Subject<LocalActions[]>();
+        this._localEvents = new Subject<RuntimeActions[]>();
         this._remoteEvents = new Subject<RemoteAction[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._supressLogs = false;
@@ -588,7 +591,7 @@ export class AuxHelper extends BaseHelper<Bot> {
 
     private _sendOtherEvents(events: BotAction[]) {
         let remoteEvents: RemoteActions[] = [];
-        let localEvents: LocalActions[] = [];
+        let localEvents: RuntimeActions[] = [];
         let deviceEvents: DeviceAction[] = [];
 
         for (let event of events) {
@@ -601,7 +604,7 @@ export class AuxHelper extends BaseHelper<Bot> {
             } else if (event.type === 'device') {
                 deviceEvents.push(event);
             } else {
-                localEvents.push(<LocalActions>event);
+                localEvents.push(<RuntimeActions>event);
             }
         }
 

@@ -1,5 +1,5 @@
-import { Bot } from '../bots/Bot';
-import { BotAction } from '../bots/BotEvents';
+import { Bot } from '@casual-simulation/aux-common/bots/Bot';
+import { BotAction } from '@casual-simulation/aux-common/bots/BotEvents';
 
 export class RanOutOfEnergyError extends Error {
     constructor() {

@@ -6,7 +6,12 @@ import {
     Transpiler,
     TranspilerResult,
 } from './Transpiler';
-import { isFormula, isScript, parseScript, hasValue } from '../bots';
+import {
+    isFormula,
+    isScript,
+    parseScript,
+    hasValue,
+} from '@casual-simulation/aux-common/bots';
 import { flatMap } from 'lodash';
 import ErrorStackParser from '@casual-simulation/error-stack-parser';
 import StackFrame from 'stackframe';

@@ -1,4 +1,7 @@
-import { MemoryPartition, createMemoryPartition } from '../partitions';
+import {
+    MemoryPartition,
+    createMemoryPartition,
+} from '@casual-simulation/aux-common/partitions';
 import {
     AuxRuntime,
     mapLibraryFunctions,
@@ -97,9 +100,13 @@ import {
     DATE_TAG_PREFIX,
     VECTOR_TAG_PREFIX,
     ROTATION_TAG_PREFIX,
-} from '../bots';
+} from '@casual-simulation/aux-common/bots';
 import { v4 as uuid } from 'uuid';
-import { waitAsync } from '../test/TestHelpers';
+import {
+    waitAsync,
+    allDataTypeCases,
+    customDataTypeCases,
+} from '@casual-simulation/aux-common/test/TestHelpers';
 import { types } from 'util';
 import {
     remote,
@@ -107,7 +114,7 @@ import {
     deviceResult,
     deviceError,
 } from '@casual-simulation/causal-trees';
-import { possibleTagValueCases } from '../bots/test/BotTestHelpers';
+import { possibleTagValueCases } from '@casual-simulation/aux-common/bots/test/BotTestHelpers';
 import { RealtimeEditMode } from './RuntimeBot';
 import { skip } from 'rxjs/operators';
 import {
@@ -120,17 +127,24 @@ import { ActionResult, ScriptError } from './AuxResults';
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import { DefaultRealtimeEditModeProvider } from './AuxRealtimeEditModeProvider';
-import { DeepObjectError, formatAuthToken, isPromise } from './Utils';
-import { del, edit, insert, preserve, tagValueHash } from '../aux-format-2';
-import { merge } from '../utils';
+import { isPromise } from './Utils';
+import {
+    del,
+    edit,
+    insert,
+    preserve,
+    tagValueHash,
+} from '@casual-simulation/aux-common/aux-format-2';
+import { merge } from '@casual-simulation/aux-common/utils';
 import { flatMap, pickBy } from 'lodash';
 import { SubscriptionLike } from 'rxjs';
 import { DateTime } from 'luxon';
-import { Vector2, Vector3, Rotation, Quaternion } from '../math';
 import {
-    allDataTypeCases,
-    customDataTypeCases,
-} from './test/RuntimeTestHelpers';
+    Vector2,
+    Vector3,
+    Rotation,
+    Quaternion,
+} from '@casual-simulation/aux-common/math';
 import { Interpreter } from '@casual-simulation/js-interpreter';
 import { RuntimeStop } from './CompiledBot';
 import { DynamicImports } from './AuxRuntimeDynamicImports';

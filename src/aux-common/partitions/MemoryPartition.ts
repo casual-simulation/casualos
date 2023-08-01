@@ -40,7 +40,7 @@ import { v4 as uuid } from 'uuid';
 import {
     ensureBotIsSerializable,
     ensureTagIsSerializable,
-} from '../runtime/Utils';
+} from './PartitionUtils';
 
 /**
  * Attempts to create a MemoryPartition from the given config.

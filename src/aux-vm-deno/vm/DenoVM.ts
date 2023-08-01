@@ -1,9 +1,6 @@
 import {
-    LocalActions,
     BotAction,
     StateUpdatedEvent,
-    ProxyBridgePartitionImpl,
-    RuntimeStateVersion,
     StoredAux,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
@@ -29,6 +26,10 @@ import {
 import { DenoWorker, polyfillMessageChannel } from 'deno-vm';
 import { URL } from 'url';
 import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
+import {
+    RuntimeActions,
+    RuntimeStateVersion,
+} from '@casual-simulation/aux-runtime';
 
 polyfillMessageChannel();
 
@@ -39,7 +40,7 @@ let workerCount = 0;
  * That is, the AUX is run inside a web worker.
  */
 export class DenoVM implements AuxVM {
-    private _localEvents: Subject<LocalActions[]>;
+    private _localEvents: Subject<RuntimeActions[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -71,7 +72,7 @@ export class DenoVM implements AuxVM {
     constructor(user: AuxUser, config: AuxConfig) {
         this._initialUser = user;
         this._config = config;
-        this._localEvents = new Subject<LocalActions[]>();
+        this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._versionUpdated = new Subject<RuntimeStateVersion>();
@@ -186,7 +187,7 @@ export class DenoVM implements AuxVM {
     /**
      * The observable list of events that should be produced locally.
      */
-    get localEvents(): Observable<LocalActions[]> {
+    get localEvents(): Observable<RuntimeActions[]> {
         return this._localEvents;
     }
 

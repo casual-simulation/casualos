@@ -311,9 +311,6 @@ import {
     WakeLockConfiguration,
     EnableXROptions,
     analyticsRecordEvent as calcAnalyticsRecordEvent,
-    attachRuntime,
-    TagMapper,
-    detachRuntime,
     KNOWN_TAGS,
     ShowConfirmOptions,
     isStoredVersion2,
@@ -341,7 +338,8 @@ import {
     AIGenerateImageOptions,
     AIGenerateImageAction,
     aiGenerateImage,
-} from '../bots';
+    getEasing,
+} from '@casual-simulation/aux-common/bots';
 import {
     sortBy,
     every,
@@ -357,17 +355,15 @@ import {
     RemoteAction,
 } from '@casual-simulation/causal-trees';
 import { RanOutOfEnergyError } from './AuxResults';
-import '../polyfill/Array.first.polyfill';
-import '../polyfill/Array.last.polyfill';
+import '@casual-simulation/aux-common/polyfill/Array.first.polyfill';
+import '@casual-simulation/aux-common/polyfill/Array.last.polyfill';
 import {
-    convertToCopiableValue,
     embedBase64InPdf,
-    formatAuthToken,
-    getEasing,
     getEmbeddedBase64FromPdf,
     toHexString as utilToHexString,
     fromHexString as utilFromHexString,
 } from './Utils';
+import { convertToCopiableValue } from '@casual-simulation/aux-common/partitions/PartitionUtils';
 import {
     sha256 as hashSha256,
     sha512 as hashSha512,
@@ -388,8 +384,14 @@ import {
     isAsymmetricEncrypted,
     isEncrypted,
 } from '@casual-simulation/crypto';
-import { tagValueHash } from '../aux-format-2/AuxOpTypes';
-import { apply, del, insert, isTagEdit, preserve } from '../aux-format-2';
+import { tagValueHash } from '@casual-simulation/aux-common/aux-format-2/AuxOpTypes';
+import {
+    apply,
+    del,
+    insert,
+    isTagEdit,
+    preserve,
+} from '@casual-simulation/aux-common/aux-format-2';
 import {
     Euler,
     Vector3 as ThreeVector3,
@@ -403,7 +405,12 @@ import './PerformanceNowPolyfill';
 import './BlobPolyfill';
 import { AuxDevice } from './AuxDevice';
 import { AuxVersion } from './AuxVersion';
-import { Vector3, Vector2, Quaternion, Rotation } from '../math';
+import {
+    Vector3,
+    Vector2,
+    Quaternion,
+    Rotation,
+} from '@casual-simulation/aux-common/math';
 import { Fragment, h } from 'preact';
 import htm from 'htm';
 import { fromByteArray, toByteArray } from 'base64-js';
@@ -449,13 +456,14 @@ import type { AuxRuntime } from './AuxRuntime';
 import {
     constructInitializationUpdate,
     mergeInstUpdates as calcMergeInstUpdates,
-} from '../partitions/PartitionUtils';
+} from '@casual-simulation/aux-common/partitions/PartitionUtils';
 import type { AxiosResponse, AxiosError } from 'axios';
 import { CasualOSError } from './CasualOSError';
 import {
     AIGenerateImageResponse,
     AIGenerateImageSuccess,
 } from '@casual-simulation/aux-records/AIController';
+import { TagMapper, attachRuntime, detachRuntime } from './RuntimeEvents';
 
 const _html: HtmlFunction = htm.bind(h) as any;
 
@@ -9594,7 +9602,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             options.tagNameMapper,
             task.taskId
         );
-        return addAsyncAction(task, event);
+        return addAsyncAction(task, event as any);
     }
 
     /**
@@ -9605,7 +9613,7 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
         const runtime = debug[GET_RUNTIME]();
         const task = context.createTask();
         const event = detachRuntime(runtime, task.taskId);
-        return addAsyncAction(task, event);
+        return addAsyncAction(task, event as any);
     }
 
     /**

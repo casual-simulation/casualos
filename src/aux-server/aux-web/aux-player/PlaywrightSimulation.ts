@@ -20,6 +20,7 @@ import {
     BOOTSTRAP_PARTITION_ID,
     getTagValueForSpace,
     getUpdateForTagAndSpace,
+    BotAction,
 } from '@casual-simulation/aux-common';
 
 import {
@@ -245,7 +246,11 @@ export class PlaywrightSimulation
         this._subscriptions.push(this._idePortal);
         this._subscriptions.push(
             this._vm.localEvents
-                .pipe(tap((e) => this._recordsManager.handleEvents(e)))
+                .pipe(
+                    tap((e) =>
+                        this._recordsManager.handleEvents(e as BotAction[])
+                    )
+                )
                 .subscribe()
         );
         this._subscriptions.push(
@@ -263,7 +268,11 @@ export class PlaywrightSimulation
                 this._livekitManager.getRoomOptions(set)
             ),
             this._vm.localEvents
-                .pipe(tap((e) => this._livekitManager.handleEvents(e)))
+                .pipe(
+                    tap((e) =>
+                        this._livekitManager.handleEvents(e as BotAction[])
+                    )
+                )
                 .subscribe()
         );
     }

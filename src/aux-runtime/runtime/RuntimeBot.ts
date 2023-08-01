@@ -15,7 +15,7 @@ import {
     mergeEdits,
     remoteEdit,
     TagEditOp,
-} from '../aux-format-2';
+} from '@casual-simulation/aux-common/aux-format-2';
 import {
     BotSpace,
     BotTags,
@@ -44,18 +44,17 @@ import {
     GET_TAG_MASKS_SYMBOL,
     RuntimeBotLinks,
     BotAction,
-} from '../bots';
-import { REPLACE_BOT_SYMBOL } from '../bots/Bot';
+} from '@casual-simulation/aux-common/bots';
+import { REPLACE_BOT_SYMBOL } from '@casual-simulation/aux-common/bots/Bot';
 import {
     createBotLink,
     isBot,
     isBotLink,
     ORIGINAL_OBJECT,
-} from '../bots/BotCalculations';
+} from '@casual-simulation/aux-common/bots/BotCalculations';
 import { INTERPRETABLE_FUNCTION } from './AuxCompiler';
 import { CompiledBot } from './CompiledBot';
 import { RuntimeStateVersion } from './RuntimeStateVersion';
-import { convertToCopiableValue } from './Utils';
 
 const KNOWN_SYMBOLS = new Set([
     REGULAR_OBJECT,

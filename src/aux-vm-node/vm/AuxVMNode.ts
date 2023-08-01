@@ -11,7 +11,6 @@ import {
     LocalActions,
     BotAction,
     StateUpdatedEvent,
-    RuntimeStateVersion,
     StoredAux,
 } from '@casual-simulation/aux-common';
 import {
@@ -20,10 +19,14 @@ import {
     DeviceAction,
 } from '@casual-simulation/causal-trees';
 import { AuxUser, BaseAuxChannel } from '@casual-simulation/aux-vm';
+import {
+    RuntimeActions,
+    RuntimeStateVersion,
+} from '@casual-simulation/aux-runtime';
 
 export class AuxVMNode implements AuxVM {
     private _channel: AuxChannel;
-    private _localEvents: Subject<LocalActions[]>;
+    private _localEvents: Subject<RuntimeActions[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _versionUpdated: Subject<RuntimeStateVersion>;
@@ -40,7 +43,7 @@ export class AuxVMNode implements AuxVM {
 
     id: string;
 
-    get localEvents(): Observable<LocalActions[]> {
+    get localEvents(): Observable<RuntimeActions[]> {
         return this._localEvents;
     }
 
@@ -78,7 +81,7 @@ export class AuxVMNode implements AuxVM {
 
     constructor(channel: AuxChannel) {
         this._channel = channel;
-        this._localEvents = new Subject<LocalActions[]>();
+        this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._versionUpdated = new Subject<RuntimeStateVersion>();

@@ -3,7 +3,6 @@ import {
     BotAction,
     StateUpdatedEvent,
     ProxyBridgePartitionImpl,
-    RuntimeStateVersion,
     StoredAux,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
@@ -30,6 +29,10 @@ import Bowser from 'bowser';
 import axios from 'axios';
 import { AuxSubChannel, AuxSubVM } from '@casual-simulation/aux-vm/vm';
 import { RemoteAuxVM } from '@casual-simulation/aux-vm-client';
+import {
+    RuntimeActions,
+    RuntimeStateVersion,
+} from '@casual-simulation/aux-runtime';
 
 export const DEFAULT_IFRAME_ALLOW_ATTRIBUTE =
     'accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking';
@@ -41,7 +44,7 @@ export const DEFAULT_IFRAME_SANDBOX_ATTRIBUTE =
  * That is, the AUX is run inside a web worker.
  */
 export class AuxVMImpl implements AuxVM {
-    private _localEvents: Subject<LocalActions[]>;
+    private _localEvents: Subject<RuntimeActions[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -74,7 +77,7 @@ export class AuxVMImpl implements AuxVM {
     constructor(user: AuxUser, config: AuxConfig) {
         this._initialUser = user;
         this._config = config;
-        this._localEvents = new Subject<LocalActions[]>();
+        this._localEvents = new Subject<RuntimeActions[]>();
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._versionUpdated = new Subject<RuntimeStateVersion>();
@@ -166,7 +169,7 @@ export class AuxVMImpl implements AuxVM {
     /**
      * The observable list of events that should be produced locally.
      */
-    get localEvents(): Observable<LocalActions[]> {
+    get localEvents(): Observable<RuntimeActions[]> {
         return this._localEvents;
     }
 

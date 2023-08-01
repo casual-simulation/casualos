@@ -70,6 +70,7 @@ import {
     SYSTEM_PORTAL_DIFF,
     SHEET_PORTAL,
 } from './Bot';
+import TWEEN, { Easing as TweenEasing } from '@tweenjs/tween.js';
 
 import { BotCalculationContext, cacheFunction } from './BotCalculationContext';
 
@@ -89,7 +90,7 @@ import {
 } from 'lodash';
 
 /// <reference path="../typings/global.d.ts" />
-import { PartialBot } from '../bots';
+import { EaseMode, EaseType, Easing, PartialBot } from '../bots';
 import { merge, shortUuid } from '../utils';
 import { BotObjectsContext } from './BotObjectsContext';
 import { DateTime, SystemZone } from 'luxon';
@@ -1717,6 +1718,77 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
         return shape;
     }
     return DEFAULT_BOT_SHAPE;
+}
+
+export function getDefaultEasing(
+    easing: Easing | EaseType | ((progress: number) => number)
+): Easing {
+    return hasValue(easing)
+        ? typeof easing === 'function'
+            ? { mode: 'inout', type: 'linear' }
+            : typeof easing === 'string'
+            ? {
+                  mode: 'inout',
+                  type: easing,
+              }
+            : easing
+        : {
+              mode: 'inout',
+              type: 'linear',
+          };
+}
+
+export function getEasing(
+    easing: Easing | EaseType | ((progress: number) => number)
+) {
+    if (typeof easing === 'function') {
+        return easing;
+    }
+    const value = getDefaultEasing(easing);
+    return getTweenEasing(value as Easing);
+}
+
+export function getTweenEasing(easing: Easing): any {
+    switch (easing.type) {
+        case 'linear':
+        default:
+            return TWEEN.Easing.Linear.None;
+        case 'circular':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Circular);
+        case 'cubic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Cubic);
+        case 'exponential':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Exponential);
+        case 'elastic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Elastic);
+        case 'quadratic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Quadratic);
+        case 'quartic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Quartic);
+        case 'quintic':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Quintic);
+        case 'sinusoidal':
+            return resolveEaseType(easing.mode, TWEEN.Easing.Sinusoidal);
+    }
+}
+
+function resolveEaseType(
+    mode: EaseMode,
+    val: typeof TweenEasing.Circular | typeof TweenEasing.Linear
+): any {
+    if ('None' in val) {
+        return val.None;
+    } else {
+        switch (mode) {
+            case 'in':
+                return val.In;
+            case 'out':
+                return val.Out;
+            case 'inout':
+            default:
+                return val.InOut;
+        }
+    }
 }
 
 /**

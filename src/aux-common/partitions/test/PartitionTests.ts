@@ -13,7 +13,7 @@ import {
 } from '../../bots';
 import { Subscription, never } from 'rxjs';
 import { CurrentVersion, StatusUpdate } from '@casual-simulation/causal-trees';
-import { waitAsync } from '../../test/TestHelpers';
+import { waitAsync, allDataTypeCases } from '../../test/TestHelpers';
 import {
     first,
     buffer,
@@ -38,7 +38,6 @@ import {
     generateRandomEditCases,
     generateRandomEditParagraphCases,
 } from '../../test/FuzzingHelpers';
-import { allDataTypeCases } from '../../runtime/test/RuntimeTestHelpers';
 import '../../../../jest/jest-matchers';
 
 expect.extend({

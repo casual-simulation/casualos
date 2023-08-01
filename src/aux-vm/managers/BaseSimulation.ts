@@ -119,7 +119,9 @@ export class BaseSimulation implements Simulation {
     }
 
     get localEvents(): Observable<LocalActions> {
-        return this._vm.localEvents.pipe(flatMap((e) => e));
+        return this._vm.localEvents.pipe(
+            flatMap((e) => e)
+        ) as Observable<LocalActions>;
     }
 
     get onError(): Observable<AuxChannelErrorType> {

@@ -4,7 +4,6 @@ import {
     createAuxPartition,
     PartitionConfig,
     AuxPartition,
-    AuxRuntime,
 } from '@casual-simulation/aux-common';
 import { SERVER_ROLE, DeviceAction } from '@casual-simulation/causal-trees';
 import {
@@ -16,6 +15,7 @@ import {
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client';
 import { createProxyClientPartition } from '../partitions/ProxyClientPartition';
 import { proxy } from 'comlink';
+import { AuxRuntime } from '@casual-simulation/aux-runtime';
 
 export class BrowserAuxChannel extends RemoteAuxChannel {
     static defaultHost: string;

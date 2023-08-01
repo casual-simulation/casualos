@@ -210,8 +210,6 @@ import {
     configureWakeLock,
     getWakeLockConfiguration,
     analyticsRecordEvent,
-    attachRuntime,
-    detachRuntime,
     KNOWN_TAGS,
     showConfirm,
     StoredAuxVersion2,
@@ -229,12 +227,9 @@ import {
     aiChat,
     aiGenerateSkybox,
     aiGenerateImage,
-} from '../bots';
+} from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
-import {
-    possibleTagNameCases,
-    possibleTagValueCases,
-} from '../bots/test/BotTestHelpers';
+import { attachRuntime, detachRuntime } from './RuntimeEvents';
 import { remote } from '@casual-simulation/causal-trees';
 import { v4 as uuid } from 'uuid';
 import {
@@ -255,7 +250,7 @@ import {
     decryptV1,
     keypair,
 } from '@casual-simulation/crypto';
-import { CERTIFIED_SPACE } from '../aux-format-2/AuxWeaveReducer';
+import { CERTIFIED_SPACE } from '@casual-simulation/aux-common/aux-format-2/AuxWeaveReducer';
 import {
     del,
     edit,
@@ -263,16 +258,15 @@ import {
     preserve,
     remoteEdit,
     tagValueHash,
-} from '../aux-format-2';
+} from '@casual-simulation/aux-common/aux-format-2';
 import { RanOutOfEnergyError } from './AuxResults';
 import { Subscription, SubscriptionLike } from 'rxjs';
-import { waitAsync } from '../test/TestHelpers';
 import {
-    convertErrorToCopiableValue,
-    embedBase64InPdf,
-    formatAuthToken,
-    fromHexString,
-} from './Utils';
+    waitAsync,
+    customDataTypeCases,
+} from '@casual-simulation/aux-common/test/TestHelpers';
+import { embedBase64InPdf, formatAuthToken, fromHexString } from './Utils';
+import { convertErrorToCopiableValue } from '@casual-simulation/aux-common/partitions/PartitionUtils';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { Fragment } from 'preact';
 import fastJsonStableStringify from '@casual-simulation/fast-json-stable-stringify';
@@ -288,10 +282,14 @@ import {
     unwindAndCapture,
 } from '@casual-simulation/js-interpreter';
 import { DateTime, FixedOffsetZone } from 'luxon';
-import { Vector3, Vector2, Quaternion, Rotation } from '../math';
+import {
+    Vector3,
+    Vector2,
+    Quaternion,
+    Rotation,
+} from '@casual-simulation/aux-common/math';
 import * as hooks from 'preact/hooks';
 import { render } from 'preact';
-import { customDataTypeCases } from './test/RuntimeTestHelpers';
 import {
     getInterpretableFunction,
     INTERPRETABLE_FUNCTION,
@@ -300,8 +298,8 @@ import {
 import {
     constructInitializationUpdate,
     getStateFromUpdates,
-} from '../partitions/PartitionUtils';
-import { YjsPartitionImpl } from '../partitions';
+} from '@casual-simulation/aux-common/partitions/PartitionUtils';
+import { YjsPartitionImpl } from '@casual-simulation/aux-common/partitions';
 import { applyUpdate } from 'yjs';
 import { CasualOSError } from './CasualOSError';
 

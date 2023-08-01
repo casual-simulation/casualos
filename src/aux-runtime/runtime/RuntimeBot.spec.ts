@@ -17,7 +17,7 @@ import {
     hasValue,
     GET_TAG_MASKS_SYMBOL,
     REPLACE_BOT_SYMBOL,
-} from '../bots';
+} from '@casual-simulation/aux-common/bots';
 import { AuxGlobalContext, MemoryGlobalContext } from './AuxGlobalContext';
 import {
     createRuntimeBot,
@@ -42,7 +42,7 @@ import {
     preserve,
     remoteEdit,
     remoteEdits,
-} from '../aux-format-2';
+} from '@casual-simulation/aux-common/aux-format-2';
 import { DateTime } from 'luxon';
 import {
     InterpreterContinuation,

@@ -72,7 +72,7 @@ import {
     getClock,
     getStateVector,
 } from '../yjs/YjsHelpers';
-import { ensureTagIsSerializable } from '../runtime/Utils';
+import { ensureTagIsSerializable } from './PartitionUtils';
 
 /**
  * Attempts to create a YjsPartition from the given config.

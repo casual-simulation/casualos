@@ -41,6 +41,7 @@
     },
     "dependencies": {
         "@casual-simulation/aux-common": "^3.2.3",
+        "@casual-simulation/aux-runtime": "^3.2.3",
         "@casual-simulation/aux-records": "^3.2.3",
         "@casual-simulation/aux-vm": "^3.2.3",
         "@casual-simulation/aux-vm-client": "^3.2.3",

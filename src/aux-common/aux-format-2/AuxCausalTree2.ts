@@ -73,7 +73,7 @@ import {
 import { Action } from '@casual-simulation/causal-trees';
 import { merge as lodashMerge } from 'lodash';
 import { v4 as uuid } from 'uuid';
-import { ensureTagIsSerializable } from '../runtime/Utils';
+import { ensureTagIsSerializable } from '../partitions/PartitionUtils';
 import { hasValue } from '../bots/BotCalculations';
 
 /**

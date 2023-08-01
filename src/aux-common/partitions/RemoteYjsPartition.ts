@@ -103,7 +103,7 @@ import {
 import { fromByteArray, toByteArray } from 'base64-js';
 import { startWith } from 'rxjs/operators';
 import { YjsPartitionImpl } from './YjsPartition';
-import { ensureTagIsSerializable } from '../runtime/Utils';
+import { ensureTagIsSerializable } from './PartitionUtils';
 
 /**
  * Attempts to create a YjsPartition from the given config.

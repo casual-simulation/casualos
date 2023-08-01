@@ -1,14 +1,14 @@
 import {
     AuxRealtimeEditModeProvider,
-    DEFAULT_SPACE_REALTIME_EDIT_MODE_MAP,
     DEFAULT_REALTIME_EDIT_MODE,
-} from '../runtime/AuxRealtimeEditModeProvider';
-import { AuxPartitions } from './AuxPartition';
-import { realtimeStrategyToRealtimeEditMode } from '../runtime/Utils';
-import { RealtimeEditMode } from '../runtime/RuntimeBot';
+} from './AuxRealtimeEditModeProvider';
+import { AuxPartitions } from '@casual-simulation/aux-common';
+import { realtimeStrategyToRealtimeEditMode } from './Utils';
+import { RealtimeEditMode } from './RuntimeBot';
 
 export class AuxPartitionRealtimeEditModeProvider
-    implements AuxRealtimeEditModeProvider {
+    implements AuxRealtimeEditModeProvider
+{
     private _partitions: AuxPartitions;
 
     constructor(partitions: AuxPartitions) {

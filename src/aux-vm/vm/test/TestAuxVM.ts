@@ -12,9 +12,6 @@ import {
     getActiveObjects,
     tagsOnBot,
     StateUpdatedEvent,
-    AuxRuntime,
-    RuntimeStateVersion,
-    isPromise,
     StoredAux,
 } from '@casual-simulation/aux-common';
 import {
@@ -25,6 +22,11 @@ import {
 import { union } from 'lodash';
 import { AuxUser } from '../../AuxUser';
 import { ChannelActionResult } from '../../vm';
+import {
+    AuxRuntime,
+    RuntimeStateVersion,
+    isPromise,
+} from '@casual-simulation/aux-runtime';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;

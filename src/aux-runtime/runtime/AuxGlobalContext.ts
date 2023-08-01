@@ -10,7 +10,7 @@ import {
     RuntimeBot,
     getOriginalObject,
     ORIGINAL_OBJECT,
-} from '../bots';
+} from '@casual-simulation/aux-common/bots';
 import {
     RuntimeBotFactory,
     RuntimeBotsState,
@@ -34,7 +34,7 @@ import { tap } from 'rxjs/operators';
 import TWEEN from '@tweenjs/tween.js';
 import { v4 as uuidv4 } from 'uuid';
 import stableStringify from '@casual-simulation/fast-json-stable-stringify';
-import { ensureBotIsSerializable } from './Utils';
+import { ensureBotIsSerializable } from '@casual-simulation/aux-common/partitions/PartitionUtils';
 import type {
     InterpreterContinuation,
     InterpreterStop,

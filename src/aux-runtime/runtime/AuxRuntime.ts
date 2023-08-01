@@ -70,7 +70,7 @@ import {
     formatBotRotation,
     parseTaggedNumber,
     REPLACE_BOT_SYMBOL,
-} from '../bots';
+} from '@casual-simulation/aux-common/bots';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
 import {
     AuxCompiler,
@@ -126,9 +126,6 @@ import {
 import { AuxVersion } from './AuxVersion';
 import { AuxDevice } from './AuxDevice';
 import {
-    convertToCopiableValue,
-    DeepObjectError,
-    formatAuthToken,
     isPromise,
     isRuntimePromise,
     markAsRuntimePromise,
@@ -136,12 +133,15 @@ import {
 } from './Utils';
 import {
     AuxRealtimeEditModeProvider,
-    SpaceRealtimeEditModeMap,
     DefaultRealtimeEditModeProvider,
 } from './AuxRealtimeEditModeProvider';
 import { sortBy, forOwn, merge, union, mapValues } from 'lodash';
-import { tagValueHash } from '../aux-format-2/AuxOpTypes';
-import { applyTagEdit, isTagEdit, mergeVersions } from '../aux-format-2';
+import { tagValueHash } from '@casual-simulation/aux-common/aux-format-2/AuxOpTypes';
+import {
+    applyTagEdit,
+    isTagEdit,
+    mergeVersions,
+} from '@casual-simulation/aux-common/aux-format-2';
 import { CurrentVersion, VersionVector } from '@casual-simulation/causal-trees';
 import {
     RuntimeStateVersion,
@@ -149,7 +149,7 @@ import {
 } from './RuntimeStateVersion';
 import { replaceMacros } from './Transpiler';
 import { DateTime } from 'luxon';
-import { Rotation, Vector2, Vector3 } from '../math';
+import { Rotation, Vector2, Vector3 } from '@casual-simulation/aux-common/math';
 import type {
     Breakpoint,
     Interpreter as InterpreterType,
@@ -172,13 +172,17 @@ import {
 } from '@casual-simulation/js-interpreter/InterpreterUtils';
 import { v4 as uuid } from 'uuid';
 import { importInterpreter as _dynamicImportInterpreter } from './AuxRuntimeDynamicImports';
+import { UNMAPPABLE } from '@casual-simulation/aux-common/bots/BotEvents';
 import {
     DebuggerScriptEnterTrace,
     DebuggerScriptExitTrace,
     DebuggerTagMaskUpdate,
     DebuggerTagUpdate,
-    UNMAPPABLE,
-} from '../bots/BotEvents';
+} from './RuntimeEvents';
+import {
+    DeepObjectError,
+    convertToCopiableValue,
+} from '@casual-simulation/aux-common/partitions/PartitionUtils';
 
 let Interpreter: typeof InterpreterType;
 let DeclarativeEnvironmentRecord: typeof DeclarativeEnvironmentRecordType;

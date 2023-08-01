@@ -6,3 +6,6 @@ export * from './AuxVersion';
 export * from './RuntimeStateVersion';
 export * from './AuxRealtimeEditModeProvider';
 export * from './Utils';
+export * from './CompiledBot';
+export * from './RuntimeEvents';
+export * from './AuxPartitionRealtimeEditModeProvider';
