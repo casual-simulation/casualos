@@ -1,5 +1,6 @@
 import {
     ListedRecord,
+    ListedStudio,
     PublicRecordKeyPolicy,
     RecordsStore,
 } from './RecordsStore';
@@ -20,6 +21,7 @@ import {
 } from './Errors';
 import type { ValidateSessionKeyFailure } from './AuthController';
 import { AuthStore } from './AuthStore';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Defines a class that manages records and their keys.
@@ -172,11 +174,14 @@ export class RecordsController {
                 };
             }
         } catch (err) {
-            console.error(err);
+            console.error(
+                '[RecordsController] [createPublicRecordKey] An error occurred while creating a public record key:',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
                 errorReason: 'server_error',
             };
         }
@@ -305,11 +310,14 @@ export class RecordsController {
                 };
             }
         } catch (err) {
-            console.error(err);
+            console.error(
+                '[RecordsController] [validatePublicRecordKey] An error occurred while creating a public record key:',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }
@@ -377,11 +385,14 @@ export class RecordsController {
                 ownerId: record.ownerId,
             };
         } catch (err) {
-            console.error(err);
+            console.error(
+                '[RecordsController] [validateRecordName] An error occurred while creating a public record key:',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }
@@ -407,6 +418,71 @@ export class RecordsController {
         } catch (err) {
             console.log(
                 '[RecordsController] [listRecords] Error listing records: ',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to create a new studio. That is, an entity that can be used to group records.
+     * @param studioName The name of the studio.
+     * @param userId The ID of the user that is creating the studio.
+     */
+    async createStudio(
+        studioName: string,
+        userId: string
+    ): Promise<CreateStudioResult> {
+        try {
+            const studioId = uuid();
+
+            await this._store.createStudioForUser(
+                {
+                    id: studioId,
+                    displayName: studioName,
+                },
+                userId
+            );
+
+            return {
+                success: true,
+                studioId: studioId,
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [createStudio] An error occurred while creating a studio:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Gets the list of studios that the user with the given ID has access to.
+     * @param userId The ID of the user.
+     */
+    async listStudios(userId: string): Promise<ListStudiosResult> {
+        try {
+            const studios = await this._store.listStudiosForUser(userId);
+
+            return {
+                success: true,
+                studios: studios.map((s) => ({
+                    studioId: s.studioId,
+                    displayName: s.displayName,
+                })),
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [listStudios] An error occurred while listing studios:',
                 err
             );
             return {
@@ -619,6 +695,32 @@ export type UnauthorizedToCreateRecordKeyError =
  * Defines an error that occurs when an invalid record key is used to
  */
 export type InvalidRecordKey = 'invalid_record_key';
+
+export type CreateStudioResult = CreateStudioSuccess | CreateStudioFailure;
+
+export interface CreateStudioSuccess {
+    success: true;
+    studioId: string;
+}
+
+export interface CreateStudioFailure {
+    success: false;
+    errorCode: NotLoggedInError | NotAuthorizedError | ServerError;
+    errorMessage: string;
+}
+
+export type ListStudiosResult = ListStudiosSuccess | ListStudiosFailure;
+
+export interface ListStudiosSuccess {
+    success: true;
+    studios: ListedStudio[];
+}
+
+export interface ListStudiosFailure {
+    success: false;
+    errorCode: NotLoggedInError | NotAuthorizedError | ServerError;
+    errorMessage: string;
+}
 
 /**
  * The default policy for keys that do not have a specified record key.

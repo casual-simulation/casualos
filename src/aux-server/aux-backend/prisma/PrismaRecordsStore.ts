@@ -130,6 +130,38 @@ export class PrismaRecordsStore implements RecordsStore {
         });
     }
 
+    async createStudioForUser(
+        studio: Studio,
+        adminId: string
+    ): Promise<{ studio: Studio; assignment: StudioAssignment }> {
+        const result = await this._client.studio.create({
+            data: {
+                id: studio.id,
+                displayName: studio.displayName,
+                stripeCustomerId: studio.stripeCustomerId,
+                subscriptionId: studio.subscriptionId,
+                subscriptionStatus: studio.subscriptionStatus,
+                assignments: {
+                    create: {
+                        userId: adminId,
+                        isPrimaryContact: true,
+                        role: 'admin',
+                    },
+                },
+            },
+        });
+
+        return {
+            studio: result,
+            assignment: {
+                studioId: result.id,
+                userId: adminId,
+                isPrimaryContact: true,
+                role: 'admin',
+            },
+        };
+    }
+
     async getStudioById(id: string): Promise<Studio> {
         return await this._client.studio.findUnique({
             where: {
@@ -231,7 +263,7 @@ export class PrismaRecordsStore implements RecordsStore {
             },
         });
 
-        return assignments;
+        return assignments as ListedStudioAssignment[];
     }
 
     async listUserAssignments(userId: string): Promise<ListedUserAssignment[]> {
@@ -247,6 +279,6 @@ export class PrismaRecordsStore implements RecordsStore {
             },
         });
 
-        return assignments;
+        return assignments as ListedUserAssignment[];
     }
 }

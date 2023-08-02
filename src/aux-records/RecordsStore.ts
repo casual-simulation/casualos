@@ -61,6 +61,19 @@ export interface RecordsStore {
     addStudio(studio: Studio): Promise<void>;
 
     /**
+     * Creates a new studio and adds the given user as an admin.
+     * @param studio The studio to create.
+     * @param adminId The ID of the admin user.
+     */
+    createStudioForUser(
+        studio: Studio,
+        adminId: string
+    ): Promise<{
+        studio: Studio;
+        assignment: StudioAssignment;
+    }>;
+
+    /**
      * Updates the given studio.
      * @param studio The studio record that should be updated.
      */
@@ -194,6 +207,8 @@ export interface Studio {
     subscriptionId?: string;
 }
 
+export type StudioAssignmentRole = 'admin' | 'member';
+
 /**
  * Defines an interface for studio assignment objects.
  */
@@ -216,7 +231,7 @@ export interface StudioAssignment {
     /**
      * The role that this user has in the studio.
      */
-    role: string;
+    role: StudioAssignmentRole;
 }
 
 export interface ListedStudioAssignment {
@@ -238,7 +253,7 @@ export interface ListedStudioAssignment {
     /**
      * The role that this user has in the studio.
      */
-    role: string;
+    role: StudioAssignmentRole;
 
     /**
      * The user that this assignment applies to.
@@ -265,7 +280,7 @@ export interface ListedUserAssignment {
     /**
      * The role that this user has in the studio.
      */
-    role: string;
+    role: StudioAssignmentRole;
 }
 
 /**

@@ -406,6 +406,7 @@ describe('RecordsHttpServer', () => {
         await services.recordsStore.updateRecord({
             name: recordName,
             ownerId: ownerId,
+            studioId: null,
             secretHashes: record.secretHashes,
             secretSalt: record.secretSalt,
         });
@@ -8982,6 +8983,117 @@ describe('RecordsHttpServer', () => {
                 }),
                 apiHeaders
             )
+        );
+    });
+
+    describe('POST /api/v2/studios', () => {
+        it('should create a studio and return the ID', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/studios',
+                    JSON.stringify({
+                        displayName: 'my studio',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    studioId: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testAuthorization(() =>
+            httpPost(
+                '/api/v2/studios',
+                JSON.stringify({
+                    displayName: 'my studio',
+                }),
+                authenticatedHeaders
+            )
+        );
+        testOrigin('POST', '/api/v2/studios', () =>
+            JSON.stringify({
+                displayName: 'my studio',
+            })
+        );
+        testRateLimit(() =>
+            httpPost(
+                '/api/v2/studios',
+                JSON.stringify({
+                    displayName: 'my studio',
+                }),
+                authenticatedHeaders
+            )
+        );
+    });
+
+    describe('GET /api/v2/studios/list', () => {
+        beforeEach(async () => {
+            await recordsStore.addStudio({
+                id: 'studioId1',
+                displayName: 'studio 1',
+            });
+
+            await recordsStore.addStudio({
+                id: 'studioId2',
+                displayName: 'studio 2',
+            });
+
+            await recordsStore.addStudio({
+                id: 'studioId3',
+                displayName: 'studio 3',
+            });
+
+            await recordsStore.addStudioAssignment({
+                studioId: 'studioId2',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+            await recordsStore.addStudioAssignment({
+                studioId: 'studioId3',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+        });
+
+        it('should list the studios that the user has access to', async () => {
+            const result = await server.handleRequest(
+                httpGet(`/api/v2/studios/list`, authenticatedHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    studios: [
+                        {
+                            studioId: 'studioId2',
+                            displayName: 'studio 2',
+                        },
+                        {
+                            studioId: 'studioId3',
+                            displayName: 'studio 3',
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testAuthorization(() =>
+            httpGet('/api/v2/studios/list', authenticatedHeaders)
+        );
+        testOrigin('GET', '/api/v2/studios/list');
+        testRateLimit(() =>
+            httpGet('/api/v2/studios/list', authenticatedHeaders)
         );
     });
 

@@ -10,7 +10,7 @@ import {
     Studio,
     StudioAssignment,
 } from './RecordsStore';
-import { AuthStore } from 'AuthStore';
+import { AuthStore } from './AuthStore';
 
 export class MemoryRecordsStore implements RecordsStore {
     private _records: Record[] = [];
@@ -105,6 +105,28 @@ export class MemoryRecordsStore implements RecordsStore {
         if (existingStudioIndex < 0) {
             this._studios.push(studio);
         }
+    }
+
+    async createStudioForUser(
+        studio: Studio,
+        adminId: string
+    ): Promise<{
+        studio: Studio;
+        assignment: StudioAssignment;
+    }> {
+        await this.addStudio(studio);
+        const assignment: StudioAssignment = {
+            studioId: studio.id,
+            userId: adminId,
+            isPrimaryContact: true,
+            role: 'admin',
+        };
+        await this.addStudioAssignment(assignment);
+
+        return {
+            studio,
+            assignment,
+        };
     }
 
     async updateStudio(studio: Studio): Promise<void> {

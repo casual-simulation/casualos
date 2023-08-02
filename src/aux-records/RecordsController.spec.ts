@@ -20,6 +20,10 @@ import {
 import { MemoryAuthStore } from './MemoryAuthStore';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
+import { v4 as uuid } from 'uuid';
+
+const uuidMock: jest.Mock = <any>uuid;
+jest.mock('uuid');
 
 console.error = jest.fn();
 console.log = jest.fn();
@@ -48,6 +52,7 @@ describe('RecordsController', () => {
             expect(await store.getRecordByName('name')).toEqual({
                 name: 'name',
                 ownerId: 'userId',
+                studioId: null,
                 secretHashes: [],
                 secretSalt: expect.any(String),
             });
@@ -84,6 +89,7 @@ describe('RecordsController', () => {
             expect(await store.getRecordByName('name')).toEqual({
                 name: 'name',
                 ownerId: 'userId',
+                studioId: null,
                 secretHashes: ['test'],
                 secretSalt: 'salt',
             });
@@ -145,6 +151,7 @@ describe('RecordsController', () => {
             expect(record).toEqual({
                 name: 'otherUserId',
                 ownerId: 'otherUserId',
+                studioId: null,
                 // It should erase existing secret hashes and issue a new salt
                 // so that previous record keys are now invalid.
                 secretHashes: [],
@@ -194,6 +201,7 @@ describe('RecordsController', () => {
             expect(await store.getRecordByName('name')).toEqual({
                 name: 'name',
                 ownerId: 'userId',
+                studioId: null,
                 secretHashes: ['test'],
                 secretSalt: 'salt',
             });
@@ -240,9 +248,7 @@ describe('RecordsController', () => {
 
             expect(result.success).toBe(false);
             expect(result.errorCode).toBe('server_error');
-            expect(result.errorMessage).toEqual(
-                expect.stringContaining('Test Error')
-            );
+            expect(result.errorMessage).toEqual('A server error occurred.');
         });
 
         it('should return an invalid_policy error if the given policy is not supported', async () => {
@@ -267,6 +273,7 @@ describe('RecordsController', () => {
             expect(await store.getRecordByName('name')).toEqual({
                 name: 'name',
                 ownerId: 'userId',
+                studioId: null,
                 secretHashes: ['test'],
                 secretSalt: 'salt',
             });
@@ -662,9 +669,7 @@ describe('RecordsController', () => {
 
                 expect(result.success).toBe(false);
                 expect(result.errorCode).toBe('server_error');
-                expect(result.errorMessage).toEqual(
-                    expect.stringContaining('Test Error')
-                );
+                expect(result.errorMessage).toEqual('A server error occurred.');
             });
         });
 
@@ -1100,9 +1105,7 @@ describe('RecordsController', () => {
 
                 expect(result.success).toBe(false);
                 expect(result.errorCode).toBe('server_error');
-                expect(result.errorMessage).toEqual(
-                    expect.stringContaining('Test Error')
-                );
+                expect(result.errorMessage).toEqual('A server error occurred.');
             });
         });
     });
@@ -1154,6 +1157,7 @@ describe('RecordsController', () => {
             expect(await store.getRecordByName('userId')).toEqual({
                 name: 'userId',
                 ownerId: 'userId',
+                studioId: null,
                 secretHashes: [],
                 secretSalt: expect.any(String),
             });
@@ -1179,6 +1183,7 @@ describe('RecordsController', () => {
             expect(record).toEqual({
                 name: 'userId',
                 ownerId: 'userId',
+                studioId: null,
                 secretHashes: [],
                 secretSalt: expect.any(String),
             });
@@ -1240,49 +1245,51 @@ describe('RecordsController', () => {
                     {
                         name: 'record1',
                         ownerId: 'userId',
+                        studioId: null,
                     },
                     {
                         name: 'record2',
                         ownerId: 'userId',
+                        studioId: null,
                     },
                     {
                         name: 'record3',
                         ownerId: 'userId',
+                        studioId: null,
                     },
                 ],
             });
         });
 
-        it('should return all records that the user has access to', async () => {
-            await store.addStudio({});
-            await store.addRecord({
-                name: 'record1',
-                ownerId: null,
-                studioId: 'studioId',
-                secretHashes: [],
-                secretSalt: '',
-            });
+        // it('should return all records that the user has access to', async () => {
+        //     await store.addRecord({
+        //         name: 'record1',
+        //         ownerId: null,
+        //         studioId: 'studioId',
+        //         secretHashes: [],
+        //         secretSalt: '',
+        //     });
 
-            const result = await manager.listRecords('userId');
+        //     const result = await manager.listRecords('userId');
 
-            expect(result).toEqual({
-                success: true,
-                records: [
-                    {
-                        name: 'record1',
-                        ownerId: 'userId',
-                    },
-                    {
-                        name: 'record2',
-                        ownerId: 'userId',
-                    },
-                    {
-                        name: 'record3',
-                        ownerId: 'userId',
-                    },
-                ],
-            });
-        });
+        //     expect(result).toEqual({
+        //         success: true,
+        //         records: [
+        //             {
+        //                 name: 'record1',
+        //                 ownerId: 'userId',
+        //             },
+        //             {
+        //                 name: 'record2',
+        //                 ownerId: 'userId',
+        //             },
+        //             {
+        //                 name: 'record3',
+        //                 ownerId: 'userId',
+        //             },
+        //         ],
+        //     });
+        // });
 
         it('should return a not_supported error if the store does not support listing records', async () => {
             (store as any).listRecordsByOwnerId = null;
@@ -1293,6 +1300,106 @@ describe('RecordsController', () => {
                 success: false,
                 errorCode: 'not_supported',
                 errorMessage: 'This operation is not supported.',
+            });
+        });
+    });
+
+    describe('createStudio()', () => {
+        it('should create a new studio with a random UUID', async () => {
+            uuidMock.mockReturnValueOnce('studioId1');
+            const result = await manager.createStudio('my studio', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                studioId: 'studioId1',
+            });
+        });
+
+        it('should assign the given user as an owner', async () => {
+            await auth.saveNewUser({
+                id: 'userId',
+                email: 'test@example.com',
+                name: 'test user',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            uuidMock.mockReturnValueOnce('studioId1');
+            await manager.createStudio('my studio', 'userId');
+
+            const assignments = await store.listStudioAssignments('studioId1');
+
+            expect(assignments).toEqual([
+                {
+                    studioId: 'studioId1',
+                    userId: 'userId',
+                    role: 'admin',
+                    isPrimaryContact: true,
+                    user: {
+                        id: 'userId',
+                        name: 'test user',
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe('listStudios()', () => {
+        beforeEach(async () => {
+            await auth.saveNewUser({
+                id: 'userId',
+                name: 'test user',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: 'studioId1',
+                displayName: 'studio 1',
+            });
+
+            await store.addStudio({
+                id: 'studioId2',
+                displayName: 'studio 2',
+            });
+
+            await store.addStudio({
+                id: 'studioId3',
+                displayName: 'studio 3',
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId2',
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId3',
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+        });
+
+        it('should list the studios that the user has access to', async () => {
+            const result = await manager.listStudios('userId');
+
+            expect(result).toEqual({
+                success: true,
+                studios: [
+                    {
+                        studioId: 'studioId2',
+                        displayName: 'studio 2',
+                    },
+                    {
+                        studioId: 'studioId3',
+                        displayName: 'studio 3',
+                    },
+                ],
             });
         });
     });

@@ -95,6 +95,25 @@ export class MongoDBRecordsStore implements RecordsStore {
         });
     }
 
+    async createStudioForUser(
+        studio: Studio,
+        adminId: string
+    ): Promise<{ studio: Studio; assignment: StudioAssignment }> {
+        await this.addStudio(studio);
+        const assignment: StudioAssignment = {
+            studioId: studio.id,
+            userId: adminId,
+            isPrimaryContact: true,
+            role: 'admin',
+        };
+        await this.addStudioAssignment(assignment);
+
+        return {
+            studio,
+            assignment,
+        };
+    }
+
     async updateStudio(studio: Studio): Promise<void> {
         await this._studios.updateOne(
             {
