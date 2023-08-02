@@ -1261,36 +1261,6 @@ describe('RecordsController', () => {
             });
         });
 
-        // it('should return all records that the user has access to', async () => {
-        //     await store.addRecord({
-        //         name: 'record1',
-        //         ownerId: null,
-        //         studioId: 'studioId',
-        //         secretHashes: [],
-        //         secretSalt: '',
-        //     });
-
-        //     const result = await manager.listRecords('userId');
-
-        //     expect(result).toEqual({
-        //         success: true,
-        //         records: [
-        //             {
-        //                 name: 'record1',
-        //                 ownerId: 'userId',
-        //             },
-        //             {
-        //                 name: 'record2',
-        //                 ownerId: 'userId',
-        //             },
-        //             {
-        //                 name: 'record3',
-        //                 ownerId: 'userId',
-        //             },
-        //         ],
-        //     });
-        // });
-
         it('should return a not_supported error if the store does not support listing records', async () => {
             (store as any).listRecordsByOwnerId = null;
 
@@ -1300,6 +1270,91 @@ describe('RecordsController', () => {
                 success: false,
                 errorCode: 'not_supported',
                 errorMessage: 'This operation is not supported.',
+            });
+        });
+    });
+
+    describe('listStudioRecords()', () => {
+        beforeEach(async () => {
+            await auth.saveNewUser({
+                id: 'userId',
+                email: 'test@example.com',
+                phoneNumber: null,
+                name: 'test user',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'studio',
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'userId',
+                role: 'admin',
+                isPrimaryContact: true,
+            });
+
+            await store.addRecord({
+                name: 'record1',
+                ownerId: null,
+                studioId: 'studioId',
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            await store.addRecord({
+                name: 'record2',
+                ownerId: null,
+                studioId: 'studioId',
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            await store.addRecord({
+                name: 'record3',
+                ownerId: null,
+                studioId: 'studioId',
+                secretHashes: [],
+                secretSalt: '',
+            });
+
+            await store.addRecord({
+                name: 'record4',
+                ownerId: null,
+                studioId: 'otherStudioId',
+                secretHashes: [],
+                secretSalt: '',
+            });
+        });
+
+        it('should return all records owned by the given studio', async () => {
+            const result = await manager.listStudioRecords(
+                'studioId',
+                'userId'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                records: [
+                    {
+                        name: 'record1',
+                        ownerId: null,
+                        studioId: 'studioId',
+                    },
+                    {
+                        name: 'record2',
+                        ownerId: null,
+                        studioId: 'studioId',
+                    },
+                    {
+                        name: 'record3',
+                        ownerId: null,
+                        studioId: 'studioId',
+                    },
+                ],
             });
         });
     });

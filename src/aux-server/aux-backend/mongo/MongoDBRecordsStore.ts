@@ -87,6 +87,27 @@ export class MongoDBRecordsStore implements RecordsStore {
         return this._collection.find({ studioId: studioId }).toArray();
     }
 
+    async listRecordsByStudioIdAndUserId(
+        studioId: string,
+        userId: string
+    ): Promise<ListedRecord[]> {
+        const studio = await this._studios.findOne({
+            studioId: studioId,
+        });
+
+        if (!studio) {
+            return [];
+        }
+
+        const isAssigned = studio.assignments.some((a) => a.userId === userId);
+
+        if (!isAssigned) {
+            return [];
+        }
+
+        return this.listRecordsByStudioId(studioId);
+    }
+
     async addStudio(studio: Studio): Promise<void> {
         this._studios.insertOne({
             ...studio,

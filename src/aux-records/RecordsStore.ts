@@ -43,7 +43,7 @@ export interface RecordsStore {
      *
      * @param ownerId The ID of the user that owns the records.
      */
-    listRecordsByOwnerId?(ownerId: string): Promise<ListedRecord[]>;
+    listRecordsByOwnerId(ownerId: string): Promise<ListedRecord[]>;
 
     /**
      * Gets the list of records that the studio with the given ID owns.
@@ -52,7 +52,17 @@ export interface RecordsStore {
      *
      * @param studioId The ID of the studio that owns the records.
      */
-    listRecordsByStudioId?(studioId: string): Promise<ListedRecord[]>;
+    listRecordsByStudioId(studioId: string): Promise<ListedRecord[]>;
+
+    /**
+     * Gets the list of records that the studio with the given ID owns and that the user with the given ID has access to.
+     * @param studioId The ID of the studio.
+     * @param userId The ID of the user.
+     */
+    listRecordsByStudioIdAndUserId(
+        studioId: string,
+        userId: string
+    ): Promise<ListedRecord[]>;
 
     /**
      * Adds the given studio to the store.

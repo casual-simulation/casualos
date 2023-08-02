@@ -98,6 +98,31 @@ export class MemoryRecordsStore implements RecordsStore {
         );
     }
 
+    async listRecordsByStudioIdAndUserId(
+        studioId: string,
+        userId: string
+    ): Promise<ListedRecord[]> {
+        return sortBy(
+            this._records
+                .filter((s) => {
+                    if (s.studioId !== studioId) {
+                        return false;
+                    }
+
+                    const isAssigned = this._studioAssignments.some(
+                        (a) => a.studioId === studioId && a.userId === userId
+                    );
+                    return isAssigned;
+                })
+                .map((r) => ({
+                    name: r.name,
+                    ownerId: r.ownerId,
+                    studioId: r.studioId,
+                })),
+            (r) => r.name
+        );
+    }
+
     async addStudio(studio: Studio): Promise<void> {
         const existingStudioIndex = this._studios.findIndex(
             (r) => r.id === studio.id

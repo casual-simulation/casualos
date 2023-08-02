@@ -429,6 +429,44 @@ export class RecordsController {
     }
 
     /**
+     * Gets the list of records in the given studio that the user with the given ID has access to.
+     * @param studioId The ID of the studio.
+     * @param userId The ID of the user.
+     */
+    async listStudioRecords(
+        studioId: string,
+        userId: string
+    ): Promise<ListRecordsResult> {
+        try {
+            if (!this._store.listRecordsByStudioIdAndUserId) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+            const records = await this._store.listRecordsByStudioIdAndUserId(
+                studioId,
+                userId
+            );
+            return {
+                success: true,
+                records: records,
+            };
+        } catch (err) {
+            console.log(
+                '[RecordsController] [listStudioRecords] Error listing records: ',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
      * Attempts to create a new studio. That is, an entity that can be used to group records.
      * @param studioName The name of the studio.
      * @param userId The ID of the user that is creating the studio.

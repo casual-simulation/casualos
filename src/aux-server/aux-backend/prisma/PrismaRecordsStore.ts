@@ -121,6 +121,29 @@ export class PrismaRecordsStore implements RecordsStore {
         });
     }
 
+    listRecordsByStudioIdAndUserId(
+        studioId: string,
+        userId: string
+    ): Promise<ListedRecord[]> {
+        return this._client.record.findMany({
+            where: {
+                studioId: studioId,
+                studio: {
+                    assignments: {
+                        some: {
+                            userId: userId,
+                        },
+                    },
+                },
+            },
+            select: {
+                name: true,
+                ownerId: true,
+                studioId: true,
+            },
+        });
+    }
+
     async addStudio(studio: Studio): Promise<void> {
         await this._client.studio.create({
             data: {
