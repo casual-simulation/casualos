@@ -101,10 +101,6 @@ export class AuthManager {
         return this._appMetadata?.subscriptionTier;
     }
 
-    get openAiKey() {
-        return this._appMetadata?.openAiKey;
-    }
-
     get userInfoLoaded() {
         return !!this._userId && !!this.savedSessionKey && !!this._appMetadata;
     }
@@ -654,7 +650,6 @@ export class AuthManager {
             name: this.name,
             email: this.email,
             phoneNumber: this.phone,
-            openAiKey: this.openAiKey,
             ...newMetadata,
         });
         await this.loadUserInfo();

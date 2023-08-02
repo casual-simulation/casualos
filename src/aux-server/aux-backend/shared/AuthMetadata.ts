@@ -4,7 +4,6 @@ export interface UserMetadata {
     phone: string;
     avatarUrl: string;
     avatarPortraitUrl: string;
-    openAiKey: string;
 }
 
 export interface AppMetadata {
@@ -15,7 +14,6 @@ export interface AppMetadata {
     phoneNumber: string;
     hasActiveSubscription: boolean;
     subscriptionTier: string;
-    openAiKey: string;
 }
 
 export interface AppService {

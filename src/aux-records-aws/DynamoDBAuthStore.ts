@@ -81,7 +81,6 @@ export class DynamoDBAuthStore implements AuthStore {
                         stripeCustomerId: user.stripeCustomerId,
                         subscriptionStatus: user.subscriptionStatus,
                         subscriptionId: user.subscriptionId,
-                        openAiKey: user.openAiKey,
                         banTimeMs: user.banTimeMs,
                         banReason: user.banReason,
                     }),
@@ -147,7 +146,6 @@ export class DynamoDBAuthStore implements AuthStore {
                         stripeCustomerId: user.stripeCustomerId,
                         subscriptionStatus: user.subscriptionStatus,
                         subscriptionId: user.subscriptionId,
-                        openAiKey: user.openAiKey,
                         banTimeMs: user.banTimeMs,
                         banReason: user.banReason,
                     }),
@@ -262,7 +260,6 @@ export class DynamoDBAuthStore implements AuthStore {
                 stripeCustomerId: user.stripeCustomerId,
                 subscriptionStatus: user.subscriptionStatus,
                 subscriptionId: user.subscriptionId,
-                openAiKey: user.openAiKey,
                 banTimeMs: user.banTimeMs,
                 banReason: user.banReason,
             };

@@ -3239,7 +3239,6 @@ export class RecordsHttpServer {
             phoneNumber: result.phoneNumber,
             hasActiveSubscription: result.hasActiveSubscription,
             subscriptionTier: result.subscriptionTier,
-            openAiKey: result.openAiKey,
         });
     }
 
@@ -3293,11 +3292,6 @@ export class RecordsHttpServer {
                 .nullable(),
             avatarUrl: z.string().url().optional().nullable(),
             avatarPortraitUrl: z.string().url().optional().nullable(),
-            openAiKey: z
-                .string()
-                .max(MAX_OPEN_AI_API_KEY_LENGTH)
-                .optional()
-                .nullable(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);

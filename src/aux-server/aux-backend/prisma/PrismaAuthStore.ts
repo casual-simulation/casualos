@@ -120,7 +120,6 @@ export class PrismaAuthStore implements AuthStore {
             allSessionRevokeTime: convertToDate(user.allSessionRevokeTimeMs),
             currentLoginRequestId: user.currentLoginRequestId as string,
             stripeCustomerId: user.stripeCustomerId as string,
-            openAiKey: user.openAiKey as string,
             subscriptionStatus: user.subscriptionStatus as string,
             subscriptionId: user.subscriptionId as string,
             banTime: convertToDate(user.banTimeMs),
@@ -149,7 +148,6 @@ export class PrismaAuthStore implements AuthStore {
                     user.allSessionRevokeTimeMs
                 ),
                 stripeCustomerId: user.stripeCustomerId as string,
-                openAiKey: user.openAiKey as string,
                 subscriptionStatus: user.subscriptionStatus as string,
                 subscriptionId: user.subscriptionId as string,
                 banTime: convertToDate(user.banTimeMs),
@@ -378,7 +376,6 @@ export class PrismaAuthStore implements AuthStore {
                 allSessionRevokeTimeMs: convertToMillis(
                     user.allSessionRevokeTime
                 ),
-                openAiKey: user.openAiKey,
                 currentLoginRequestId: user.currentLoginRequestId,
                 subscriptionStatus:
                     user.subscriptionStatus as AuthUser['subscriptionStatus'],
@@ -418,7 +415,6 @@ export interface MongoDBAuthUser {
     stripeCustomerId?: string;
     subscriptionStatus?: string;
     subscriptionId?: string;
-    openAiKey?: string;
     banTimeMs?: number;
     banReason?: AuthUser['banReason'];
 }

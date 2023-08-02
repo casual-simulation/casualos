@@ -429,36 +429,7 @@ describe('RecordsHttpServer', () => {
                     email: 'test@example.com',
                     phoneNumber: null,
                     hasActiveSubscription: false,
-                    openAiKey: null,
                     subscriptionTier: null,
-                },
-                headers: accountCorsHeaders,
-            });
-        });
-
-        it('should return the openAiKey for active subscriptions', async () => {
-            const user = await authStore.findUser(userId);
-            await authStore.saveUser({
-                ...user,
-                subscriptionStatus: 'active',
-                openAiKey: 'api key',
-            });
-            const result = await server.handleRequest(
-                httpGet(
-                    `/api/{userId:${userId}}/metadata`,
-                    authenticatedHeaders
-                )
-            );
-
-            expectResponseBodyToEqual(result, {
-                statusCode: 200,
-                body: {
-                    success: true,
-                    email: 'test@example.com',
-                    phoneNumber: null,
-                    hasActiveSubscription: true,
-                    openAiKey: 'api key',
-                    subscriptionTier: 'beta',
                 },
                 headers: accountCorsHeaders,
             });
@@ -523,7 +494,6 @@ describe('RecordsHttpServer', () => {
                     email: 'other@example.com',
                     phoneNumber: null,
                     hasActiveSubscription: false,
-                    openAiKey: null,
                     subscriptionTier: null,
                 },
                 headers: accountCorsHeaders,
@@ -677,38 +647,6 @@ describe('RecordsHttpServer', () => {
                 name: 'Kal',
                 avatarUrl: 'https://example.com/avatar.png',
                 avatarPortraitUrl: 'https://example.com/avatar-portrait.png',
-            });
-        });
-
-        it('should be able to update the openAiKey when the user has an active subscription', async () => {
-            let user = await authStore.findUser(userId);
-            await authStore.saveUser({
-                ...user,
-                subscriptionStatus: 'active',
-            });
-            const result = await server.handleRequest(
-                httpPut(
-                    `/api/{userId:${userId}}/metadata`,
-                    JSON.stringify({
-                        openAiKey: 'api key',
-                    }),
-                    authenticatedHeaders
-                )
-            );
-
-            expect(result).toEqual({
-                statusCode: 200,
-                body: JSON.stringify({
-                    success: true,
-                    userId,
-                }),
-                headers: accountCorsHeaders,
-            });
-
-            user = await authStore.findUser(userId);
-            expect(user).toMatchObject({
-                id: userId,
-                openAiKey: formatV1OpenAiKey('api key'),
             });
         });
 

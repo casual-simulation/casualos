@@ -22,7 +22,6 @@ model User {
     allSessionRevokeTime DateTime?
     currentLoginRequestId String? @unique
     currentLoginRequest LoginRequest? @relation("CurrentLoginRequest", fields: [currentLoginRequestId], references: [requestId])
-    openAiKey String?
     banTime DateTime?
     banReason String?
     subscriptionStatus String?

@@ -120,7 +120,6 @@ describe('DynamoDBAuthStore', () => {
                 currentLoginRequestId: 'abc',
                 stripeCustomerId: 'customerId',
                 subscriptionStatus: 'active',
-                openAiKey: 'api key',
             });
 
             expect(dynamodb.transactWrite).toHaveBeenCalledWith({
@@ -139,7 +138,6 @@ describe('DynamoDBAuthStore', () => {
                                 currentLoginRequestId: 'abc',
                                 stripeCustomerId: 'customerId',
                                 subscriptionStatus: 'active',
-                                openAiKey: 'api key',
                             },
                         },
                     },
@@ -183,7 +181,6 @@ describe('DynamoDBAuthStore', () => {
                 currentLoginRequestId: 'abc',
                 stripeCustomerId: 'customerId',
                 subscriptionStatus: 'active',
-                openAiKey: 'api key',
                 banTimeMs: 1,
                 banReason: 'terms_of_service_violation',
             });
@@ -208,7 +205,6 @@ describe('DynamoDBAuthStore', () => {
                                 currentLoginRequestId: 'abc',
                                 stripeCustomerId: 'customerId',
                                 subscriptionStatus: 'active',
-                                openAiKey: 'api key',
                                 banTimeMs: 1,
                                 banReason: 'terms_of_service_violation',
                             },
@@ -415,7 +411,6 @@ describe('DynamoDBAuthStore', () => {
                         currentLoginRequestId: 'requestId',
                         stripeCustomerId: 'customerId',
                         subscriptionStatus: 'active',
-                        openAiKey: 'api key',
                         banTimeMs: 1,
                         banReason: 'terms_of_service_violation',
                     },
@@ -435,7 +430,6 @@ describe('DynamoDBAuthStore', () => {
                 currentLoginRequestId: 'requestId',
                 stripeCustomerId: 'customerId',
                 subscriptionStatus: 'active',
-                openAiKey: 'api key',
                 banTimeMs: 1,
                 banReason: 'terms_of_service_violation',
             });
@@ -490,7 +484,6 @@ describe('DynamoDBAuthStore', () => {
                         currentLoginRequestId: 'requestId',
                         stripeCustomerId: 'customerId',
                         subscriptionStatus: 'active',
-                        openAiKey: 'api key',
                     },
                 })
             );
@@ -508,7 +501,6 @@ describe('DynamoDBAuthStore', () => {
                 currentLoginRequestId: 'requestId',
                 stripeCustomerId: 'customerId',
                 subscriptionStatus: 'active',
-                openAiKey: 'api key',
             });
 
             expect(dynamodb.get).toHaveBeenCalledWith({
@@ -752,7 +744,6 @@ describe('DynamoDBAuthStore', () => {
                         currentLoginRequestId: 'requestId',
                         stripeCustomerId: 'customerId',
                         subscriptionStatus: 'active',
-                        openAiKey: 'api key',
                     },
                 })
             );
@@ -770,7 +761,6 @@ describe('DynamoDBAuthStore', () => {
                 currentLoginRequestId: 'requestId',
                 stripeCustomerId: 'customerId',
                 subscriptionStatus: 'active',
-                openAiKey: 'api key',
             });
             expect(dynamodb.query).toHaveBeenCalledWith({
                 TableName: 'users-table',
