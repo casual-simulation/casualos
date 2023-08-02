@@ -153,6 +153,7 @@ export class RecordsController {
                 await this._store.addRecord({
                     name,
                     ownerId: userId,
+                    studioId: null,
                     secretHashes: [],
                     secretSalt: salt,
                 });
@@ -333,6 +334,7 @@ export class RecordsController {
                     await this._store.addRecord({
                         name,
                         ownerId: userId,
+                        studioId: null,
                         secretHashes: [],
                         secretSalt: this._createSalt(),
                     });

@@ -60,6 +60,20 @@ export class MemoryRecordsStore implements RecordsStore {
                 .map((r) => ({
                     name: r.name,
                     ownerId: r.ownerId,
+                    studioId: r.studioId,
+                })),
+            (r) => r.name
+        );
+    }
+
+    async listRecordsByStudioId(studioId: string): Promise<ListedRecord[]> {
+        return sortBy(
+            this._records
+                .filter((r) => r.studioId === studioId)
+                .map((r) => ({
+                    name: r.name,
+                    ownerId: r.ownerId,
+                    studioId: r.studioId,
                 })),
             (r) => r.name
         );

@@ -73,6 +73,7 @@ describe('PolicyController', () => {
         await services.recordsStore.updateRecord({
             name: recordName,
             ownerId: ownerId,
+            studioId: null,
             secretHashes: record.secretHashes,
             secretSalt: record.secretSalt,
         });

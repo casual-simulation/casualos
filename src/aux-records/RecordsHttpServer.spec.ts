@@ -6139,30 +6139,35 @@ describe('RecordsHttpServer', () => {
             await recordsStore.addRecord({
                 name: 'test0',
                 ownerId: 'otherUserId',
+                studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });
             await recordsStore.addRecord({
                 name: 'test1',
                 ownerId: userId,
+                studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });
             await recordsStore.addRecord({
                 name: 'test2',
                 ownerId: userId,
+                studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });
             await recordsStore.addRecord({
                 name: 'test3',
                 ownerId: userId,
+                studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });
             await recordsStore.addRecord({
                 name: 'test4',
                 ownerId: 'otherUserId',
+                studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });

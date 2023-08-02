@@ -44,6 +44,15 @@ export interface RecordsStore {
      * @param ownerId The ID of the user that owns the records.
      */
     listRecordsByOwnerId?(ownerId: string): Promise<ListedRecord[]>;
+
+    /**
+     * Gets the list of records that the studio with the given ID owns.
+     *
+     * If null or undefined, then this store does not support this method.
+     *
+     * @param studioId The ID of the studio that owns the records.
+     */
+    listRecordsByStudioId?(studioId: string): Promise<ListedRecord[]>;
 }
 
 /**
@@ -56,9 +65,16 @@ export interface Record {
     name: string;
 
     /**
-     * The ID of the user that created the record.
+     * The ID of the user that owns the record.
+     * Null if the record is owned by a studio.
      */
-    ownerId: string;
+    ownerId: string | null;
+
+    /**
+     * The ID of the studio that owns the record.
+     * Null if the record is owned by a user.
+     */
+    studioId: string | null;
 
     /**
      * The scrypt hashes of the secrets that allow access to the record.
@@ -81,9 +97,16 @@ export interface ListedRecord {
     name: string;
 
     /**
-     * The ID of the user that created the record.
+     * The ID of the user that owns the record.
+     * Null if owned by a studio.
      */
-    ownerId: string;
+    ownerId: string | null;
+
+    /**
+     * The ID of the studio that owns the record.
+     * Null if owned by a user.
+     */
+    studioId: string | null;
 }
 
 /**

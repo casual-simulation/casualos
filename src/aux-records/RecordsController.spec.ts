@@ -69,6 +69,7 @@ describe('RecordsController', () => {
             await store.addRecord({
                 name: 'name',
                 ownerId: 'userId',
+                studioId: null,
                 secretHashes: ['test'],
                 secretSalt: 'salt',
             });
@@ -127,6 +128,7 @@ describe('RecordsController', () => {
             await store.addRecord({
                 name: 'otherUserId',
                 ownerId: 'userId',
+                studioId: null,
                 secretHashes: ['test'],
                 secretSalt: 'salt',
             });
@@ -177,6 +179,7 @@ describe('RecordsController', () => {
             await store.addRecord({
                 name: 'name',
                 ownerId: 'userId',
+                studioId: null,
                 secretHashes: ['test'],
                 secretSalt: 'salt',
             });
@@ -208,6 +211,7 @@ describe('RecordsController', () => {
             await store.addRecord({
                 name: 'name',
                 ownerId: 'userId',
+                studioId: null,
                 secretHashes: ['test'],
                 secretSalt: 'salt',
             });
@@ -245,6 +249,7 @@ describe('RecordsController', () => {
             await store.addRecord({
                 name: 'name',
                 ownerId: 'userId',
+                studioId: null,
                 secretHashes: ['test'],
                 secretSalt: 'salt',
             });
@@ -294,6 +299,7 @@ describe('RecordsController', () => {
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
+                        studioId: null,
                         secretHashes: [hash3, hash2, hash1],
                         secretSalt: salt,
                     });
@@ -318,6 +324,7 @@ describe('RecordsController', () => {
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
+                        studioId: null,
                         secretHashes: [],
                         secretSalt: salt,
                     });
@@ -361,6 +368,7 @@ describe('RecordsController', () => {
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
+                        studioId: null,
                         secretHashes: [],
                         secretSalt: salt,
                     });
@@ -404,6 +412,7 @@ describe('RecordsController', () => {
                     store.addRecord({
                         name: 'otherUserId',
                         ownerId: 'otherUserId',
+                        studioId: null,
                         secretHashes: [],
                         secretSalt: salt,
                     });
@@ -456,6 +465,7 @@ describe('RecordsController', () => {
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
+                        studioId: null,
                         secretHashes: [hash3, hash2, hash1],
                         secretSalt: salt,
                     });
@@ -489,6 +499,7 @@ describe('RecordsController', () => {
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
+                        studioId: null,
                         secretHashes: [],
                         secretSalt: salt,
                     });
@@ -541,6 +552,7 @@ describe('RecordsController', () => {
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
+                        studioId: null,
                         secretHashes: [],
                         secretSalt: salt,
                     });
@@ -593,6 +605,7 @@ describe('RecordsController', () => {
                     store.addRecord({
                         name: 'otherUserId',
                         ownerId: 'otherUserId',
+                        studioId: null,
                         secretHashes: [],
                         secretSalt: salt,
                     });
@@ -665,6 +678,7 @@ describe('RecordsController', () => {
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
+                        studioId: null,
                         secretHashes: [hash3, hash2, hash1],
                         secretSalt: salt,
                     });
@@ -689,6 +703,7 @@ describe('RecordsController', () => {
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
+                        studioId: null,
                         secretHashes: [hash3, hash2, hash1],
                         secretSalt: salt,
                     });
@@ -711,6 +726,7 @@ describe('RecordsController', () => {
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
+                        studioId: null,
                         secretHashes: [],
                         secretSalt: salt,
                     });
@@ -754,6 +770,7 @@ describe('RecordsController', () => {
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
+                        studioId: null,
                         secretHashes: [],
                         secretSalt: salt,
                     });
@@ -795,6 +812,7 @@ describe('RecordsController', () => {
                     store.addRecord({
                         name: 'otherUserId',
                         ownerId: 'otherUserId',
+                        studioId: null,
                         secretHashes: [],
                         secretSalt: salt,
                     });
@@ -851,6 +869,7 @@ describe('RecordsController', () => {
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
+                        studioId: null,
                         secretHashes: [hash3, hash2, hash1],
                         secretSalt: salt,
                     });
@@ -884,6 +903,7 @@ describe('RecordsController', () => {
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
+                        studioId: null,
                         secretHashes: [hash3, hash2, hash1],
                         secretSalt: salt,
                     });
@@ -915,6 +935,7 @@ describe('RecordsController', () => {
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
+                        studioId: null,
                         secretHashes: [],
                         secretSalt: salt,
                     });
@@ -967,6 +988,7 @@ describe('RecordsController', () => {
                     store.addRecord({
                         name: 'name',
                         ownerId: 'userId',
+                        studioId: null,
                         secretHashes: [],
                         secretSalt: salt,
                     });
@@ -1017,6 +1039,7 @@ describe('RecordsController', () => {
                     store.addRecord({
                         name: 'otherUserId',
                         ownerId: 'otherUserId',
+                        studioId: null,
                         secretHashes: [],
                         secretSalt: salt,
                     });
@@ -1089,6 +1112,7 @@ describe('RecordsController', () => {
             await store.addRecord({
                 name: 'name',
                 ownerId: 'userId',
+                studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });
@@ -1105,6 +1129,7 @@ describe('RecordsController', () => {
             await store.addRecord({
                 name: 'name',
                 ownerId: 'userId',
+                studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });
@@ -1138,6 +1163,7 @@ describe('RecordsController', () => {
             await store.addRecord({
                 name: 'userId',
                 ownerId: 'otherUserId',
+                studioId: null,
                 secretHashes: [],
                 secretSalt: 'salt',
             });
@@ -1175,6 +1201,7 @@ describe('RecordsController', () => {
             await store.addRecord({
                 name: 'record1',
                 ownerId: 'userId',
+                studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });
@@ -1182,6 +1209,7 @@ describe('RecordsController', () => {
             await store.addRecord({
                 name: 'record2',
                 ownerId: 'userId',
+                studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });
@@ -1189,6 +1217,7 @@ describe('RecordsController', () => {
             await store.addRecord({
                 name: 'record3',
                 ownerId: 'userId',
+                studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });
@@ -1196,6 +1225,7 @@ describe('RecordsController', () => {
             await store.addRecord({
                 name: 'record4',
                 ownerId: 'otherUserId',
+                studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });

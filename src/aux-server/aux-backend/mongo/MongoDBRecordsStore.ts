@@ -67,4 +67,8 @@ export class MongoDBRecordsStore implements RecordsStore {
     listRecordsByOwnerId(ownerId: string): Promise<ListedRecord[]> {
         return this._collection.find({ ownerId: ownerId }).toArray();
     }
+
+    listRecordsByStudioId(studioId: string): Promise<ListedRecord[]> {
+        return this._collection.find({ studioId: studioId }).toArray();
+    }
 }

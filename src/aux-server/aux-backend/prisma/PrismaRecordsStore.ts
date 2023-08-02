@@ -98,6 +98,20 @@ export class PrismaRecordsStore implements RecordsStore {
             select: {
                 name: true,
                 ownerId: true,
+                studioId: true,
+            },
+        });
+    }
+
+    listRecordsByStudioId(studioId: string): Promise<ListedRecord[]> {
+        return this._client.record.findMany({
+            where: {
+                studioId: studioId,
+            },
+            select: {
+                name: true,
+                ownerId: true,
+                studioId: true,
             },
         });
     }
