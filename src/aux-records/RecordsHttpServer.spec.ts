@@ -6189,14 +6189,17 @@ describe('RecordsHttpServer', () => {
                         {
                             name: 'test1',
                             ownerId: userId,
+                            studioId: null,
                         },
                         {
                             name: 'test2',
                             ownerId: userId,
+                            studioId: null,
                         },
                         {
                             name: 'test3',
                             ownerId: userId,
+                            studioId: null,
                         },
                     ],
                 },
