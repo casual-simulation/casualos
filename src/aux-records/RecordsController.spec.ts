@@ -31,7 +31,7 @@ describe('RecordsController', () => {
 
     beforeEach(() => {
         auth = new MemoryAuthStore();
-        store = new MemoryRecordsStore();
+        store = new MemoryRecordsStore(auth);
         manager = new RecordsController(store, auth);
     });
 
@@ -1232,6 +1232,37 @@ describe('RecordsController', () => {
         });
 
         it('should return all records owned by the given user', async () => {
+            const result = await manager.listRecords('userId');
+
+            expect(result).toEqual({
+                success: true,
+                records: [
+                    {
+                        name: 'record1',
+                        ownerId: 'userId',
+                    },
+                    {
+                        name: 'record2',
+                        ownerId: 'userId',
+                    },
+                    {
+                        name: 'record3',
+                        ownerId: 'userId',
+                    },
+                ],
+            });
+        });
+
+        it('should return all records that the user has access to', async () => {
+            await store.addStudio({});
+            await store.addRecord({
+                name: 'record1',
+                ownerId: null,
+                studioId: 'studioId',
+                secretHashes: [],
+                secretSalt: '',
+            });
+
             const result = await manager.listRecords('userId');
 
             expect(result).toEqual({

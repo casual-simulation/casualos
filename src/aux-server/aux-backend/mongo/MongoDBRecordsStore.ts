@@ -3,16 +3,31 @@ import {
     RecordsStore,
     RecordKey,
     ListedRecord,
+    AuthStore,
+    Studio,
+    StudioAssignment,
+    ListedStudioAssignment,
+    ListedUserAssignment,
+    ListedStudio,
 } from '@casual-simulation/aux-records';
 import { Collection } from 'mongodb';
 
 export class MongoDBRecordsStore implements RecordsStore {
     private _collection: Collection<Record>;
     private _keyCollection: Collection<RecordKey>;
+    private _studios: Collection<MongoDBStudio>;
+    private _auth: AuthStore;
 
-    constructor(collection: Collection<Record>, keys: Collection<RecordKey>) {
+    constructor(
+        collection: Collection<Record>,
+        keys: Collection<RecordKey>,
+        studios: Collection<MongoDBStudio>,
+        auth: AuthStore
+    ) {
         this._collection = collection;
         this._keyCollection = keys;
+        this._studios = studios;
+        this._auth = auth;
     }
 
     async updateRecord(record: Record): Promise<void> {
@@ -71,4 +86,208 @@ export class MongoDBRecordsStore implements RecordsStore {
     listRecordsByStudioId(studioId: string): Promise<ListedRecord[]> {
         return this._collection.find({ studioId: studioId }).toArray();
     }
+
+    async addStudio(studio: Studio): Promise<void> {
+        this._studios.insertOne({
+            ...studio,
+            _id: studio.id,
+            assignments: [],
+        });
+    }
+
+    async updateStudio(studio: Studio): Promise<void> {
+        await this._studios.updateOne(
+            {
+                _id: studio.id,
+            },
+            {
+                $set: {
+                    displayName: studio.displayName,
+                },
+            },
+            { upsert: true }
+        );
+    }
+
+    async getStudioById(id: string): Promise<Studio> {
+        const studio = await this._studios.findOne({
+            _id: id,
+        });
+
+        if (!studio) {
+            return null;
+        }
+
+        return {
+            id: studio._id,
+            displayName: studio.displayName,
+            stripeCustomerId: studio.stripeCustomerId,
+            subscriptionId: studio.subscriptionId,
+            subscriptionStatus: studio.subscriptionStatus,
+        };
+    }
+
+    async listStudiosForUser(userId: string): Promise<ListedStudio[]> {
+        const studios = await this._studios
+            .find({
+                assignments: {
+                    $elemMatch: {
+                        userId: userId,
+                    },
+                },
+            })
+            .map((s) => ({
+                studioId: s._id,
+                displayName: s.displayName,
+            }))
+            .toArray();
+
+        return studios;
+    }
+
+    async addStudioAssignment(assignment: StudioAssignment): Promise<void> {
+        const studio = await this._studios.findOne({
+            _id: assignment.studioId,
+        });
+
+        if (!studio) {
+            return;
+        }
+
+        studio.assignments.push(assignment);
+
+        await this._studios.updateOne(
+            {
+                _id: assignment.studioId,
+            },
+            {
+                $set: {
+                    assignments: studio.assignments,
+                },
+            }
+        );
+    }
+
+    async removeStudioAssignment(
+        studioId: string,
+        userId: string
+    ): Promise<void> {
+        const studio = await this._studios.findOne({
+            _id: studioId,
+        });
+
+        if (!studio) {
+            return;
+        }
+
+        studio.assignments = studio.assignments.filter(
+            (a) => a.userId !== userId
+        );
+
+        await this._studios.updateOne(
+            {
+                _id: studioId,
+            },
+            {
+                $set: {
+                    assignments: studio.assignments,
+                },
+            }
+        );
+    }
+
+    async updateStudioAssignment(assignment: StudioAssignment): Promise<void> {
+        const studioId = assignment.studioId;
+        const userId = assignment.userId;
+        const studio = await this._studios.findOne({
+            _id: studioId,
+        });
+
+        if (!studio) {
+            return;
+        }
+
+        const index = studio.assignments.findIndex((a) => a.userId === userId);
+
+        if (index < 0) {
+            return;
+        }
+        studio.assignments[index] = assignment;
+
+        await this._studios.updateOne(
+            {
+                _id: studioId,
+            },
+            {
+                $set: {
+                    assignments: studio.assignments,
+                },
+            }
+        );
+    }
+
+    async listStudioAssignments(
+        studioId: string
+    ): Promise<ListedStudioAssignment[]> {
+        const studio = await this._studios.findOne({
+            _id: studioId,
+        });
+
+        if (!studio) {
+            return [];
+        }
+
+        let assignments: ListedStudioAssignment[] = [];
+
+        for (let a of studio.assignments) {
+            let user = await this._auth.findUser(a.userId);
+            if (!user) {
+                continue;
+            }
+            assignments.push({
+                studioId: a.studioId,
+                userId: a.userId,
+                isPrimaryContact: a.isPrimaryContact,
+                role: a.role,
+                user: {
+                    id: user.id,
+                    name: user.name,
+                },
+            });
+        }
+
+        return assignments;
+    }
+
+    async listUserAssignments(userId: string): Promise<ListedUserAssignment[]> {
+        const studios = await this._studios
+            .find({
+                assignments: {
+                    $elemMatch: {
+                        userId: userId,
+                    },
+                },
+            })
+            .toArray();
+
+        let assignments: ListedUserAssignment[] = [];
+
+        for (let s of studios) {
+            for (let a of s.assignments.filter((a) => a.userId === userId)) {
+                assignments.push({
+                    userId: a.userId,
+                    studioId: a.studioId,
+                    isPrimaryContact: a.isPrimaryContact,
+                    role: a.role,
+                });
+            }
+        }
+
+        return assignments;
+    }
+}
+
+export interface MongoDBStudio extends Studio {
+    _id: string;
+    assignments: StudioAssignment[];
 }

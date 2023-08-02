@@ -387,7 +387,7 @@ export class RecordsController {
     }
 
     /**
-     * Gets the list of records that the user with the given ID owns.
+     * Gets the list of records that the user with the given ID has access to.
      * @param userId The ID of the user.
      */
     async listRecords(userId: string): Promise<ListRecordsResult> {

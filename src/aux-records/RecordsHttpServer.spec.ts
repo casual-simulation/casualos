@@ -188,7 +188,9 @@ describe('RecordsHttpServer', () => {
             livekitEndpoint
         );
 
-        const memRecordsStore = (recordsStore = new MemoryRecordsStore());
+        const memRecordsStore = (recordsStore = new MemoryRecordsStore(
+            authStore
+        ));
         recordsController = new RecordsController(recordsStore, authStore);
 
         policyStore = new MemoryPolicyStore();

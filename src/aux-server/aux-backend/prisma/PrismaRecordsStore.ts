@@ -4,6 +4,11 @@ import {
     RecordKey,
     cleanupObject,
     ListedRecord,
+    Studio,
+    StudioAssignment,
+    ListedStudioAssignment,
+    ListedUserAssignment,
+    ListedStudio,
 } from '@casual-simulation/aux-records';
 import { PrismaClient } from '@prisma/client';
 
@@ -114,5 +119,134 @@ export class PrismaRecordsStore implements RecordsStore {
                 studioId: true,
             },
         });
+    }
+
+    async addStudio(studio: Studio): Promise<void> {
+        await this._client.studio.create({
+            data: {
+                id: studio.id,
+                displayName: studio.displayName,
+            },
+        });
+    }
+
+    async getStudioById(id: string): Promise<Studio> {
+        return await this._client.studio.findUnique({
+            where: {
+                id: id,
+            },
+        });
+    }
+
+    async updateStudio(studio: Studio): Promise<void> {
+        await this._client.studio.update({
+            where: {
+                id: studio.id,
+            },
+            data: {
+                displayName: studio.displayName,
+            },
+        });
+    }
+
+    async listStudiosForUser(userId: string): Promise<ListedStudio[]> {
+        const studios = await this._client.studio.findMany({
+            where: {
+                assignments: {
+                    some: {
+                        userId: userId,
+                    },
+                },
+            },
+            select: {
+                id: true,
+                displayName: true,
+            },
+        });
+
+        return studios.map((s) => ({
+            studioId: s.id,
+            displayName: s.displayName,
+        }));
+    }
+
+    async addStudioAssignment(assignment: StudioAssignment): Promise<void> {
+        await this._client.studioAssignment.create({
+            data: {
+                studioId: assignment.studioId,
+                userId: assignment.userId,
+                isPrimaryContact: assignment.isPrimaryContact,
+                role: assignment.role,
+            },
+        });
+    }
+
+    async updateStudioAssignment(assignment: StudioAssignment): Promise<void> {
+        await this._client.studioAssignment.update({
+            where: {
+                studioId_userId: {
+                    studioId: assignment.studioId,
+                    userId: assignment.userId,
+                },
+            },
+            data: {
+                isPrimaryContact: assignment.isPrimaryContact,
+                role: assignment.role,
+            },
+        });
+    }
+
+    async removeStudioAssignment(
+        studioId: string,
+        userId: string
+    ): Promise<void> {
+        await this._client.studioAssignment.delete({
+            where: {
+                studioId_userId: {
+                    studioId: studioId,
+                    userId: userId,
+                },
+            },
+        });
+    }
+
+    async listStudioAssignments(
+        studioId: string
+    ): Promise<ListedStudioAssignment[]> {
+        const assignments = await this._client.studioAssignment.findMany({
+            where: {
+                studioId: studioId,
+            },
+            select: {
+                studioId: true,
+                userId: true,
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                role: true,
+                isPrimaryContact: true,
+            },
+        });
+
+        return assignments;
+    }
+
+    async listUserAssignments(userId: string): Promise<ListedUserAssignment[]> {
+        const assignments = await this._client.studioAssignment.findMany({
+            where: {
+                userId: userId,
+            },
+            select: {
+                studioId: true,
+                userId: true,
+                isPrimaryContact: true,
+                role: true,
+            },
+        });
+
+        return assignments;
     }
 }
