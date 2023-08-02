@@ -13,6 +13,10 @@ import type {
     ListUserPoliciesResult,
     ListEventsResult,
     ListRoleAssignmentsResult,
+    ListStudiosResult,
+    ListedStudio,
+    Studio,
+    CreateStudioResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -263,6 +267,45 @@ export class AuthManager {
         }
 
         return null;
+    }
+
+    async listStudios(): Promise<ListedStudio[]> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/studios/list`);
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as ListStudiosResult;
+        if (result.success === true) {
+            return result.studios;
+        } else {
+        }
+
+        return null;
+    }
+
+    async createStudio(displayName: string): Promise<string> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/studios`);
+
+        const response = await axios.post(
+            url.href,
+            {
+                displayName,
+            },
+            {
+                headers: this._authenticationHeaders(),
+                validateStatus: (status) => status < 500 || status === 501,
+            }
+        );
+
+        const result = response.data as CreateStudioResult;
+        if (result.success === true) {
+            return result.studioId;
+        } else {
+            return null;
+        }
     }
 
     async listData(recordName: string, startingAddress?: string) {

@@ -4,6 +4,7 @@ import Component from 'vue-class-component';
 import { Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
+import { ListedStudio } from '@casual-simulation/aux-records';
 
 document.title = location.hostname;
 
@@ -17,7 +18,12 @@ export default class AuthApp extends Vue {
     showRecords: boolean = false;
 
     loadingRecords: boolean = false;
+    loadingStudios: boolean = false;
+    showCreateStudio: boolean = false;
     records: any[] = [];
+    studios: any[] = [];
+
+    studioName: string = '';
 
     get title() {
         return location.hostname;
@@ -29,14 +35,51 @@ export default class AuthApp extends Vue {
         }
     }
 
+    async onExpandStudio(studio: any) {
+        studio.loading = true;
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        studio.loading = false;
+        studio.records = [
+            {
+                name: 'test',
+                label: 'test',
+                ownerId: 'test',
+            },
+            {
+                name: 'other',
+                label: 'other',
+                ownerId: 'other',
+            },
+        ];
+    }
+
     created() {
         this.showLogout = false;
         this.showRecords = false;
+        this.showCreateStudio = false;
         this.loadingRecords = false;
+        this.loadingStudios = false;
         this.records = [];
+        this.studios = [];
+        this.studioName = '';
         authManager.loginState.subscribe((state) => {
             this.showLogout = authManager.isLoggedIn();
+
+            if (authManager.isLoggedIn()) {
+                this.loadStudios();
+            }
         });
+    }
+
+    startCreateStudio() {
+        this.showCreateStudio = true;
+        this.studioName = '';
+    }
+
+    async createStudio() {
+        this.showCreateStudio = false;
+        const studioId = await authManager.createStudio(this.studioName);
+        await this.loadStudios();
     }
 
     async logout() {
@@ -56,6 +99,22 @@ export default class AuthApp extends Vue {
             }));
         } finally {
             this.loadingRecords = false;
+        }
+    }
+
+    async loadStudios() {
+        console.log('[AuthApp] Loading studios...');
+        this.loadingStudios = true;
+        try {
+            const studios = (await authManager.listStudios()) ?? [];
+            this.studios = studios.map((s) => ({
+                ...s,
+                records: [],
+                loading: false,
+                open: false,
+            }));
+        } finally {
+            this.loadingStudios = false;
         }
     }
 }
