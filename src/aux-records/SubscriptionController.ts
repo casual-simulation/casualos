@@ -54,6 +54,14 @@ export class SubscriptionController {
         }
 
         try {
+            if (request.userId && request.studioId) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The given request is invalid. It must not specify both a user ID and a studio ID.',
+                };
+            }
             if (request.userId) {
                 if (
                     typeof request.userId !== 'string' ||

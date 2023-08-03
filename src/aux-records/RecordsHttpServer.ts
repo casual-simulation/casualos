@@ -716,6 +716,15 @@ export class RecordsHttpServer {
                 await this._listStudios(request),
                 this._allowedAccountOrigins
             );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/subscriptions'
+        ) {
+            return formatResponse(
+                request,
+                await this._getSubscriptionInfoV2(request),
+                this._allowedAccountOrigins
+            );
         } else if (request.method === 'OPTIONS') {
             return formatResponse(
                 request,
@@ -3187,6 +3196,89 @@ export class RecordsHttpServer {
         const result = await this._subscriptions.getSubscriptionStatus({
             sessionKey,
             userId,
+        });
+
+        if (!result.success) {
+            return returnResult(result);
+        }
+
+        return returnResult({
+            success: true,
+            publishableKey: result.publishableKey,
+            subscriptions: result.subscriptions.map((s) => ({
+                active: s.active,
+                statusCode: s.statusCode,
+                productName: s.productName,
+                startDate: s.startDate,
+                endedDate: s.endedDate,
+                cancelDate: s.cancelDate,
+                canceledDate: s.canceledDate,
+                currentPeriodStart: s.currentPeriodStart,
+                currentPeriodEnd: s.currentPeriodEnd,
+                renewalInterval: s.renewalInterval,
+                intervalLength: s.intervalLength,
+                intervalCost: s.intervalCost,
+                currency: s.currency,
+                featureList: s.featureList,
+            })),
+            purchasableSubscriptions: result.purchasableSubscriptions.map(
+                (s) => ({
+                    id: s.id,
+                    name: s.name,
+                    description: s.description,
+                    featureList: s.featureList,
+                    prices: s.prices,
+                })
+            ),
+        });
+    }
+
+    private async _getSubscriptionInfoV2(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!this._subscriptions) {
+            return returnResult(SUBSCRIPTIONS_NOT_SUPPORTED_RESULT);
+        }
+
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const sessionKey = getSessionKey(request);
+
+        if (!sessionKey) {
+            return returnResult(NOT_LOGGED_IN_RESULT);
+        }
+
+        const schema = z.object({
+            studioId: z
+                .string({
+                    invalid_type_error: 'studioId must be a string.',
+                    required_error: 'studioId is required.',
+                })
+                .nonempty('studioId must be non-empty.')
+                .optional(),
+            userId: z
+                .string({
+                    invalid_type_error: 'userId must be a string.',
+                    required_error: 'userId is required.',
+                })
+                .nonempty('userId must be non-empty.')
+                .optional(),
+        });
+
+        const parseResult = schema.safeParse(request.query || {});
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { studioId, userId } = parseResult.data;
+
+        const result = await this._subscriptions.getSubscriptionStatus({
+            sessionKey,
+            userId,
+            studioId,
         });
 
         if (!result.success) {
