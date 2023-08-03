@@ -844,6 +844,8 @@ const subscriptionConfigSchema = z.object({
             defaultSubscription: z.boolean().optional(),
             purchasable: z.boolean().optional(),
             tier: z.string().nonempty().optional(),
+            userOnly: z.boolean().optional(),
+            studioOnly: z.boolean().optional(),
         })
     ),
 });
