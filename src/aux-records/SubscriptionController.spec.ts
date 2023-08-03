@@ -897,6 +897,27 @@ describe('SubscriptionController', () => {
                 });
             });
 
+            it('should return a invalid_key result if the user is not an admin', async () => {
+                await recordsStore.removeStudioAssignment(studioId, user.id);
+                await recordsStore.addStudioAssignment({
+                    studioId: studioId,
+                    userId: user.id,
+                    isPrimaryContact: true,
+                    role: 'member',
+                });
+
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey: sessionKey,
+                    studioId,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                });
+            });
+
             it('should return a invalid_key result if given the wrong sessionKey', async () => {
                 const result = await controller.getSubscriptionStatus({
                     sessionKey: formatV1SessionKey(
