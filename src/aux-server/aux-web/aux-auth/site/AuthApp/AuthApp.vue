@@ -61,6 +61,7 @@
                         <md-list slot="md-expand">
                             <md-list-item
                                 class="md-inset"
+                                v-if="studio.role === 'admin'"
                                 :to="{
                                     name: 'studio',
                                     params: {
@@ -70,7 +71,7 @@
                                 }"
                             >
                                 <md-icon>settings</md-icon>
-                                <span class="md-list-item-text">Subscription</span>
+                                <span class="md-list-item-text">Settings</span>
                             </md-list-item>
                             <md-list-item
                                 v-for="record in studio.records"

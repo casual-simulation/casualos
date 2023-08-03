@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="studio-container">
         <h2>{{ studioName }}</h2>
         <auth-subscription :studioId="studioId" />
     </div>
