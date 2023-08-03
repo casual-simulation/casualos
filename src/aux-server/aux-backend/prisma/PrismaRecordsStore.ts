@@ -1,3 +1,4 @@
+import { hasValue } from '@casual-simulation/aux-common';
 import {
     Record,
     RecordsStore,
@@ -9,8 +10,9 @@ import {
     ListedStudioAssignment,
     ListedUserAssignment,
     ListedStudio,
+    ListStudioAssignmentFilters,
 } from '@casual-simulation/aux-records';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 export class PrismaRecordsStore implements RecordsStore {
     private _client: PrismaClient;
@@ -266,12 +268,27 @@ export class PrismaRecordsStore implements RecordsStore {
     }
 
     async listStudioAssignments(
-        studioId: string
+        studioId: string,
+        filters?: ListStudioAssignmentFilters
     ): Promise<ListedStudioAssignment[]> {
+        let filter: Prisma.StudioAssignmentWhereInput = {
+            studioId: studioId,
+        };
+
+        if (hasValue(filters?.userId)) {
+            filter.userId = filters.userId;
+        }
+
+        if (hasValue(filters?.role)) {
+            filter.role = filters.role;
+        }
+
+        if (hasValue(filters?.isPrimaryContact)) {
+            filter.isPrimaryContact = filters.isPrimaryContact;
+        }
+
         const assignments = await this._client.studioAssignment.findMany({
-            where: {
-                studioId: studioId,
-            },
+            where: filter,
             select: {
                 studioId: true,
                 userId: true,

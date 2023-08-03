@@ -123,8 +123,12 @@ export interface RecordsStore {
     /**
      * Gets the list of users that have been assigned to the given studio.
      * @param studioId The ID of the studio.
+     * @param filters The additional filters that should be used.
      */
-    listStudioAssignments(studioId: string): Promise<ListedStudioAssignment[]>;
+    listStudioAssignments(
+        studioId: string,
+        filters?: ListStudioAssignmentFilters
+    ): Promise<ListedStudioAssignment[]>;
 
     /**
      * Gets the list of studio assignments that the user with the given ID has access to.
@@ -318,6 +322,23 @@ export interface ListedStudio {
      * The name of the studio.
      */
     displayName: string;
+}
+
+export interface ListStudioAssignmentFilters {
+    /**
+     * The ID of the user to filter by.
+     */
+    userId?: string;
+
+    /**
+     * The role to filter by.
+     */
+    role?: string;
+
+    /**
+     * Whether to filter by primary contact.
+     */
+    isPrimaryContact?: boolean;
 }
 
 /**

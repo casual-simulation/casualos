@@ -7,6 +7,8 @@ import { AuthMessenger } from './AuthMessenger';
 import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
 import { StripeInterface, StripeProduct } from './StripeInterface';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import { Studio } from './RecordsStore';
+import { MemoryRecordsStore } from './MemoryRecordsStore';
 
 console.log = jest.fn();
 
@@ -15,6 +17,7 @@ describe('SubscriptionController', () => {
     let auth: AuthController;
     let authStore: AuthStore;
     let authMessenger: MemoryAuthMessenger;
+    let recordsStore: MemoryRecordsStore;
 
     let stripeMock: {
         publishableKey: string;
@@ -35,6 +38,7 @@ describe('SubscriptionController', () => {
     beforeEach(async () => {
         authStore = new MemoryAuthStore();
         authMessenger = new MemoryAuthMessenger();
+        recordsStore = new MemoryRecordsStore(authStore);
 
         config = {
             subscriptions: [
@@ -118,6 +122,7 @@ describe('SubscriptionController', () => {
             stripe,
             auth,
             authStore,
+            recordsStore,
             config
         );
 
@@ -159,314 +164,819 @@ describe('SubscriptionController', () => {
             expect(user.stripeCustomerId).toBeFalsy();
         });
 
-        it('should be able list subscriptions when the user has no customer ID', async () => {
-            const result = await controller.getSubscriptionStatus({
-                sessionKey,
-                userId,
-            });
-
-            expect(result).toEqual({
-                success: true,
-                userId,
-                publishableKey: 'publishable_key',
-                subscriptions: [],
-                purchasableSubscriptions: [
-                    {
-                        id: 'sub_1',
-                        name: 'Product 99',
-                        description: 'A product named 99.',
-                        featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
-                        prices: [
-                            {
-                                id: 'default',
-                                interval: 'month',
-                                intervalLength: 1,
-                                currency: 'usd',
-                                cost: 100,
-                            },
-                        ],
-                    },
-                ],
-            });
-        });
-
-        it('should be able list subscriptions when the user has a customer ID', async () => {
-            await authStore.saveUser({
-                ...user,
-                stripeCustomerId: 'stripe_customer',
-            });
-            user = await authStore.findUserByAddress(
-                'test@example.com',
-                'email'
-            );
-            expect(user.stripeCustomerId).toBe('stripe_customer');
-
-            stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
-                {
-                    subscriptions: [],
-                }
-            );
-
-            const result = await controller.getSubscriptionStatus({
-                sessionKey,
-                userId,
-            });
-
-            expect(result).toEqual({
-                success: true,
-                userId,
-                publishableKey: 'publishable_key',
-                subscriptions: [],
-                purchasableSubscriptions: [
-                    {
-                        id: 'sub_1',
-                        name: 'Product 99',
-                        description: 'A product named 99.',
-                        featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
-                        prices: [
-                            {
-                                id: 'default',
-                                interval: 'month',
-                                intervalLength: 1,
-                                currency: 'usd',
-                                cost: 100,
-                            },
-                        ],
-                    },
-                ],
-            });
-        });
-
-        it('should be able to list subscriptions that the user has', async () => {
-            await authStore.saveUser({
-                ...user,
-                stripeCustomerId: 'stripe_customer',
-            });
-            user = await authStore.findUserByAddress(
-                'test@example.com',
-                'email'
-            );
-            expect(user.stripeCustomerId).toBe('stripe_customer');
-
-            stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
-                {
-                    subscriptions: [
-                        {
-                            id: 'subscription_id',
-                            status: 'active',
-                            start_date: 123,
-                            ended_at: null,
-                            cancel_at: null,
-                            canceled_at: null,
-                            current_period_start: 456,
-                            current_period_end: 999,
-                            items: [
-                                {
-                                    id: 'item_id',
-                                    price: {
-                                        id: 'price_id',
-                                        interval: 'month',
-                                        interval_count: 1,
-                                        currency: 'usd',
-                                        unit_amount: 123,
-
-                                        product: {
-                                            id: 'product_id',
-                                            name: 'Product Name',
-                                        },
-                                    },
-                                },
-                            ],
-                        },
-                    ],
-                }
-            );
-
-            const result = await controller.getSubscriptionStatus({
-                sessionKey,
-                userId,
-            });
-
-            expect(result).toEqual({
-                success: true,
-                userId,
-                publishableKey: 'publishable_key',
-                subscriptions: [
-                    {
-                        active: true,
-                        statusCode: 'active',
-                        productName: 'Product Name',
-                        startDate: 123,
-                        endedDate: null,
-                        cancelDate: null,
-                        canceledDate: null,
-                        currentPeriodStart: 456,
-                        currentPeriodEnd: 999,
-                        renewalInterval: 'month',
-                        intervalLength: 1,
-                        intervalCost: 123,
-                        currency: 'usd',
-                    },
-                ],
-                purchasableSubscriptions: [],
-            });
-        });
-
-        it('should include the feature list for the active subscription', async () => {
-            await authStore.saveUser({
-                ...user,
-                stripeCustomerId: 'stripe_customer',
-            });
-            user = await authStore.findUserByAddress(
-                'test@example.com',
-                'email'
-            );
-            expect(user.stripeCustomerId).toBe('stripe_customer');
-
-            stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
-                {
-                    subscriptions: [
-                        {
-                            id: 'subscription_id',
-                            status: 'active',
-                            start_date: 123,
-                            ended_at: null,
-                            cancel_at: null,
-                            canceled_at: null,
-                            current_period_start: 456,
-                            current_period_end: 999,
-                            items: [
-                                {
-                                    id: 'item_id',
-                                    price: {
-                                        id: 'price_id',
-                                        interval: 'month',
-                                        interval_count: 1,
-                                        currency: 'usd',
-                                        unit_amount: 123,
-
-                                        product: {
-                                            id: 'product_1_id',
-                                            name: 'Product Name',
-                                        },
-                                    },
-                                },
-                            ],
-                        },
-                    ],
-                }
-            );
-
-            const result = await controller.getSubscriptionStatus({
-                sessionKey,
-                userId,
-            });
-
-            expect(result).toEqual({
-                success: true,
-                userId,
-                publishableKey: 'publishable_key',
-                subscriptions: [
-                    {
-                        active: true,
-                        statusCode: 'active',
-                        productName: 'Product Name',
-                        startDate: 123,
-                        endedDate: null,
-                        cancelDate: null,
-                        canceledDate: null,
-                        currentPeriodStart: 456,
-                        currentPeriodEnd: 999,
-                        renewalInterval: 'month',
-                        intervalLength: 1,
-                        intervalCost: 123,
-                        currency: 'usd',
-                        featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
-                    },
-                ],
-                purchasableSubscriptions: [],
-            });
-        });
-
-        it('should return a invalid_key result if given the wrong sessionKey', async () => {
-            const result = await controller.getSubscriptionStatus({
-                sessionKey: formatV1SessionKey(
-                    'wrong user id',
-                    'wrong session id',
-                    'wrong session secret',
-                    123
-                ),
-                userId,
-            });
-
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'invalid_key',
-                errorMessage: INVALID_KEY_ERROR_MESSAGE,
-            });
-        });
-
-        it('should return a invalid_key result if given a sessionKey with a wrong secret', async () => {
-            const [userId, sessionId, secret, expiry] =
-                parseSessionKey(sessionKey);
-
-            const result = await controller.getSubscriptionStatus({
-                sessionKey: formatV1SessionKey(
+        describe('user', () => {
+            it('should be able list subscriptions when the user has no customer ID', async () => {
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
                     userId,
-                    sessionId,
-                    'wrong session secret',
-                    expiry
-                ),
-                userId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [],
+                    purchasableSubscriptions: [
+                        {
+                            id: 'sub_1',
+                            name: 'Product 99',
+                            description: 'A product named 99.',
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 100,
+                                },
+                            ],
+                        },
+                    ],
+                });
             });
 
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'invalid_key',
-                errorMessage: INVALID_KEY_ERROR_MESSAGE,
+            it('should only list subscriptions purchasable by users', async () => {
+                config.subscriptions = [
+                    ...config.subscriptions,
+                    {
+                        id: 'sub_3',
+                        eligibleProducts: ['product_99_id'],
+                        product: 'product_99_id',
+                        studioOnly: true,
+                        featureList: ['Feature 1'],
+                    },
+                    {
+                        id: 'sub_4',
+                        eligibleProducts: ['product_1000_id'],
+                        product: 'product_1000_id',
+                        userOnly: true,
+                        featureList: ['Feature 1'],
+                    },
+                ];
+
+                controller = new SubscriptionController(
+                    stripe,
+                    auth,
+                    authStore,
+                    recordsStore,
+                    config
+                );
+
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [],
+                    purchasableSubscriptions: [
+                        {
+                            id: 'sub_1',
+                            name: 'Product 99',
+                            description: 'A product named 99.',
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 100,
+                                },
+                            ],
+                        },
+                        {
+                            id: 'sub_4',
+                            name: 'Product 1000',
+                            description: 'A product named 1000.',
+                            featureList: ['Feature 1'],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 9999,
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+
+            it('should be able list subscriptions when the user has a customer ID', async () => {
+                await authStore.saveUser({
+                    ...user,
+                    stripeCustomerId: 'stripe_customer',
+                });
+                user = await authStore.findUserByAddress(
+                    'test@example.com',
+                    'email'
+                );
+                expect(user.stripeCustomerId).toBe('stripe_customer');
+
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [],
+                    }
+                );
+
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [],
+                    purchasableSubscriptions: [
+                        {
+                            id: 'sub_1',
+                            name: 'Product 99',
+                            description: 'A product named 99.',
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 100,
+                                },
+                            ],
+                        },
+                    ],
+                });
+            });
+
+            it('should be able to list subscriptions that the user has', async () => {
+                await authStore.saveUser({
+                    ...user,
+                    stripeCustomerId: 'stripe_customer',
+                });
+                user = await authStore.findUserByAddress(
+                    'test@example.com',
+                    'email'
+                );
+                expect(user.stripeCustomerId).toBe('stripe_customer');
+
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [
+                            {
+                                id: 'subscription_id',
+                                status: 'active',
+                                start_date: 123,
+                                ended_at: null,
+                                cancel_at: null,
+                                canceled_at: null,
+                                current_period_start: 456,
+                                current_period_end: 999,
+                                items: [
+                                    {
+                                        id: 'item_id',
+                                        price: {
+                                            id: 'price_id',
+                                            interval: 'month',
+                                            interval_count: 1,
+                                            currency: 'usd',
+                                            unit_amount: 123,
+
+                                            product: {
+                                                id: 'product_id',
+                                                name: 'Product Name',
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                );
+
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [
+                        {
+                            active: true,
+                            statusCode: 'active',
+                            productName: 'Product Name',
+                            startDate: 123,
+                            endedDate: null,
+                            cancelDate: null,
+                            canceledDate: null,
+                            currentPeriodStart: 456,
+                            currentPeriodEnd: 999,
+                            renewalInterval: 'month',
+                            intervalLength: 1,
+                            intervalCost: 123,
+                            currency: 'usd',
+                        },
+                    ],
+                    purchasableSubscriptions: [],
+                });
+            });
+
+            it('should include the feature list for the active subscription', async () => {
+                await authStore.saveUser({
+                    ...user,
+                    stripeCustomerId: 'stripe_customer',
+                });
+                user = await authStore.findUserByAddress(
+                    'test@example.com',
+                    'email'
+                );
+                expect(user.stripeCustomerId).toBe('stripe_customer');
+
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [
+                            {
+                                id: 'subscription_id',
+                                status: 'active',
+                                start_date: 123,
+                                ended_at: null,
+                                cancel_at: null,
+                                canceled_at: null,
+                                current_period_start: 456,
+                                current_period_end: 999,
+                                items: [
+                                    {
+                                        id: 'item_id',
+                                        price: {
+                                            id: 'price_id',
+                                            interval: 'month',
+                                            interval_count: 1,
+                                            currency: 'usd',
+                                            unit_amount: 123,
+
+                                            product: {
+                                                id: 'product_1_id',
+                                                name: 'Product Name',
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                );
+
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [
+                        {
+                            active: true,
+                            statusCode: 'active',
+                            productName: 'Product Name',
+                            startDate: 123,
+                            endedDate: null,
+                            cancelDate: null,
+                            canceledDate: null,
+                            currentPeriodStart: 456,
+                            currentPeriodEnd: 999,
+                            renewalInterval: 'month',
+                            intervalLength: 1,
+                            intervalCost: 123,
+                            currency: 'usd',
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                        },
+                    ],
+                    purchasableSubscriptions: [],
+                });
+            });
+
+            it('should return a invalid_key result if given the wrong sessionKey', async () => {
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey: formatV1SessionKey(
+                        'wrong user id',
+                        'wrong session id',
+                        'wrong session secret',
+                        123
+                    ),
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                });
+            });
+
+            it('should return a invalid_key result if given a sessionKey with a wrong secret', async () => {
+                const [userId, sessionId, secret, expiry] =
+                    parseSessionKey(sessionKey);
+
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey: formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        'wrong session secret',
+                        expiry
+                    ),
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                });
+            });
+
+            it('should return a unacceptable_session_key result if given an incorrectly formatted sessionKey', async () => {
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey: 'wrong',
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'unacceptable_session_key',
+                    errorMessage:
+                        'The given session key is invalid. It must be a correctly formatted string.',
+                });
+            });
+
+            it('should return a unacceptable_request result if given an empty userId', async () => {
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    userId: '',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The given request is invalid. It must have a valid user ID or studio ID.',
+                });
+            });
+
+            it('should return a not_supported result if the controller has no stripe integration', async () => {
+                (controller as any)._stripe = null;
+
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    userId,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This method is not supported.',
+                });
             });
         });
 
-        it('should return a unacceptable_session_key result if given an incorrectly formatted sessionKey', async () => {
-            const result = await controller.getSubscriptionStatus({
-                sessionKey: 'wrong',
-                userId,
+        describe('studio', () => {
+            let studio: Studio;
+            let studioId: string = 'studioId';
+
+            beforeEach(async () => {
+                studioId = 'studioId';
+                studio = {
+                    id: studioId,
+                    displayName: 'studio name',
+                };
+                await recordsStore.addStudio(studio);
+                await recordsStore.addStudioAssignment({
+                    studioId: studioId,
+                    userId: user.id,
+                    isPrimaryContact: true,
+                    role: 'admin',
+                });
             });
 
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'unacceptable_session_key',
-                errorMessage:
-                    'The given session key is invalid. It must be a correctly formatted string.',
+            it('should be able list subscriptions when the studio has no customer ID', async () => {
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    studioId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    studioId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [],
+                    purchasableSubscriptions: [
+                        {
+                            id: 'sub_1',
+                            name: 'Product 99',
+                            description: 'A product named 99.',
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 100,
+                                },
+                            ],
+                        },
+                    ],
+                });
             });
-        });
 
-        it('should return a unacceptable_user_id result if given an empty userId', async () => {
-            const result = await controller.getSubscriptionStatus({
-                sessionKey,
-                userId: '',
+            it('should only list subscriptions purchasable by studios', async () => {
+                config.subscriptions = [
+                    ...config.subscriptions,
+                    {
+                        id: 'sub_3',
+                        eligibleProducts: ['product_99_id'],
+                        product: 'product_99_id',
+                        studioOnly: true,
+                        featureList: ['Feature 1'],
+                    },
+                    {
+                        id: 'sub_4',
+                        eligibleProducts: ['product_1000_id'],
+                        product: 'product_1000_id',
+                        userOnly: true,
+                        featureList: ['Feature 1'],
+                    },
+                ];
+
+                controller = new SubscriptionController(
+                    stripe,
+                    auth,
+                    authStore,
+                    recordsStore,
+                    config
+                );
+
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    studioId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    studioId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [],
+                    purchasableSubscriptions: [
+                        {
+                            id: 'sub_1',
+                            name: 'Product 99',
+                            description: 'A product named 99.',
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 100,
+                                },
+                            ],
+                        },
+                        {
+                            id: 'sub_3',
+                            name: 'Product 99',
+                            description: 'A product named 99.',
+                            featureList: ['Feature 1'],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 100,
+                                },
+                            ],
+                        },
+                    ],
+                });
             });
 
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'unacceptable_user_id',
-                errorMessage:
-                    'The given user ID is invalid. It must be a correctly formatted string.',
+            it('should be able list subscriptions when the studio has a customer ID', async () => {
+                await recordsStore.updateStudio({
+                    ...studio,
+                    stripeCustomerId: 'stripe_customer',
+                });
+                studio = await recordsStore.getStudioById(studioId);
+                expect(studio.stripeCustomerId).toBe('stripe_customer');
+
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [],
+                    }
+                );
+
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    studioId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    studioId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [],
+                    purchasableSubscriptions: [
+                        {
+                            id: 'sub_1',
+                            name: 'Product 99',
+                            description: 'A product named 99.',
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                            prices: [
+                                {
+                                    id: 'default',
+                                    interval: 'month',
+                                    intervalLength: 1,
+                                    currency: 'usd',
+                                    cost: 100,
+                                },
+                            ],
+                        },
+                    ],
+                });
             });
-        });
 
-        it('should return a not_supported result if the controller has no stripe integration', async () => {
-            (controller as any)._stripe = null;
+            it('should be able to list subscriptions that the studio has', async () => {
+                await recordsStore.updateStudio({
+                    ...studio,
+                    stripeCustomerId: 'stripe_customer',
+                });
+                studio = await recordsStore.getStudioById(studioId);
+                expect(studio.stripeCustomerId).toBe('stripe_customer');
 
-            const result = await controller.getSubscriptionStatus({
-                sessionKey,
-                userId,
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [
+                            {
+                                id: 'subscription_id',
+                                status: 'active',
+                                start_date: 123,
+                                ended_at: null,
+                                cancel_at: null,
+                                canceled_at: null,
+                                current_period_start: 456,
+                                current_period_end: 999,
+                                items: [
+                                    {
+                                        id: 'item_id',
+                                        price: {
+                                            id: 'price_id',
+                                            interval: 'month',
+                                            interval_count: 1,
+                                            currency: 'usd',
+                                            unit_amount: 123,
+
+                                            product: {
+                                                id: 'product_id',
+                                                name: 'Product Name',
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                );
+
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    studioId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    studioId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [
+                        {
+                            active: true,
+                            statusCode: 'active',
+                            productName: 'Product Name',
+                            startDate: 123,
+                            endedDate: null,
+                            cancelDate: null,
+                            canceledDate: null,
+                            currentPeriodStart: 456,
+                            currentPeriodEnd: 999,
+                            renewalInterval: 'month',
+                            intervalLength: 1,
+                            intervalCost: 123,
+                            currency: 'usd',
+                        },
+                    ],
+                    purchasableSubscriptions: [],
+                });
             });
 
-            expect(result).toEqual({
-                success: false,
-                errorCode: 'not_supported',
-                errorMessage: 'This method is not supported.',
+            it('should include the feature list for the active subscription', async () => {
+                await recordsStore.updateStudio({
+                    ...studio,
+                    stripeCustomerId: 'stripe_customer',
+                });
+                studio = await recordsStore.getStudioById(studioId);
+                expect(studio.stripeCustomerId).toBe('stripe_customer');
+
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [
+                            {
+                                id: 'subscription_id',
+                                status: 'active',
+                                start_date: 123,
+                                ended_at: null,
+                                cancel_at: null,
+                                canceled_at: null,
+                                current_period_start: 456,
+                                current_period_end: 999,
+                                items: [
+                                    {
+                                        id: 'item_id',
+                                        price: {
+                                            id: 'price_id',
+                                            interval: 'month',
+                                            interval_count: 1,
+                                            currency: 'usd',
+                                            unit_amount: 123,
+
+                                            product: {
+                                                id: 'product_1_id',
+                                                name: 'Product Name',
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                );
+
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    studioId,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    userId,
+                    studioId,
+                    publishableKey: 'publishable_key',
+                    subscriptions: [
+                        {
+                            active: true,
+                            statusCode: 'active',
+                            productName: 'Product Name',
+                            startDate: 123,
+                            endedDate: null,
+                            cancelDate: null,
+                            canceledDate: null,
+                            currentPeriodStart: 456,
+                            currentPeriodEnd: 999,
+                            renewalInterval: 'month',
+                            intervalLength: 1,
+                            intervalCost: 123,
+                            currency: 'usd',
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                        },
+                    ],
+                    purchasableSubscriptions: [],
+                });
+            });
+
+            it('should return a invalid_key result if given the wrong sessionKey', async () => {
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey: formatV1SessionKey(
+                        'wrong user id',
+                        'wrong session id',
+                        'wrong session secret',
+                        123
+                    ),
+                    studioId,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                });
+            });
+
+            it('should return a invalid_key result if given a sessionKey with a wrong secret', async () => {
+                const [userId, sessionId, secret, expiry] =
+                    parseSessionKey(sessionKey);
+
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey: formatV1SessionKey(
+                        userId,
+                        sessionId,
+                        'wrong session secret',
+                        expiry
+                    ),
+                    studioId,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                });
+            });
+
+            it('should return a unacceptable_session_key result if given an incorrectly formatted sessionKey', async () => {
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey: 'wrong',
+                    studioId,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'unacceptable_session_key',
+                    errorMessage:
+                        'The given session key is invalid. It must be a correctly formatted string.',
+                });
+            });
+
+            it('should return a unacceptable_request result if given an empty userId', async () => {
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    studioId: '',
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The given request is invalid. It must have a valid user ID or studio ID.',
+                });
+            });
+
+            it('should return a not_supported result if the controller has no stripe integration', async () => {
+                (controller as any)._stripe = null;
+
+                const result = await controller.getSubscriptionStatus({
+                    sessionKey,
+                    studioId,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This method is not supported.',
+                });
             });
         });
     });
@@ -574,6 +1084,7 @@ describe('SubscriptionController', () => {
                     stripe,
                     auth,
                     authStore,
+                    recordsStore,
                     {
                         subscriptions: [
                             {
@@ -1088,28 +1599,38 @@ describe('SubscriptionController', () => {
                 name: 'test name',
             });
 
-            controller = new SubscriptionController(stripe, auth, authStore, {
-                subscriptions: [
-                    {
-                        id: 'sub_1',
-                        product: 'product_99_id',
-                        eligibleProducts: [
-                            'product_99_id',
-                            'product_1_id',
-                            'product_2_id',
-                            'product_3_id',
-                        ],
-                        featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
+            controller = new SubscriptionController(
+                stripe,
+                auth,
+                authStore,
+                recordsStore,
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub_1',
+                            product: 'product_99_id',
+                            eligibleProducts: [
+                                'product_99_id',
+                                'product_1_id',
+                                'product_2_id',
+                                'product_3_id',
+                            ],
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                        },
+                    ],
+                    checkoutConfig: {
+                        mySpecialKey: 123,
                     },
-                ],
-                checkoutConfig: {
-                    mySpecialKey: 123,
-                },
-                webhookSecret: 'webhook_secret',
-                cancelUrl: 'cancel_url',
-                returnUrl: 'return_url',
-                successUrl: 'success_url',
-            });
+                    webhookSecret: 'webhook_secret',
+                    cancelUrl: 'cancel_url',
+                    returnUrl: 'return_url',
+                    successUrl: 'success_url',
+                }
+            );
 
             const result = await controller.createManageSubscriptionLink({
                 sessionKey,
@@ -1185,28 +1706,38 @@ describe('SubscriptionController', () => {
                 new Error('Should not be hit')
             );
 
-            controller = new SubscriptionController(stripe, auth, authStore, {
-                subscriptions: [
-                    {
-                        id: 'sub_1',
-                        product: 'product_99_id',
-                        eligibleProducts: [
-                            'product_99_id',
-                            'product_1_id',
-                            'product_2_id',
-                            'product_3_id',
-                        ],
-                        featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
+            controller = new SubscriptionController(
+                stripe,
+                auth,
+                authStore,
+                recordsStore,
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub_1',
+                            product: 'product_99_id',
+                            eligibleProducts: [
+                                'product_99_id',
+                                'product_1_id',
+                                'product_2_id',
+                                'product_3_id',
+                            ],
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
+                        },
+                    ],
+                    portalConfig: {
+                        mySpecialKey: 123,
                     },
-                ],
-                portalConfig: {
-                    mySpecialKey: 123,
-                },
-                webhookSecret: 'webhook_secret',
-                cancelUrl: 'cancel_url',
-                returnUrl: 'return_url',
-                successUrl: 'success_url',
-            });
+                    webhookSecret: 'webhook_secret',
+                    cancelUrl: 'cancel_url',
+                    returnUrl: 'return_url',
+                    successUrl: 'success_url',
+                }
+            );
 
             await authStore.saveUser({
                 ...user,

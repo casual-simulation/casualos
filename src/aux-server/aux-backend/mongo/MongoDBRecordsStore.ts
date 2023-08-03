@@ -1,3 +1,4 @@
+import { hasValue } from '@casual-simulation/aux-common';
 import {
     Record,
     RecordsStore,
@@ -9,8 +10,9 @@ import {
     ListedStudioAssignment,
     ListedUserAssignment,
     ListedStudio,
+    ListStudioAssignmentFilters,
 } from '@casual-simulation/aux-records';
-import { Collection } from 'mongodb';
+import { Collection, FilterQuery } from 'mongodb';
 
 export class MongoDBRecordsStore implements RecordsStore {
     private _collection: Collection<Record>;
@@ -267,11 +269,26 @@ export class MongoDBRecordsStore implements RecordsStore {
     }
 
     async listStudioAssignments(
-        studioId: string
+        studioId: string,
+        filters?: ListStudioAssignmentFilters
     ): Promise<ListedStudioAssignment[]> {
-        const studio = await this._studios.findOne({
+        let query: FilterQuery<MongoDBStudio> = {
             _id: studioId,
-        });
+        };
+
+        if (hasValue(filters?.role)) {
+            query['assignments.role'] = filters.role;
+        }
+
+        if (hasValue(filters?.userId)) {
+            query['assignments.userId'] = filters.userId;
+        }
+
+        if (hasValue(filters?.isPrimaryContact)) {
+            query['assignments.isPrimaryContact'] = filters.isPrimaryContact;
+        }
+
+        const studio = await this._studios.findOne(query);
 
         if (!studio) {
             return [];

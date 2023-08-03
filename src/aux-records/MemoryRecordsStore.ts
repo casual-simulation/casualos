@@ -1,5 +1,6 @@
 import { sortBy } from 'lodash';
 import {
+    ListStudioAssignmentFilters,
     ListedRecord,
     ListedStudio,
     ListedStudioAssignment,
@@ -210,11 +211,23 @@ export class MemoryRecordsStore implements RecordsStore {
     }
 
     async listStudioAssignments(
-        studioId: string
+        studioId: string,
+        filters?: ListStudioAssignmentFilters
     ): Promise<ListedStudioAssignment[]> {
-        const assignments = this._studioAssignments.filter(
-            (s) => s.studioId === studioId
-        );
+        const assignments = this._studioAssignments.filter((s) => {
+            const matchesRole = !filters?.role || s.role === filters.role;
+            const matchesPrimaryContact =
+                !filters?.isPrimaryContact ||
+                s.isPrimaryContact === filters.isPrimaryContact;
+            const matchesUserId =
+                !filters?.userId || s.userId === filters.userId;
+            return (
+                s.studioId === studioId &&
+                matchesRole &&
+                matchesPrimaryContact &&
+                matchesUserId
+            );
+        });
 
         let results: ListedStudioAssignment[] = [];
 

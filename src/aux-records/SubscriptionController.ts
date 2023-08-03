@@ -12,6 +12,7 @@ import {
 import { ServerError } from './Errors';
 import { isActiveSubscription, JsonParseResult, tryParseJson } from './Utils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import { RecordsStore } from './RecordsStore';
 
 /**
  * Defines a class that is able to handle subscriptions.
@@ -20,17 +21,20 @@ export class SubscriptionController {
     private _stripe: StripeInterface;
     private _auth: AuthController;
     private _authStore: AuthStore;
+    private _recordsStore: RecordsStore;
     private _config: SubscriptionConfiguration;
 
     constructor(
         stripe: StripeInterface,
         auth: AuthController,
         authStore: AuthStore,
+        recordsStore: RecordsStore,
         config: SubscriptionConfiguration
     ) {
         this._stripe = stripe;
         this._auth = auth;
         this._authStore = authStore;
+        this._recordsStore = recordsStore;
         this._config = config;
     }
 
@@ -50,12 +54,36 @@ export class SubscriptionController {
         }
 
         try {
-            if (typeof request.userId !== 'string' || request.userId === '') {
+            if (request.userId) {
+                if (
+                    typeof request.userId !== 'string' ||
+                    request.userId === ''
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_user_id',
+                        errorMessage:
+                            'The given user ID is invalid. It must be a correctly formatted string.',
+                    };
+                }
+            } else if (request.studioId) {
+                if (
+                    typeof request.studioId !== 'string' ||
+                    request.studioId === ''
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_studio_id',
+                        errorMessage:
+                            'The given studio ID is invalid. It must be a correctly formatted string.',
+                    };
+                }
+            } else {
                 return {
                     success: false,
-                    errorCode: 'unacceptable_user_id',
+                    errorCode: 'unacceptable_request',
                     errorMessage:
-                        'The given user ID is invalid. It must be a correctly formatted string.',
+                        'The given request is invalid. It must have a valid user ID or studio ID.',
                 };
             }
 
@@ -63,30 +91,69 @@ export class SubscriptionController {
                 request.sessionKey
             );
 
+            let customerId: string;
+            let role: 'user' | 'studio';
             if (keyResult.success === false) {
                 return keyResult;
-            } else if (keyResult.userId !== request.userId) {
-                console.log(
-                    '[SubscriptionController] [getSubscriptionStatus] Request User ID doesnt match session key User ID!'
-                );
-                return {
-                    success: false,
-                    errorCode: 'invalid_key',
-                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
-                };
+            } else {
+                if (request.userId) {
+                    if (keyResult.userId !== request.userId) {
+                        console.log(
+                            '[SubscriptionController] [getSubscriptionStatus] Request User ID doesnt match session key User ID!'
+                        );
+                        return {
+                            success: false,
+                            errorCode: 'invalid_key',
+                            errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                        };
+                    }
+
+                    const user = await this._authStore.findUser(
+                        keyResult.userId
+                    );
+                    customerId = user.stripeCustomerId;
+                    role = 'user';
+                } else if (request.studioId) {
+                    const assignments =
+                        await this._recordsStore.listStudioAssignments(
+                            request.studioId,
+                            {
+                                userId: keyResult.userId,
+                                role: 'admin',
+                            }
+                        );
+
+                    if (assignments.length <= 0) {
+                        console.log(
+                            '[SubscriptionController] [getSubscriptionStatus] Request user does not have access to studio!'
+                        );
+                        return {
+                            success: false,
+                            errorCode: 'invalid_key',
+                            errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                        };
+                    }
+
+                    const studio = await this._recordsStore.getStudioById(
+                        request.studioId
+                    );
+                    customerId = studio.stripeCustomerId;
+                    role = 'studio';
+                }
             }
 
-            const user = await this._authStore.findUser(keyResult.userId);
-            let customerId = user.stripeCustomerId;
+            // const user = await this._authStore.findUser(keyResult.userId);
+            // let customerId = user.stripeCustomerId;
 
             if (!customerId) {
                 return {
                     success: true,
                     userId: keyResult.userId,
+                    studioId: request.studioId,
                     publishableKey: this._stripe.publishableKey,
                     subscriptions: [],
                     purchasableSubscriptions:
-                        await this._getPurchasableSubscriptions(),
+                        await this._getPurchasableSubscriptions(role),
                 };
             }
 
@@ -129,10 +196,12 @@ export class SubscriptionController {
             const purchasableSubscriptions =
                 subscriptions.length > 0
                     ? []
-                    : await this._getPurchasableSubscriptions();
+                    : await this._getPurchasableSubscriptions(role);
+
             return {
                 success: true,
                 userId: keyResult.userId,
+                studioId: request.studioId,
                 publishableKey: this._stripe.publishableKey,
                 subscriptions,
                 purchasableSubscriptions,
@@ -150,11 +219,20 @@ export class SubscriptionController {
         }
     }
 
-    private async _getPurchasableSubscriptions(): Promise<
-        PurchasableSubscription[]
-    > {
+    private async _getPurchasableSubscriptions(
+        role: 'user' | 'studio'
+    ): Promise<PurchasableSubscription[]> {
         const promises = this._config.subscriptions
-            .filter((s) => s.purchasable ?? true)
+            .filter((s) => {
+                const isPurchasable = s.purchasable ?? true;
+                const isUserOnly = s.userOnly ?? false;
+                const isStudioOnly = s.studioOnly ?? false;
+                const matchesRole =
+                    (isUserOnly && role === 'user') ||
+                    (isStudioOnly && role === 'studio') ||
+                    (!isUserOnly && !isStudioOnly);
+                return isPurchasable && matchesRole;
+            })
             .map(async (s) => ({
                 sub: s,
                 info: await this._stripe.getProductAndPriceInfo(s.product),
@@ -719,7 +797,12 @@ export interface GetSubscriptionStatusRequest {
     /**
      * The ID of the user whose subscription status should be retrieved.
      */
-    userId: string;
+    userId?: string;
+
+    /**
+     * The ID of the studio whose subscrition status should be retrieved.
+     */
+    studioId?: string;
 }
 
 export type GetSubscriptionStatusResult =
@@ -732,7 +815,12 @@ export interface GetSubscriptionStatusSuccess {
     /**
      * The ID of the user.
      */
-    userId: string;
+    userId?: string;
+
+    /**
+     * The ID of the studio.
+     */
+    studioId?: string;
 
     /**
      * The publishable stripe API key.
@@ -902,6 +990,8 @@ export interface GetSubscriptionStatusFailure {
         | ServerError
         | ValidateSessionKeyFailure['errorCode']
         | 'unacceptable_user_id'
+        | 'unacceptable_studio_id'
+        | 'unacceptable_request'
         | 'not_supported';
 
     /**
