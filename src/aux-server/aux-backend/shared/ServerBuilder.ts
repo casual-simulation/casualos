@@ -689,6 +689,7 @@ export class ServerBuilder {
                 this._stripe,
                 this._authController,
                 this._authStore,
+                this._recordsStore,
                 this._subscriptionConfig
             );
         }
