@@ -11,6 +11,7 @@ import {
     ListedUserAssignment,
     ListedStudio,
     ListStudioAssignmentFilters,
+    StudioAssignmentRole,
 } from '@casual-simulation/aux-records';
 import { PrismaClient, Prisma } from '@prisma/client';
 
@@ -207,23 +208,29 @@ export class PrismaRecordsStore implements RecordsStore {
     }
 
     async listStudiosForUser(userId: string): Promise<ListedStudio[]> {
-        const studios = await this._client.studio.findMany({
+        const assignments = await this._client.studioAssignment.findMany({
             where: {
-                assignments: {
-                    some: {
-                        userId: userId,
+                userId: userId,
+            },
+            select: {
+                studioId: true,
+                userId: true,
+                role: true,
+                isPrimaryContact: true,
+                studio: {
+                    select: {
+                        displayName: true,
                     },
                 },
             },
-            select: {
-                id: true,
-                displayName: true,
-            },
         });
 
-        return studios.map((s) => ({
-            studioId: s.id,
-            displayName: s.displayName,
+        return assignments.map((a) => ({
+            studioId: a.studioId,
+            userId: a.userId,
+            role: a.role as StudioAssignmentRole,
+            isPrimaryContact: a.isPrimaryContact,
+            displayName: a.studio.displayName,
         }));
     }
 
@@ -303,7 +310,20 @@ export class PrismaRecordsStore implements RecordsStore {
             },
         });
 
-        return assignments as ListedStudioAssignment[];
+        return assignments.map((a) => {
+            const assignment: ListedStudioAssignment = {
+                studioId: a.studioId,
+                userId: a.userId,
+                role: a.role as StudioAssignmentRole,
+                isPrimaryContact: a.isPrimaryContact,
+                user: {
+                    id: a.user.id,
+                    name: a.user.name,
+                },
+            };
+
+            return assignment;
+        });
     }
 
     async listUserAssignments(userId: string): Promise<ListedUserAssignment[]> {
@@ -316,9 +336,24 @@ export class PrismaRecordsStore implements RecordsStore {
                 userId: true,
                 isPrimaryContact: true,
                 role: true,
+                studio: {
+                    select: {
+                        displayName: true,
+                    },
+                },
             },
         });
 
-        return assignments as ListedUserAssignment[];
+        return assignments.map((a) => {
+            const assignment: ListedUserAssignment = {
+                studioId: a.studioId,
+                userId: a.userId,
+                role: a.role as StudioAssignmentRole,
+                isPrimaryContact: a.isPrimaryContact,
+                displayName: a.studio.displayName,
+            };
+
+            return assignment;
+        });
     }
 }

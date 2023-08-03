@@ -178,13 +178,17 @@ export class MongoDBRecordsStore implements RecordsStore {
                     },
                 },
             })
-            .map((s) => ({
-                studioId: s._id,
-                displayName: s.displayName,
-            }))
             .toArray();
 
-        return studios;
+        return studios.map((s) => {
+            const assignment = s.assignments.find((a) => a.userId === userId);
+            return {
+                studioId: s._id,
+                displayName: s.displayName,
+                role: assignment.role,
+                isPrimaryContact: assignment.isPrimaryContact,
+            };
+        });
     }
 
     async addStudioAssignment(assignment: StudioAssignment): Promise<void> {
@@ -336,6 +340,7 @@ export class MongoDBRecordsStore implements RecordsStore {
                     studioId: a.studioId,
                     isPrimaryContact: a.isPrimaryContact,
                     role: a.role,
+                    displayName: s.displayName,
                 });
             }
         }

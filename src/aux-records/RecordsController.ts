@@ -516,6 +516,8 @@ export class RecordsController {
                 studios: studios.map((s) => ({
                     studioId: s.studioId,
                     displayName: s.displayName,
+                    role: s.role,
+                    isPrimaryContact: s.isPrimaryContact,
                 })),
             };
         } catch (err) {

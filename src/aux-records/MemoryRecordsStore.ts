@@ -171,11 +171,19 @@ export class MemoryRecordsStore implements RecordsStore {
     async listStudiosForUser(userId: string): Promise<ListedStudio[]> {
         const assignments = await this.listUserAssignments(userId);
         const studios = await Promise.all(
-            assignments.map((a) => this.getStudioById(a.studioId))
+            assignments.map(async (a) => {
+                const s = await this.getStudioById(a.studioId);
+                return {
+                    ...s,
+                    ...a,
+                };
+            })
         );
         return studios.map((s) => ({
             studioId: s.id,
             displayName: s.displayName,
+            role: s.role,
+            isPrimaryContact: s.isPrimaryContact,
         }));
     }
 
@@ -256,11 +264,17 @@ export class MemoryRecordsStore implements RecordsStore {
             (s) => s.userId === userId
         );
 
-        return assignments.map((s) => ({
-            studioId: s.studioId,
-            userId: s.userId,
-            isPrimaryContact: s.isPrimaryContact,
-            role: s.role,
-        }));
+        return assignments.map((s) => {
+            const studio = this._studios.find(
+                (studio) => studio.id === s.studioId
+            );
+            return {
+                displayName: studio.displayName,
+                studioId: s.studioId,
+                userId: s.userId,
+                isPrimaryContact: s.isPrimaryContact,
+                role: s.role,
+            };
+        });
     }
 }

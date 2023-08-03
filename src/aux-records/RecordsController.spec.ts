@@ -1436,7 +1436,7 @@ describe('RecordsController', () => {
                 studioId: 'studioId3',
                 userId: 'userId',
                 isPrimaryContact: true,
-                role: 'admin',
+                role: 'member',
             });
         });
 
@@ -1449,10 +1449,14 @@ describe('RecordsController', () => {
                     {
                         studioId: 'studioId2',
                         displayName: 'studio 2',
+                        isPrimaryContact: true,
+                        role: 'admin',
                     },
                     {
                         studioId: 'studioId3',
                         displayName: 'studio 3',
+                        isPrimaryContact: true,
+                        role: 'member',
                     },
                 ],
             });

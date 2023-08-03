@@ -277,6 +277,11 @@ export interface ListedStudioAssignment {
 
 export interface ListedUserAssignment {
     /**
+     * The name of the studio that this assignment applies to.
+     */
+    displayName: string;
+
+    /**
      * The ID of the studio that this assignment applies to.
      */
     studioId: string;
@@ -322,6 +327,16 @@ export interface ListedStudio {
      * The name of the studio.
      */
     displayName: string;
+
+    /**
+     * The role that the user has in the studio.
+     */
+    role: StudioAssignmentRole;
+
+    /**
+     * Whether the user is the primary contact for this studio.
+     */
+    isPrimaryContact: boolean;
 }
 
 export interface ListStudioAssignmentFilters {

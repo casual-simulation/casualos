@@ -9064,7 +9064,7 @@ describe('RecordsHttpServer', () => {
                 studioId: 'studioId3',
                 userId: userId,
                 isPrimaryContact: true,
-                role: 'admin',
+                role: 'member',
             });
         });
 
@@ -9081,10 +9081,14 @@ describe('RecordsHttpServer', () => {
                         {
                             studioId: 'studioId2',
                             displayName: 'studio 2',
+                            role: 'admin',
+                            isPrimaryContact: true,
                         },
                         {
                             studioId: 'studioId3',
                             displayName: 'studio 3',
+                            role: 'member',
+                            isPrimaryContact: true,
                         },
                     ],
                 },
@@ -9101,7 +9105,7 @@ describe('RecordsHttpServer', () => {
         );
     });
 
-    describe.only('GET /api/v2/subscriptions', () => {
+    describe('GET /api/v2/subscriptions', () => {
         describe('?userId', () => {
             let user: AuthUser;
             beforeEach(async () => {
