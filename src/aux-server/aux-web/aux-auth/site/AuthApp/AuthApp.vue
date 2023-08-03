@@ -60,6 +60,19 @@
 
                         <md-list slot="md-expand">
                             <md-list-item
+                                class="md-inset"
+                                :to="{
+                                    name: 'studio',
+                                    params: {
+                                        studioId: studio.studioId,
+                                        studioName: studio.displayName,
+                                    },
+                                }"
+                            >
+                                <md-icon>settings</md-icon>
+                                <span class="md-list-item-text">Subscription</span>
+                            </md-list-item>
+                            <md-list-item
                                 v-for="record in studio.records"
                                 :key="record.name"
                                 class="md-inset"

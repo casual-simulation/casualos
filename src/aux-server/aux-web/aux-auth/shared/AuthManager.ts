@@ -35,6 +35,7 @@ import type {
     CreateManageSubscriptionResult,
     GetSubscriptionStatusSuccess,
     CreateManageSubscriptionRequest,
+    GetSubscriptionStatusRequest,
 } from '@casual-simulation/aux-records/SubscriptionController';
 import { omitBy } from 'lodash';
 
@@ -249,6 +250,35 @@ export class AuthManager {
         }
     }
 
+    async listSubscriptionsV2(
+        request: Pick<GetSubscriptionStatusRequest, 'studioId' | 'userId'>
+    ): Promise<GetSubscriptionStatusSuccess> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/subscriptions`);
+
+        if ('studioId' in request) {
+            url.searchParams.set('studioId', request.studioId);
+        }
+        if ('userId' in request) {
+            url.searchParams.set('userId', request.userId);
+        }
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as GetSubscriptionStatusResult;
+
+        if (result.success === true) {
+            return result;
+        } else {
+            if (result.errorCode === 'not_supported') {
+                return null;
+            }
+            return null;
+        }
+    }
+
     async listRecords(): Promise<ListedRecord[]> {
         const url = new URL(`${this.apiEndpoint}/api/v2/records/list`);
 
@@ -280,7 +310,6 @@ export class AuthManager {
         const result = response.data as ListStudiosResult;
         if (result.success === true) {
             return result.studios;
-        } else {
         }
 
         return null;
