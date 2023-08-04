@@ -725,6 +725,15 @@ export class RecordsHttpServer {
                 await this._getSubscriptionInfoV2(request),
                 this._allowedAccountOrigins
             );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/subscriptions/manage'
+        ) {
+            return formatResponse(
+                request,
+                await this._manageSubscriptionV2(request),
+                this._allowedAccountOrigins
+            );
         } else if (request.method === 'OPTIONS') {
             return formatResponse(
                 request,
@@ -3378,6 +3387,87 @@ export class RecordsHttpServer {
             userId,
             subscriptionId,
             expectedPrice,
+        });
+
+        if (!result.success) {
+            return returnResult(result);
+        }
+
+        return returnResult({
+            success: true,
+            url: result.url,
+        });
+    }
+
+    private async _manageSubscriptionV2(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!this._subscriptions) {
+            return returnResult(SUBSCRIPTIONS_NOT_SUPPORTED_RESULT);
+        }
+
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const sessionKey = getSessionKey(request);
+
+        if (!sessionKey) {
+            return returnResult(NOT_LOGGED_IN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            userId: z
+                .string({
+                    invalid_type_error: 'userId must be a string.',
+                    required_error: 'userId is required.',
+                })
+                .nonempty('userId must not be empty.')
+                .optional(),
+            studioId: z
+                .string({
+                    invalid_type_error: 'studioId must be a string.',
+                    required_error: 'studioId is required.',
+                })
+                .nonempty('studioId must not be empty.')
+                .optional(),
+            subscriptionId: z.string().optional(),
+            expectedPrice: z
+                .object({
+                    currency: z.string(),
+                    cost: z.number(),
+                    interval: z.enum(['month', 'year', 'week', 'day']),
+                    intervalLength: z.number(),
+                })
+                .optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { userId, studioId, subscriptionId, expectedPrice } =
+            parseResult.data;
+
+        const result = await this._subscriptions.createManageSubscriptionLink({
+            sessionKey,
+            userId,
+            studioId,
+            subscriptionId,
+            expectedPrice:
+                expectedPrice as CreateManageSubscriptionRequest['expectedPrice'],
         });
 
         if (!result.success) {
