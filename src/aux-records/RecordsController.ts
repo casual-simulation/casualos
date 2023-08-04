@@ -431,7 +431,7 @@ export class RecordsController {
     /**
      * Gets the list of records in the given studio that the user with the given ID has access to.
      * @param studioId The ID of the studio.
-     * @param userId The ID of the user.
+     * @param userId The ID of the user that is currently logged in.
      */
     async listStudioRecords(
         studioId: string,

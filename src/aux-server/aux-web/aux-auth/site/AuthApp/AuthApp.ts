@@ -36,21 +36,19 @@ export default class AuthApp extends Vue {
     }
 
     async onExpandStudio(studio: any) {
+        console.log('[AuthApp] Loading records for studio...');
         studio.loading = true;
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        studio.loading = false;
-        studio.records = [
-            {
-                name: 'test',
-                label: 'test',
-                ownerId: 'test',
-            },
-            {
-                name: 'other',
-                label: 'other',
-                ownerId: 'other',
-            },
-        ];
+        try {
+            const records =
+                (await authManager.listStudioRecords(studio.studioId)) ?? [];
+            studio.records = records.map((r) => ({
+                name: r.name,
+                label: r.name,
+                ownerId: r.ownerId,
+            }));
+        } finally {
+            studio.loading = false;
+        }
     }
 
     created() {

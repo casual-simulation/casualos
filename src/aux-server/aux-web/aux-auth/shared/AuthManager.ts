@@ -299,6 +299,30 @@ export class AuthManager {
         return null;
     }
 
+    async listStudioRecords(studioId: string): Promise<ListedRecord[]> {
+        const url = new URL(
+            `${
+                this.apiEndpoint
+            }/api/v2/records/list?studioId=${encodeURIComponent(studioId)}`
+        );
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as ListRecordsResult;
+        if (result.success === true) {
+            return result.records;
+        } else {
+            if (result.errorCode === 'not_supported') {
+                return [];
+            }
+        }
+
+        return null;
+    }
+
     async listStudios(): Promise<ListedStudio[]> {
         const url = new URL(`${this.apiEndpoint}/api/v2/studios/list`);
 

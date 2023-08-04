@@ -6208,6 +6208,98 @@ describe('RecordsHttpServer', () => {
             });
         });
 
+        describe('?studioId', () => {
+            let studioId: string;
+            beforeEach(async () => {
+                studioId = 'studioId';
+                await recordsStore.addStudio({
+                    id: studioId,
+                    displayName: 'my studio',
+                });
+                await recordsStore.addStudioAssignment({
+                    studioId,
+                    userId,
+                    isPrimaryContact: true,
+                    role: 'admin',
+                });
+
+                await recordsStore.addRecord({
+                    name: 'test5',
+                    ownerId: null,
+                    studioId: studioId,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+                await recordsStore.addRecord({
+                    name: 'test6',
+                    ownerId: null,
+                    studioId: studioId,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+                await recordsStore.addRecord({
+                    name: 'test7',
+                    ownerId: null,
+                    studioId: studioId,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+                await recordsStore.addRecord({
+                    name: 'test8',
+                    ownerId: null,
+                    studioId: 'otherStudio',
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+                await recordsStore.addRecord({
+                    name: 'test9',
+                    ownerId: null,
+                    studioId: studioId,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+            });
+
+            it('should return the list of records for the studio', async () => {
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/records/list?studioId=${studioId}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        records: [
+                            {
+                                name: 'test5',
+                                ownerId: null,
+                                studioId: studioId,
+                            },
+                            {
+                                name: 'test6',
+                                ownerId: null,
+                                studioId: studioId,
+                            },
+                            {
+                                name: 'test7',
+                                ownerId: null,
+                                studioId: studioId,
+                            },
+                            {
+                                name: 'test9',
+                                ownerId: null,
+                                studioId: studioId,
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+        });
+
         testAuthorization(() => httpGet('/api/v2/records/list', apiHeaders));
     });
 

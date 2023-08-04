@@ -817,8 +817,28 @@ export class RecordsHttpServer {
             return returnResult(validation);
         }
 
-        const result = await this._records.listRecords(validation.userId);
-        return returnResult(result);
+        const schema = z.object({
+            studioId: z.string().nonempty().optional(),
+        });
+
+        const parseResult = schema.safeParse(request.query);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { studioId } = parseResult.data;
+
+        if (studioId) {
+            const result = await this._records.listStudioRecords(
+                studioId,
+                validation.userId
+            );
+            return returnResult(result);
+        } else {
+            const result = await this._records.listRecords(validation.userId);
+            return returnResult(result);
+        }
     }
 
     private async _createRecordKey(
