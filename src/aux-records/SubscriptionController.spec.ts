@@ -66,9 +66,9 @@ describe('SubscriptionController', () => {
                 },
             ],
             webhookSecret: 'webhook_secret',
-            cancelUrl: 'cancel_url',
-            returnUrl: 'return_url',
-            successUrl: 'success_url',
+            cancelUrl: 'http://cancel_url/',
+            returnUrl: 'http://return_url/',
+            successUrl: 'http://success_url/',
         };
         auth = new AuthController(authStore, authMessenger, config);
 
@@ -1055,8 +1055,8 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                     mode: 'subscription',
                     customer: 'stripe_customer',
-                    success_url: 'success_url',
-                    cancel_url: 'cancel_url',
+                    success_url: 'http://success_url/',
+                    cancel_url: 'http://cancel_url/',
                     line_items: [
                         {
                             price: 'price_99',
@@ -1144,9 +1144,9 @@ describe('SubscriptionController', () => {
                                 },
                             ],
                             webhookSecret: 'webhook_secret',
-                            cancelUrl: 'cancel_url',
-                            returnUrl: 'return_url',
-                            successUrl: 'success_url',
+                            cancelUrl: 'http://cancel_url/',
+                            returnUrl: 'http://return_url/',
+                            successUrl: 'http://success_url/',
                         }
                     );
 
@@ -1196,8 +1196,8 @@ describe('SubscriptionController', () => {
                     ).toHaveBeenCalledWith({
                         mode: 'subscription',
                         customer: 'stripe_customer',
-                        success_url: 'success_url',
-                        cancel_url: 'cancel_url',
+                        success_url: 'http://success_url/',
+                        cancel_url: 'http://cancel_url/',
                         line_items: [
                             {
                                 price: 'price_100',
@@ -1297,7 +1297,7 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createPortalSession).toHaveBeenCalledTimes(1);
                 expect(stripeMock.createPortalSession).toHaveBeenCalledWith({
                     customer: 'stripe_customer',
-                    return_url: 'return_url',
+                    return_url: 'http://return_url/',
                 });
             });
 
@@ -1369,8 +1369,8 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                     mode: 'subscription',
                     customer: 'stripe_customer',
-                    success_url: 'success_url',
-                    cancel_url: 'cancel_url',
+                    success_url: 'http://success_url/',
+                    cancel_url: 'http://cancel_url/',
                     line_items: [
                         {
                             price: 'price_99',
@@ -1452,8 +1452,8 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                     mode: 'subscription',
                     customer: 'stripe_customer',
-                    success_url: 'success_url',
-                    cancel_url: 'cancel_url',
+                    success_url: 'http://success_url/',
+                    cancel_url: 'http://cancel_url/',
                     line_items: [
                         {
                             price: 'price_99',
@@ -1535,8 +1535,8 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                     mode: 'subscription',
                     customer: 'stripe_customer',
-                    success_url: 'success_url',
-                    cancel_url: 'cancel_url',
+                    success_url: 'http://success_url/',
+                    cancel_url: 'http://cancel_url/',
                     line_items: [
                         {
                             price: 'price_99',
@@ -1618,8 +1618,8 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                     mode: 'subscription',
                     customer: 'stripe_customer',
-                    success_url: 'success_url',
-                    cancel_url: 'cancel_url',
+                    success_url: 'http://success_url/',
+                    cancel_url: 'http://cancel_url/',
                     line_items: [
                         {
                             price: 'price_99',
@@ -1676,9 +1676,9 @@ describe('SubscriptionController', () => {
                             mySpecialKey: 123,
                         },
                         webhookSecret: 'webhook_secret',
-                        cancelUrl: 'cancel_url',
-                        returnUrl: 'return_url',
-                        successUrl: 'success_url',
+                        cancelUrl: 'http://cancel_url/',
+                        returnUrl: 'http://return_url/',
+                        successUrl: 'http://success_url/',
                     }
                 );
 
@@ -1708,8 +1708,8 @@ describe('SubscriptionController', () => {
                     mySpecialKey: 123,
                     mode: 'subscription',
                     customer: 'stripe_customer',
-                    success_url: 'success_url',
-                    cancel_url: 'cancel_url',
+                    success_url: 'http://success_url/',
+                    cancel_url: 'http://cancel_url/',
                     line_items: [
                         {
                             price: 'price_99',
@@ -1790,9 +1790,9 @@ describe('SubscriptionController', () => {
                             mySpecialKey: 123,
                         },
                         webhookSecret: 'webhook_secret',
-                        cancelUrl: 'cancel_url',
-                        returnUrl: 'return_url',
-                        successUrl: 'success_url',
+                        cancelUrl: 'http://cancel_url/',
+                        returnUrl: 'http://return_url/',
+                        successUrl: 'http://success_url/',
                     }
                 );
 
@@ -1822,7 +1822,7 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createPortalSession).toHaveBeenCalledWith({
                     mySpecialKey: 123,
                     customer: 'stripe_customer',
-                    return_url: 'return_url',
+                    return_url: 'http://return_url/',
                 });
             });
 
@@ -1891,7 +1891,7 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createPortalSession).toHaveBeenCalledTimes(1);
                 expect(stripeMock.createPortalSession).toHaveBeenCalledWith({
                     customer: 'stripe_customer',
-                    return_url: 'return_url',
+                    return_url: 'http://return_url/',
                 });
             });
 
@@ -1960,7 +1960,7 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createPortalSession).toHaveBeenCalledTimes(1);
                 expect(stripeMock.createPortalSession).toHaveBeenCalledWith({
                     customer: 'stripe_customer',
-                    return_url: 'return_url',
+                    return_url: 'http://return_url/',
                 });
             });
 
@@ -2029,7 +2029,7 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createPortalSession).toHaveBeenCalledTimes(1);
                 expect(stripeMock.createPortalSession).toHaveBeenCalledWith({
                     customer: 'stripe_customer',
-                    return_url: 'return_url',
+                    return_url: 'http://return_url/',
                 });
             });
 
@@ -2098,7 +2098,7 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createPortalSession).toHaveBeenCalledTimes(1);
                 expect(stripeMock.createPortalSession).toHaveBeenCalledWith({
                     customer: 'stripe_customer',
-                    return_url: 'return_url',
+                    return_url: 'http://return_url/',
                 });
             });
 
@@ -2167,7 +2167,7 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createPortalSession).toHaveBeenCalledTimes(1);
                 expect(stripeMock.createPortalSession).toHaveBeenCalledWith({
                     customer: 'stripe_customer',
-                    return_url: 'return_url',
+                    return_url: 'http://return_url/',
                 });
             });
 
@@ -2292,8 +2292,12 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                     mode: 'subscription',
                     customer: 'stripe_customer',
-                    success_url: 'success_url',
-                    cancel_url: 'cancel_url',
+                    success_url: `http://success_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
+                    cancel_url: `http://cancel_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
                     line_items: [
                         {
                             price: 'price_99',
@@ -2382,9 +2386,9 @@ describe('SubscriptionController', () => {
                                 },
                             ],
                             webhookSecret: 'webhook_secret',
-                            cancelUrl: 'cancel_url',
-                            returnUrl: 'return_url',
-                            successUrl: 'success_url',
+                            cancelUrl: `http://cancel_url/`,
+                            returnUrl: `http://return_url/`,
+                            successUrl: `http://success_url/`,
                         }
                     );
 
@@ -2430,8 +2434,12 @@ describe('SubscriptionController', () => {
                     ).toHaveBeenCalledWith({
                         mode: 'subscription',
                         customer: 'stripe_customer',
-                        success_url: 'success_url',
-                        cancel_url: 'cancel_url',
+                        success_url: `http://success_url/studios/${studioId}/${encodeURIComponent(
+                            'my studio'
+                        )}`,
+                        cancel_url: `http://cancel_url/studios/${studioId}/${encodeURIComponent(
+                            'my studio'
+                        )}`,
                         line_items: [
                             {
                                 price: 'price_100',
@@ -2531,7 +2539,9 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createPortalSession).toHaveBeenCalledTimes(1);
                 expect(stripeMock.createPortalSession).toHaveBeenCalledWith({
                     customer: 'stripe_customer',
-                    return_url: 'return_url',
+                    return_url: `http://return_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
                 });
             });
 
@@ -2602,8 +2612,12 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                     mode: 'subscription',
                     customer: 'stripe_customer',
-                    success_url: 'success_url',
-                    cancel_url: 'cancel_url',
+                    success_url: `http://success_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
+                    cancel_url: `http://cancel_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
                     line_items: [
                         {
                             price: 'price_99',
@@ -2685,8 +2699,12 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                     mode: 'subscription',
                     customer: 'stripe_customer',
-                    success_url: 'success_url',
-                    cancel_url: 'cancel_url',
+                    success_url: `http://success_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
+                    cancel_url: `http://cancel_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
                     line_items: [
                         {
                             price: 'price_99',
@@ -2768,8 +2786,12 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                     mode: 'subscription',
                     customer: 'stripe_customer',
-                    success_url: 'success_url',
-                    cancel_url: 'cancel_url',
+                    success_url: `http://success_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
+                    cancel_url: `http://cancel_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
                     line_items: [
                         {
                             price: 'price_99',
@@ -2851,8 +2873,12 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createCheckoutSession).toHaveBeenCalledWith({
                     mode: 'subscription',
                     customer: 'stripe_customer',
-                    success_url: 'success_url',
-                    cancel_url: 'cancel_url',
+                    success_url: `http://success_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
+                    cancel_url: `http://cancel_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
                     line_items: [
                         {
                             price: 'price_99',
@@ -2905,9 +2931,9 @@ describe('SubscriptionController', () => {
                             mySpecialKey: 123,
                         },
                         webhookSecret: 'webhook_secret',
-                        cancelUrl: 'cancel_url',
-                        returnUrl: 'return_url',
-                        successUrl: 'success_url',
+                        cancelUrl: 'http://cancel_url/',
+                        returnUrl: 'http://return_url/',
+                        successUrl: 'http://success_url/',
                     }
                 );
 
@@ -2938,8 +2964,12 @@ describe('SubscriptionController', () => {
                     mySpecialKey: 123,
                     mode: 'subscription',
                     customer: 'stripe_customer',
-                    success_url: 'success_url',
-                    cancel_url: 'cancel_url',
+                    success_url: `http://success_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
+                    cancel_url: `http://cancel_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
                     line_items: [
                         {
                             price: 'price_99',
@@ -3021,9 +3051,9 @@ describe('SubscriptionController', () => {
                             mySpecialKey: 123,
                         },
                         webhookSecret: 'webhook_secret',
-                        cancelUrl: 'cancel_url',
-                        returnUrl: 'return_url',
-                        successUrl: 'success_url',
+                        cancelUrl: 'http://cancel_url/',
+                        returnUrl: 'http://return_url/',
+                        successUrl: 'http://success_url/',
                     }
                 );
 
@@ -3052,7 +3082,9 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createPortalSession).toHaveBeenCalledWith({
                     mySpecialKey: 123,
                     customer: 'stripe_customer',
-                    return_url: 'return_url',
+                    return_url: `http://return_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
                 });
             });
 
@@ -3120,7 +3152,9 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createPortalSession).toHaveBeenCalledTimes(1);
                 expect(stripeMock.createPortalSession).toHaveBeenCalledWith({
                     customer: 'stripe_customer',
-                    return_url: 'return_url',
+                    return_url: `http://return_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
                 });
             });
 
@@ -3188,7 +3222,9 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createPortalSession).toHaveBeenCalledTimes(1);
                 expect(stripeMock.createPortalSession).toHaveBeenCalledWith({
                     customer: 'stripe_customer',
-                    return_url: 'return_url',
+                    return_url: `http://return_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
                 });
             });
 
@@ -3256,7 +3292,9 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createPortalSession).toHaveBeenCalledTimes(1);
                 expect(stripeMock.createPortalSession).toHaveBeenCalledWith({
                     customer: 'stripe_customer',
-                    return_url: 'return_url',
+                    return_url: `http://return_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
                 });
             });
 
@@ -3324,7 +3362,9 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createPortalSession).toHaveBeenCalledTimes(1);
                 expect(stripeMock.createPortalSession).toHaveBeenCalledWith({
                     customer: 'stripe_customer',
-                    return_url: 'return_url',
+                    return_url: `http://return_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
                 });
             });
 
@@ -3392,7 +3432,9 @@ describe('SubscriptionController', () => {
                 expect(stripeMock.createPortalSession).toHaveBeenCalledTimes(1);
                 expect(stripeMock.createPortalSession).toHaveBeenCalledWith({
                     customer: 'stripe_customer',
-                    return_url: 'return_url',
+                    return_url: `http://return_url/studios/${studioId}/${encodeURIComponent(
+                        'my studio'
+                    )}`,
                 });
             });
 

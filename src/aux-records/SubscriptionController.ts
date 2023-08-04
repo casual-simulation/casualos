@@ -500,7 +500,9 @@ export class SubscriptionController {
                     request,
                     customerId,
                     metadata,
-                    role
+                    role,
+                    user,
+                    studio
                 );
             }
 
@@ -541,7 +543,11 @@ export class SubscriptionController {
                 const session = await this._stripe.createPortalSession({
                     ...(this._config.portalConfig ?? {}),
                     customer: customerId,
-                    return_url: this._config.returnUrl,
+                    return_url: returnRoute(
+                        this._config.returnUrl,
+                        user,
+                        studio
+                    ),
                 });
 
                 console.log(
@@ -561,7 +567,9 @@ export class SubscriptionController {
                 request,
                 customerId,
                 metadata,
-                role
+                role,
+                user,
+                studio
             );
         } catch (err) {
             console.error(
@@ -580,7 +588,9 @@ export class SubscriptionController {
         request: CreateManageSubscriptionRequest,
         customerId: string,
         metadata: any,
-        role: 'user' | 'studio'
+        role: 'user' | 'studio',
+        user: AuthUser,
+        studio: Studio
     ): Promise<CreateManageSubscriptionResult> {
         const purchasableSubscriptions =
             this._getPurchasableSubscriptionsForRole(role);
@@ -647,8 +657,8 @@ export class SubscriptionController {
         const session = await this._stripe.createCheckoutSession({
             ...(this._config.checkoutConfig ?? {}),
             customer: customerId,
-            success_url: this._config.successUrl,
-            cancel_url: this._config.cancelUrl,
+            success_url: returnRoute(this._config.successUrl, user, studio),
+            cancel_url: returnRoute(this._config.cancelUrl, user, studio),
             line_items: [
                 {
                     price: productInfo.default_price.id,
@@ -896,6 +906,23 @@ function isValidSubscription(
         typeof sub.product === 'string' &&
         typeof sub.defaultSubscription === 'boolean'
     );
+}
+
+function returnRoute(basePath: string, user: AuthUser, studio: Studio) {
+    if (user) {
+        return basePath;
+    } else {
+        return studiosRoute(basePath, studio.id, studio.displayName);
+    }
+}
+
+function studiosRoute(basePath: string, studioId: string, studioName: string) {
+    return new URL(
+        `/studios/${encodeURIComponent(studioId)}/${encodeURIComponent(
+            studioName
+        )}`,
+        basePath
+    ).href;
 }
 
 /**
