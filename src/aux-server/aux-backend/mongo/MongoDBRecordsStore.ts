@@ -169,6 +169,24 @@ export class MongoDBRecordsStore implements RecordsStore {
         };
     }
 
+    async getStudioByStripeCustomerId(customerId: string): Promise<Studio> {
+        const studio = await this._studios.findOne({
+            stripeCustomerId: customerId,
+        });
+
+        if (!studio) {
+            return null;
+        }
+
+        return {
+            id: studio._id,
+            displayName: studio.displayName,
+            stripeCustomerId: studio.stripeCustomerId,
+            subscriptionId: studio.subscriptionId,
+            subscriptionStatus: studio.subscriptionStatus,
+        };
+    }
+
     async listStudiosForUser(userId: string): Promise<ListedStudio[]> {
         const studios = await this._studios
             .find({

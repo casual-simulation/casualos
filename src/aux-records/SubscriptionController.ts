@@ -780,28 +780,62 @@ export class SubscriptionController {
                     customerId
                 );
 
-                if (!user) {
-                    console.log(
-                        `[SubscriptionController] [handleStripeWebhook] No user found for Customer ID (${customerId})`
-                    );
-                    return {
-                        success: true,
-                    };
+                if (user) {
+                    if (
+                        user.subscriptionStatus !== status ||
+                        user.subscriptionId !== sub.id
+                    ) {
+                        console.log(
+                            `[SubscriptionController] [handleStripeWebhook] User (${user.id}) subscription status doesn't match stored. Updating...`
+                        );
+                        await this._authStore.saveUser({
+                            ...user,
+                            subscriptionStatus: status,
+                            subscriptionId: sub.id,
+                        });
+                    } else {
+                        return {
+                            success: true,
+                        };
+                    }
                 }
 
-                if (
-                    user.subscriptionStatus !== status ||
-                    user.subscriptionId !== sub.id
-                ) {
-                    console.log(
-                        `[SubscriptionController] [handleStripeWebhook] User subscription status doesn't match stored. Updating...`
+                console.log(
+                    `[SubscriptionController] [handleStripeWebhook] No user found for Customer ID (${customerId})`
+                );
+
+                const studio =
+                    await this._recordsStore.getStudioByStripeCustomerId(
+                        customerId
                     );
-                    await this._authStore.saveUser({
-                        ...user,
-                        subscriptionStatus: status,
-                        subscriptionId: sub.id,
-                    });
+
+                if (studio) {
+                    if (
+                        studio.subscriptionStatus !== status ||
+                        studio.subscriptionId !== sub.id
+                    ) {
+                        console.log(
+                            `[SubscriptionController] [handleStripeWebhook] Studio ((${studio.id})) subscription status doesn't match stored. Updating...`
+                        );
+                        await this._recordsStore.updateStudio({
+                            ...studio,
+                            subscriptionStatus: status,
+                            subscriptionId: sub.id,
+                        });
+                    } else {
+                        return {
+                            success: true,
+                        };
+                    }
                 }
+
+                console.log(
+                    `[SubscriptionController] [handleStripeWebhook] No studio found for Customer ID (${customerId})`
+                );
+
+                return {
+                    success: true,
+                };
             }
 
             return {

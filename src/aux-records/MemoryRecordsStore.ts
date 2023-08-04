@@ -168,6 +168,10 @@ export class MemoryRecordsStore implements RecordsStore {
         return this._studios.find((s) => s.id === id);
     }
 
+    async getStudioByStripeCustomerId(customerId: string): Promise<Studio> {
+        return this._studios.find((s) => s.stripeCustomerId === customerId);
+    }
+
     async listStudiosForUser(userId: string): Promise<ListedStudio[]> {
         const assignments = await this.listUserAssignments(userId);
         const studios = await Promise.all(

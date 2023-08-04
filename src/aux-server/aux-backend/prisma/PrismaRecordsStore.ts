@@ -196,6 +196,14 @@ export class PrismaRecordsStore implements RecordsStore {
         });
     }
 
+    async getStudioByStripeCustomerId(customerId: string): Promise<Studio> {
+        return await this._client.studio.findUnique({
+            where: {
+                stripeCustomerId: customerId,
+            },
+        });
+    }
+
     async updateStudio(studio: Studio): Promise<void> {
         await this._client.studio.update({
             where: {

@@ -96,6 +96,12 @@ export interface RecordsStore {
     getStudioById(id: string): Promise<Studio>;
 
     /**
+     * Gets the studio that has the given stripe customer ID.
+     * @param customerId The stripe customer ID for the studio.
+     */
+    getStudioByStripeCustomerId(customerId: string): Promise<Studio>;
+
+    /**
      * Gets the list of studios that the user with the given ID has access to.
      * @param userId The ID of the user.
      */
