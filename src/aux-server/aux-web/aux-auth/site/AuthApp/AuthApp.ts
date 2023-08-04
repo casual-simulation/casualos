@@ -111,8 +111,16 @@ export default class AuthApp extends Vue {
                 ...s,
                 records: [],
                 loading: false,
-                open: false,
+                open:
+                    this.$route.name === 'studio' &&
+                    this.$route.params.studioId === s.studioId,
             }));
+
+            for (let s of this.studios) {
+                if (s.open) {
+                    this.onExpandStudio(s);
+                }
+            }
         } finally {
             this.loadingStudios = false;
         }
