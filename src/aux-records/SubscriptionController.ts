@@ -12,7 +12,7 @@ import {
 import { ServerError } from './Errors';
 import { isActiveSubscription, JsonParseResult, tryParseJson } from './Utils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
-import { RecordsStore, Studio } from './RecordsStore';
+import { ListedStudioAssignment, RecordsStore, Studio } from './RecordsStore';
 
 /**
  * Defines a class that is able to handle subscriptions.
@@ -364,6 +364,7 @@ export class SubscriptionController {
             let role: 'user' | 'studio';
             let user: AuthUser;
             let studio: Studio;
+            let customerMetadata: any = {};
             let metadata: any = {};
             if (keyResult.success === false) {
                 return keyResult;
@@ -385,6 +386,8 @@ export class SubscriptionController {
                 customerEmail = user.email;
                 customerPhone = user.phoneNumber;
                 metadata.userId = user.id;
+                customerMetadata.role = 'user';
+                customerMetadata.userId = user.id;
                 role = 'user';
 
                 console.log(
@@ -417,7 +420,31 @@ export class SubscriptionController {
                     request.studioId
                 );
                 customerId = studio.stripeCustomerId;
+                customerName = studio.displayName;
+                customerMetadata.role = 'studio';
+                customerMetadata.studioId = studio.id;
                 metadata.studioId = studio.id;
+
+                let primaryAssignment: ListedStudioAssignment;
+
+                if (userAssignment.isPrimaryContact) {
+                    primaryAssignment = userAssignment;
+                } else {
+                    primaryAssignment = assignments.find(
+                        (a) => a.isPrimaryContact
+                    );
+                }
+
+                if (primaryAssignment) {
+                    const user = await this._authStore.findUser(
+                        primaryAssignment.userId
+                    );
+                    customerEmail = user.email;
+                    customerPhone = user.phoneNumber;
+                    metadata.contactUserId = user.id;
+                    customerMetadata.contactUserId = user.id;
+                }
+
                 role = 'studio';
 
                 console.log(
@@ -427,7 +454,7 @@ export class SubscriptionController {
                 throw new Error('Should not reach this point');
             }
 
-            metadata.managerId = keyResult.userId;
+            metadata.subjectId = keyResult.userId;
 
             if (!customerId) {
                 if (this._config.subscriptions.length <= 0) {
@@ -445,6 +472,7 @@ export class SubscriptionController {
                     name: customerName,
                     email: customerEmail,
                     phone: customerPhone,
+                    metadata: customerMetadata,
                 });
 
                 customerId = result.id;
@@ -477,7 +505,7 @@ export class SubscriptionController {
             }
 
             console.log(
-                `[SubscriptionController] [createManageSubscriptionLink] User (${user.id}) Has Stripe Customer ID (${user.stripeCustomerId}). Checking active subscriptions for customer.`
+                `[SubscriptionController] [createManageSubscriptionLink] Has Stripe Customer ID (${customerId}). Checking active subscriptions for customer.`
             );
             const subs = await this._stripe.listActiveSubscriptionsForCustomer(
                 customerId
@@ -536,7 +564,7 @@ export class SubscriptionController {
                 role
             );
         } catch (err) {
-            console.log(
+            console.error(
                 '[SubscriptionController] An error occurred while creating a manage subscription link:',
                 err
             );
