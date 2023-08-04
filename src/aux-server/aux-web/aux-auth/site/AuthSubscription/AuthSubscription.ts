@@ -61,17 +61,31 @@ export default class AuthSubscription extends Vue {
     }
 
     async manageSubscription() {
-        await authManager.manageSubscriptions();
+        if (this.studioId) {
+            await authManager.manageSubscriptionsV2({
+                studioId: this.studioId,
+            });
+        } else {
+            await authManager.manageSubscriptions();
+        }
     }
 
     async subscribe(
         subscriptionId: string,
         expectedPrice: PurchasableSubscription['prices'][0]
     ) {
-        await authManager.manageSubscriptions({
-            subscriptionId,
-            expectedPrice,
-        });
+        if (this.studioId) {
+            await authManager.manageSubscriptionsV2({
+                studioId: this.studioId,
+                subscriptionId,
+                expectedPrice,
+            });
+        } else {
+            await authManager.manageSubscriptions({
+                subscriptionId,
+                expectedPrice,
+            });
+        }
     }
 
     getSubscriptionPrice(sub: SubscriptionStatus): string {

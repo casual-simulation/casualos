@@ -523,6 +523,29 @@ export class AuthManager {
         }
     }
 
+    async manageSubscriptionsV2(
+        options: Pick<
+            CreateManageSubscriptionRequest,
+            'subscriptionId' | 'expectedPrice' | 'userId' | 'studioId'
+        >
+    ): Promise<void> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/subscriptions/manage`);
+        const response = await axios.post(url.href, options, {
+            headers: this._authenticationHeaders(),
+        });
+
+        const result = response.data as CreateManageSubscriptionResult;
+
+        if (result.success === true) {
+            location.href = result.url;
+        } else {
+            console.error(
+                '[AuthManager] Unable to manage subscriptions!',
+                result
+            );
+        }
+    }
+
     private async _revokeSessionKey(sessionKey: string): Promise<void> {
         try {
             const response = await axios.post(
