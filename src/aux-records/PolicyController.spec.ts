@@ -312,6 +312,7 @@ describe('PolicyController', () => {
                     ownerId: ownerId,
                     secretHashes: [],
                     secretSalt: expect.any(String),
+                    studioId: null,
                 });
             });
 
@@ -1447,6 +1448,7 @@ describe('PolicyController', () => {
                     ownerId: ownerId,
                     secretHashes: [],
                     secretSalt: expect.any(String),
+                    studioId: null,
                 });
             });
 
@@ -1755,6 +1757,7 @@ describe('PolicyController', () => {
                     ownerId: ownerId,
                     secretHashes: [],
                     secretSalt: expect.any(String),
+                    studioId: null,
                 });
             });
 
@@ -2902,6 +2905,7 @@ describe('PolicyController', () => {
                     ownerId: ownerId,
                     secretHashes: [],
                     secretSalt: expect.any(String),
+                    studioId: null,
                 });
             });
 

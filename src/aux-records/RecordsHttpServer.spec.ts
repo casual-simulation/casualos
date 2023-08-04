@@ -8497,6 +8497,15 @@ describe('RecordsHttpServer', () => {
                 subscriptionId: 'sub_id',
                 subscriptionStatus: 'active',
             });
+
+            chatInterface.chat.mockResolvedValueOnce({
+                choices: [
+                    {
+                        role: 'assistant',
+                        content: 'hi!',
+                    },
+                ],
+            });
         });
 
         it('should return a not_supported result if the server has a null AI controller', async () => {
@@ -8545,15 +8554,6 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should call the AI chat interface', async () => {
-            chatInterface.chat.mockResolvedValueOnce({
-                choices: [
-                    {
-                        role: 'assistant',
-                        content: 'hi!',
-                    },
-                ],
-            });
-
             const result = await server.handleRequest(
                 httpPost(
                     `/api/v2/ai/chat`,
@@ -8686,6 +8686,11 @@ describe('RecordsHttpServer', () => {
                 subscriptionId: 'sub_id',
                 subscriptionStatus: 'active',
             });
+
+            skyboxInterface.generateSkybox.mockResolvedValueOnce({
+                success: true,
+                skyboxId: 'skybox-id',
+            });
         });
 
         it('should return a not_supported result if the server has a null AI controller', async () => {
@@ -8728,11 +8733,6 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should call the AI skybox interface', async () => {
-            skyboxInterface.generateSkybox.mockResolvedValueOnce({
-                success: true,
-                skyboxId: 'skybox-id',
-            });
-
             const result = await server.handleRequest(
                 httpPost(
                     `/api/v2/ai/skybox`,
@@ -8801,6 +8801,13 @@ describe('RecordsHttpServer', () => {
                 subscriptionId: 'sub_id',
                 subscriptionStatus: 'active',
             });
+
+            skyboxInterface.getSkybox.mockResolvedValueOnce({
+                success: true,
+                status: 'generated',
+                fileUrl: 'file-url',
+                thumbnailUrl: 'thumbnail-url',
+            });
         });
 
         it('should return a not_supported result if the server has a null AI controller', async () => {
@@ -8837,13 +8844,6 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should call the AI skybox interface', async () => {
-            skyboxInterface.getSkybox.mockResolvedValueOnce({
-                success: true,
-                status: 'generated',
-                fileUrl: 'file-url',
-                thumbnailUrl: 'thumbnail-url',
-            });
-
             const result = await server.handleRequest(
                 httpGet(`/api/v2/ai/skybox?skyboxId=${'skybox-id'}`, apiHeaders)
             );
@@ -8877,6 +8877,15 @@ describe('RecordsHttpServer', () => {
                 ...u,
                 subscriptionId: 'sub_id',
                 subscriptionStatus: 'active',
+            });
+
+            imageInterface.generateImage.mockResolvedValueOnce({
+                images: [
+                    {
+                        base64: 'base64',
+                        mimeType: 'image/png',
+                    },
+                ],
             });
         });
 
@@ -8920,15 +8929,6 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should call the AI image interface', async () => {
-            imageInterface.generateImage.mockResolvedValueOnce({
-                images: [
-                    {
-                        base64: 'base64',
-                        mimeType: 'image/png',
-                    },
-                ],
-            });
-
             const result = await server.handleRequest(
                 httpPost(
                     `/api/v2/ai/image`,

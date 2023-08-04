@@ -68,6 +68,7 @@ describe('EventRecordsController', () => {
             ownerId: owner.userId,
             secretHashes: record.secretHashes,
             secretSalt: record.secretSalt,
+            studioId: null,
         });
     });
 
