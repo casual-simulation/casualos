@@ -145,6 +145,9 @@ export class MongoDBRecordsStore implements RecordsStore {
             {
                 $set: {
                     displayName: studio.displayName,
+                    stripeCustomerId: studio.stripeCustomerId,
+                    subscriptionId: studio.subscriptionId,
+                    subscriptionStatus: studio.subscriptionStatus,
                 },
             },
             { upsert: true }

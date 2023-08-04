@@ -152,6 +152,9 @@ export class PrismaRecordsStore implements RecordsStore {
             data: {
                 id: studio.id,
                 displayName: studio.displayName,
+                stripeCustomerId: studio.stripeCustomerId,
+                subscriptionId: studio.subscriptionId,
+                subscriptionStatus: studio.subscriptionStatus,
             },
         });
     }
@@ -211,6 +214,9 @@ export class PrismaRecordsStore implements RecordsStore {
             },
             data: {
                 displayName: studio.displayName,
+                stripeCustomerId: studio.stripeCustomerId,
+                subscriptionId: studio.subscriptionId,
+                subscriptionStatus: studio.subscriptionStatus,
             },
         });
     }
