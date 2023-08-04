@@ -272,6 +272,16 @@ Resources:
                     Properties:
                         Path: /api/{userId}/subscription/manage
                         Method: POST
+                GetSubscriptionsV2:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/subscriptions
+                        Method: GET
+                ManageSubscriptionsV2:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/subscriptions/manage
+                        Method: POST
                 AiChat:
                     Type: Api
                     Properties:
