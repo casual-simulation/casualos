@@ -302,6 +302,16 @@ Resources:
                     Properties:
                         Path: /api/v2/ai/image
                         Method: POST
+                CreateStudio:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/studios
+                        Method: POST
+                ListStudios:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/studios/list
+                        Method: GET
                 ListStudioMembers:
                     Type: Api
                     Properties:
