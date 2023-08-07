@@ -171,9 +171,9 @@ describe('RecordsHttpServer', () => {
                 },
             ],
             webhookSecret: 'webhook_secret',
-            cancelUrl: 'cancel_url',
-            successUrl: 'success_url',
-            returnUrl: 'return_url',
+            cancelUrl: 'http://cancel_url',
+            successUrl: 'http://success_url',
+            returnUrl: 'http://return_url',
         };
 
         authStore = new MemoryAuthStore();
@@ -1062,7 +1062,7 @@ describe('RecordsHttpServer', () => {
             );
 
             stripeMock.createPortalSession.mockResolvedValueOnce({
-                url: 'portal_url',
+                url: 'http://portal_url',
             });
 
             const result = await server.handleRequest(
@@ -1077,7 +1077,7 @@ describe('RecordsHttpServer', () => {
                 statusCode: 200,
                 body: JSON.stringify({
                     success: true,
-                    url: 'portal_url',
+                    url: 'http://portal_url',
                 }),
                 headers: accountCorsHeaders,
             });
@@ -1090,11 +1090,11 @@ describe('RecordsHttpServer', () => {
                 }
             );
             stripeMock.createCheckoutSession.mockResolvedValueOnce({
-                url: 'create_url',
+                url: 'http://create_url',
             });
 
             stripeMock.createPortalSession.mockResolvedValueOnce({
-                url: 'portal_url',
+                url: 'http://portal_url',
             });
 
             const result = await server.handleRequest(
@@ -1117,7 +1117,7 @@ describe('RecordsHttpServer', () => {
                 statusCode: 200,
                 body: JSON.stringify({
                     success: true,
-                    url: 'create_url',
+                    url: 'http://create_url',
                 }),
                 headers: accountCorsHeaders,
             });
@@ -1133,11 +1133,11 @@ describe('RecordsHttpServer', () => {
                 }
             );
             stripeMock.createCheckoutSession.mockResolvedValueOnce({
-                url: 'create_url',
+                url: 'http://create_url',
             });
 
             stripeMock.createPortalSession.mockResolvedValueOnce({
-                url: 'portal_url',
+                url: 'http://portal_url',
             });
 
             const result = await server.handleRequest(
@@ -9780,7 +9780,7 @@ describe('RecordsHttpServer', () => {
                 );
 
                 stripeMock.createPortalSession.mockResolvedValueOnce({
-                    url: 'portal_url',
+                    url: 'http://portal_url',
                 });
 
                 const result = await server.handleRequest(
@@ -9797,7 +9797,7 @@ describe('RecordsHttpServer', () => {
                     statusCode: 200,
                     body: JSON.stringify({
                         success: true,
-                        url: 'portal_url',
+                        url: 'http://portal_url',
                     }),
                     headers: accountCorsHeaders,
                 });
@@ -9810,11 +9810,11 @@ describe('RecordsHttpServer', () => {
                     }
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
-                    url: 'create_url',
+                    url: 'http://create_url',
                 });
 
                 stripeMock.createPortalSession.mockResolvedValueOnce({
-                    url: 'portal_url',
+                    url: 'http://portal_url',
                 });
 
                 const result = await server.handleRequest(
@@ -9838,7 +9838,7 @@ describe('RecordsHttpServer', () => {
                     statusCode: 200,
                     body: JSON.stringify({
                         success: true,
-                        url: 'create_url',
+                        url: 'http://create_url',
                     }),
                     headers: accountCorsHeaders,
                 });
@@ -9854,11 +9854,11 @@ describe('RecordsHttpServer', () => {
                     }
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
-                    url: 'create_url',
+                    url: 'http://create_url',
                 });
 
                 stripeMock.createPortalSession.mockResolvedValueOnce({
-                    url: 'portal_url',
+                    url: 'http://portal_url',
                 });
 
                 const result = await server.handleRequest(
@@ -10080,7 +10080,7 @@ describe('RecordsHttpServer', () => {
                 );
 
                 stripeMock.createPortalSession.mockResolvedValueOnce({
-                    url: 'portal_url',
+                    url: 'http://portal_url',
                 });
 
                 const result = await server.handleRequest(
@@ -10097,7 +10097,7 @@ describe('RecordsHttpServer', () => {
                     statusCode: 200,
                     body: JSON.stringify({
                         success: true,
-                        url: 'portal_url',
+                        url: 'http://portal_url',
                     }),
                     headers: accountCorsHeaders,
                 });
@@ -10110,11 +10110,11 @@ describe('RecordsHttpServer', () => {
                     }
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
-                    url: 'create_url',
+                    url: 'http://create_url',
                 });
 
                 stripeMock.createPortalSession.mockResolvedValueOnce({
-                    url: 'portal_url',
+                    url: 'http://portal_url',
                 });
 
                 const result = await server.handleRequest(
@@ -10138,7 +10138,7 @@ describe('RecordsHttpServer', () => {
                     statusCode: 200,
                     body: JSON.stringify({
                         success: true,
-                        url: 'create_url',
+                        url: 'http://create_url',
                     }),
                     headers: accountCorsHeaders,
                 });
@@ -10154,11 +10154,11 @@ describe('RecordsHttpServer', () => {
                     }
                 );
                 stripeMock.createCheckoutSession.mockResolvedValueOnce({
-                    url: 'create_url',
+                    url: 'http://create_url',
                 });
 
                 stripeMock.createPortalSession.mockResolvedValueOnce({
-                    url: 'portal_url',
+                    url: 'http://portal_url',
                 });
 
                 const result = await server.handleRequest(

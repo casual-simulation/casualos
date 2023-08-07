@@ -438,8 +438,8 @@ export class SubscriptionController {
                 if (primaryAssignment) {
                     customerEmail = primaryAssignment.user.email;
                     customerPhone = primaryAssignment.user.phoneNumber;
-                    metadata.contactUserId = user.id;
-                    customerMetadata.contactUserId = user.id;
+                    metadata.contactUserId = keyResult.userId;
+                    customerMetadata.contactUserId = keyResult.userId;
                 }
 
                 role = 'studio';
