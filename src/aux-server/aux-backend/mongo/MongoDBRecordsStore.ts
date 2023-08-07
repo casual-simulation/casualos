@@ -334,6 +334,8 @@ export class MongoDBRecordsStore implements RecordsStore {
                 user: {
                     id: user.id,
                     name: user.name,
+                    email: user.email,
+                    phoneNumber: user.phoneNumber,
                 },
             });
         }

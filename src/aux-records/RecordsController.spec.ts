@@ -1394,6 +1394,8 @@ describe('RecordsController', () => {
                     user: {
                         id: 'userId',
                         name: 'test user',
+                        email: 'test@example.com',
+                        phoneNumber: null,
                     },
                 },
             ]);
@@ -1459,6 +1461,163 @@ describe('RecordsController', () => {
                         role: 'member',
                     },
                 ],
+            });
+        });
+    });
+
+    describe('listStudioMembers()', () => {
+        let studioId: string;
+        beforeEach(async () => {
+            studioId = 'studioId';
+
+            await auth.saveNewUser({
+                id: 'userId',
+                name: 'test user',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await auth.saveNewUser({
+                id: 'userId2',
+                name: 'test user 2',
+                email: 'test2@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await auth.saveNewUser({
+                id: 'userId3',
+                name: 'test user 3',
+                email: null,
+                phoneNumber: '555',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: studioId,
+                displayName: 'studio 1',
+            });
+
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: 'userId2',
+                isPrimaryContact: true,
+                role: 'member',
+            });
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: 'userId3',
+                isPrimaryContact: false,
+                role: 'member',
+            });
+        });
+
+        it('should list the users in the studio that the user has access to', async () => {
+            const result = await manager.listStudioMembers(studioId, 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                members: [
+                    {
+                        studioId,
+                        userId: 'userId',
+                        isPrimaryContact: true,
+                        role: 'admin',
+                        user: {
+                            id: 'userId',
+                            name: 'test user',
+                            email: 'test@example.com',
+                            phoneNumber: null,
+                        },
+                    },
+                    {
+                        studioId,
+                        userId: 'userId2',
+                        isPrimaryContact: true,
+                        role: 'member',
+                        user: {
+                            id: 'userId2',
+                            name: 'test user 2',
+                            email: 'test2@example.com',
+                            phoneNumber: null,
+                        },
+                    },
+                    {
+                        studioId,
+                        userId: 'userId3',
+                        isPrimaryContact: false,
+                        role: 'member',
+                        user: {
+                            id: 'userId3',
+                            name: 'test user 3',
+                            email: null,
+                            phoneNumber: '555',
+                        },
+                    },
+                ],
+            });
+        });
+
+        it('should list the users in the studio that the user has access to', async () => {
+            const result = await manager.listStudioMembers(studioId, 'userId3');
+
+            expect(result).toEqual({
+                success: true,
+                members: [
+                    {
+                        studioId,
+                        userId: 'userId',
+                        isPrimaryContact: true,
+                        role: 'admin',
+                        user: {
+                            id: 'userId',
+                            name: 'test user',
+                        },
+                    },
+                    {
+                        studioId,
+                        userId: 'userId2',
+                        isPrimaryContact: true,
+                        role: 'member',
+                        user: {
+                            id: 'userId2',
+                            name: 'test user 2',
+                        },
+                    },
+                    {
+                        studioId,
+                        userId: 'userId3',
+                        isPrimaryContact: false,
+                        role: 'member',
+                        user: {
+                            id: 'userId3',
+                            name: 'test user 3',
+                        },
+                    },
+                ],
+            });
+        });
+
+        it('should return a not_authorized error if the user is not authorized', async () => {
+            const result = await manager.listStudioMembers(
+                studioId,
+                'wrong_user'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'You are not authorized to access this studio.',
             });
         });
     });

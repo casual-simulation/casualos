@@ -321,6 +321,16 @@ export interface ListedStudioAssignmentUser {
      * The name of the user.
      */
     name: string;
+
+    /**
+     * The email address of the user.
+     */
+    email: string;
+
+    /**
+     * The phone number of the user.
+     */
+    phoneNumber: string;
 }
 
 export interface ListedStudio {

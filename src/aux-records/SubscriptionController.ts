@@ -436,11 +436,8 @@ export class SubscriptionController {
                 }
 
                 if (primaryAssignment) {
-                    const user = await this._authStore.findUser(
-                        primaryAssignment.userId
-                    );
-                    customerEmail = user.email;
-                    customerPhone = user.phoneNumber;
+                    customerEmail = primaryAssignment.user.email;
+                    customerPhone = primaryAssignment.user.phoneNumber;
                     metadata.contactUserId = user.id;
                     customerMetadata.contactUserId = user.id;
                 }

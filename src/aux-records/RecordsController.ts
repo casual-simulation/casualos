@@ -533,6 +533,73 @@ export class RecordsController {
         }
     }
 
+    /**
+     * Gets the list of members in a studio.
+     * @param studioId The ID of the studio.
+     * @param userId The ID of the user that is currently logged in.
+     */
+    async listStudioMembers(
+        studioId: string,
+        userId: string
+    ): Promise<ListStudioMembersResult> {
+        try {
+            const members = await this._store.listStudioAssignments(studioId);
+
+            const userAssignment = members.find((m) => m.userId === userId);
+
+            if (!userAssignment) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to access this studio.',
+                };
+            }
+
+            if (userAssignment.role === 'admin') {
+                return {
+                    success: true,
+                    members: members.map((m) => ({
+                        studioId: m.studioId,
+                        userId: m.userId,
+                        isPrimaryContact: m.isPrimaryContact,
+                        role: m.role,
+                        user: {
+                            id: m.user.id,
+                            name: m.user.name,
+                            email: m.user.email,
+                            phoneNumber: m.user.phoneNumber,
+                        },
+                    })),
+                };
+            }
+
+            return {
+                success: true,
+                members: members.map((m) => ({
+                    studioId: m.studioId,
+                    userId: m.userId,
+                    isPrimaryContact: m.isPrimaryContact,
+                    role: m.role,
+                    user: {
+                        id: m.user.id,
+                        name: m.user.name,
+                    },
+                })),
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [listStudioMembers] An error occurred while listing studio members:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     private _createSalt(): string {
         return fromByteArray(randomBytes(16));
     }
@@ -757,6 +824,36 @@ export interface ListStudiosSuccess {
 }
 
 export interface ListStudiosFailure {
+    success: false;
+    errorCode: NotLoggedInError | NotAuthorizedError | ServerError;
+    errorMessage: string;
+}
+
+export type ListStudioMembersResult =
+    | ListStudioMembersSuccess
+    | ListStudioMembersFailure;
+
+export interface ListStudioMembersSuccess {
+    success: true;
+    members: ListedStudioMember[];
+}
+
+export interface ListedStudioMember {
+    userId: string;
+    studioId: string;
+    role: 'admin' | 'member';
+    isPrimaryContact: boolean;
+    user: ListedStudioMemberUser;
+}
+
+export interface ListedStudioMemberUser {
+    id: string;
+    name: string;
+    email?: string;
+    phoneNumber?: string;
+}
+
+export interface ListStudioMembersFailure {
     success: false;
     errorCode: NotLoggedInError | NotAuthorizedError | ServerError;
     errorMessage: string;

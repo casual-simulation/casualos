@@ -317,6 +317,8 @@ export class PrismaRecordsStore implements RecordsStore {
                     select: {
                         id: true,
                         name: true,
+                        email: true,
+                        phoneNumber: true,
                     },
                 },
                 role: true,
@@ -333,6 +335,8 @@ export class PrismaRecordsStore implements RecordsStore {
                 user: {
                     id: a.user.id,
                     name: a.user.name,
+                    email: a.user.email,
+                    phoneNumber: a.user.phoneNumber,
                 },
             };
 
