@@ -5,6 +5,7 @@ import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
 import AuthSubscription from '../AuthSubscription/AuthSubscription';
+import { ListedStudioMember } from '@casual-simulation/aux-records';
 
 @Component({
     components: {
@@ -19,5 +20,26 @@ export default class AuthStudio extends Vue {
     @Prop({ required: true })
     studioName: string;
 
+    members: ListedStudioMember[] = [];
+    loadingMembers: boolean = false;
+
     created() {}
+
+    mounted() {
+        this.loadingMembers = false;
+        this.members = [];
+
+        this._loadMembers();
+    }
+
+    private async _loadMembers() {
+        try {
+            this.loadingMembers = true;
+            this.members = await authManager.listStudioMembers(this.studioId);
+        } finally {
+            this.loadingMembers = false;
+        }
+    }
+
+    revokeMembership(member: ListedStudioMember) {}
 }
