@@ -718,6 +718,15 @@ export class RecordsHttpServer {
             );
         } else if (
             request.method === 'GET' &&
+            request.path === '/api/v2/studios/members/list'
+        ) {
+            return formatResponse(
+                request,
+                await this._listStudioMembers(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
             request.path === '/api/v2/subscriptions'
         ) {
             return formatResponse(
@@ -1840,6 +1849,49 @@ export class RecordsHttpServer {
         }
 
         const result = await this._records.listStudios(
+            sessionKeyValidation.userId
+        );
+        return returnResult(result);
+    }
+
+    private async _listStudioMembers(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (!this._aiController) {
+            return returnResult(AI_NOT_SUPPORTED_RESULT);
+        }
+
+        const schema = z.object({
+            studioId: z
+                .string({
+                    invalid_type_error: 'studioId must be a string.',
+                    required_error: 'studioId is required.',
+                })
+                .nonempty('studioId must not be empty'),
+        });
+
+        const parseResult = schema.safeParse(request.query);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { studioId } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._records.listStudioMembers(
+            studioId,
             sessionKeyValidation.userId
         );
         return returnResult(result);

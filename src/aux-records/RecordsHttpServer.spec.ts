@@ -60,6 +60,7 @@ import {
     AIGenerateImageInterfaceRequest,
     AIGenerateImageInterfaceResponse,
 } from './AIImageInterface';
+import { sortBy } from 'lodash';
 
 console.log = jest.fn();
 
@@ -9194,6 +9195,96 @@ describe('RecordsHttpServer', () => {
         testOrigin('GET', '/api/v2/studios/list');
         testRateLimit(() =>
             httpGet('/api/v2/studios/list', authenticatedHeaders)
+        );
+    });
+
+    describe('GET /api/v2/studios/members/list', () => {
+        let studioId: string;
+        beforeEach(async () => {
+            studioId = 'studioId1';
+            await authStore.saveUser({
+                id: 'userId2',
+                email: 'test2@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await recordsStore.addStudio({
+                id: studioId,
+                displayName: 'studio 1',
+            });
+
+            await recordsStore.addStudioAssignment({
+                studioId: studioId,
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+            await recordsStore.addStudioAssignment({
+                studioId: studioId,
+                userId: 'userId2',
+                isPrimaryContact: false,
+                role: 'member',
+            });
+        });
+
+        it('should list the members of the studio', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/studios/members/list?studioId=${studioId}`,
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    members: sortBy(
+                        [
+                            {
+                                studioId,
+                                userId: userId,
+                                isPrimaryContact: true,
+                                role: 'admin',
+                                user: {
+                                    id: userId,
+                                    email: 'test@example.com',
+                                    phoneNumber: null,
+                                },
+                            },
+                            {
+                                studioId,
+                                userId: 'userId2',
+                                isPrimaryContact: false,
+                                role: 'member',
+                                user: {
+                                    id: 'userId2',
+                                    email: 'test2@example.com',
+                                    phoneNumber: null,
+                                },
+                            },
+                        ],
+                        (u) => u.userId
+                    ),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testAuthorization(() =>
+            httpGet(
+                '/api/v2/studios/members/list?studioId=studioId1',
+                authenticatedHeaders
+            )
+        );
+        testOrigin('GET', '/api/v2/studios/members/list?studioId=studioId1');
+        testRateLimit(() =>
+            httpGet(
+                '/api/v2/studios/members/list?studioId=studioId1',
+                authenticatedHeaders
+            )
         );
     });
 

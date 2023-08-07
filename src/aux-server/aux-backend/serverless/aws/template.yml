@@ -302,6 +302,11 @@ Resources:
                     Properties:
                         Path: /api/v2/ai/image
                         Method: POST
+                ListStudioMembers:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/studios/members/list
+                        Method: GET
                 StripeWebhook:
                     Type: Api
                     Properties:
