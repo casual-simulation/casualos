@@ -726,6 +726,15 @@ export class RecordsHttpServer {
                 this._allowedAccountOrigins
             );
         } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/studios/members'
+        ) {
+            return formatResponse(
+                request,
+                await this._addStudioMember(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
             request.method === 'GET' &&
             request.path === '/api/v2/subscriptions'
         ) {
@@ -1773,10 +1782,6 @@ export class RecordsHttpServer {
             return returnResult(INVALID_ORIGIN_RESULT);
         }
 
-        if (!this._aiController) {
-            return returnResult(AI_NOT_SUPPORTED_RESULT);
-        }
-
         if (typeof request.body !== 'string') {
             return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
         }
@@ -1894,6 +1899,82 @@ export class RecordsHttpServer {
             studioId,
             sessionKeyValidation.userId
         );
+        return returnResult(result);
+    }
+
+    private async _addStudioMember(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            studioId: z
+                .string({
+                    invalid_type_error: 'studioId must be a string.',
+                    required_error: 'studioId is required.',
+                })
+                .nonempty('studioId must not be empty'),
+            addedUserId: z
+                .string({
+                    invalid_type_error: 'addedUserId must be a string.',
+                    required_error: 'addedUserId is required.',
+                })
+                .nonempty('addedUserId must not be empty')
+                .optional(),
+            addedEmail: z
+                .string({
+                    invalid_type_error: 'addedEmail must be a string.',
+                    required_error: 'addedEmail is required.',
+                })
+                .nonempty('addedEmail must not be empty')
+                .optional(),
+            addedPhoneNumber: z
+                .string({
+                    invalid_type_error: 'addedPhoneNumber must be a string.',
+                    required_error: 'addedPhoneNumber is required.',
+                })
+                .nonempty('addedPhoneNumber must not be empty')
+                .optional(),
+            role: z.union([z.literal('admin'), z.literal('member')]),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { studioId, addedUserId, addedEmail, addedPhoneNumber, role } =
+            parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._records.addStudioMember({
+            studioId,
+            userId: sessionKeyValidation.userId,
+            role,
+            addedUserId,
+            addedEmail,
+            addedPhoneNumber,
+        });
         return returnResult(result);
     }
 

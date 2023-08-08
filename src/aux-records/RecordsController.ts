@@ -644,10 +644,10 @@ export class RecordsController {
             let addedUserId: string = null;
             if (request.addedUserId) {
                 addedUserId = request.addedUserId;
-            } else if (request.email || request.phoneNumber) {
+            } else if (request.addedEmail || request.addedPhoneNumber) {
                 const addedUser = await this._auth.findUserByAddress(
-                    request.email ?? request.phoneNumber,
-                    request.email ? 'email' : 'phone'
+                    request.addedEmail ?? request.addedPhoneNumber,
+                    request.addedEmail ? 'email' : 'phone'
                 );
 
                 if (!addedUser) {
@@ -959,17 +959,17 @@ export interface AddStudioMemberRequest {
     /**
      * The ID of the user that is currently logged in.
      */
-    userId?: string;
+    userId: string;
 
     /**
      * The email address of the user that should be added to the studio.
      */
-    email?: string;
+    addedEmail?: string;
 
     /**
      * The phone number of the user that should be added to the studio.
      */
-    phoneNumber?: string;
+    addedPhoneNumber?: string;
 
     /**
      * The ID of the user that should be added to the studio.

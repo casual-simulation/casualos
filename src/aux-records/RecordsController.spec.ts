@@ -1712,7 +1712,7 @@ describe('RecordsController', () => {
             const result = await manager.addStudioMember({
                 studioId: studioId,
                 userId: 'userId',
-                email: 'test2@example.com',
+                addedEmail: 'test2@example.com',
                 role: 'member',
             });
 
@@ -1753,7 +1753,7 @@ describe('RecordsController', () => {
             const result = await manager.addStudioMember({
                 studioId: studioId,
                 userId: 'userId',
-                phoneNumber: '555',
+                addedPhoneNumber: '555',
                 role: 'member',
             });
 
@@ -1833,7 +1833,7 @@ describe('RecordsController', () => {
             const result = await manager.addStudioMember({
                 studioId: studioId,
                 userId: 'userId',
-                email: 'wrong email',
+                addedEmail: 'wrong email',
                 role: 'member',
             });
 
@@ -1848,7 +1848,7 @@ describe('RecordsController', () => {
             const result = await manager.addStudioMember({
                 studioId: studioId,
                 userId: 'userId',
-                phoneNumber: 'wrong phone number',
+                addedPhoneNumber: 'wrong phone number',
                 role: 'member',
             });
 

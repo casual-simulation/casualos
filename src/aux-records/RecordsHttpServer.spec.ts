@@ -9288,6 +9288,168 @@ describe('RecordsHttpServer', () => {
         );
     });
 
+    describe('POST /api/v2/studios/members', () => {
+        let studioId: string;
+        beforeEach(async () => {
+            studioId = 'studioId1';
+            await authStore.saveUser({
+                id: 'userId2',
+                email: 'test2@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await authStore.saveUser({
+                id: 'userId3',
+                email: null,
+                phoneNumber: '555',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await recordsStore.addStudio({
+                id: studioId,
+                displayName: 'studio 1',
+            });
+
+            await recordsStore.addStudioAssignment({
+                studioId: studioId,
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+        });
+
+        it('should add a member to the studio', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/studios/members',
+                    JSON.stringify({
+                        studioId,
+                        addedUserId: 'userId2',
+                        role: 'member',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const list = await recordsStore.listStudioAssignments(studioId, {
+                userId: 'userId2',
+            });
+
+            expect(list).toEqual([
+                {
+                    studioId,
+                    userId: 'userId2',
+                    role: 'member',
+                    isPrimaryContact: false,
+                    user: {
+                        id: 'userId2',
+                        email: 'test2@example.com',
+                        phoneNumber: null,
+                    },
+                },
+            ]);
+        });
+
+        it('should be able to add members by email address', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/studios/members',
+                    JSON.stringify({
+                        studioId,
+                        addedEmail: 'test2@example.com',
+                        role: 'member',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const list = await recordsStore.listStudioAssignments(studioId, {
+                userId: 'userId2',
+            });
+
+            expect(list).toEqual([
+                {
+                    studioId,
+                    userId: 'userId2',
+                    role: 'member',
+                    isPrimaryContact: false,
+                    user: {
+                        id: 'userId2',
+                        email: 'test2@example.com',
+                        phoneNumber: null,
+                    },
+                },
+            ]);
+        });
+
+        it('should be able to add members by phone number', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/studios/members',
+                    JSON.stringify({
+                        studioId,
+                        addedPhoneNumber: '555',
+                        role: 'member',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const list = await recordsStore.listStudioAssignments(studioId, {
+                userId: 'userId3',
+            });
+
+            expect(list).toEqual([
+                {
+                    studioId,
+                    userId: 'userId3',
+                    role: 'member',
+                    isPrimaryContact: false,
+                    user: {
+                        id: 'userId3',
+                        email: null,
+                        phoneNumber: '555',
+                    },
+                },
+            ]);
+        });
+
+        testUrl('POST', '/api/v2/studios/members', () =>
+            JSON.stringify({
+                studioId,
+                addedUserId: 'userId2',
+                role: 'member',
+            })
+        );
+    });
+
     describe('GET /api/v2/subscriptions', () => {
         describe('?userId', () => {
             let user: AuthUser;
