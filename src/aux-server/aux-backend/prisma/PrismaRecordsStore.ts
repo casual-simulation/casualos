@@ -324,6 +324,12 @@ export class PrismaRecordsStore implements RecordsStore {
                 role: true,
                 isPrimaryContact: true,
             },
+            orderBy: {
+                user: {
+                    email: 'asc',
+                    phoneNumber: 'asc',
+                },
+            },
         });
 
         return assignments.map((a) => {
