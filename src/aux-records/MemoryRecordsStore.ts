@@ -207,7 +207,7 @@ export class MemoryRecordsStore implements RecordsStore {
         userId: string
     ): Promise<void> {
         this._studioAssignments = this._studioAssignments.filter(
-            (s) => s.studioId !== studioId && s.userId !== userId
+            (s) => s.studioId !== studioId || s.userId !== userId
         );
     }
 
