@@ -96,5 +96,13 @@ export default class AuthStudio extends Vue {
         }
     }
 
-    revokeMembership(member: ListedStudioMember) {}
+    async revokeMembership(member: ListedStudioMember) {
+        const result = await authManager.removeStudioMember({
+            studioId: this.studioId,
+            removedUserId: member.userId,
+        });
+        if (result.success === true) {
+            this._loadMembers();
+        }
+    }
 }

@@ -363,6 +363,21 @@ export class AuthManager {
         return result;
     }
 
+    async removeStudioMember(
+        request: Omit<RemoveStudioMemberRequest, 'userId'>
+    ): Promise<RemoveStudioMemberResult> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/studios/members`);
+
+        const response = await axios.delete(url.href, {
+            data: request,
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as RemoveStudioMemberResult;
+        return result;
+    }
+
     async listStudios(): Promise<ListedStudio[]> {
         const url = new URL(`${this.apiEndpoint}/api/v2/studios/list`);
 
