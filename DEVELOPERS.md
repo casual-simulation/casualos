@@ -65,6 +65,8 @@ Most of them are NPM scripts, so they're easy to run.
     -   `npm run test:watch`
 -   Run tests
     -   `npm test`
+-   Start CockroachDB
+    -   `npm run cockroach`
 -   Reset your database
     -   `prisma migrate reset`
 -   Update your database to match schema (creates a migration if needed)
