@@ -735,6 +735,15 @@ export class RecordsHttpServer {
                 this._allowedAccountOrigins
             );
         } else if (
+            request.method === 'DELETE' &&
+            request.path === '/api/v2/studios/members'
+        ) {
+            return formatResponse(
+                request,
+                await this._removeStudioMember(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
             request.method === 'GET' &&
             request.path === '/api/v2/subscriptions'
         ) {
@@ -1974,6 +1983,63 @@ export class RecordsHttpServer {
             addedUserId,
             addedEmail,
             addedPhoneNumber,
+        });
+        return returnResult(result);
+    }
+
+    private async _removeStudioMember(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            studioId: z
+                .string({
+                    invalid_type_error: 'studioId must be a string.',
+                    required_error: 'studioId is required.',
+                })
+                .nonempty('studioId must not be empty'),
+            removedUserId: z
+                .string({
+                    invalid_type_error: 'removedUserId must be a string.',
+                    required_error: 'removedUserId is required.',
+                })
+                .nonempty('removedUserId must not be empty')
+                .optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { studioId, removedUserId } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._records.removeStudioMember({
+            studioId,
+            userId: sessionKeyValidation.userId,
+            removedUserId,
         });
         return returnResult(result);
     }

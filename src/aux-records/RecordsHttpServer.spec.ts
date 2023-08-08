@@ -9450,6 +9450,81 @@ describe('RecordsHttpServer', () => {
         );
     });
 
+    describe('DELETE /api/v2/studios/members', () => {
+        let studioId: string;
+        beforeEach(async () => {
+            studioId = 'studioId1';
+            await authStore.saveUser({
+                id: 'userId2',
+                email: 'test2@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await authStore.saveUser({
+                id: 'userId3',
+                email: null,
+                phoneNumber: '555',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await recordsStore.addStudio({
+                id: studioId,
+                displayName: 'studio 1',
+            });
+
+            await recordsStore.addStudioAssignment({
+                studioId: studioId,
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            await recordsStore.addStudioAssignment({
+                studioId: studioId,
+                userId: 'userId2',
+                isPrimaryContact: false,
+                role: 'member',
+            });
+        });
+
+        it('should remove the member from the studio', async () => {
+            const result = await server.handleRequest(
+                httpDelete(
+                    '/api/v2/studios/members',
+                    JSON.stringify({
+                        studioId,
+                        removedUserId: 'userId2',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const list = await recordsStore.listStudioAssignments(studioId, {
+                userId: 'userId2',
+            });
+
+            expect(list).toEqual([]);
+        });
+
+        testUrl('DELETE', '/api/v2/studios/members', () =>
+            JSON.stringify({
+                studioId,
+                removedUserId: 'userId2',
+            })
+        );
+    });
+
     describe('GET /api/v2/subscriptions', () => {
         describe('?userId', () => {
             let user: AuthUser;
