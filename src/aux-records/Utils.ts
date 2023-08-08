@@ -347,6 +347,10 @@ export function getStatusCode(
             return 404;
         } else if (response.errorCode === 'operation_not_found') {
             return 404;
+        } else if (response.errorCode === 'studio_not_found') {
+            return 404;
+        } else if (response.errorCode === 'user_not_found') {
+            return 404;
         } else if (response.errorCode === 'session_already_revoked') {
             return 200;
         } else if (response.errorCode === 'invalid_code') {

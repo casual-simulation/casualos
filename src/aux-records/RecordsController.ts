@@ -3,6 +3,7 @@ import {
     ListedStudio,
     PublicRecordKeyPolicy,
     RecordsStore,
+    StudioAssignmentRole,
 } from './RecordsStore';
 import { toBase64String, fromBase64String } from './Utils';
 import {
@@ -600,6 +601,96 @@ export class RecordsController {
         }
     }
 
+    async addStudioMember(
+        request: AddStudioMemberRequest
+    ): Promise<AddStudioMemberResult> {
+        try {
+            const studio = await this._store.getStudioById(request.studioId);
+
+            if (!studio) {
+                return {
+                    success: false,
+                    errorCode: 'studio_not_found',
+                    errorMessage: 'Studio not found.',
+                };
+            }
+
+            if (!request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'You must be logged in to add a studio member.',
+                };
+            }
+
+            const list = await this._store.listStudioAssignments(
+                request.studioId,
+                {
+                    userId: request.userId,
+                    role: 'admin',
+                }
+            );
+
+            if (list.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                };
+            }
+
+            let addedUserId: string = null;
+            if (request.addedUserId) {
+                addedUserId = request.addedUserId;
+            } else if (request.email || request.phoneNumber) {
+                const addedUser = await this._auth.findUserByAddress(
+                    request.email ?? request.phoneNumber,
+                    request.email ? 'email' : 'phone'
+                );
+
+                if (!addedUser) {
+                    return {
+                        success: false,
+                        errorCode: 'user_not_found',
+                        errorMessage: 'The user was not able to be found.',
+                    };
+                }
+
+                addedUserId = addedUser.id;
+            } else {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'You must provide an email, phone number, or user ID to add a studio member.',
+                };
+            }
+
+            await this._store.addStudioAssignment({
+                studioId: request.studioId,
+                userId: addedUserId,
+                isPrimaryContact: false,
+                role: request.role,
+            });
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [addStudioMember] An error occurred while adding a studio member:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     private _createSalt(): string {
         return fromByteArray(randomBytes(16));
     }
@@ -856,6 +947,58 @@ export interface ListedStudioMemberUser {
 export interface ListStudioMembersFailure {
     success: false;
     errorCode: NotLoggedInError | NotAuthorizedError | ServerError;
+    errorMessage: string;
+}
+
+export interface AddStudioMemberRequest {
+    /**
+     * The ID of the studio.
+     */
+    studioId: string;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId?: string;
+
+    /**
+     * The email address of the user that should be added to the studio.
+     */
+    email?: string;
+
+    /**
+     * The phone number of the user that should be added to the studio.
+     */
+    phoneNumber?: string;
+
+    /**
+     * The ID of the user that should be added to the studio.
+     */
+    addedUserId?: string;
+
+    /**
+     * The role that the added user should have in the studio.
+     */
+    role: StudioAssignmentRole;
+}
+
+export type AddStudioMemberResult =
+    | AddStudioMemberSuccess
+    | AddStudioMemberFailure;
+
+export interface AddStudioMemberSuccess {
+    success: true;
+}
+
+export interface AddStudioMemberFailure {
+    success: false;
+    errorCode:
+        | NotLoggedInError
+        | NotAuthorizedError
+        | ServerError
+        | 'studio_not_found'
+        | 'unacceptable_request'
+        | 'user_not_found';
     errorMessage: string;
 }
 

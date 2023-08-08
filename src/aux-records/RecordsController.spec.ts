@@ -1621,6 +1621,244 @@ describe('RecordsController', () => {
             });
         });
     });
+
+    describe('addStudioMember()', () => {
+        let studioId: string;
+        beforeEach(async () => {
+            studioId = 'studioId';
+
+            await auth.saveNewUser({
+                id: 'userId',
+                name: 'test user',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await auth.saveNewUser({
+                id: 'userId2',
+                name: 'test user 2',
+                email: 'test2@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await auth.saveNewUser({
+                id: 'userId3',
+                name: 'test user 3',
+                email: null,
+                phoneNumber: '555',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: studioId,
+                displayName: 'studio 1',
+            });
+
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+        });
+
+        it('should add the user to the studio', async () => {
+            const result = await manager.addStudioMember({
+                studioId: studioId,
+                userId: 'userId',
+                addedUserId: 'userId2',
+                role: 'member',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const assignments = await store.listStudioAssignments(studioId);
+            expect(assignments).toEqual([
+                {
+                    studioId: studioId,
+                    userId: 'userId',
+                    isPrimaryContact: true,
+                    role: 'admin',
+                    user: {
+                        id: 'userId',
+                        name: 'test user',
+                        email: 'test@example.com',
+                        phoneNumber: null,
+                    },
+                },
+                {
+                    studioId: studioId,
+                    userId: 'userId2',
+                    role: 'member',
+                    isPrimaryContact: false,
+                    user: {
+                        id: 'userId2',
+                        name: 'test user 2',
+                        email: 'test2@example.com',
+                        phoneNumber: null,
+                    },
+                },
+            ]);
+        });
+
+        it('should be able to add a user by their email address', async () => {
+            const result = await manager.addStudioMember({
+                studioId: studioId,
+                userId: 'userId',
+                email: 'test2@example.com',
+                role: 'member',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const assignments = await store.listStudioAssignments(studioId);
+            expect(assignments).toEqual([
+                {
+                    studioId: studioId,
+                    userId: 'userId',
+                    isPrimaryContact: true,
+                    role: 'admin',
+                    user: {
+                        id: 'userId',
+                        name: 'test user',
+                        email: 'test@example.com',
+                        phoneNumber: null,
+                    },
+                },
+                {
+                    studioId: studioId,
+                    userId: 'userId2',
+                    role: 'member',
+                    isPrimaryContact: false,
+                    user: {
+                        id: 'userId2',
+                        name: 'test user 2',
+                        email: 'test2@example.com',
+                        phoneNumber: null,
+                    },
+                },
+            ]);
+        });
+
+        it('should be able to add a user by their phone number', async () => {
+            const result = await manager.addStudioMember({
+                studioId: studioId,
+                userId: 'userId',
+                phoneNumber: '555',
+                role: 'member',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const assignments = await store.listStudioAssignments(studioId);
+            expect(assignments).toEqual([
+                {
+                    studioId: studioId,
+                    userId: 'userId',
+                    isPrimaryContact: true,
+                    role: 'admin',
+                    user: {
+                        id: 'userId',
+                        name: 'test user',
+                        email: 'test@example.com',
+                        phoneNumber: null,
+                    },
+                },
+                {
+                    studioId: studioId,
+                    userId: 'userId3',
+                    role: 'member',
+                    isPrimaryContact: false,
+                    user: {
+                        id: 'userId3',
+                        name: 'test user 3',
+                        email: null,
+                        phoneNumber: '555',
+                    },
+                },
+            ]);
+        });
+
+        it('should return a not_authorized error if the user is not authorized', async () => {
+            await store.removeStudioAssignment(studioId, 'userId');
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'member',
+            });
+
+            const result = await manager.addStudioMember({
+                studioId: studioId,
+                userId: 'userId',
+                addedUserId: 'userId2',
+                role: 'member',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to perform this operation.',
+            });
+        });
+
+        it('should return a studio_not_found error if the studio does not exist', async () => {
+            const result = await manager.addStudioMember({
+                studioId: 'wrongStudioId',
+                userId: 'userId',
+                addedUserId: 'userId2',
+                role: 'member',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'studio_not_found',
+                errorMessage: 'Studio not found.',
+            });
+        });
+
+        it('should return a user_not_found error if the user with the given email does not exist', async () => {
+            const result = await manager.addStudioMember({
+                studioId: studioId,
+                userId: 'userId',
+                email: 'wrong email',
+                role: 'member',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'user_not_found',
+                errorMessage: 'The user was not able to be found.',
+            });
+        });
+
+        it('should return a user_not_found error if the user with the given phone number does not exist', async () => {
+            const result = await manager.addStudioMember({
+                studioId: studioId,
+                userId: 'userId',
+                phoneNumber: 'wrong phone number',
+                role: 'member',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'user_not_found',
+                errorMessage: 'The user was not able to be found.',
+            });
+        });
+    });
 });
 
 describe('formatV1RecordKey()', () => {
