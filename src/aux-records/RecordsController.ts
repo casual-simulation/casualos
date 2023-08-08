@@ -605,16 +605,6 @@ export class RecordsController {
         request: AddStudioMemberRequest
     ): Promise<AddStudioMemberResult> {
         try {
-            const studio = await this._store.getStudioById(request.studioId);
-
-            if (!studio) {
-                return {
-                    success: false,
-                    errorCode: 'studio_not_found',
-                    errorMessage: 'Studio not found.',
-                };
-            }
-
             if (!request.userId) {
                 return {
                     success: false,
@@ -681,6 +671,66 @@ export class RecordsController {
         } catch (err) {
             console.error(
                 '[RecordsController] [addStudioMember] An error occurred while adding a studio member:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async removeStudioMember(
+        request: RemoveStudioMemberRequest
+    ): Promise<RemoveStudioMemberResult> {
+        try {
+            if (!request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'You must be logged in to remove a studio member.',
+                };
+            }
+
+            if (request.userId === request.removedUserId) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                };
+            }
+
+            const list = await this._store.listStudioAssignments(
+                request.studioId,
+                {
+                    userId: request.userId,
+                    role: 'admin',
+                }
+            );
+
+            if (list.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                };
+            }
+
+            await this._store.removeStudioAssignment(
+                request.studioId,
+                request.removedUserId
+            );
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [removeStudioMember] An error occurred while removing a studio member:',
                 err
             );
             return {
@@ -999,6 +1049,37 @@ export interface AddStudioMemberFailure {
         | 'studio_not_found'
         | 'unacceptable_request'
         | 'user_not_found';
+    errorMessage: string;
+}
+
+export interface RemoveStudioMemberRequest {
+    /**
+     * The ID of the studio.
+     */
+    studioId: string;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The ID of the user that should be removed from the studio.
+     */
+    removedUserId: string;
+}
+
+export type RemoveStudioMemberResult =
+    | RemoveStudioMemberSuccess
+    | RemoveStudioMemberFailure;
+
+export interface RemoveStudioMemberSuccess {
+    success: true;
+}
+
+export interface RemoveStudioMemberFailure {
+    success: false;
+    errorCode: NotLoggedInError | NotAuthorizedError | ServerError;
     errorMessage: string;
 }
 

@@ -1814,7 +1814,7 @@ describe('RecordsController', () => {
             });
         });
 
-        it('should return a studio_not_found error if the studio does not exist', async () => {
+        it('should return a not_authorized error if the studio does not exist', async () => {
             const result = await manager.addStudioMember({
                 studioId: 'wrongStudioId',
                 userId: 'userId',
@@ -1824,8 +1824,9 @@ describe('RecordsController', () => {
 
             expect(result).toEqual({
                 success: false,
-                errorCode: 'studio_not_found',
-                errorMessage: 'Studio not found.',
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to perform this operation.',
             });
         });
 
@@ -1856,6 +1857,139 @@ describe('RecordsController', () => {
                 success: false,
                 errorCode: 'user_not_found',
                 errorMessage: 'The user was not able to be found.',
+            });
+        });
+    });
+
+    describe('removeStudioMember()', () => {
+        let studioId: string;
+        beforeEach(async () => {
+            studioId = 'studioId';
+
+            await auth.saveNewUser({
+                id: 'userId',
+                name: 'test user',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await auth.saveNewUser({
+                id: 'userId2',
+                name: 'test user 2',
+                email: 'test2@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await auth.saveNewUser({
+                id: 'userId3',
+                name: 'test user 3',
+                email: null,
+                phoneNumber: '555',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: studioId,
+                displayName: 'studio 1',
+            });
+
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: 'userId2',
+                isPrimaryContact: true,
+                role: 'member',
+            });
+        });
+
+        it('should remove the user from the studio', async () => {
+            const result = await manager.removeStudioMember({
+                studioId: studioId,
+                userId: 'userId',
+                removedUserId: 'userId2',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const assignments = await store.listStudioAssignments(studioId);
+            expect(assignments).toEqual([
+                {
+                    studioId: studioId,
+                    userId: 'userId',
+                    isPrimaryContact: true,
+                    role: 'admin',
+                    user: {
+                        id: 'userId',
+                        name: 'test user',
+                        email: 'test@example.com',
+                        phoneNumber: null,
+                    },
+                },
+            ]);
+        });
+
+        it('should return a not_authorized error if the user is not authorized', async () => {
+            await store.removeStudioAssignment(studioId, 'userId');
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'member',
+            });
+
+            const result = await manager.removeStudioMember({
+                studioId: studioId,
+                userId: 'userId',
+                removedUserId: 'userId2',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to perform this operation.',
+            });
+        });
+
+        it('should return a not_authorized error if the user tries to remove themselves', async () => {
+            const result = await manager.removeStudioMember({
+                studioId: studioId,
+                userId: 'userId',
+                removedUserId: 'userId',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to perform this operation.',
+            });
+        });
+
+        it('should return a not_authorized error if the studio does not exist', async () => {
+            const result = await manager.removeStudioMember({
+                studioId: 'wrongStudioId',
+                userId: 'userId',
+                removedUserId: 'userId2',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to perform this operation.',
             });
         });
     });
