@@ -19,6 +19,8 @@ import type {
     CreateStudioResult,
     ListedStudioMember,
     ListStudioMembersResult,
+    AddStudioMemberRequest,
+    AddStudioMemberResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -345,6 +347,20 @@ export class AuthManager {
         } else {
             return [];
         }
+    }
+
+    async addStudioMember(
+        request: Omit<AddStudioMemberRequest, 'userId'>
+    ): Promise<AddStudioMemberResult> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/studios/members`);
+
+        const response = await axios.post(url.href, request, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as AddStudioMemberResult;
+        return result;
     }
 
     async listStudios(): Promise<ListedStudio[]> {
