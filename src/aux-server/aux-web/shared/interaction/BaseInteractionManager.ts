@@ -47,6 +47,7 @@ import {
     isObjectVisible,
     objectForwardRay,
     cameraForwardRay,
+    objectWorldForwardRay,
 } from '../scene/SceneUtils';
 import { CameraRigControls } from './CameraRigControls';
 import { Game } from '../scene/Game';
@@ -1053,7 +1054,7 @@ export abstract class BaseInteractionManager {
         controller: ControllerData,
         gameObjectFilter: (obj: GameObject) => boolean
     ) {
-        const ray = objectForwardRay(controller.ray);
+        const ray = objectWorldForwardRay(controller.ray);
         return this.findHoveredGameObjectFromRay(ray, gameObjectFilter);
     }
 
