@@ -1217,6 +1217,79 @@ describe('RecordsController', () => {
                 success: true,
                 recordName: 'name',
                 ownerId: 'userId',
+                studioId: null,
+            });
+        });
+
+        it('should include info about the record studio', async () => {
+            await auth.saveUser({
+                id: 'userId',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+            await auth.saveUser({
+                id: 'otherUserId',
+                email: 'other@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'myStudio',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'userId',
+                isPrimaryContact: false,
+                role: 'admin',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'otherUserId',
+                isPrimaryContact: false,
+                role: 'member',
+            });
+            await store.addRecord({
+                name: 'name',
+                ownerId: null,
+                studioId: 'studioId',
+                secretHashes: [],
+                secretSalt: '',
+            });
+            const result = await manager.validateRecordName('name', 'userId');
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'name',
+                ownerId: null,
+                studioId: 'studioId',
+                studioMembers: [
+                    {
+                        userId: 'userId',
+                        studioId: 'studioId',
+                        isPrimaryContact: false,
+                        role: 'admin',
+                        user: {
+                            id: 'userId',
+                            email: 'test@example.com',
+                            phoneNumber: null,
+                        },
+                    },
+                    {
+                        userId: 'otherUserId',
+                        studioId: 'studioId',
+                        isPrimaryContact: false,
+                        role: 'member',
+                        user: {
+                            id: 'otherUserId',
+                            email: 'other@example.com',
+                            phoneNumber: null,
+                        },
+                    },
+                ],
             });
         });
 
@@ -1234,6 +1307,7 @@ describe('RecordsController', () => {
                 success: true,
                 recordName: 'name',
                 ownerId: 'userId',
+                studioId: null,
             });
         });
 
@@ -1244,6 +1318,7 @@ describe('RecordsController', () => {
                 success: true,
                 recordName: 'userId',
                 ownerId: 'userId',
+                studioId: null,
             });
 
             expect(await store.getRecordByName('userId')).toEqual({
@@ -1269,6 +1344,7 @@ describe('RecordsController', () => {
                 success: true,
                 recordName: 'userId',
                 ownerId: 'userId',
+                studioId: null,
             });
 
             const record = await store.getRecordByName('userId');

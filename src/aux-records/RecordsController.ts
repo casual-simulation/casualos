@@ -1,6 +1,7 @@
 import {
     ListedRecord,
     ListedStudio,
+    ListedStudioAssignment,
     PublicRecordKeyPolicy,
     RecordsStore,
     StudioAssignmentRole,
@@ -474,6 +475,7 @@ export class RecordsController {
                         success: true,
                         recordName: name,
                         ownerId: userId,
+                        studioId: null,
                     };
                 }
 
@@ -502,10 +504,19 @@ export class RecordsController {
                 });
             }
 
+            let studioMembers: ListedStudioAssignment[] = undefined;
+            if (record.studioId) {
+                studioMembers = await this._store.listStudioAssignments(
+                    record.studioId
+                );
+            }
+
             return {
                 success: true,
                 recordName: name,
                 ownerId: record.ownerId,
+                studioId: record.studioId,
+                studioMembers,
             };
         } catch (err) {
             console.error(
@@ -1051,6 +1062,12 @@ export interface ValidateRecordNameSuccess {
     success: true;
     recordName: string;
     ownerId: string;
+    studioId: string;
+
+    /**
+     * The IDs of the members of the studio.
+     */
+    studioMembers?: ListedStudioAssignment[];
 }
 
 export interface ValidateRecordNameFailure {

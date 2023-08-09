@@ -21,6 +21,9 @@ import {
 import { PolicyStore } from './PolicyStore';
 import { MemoryPolicyStore } from './MemoryPolicyStore';
 import {
+    CreateRecordSuccess,
+    CreateStudioResult,
+    CreateStudioSuccess,
     formatV1RecordKey,
     parseRecordKey,
     RecordsController,
@@ -47,6 +50,10 @@ describe('PolicyController', () => {
     let recordKey: string;
     let recordName: string;
 
+    let memberId: string;
+    let studioId: string;
+    let studioRecord: string;
+
     let wrongRecordKey: string;
 
     beforeEach(async () => {
@@ -59,11 +66,21 @@ describe('PolicyController', () => {
         const owner = await createTestUser(services, 'owner@example.com');
         const user = await createTestUser(services);
 
+        await services.authStore.saveNewUser({
+            id: 'memberId',
+            allSessionRevokeTimeMs: null,
+            currentLoginRequestId: null,
+            email: 'member@example.com',
+            phoneNumber: null,
+        });
+
         userId = user.userId;
         sessionKey = user.sessionKey;
 
         ownerId = owner.userId;
         ownerSessionKey = user.sessionKey;
+
+        memberId = 'memberId';
 
         const testRecordKey = await createTestRecordKey(services, userId);
         recordKey = testRecordKey.recordKey;
@@ -80,6 +97,27 @@ describe('PolicyController', () => {
 
         const [name, password] = parseRecordKey(recordKey);
         wrongRecordKey = formatV1RecordKey('wrong record name', password);
+
+        const studioResult = (await services.records.createStudio(
+            'myStudio',
+            ownerId
+        )) as CreateStudioSuccess;
+
+        const studioRecordResult = (await services.records.createRecord({
+            recordName: 'studioRecord',
+            userId: ownerId,
+            studioId: studioResult.studioId,
+        })) as CreateRecordSuccess;
+
+        studioId = studioResult.studioId;
+        studioRecord = 'studioRecord';
+
+        await services.records.addStudioMember({
+            studioId: studioId,
+            userId: ownerId,
+            addedUserId: memberId,
+            role: 'member',
+        });
     });
 
     describe('authorizeRequest()', () => {
@@ -258,18 +296,18 @@ describe('PolicyController', () => {
                 });
             });
 
-            it('should allow the request if the user is the record owner', async () => {
+            it('should allow the request if the user is an admin of the studio', async () => {
                 const result = await controller.authorizeRequest({
-                    recordKeyOrRecordName: recordName,
+                    recordKeyOrRecordName: studioRecord,
                     action: 'data.create',
                     address: 'myAddress',
                     userId: ownerId,
-                    resourceMarkers: [PUBLIC_READ_MARKER],
+                    resourceMarkers: ['secret'],
                 });
 
                 expect(result).toEqual({
                     allowed: true,
-                    recordName,
+                    recordName: studioRecord,
                     recordKeyOwnerId: null,
                     authorizerId: ownerId,
                     subject: {
@@ -278,7 +316,7 @@ describe('PolicyController', () => {
                         subjectPolicy: 'subjectfull',
                         markers: [
                             {
-                                marker: PUBLIC_READ_MARKER,
+                                marker: 'secret',
                                 actions: [
                                     {
                                         action: 'data.create',
@@ -305,6 +343,81 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
+                });
+            });
+
+            it('should allow the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId: memberId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: memberId,
+                    subject: {
+                        userId: memberId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.create',
+                                        grantingPermission: {
+                                            type: 'data.create',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId: userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'data.create',
+                    },
                 });
             });
 
@@ -1483,6 +1596,111 @@ describe('PolicyController', () => {
                 expect(result.allowed).toBe(true);
             });
 
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    userId: ownerId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.read',
+                                        grantingPermission: {
+                                            type: 'data.read',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    userId: memberId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: memberId,
+                    subject: {
+                        userId: memberId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.read',
+                                        grantingPermission: {
+                                            type: 'data.read',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'data.read',
+                    address: 'myAddress',
+                    userId: userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'data.read',
+                    },
+                });
+            });
+
             it('should allow the request if the record name equals the user ID', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: ownerId,
@@ -1808,6 +2026,111 @@ describe('PolicyController', () => {
                     secretHashes: [],
                     secretSalt: expect.any(String),
                     studioId: null,
+                });
+            });
+
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    userId: ownerId,
+                    existingMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.update',
+                                        grantingPermission: {
+                                            type: 'data.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    userId: memberId,
+                    existingMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: memberId,
+                    subject: {
+                        userId: memberId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.update',
+                                        grantingPermission: {
+                                            type: 'data.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'data.update',
+                    address: 'myAddress',
+                    userId: userId,
+                    existingMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'data.update',
+                    },
                 });
             });
 
@@ -2911,6 +3234,111 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'data.delete',
+                    address: 'myAddress',
+                    userId: ownerId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.delete',
+                                        grantingPermission: {
+                                            type: 'data.delete',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'data.delete',
+                    address: 'myAddress',
+                    userId: memberId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: memberId,
+                    subject: {
+                        userId: memberId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.delete',
+                                        grantingPermission: {
+                                            type: 'data.delete',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'data.delete',
+                    address: 'myAddress',
+                    userId: userId,
+                    resourceMarkers: ['secret'],
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'data.delete',
+                    },
+                });
+            });
+
             it('should allow the request if the record name is the same as the user ID', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: ownerId,
@@ -3690,6 +4118,140 @@ describe('PolicyController', () => {
                             markers: ['secret'],
                         },
                     ],
+                });
+            });
+
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'data.list',
+                    userId: ownerId,
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'data.list',
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                    ],
+                    userId: memberId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: memberId,
+                    subject: {
+                        userId: memberId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'data.list',
+                                        grantingPermission: {
+                                            type: 'data.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'data.list',
+                    userId: userId,
+                    dataItems: [
+                        {
+                            address: 'testAddress',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId: userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: 'secret',
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedDataItems: [],
                 });
             });
 
@@ -4987,6 +5549,132 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'file.create',
+                    userId: ownerId,
+                    resourceMarkers: ['secret'],
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.create',
+                                        grantingPermission: {
+                                            type: 'file.create',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'file.create',
+                    userId: memberId,
+                    resourceMarkers: ['secret'],
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: memberId,
+                    subject: {
+                        userId: memberId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.create',
+                                        grantingPermission: {
+                                            type: 'file.create',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'file.create',
+                    userId: userId,
+                    resourceMarkers: ['secret'],
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'file.create',
+                    },
+                });
+            });
+
             it('should allow the request if the record name matches the user ID', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: ownerId,
@@ -6113,6 +6801,112 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'file.read',
+                    userId: ownerId,
+                    resourceMarkers: ['secret'],
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.read',
+                                        grantingPermission: {
+                                            type: 'file.read',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'file.read',
+                    userId: memberId,
+                    resourceMarkers: ['secret'],
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: memberId,
+                    subject: {
+                        userId: memberId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.read',
+                                        grantingPermission: {
+                                            type: 'file.read',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'file.read',
+                    userId: userId,
+                    resourceMarkers: ['secret'],
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'file.read',
+                    },
+                });
+            });
+
             it('should allow the request if the record name matches the user ID', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: ownerId,
@@ -7114,6 +7908,148 @@ describe('PolicyController', () => {
                             markers: ['secret'],
                         },
                     ],
+                });
+            });
+
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'file.list',
+                    userId: ownerId,
+                    fileItems: [
+                        {
+                            fileName: 'testFile.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 100,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.list',
+                                        grantingPermission: {
+                                            type: 'file.list',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [
+                        {
+                            fileName: 'testFile.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 100,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'file.list',
+                    fileItems: [
+                        {
+                            fileName: 'testFile.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 100,
+                            markers: ['secret'],
+                        },
+                    ],
+                    userId: memberId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: memberId,
+                    subject: {
+                        userId: memberId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.list',
+                                        grantingPermission: {
+                                            type: 'file.list',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [
+                        {
+                            fileName: 'testFile.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 100,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'file.list',
+                    userId: userId,
+                    fileItems: [
+                        {
+                            fileName: 'testFile.json',
+                            fileMimeType: 'application/json',
+                            fileSizeInBytes: 100,
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId: userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: 'secret',
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedFileItems: [],
                 });
             });
 
@@ -8509,6 +9445,112 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'file.delete',
+                    userId: ownerId,
+                    resourceMarkers: ['secret'],
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.delete',
+                                        grantingPermission: {
+                                            type: 'file.delete',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'file.delete',
+                    userId: memberId,
+                    resourceMarkers: ['secret'],
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: memberId,
+                    subject: {
+                        userId: memberId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.delete',
+                                        grantingPermission: {
+                                            type: 'file.delete',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'file.delete',
+                    userId: userId,
+                    resourceMarkers: ['secret'],
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'file.delete',
+                    },
+                });
+            });
+
             it('should allow the request if the record name matches the user ID', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: ownerId,
@@ -9894,6 +10936,163 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'file.update',
+                    userId: ownerId,
+                    existingMarkers: ['secret'],
+                    addedMarkers: ['test'],
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.update',
+                                        grantingPermission: {
+                                            type: 'file.update',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                            {
+                                marker: 'test',
+                                actions: [
+                                    {
+                                        action: 'file.update',
+                                        grantingPermission: {
+                                            type: 'file.update',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'file.update',
+                    userId: memberId,
+                    existingMarkers: ['secret'],
+                    addedMarkers: ['test'],
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: memberId,
+                    subject: {
+                        userId: memberId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'file.update',
+                                        grantingPermission: {
+                                            type: 'file.update',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                            {
+                                marker: 'test',
+                                actions: [
+                                    {
+                                        action: 'file.update',
+                                        grantingPermission: {
+                                            type: 'file.update',
+                                            role: ADMIN_ROLE_NAME,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'file.update',
+                    userId: userId,
+                    existingMarkers: ['secret'],
+                    addedMarkers: ['test'],
+                    fileMimeType: 'text/plain',
+                    fileSizeInBytes: 100,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'file.update',
+                    },
+                });
+            });
+
             it('should allow the request if the record name matches the user ID', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: ownerId,
@@ -10624,6 +11823,111 @@ describe('PolicyController', () => {
                 expect(result.allowed).toBe(true);
             });
 
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'event.count',
+                    userId: ownerId,
+                    resourceMarkers: ['secret'],
+                    eventName: 'event',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.count',
+                                        grantingPermission: {
+                                            type: 'event.count',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'event.count',
+                    userId: memberId,
+                    resourceMarkers: ['secret'],
+                    eventName: 'event',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: memberId,
+                    subject: {
+                        userId: memberId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.count',
+                                        grantingPermission: {
+                                            type: 'event.count',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'event.count',
+                    userId: userId,
+                    resourceMarkers: ['secret'],
+                    eventName: 'event',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'event.count',
+                    },
+                });
+            });
+
             it('should allow the request if the record name matches the user ID', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: ownerId,
@@ -10934,6 +12238,111 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
+                });
+            });
+
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'event.update',
+                    userId: ownerId,
+                    existingMarkers: ['secret'],
+                    eventName: 'event',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.update',
+                                        grantingPermission: {
+                                            type: 'event.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'event.update',
+                    userId: memberId,
+                    existingMarkers: ['secret'],
+                    eventName: 'event',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: memberId,
+                    subject: {
+                        userId: memberId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.update',
+                                        grantingPermission: {
+                                            type: 'event.update',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'event.update',
+                    userId: userId,
+                    existingMarkers: ['secret'],
+                    eventName: 'event',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'event.update',
+                    },
                 });
             });
 
@@ -12147,6 +13556,140 @@ describe('PolicyController', () => {
                             markers: [PUBLIC_READ_MARKER],
                         },
                     ],
+                });
+            });
+
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'event.list',
+                    userId: ownerId,
+                    eventItems: [
+                        {
+                            eventName: 'event',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [
+                        {
+                            eventName: 'event',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should allow the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'event.list',
+                    eventItems: [
+                        {
+                            eventName: 'event',
+                            markers: ['secret'],
+                        },
+                    ],
+                    userId: memberId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: memberId,
+                    subject: {
+                        userId: memberId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.list',
+                                        grantingPermission: {
+                                            type: 'event.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [
+                        {
+                            eventName: 'event',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'event.list',
+                    userId: userId,
+                    eventItems: [
+                        {
+                            eventName: 'event',
+                            markers: ['secret'],
+                        },
+                    ],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: userId,
+                    subject: {
+                        userId: userId,
+                        role: true,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                actions: [],
+                                marker: 'secret',
+                            },
+                        ],
+                    },
+                    instances: [],
+                    allowedEventItems: [],
                 });
             });
 
@@ -13385,6 +14928,111 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'event.increment',
+                    userId: ownerId,
+                    resourceMarkers: ['secret'],
+                    eventName: 'event',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.increment',
+                                        grantingPermission: {
+                                            type: 'event.increment',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should allow the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'event.increment',
+                    userId: memberId,
+                    resourceMarkers: ['secret'],
+                    eventName: 'event',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: memberId,
+                    subject: {
+                        userId: memberId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: 'secret',
+                                actions: [
+                                    {
+                                        action: 'event.increment',
+                                        grantingPermission: {
+                                            type: 'event.increment',
+                                            role: ADMIN_ROLE_NAME,
+                                            events: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'event.increment',
+                    userId: userId,
+                    resourceMarkers: ['secret'],
+                    eventName: 'event',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: 'secret',
+                        permission: 'event.increment',
+                    },
+                });
+            });
+
             it('should allow the request if the record name matches the user ID', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: ownerId,
@@ -14063,6 +15711,93 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'policy.grantPermission',
+                    userId: ownerId,
+                    policy: 'myPolicy',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: ACCOUNT_MARKER,
+                                actions: [
+                                    {
+                                        action: 'policy.grantPermission',
+                                        grantingPermission: {
+                                            type: 'policy.grantPermission',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'policy.grantPermission',
+                    userId: memberId,
+                    policy: 'myPolicy',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: memberId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.grantPermission',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'policy.grantPermission',
+                    userId: userId,
+                    policy: 'myPolicy',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.grantPermission',
+                    },
+                });
+            });
+
             it('should allow the request if the record name matches the user ID', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: ownerId,
@@ -14615,6 +16350,93 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
+                });
+            });
+
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'policy.revokePermission',
+                    userId: ownerId,
+                    policy: 'myPolicy',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: ACCOUNT_MARKER,
+                                actions: [
+                                    {
+                                        action: 'policy.revokePermission',
+                                        grantingPermission: {
+                                            type: 'policy.revokePermission',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'policy.revokePermission',
+                    userId: memberId,
+                    policy: 'myPolicy',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: memberId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.revokePermission',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'policy.revokePermission',
+                    userId: userId,
+                    policy: 'myPolicy',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.revokePermission',
+                    },
                 });
             });
 
@@ -15173,6 +16995,93 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'policy.read',
+                    userId: ownerId,
+                    policy: 'myPolicy',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: ACCOUNT_MARKER,
+                                actions: [
+                                    {
+                                        action: 'policy.read',
+                                        grantingPermission: {
+                                            type: 'policy.read',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'policy.read',
+                    userId: memberId,
+                    policy: 'myPolicy',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: memberId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.read',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'policy.read',
+                    userId: userId,
+                    policy: 'myPolicy',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.read',
+                    },
+                });
+            });
+
             it('should allow the request if the record name matches the user ID', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: ownerId,
@@ -15725,6 +17634,90 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'policy.list',
+                    userId: ownerId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: ACCOUNT_MARKER,
+                                actions: [
+                                    {
+                                        action: 'policy.list',
+                                        grantingPermission: {
+                                            type: 'policy.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'policy.list',
+                    userId: memberId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: memberId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.list',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'policy.list',
+                    userId: userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'policy.list',
+                    },
+                });
+            });
+
             it('should allow the request if the record name matches the user ID', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: ownerId,
@@ -16265,6 +18258,90 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'role.list',
+                    userId: ownerId,
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: ACCOUNT_MARKER,
+                                actions: [
+                                    {
+                                        action: 'role.list',
+                                        grantingPermission: {
+                                            type: 'role.list',
+                                            role: ADMIN_ROLE_NAME,
+                                            roles: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'role.list',
+                    userId: memberId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: memberId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'role.list',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'role.list',
+                    userId: userId,
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'role.list',
+                    },
+                });
+            });
+
             it('should allow the request if the record name matches the user ID', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: ownerId,
@@ -16800,6 +18877,93 @@ describe('PolicyController', () => {
                         ],
                     },
                     instances: [],
+                });
+            });
+
+            it('should allow the request if the user is an admin of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'role.read',
+                    userId: ownerId,
+                    role: 'myRole',
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName: studioRecord,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: ACCOUNT_MARKER,
+                                actions: [
+                                    {
+                                        action: 'role.read',
+                                        grantingPermission: {
+                                            type: 'role.read',
+                                            role: ADMIN_ROLE_NAME,
+                                            roles: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
+            it('should deny the request if the user is an member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'role.read',
+                    userId: memberId,
+                    role: 'myRole',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: memberId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'role.read',
+                    },
+                });
+            });
+
+            it('should deny the request if the user is not a member of the studio', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: studioRecord,
+                    action: 'role.read',
+                    userId: userId,
+                    role: 'myRole',
+                });
+
+                expect(result).toEqual({
+                    allowed: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this action.',
+                    reason: {
+                        type: 'missing_permission',
+                        kind: 'user',
+                        id: userId,
+                        role: null,
+                        marker: ACCOUNT_MARKER,
+                        permission: 'role.read',
+                    },
                 });
             });
 
@@ -17363,6 +19527,98 @@ describe('PolicyController', () => {
                             ],
                         },
                         instances: [],
+                    });
+                });
+
+                it('should allow the request if the user is an admin of the studio', async () => {
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: studioRecord,
+                        action: 'role.grant',
+                        userId: ownerId,
+                        role: 'myRole',
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: true,
+                        recordName: studioRecord,
+                        recordKeyOwnerId: null,
+                        authorizerId: ownerId,
+                        subject: {
+                            userId: ownerId,
+                            role: ADMIN_ROLE_NAME,
+                            subjectPolicy: 'subjectfull',
+                            markers: [
+                                {
+                                    marker: ACCOUNT_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'role.grant',
+                                            grantingPermission: {
+                                                type: 'role.grant',
+                                                role: ADMIN_ROLE_NAME,
+                                                roles: true,
+                                                userIds: true,
+                                                instances: true,
+                                            },
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        instances: [],
+                    });
+                });
+
+                it('should deny the request if the user is an member of the studio', async () => {
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: studioRecord,
+                        action: 'role.grant',
+                        userId: memberId,
+                        role: 'myRole',
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: memberId,
+                            role: null,
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.grant',
+                        },
+                    });
+                });
+
+                it('should deny the request if the user is not a member of the studio', async () => {
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: studioRecord,
+                        action: 'role.grant',
+                        userId: userId,
+                        role: 'myRole',
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: userId,
+                            role: null,
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.grant',
+                        },
                     });
                 });
 
@@ -18111,6 +20367,98 @@ describe('PolicyController', () => {
                             ],
                         },
                         instances: [],
+                    });
+                });
+
+                it('should allow the request if the user is an admin of the studio', async () => {
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: studioRecord,
+                        action: 'role.revoke',
+                        userId: ownerId,
+                        role: 'myRole',
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: true,
+                        recordName: studioRecord,
+                        recordKeyOwnerId: null,
+                        authorizerId: ownerId,
+                        subject: {
+                            userId: ownerId,
+                            role: ADMIN_ROLE_NAME,
+                            subjectPolicy: 'subjectfull',
+                            markers: [
+                                {
+                                    marker: ACCOUNT_MARKER,
+                                    actions: [
+                                        {
+                                            action: 'role.revoke',
+                                            grantingPermission: {
+                                                type: 'role.revoke',
+                                                role: ADMIN_ROLE_NAME,
+                                                roles: true,
+                                                userIds: true,
+                                                instances: true,
+                                            },
+                                            grantingPolicy:
+                                                DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        instances: [],
+                    });
+                });
+
+                it('should deny the request if the user is an member of the studio', async () => {
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: studioRecord,
+                        action: 'role.revoke',
+                        userId: memberId,
+                        role: 'myRole',
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: memberId,
+                            role: null,
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.revoke',
+                        },
+                    });
+                });
+
+                it('should deny the request if the user is not a member of the studio', async () => {
+                    const result = await controller.authorizeRequest({
+                        recordKeyOrRecordName: studioRecord,
+                        action: 'role.revoke',
+                        userId: userId,
+                        role: 'myRole',
+                        ...target,
+                    });
+
+                    expect(result).toEqual({
+                        allowed: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            type: 'missing_permission',
+                            kind: 'user',
+                            id: userId,
+                            role: null,
+                            marker: ACCOUNT_MARKER,
+                            permission: 'role.revoke',
+                        },
                     });
                 });
 
