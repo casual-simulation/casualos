@@ -20,15 +20,6 @@
             @triggered="showQuickAccess()"
         /> -->
 
-        <!--
-                        THIS WORKED_<div v-shortkey="['ctrl-cmd', 'b']" @shortkey.stop.prevent="showSearch()" />
-                        THIS WORKED_<button @click="getSearchTagsInput().focus()">Button</button>
-
-                    shortkey="[ctrl-cmd, 'b']" @shortkey.stop.prevent="getSearchTagsInput().focus()"
-                    <div v-shortkey="['ctrl-cmd', 'shift', 'f']" @shortkey.stop.prevent="showSearch()" /> 
-                    @shortkey.stop.prevent="focus()" 
-                    -->
-
         <md-card ref="card" class="portal-card">
             <md-card-content>
                 <div class="panes">
