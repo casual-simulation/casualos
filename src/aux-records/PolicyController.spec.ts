@@ -258,6 +258,56 @@ describe('PolicyController', () => {
                 });
             });
 
+            it('should allow the request if the user is the record owner', async () => {
+                const result = await controller.authorizeRequest({
+                    recordKeyOrRecordName: recordName,
+                    action: 'data.create',
+                    address: 'myAddress',
+                    userId: ownerId,
+                    resourceMarkers: [PUBLIC_READ_MARKER],
+                });
+
+                expect(result).toEqual({
+                    allowed: true,
+                    recordName,
+                    recordKeyOwnerId: null,
+                    authorizerId: ownerId,
+                    subject: {
+                        userId: ownerId,
+                        role: ADMIN_ROLE_NAME,
+                        subjectPolicy: 'subjectfull',
+                        markers: [
+                            {
+                                marker: PUBLIC_READ_MARKER,
+                                actions: [
+                                    {
+                                        action: 'data.create',
+                                        grantingPermission: {
+                                            type: 'data.create',
+                                            role: ADMIN_ROLE_NAME,
+                                            addresses: true,
+                                        },
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                    },
+                                    {
+                                        action: 'policy.assign',
+                                        grantingPolicy:
+                                            DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT,
+                                        grantingPermission: {
+                                            type: 'policy.assign',
+                                            role: ADMIN_ROLE_NAME,
+                                            policies: true,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    instances: [],
+                });
+            });
+
             it('should allow the request if the record name is the same as the user ID', async () => {
                 const result = await controller.authorizeRequest({
                     recordKeyOrRecordName: ownerId,

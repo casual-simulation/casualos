@@ -420,6 +420,15 @@ export class RecordsHttpServer {
             );
         } else if (
             request.method === 'POST' &&
+            request.path === '/api/v2/records'
+        ) {
+            return formatResponse(
+                request,
+                await this._createRecord(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
             request.path === '/api/v2/records/events/count'
         ) {
             return formatResponse(
@@ -866,6 +875,80 @@ export class RecordsHttpServer {
             const result = await this._records.listRecords(validation.userId);
             return returnResult(result);
         }
+    }
+
+    private async _createRecord(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must not be empty.'),
+            ownerId: z
+                .string({
+                    invalid_type_error: 'ownerId must be a string.',
+                    required_error: 'ownerId is required.',
+                })
+                .nonempty('ownerId must not be empty.')
+                .optional(),
+            studioId: z
+                .string({
+                    invalid_type_error: 'studioId must be a string.',
+                    required_error: 'studioId is required.',
+                })
+                .nonempty('studioId must not be empty.')
+                .optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, ownerId, studioId } = parseResult.data;
+
+        if (!recordName || typeof recordName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'recordName is required and must be a string.',
+            });
+        }
+
+        const validation = await this._validateSessionKey(request);
+        if (validation.success === false) {
+            if (validation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(validation);
+        }
+
+        const result = await this._records.createRecord({
+            recordName,
+            ownerId,
+            studioId,
+            userId: validation.userId,
+        });
+
+        return returnResult(result);
     }
 
     private async _createRecordKey(

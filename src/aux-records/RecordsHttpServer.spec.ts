@@ -1907,6 +1907,121 @@ describe('RecordsHttpServer', () => {
         );
     });
 
+    describe('POST /api/v2/records', () => {
+        it('should create a new record', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/records',
+                    JSON.stringify({
+                        recordName: 'myRecord',
+                        ownerId: userId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should be able to create a record for a studio', async () => {
+            await recordsStore.addStudio({
+                id: 'studioId',
+                displayName: 'myStudio',
+            });
+
+            await recordsStore.addStudioAssignment({
+                studioId: 'studioId',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/records',
+                    JSON.stringify({
+                        recordName: 'myRecord',
+                        studioId: 'studioId',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 403 status code if the user does not have admin permissions for the studio', async () => {
+            await recordsStore.addStudio({
+                id: 'studioId',
+                displayName: 'myStudio',
+            });
+
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/records',
+                    JSON.stringify({
+                        recordName: 'myRecord',
+                        studioId: 'studioId',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to create a record for this studio.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 403 status code when the record already exists', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/records',
+                    JSON.stringify({
+                        recordName,
+                        ownerId: userId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'record_already_exists',
+                    errorMessage: 'A record with that name already exists.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testUrl('POST', '/api/v2/records', () =>
+            JSON.stringify({
+                recordName: 'myRecord',
+                ownerId: userId,
+            })
+        );
+    });
+
     describe('POST /api/v2/records/events/count', () => {
         it('should add to the record event count', async () => {
             const result = await server.handleRequest(
