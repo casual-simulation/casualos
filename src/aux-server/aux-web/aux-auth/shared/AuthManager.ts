@@ -418,6 +418,25 @@ export class AuthManager {
         }
     }
 
+    async createRecord(
+        request: Omit<CreateRecordRequest, 'userId'>
+    ): Promise<CreateRecordResult> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records`);
+
+        const response = await axios.post(
+            url.href,
+            {
+                ...request,
+            },
+            {
+                headers: this._authenticationHeaders(),
+                validateStatus: (status) => status < 500 || status === 501,
+            }
+        );
+
+        return response.data as CreateRecordResult;
+    }
+
     async listData(recordName: string, startingAddress?: string) {
         const url = new URL(`${this.apiEndpoint}/api/v2/records/data/list`);
 

@@ -46,6 +46,9 @@
                             >
                                 <strong class="md-list-item-text">No Records</strong>
                             </md-list-item>
+                            <md-button class="md-raised md-primary" @click="startCreateRecord()"
+                                >Create Record</md-button
+                            >
                         </md-list>
                     </md-list-item>
                     <md-list-item
@@ -96,6 +99,11 @@
                             >
                                 <strong class="md-list-item-text">No Records</strong>
                             </md-list-item>
+                            <md-button
+                                class="md-raised md-primary"
+                                @click="startCreateRecord(studio.studioId)"
+                                >Create Record</md-button
+                            >
                         </md-list>
                     </md-list-item>
                     <md-list-item>
@@ -122,6 +130,35 @@
 
             <md-dialog-actions>
                 <md-button @click="createStudio()">Create</md-button>
+            </md-dialog-actions>
+        </md-dialog>
+
+        <md-dialog :md-active.sync="showCreateRecord">
+            <md-dialog-title>Create Record</md-dialog-title>
+            <md-dialog-content>
+                <form @submit.prevent="createRecord()">
+                    <md-field>
+                        <label>Record Name</label>
+                        <md-input v-model="recordName" required></md-input>
+                    </md-field>
+
+                    <md-field>
+                        <label>Studio</label>
+                        <md-select v-model="createRecordStudioId">
+                            <md-option :value="''"> My Studio </md-option>
+                            <md-option
+                                v-for="studio of studios"
+                                :key="studio.studioId"
+                                :value="studio.studioId"
+                            >
+                                {{ studio.displayName }}
+                            </md-option>
+                        </md-select>
+                    </md-field>
+                </form>
+            </md-dialog-content>
+            <md-dialog-actions>
+                <md-button class="md-primary" @click="createRecord()">Create</md-button>
             </md-dialog-actions>
         </md-dialog>
     </div>

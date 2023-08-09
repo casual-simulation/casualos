@@ -4,7 +4,10 @@ import Component from 'vue-class-component';
 import { Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { SvgIcon } from '@casual-simulation/aux-components';
-import { ListedStudio } from '@casual-simulation/aux-records';
+import {
+    CreateRecordRequest,
+    ListedStudio,
+} from '@casual-simulation/aux-records';
 
 document.title = location.hostname;
 
@@ -20,10 +23,13 @@ export default class AuthApp extends Vue {
     loadingRecords: boolean = false;
     loadingStudios: boolean = false;
     showCreateStudio: boolean = false;
+    showCreateRecord: boolean = false;
     records: any[] = [];
     studios: any[] = [];
 
+    recordName: string = '';
     studioName: string = '';
+    createRecordStudioId: string = null;
 
     get title() {
         return location.hostname;
@@ -55,11 +61,14 @@ export default class AuthApp extends Vue {
         this.showLogout = false;
         this.showRecords = false;
         this.showCreateStudio = false;
+        this.showCreateRecord = false;
         this.loadingRecords = false;
         this.loadingStudios = false;
         this.records = [];
         this.studios = [];
         this.studioName = '';
+        this.recordName = '';
+        this.createRecordStudioId = null;
         authManager.loginState.subscribe((state) => {
             this.showLogout = authManager.isLoggedIn();
 
@@ -74,10 +83,42 @@ export default class AuthApp extends Vue {
         this.studioName = '';
     }
 
+    startCreateRecord(studioId?: string) {
+        this.showCreateRecord = true;
+        this.recordName = '';
+        this.createRecordStudioId = studioId ?? '';
+    }
+
     async createStudio() {
         this.showCreateStudio = false;
         const studioId = await authManager.createStudio(this.studioName);
         await this.loadStudios();
+    }
+
+    async createRecord() {
+        this.showCreateRecord = false;
+        let request: Omit<CreateRecordRequest, 'userId'> = {
+            recordName: this.recordName,
+        };
+
+        if (this.createRecordStudioId) {
+            request['studioId'] = this.createRecordStudioId;
+        } else {
+            request['ownerId'] = authManager.userId;
+        }
+
+        await authManager.createRecord(request);
+
+        if (this.createRecordStudioId) {
+            const studio = this.studios.find(
+                (s) => s.studioId === this.createRecordStudioId
+            );
+            if (studio) {
+                await this.onExpandStudio(studio);
+            }
+        } else {
+            await this.loadRecords();
+        }
     }
 
     async logout() {

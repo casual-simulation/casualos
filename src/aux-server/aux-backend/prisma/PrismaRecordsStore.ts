@@ -30,12 +30,14 @@ export class PrismaRecordsStore implements RecordsStore {
             create: {
                 name: record.name,
                 ownerId: record.ownerId,
+                studioId: record.studioId,
                 secretHashes: record.secretHashes,
                 secretSalt: record.secretSalt,
             },
             update: {
                 name: record.name,
                 ownerId: record.ownerId,
+                studioId: record.studioId,
                 secretHashes: record.secretHashes,
                 secretSalt: record.secretSalt,
             },
@@ -47,6 +49,7 @@ export class PrismaRecordsStore implements RecordsStore {
             data: {
                 name: record.name,
                 ownerId: record.ownerId,
+                studioId: record.studioId,
                 secretHashes: record.secretHashes,
                 secretSalt: record.secretSalt,
             },
