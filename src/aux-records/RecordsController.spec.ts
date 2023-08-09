@@ -1993,6 +1993,140 @@ describe('RecordsController', () => {
             });
         });
     });
+
+    describe('createRecord()', () => {
+        beforeEach(async () => {
+            await auth.saveUser({
+                id: 'userId',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+        });
+
+        it('should create the given record', async () => {
+            const result = await manager.createRecord({
+                recordName: 'myRecord',
+                userId: 'userId',
+                ownerId: 'userId',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const records = await store.listRecordsByOwnerId('userId');
+
+            expect(records).toEqual([
+                {
+                    name: 'myRecord',
+                    ownerId: 'userId',
+                    studioId: null,
+                },
+            ]);
+        });
+
+        it('should not create the record if it already exists', async () => {
+            await store.addRecord({
+                name: 'myRecord',
+                ownerId: 'otherUserId',
+                secretHashes: [],
+                secretSalt: '',
+                studioId: null,
+            });
+
+            const result = await manager.createRecord({
+                recordName: 'myRecord',
+                userId: 'userId',
+                ownerId: 'userId',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'record_already_exists',
+                errorMessage: 'A record with that name already exists.',
+            });
+        });
+
+        it('should return not_authorized if the ownerId is different from the userId', async () => {
+            const result = await manager.createRecord({
+                recordName: 'myRecord',
+                userId: 'userId',
+                ownerId: 'otherUserId',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to create a record for another user.',
+            });
+        });
+
+        it('should be able to create a record for a studio', async () => {
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'studio',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            const result = await manager.createRecord({
+                recordName: 'myRecord',
+                userId: 'userId',
+                studioId: 'studioId',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const records = await store.listRecordsByStudioId('studioId');
+
+            expect(records).toEqual([
+                {
+                    name: 'myRecord',
+                    ownerId: null,
+                    studioId: 'studioId',
+                },
+            ]);
+        });
+
+        it('should return not_authorized if the user is not an admin in the studio', async () => {
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'studio',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'member',
+            });
+
+            const result = await manager.createRecord({
+                recordName: 'myRecord',
+                userId: 'userId',
+                studioId: 'studioId',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'You are not authorized to create a record for this studio.',
+            });
+
+            const records = await store.listRecordsByStudioId('studioId');
+
+            expect(records).toEqual([]);
+        });
+    });
 });
 
 describe('formatV1RecordKey()', () => {

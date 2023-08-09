@@ -499,6 +499,7 @@ describe('getStatusCode()', () => {
         ['invalid_subscription_tier', 403] as const,
         ['studio_not_found', 404] as const,
         ['user_not_found', 404] as const,
+        ['record_already_exists', 403] as const,
     ];
 
     it.each(cases)('should map error code %s to %s', (code, expectedStatus) => {

@@ -37,6 +37,110 @@ export class RecordsController {
     }
 
     /**
+     * Creates a new record.
+     * @param request The request that should be used to create the record.
+     */
+    async createRecord(
+        request: CreateRecordRequest
+    ): Promise<CreateRecordResult> {
+        try {
+            if (!request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in in order to create a record.',
+                };
+            }
+
+            const record = await this._store.getRecordByName(
+                request.recordName
+            );
+
+            if (record) {
+                return {
+                    success: false,
+                    errorCode: 'record_already_exists',
+                    errorMessage: 'A record with that name already exists.',
+                };
+            }
+
+            if (!request.ownerId && !request.studioId) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'You must provide an owner ID or a studio ID.',
+                };
+            }
+
+            if (request.ownerId) {
+                if (request.ownerId !== request.userId) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to create a record for another user.',
+                    };
+                }
+
+                console.log(
+                    `[RecordsController] [action: record.create recordName: ${request.recordName}, userId: ${request.userId}, ownerId: ${request.ownerId}] Creating record.`
+                );
+
+                await this._store.addRecord({
+                    name: request.recordName,
+                    ownerId: request.ownerId,
+                    secretHashes: [],
+                    secretSalt: this._createSalt(),
+                    studioId: null,
+                });
+            } else {
+                const assignments = await this._store.listStudioAssignments(
+                    request.studioId,
+                    {
+                        userId: request.userId,
+                        role: 'admin',
+                    }
+                );
+
+                if (assignments.length <= 0) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to create a record for this studio.',
+                    };
+                }
+
+                console.log(
+                    `[RecordsController] [action: record.create recordName: ${request.recordName}, userId: ${request.userId}, studioId: ${request.studioId}] Creating record.`
+                );
+                await this._store.addRecord({
+                    name: request.recordName,
+                    ownerId: null,
+                    secretHashes: [],
+                    secretSalt: this._createSalt(),
+                    studioId: request.studioId,
+                });
+            }
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [createRecord] An error occurred while creating a record:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
      * Creates a new public record key for the given bucket name.
      * @param name The name of the record.
      * @param policy The policy that should be used for the public record key.
@@ -744,6 +848,48 @@ export class RecordsController {
     private _createSalt(): string {
         return fromByteArray(randomBytes(16));
     }
+}
+
+/**
+ * Defines an interface that represents a request to create a record.
+ */
+export interface CreateRecordRequest {
+    /**
+     * The name of the record that should be created.
+     */
+    recordName: string;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The ID of the user that should be the owner of the record.
+     */
+    ownerId?: string;
+
+    /**
+     * The ID of the studio that should own the record.
+     */
+    studioId?: string;
+}
+
+export type CreateRecordResult = CreateRecordSuccess | CreateRecordFailure;
+
+export interface CreateRecordSuccess {
+    success: true;
+}
+
+export interface CreateRecordFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotAuthorizedError
+        | 'record_already_exists'
+        | 'unacceptable_request';
+    errorMessage: string;
 }
 
 export type ValidatePublicRecordKeyResult =

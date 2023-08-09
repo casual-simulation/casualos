@@ -401,6 +401,8 @@ export function getStatusCode(
             return 403;
         } else if (response.errorCode === 'invalid_subscription_tier') {
             return 403;
+        } else if (response.errorCode === 'record_already_exists') {
+            return 403;
         } else {
             return 400;
         }
