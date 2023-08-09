@@ -107,6 +107,98 @@ describe('RecordsController', () => {
             expect(key.secretHash.startsWith('vH2.')).toBe(true);
         });
 
+        it('should be able to add a key to an existing record if the user is an admin in the studio', async () => {
+            await auth.saveUser({
+                id: 'userId',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                email: 'test@example.com',
+                phoneNumber: null,
+            });
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'Studio',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'userId',
+                role: 'admin',
+                isPrimaryContact: true,
+            });
+
+            await store.addRecord({
+                name: 'name',
+                ownerId: null,
+                studioId: 'studioId',
+                secretHashes: [],
+                secretSalt: 'salt',
+            });
+            const result = (await manager.createPublicRecordKey(
+                'name',
+                'subjectless',
+                'userId'
+            )) as CreatePublicRecordKeySuccess;
+
+            expect(result.success).toBe(true);
+            expect(isRecordKey(result.recordKey)).toBe(true);
+            expect(await store.getRecordByName('name')).toEqual({
+                name: 'name',
+                ownerId: null,
+                studioId: 'studioId',
+                secretHashes: [],
+                secretSalt: 'salt',
+            });
+            expect(store.recordKeys).toEqual([
+                {
+                    recordName: 'name',
+                    secretHash: expect.any(String),
+                    policy: 'subjectless',
+                    creatorId: 'userId',
+                },
+            ]);
+
+            // Should use v2 hashes for record key secrets
+            const key = store.recordKeys[0];
+            expect(key.secretHash.startsWith('vH2.')).toBe(true);
+        });
+
+        it('should not be able to add a key to an existing record if the user is not an admin in the studio', async () => {
+            await auth.saveUser({
+                id: 'userId',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                email: 'test@example.com',
+                phoneNumber: null,
+            });
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'Studio',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'userId',
+                role: 'member',
+                isPrimaryContact: true,
+            });
+
+            await store.addRecord({
+                name: 'name',
+                ownerId: null,
+                studioId: 'studioId',
+                secretHashes: [],
+                secretSalt: 'salt',
+            });
+            const result = (await manager.createPublicRecordKey(
+                'name',
+                'subjectless',
+                'userId'
+            )) as CreatePublicRecordKeyFailure;
+
+            expect(result.success).toBe(false);
+
+            expect(store.recordKeys).toEqual([]);
+        });
+
         it('not issue a key if the record name matches a different user ID', async () => {
             await auth.saveUser({
                 id: 'userId',

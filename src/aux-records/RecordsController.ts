@@ -181,13 +181,31 @@ export class RecordsController {
 
             if (record) {
                 if (record.ownerId !== userId && name !== userId) {
-                    return {
-                        success: false,
-                        errorCode: 'unauthorized_to_create_record_key',
-                        errorMessage:
-                            'Another user has already created this record.',
-                        errorReason: 'record_owned_by_different_user',
-                    };
+                    let valid = false;
+                    if (record.studioId) {
+                        const assignments =
+                            await this._store.listStudioAssignments(
+                                record.studioId,
+                                {
+                                    userId: userId,
+                                    role: 'admin',
+                                }
+                            );
+
+                        if (assignments.length > 0) {
+                            valid = true;
+                        }
+                    }
+
+                    if (!valid) {
+                        return {
+                            success: false,
+                            errorCode: 'unauthorized_to_create_record_key',
+                            errorMessage:
+                                'Another user has already created this record.',
+                            errorReason: 'record_owned_by_different_user',
+                        };
+                    }
                 }
 
                 console.log(
@@ -221,7 +239,7 @@ export class RecordsController {
                     recordName: name,
                     secretHash: passwordHash,
                     policy: policy ?? DEFAULT_RECORD_KEY_POLICY,
-                    creatorId: record.ownerId,
+                    creatorId: record.ownerId ?? userId,
                 });
 
                 return {
