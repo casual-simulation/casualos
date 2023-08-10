@@ -23,6 +23,8 @@ import type {
     AddStudioMemberResult,
     RemoveStudioMemberRequest,
     RemoveStudioMemberResult,
+    CreateRecordRequest,
+    CreateRecordResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
