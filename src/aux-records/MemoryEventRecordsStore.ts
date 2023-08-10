@@ -11,6 +11,10 @@ import {
 export class MemoryEventRecordsStore implements EventRecordsStore {
     private _buckets: Map<string, Map<string, RecordData>> = new Map();
 
+    get buckets() {
+        return this._buckets;
+    }
+
     async addEventCount(
         recordName: string,
         eventName: string,

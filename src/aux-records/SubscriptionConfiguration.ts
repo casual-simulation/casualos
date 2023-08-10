@@ -303,3 +303,17 @@ export interface AISkyboxFeaturesConfiguration {
      */
     maxSkyboxesPerPeriod?: number;
 }
+
+export function getSubscriptionFeatures(
+    config: SubscriptionConfiguration,
+    tier: string,
+    type: 'user' | 'studio'
+): FeaturesConfiguration {
+    const features = config.tiers[tier]?.features;
+
+    if (!features) {
+        return config.defaultFeatures[type];
+    }
+
+    return features;
+}

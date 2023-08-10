@@ -21,6 +21,10 @@ export class MemoryFileRecordsStore implements FileRecordsStore {
     private _files: Map<string, StoredFile> = new Map();
     private _fileUploadUrl: string = 'http://localhost:9191';
 
+    get files() {
+        return this._files;
+    }
+
     async presignFileUpload(
         request: PresignFileUploadRequest
     ): Promise<PresignFileUploadResult> {

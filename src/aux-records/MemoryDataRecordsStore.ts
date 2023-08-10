@@ -11,6 +11,10 @@ import {
 export class MemoryDataRecordsStore implements DataRecordsStore {
     private _buckets: Map<string, Map<string, RecordData>> = new Map();
 
+    get buckets() {
+        return this._buckets;
+    }
+
     async setData(
         recordName: string,
         address: string,
