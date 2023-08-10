@@ -1,5 +1,18 @@
 # CasualOS Changelog
 
+## V3.2.4
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Added the ability to use `Ctrl+B` to automatically focus the last visisted tag.
+-   Added a "Done" button to the `os.showInput()` modal.
+
+### :rocket: Bug Fixes
+
+-   Fixed an issue where bots in the miniGridPortal were somehow pointable by controllers while in AR/VR.
+
 ## V3.2.3
 
 #### Date: 7/31/2023
