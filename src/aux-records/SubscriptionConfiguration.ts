@@ -2,55 +2,7 @@ export interface SubscriptionConfiguration {
     /**
      * The information that should be used for subscriptions.
      */
-    subscriptions: {
-        /**
-         * The ID of the subscription.
-         * Only used for the API.
-         */
-        id: string;
-
-        /**
-         * The ID of the product that needs to be purchased for the subscription.
-         */
-        product: string;
-
-        /**
-         * The list of features that should be shown for this subscription tier.
-         */
-        featureList: string[];
-
-        /**
-         * The list of products that are eligible for this subscription tier.
-         */
-        eligibleProducts: string[];
-
-        /**
-         * Whether this subscription should be the default.
-         */
-        defaultSubscription?: boolean;
-
-        /**
-         * Whether the subscription should be offered for purchase.
-         * Defaults to true.
-         */
-        purchasable?: boolean;
-
-        /**
-         * Whether the subscription is only purchasable by users.
-         */
-        userOnly?: boolean;
-
-        /**
-         * Whether the subscription is only purchasable by studios.
-         */
-        studioOnly?: boolean;
-
-        /**
-         * The tier that the subscription represents.
-         * Defaults to "beta".
-         */
-        tier?: string;
-    }[];
+    subscriptions: APISubscription[];
 
     /**
      * The configuration that should be passed to https://stripe.com/docs/api/checkout/sessions when creating a checkout session.
@@ -81,4 +33,273 @@ export interface SubscriptionConfiguration {
      * The URL that the user should be returned to after managing their subscriptions.
      */
     returnUrl: string;
+
+    /**
+     * The object that contains configurations for each subscription tier.
+     */
+    tiers: TiersConfiguration;
+
+    /**
+     * The features that should be used when a tier does not have a features configuration.
+     */
+    defaultFeatures: DefaultFeaturesConfiguration;
+}
+
+export interface APISubscription {
+    /**
+     * The ID of the subscription.
+     * Only used for the API.
+     */
+    id: string;
+
+    /**
+     * The ID of the product that needs to be purchased for the subscription.
+     */
+    product: string;
+
+    /**
+     * The list of features that should be shown for this subscription tier.
+     */
+    featureList: string[];
+
+    /**
+     * The list of products that are eligible for this subscription tier.
+     */
+    eligibleProducts: string[];
+
+    /**
+     * Whether this subscription should be the default.
+     */
+    defaultSubscription?: boolean;
+
+    /**
+     * Whether the subscription should be offered for purchase.
+     * Defaults to true.
+     */
+    purchasable?: boolean;
+
+    /**
+     * Whether the subscription is only purchasable by users.
+     */
+    userOnly?: boolean;
+
+    /**
+     * Whether the subscription is only purchasable by studios.
+     */
+    studioOnly?: boolean;
+
+    /**
+     * The tier that the subscription represents.
+     * Defaults to "beta".
+     */
+    tier?: string;
+}
+
+export interface TiersConfiguration {
+    [tier: string]: TierConfiguration;
+}
+
+/**
+ * Defines an interface that contains the configuration for a tier.
+ */
+export interface TierConfiguration {
+    /**
+     * The configuration for the features for subscriptions on this tier.
+     */
+    features?: FeaturesConfiguration;
+}
+
+export interface DefaultFeaturesConfiguration {
+    /**
+     * The default features for users.
+     */
+    user: FeaturesConfiguration;
+
+    /**
+     * The default features for studios.
+     */
+    studio: FeaturesConfiguration;
+}
+
+/**
+ * Defines an interface that contains the configuration for features.
+ */
+export interface FeaturesConfiguration {
+    records: RecordFeaturesConfiguration;
+
+    /**
+     * The configuration for data features.
+     */
+    data: DataFeaturesConfiguration;
+
+    /**
+     * The configuration for file features.
+     */
+    files: FileFeaturesConfiguration;
+
+    /**
+     * The configuration for event features.
+     */
+    events: EventFeaturesConfiguration;
+
+    /**
+     * The configuration for AI features.
+     */
+    ai: AIFeaturesConfiguration;
+}
+
+export interface RecordFeaturesConfiguration {
+    /**
+     * Whether creating and managing records is allowed.
+     */
+    allowed: boolean;
+
+    /**
+     * The maximum number of records that are allowed.
+     * If not specified, then there is no limit.
+     */
+    maxRecords?: number;
+}
+
+export interface DataFeaturesConfiguration {
+    /**
+     * Whether data resources should be allowed.
+     */
+    allowed: boolean;
+
+    /**
+     * The maximum number of items that are allowed.
+     * If not specified, then there is no limit.
+     */
+    maxItems?: number;
+
+    /**
+     * The maximum number of item reads that are allowed per subscription period.
+     * If not specified, then there is no limit.
+     */
+    maxReadsPerPeriod?: number;
+
+    /**
+     * The maximum number of item writes that are allowed per period.
+     * If not specified, then there is no limit.
+     */
+    maxWritesPerPeriod?: number;
+}
+
+export interface FileFeaturesConfiguration {
+    /**
+     * Whether file resources are allowed.
+     */
+    allowed: boolean;
+
+    /**
+     * The maximum number of files that are allowed.
+     * If not specified, then there is no limit.
+     */
+    maxFiles?: number;
+
+    /**
+     * The maximum number of bytes that are allowed per file.
+     * If not specified, then there is no limit.
+     */
+    maxBytesPerFile?: number;
+
+    /**
+     * The maximum number of bytes that are allowed to be stored.
+     * If not specified, then there is no limit.
+     */
+    maxBytesTotal?: number;
+}
+
+export interface EventFeaturesConfiguration {
+    /**
+     * Whether event resources are allowed.
+     */
+    allowed: boolean;
+
+    /**
+     * The maximum number of events that are allowed.
+     * If not specified, then there is no limit.
+     */
+    maxEvents?: number;
+
+    /**
+     * The maximum number of event reads that are allowed per subscription period.
+     * If not specified, then there is no limit.
+     */
+    maxReadsPerPeriod?: number;
+
+    /**
+     * The maximum number of event writes that are allowed per subscription period.
+     * If not specified, then there is no limit.
+     */
+    maxWritesPerPeriod?: number;
+}
+
+export interface AIFeaturesConfiguration {
+    /**
+     * The configuration for AI chat features.
+     */
+    chat: AIChatFeaturesConfiguration;
+
+    /**
+     * The configuration for AI image features.
+     */
+    images: AIImageFeaturesConfiguration;
+
+    /**
+     * The configuration for AI skybox features.
+     */
+    skyboxes: AISkyboxFeaturesConfiguration;
+}
+
+export interface AIChatFeaturesConfiguration {
+    /**
+     * Whether AI chat features are allowed.
+     */
+    allowed: boolean;
+
+    /**
+     * The maximum number of tokens that are allowed to be processed per request.
+     * If not specified, then there is no limit.
+     */
+    maxTokensPerRequest?: number;
+
+    /**
+     * The maximum number of tokens that are allowed to be processed per subscription period.
+     * If not specified, then there is no limit.
+     */
+    maxTokensPerPeriod?: number;
+}
+
+export interface AIImageFeaturesConfiguration {
+    /**
+     * Whether AI image features are allowed.
+     */
+    allowed: boolean;
+
+    /**
+     * The maximum number of pixels that are allowed to be generated per request.
+     * If not specified, then there is no limit.
+     */
+    maxPixelsPerRequest?: number;
+
+    /**
+     * The maximum number of pixels that are allowed to be generated per subscription period.
+     * If not specified, then there is no limit.
+     */
+    maxPixelsPerPeriod?: number;
+}
+
+export interface AISkyboxFeaturesConfiguration {
+    /**
+     * Whether AI skybox features are allowed.
+     */
+    allowed: boolean;
+
+    /**
+     * The maximum number of skyboxes that are allowed to be generated per subscription period.
+     * If not specified, then there is no limit.
+     */
+    maxSkyboxesPerPeriod?: number;
 }
