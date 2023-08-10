@@ -826,6 +826,44 @@ const stripeSchema = z.object({
     publishableKey: z.string().nonempty(),
 });
 
+const subscriptionFeaturesSchema = z.object({
+    data: z.object({
+        allowed: z.boolean(),
+        maxItems: z.number({}).int().positive().optional(),
+        maxReadsPerPeriod: z.number().int().positive().optional(),
+        maxWritesPerPeriod: z.number().int().positive().optional(),
+    }),
+    files: z.object({
+        allowed: z.boolean(),
+        maxFiles: z.number().int().positive().optional(),
+        maxBytesPerFile: z.number().int().positive().optional(),
+        maxBytesTotal: z.number().int().positive().optional(),
+    }),
+    events: z.object({
+        allowed: z.boolean(),
+        maxEvents: z.number().int().positive().optional(),
+        maxUpdatesPerPeriod: z.number().int().positive().optional(),
+    }),
+    policies: z.object({
+        allowed: z.boolean(),
+        maxPolicies: z.number().int().positive().optional(),
+    }),
+    ai: z.object({
+        chat: z.object({
+            allowed: z.boolean(),
+            maxTokensPerPeriod: z.number().int().positive().optional(),
+        }),
+        images: z.object({
+            allowed: z.boolean(),
+            maxPixelsPerPeriod: z.number().int().positive().optional(),
+        }),
+        skyboxes: z.object({
+            allowed: z.boolean(),
+            maxPixelsPerPeriod: z.number().int().positive().optional(),
+        }),
+    }),
+});
+
 const subscriptionConfigSchema = z.object({
     webhookSecret: z.string().nonempty(),
     successUrl: z.string().nonempty(),
@@ -848,6 +886,17 @@ const subscriptionConfigSchema = z.object({
             studioOnly: z.boolean().optional(),
         })
     ),
+
+    tiers: z
+        .object({})
+        .catchall(
+            z.object({
+                features: subscriptionFeaturesSchema.optional(),
+            })
+        )
+        .optional(),
+
+    defaultFeatures: subscriptionFeaturesSchema.optional(),
 });
 
 const mongodbSchema = z.object({
