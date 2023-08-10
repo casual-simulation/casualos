@@ -59,6 +59,54 @@ export class RecordsController {
             );
 
             if (record) {
+                if (
+                    record.name === request.userId &&
+                    record.ownerId !== request.userId &&
+                    request.ownerId === request.userId
+                ) {
+                    console.log(
+                        `[RecordsController] [action: record.create recordName: ${record.name}, userId: ${request.userId}] Fixing record owner to match actual owner.`
+                    );
+
+                    record.ownerId = request.userId;
+                    record.studioId = null;
+                    // Clear the hashes and re-create the salt so that access to the record is revoked for any record key that was created before.
+                    record.secretHashes = [];
+                    record.secretSalt = this._createSalt();
+                    await this._store.updateRecord({
+                        ...record,
+                    });
+
+                    return {
+                        success: true,
+                    };
+                }
+
+                let existingStudioMembers =
+                    await this._store.listStudioAssignments(record.name);
+                if (
+                    existingStudioMembers.length > 0 &&
+                    record.studioId !== record.name &&
+                    request.studioId === record.name
+                ) {
+                    console.log(
+                        `[RecordsController] [action: record.create recordName: ${record.name}, userId: ${request.userId}, studioId: ${request.studioId}] Fixing record owner to match actual owner.`
+                    );
+
+                    record.ownerId = null;
+                    record.studioId = request.studioId;
+                    // Clear the hashes and re-create the salt so that access to the record is revoked for any record key that was created before.
+                    record.secretHashes = [];
+                    record.secretSalt = this._createSalt();
+                    await this._store.updateRecord({
+                        ...record,
+                    });
+
+                    return {
+                        success: true,
+                    };
+                }
+
                 return {
                     success: false,
                     errorCode: 'record_already_exists',
@@ -181,6 +229,44 @@ export class RecordsController {
             }
 
             if (record) {
+                if (name === userId) {
+                    // The user is not currently the owner of their own record.
+                    // This is an issue that needs to be fixed because users should always own the record that has the same name as their ID.
+                    console.log(
+                        `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}] Fixing record owner to match actual owner.`
+                    );
+                    record.ownerId = userId;
+                    record.studioId = null;
+                    // Clear the hashes and re-create the salt so that access to the record is revoked for any record key that was created before.
+                    record.secretHashes = [];
+                    record.secretSalt = this._createSalt();
+                    await this._store.updateRecord({
+                        ...record,
+                    });
+                } else {
+                    let existingStudioMembers =
+                        await this._store.listStudioAssignments(name);
+
+                    if (
+                        existingStudioMembers.length > 0 &&
+                        record.studioId !== name
+                    ) {
+                        // The studio is not currently the owner of their own record.
+                        // This is an issue that needs to be fixed because studios should always own the record that has the same name as their ID.
+                        console.log(
+                            `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}, studioId: ${name}] Fixing record owner to match actual owner.`
+                        );
+                        record.ownerId = null;
+                        record.studioId = record.name;
+                        // Clear the hashes and re-create the salt so that access to the record is revoked for any record key that was created before.
+                        record.secretHashes = [];
+                        record.secretSalt = this._createSalt();
+                        await this._store.updateRecord({
+                            ...record,
+                        });
+                    }
+                }
+
                 if (record.ownerId !== userId && name !== userId) {
                     let valid = false;
                     if (record.studioId) {
@@ -212,21 +298,6 @@ export class RecordsController {
                 console.log(
                     `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}] Creating record key.`
                 );
-
-                if (name === userId) {
-                    // The user is not currently the owner of their own record.
-                    // This is an issue that needs to be fixed because users should always own the record that has the same name as their ID.
-                    console.log(
-                        `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}] Fixing record owner to match actual owner.`
-                    );
-                    record.ownerId = userId;
-                    // Clear the hashes and re-create the salt so that access to the record is revoked for any record key that was created before.
-                    record.secretHashes = [];
-                    record.secretSalt = this._createSalt();
-                    await this._store.updateRecord({
-                        ...record,
-                    });
-                }
 
                 const passwordBytes = randomBytes(16);
                 const password = fromByteArray(passwordBytes); // convert to human-readable string
@@ -479,6 +550,32 @@ export class RecordsController {
                     };
                 }
 
+                let studioMembers = await this._store.listStudioAssignments(
+                    name
+                );
+
+                if (studioMembers.length > 0) {
+                    console.log(
+                        `[RecordsController] [validateRecordName recordName: ${name}, userId: ${userId}, studioId: ${name}] Creating record for studio.`
+                    );
+
+                    await this._store.addRecord({
+                        name,
+                        ownerId: null,
+                        studioId: name,
+                        secretHashes: [],
+                        secretSalt: this._createSalt(),
+                    });
+
+                    return {
+                        success: true,
+                        recordName: name,
+                        ownerId: null,
+                        studioId: name,
+                        studioMembers,
+                    };
+                }
+
                 return {
                     success: false,
                     errorCode: 'record_not_found',
@@ -504,8 +601,31 @@ export class RecordsController {
                 });
             }
 
+            let existingStudioMembers = await this._store.listStudioAssignments(
+                name
+            );
+            if (
+                existingStudioMembers.length > 0 &&
+                record.studioId !== name &&
+                record.ownerId !== null
+            ) {
+                console.log(
+                    `[RecordsController] [validateRecordName recordName: ${name}, userId: ${userId}, studioId: ${name}] Fixing record studio to match actual studio.`
+                );
+
+                record.ownerId = null;
+                record.studioId = name;
+                record.secretHashes = [];
+                record.secretSalt = this._createSalt();
+                await this._store.updateRecord({
+                    ...record,
+                });
+            }
+
             let studioMembers: ListedStudioAssignment[] = undefined;
-            if (record.studioId) {
+            if (existingStudioMembers.length > 0) {
+                studioMembers = existingStudioMembers;
+            } else if (record.studioId) {
                 studioMembers = await this._store.listStudioAssignments(
                     record.studioId
                 );

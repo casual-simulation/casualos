@@ -274,6 +274,76 @@ describe('RecordsController', () => {
             });
         });
 
+        it('should be able to issue a key if the record name matches a studio ID but the record was created by a different user', async () => {
+            await auth.saveUser({
+                id: 'userId',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                email: 'test@example.com',
+                phoneNumber: null,
+            });
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'my studio',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'userId',
+                isPrimaryContact: false,
+                role: 'admin',
+            });
+
+            await store.addRecord({
+                name: 'studioId',
+                ownerId: 'userId',
+                studioId: null,
+                secretHashes: ['test'],
+                secretSalt: 'salt',
+            });
+
+            const result = (await manager.createPublicRecordKey(
+                'studioId',
+                'subjectless',
+                'userId'
+            )) as CreatePublicRecordKeySuccess;
+
+            expect(result.success).toBe(true);
+            expect(isRecordKey(result.recordKey)).toBe(true);
+            const record = await store.getRecordByName('studioId');
+            expect(record).toEqual({
+                name: 'studioId',
+                ownerId: null,
+                studioId: 'studioId',
+                // It should erase existing secret hashes and issue a new salt
+                // so that previous record keys are now invalid.
+                secretHashes: [],
+                secretSalt: expect.any(String),
+            });
+            expect(record.secretSalt).not.toBe('salt');
+            expect(store.recordKeys).toEqual([
+                {
+                    recordName: 'studioId',
+                    secretHash: expect.any(String),
+                    policy: 'subjectless',
+                    creatorId: 'userId',
+                },
+            ]);
+
+            // Should use v2 hashes for record key secrets
+            const key = store.recordKeys[0];
+            expect(key.secretHash.startsWith('vH2.')).toBe(true);
+
+            expect(
+                await manager.validatePublicRecordKey(result.recordKey)
+            ).toEqual({
+                success: true,
+                recordName: 'studioId',
+                ownerId: null,
+                keyCreatorId: 'userId',
+                policy: 'subjectless',
+            });
+        });
+
         it('should default to subjectfull records if a null policy is given', async () => {
             await store.addRecord({
                 name: 'name',
@@ -1330,6 +1400,59 @@ describe('RecordsController', () => {
             });
         });
 
+        it('should create the record if it doesnt exist and the name matches a studio that the user is a member of', async () => {
+            await auth.saveUser({
+                id: 'userId',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'myStudio',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'userId',
+                isPrimaryContact: false,
+                role: 'member',
+            });
+
+            const result = await manager.validateRecordName(
+                'studioId',
+                'userId'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'studioId',
+                ownerId: null,
+                studioId: 'studioId',
+                studioMembers: [
+                    {
+                        userId: 'userId',
+                        studioId: 'studioId',
+                        isPrimaryContact: false,
+                        role: 'member',
+                        user: {
+                            id: 'userId',
+                            email: 'test@example.com',
+                            phoneNumber: null,
+                        },
+                    },
+                ],
+            });
+
+            expect(await store.getRecordByName('studioId')).toEqual({
+                name: 'studioId',
+                ownerId: null,
+                studioId: 'studioId',
+                secretHashes: [],
+                secretSalt: expect.any(String),
+            });
+        });
+
         it('should update the record if the name matches the given user ID but the owner is different', async () => {
             await store.addRecord({
                 name: 'userId',
@@ -1352,6 +1475,68 @@ describe('RecordsController', () => {
                 name: 'userId',
                 ownerId: 'userId',
                 studioId: null,
+                secretHashes: [],
+                secretSalt: expect.any(String),
+            });
+            expect(record.secretSalt).not.toBe('salt');
+        });
+
+        it('should update the record if the name matches a studio ID but the owner is different', async () => {
+            await auth.saveUser({
+                id: 'userId',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'myStudio',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'userId',
+                isPrimaryContact: false,
+                role: 'member',
+            });
+
+            await store.addRecord({
+                name: 'studioId',
+                ownerId: 'otherUserId',
+                studioId: null,
+                secretHashes: [],
+                secretSalt: 'salt',
+            });
+            const result = await manager.validateRecordName(
+                'studioId',
+                'userId'
+            );
+
+            expect(result).toEqual({
+                success: true,
+                recordName: 'studioId',
+                ownerId: null,
+                studioId: 'studioId',
+                studioMembers: [
+                    {
+                        userId: 'userId',
+                        studioId: 'studioId',
+                        isPrimaryContact: false,
+                        role: 'member',
+                        user: {
+                            id: 'userId',
+                            email: 'test@example.com',
+                            phoneNumber: null,
+                        },
+                    },
+                ],
+            });
+
+            const record = await store.getRecordByName('studioId');
+            expect(record).toEqual({
+                name: 'studioId',
+                ownerId: null,
+                studioId: 'studioId',
                 secretHashes: [],
                 secretSalt: expect.any(String),
             });
@@ -2293,6 +2478,83 @@ describe('RecordsController', () => {
             const records = await store.listRecordsByStudioId('studioId');
 
             expect(records).toEqual([]);
+        });
+
+        it('should fix records to be owned by the user if the record name is the same as the user ID', async () => {
+            await store.addRecord({
+                name: 'userId',
+                ownerId: 'otherUserId',
+                secretHashes: [],
+                secretSalt: 'test',
+                studioId: null,
+            });
+
+            const result = await manager.createRecord({
+                recordName: 'userId',
+                userId: 'userId',
+                ownerId: 'userId',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const record = await store.getRecordByName('userId');
+            expect(record).toEqual({
+                name: 'userId',
+                ownerId: 'userId',
+                studioId: null,
+                secretHashes: [],
+                secretSalt: expect.any(String),
+            });
+            expect(record.secretSalt).not.toBe('test');
+        });
+
+        it('should fix records to be owned by the studio if the record name is the same as a studio ID', async () => {
+            await auth.saveUser({
+                id: 'userId',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                email: 'test@example.com',
+                phoneNumber: null,
+            });
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'my studio',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'userId',
+                isPrimaryContact: false,
+                role: 'member',
+            });
+            await store.addRecord({
+                name: 'studioId',
+                ownerId: 'otherUserId',
+                secretHashes: [],
+                secretSalt: 'test',
+                studioId: null,
+            });
+
+            const result = await manager.createRecord({
+                recordName: 'studioId',
+                userId: 'userId',
+                studioId: 'studioId',
+            });
+
+            expect(result).toEqual({
+                success: true,
+            });
+
+            const record = await store.getRecordByName('studioId');
+            expect(record).toEqual({
+                name: 'studioId',
+                ownerId: null,
+                studioId: 'studioId',
+                secretHashes: [],
+                secretSalt: expect.any(String),
+            });
+            expect(record.secretSalt).not.toBe('test');
         });
     });
 });
