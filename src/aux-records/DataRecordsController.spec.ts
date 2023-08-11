@@ -20,6 +20,7 @@ import { AuthMessenger } from './AuthMessenger';
 import {
     createTestControllers,
     createTestRecordKey,
+    createTestSubConfiguration,
     createTestUser,
 } from './TestUtils';
 import { PolicyStore } from './PolicyStore';
@@ -29,6 +30,15 @@ import {
     ADMIN_ROLE_NAME,
     PUBLIC_READ_MARKER,
 } from './PolicyPermissions';
+import { MemoryMetricsStore } from './MemoryMetricsStore';
+import { MemoryConfigurationStore } from './MemoryConfigurationStore';
+import { MemoryAuthStore } from './MemoryAuthStore';
+import { merge } from 'lodash';
+import {
+    FeaturesConfiguration,
+    SubscriptionConfiguration,
+    allowAllFeatures,
+} from './SubscriptionConfiguration';
 
 console.log = jest.fn();
 
@@ -39,8 +49,11 @@ describe('DataRecordsController', () => {
     let policies: PolicyController;
     let store: DataRecordsStore;
     let manager: DataRecordsController;
+    let metricsStore: MemoryMetricsStore;
     let key: string;
     let subjectlessKey: string;
+    let configStore: MemoryConfigurationStore;
+    let authStore: MemoryAuthStore;
 
     let userId: string;
     let sessionKey: string;
@@ -48,12 +61,26 @@ describe('DataRecordsController', () => {
     beforeEach(async () => {
         const services = createTestControllers();
 
+        authStore = services.authStore;
+        configStore = services.configStore;
         policiesStore = services.policyStore;
         policies = services.policies;
         recordsStore = services.recordsStore;
         records = services.records;
-        store = new MemoryDataRecordsStore();
-        manager = new DataRecordsController(policies, store);
+        let dataStore = (store = new MemoryDataRecordsStore());
+        metricsStore = new MemoryMetricsStore(
+            dataStore,
+            null,
+            null,
+            recordsStore,
+            authStore
+        );
+        manager = new DataRecordsController({
+            policies,
+            store,
+            metrics: metricsStore,
+            config: configStore,
+        });
 
         const user = await createTestUser(services, 'test@example.com');
         userId = user.userId;
@@ -623,6 +650,75 @@ describe('DataRecordsController', () => {
 
             await expect(
                 store.getData('testRecord', 'address')
+            ).resolves.toEqual({
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
+
+        it('should reject the request if the maximum number of items has been hit for the users subscription', async () => {
+            configStore.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                data: {
+                                    maxItems: 1,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.setData(
+                'testRecord',
+                'address1',
+                'data',
+                'testUser',
+                'testUser',
+                null,
+                null,
+                [PUBLIC_READ_MARKER]
+            );
+
+            const user = await authStore.findUser(userId);
+            await authStore.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = (await manager.recordData(
+                key,
+                'address2',
+                'data',
+                'subjectId',
+                null,
+                null
+            )) as RecordDataFailure;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'The maximum number of items has been reached for your subscription.',
+                errorReason: 'too_many_items',
+            });
+
+            await expect(
+                store.getData('testRecord', 'address2')
             ).resolves.toEqual({
                 success: false,
                 errorCode: 'data_not_found',

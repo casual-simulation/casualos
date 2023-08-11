@@ -7,5 +7,5 @@ export interface ConfigurationStore {
     /**
      * Retrieves the subscription configuration from the store.
      */
-    getSubscriptionConfiguration(): Promise<SubscriptionConfiguration>;
+    getSubscriptionConfiguration(): Promise<SubscriptionConfiguration | null>;
 }

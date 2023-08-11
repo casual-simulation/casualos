@@ -1,3 +1,4 @@
+import { MemoryMetricsStore } from 'MemoryMetricsStore';
 import { AuthController } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { MemoryAuthStore } from './MemoryAuthStore';
@@ -6,22 +7,48 @@ import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { PolicyController } from './PolicyController';
 import { RecordsController } from './RecordsController';
 import { PublicRecordKeyPolicy } from './RecordsStore';
-import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import {
+    SubscriptionConfiguration,
+    allowAllFeatures,
+} from './SubscriptionConfiguration';
+import { MemoryConfigurationStore } from 'MemoryConfigurationStore';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
-export function createTestControllers(config?: SubscriptionConfiguration) {
-    const subConfig = config ?? {
+export function createTestSubConfiguration(): SubscriptionConfiguration {
+    return {
         cancelUrl: 'cancel-url',
         returnUrl: 'return-url',
         successUrl: 'success-url',
         webhookSecret: 'webhook-secret',
         subscriptions: [],
+        tiers: {
+            beta: {
+                features: allowAllFeatures(),
+            },
+        },
+        defaultFeatures: {
+            studio: allowAllFeatures(),
+            user: allowAllFeatures(),
+        },
     };
+}
 
+export function createTestControllers(config?: SubscriptionConfiguration) {
+    const subConfig: SubscriptionConfiguration =
+        config ?? createTestSubConfiguration();
+
+    const configStore = new MemoryConfigurationStore({
+        subscriptions: subConfig,
+    });
     const authStore = new MemoryAuthStore();
     const authMessenger = new MemoryAuthMessenger();
-    const auth = new AuthController(authStore, authMessenger, subConfig, true);
+    const auth = new AuthController(
+        authStore,
+        authMessenger,
+        configStore,
+        true
+    );
     const recordsStore = new MemoryRecordsStore(authStore);
     const records = new RecordsController(recordsStore, authStore);
     const policyStore = new MemoryPolicyStore();
@@ -35,6 +62,7 @@ export function createTestControllers(config?: SubscriptionConfiguration) {
         records,
         policyStore,
         policies,
+        configStore,
     };
 }
 

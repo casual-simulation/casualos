@@ -81,6 +81,7 @@ describe('AuthController', () => {
             cancelUrl: 'cancel_url',
             returnUrl: 'return_url',
         };
+
         controller = new AuthController(
             authStore,
             messenger,

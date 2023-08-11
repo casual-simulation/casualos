@@ -304,12 +304,42 @@ export interface AISkyboxFeaturesConfiguration {
     maxSkyboxesPerPeriod?: number;
 }
 
+export function allowAllFeatures(): FeaturesConfiguration {
+    return {
+        records: {
+            allowed: true,
+        },
+        ai: {
+            chat: {
+                allowed: true,
+            },
+            images: {
+                allowed: true,
+            },
+            skyboxes: {
+                allowed: true,
+            },
+        },
+        data: {
+            allowed: true,
+        },
+        events: {
+            allowed: true,
+        },
+        files: {
+            allowed: true,
+        },
+    };
+}
+
 export function getSubscriptionFeatures(
     config: SubscriptionConfiguration,
-    tier: string,
+    subscriptionId: string,
     type: 'user' | 'studio'
 ): FeaturesConfiguration {
-    const features = config.tiers[tier]?.features;
+    const sub = config.subscriptions.find((s) => s.id === subscriptionId);
+    const tier = sub?.tier;
+    const features = tier ? config.tiers[tier]?.features : null;
 
     if (!features) {
         return config.defaultFeatures[type];

@@ -18,6 +18,20 @@ export class MemoryMetricsStore implements MetricsStore {
     private _recordsStore: MemoryRecordsStore;
     private _authStore: MemoryAuthStore;
 
+    constructor(
+        dataStore: MemoryDataRecordsStore,
+        fileStore: MemoryFileRecordsStore,
+        eventStore: MemoryEventRecordsStore,
+        recordsStore: MemoryRecordsStore,
+        authStore: MemoryAuthStore
+    ) {
+        this._dataStore = dataStore;
+        this._fileStore = fileStore;
+        this._eventStore = eventStore;
+        this._recordsStore = recordsStore;
+        this._authStore = authStore;
+    }
+
     async getSubscriptionDataMetricsByRecordName(
         recordName: string
     ): Promise<DataSubscriptionMetrics> {
@@ -80,7 +94,7 @@ export class MemoryMetricsStore implements MetricsStore {
             if (!bucket) {
                 continue;
             }
-            totalEvents += bucket.size();
+            totalEvents += bucket.size;
         }
 
         return {

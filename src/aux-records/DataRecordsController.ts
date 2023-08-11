@@ -26,23 +26,34 @@ import {
 } from './PolicyController';
 import { PUBLIC_READ_MARKER } from './PolicyPermissions';
 import { without } from 'lodash';
+import { MetricsStore } from './MetricsStore';
+import { ConfigurationStore } from './ConfigurationStore';
+
+export interface DataRecordsConfiguration {
+    store: DataRecordsStore;
+    policies: PolicyController;
+    metrics: MetricsStore;
+    config: ConfigurationStore;
+}
 
 /**
  * Defines a class that is able to manage data (key/value) records.
  */
 export class DataRecordsController {
-    private _manager: RecordsController;
     private _store: DataRecordsStore;
     private _policies: PolicyController;
+    private _metrics: MetricsStore;
+    private _config: ConfigurationStore;
 
     /**
      * Creates a DataRecordsController.
-     * @param manager The records manager that should be used to validate record keys.
-     * @param store The store that should be used to save data.
+     * @param config The configuration that should be used for the data records controller.
      */
-    constructor(policies: PolicyController, store: DataRecordsStore) {
-        this._store = store;
-        this._policies = policies;
+    constructor(config: DataRecordsConfiguration) {
+        this._store = config.store;
+        this._policies = config.policies;
+        this._metrics = config.metrics;
+        this._config = config.config;
     }
 
     /**
@@ -210,6 +221,14 @@ export class DataRecordsController {
 
             if (authorization.allowed === false) {
                 return returnAuthorizationResult(authorization);
+            }
+
+            if (request.action === 'data.create') {
+                // Check metrics
+                const metricsResult =
+                    await this._metrics.getSubscriptionDataMetricsByRecordName(
+                        recordName
+                    );
             }
 
             const result2 = await this._store.setData(
@@ -600,6 +619,11 @@ export interface RecordDataFailure {
      * The error message for the failure.
      */
     errorMessage: string;
+
+    /**
+     * The reason for the error.
+     */
+    errorReason?: 'too_many_items';
 }
 
 /**

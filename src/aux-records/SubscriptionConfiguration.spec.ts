@@ -8,7 +8,15 @@ describe('getSubscriptionFeatures()', () => {
         cancelUrl: 'url',
         returnUrl: 'url',
         successUrl: 'url',
-        subscriptions: [],
+        subscriptions: [
+            {
+                id: 'subId',
+                tier: 'beta',
+                eligibleProducts: [],
+                featureList: [],
+                product: '',
+            },
+        ],
         tiers: {
             beta: {
                 features: {
@@ -93,8 +101,8 @@ describe('getSubscriptionFeatures()', () => {
         webhookSecret: 'secret',
     };
 
-    it('should return the features for the given tier', () => {
-        const features = getSubscriptionFeatures(config, 'beta', 'user');
+    it('should return the features for the given subscription ID', () => {
+        const features = getSubscriptionFeatures(config, 'subId', 'user');
 
         expect(features === config.tiers.beta).toBe(true);
     });
@@ -109,5 +117,31 @@ describe('getSubscriptionFeatures()', () => {
         const features = getSubscriptionFeatures(config, 'missing', 'user');
 
         expect(features === config.defaultFeatures.studio).toBe(true);
+    });
+
+    const statusTypes = [
+        ['active', true] as const,
+        ['trialing', true] as const,
+        ['canceled', false] as const,
+        ['ended', false] as const,
+        ['past_due', false] as const,
+        ['unpaid', false] as const,
+        ['incomplete', false] as const,
+        ['incomplete_expired', false] as const,
+        ['paused', false] as const,
+        ['invalid status', false] as const,
+        [null as any, false] as const,
+        [undefined as any, false] as const,
+    ];
+
+    describe.each(statusTypes)('%s status', (status, expected) => {
+        if (expected) {
+            it('should ');
+        } else {
+            it('should ');
+        }
+    });
+    it.each(statusTypes)('should map %s to %s', (status, expected) => {
+        expect(isActiveSubscription(status)).toBe(expected);
     });
 });
