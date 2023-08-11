@@ -1,4 +1,3 @@
-import { MemoryMetricsStore } from 'MemoryMetricsStore';
 import { AuthController } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { MemoryAuthStore } from './MemoryAuthStore';
@@ -11,7 +10,7 @@ import {
     SubscriptionConfiguration,
     allowAllFeatures,
 } from './SubscriptionConfiguration';
-import { MemoryConfigurationStore } from 'MemoryConfigurationStore';
+import { MemoryConfigurationStore } from './MemoryConfigurationStore';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
@@ -22,11 +21,7 @@ export function createTestSubConfiguration(): SubscriptionConfiguration {
         successUrl: 'success-url',
         webhookSecret: 'webhook-secret',
         subscriptions: [],
-        tiers: {
-            beta: {
-                features: allowAllFeatures(),
-            },
-        },
+        tiers: {},
         defaultFeatures: {
             studio: allowAllFeatures(),
             user: allowAllFeatures(),

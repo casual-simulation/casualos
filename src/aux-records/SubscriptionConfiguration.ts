@@ -1,3 +1,5 @@
+import { isActiveSubscription } from './Utils';
+
 export interface SubscriptionConfiguration {
     /**
      * The information that should be used for subscriptions.
@@ -334,16 +336,19 @@ export function allowAllFeatures(): FeaturesConfiguration {
 
 export function getSubscriptionFeatures(
     config: SubscriptionConfiguration,
+    subscriptionStatus: string,
     subscriptionId: string,
     type: 'user' | 'studio'
 ): FeaturesConfiguration {
-    const sub = config.subscriptions.find((s) => s.id === subscriptionId);
-    const tier = sub?.tier;
-    const features = tier ? config.tiers[tier]?.features : null;
+    if (isActiveSubscription(subscriptionStatus)) {
+        const sub = config.subscriptions.find((s) => s.id === subscriptionId);
+        const tier = sub?.tier;
+        const features = tier ? config.tiers[tier]?.features : null;
 
-    if (!features) {
-        return config.defaultFeatures[type];
+        if(features) {
+            return features;
+        }
     }
 
-    return features;
+    return config.defaultFeatures[type];
 }

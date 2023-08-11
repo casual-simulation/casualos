@@ -1,4 +1,9 @@
-import { NotAuthorizedError, NotLoggedInError, ServerError } from './Errors';
+import {
+    NotAuthorizedError,
+    NotLoggedInError,
+    ServerError,
+    SubscriptionLimitReached,
+} from './Errors';
 import {
     DataRecordsStore,
     EraseDataStoreResult,
@@ -28,6 +33,7 @@ import { PUBLIC_READ_MARKER } from './PolicyPermissions';
 import { without } from 'lodash';
 import { MetricsStore } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
+import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 
 export interface DataRecordsConfiguration {
     store: DataRecordsStore;
@@ -223,12 +229,41 @@ export class DataRecordsController {
                 return returnAuthorizationResult(authorization);
             }
 
+            const metricsResult =
+                await this._metrics.getSubscriptionDataMetricsByRecordName(
+                    recordName
+                );
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getSubscriptionFeatures(
+                config,
+                metricsResult.subscriptionStatus,
+                metricsResult.subscriptionId,
+                metricsResult.ownerId ? 'user' : 'studio'
+            );
+
+            if (!features.data.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit the recording of data.',
+                    errorReason: 'data_not_allowed',
+                };
+            }
+
             if (request.action === 'data.create') {
                 // Check metrics
-                const metricsResult =
-                    await this._metrics.getSubscriptionDataMetricsByRecordName(
-                        recordName
-                    );
+                if (features.data.maxItems > 0) {
+                    if (metricsResult.totalItems >= features.data.maxItems) {
+                        return {
+                            success: false,
+                            errorCode: 'subscription_limit_reached',
+                            errorMessage:
+                                'The maximum number of items has been reached for your subscription.',
+                            errorReason: 'too_many_items',
+                        };
+                    }
+                }
             }
 
             const result2 = await this._store.setData(
@@ -610,6 +645,7 @@ export interface RecordDataFailure {
         | NotAuthorizedError
         | ValidatePublicRecordKeyFailure['errorCode']
         | SetDataResult['errorCode']
+        | SubscriptionLimitReached
         | 'unacceptable_request'
         | 'not_supported'
         | 'invalid_update_policy'
@@ -623,7 +659,7 @@ export interface RecordDataFailure {
     /**
      * The reason for the error.
      */
-    errorReason?: 'too_many_items';
+    errorReason?: 'data_not_allowed' | 'too_many_items';
 }
 
 /**
