@@ -1,4 +1,91 @@
+import { z } from 'zod';
 import { isActiveSubscription } from './Utils';
+
+export const subscriptionFeaturesSchema = z.object({
+    data: z.object({
+        allowed: z.boolean(),
+        maxItems: z.number({}).int().positive().optional(),
+        maxReadsPerPeriod: z.number().int().positive().optional(),
+        maxWritesPerPeriod: z.number().int().positive().optional(),
+    }),
+    files: z.object({
+        allowed: z.boolean(),
+        maxFiles: z.number().int().positive().optional(),
+        maxBytesPerFile: z.number().int().positive().optional(),
+        maxBytesTotal: z.number().int().positive().optional(),
+    }),
+    events: z.object({
+        allowed: z.boolean(),
+        maxEvents: z.number().int().positive().optional(),
+        maxUpdatesPerPeriod: z.number().int().positive().optional(),
+    }),
+    policies: z.object({
+        allowed: z.boolean(),
+        maxPolicies: z.number().int().positive().optional(),
+    }),
+    ai: z.object({
+        chat: z.object({
+            allowed: z.boolean(),
+            maxTokensPerPeriod: z.number().int().positive().optional(),
+        }),
+        images: z.object({
+            allowed: z.boolean(),
+            maxPixelsPerPeriod: z.number().int().positive().optional(),
+        }),
+        skyboxes: z.object({
+            allowed: z.boolean(),
+            maxPixelsPerPeriod: z.number().int().positive().optional(),
+        }),
+    }),
+});
+
+export const subscriptionConfigSchema = z.object({
+    webhookSecret: z.string().nonempty(),
+    successUrl: z.string().nonempty(),
+    cancelUrl: z.string().nonempty(),
+    returnUrl: z.string().nonempty(),
+
+    portalConfig: z.object({}).passthrough().optional().nullable(),
+    checkoutConfig: z.object({}).passthrough().optional().nullable(),
+
+    subscriptions: z.array(
+        z.object({
+            id: z.string().nonempty(),
+            product: z.string().nonempty(),
+            featureList: z.array(z.string().nonempty()),
+            eligibleProducts: z.array(z.string().nonempty()),
+            defaultSubscription: z.boolean().optional(),
+            purchasable: z.boolean().optional(),
+            tier: z.string().nonempty().optional(),
+            userOnly: z.boolean().optional(),
+            studioOnly: z.boolean().optional(),
+        })
+    ),
+
+    tiers: z
+        .object({})
+        .catchall(
+            z.object({
+                features: subscriptionFeaturesSchema.optional(),
+            })
+        )
+        .optional(),
+
+    defaultFeatures: subscriptionFeaturesSchema.optional(),
+});
+
+export function parseSubscriptionConfig(
+    config: any,
+    defaultConfig: SubscriptionConfiguration
+): SubscriptionConfiguration {
+    if (config) {
+        const result = subscriptionConfigSchema.safeParse(config);
+        if (result.success) {
+            return result.data as SubscriptionConfiguration;
+        }
+    }
+    return defaultConfig;
+}
 
 export interface SubscriptionConfiguration {
     /**
@@ -340,12 +427,15 @@ export function getSubscriptionFeatures(
     subscriptionId: string,
     type: 'user' | 'studio'
 ): FeaturesConfiguration {
+    if (!config) {
+        return allowAllFeatures();
+    }
     if (isActiveSubscription(subscriptionStatus)) {
         const sub = config.subscriptions.find((s) => s.id === subscriptionId);
         const tier = sub?.tier;
         const features = tier ? config.tiers[tier]?.features : null;
 
-        if(features) {
+        if (features) {
             return features;
         }
     }

@@ -1,5 +1,6 @@
 import {
     SubscriptionConfiguration,
+    allowAllFeatures,
     getSubscriptionFeatures,
 } from './SubscriptionConfiguration';
 
@@ -101,20 +102,45 @@ describe('getSubscriptionFeatures()', () => {
         webhookSecret: 'secret',
     };
 
+    it('should allow all features when given a null config', () => {
+        const features = getSubscriptionFeatures(
+            null,
+            'active',
+            'subId',
+            'user'
+        );
+        expect(features).toEqual(allowAllFeatures());
+    });
+
     it('should return the features for the given subscription ID', () => {
-        const features = getSubscriptionFeatures(config, 'active', 'subId', 'user');
+        const features = getSubscriptionFeatures(
+            config,
+            'active',
+            'subId',
+            'user'
+        );
 
         expect(features === config.tiers.beta).toBe(true);
     });
 
     it('should return the default features for the user subscriber type', () => {
-        const features = getSubscriptionFeatures(config, 'active', 'missing', 'user');
+        const features = getSubscriptionFeatures(
+            config,
+            'active',
+            'missing',
+            'user'
+        );
 
         expect(features === config.defaultFeatures.user).toBe(true);
     });
 
     it('should return the default features for the studio subscriber type', () => {
-        const features = getSubscriptionFeatures(config, 'active', 'missing', 'user');
+        const features = getSubscriptionFeatures(
+            config,
+            'active',
+            'missing',
+            'user'
+        );
 
         expect(features === config.defaultFeatures.studio).toBe(true);
     });
@@ -137,22 +163,42 @@ describe('getSubscriptionFeatures()', () => {
     describe.each(statusTypes)('%s status', (status, expected) => {
         if (expected) {
             it('should return the features for the subscription ID for the user', () => {
-                const features = getSubscriptionFeatures(config, status, 'subId', 'user');
+                const features = getSubscriptionFeatures(
+                    config,
+                    status,
+                    'subId',
+                    'user'
+                );
                 expect(features === config.tiers.beta).toBe(true);
             });
 
             it('should return the features for the subscription ID for the studio', () => {
-                const features = getSubscriptionFeatures(config, status, 'subId', 'studio');
+                const features = getSubscriptionFeatures(
+                    config,
+                    status,
+                    'subId',
+                    'studio'
+                );
                 expect(features === config.tiers.beta).toBe(true);
             });
         } else {
             it('should return the default features for the user', () => {
-                const features = getSubscriptionFeatures(config, status, 'subId', 'user');
+                const features = getSubscriptionFeatures(
+                    config,
+                    status,
+                    'subId',
+                    'user'
+                );
                 expect(features === config.defaultFeatures.user).toBe(true);
             });
 
             it('should return the default features for the studio', () => {
-                const features = getSubscriptionFeatures(config, status, 'subId', 'studio');
+                const features = getSubscriptionFeatures(
+                    config,
+                    status,
+                    'subId',
+                    'studio'
+                );
                 expect(features === config.defaultFeatures.studio).toBe(true);
             });
         }

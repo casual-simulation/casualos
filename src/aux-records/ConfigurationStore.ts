@@ -1,4 +1,7 @@
+import { z } from 'zod';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+
+export const SUBSCRIPTIONS_CONFIG_KEY = 'subscriptions';
 
 /**
  * Defines an interface that is used for storing configuration data.

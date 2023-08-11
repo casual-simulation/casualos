@@ -21,6 +21,7 @@ import {
     BlockadeLabsGenerateSkyboxInterface,
     OpenAIImageInterface,
     StabilityAIImageInterface,
+    MetricsStore,
 } from '@casual-simulation/aux-records';
 import {
     S3FileRecordsStore,
@@ -31,7 +32,10 @@ import {
 import { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
 import { LivekitController } from '@casual-simulation/aux-records/LivekitController';
-import { SubscriptionConfiguration } from '@casual-simulation/aux-records/SubscriptionConfiguration';
+import {
+    SubscriptionConfiguration,
+    subscriptionConfigSchema,
+} from '@casual-simulation/aux-records/SubscriptionConfiguration';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { SESV2 } from 'aws-sdk';
 import { createClient as createRedisClient } from 'redis';
@@ -63,11 +67,14 @@ import {
     MongoDBRecordsStore,
     MongoDBFileRecordsLookup,
     MongoDBStudio,
+    MongoDBConfigurationStore,
+    MongoDBMetricsStore,
 } from '../mongo';
 import { sortBy } from 'lodash';
 import { PrismaClient } from '@prisma/client';
 import {
     PrismaAuthStore,
+    PrismaConfigurationStore,
     PrismaDataRecordsStore,
     PrismaEventRecordsStore,
     PrismaFileRecordsLookup,
@@ -79,6 +86,8 @@ import {
     AIController,
     AIGenerateImageConfiguration,
 } from '@casual-simulation/aux-records/AIController';
+import { ConfigurationStore } from '@casual-simulation/aux-records/ConfigurationStore';
+import { PrismaMetricsStore } from 'aux-backend/prisma/PrismaMetricsStore';
 
 export class ServerBuilder {
     private _docClient: DocumentClient;
@@ -86,6 +95,8 @@ export class ServerBuilder {
     private _prismaClient: PrismaClient;
     private _mongoDb: Db;
 
+    private _configStore: ConfigurationStore;
+    private _metricsStore: MetricsStore;
     private _authStore: AuthStore;
     private _authMessenger: AuthMessenger;
     private _authController: AuthController;
@@ -149,7 +160,10 @@ export class ServerBuilder {
         this._options = options ?? {};
     }
 
-    useMongoDB(options: Pick<BuilderOptions, 'mongodb'> = this._options): this {
+    useMongoDB(
+        options: Pick<BuilderOptions, 'mongodb' | 'subscriptions'> = this
+            ._options
+    ): this {
         console.log('[ServerBuilder] Using MongoDB.');
 
         if (!options.mongodb) {
@@ -186,10 +200,24 @@ export class ServerBuilder {
                     db.collection<any>('recordsEvents');
                 const emailRules = db.collection<any>('emailRules');
                 const smsRules = db.collection<any>('smsRules');
+                const configuration = db.collection<any>('configuration');
 
                 const policies = db.collection<any>('policies');
                 const roles = db.collection<any>('roles');
 
+                this._metricsStore = new MongoDBMetricsStore(
+                    recordsDataCollection,
+                    studios,
+                    recordsCollection,
+                    users
+                );
+                this._configStore = new MongoDBConfigurationStore(
+                    {
+                        subscriptions:
+                            options.subscriptions as SubscriptionConfiguration,
+                    },
+                    configuration
+                );
                 this._authStore = new MongoDBAuthStore(
                     users,
                     loginRequests,
@@ -227,7 +255,8 @@ export class ServerBuilder {
     }
 
     usePrismaWithS3(
-        options: Pick<BuilderOptions, 'prisma' | 's3'> = this._options
+        options: Pick<BuilderOptions, 'prisma' | 's3' | 'subscriptions'> = this
+            ._options
     ): this {
         console.log('[ServerBuilder] Using Prisma with S3.');
         if (!options.prisma) {
@@ -242,6 +271,10 @@ export class ServerBuilder {
         const s3 = options.s3;
 
         this._prismaClient = new PrismaClient(prisma.options as any);
+        this._metricsStore = new PrismaMetricsStore(this._prismaClient);
+        this._configStore = new PrismaConfigurationStore(this._prismaClient, {
+            subscriptions: options.subscriptions as SubscriptionConfiguration,
+        });
         this._authStore = new PrismaAuthStore(this._prismaClient);
         this._recordsStore = new PrismaRecordsStore(this._prismaClient);
         this._policyStore = new PrismaPolicyStore(this._prismaClient);
@@ -655,7 +688,7 @@ export class ServerBuilder {
         this._authController = new AuthController(
             this._authStore,
             this._authMessenger,
-            this._subscriptionConfig,
+            this._configStore,
             this._forceAllowAllSubscriptionFeatures
         );
         this._recordsController = new RecordsController(
@@ -667,14 +700,18 @@ export class ServerBuilder {
             this._recordsController,
             this._policyStore
         );
-        this._dataController = new DataRecordsController(
-            this._policyController,
-            this._dataStore
-        );
-        this._manualDataController = new DataRecordsController(
-            this._policyController,
-            this._manualDataStore
-        );
+        this._dataController = new DataRecordsController({
+            store: this._dataStore,
+            config: this._configStore,
+            policies: this._policyController,
+            metrics: this._metricsStore,
+        });
+        this._manualDataController = new DataRecordsController({
+            store: this._manualDataStore,
+            config: this._configStore,
+            policies: this._policyController,
+            metrics: this._metricsStore,
+        });
         this._filesController = new FileRecordsController(
             this._policyController,
             this._filesStore
@@ -824,79 +861,6 @@ const rateLimitSchema = z.object({
 const stripeSchema = z.object({
     secretKey: z.string().nonempty(),
     publishableKey: z.string().nonempty(),
-});
-
-const subscriptionFeaturesSchema = z.object({
-    data: z.object({
-        allowed: z.boolean(),
-        maxItems: z.number({}).int().positive().optional(),
-        maxReadsPerPeriod: z.number().int().positive().optional(),
-        maxWritesPerPeriod: z.number().int().positive().optional(),
-    }),
-    files: z.object({
-        allowed: z.boolean(),
-        maxFiles: z.number().int().positive().optional(),
-        maxBytesPerFile: z.number().int().positive().optional(),
-        maxBytesTotal: z.number().int().positive().optional(),
-    }),
-    events: z.object({
-        allowed: z.boolean(),
-        maxEvents: z.number().int().positive().optional(),
-        maxUpdatesPerPeriod: z.number().int().positive().optional(),
-    }),
-    policies: z.object({
-        allowed: z.boolean(),
-        maxPolicies: z.number().int().positive().optional(),
-    }),
-    ai: z.object({
-        chat: z.object({
-            allowed: z.boolean(),
-            maxTokensPerPeriod: z.number().int().positive().optional(),
-        }),
-        images: z.object({
-            allowed: z.boolean(),
-            maxPixelsPerPeriod: z.number().int().positive().optional(),
-        }),
-        skyboxes: z.object({
-            allowed: z.boolean(),
-            maxPixelsPerPeriod: z.number().int().positive().optional(),
-        }),
-    }),
-});
-
-const subscriptionConfigSchema = z.object({
-    webhookSecret: z.string().nonempty(),
-    successUrl: z.string().nonempty(),
-    cancelUrl: z.string().nonempty(),
-    returnUrl: z.string().nonempty(),
-
-    portalConfig: z.object({}).passthrough().optional().nullable(),
-    checkoutConfig: z.object({}).passthrough().optional().nullable(),
-
-    subscriptions: z.array(
-        z.object({
-            id: z.string().nonempty(),
-            product: z.string().nonempty(),
-            featureList: z.array(z.string().nonempty()),
-            eligibleProducts: z.array(z.string().nonempty()),
-            defaultSubscription: z.boolean().optional(),
-            purchasable: z.boolean().optional(),
-            tier: z.string().nonempty().optional(),
-            userOnly: z.boolean().optional(),
-            studioOnly: z.boolean().optional(),
-        })
-    ),
-
-    tiers: z
-        .object({})
-        .catchall(
-            z.object({
-                features: subscriptionFeaturesSchema.optional(),
-            })
-        )
-        .optional(),
-
-    defaultFeatures: subscriptionFeaturesSchema.optional(),
 });
 
 const mongodbSchema = z.object({
