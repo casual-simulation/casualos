@@ -23,6 +23,7 @@ import { PolicyController } from './PolicyController';
 import {
     createTestControllers,
     createTestRecordKey,
+    createTestSubConfiguration,
     createTestUser,
 } from './TestUtils';
 import {
@@ -30,7 +31,16 @@ import {
     ADMIN_ROLE_NAME,
     PUBLIC_READ_MARKER,
 } from './PolicyPermissions';
-import { sortBy } from 'lodash';
+import { merge, sortBy } from 'lodash';
+import { MemoryConfigurationStore } from './MemoryConfigurationStore';
+import {
+    FeaturesConfiguration,
+    SubscriptionConfiguration,
+    allowAllFeatures,
+} from './SubscriptionConfiguration';
+import { MemoryAuthStore } from './MemoryAuthStore';
+import { MetricsStore } from './MetricsStore';
+import { MemoryMetricsStore } from './MemoryMetricsStore';
 
 console.log = jest.fn();
 
@@ -42,7 +52,10 @@ describe('FileRecordsController', () => {
     let store: FileRecordsStore;
     let presignUrlMock: jest.Mock;
     let presignReadMock: jest.Mock;
+    let configStore: MemoryConfigurationStore;
+    let authStore: MemoryAuthStore;
     let manager: FileRecordsController;
+    let metrics: MemoryMetricsStore;
     let key: string;
     let subjectlessKey: string;
 
@@ -50,18 +63,43 @@ describe('FileRecordsController', () => {
     let sessionKey: string;
     const recordName = 'testRecord';
 
+    let ownerId: string;
+
     beforeEach(async () => {
         const services = createTestControllers();
 
+        authStore = services.authStore;
+        configStore = services.configStore;
         policiesStore = services.policyStore;
         policies = services.policies;
         recordsStore = services.recordsStore;
         records = services.records;
 
         store = new MemoryFileRecordsStore();
-        manager = new FileRecordsController(policies, store);
+        metrics = new MemoryMetricsStore(
+            null,
+            store as MemoryFileRecordsStore,
+            null,
+            recordsStore as MemoryRecordsStore,
+            authStore
+        );
+        manager = new FileRecordsController({
+            policies,
+            store,
+            metrics: metrics,
+            config: configStore,
+        });
         presignUrlMock = store.presignFileUpload = jest.fn();
         presignReadMock = store.presignFileRead = jest.fn();
+
+        ownerId = 'testUser';
+        await authStore.saveUser({
+            id: ownerId,
+            allSessionRevokeTimeMs: null,
+            currentLoginRequestId: null,
+            email: 'other@example.com',
+            phoneNumber: null,
+        });
 
         const user = await createTestUser(services, 'test@example.com');
         userId = user.userId;
@@ -69,7 +107,7 @@ describe('FileRecordsController', () => {
 
         const testRecordKey = await createTestRecordKey(
             services,
-            'testUser',
+            ownerId,
             recordName,
             'subjectfull'
         );
@@ -77,7 +115,7 @@ describe('FileRecordsController', () => {
 
         const subjectlessRecordKey = await createTestRecordKey(
             services,
-            'testUser',
+            ownerId,
             recordName,
             'subjectless'
         );
@@ -682,6 +720,199 @@ describe('FileRecordsController', () => {
                 success: false,
                 errorCode: 'file_not_found',
                 errorMessage: 'The file was not found in the store.',
+            });
+        });
+
+        it('should reject the request if the file is larger than the configured maximum file size', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            configStore.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                files: {
+                                    maxBytesPerFile: 10,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const user = await authStore.findUser(ownerId);
+            await authStore.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = await manager.recordFile(recordName, ownerId, {
+                fileByteLength: 11,
+                fileDescription: 'description',
+                fileMimeType: 'text/plain',
+                fileSha256Hex: 'hex',
+                headers: {},
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'The file is too large.',
+            });
+        });
+
+        it('should reject the request if the file would put the total size of files stored above the limit', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            configStore.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                files: {
+                                    maxBytesTotal: 10,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.addFileRecord(
+                recordName,
+                'myFile.txt',
+                ownerId,
+                'subjectId',
+                5,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+
+            const user = await authStore.findUser(ownerId);
+            await authStore.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = await manager.recordFile(recordName, ownerId, {
+                fileByteLength: 6,
+                fileDescription: 'description',
+                fileMimeType: 'text/plain',
+                fileSha256Hex: 'hex',
+                headers: {},
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'The file storage limit has been reached for the subscription.',
+            });
+        });
+
+        it('should reject the request if the file would put the total number of files above the allowed limit', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            configStore.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                files: {
+                                    maxFiles: 1,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.addFileRecord(
+                recordName,
+                'myFile.txt',
+                ownerId,
+                'subjectId',
+                5,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+
+            const user = await authStore.findUser(ownerId);
+            await authStore.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = await manager.recordFile(recordName, ownerId, {
+                fileByteLength: 6,
+                fileDescription: 'description',
+                fileMimeType: 'text/plain',
+                fileSha256Hex: 'hex',
+                headers: {},
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'The file count limit has been reached for the subscription.',
             });
         });
     });

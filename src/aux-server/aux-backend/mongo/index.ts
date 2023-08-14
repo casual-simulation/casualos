@@ -6,3 +6,4 @@ export * from './MongoDBPolicyStore';
 export * from './MongoDBRateLimiter';
 export * from './MongoDBRecordsStore';
 export * from './MongoDBConfigurationStore';
+export * from './MongoDBMetricsStore';

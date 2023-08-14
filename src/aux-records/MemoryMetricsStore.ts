@@ -61,7 +61,8 @@ export class MemoryMetricsStore implements MetricsStore {
         const records = await this._listRecordsForSubscription(recordName);
 
         let totalFiles = 0;
-        let totalBytes = 0;
+        let totalBytesStored = 0;
+        let totalBytesReserved = 0;
         for (let record of records) {
             let files = [...this._fileStore.files.values()].filter(
                 (f) => f.recordName === record.name
@@ -69,8 +70,9 @@ export class MemoryMetricsStore implements MetricsStore {
 
             for (let file of files) {
                 totalFiles++;
+                totalBytesReserved += file.sizeInBytes;
                 if (file.uploaded) {
-                    totalBytes += file.sizeInBytes;
+                    totalBytesStored += file.sizeInBytes;
                 }
             }
         }
@@ -78,7 +80,8 @@ export class MemoryMetricsStore implements MetricsStore {
         return {
             ...info,
             totalFiles,
-            totalFileBytesStored: totalBytes,
+            totalFileBytesStored: totalBytesStored,
+            totalFileBytesReserved: totalBytesReserved,
         };
     }
 

@@ -61,6 +61,11 @@ export interface FileSubscriptionMetrics extends SubscriptionMetrics {
      * The total number of file bytes stored in the subscription.
      */
     totalFileBytesStored: number;
+
+    /**
+     * The total number of file bytes that have been reserved in the subscription.
+     */
+    totalFileBytesReserved: number;
 }
 
 export interface EventSubscriptionMetrics extends SubscriptionMetrics {

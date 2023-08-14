@@ -7,7 +7,12 @@ import {
     PresignFileReadFailure,
     GetFileRecordFailure,
 } from './FileRecordsStore';
-import { NotLoggedInError, NotSupportedError, ServerError } from './Errors';
+import {
+    NotLoggedInError,
+    NotSupportedError,
+    ServerError,
+    SubscriptionLimitReached,
+} from './Errors';
 import {
     RecordsController,
     ValidatePublicRecordKeyFailure,
@@ -22,6 +27,16 @@ import {
 import { PUBLIC_READ_MARKER } from './PolicyPermissions';
 import { getMarkersOrDefault } from './Utils';
 import { without } from 'lodash';
+import { MetricsStore } from './MetricsStore';
+import { ConfigurationStore } from './ConfigurationStore';
+import { getSubscriptionFeatures } from './SubscriptionConfiguration';
+
+export interface FileRecordsConfiguration {
+    policies: PolicyController;
+    store: FileRecordsStore;
+    metrics: MetricsStore;
+    config: ConfigurationStore;
+}
 
 /**
  * Defines a class that can manage file records.
@@ -29,10 +44,14 @@ import { without } from 'lodash';
 export class FileRecordsController {
     private _policies: PolicyController;
     private _store: FileRecordsStore;
+    private _metrics: MetricsStore;
+    private _config: ConfigurationStore;
 
-    constructor(policies: PolicyController, store: FileRecordsStore) {
-        this._policies = policies;
-        this._store = store;
+    constructor(config: FileRecordsConfiguration) {
+        this._policies = config.policies;
+        this._store = config.store;
+        this._metrics = config.metrics;
+        this._config = config.config;
     }
 
     /**
@@ -64,14 +83,6 @@ export class FileRecordsController {
                 return returnAuthorizationResult(result);
             }
 
-            // const keyResult = await this._controller.validatePublicRecordKey(
-            //     recordNameOrKey
-            // );
-
-            // if (keyResult.success === false) {
-            //     return keyResult;
-            // }
-
             const policy = result.subject.subjectPolicy;
             userId = result.subject.userId;
 
@@ -91,6 +102,61 @@ export class FileRecordsController {
             const publisherId = result.authorizerId;
             const recordName = result.recordName;
             const subjectId = userId;
+
+            const metricsResult =
+                await this._metrics.getSubscriptionFileMetricsByRecordName(
+                    recordName
+                );
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getSubscriptionFeatures(
+                config,
+                metricsResult.subscriptionStatus,
+                metricsResult.subscriptionId,
+                metricsResult.ownerId ? 'user' : 'studio'
+            );
+
+            if (!features.files.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit the recording of files.',
+                };
+            }
+
+            if (features.files.maxBytesPerFile > 0) {
+                if (request.fileByteLength > features.files.maxBytesPerFile) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage: 'The file is too large.',
+                    };
+                }
+            }
+            if (features.files.maxBytesTotal > 0) {
+                const newSize =
+                    metricsResult.totalFileBytesReserved +
+                    request.fileByteLength;
+                if (newSize > features.files.maxBytesTotal) {
+                    return {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage:
+                            'The file storage limit has been reached for the subscription.',
+                    };
+                }
+            }
+            if (features.files.maxFiles > 0) {
+                const newCount = metricsResult.totalFiles + 1;
+                if (newCount > features.files.maxFiles) {
+                    return {
+                        success: false,
+                        errorCode: 'subscription_limit_reached',
+                        errorMessage:
+                            'The file count limit has been reached for the subscription.',
+                    };
+                }
+            }
 
             const extension = getExtension(request.fileMimeType);
             const fileName = extension
@@ -729,6 +795,7 @@ export interface RecordFileFailure {
         | ValidatePublicRecordKeyFailure['errorCode']
         | AddFileFailure['errorCode']
         | AuthorizeDenied['errorCode']
+        | SubscriptionLimitReached
         | 'invalid_file_data'
         | 'not_supported';
 
