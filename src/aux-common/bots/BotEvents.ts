@@ -4040,11 +4040,6 @@ export interface AuthData {
     avatarPortraitUrl: string;
 
     /**
-     * The OpenAI API Key that is configured for use.
-     */
-    openAiKey: string | null;
-
-    /**
      * Whether the user has an active subscription to the beta program.
      */
     hasActiveSubscription: boolean;

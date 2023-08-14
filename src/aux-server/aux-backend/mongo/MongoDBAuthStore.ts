@@ -149,7 +149,6 @@ export class MongoDBAuthStore implements AuthStore {
                     allSessionRevokeTimeMs: user.allSessionRevokeTimeMs,
                     currentLoginRequestId: user.currentLoginRequestId,
                     stripeCustomerId: user.stripeCustomerId,
-                    openAiKey: user.openAiKey,
                     subscriptionStatus: user.subscriptionStatus,
                     subscriptionId: user.subscriptionId,
                     banTimeMs: user.banTimeMs,
@@ -193,7 +192,6 @@ export class MongoDBAuthStore implements AuthStore {
             stripeCustomerId: user.stripeCustomerId,
             subscriptionStatus: user.subscriptionStatus,
             subscriptionId: user.subscriptionId,
-            openAiKey: user.openAiKey,
             banTimeMs: user.banTimeMs,
             banReason: user.banReason,
         });
@@ -398,7 +396,6 @@ export interface MongoDBAuthUser {
     stripeCustomerId?: string;
     subscriptionStatus?: string;
     subscriptionId?: string;
-    openAiKey?: string;
     banTimeMs?: number;
     banReason?: AuthUser['banReason'];
 }

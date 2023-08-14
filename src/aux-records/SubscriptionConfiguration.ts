@@ -36,6 +36,16 @@ export interface SubscriptionConfiguration {
         purchasable?: boolean;
 
         /**
+         * Whether the subscription is only purchasable by users.
+         */
+        userOnly?: boolean;
+
+        /**
+         * Whether the subscription is only purchasable by studios.
+         */
+        studioOnly?: boolean;
+
+        /**
          * The tier that the subscription represents.
          * Defaults to "beta".
          */

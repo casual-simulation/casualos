@@ -1031,7 +1031,6 @@ export class AuthController {
                 avatarUrl: result.avatarUrl,
                 hasActiveSubscription: hasActiveSubscription,
                 subscriptionTier: hasActiveSubscription ? tier : null,
-                openAiKey: hasActiveSubscription ? result.openAiKey : null,
             };
         } catch (err) {
             console.error(
@@ -1152,24 +1151,13 @@ export class AuthController {
                 );
             }
 
-            const hasActiveSubscription =
-                this._forceAllowSubscriptionFeatures ||
-                isActiveSubscription(user.subscriptionStatus);
-
             const cleaned = cleanupObject({
                 name: request.update.name,
                 avatarUrl: request.update.avatarUrl,
                 avatarPortraitUrl: request.update.avatarPortraitUrl,
                 email: request.update.email,
                 phoneNumber: request.update.phoneNumber,
-                openAiKey: hasActiveSubscription
-                    ? request.update.openAiKey
-                    : undefined,
             });
-
-            if (cleaned.openAiKey) {
-                cleaned.openAiKey = formatV1OpenAiKey(cleaned.openAiKey);
-            }
 
             await this._store.saveUser({
                 ...user,
@@ -1673,11 +1661,6 @@ export interface GetUserInfoSuccess {
      * The subscription tier that the user is subscribed to.
      */
     subscriptionTier: string;
-
-    /**
-     * The OpenAI API Key that the user has configured in their account.
-     */
-    openAiKey: string | null;
 }
 
 export interface GetUserInfoFailure {
@@ -1709,12 +1692,7 @@ export interface UpdateUserInfoRequest {
     update: Partial<
         Pick<
             AuthUser,
-            | 'name'
-            | 'email'
-            | 'phoneNumber'
-            | 'avatarUrl'
-            | 'avatarPortraitUrl'
-            | 'openAiKey'
+            'name' | 'email' | 'phoneNumber' | 'avatarUrl' | 'avatarPortraitUrl'
         >
     >;
 }
