@@ -14,6 +14,7 @@ import { EventRecordsStore } from './EventRecordsStore';
 import {
     createTestControllers,
     createTestRecordKey,
+    createTestSubConfiguration,
     createTestUser,
 } from './TestUtils';
 import { PolicyController } from './PolicyController';
@@ -24,6 +25,15 @@ import {
     ADMIN_ROLE_NAME,
     PUBLIC_READ_MARKER,
 } from './PolicyPermissions';
+import { ConfigurationStore } from './ConfigurationStore';
+import { MemoryConfigurationStore } from './MemoryConfigurationStore';
+import { merge } from 'lodash';
+import {
+    FeaturesConfiguration,
+    SubscriptionConfiguration,
+    allowAllFeatures,
+} from './SubscriptionConfiguration';
+import { MemoryAuthStore } from './MemoryAuthStore';
 
 console.log = jest.fn();
 
@@ -34,6 +44,8 @@ describe('EventRecordsController', () => {
     let policyStore: MemoryPolicyStore;
     let store: EventRecordsStore;
     let manager: EventRecordsController;
+    let configStore: MemoryConfigurationStore;
+    let authStore: MemoryAuthStore;
     const userId = 'testUser';
     let key: string;
     let recordName: string;
@@ -44,6 +56,8 @@ describe('EventRecordsController', () => {
         records = controllers.records;
         policies = controllers.policies;
         policyStore = controllers.policyStore;
+        configStore = controllers.configStore;
+        authStore = controllers.authStore;
 
         store = new MemoryEventRecordsStore();
         manager = new EventRecordsController(policies, store);
@@ -214,6 +228,59 @@ describe('EventRecordsController', () => {
                     marker: PUBLIC_READ_MARKER,
                     role: null,
                 },
+            });
+
+            await expect(
+                store.getEventCount('testRecord', 'address')
+            ).resolves.toEqual({
+                success: true,
+                count: 0,
+            });
+        });
+
+        it('should deny the request if event records are not allowed', async () => {
+            configStore.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                events: {
+                                    allowed: false,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const user = await authStore.findUser(userId);
+            await authStore.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = (await manager.addCount(
+                recordName,
+                'address',
+                5,
+                userId
+            )) as AddCountFailure;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'Events are not allowed for this subscription.',
             });
 
             await expect(

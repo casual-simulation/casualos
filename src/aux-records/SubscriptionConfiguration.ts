@@ -305,24 +305,6 @@ export interface EventFeaturesConfiguration {
      * Whether event resources are allowed.
      */
     allowed: boolean;
-
-    /**
-     * The maximum number of events that are allowed.
-     * If not specified, then there is no limit.
-     */
-    maxEvents?: number;
-
-    /**
-     * The maximum number of event reads that are allowed per subscription period.
-     * If not specified, then there is no limit.
-     */
-    maxReadsPerPeriod?: number;
-
-    /**
-     * The maximum number of event writes that are allowed per subscription period.
-     * If not specified, then there is no limit.
-     */
-    maxWritesPerPeriod?: number;
 }
 
 export interface AIFeaturesConfiguration {
