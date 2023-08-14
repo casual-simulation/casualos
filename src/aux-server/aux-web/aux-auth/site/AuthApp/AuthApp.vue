@@ -30,7 +30,10 @@
                                 :to="{ name: 'records-data', params: { recordName: record.name } }"
                             >
                                 <md-icon>description</md-icon>
-                                <span class="md-list-item-text">{{ record.label }}</span>
+                                <span v-if="record.name !== userId">
+                                    {{ record.label }}
+                                </span>
+                                <span v-else> User Record ({{ record.name }}) </span>
                             </md-list-item>
                             <md-list-item v-if="loadingRecords" class="md-inset">
                                 <md-progress-spinner
@@ -83,7 +86,12 @@
                                 :to="{ name: 'records-data', params: { recordName: record.name } }"
                             >
                                 <md-icon>description</md-icon>
-                                <span class="md-list-item-text">{{ record.label }}</span>
+                                <span class="md-list-item-text">
+                                    <span v-if="record.name !== studio.studioId">
+                                        {{ record.label }}
+                                    </span>
+                                    <span v-else> Studio Record ({{ record.name }}) </span>
+                                </span>
                             </md-list-item>
                             <md-list-item v-if="studio.loading" class="md-inset">
                                 <md-progress-spinner

@@ -1,6 +1,3 @@
--- DropForeignKey
-ALTER TABLE "Record" DROP CONSTRAINT "Record_ownerId_fkey";
-
 -- AlterTable
 ALTER TABLE "Record" ADD COLUMN     "studioId" STRING;
 ALTER TABLE "Record" ALTER COLUMN "ownerId" DROP NOT NULL;
@@ -40,7 +37,9 @@ ALTER TABLE "StudioAssignment" ADD CONSTRAINT "StudioAssignment_studioId_fkey" F
 ALTER TABLE "StudioAssignment" ADD CONSTRAINT "StudioAssignment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Record" ADD CONSTRAINT "Record_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Record" ADD CONSTRAINT "Record_ownerId_fkey1" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+-- DropForeignKey
+ALTER TABLE "Record" DROP CONSTRAINT "Record_ownerId_fkey";
 
 -- AddForeignKey
 ALTER TABLE "Record" ADD CONSTRAINT "Record_studioId_fkey" FOREIGN KEY ("studioId") REFERENCES "Studio"("id") ON DELETE SET NULL ON UPDATE CASCADE;

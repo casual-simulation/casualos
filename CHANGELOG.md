@@ -8,6 +8,13 @@
 
 -   Added the ability to use `Ctrl+B` to automatically focus the last visisted tag.
 -   Added a "Done" button to the `os.showInput()` modal.
+-   Added the ability to create Studios.
+    -   Studios are a way to manage records under a different subscription than a personal account.
+    -   Studios have their own subscriptions and can have multiple members.
+    -   Members can have two roles: `admin` and `member`.
+        -   `admin` members can manage the Studio subscription and can add/remove members and create records.
+        -   `member` members can read/write data in records, but cannot manage permissions in records.
+    -   Like users, studios have an automatically created record that matches their ID.
 
 ### :rocket: Bug Fixes
 

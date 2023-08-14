@@ -144,7 +144,7 @@ model StudioAssignment {
 model Record {
     name String @id
     ownerId String?
-    owner User? @relation(fields: [ownerId], references: [id])
+    owner User? @relation(fields: [ownerId], references: [id], map: "Record_ownerId_fkey1")
 
     studioId String?
     studio Studio? @relation(fields: [studioId], references: [id])
