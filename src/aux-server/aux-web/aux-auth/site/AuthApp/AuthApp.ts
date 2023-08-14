@@ -29,6 +29,7 @@ export default class AuthApp extends Vue {
 
     recordName: string = '';
     studioName: string = '';
+    userId: string = '';
     createRecordStudioId: string = null;
 
     get title() {
@@ -68,8 +69,10 @@ export default class AuthApp extends Vue {
         this.studios = [];
         this.studioName = '';
         this.recordName = '';
+        this.userId = '';
         this.createRecordStudioId = null;
         authManager.loginState.subscribe((state) => {
+            this.userId = authManager.userId;
             this.showLogout = authManager.isLoggedIn();
 
             if (authManager.isLoggedIn()) {
