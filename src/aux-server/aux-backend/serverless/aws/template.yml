@@ -272,6 +272,16 @@ Resources:
                     Properties:
                         Path: /api/{userId}/subscription/manage
                         Method: POST
+                GetSubscriptionsV2:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/subscriptions
+                        Method: GET
+                ManageSubscriptionsV2:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/subscriptions/manage
+                        Method: POST
                 AiChat:
                     Type: Api
                     Properties:
@@ -292,6 +302,21 @@ Resources:
                     Properties:
                         Path: /api/v2/ai/image
                         Method: POST
+                CreateStudio:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/studios
+                        Method: POST
+                ListStudios:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/studios/list
+                        Method: GET
+                ListStudioMembers:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/studios/members/list
+                        Method: GET
                 StripeWebhook:
                     Type: Api
                     Properties:

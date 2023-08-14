@@ -20,7 +20,7 @@ import {
 import { AuthSession, AuthUser } from './AuthStore';
 import { LivekitController } from './LivekitController';
 import { isRecordKey, RecordsController } from './RecordsController';
-import { RecordsStore } from './RecordsStore';
+import { RecordsStore, Studio } from './RecordsStore';
 import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { EventRecordsController } from './EventRecordsController';
 import { EventRecordsStore } from './EventRecordsStore';
@@ -60,6 +60,7 @@ import {
     AIGenerateImageInterfaceRequest,
     AIGenerateImageInterfaceResponse,
 } from './AIImageInterface';
+import { sortBy } from 'lodash';
 
 console.log = jest.fn();
 
@@ -170,9 +171,9 @@ describe('RecordsHttpServer', () => {
                 },
             ],
             webhookSecret: 'webhook_secret',
-            cancelUrl: 'cancel_url',
-            successUrl: 'success_url',
-            returnUrl: 'return_url',
+            cancelUrl: 'http://cancel_url',
+            successUrl: 'http://success_url',
+            returnUrl: 'http://return_url',
         };
 
         authStore = new MemoryAuthStore();
@@ -188,7 +189,9 @@ describe('RecordsHttpServer', () => {
             livekitEndpoint
         );
 
-        const memRecordsStore = (recordsStore = new MemoryRecordsStore());
+        const memRecordsStore = (recordsStore = new MemoryRecordsStore(
+            authStore
+        ));
         recordsController = new RecordsController(recordsStore, authStore);
 
         policyStore = new MemoryPolicyStore();
@@ -260,6 +263,7 @@ describe('RecordsHttpServer', () => {
             stripe,
             authController,
             authStore,
+            recordsStore,
             subscriptionConfig
         );
 
@@ -404,6 +408,7 @@ describe('RecordsHttpServer', () => {
         await services.recordsStore.updateRecord({
             name: recordName,
             ownerId: ownerId,
+            studioId: null,
             secretHashes: record.secretHashes,
             secretSalt: record.secretSalt,
         });
@@ -429,36 +434,7 @@ describe('RecordsHttpServer', () => {
                     email: 'test@example.com',
                     phoneNumber: null,
                     hasActiveSubscription: false,
-                    openAiKey: null,
                     subscriptionTier: null,
-                },
-                headers: accountCorsHeaders,
-            });
-        });
-
-        it('should return the openAiKey for active subscriptions', async () => {
-            const user = await authStore.findUser(userId);
-            await authStore.saveUser({
-                ...user,
-                subscriptionStatus: 'active',
-                openAiKey: 'api key',
-            });
-            const result = await server.handleRequest(
-                httpGet(
-                    `/api/{userId:${userId}}/metadata`,
-                    authenticatedHeaders
-                )
-            );
-
-            expectResponseBodyToEqual(result, {
-                statusCode: 200,
-                body: {
-                    success: true,
-                    email: 'test@example.com',
-                    phoneNumber: null,
-                    hasActiveSubscription: true,
-                    openAiKey: 'api key',
-                    subscriptionTier: 'beta',
                 },
                 headers: accountCorsHeaders,
             });
@@ -523,7 +499,6 @@ describe('RecordsHttpServer', () => {
                     email: 'other@example.com',
                     phoneNumber: null,
                     hasActiveSubscription: false,
-                    openAiKey: null,
                     subscriptionTier: null,
                 },
                 headers: accountCorsHeaders,
@@ -677,38 +652,6 @@ describe('RecordsHttpServer', () => {
                 name: 'Kal',
                 avatarUrl: 'https://example.com/avatar.png',
                 avatarPortraitUrl: 'https://example.com/avatar-portrait.png',
-            });
-        });
-
-        it('should be able to update the openAiKey when the user has an active subscription', async () => {
-            let user = await authStore.findUser(userId);
-            await authStore.saveUser({
-                ...user,
-                subscriptionStatus: 'active',
-            });
-            const result = await server.handleRequest(
-                httpPut(
-                    `/api/{userId:${userId}}/metadata`,
-                    JSON.stringify({
-                        openAiKey: 'api key',
-                    }),
-                    authenticatedHeaders
-                )
-            );
-
-            expect(result).toEqual({
-                statusCode: 200,
-                body: JSON.stringify({
-                    success: true,
-                    userId,
-                }),
-                headers: accountCorsHeaders,
-            });
-
-            user = await authStore.findUser(userId);
-            expect(user).toMatchObject({
-                id: userId,
-                openAiKey: formatV1OpenAiKey('api key'),
             });
         });
 
@@ -904,6 +847,7 @@ describe('RecordsHttpServer', () => {
                             intervalLength: 1,
                             intervalCost: 123,
                             currency: 'usd',
+                            featureList: ['Feature 1', 'Feature 2'],
                         },
                     ],
                     purchasableSubscriptions: [],
@@ -1118,7 +1062,7 @@ describe('RecordsHttpServer', () => {
             );
 
             stripeMock.createPortalSession.mockResolvedValueOnce({
-                url: 'portal_url',
+                url: 'http://portal_url',
             });
 
             const result = await server.handleRequest(
@@ -1133,7 +1077,7 @@ describe('RecordsHttpServer', () => {
                 statusCode: 200,
                 body: JSON.stringify({
                     success: true,
-                    url: 'portal_url',
+                    url: 'http://portal_url',
                 }),
                 headers: accountCorsHeaders,
             });
@@ -1146,11 +1090,11 @@ describe('RecordsHttpServer', () => {
                 }
             );
             stripeMock.createCheckoutSession.mockResolvedValueOnce({
-                url: 'create_url',
+                url: 'http://create_url',
             });
 
             stripeMock.createPortalSession.mockResolvedValueOnce({
-                url: 'portal_url',
+                url: 'http://portal_url',
             });
 
             const result = await server.handleRequest(
@@ -1173,7 +1117,7 @@ describe('RecordsHttpServer', () => {
                 statusCode: 200,
                 body: JSON.stringify({
                     success: true,
-                    url: 'create_url',
+                    url: 'http://create_url',
                 }),
                 headers: accountCorsHeaders,
             });
@@ -1189,11 +1133,11 @@ describe('RecordsHttpServer', () => {
                 }
             );
             stripeMock.createCheckoutSession.mockResolvedValueOnce({
-                url: 'create_url',
+                url: 'http://create_url',
             });
 
             stripeMock.createPortalSession.mockResolvedValueOnce({
-                url: 'portal_url',
+                url: 'http://portal_url',
             });
 
             const result = await server.handleRequest(
@@ -1959,6 +1903,121 @@ describe('RecordsHttpServer', () => {
             JSON.stringify({
                 roomName,
                 userName,
+            })
+        );
+    });
+
+    describe('POST /api/v2/records', () => {
+        it('should create a new record', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/records',
+                    JSON.stringify({
+                        recordName: 'myRecord',
+                        ownerId: userId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should be able to create a record for a studio', async () => {
+            await recordsStore.addStudio({
+                id: 'studioId',
+                displayName: 'myStudio',
+            });
+
+            await recordsStore.addStudioAssignment({
+                studioId: 'studioId',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/records',
+                    JSON.stringify({
+                        recordName: 'myRecord',
+                        studioId: 'studioId',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 403 status code if the user does not have admin permissions for the studio', async () => {
+            await recordsStore.addStudio({
+                id: 'studioId',
+                displayName: 'myStudio',
+            });
+
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/records',
+                    JSON.stringify({
+                        recordName: 'myRecord',
+                        studioId: 'studioId',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to create a record for this studio.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 403 status code when the record already exists', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/records',
+                    JSON.stringify({
+                        recordName,
+                        ownerId: userId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'record_already_exists',
+                    errorMessage: 'A record with that name already exists.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testUrl('POST', '/api/v2/records', () =>
+            JSON.stringify({
+                recordName: 'myRecord',
+                ownerId: userId,
             })
         );
     });
@@ -6200,30 +6259,35 @@ describe('RecordsHttpServer', () => {
             await recordsStore.addRecord({
                 name: 'test0',
                 ownerId: 'otherUserId',
+                studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });
             await recordsStore.addRecord({
                 name: 'test1',
                 ownerId: userId,
+                studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });
             await recordsStore.addRecord({
                 name: 'test2',
                 ownerId: userId,
+                studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });
             await recordsStore.addRecord({
                 name: 'test3',
                 ownerId: userId,
+                studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });
             await recordsStore.addRecord({
                 name: 'test4',
                 ownerId: 'otherUserId',
+                studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });
@@ -6242,18 +6306,113 @@ describe('RecordsHttpServer', () => {
                         {
                             name: 'test1',
                             ownerId: userId,
+                            studioId: null,
                         },
                         {
                             name: 'test2',
                             ownerId: userId,
+                            studioId: null,
                         },
                         {
                             name: 'test3',
                             ownerId: userId,
+                            studioId: null,
                         },
                     ],
                 },
                 headers: apiCorsHeaders,
+            });
+        });
+
+        describe('?studioId', () => {
+            let studioId: string;
+            beforeEach(async () => {
+                studioId = 'studioId';
+                await recordsStore.addStudio({
+                    id: studioId,
+                    displayName: 'my studio',
+                });
+                await recordsStore.addStudioAssignment({
+                    studioId,
+                    userId,
+                    isPrimaryContact: true,
+                    role: 'admin',
+                });
+
+                await recordsStore.addRecord({
+                    name: 'test5',
+                    ownerId: null,
+                    studioId: studioId,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+                await recordsStore.addRecord({
+                    name: 'test6',
+                    ownerId: null,
+                    studioId: studioId,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+                await recordsStore.addRecord({
+                    name: 'test7',
+                    ownerId: null,
+                    studioId: studioId,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+                await recordsStore.addRecord({
+                    name: 'test8',
+                    ownerId: null,
+                    studioId: 'otherStudio',
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+                await recordsStore.addRecord({
+                    name: 'test9',
+                    ownerId: null,
+                    studioId: studioId,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+            });
+
+            it('should return the list of records for the studio', async () => {
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/records/list?studioId=${studioId}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        records: [
+                            {
+                                name: 'test5',
+                                ownerId: null,
+                                studioId: studioId,
+                            },
+                            {
+                                name: 'test6',
+                                ownerId: null,
+                                studioId: studioId,
+                            },
+                            {
+                                name: 'test7',
+                                ownerId: null,
+                                studioId: studioId,
+                            },
+                            {
+                                name: 'test9',
+                                ownerId: null,
+                                studioId: studioId,
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
             });
         });
 
@@ -8546,6 +8705,15 @@ describe('RecordsHttpServer', () => {
                 subscriptionId: 'sub_id',
                 subscriptionStatus: 'active',
             });
+
+            chatInterface.chat.mockResolvedValueOnce({
+                choices: [
+                    {
+                        role: 'assistant',
+                        content: 'hi!',
+                    },
+                ],
+            });
         });
 
         it('should return a not_supported result if the server has a null AI controller', async () => {
@@ -8594,15 +8762,6 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should call the AI chat interface', async () => {
-            chatInterface.chat.mockResolvedValueOnce({
-                choices: [
-                    {
-                        role: 'assistant',
-                        content: 'hi!',
-                    },
-                ],
-            });
-
             const result = await server.handleRequest(
                 httpPost(
                     `/api/v2/ai/chat`,
@@ -8735,6 +8894,11 @@ describe('RecordsHttpServer', () => {
                 subscriptionId: 'sub_id',
                 subscriptionStatus: 'active',
             });
+
+            skyboxInterface.generateSkybox.mockResolvedValueOnce({
+                success: true,
+                skyboxId: 'skybox-id',
+            });
         });
 
         it('should return a not_supported result if the server has a null AI controller', async () => {
@@ -8777,11 +8941,6 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should call the AI skybox interface', async () => {
-            skyboxInterface.generateSkybox.mockResolvedValueOnce({
-                success: true,
-                skyboxId: 'skybox-id',
-            });
-
             const result = await server.handleRequest(
                 httpPost(
                     `/api/v2/ai/skybox`,
@@ -8850,6 +9009,13 @@ describe('RecordsHttpServer', () => {
                 subscriptionId: 'sub_id',
                 subscriptionStatus: 'active',
             });
+
+            skyboxInterface.getSkybox.mockResolvedValueOnce({
+                success: true,
+                status: 'generated',
+                fileUrl: 'file-url',
+                thumbnailUrl: 'thumbnail-url',
+            });
         });
 
         it('should return a not_supported result if the server has a null AI controller', async () => {
@@ -8886,13 +9052,6 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should call the AI skybox interface', async () => {
-            skyboxInterface.getSkybox.mockResolvedValueOnce({
-                success: true,
-                status: 'generated',
-                fileUrl: 'file-url',
-                thumbnailUrl: 'thumbnail-url',
-            });
-
             const result = await server.handleRequest(
                 httpGet(`/api/v2/ai/skybox?skyboxId=${'skybox-id'}`, apiHeaders)
             );
@@ -8926,6 +9085,15 @@ describe('RecordsHttpServer', () => {
                 ...u,
                 subscriptionId: 'sub_id',
                 subscriptionStatus: 'active',
+            });
+
+            imageInterface.generateImage.mockResolvedValueOnce({
+                images: [
+                    {
+                        base64: 'base64',
+                        mimeType: 'image/png',
+                    },
+                ],
             });
         });
 
@@ -8969,15 +9137,6 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should call the AI image interface', async () => {
-            imageInterface.generateImage.mockResolvedValueOnce({
-                images: [
-                    {
-                        base64: 'base64',
-                        mimeType: 'image/png',
-                    },
-                ],
-            });
-
             const result = await server.handleRequest(
                 httpPost(
                     `/api/v2/ai/image`,
@@ -8996,6 +9155,7 @@ describe('RecordsHttpServer', () => {
                     images: [
                         {
                             base64: 'base64',
+                            mimeType: 'image/png',
                         },
                     ],
                 },
@@ -9036,6 +9196,1486 @@ describe('RecordsHttpServer', () => {
                 apiHeaders
             )
         );
+    });
+
+    describe('POST /api/v2/studios', () => {
+        it('should create a studio and return the ID', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/studios',
+                    JSON.stringify({
+                        displayName: 'my studio',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    studioId: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testAuthorization(() =>
+            httpPost(
+                '/api/v2/studios',
+                JSON.stringify({
+                    displayName: 'my studio',
+                }),
+                authenticatedHeaders
+            )
+        );
+        testOrigin('POST', '/api/v2/studios', () =>
+            JSON.stringify({
+                displayName: 'my studio',
+            })
+        );
+        testRateLimit(() =>
+            httpPost(
+                '/api/v2/studios',
+                JSON.stringify({
+                    displayName: 'my studio',
+                }),
+                authenticatedHeaders
+            )
+        );
+    });
+
+    describe('GET /api/v2/studios/list', () => {
+        beforeEach(async () => {
+            await recordsStore.addStudio({
+                id: 'studioId1',
+                displayName: 'studio 1',
+            });
+
+            await recordsStore.addStudio({
+                id: 'studioId2',
+                displayName: 'studio 2',
+            });
+
+            await recordsStore.addStudio({
+                id: 'studioId3',
+                displayName: 'studio 3',
+            });
+
+            await recordsStore.addStudioAssignment({
+                studioId: 'studioId2',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+            await recordsStore.addStudioAssignment({
+                studioId: 'studioId3',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'member',
+            });
+        });
+
+        it('should list the studios that the user has access to', async () => {
+            const result = await server.handleRequest(
+                httpGet(`/api/v2/studios/list`, authenticatedHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    studios: [
+                        {
+                            studioId: 'studioId2',
+                            displayName: 'studio 2',
+                            role: 'admin',
+                            isPrimaryContact: true,
+                        },
+                        {
+                            studioId: 'studioId3',
+                            displayName: 'studio 3',
+                            role: 'member',
+                            isPrimaryContact: true,
+                        },
+                    ],
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testAuthorization(() =>
+            httpGet('/api/v2/studios/list', authenticatedHeaders)
+        );
+        testOrigin('GET', '/api/v2/studios/list');
+        testRateLimit(() =>
+            httpGet('/api/v2/studios/list', authenticatedHeaders)
+        );
+    });
+
+    describe('GET /api/v2/studios/members/list', () => {
+        let studioId: string;
+        beforeEach(async () => {
+            studioId = 'studioId1';
+            await authStore.saveUser({
+                id: 'userId2',
+                email: 'test2@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await recordsStore.addStudio({
+                id: studioId,
+                displayName: 'studio 1',
+            });
+
+            await recordsStore.addStudioAssignment({
+                studioId: studioId,
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+            await recordsStore.addStudioAssignment({
+                studioId: studioId,
+                userId: 'userId2',
+                isPrimaryContact: false,
+                role: 'member',
+            });
+        });
+
+        it('should list the members of the studio', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/studios/members/list?studioId=${studioId}`,
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    members: sortBy(
+                        [
+                            {
+                                studioId,
+                                userId: userId,
+                                isPrimaryContact: true,
+                                role: 'admin',
+                                user: {
+                                    id: userId,
+                                    email: 'test@example.com',
+                                    phoneNumber: null,
+                                },
+                            },
+                            {
+                                studioId,
+                                userId: 'userId2',
+                                isPrimaryContact: false,
+                                role: 'member',
+                                user: {
+                                    id: 'userId2',
+                                    email: 'test2@example.com',
+                                    phoneNumber: null,
+                                },
+                            },
+                        ],
+                        (u) => u.userId
+                    ),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testAuthorization(() =>
+            httpGet(
+                '/api/v2/studios/members/list?studioId=studioId1',
+                authenticatedHeaders
+            )
+        );
+        testOrigin('GET', '/api/v2/studios/members/list?studioId=studioId1');
+        testRateLimit(() =>
+            httpGet(
+                '/api/v2/studios/members/list?studioId=studioId1',
+                authenticatedHeaders
+            )
+        );
+    });
+
+    describe('POST /api/v2/studios/members', () => {
+        let studioId: string;
+        beforeEach(async () => {
+            studioId = 'studioId1';
+            await authStore.saveUser({
+                id: 'userId2',
+                email: 'test2@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await authStore.saveUser({
+                id: 'userId3',
+                email: null,
+                phoneNumber: '555',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await recordsStore.addStudio({
+                id: studioId,
+                displayName: 'studio 1',
+            });
+
+            await recordsStore.addStudioAssignment({
+                studioId: studioId,
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+        });
+
+        it('should add a member to the studio', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/studios/members',
+                    JSON.stringify({
+                        studioId,
+                        addedUserId: 'userId2',
+                        role: 'member',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const list = await recordsStore.listStudioAssignments(studioId, {
+                userId: 'userId2',
+            });
+
+            expect(list).toEqual([
+                {
+                    studioId,
+                    userId: 'userId2',
+                    role: 'member',
+                    isPrimaryContact: false,
+                    user: {
+                        id: 'userId2',
+                        email: 'test2@example.com',
+                        phoneNumber: null,
+                    },
+                },
+            ]);
+        });
+
+        it('should be able to add members by email address', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/studios/members',
+                    JSON.stringify({
+                        studioId,
+                        addedEmail: 'test2@example.com',
+                        role: 'member',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const list = await recordsStore.listStudioAssignments(studioId, {
+                userId: 'userId2',
+            });
+
+            expect(list).toEqual([
+                {
+                    studioId,
+                    userId: 'userId2',
+                    role: 'member',
+                    isPrimaryContact: false,
+                    user: {
+                        id: 'userId2',
+                        email: 'test2@example.com',
+                        phoneNumber: null,
+                    },
+                },
+            ]);
+        });
+
+        it('should be able to add members by phone number', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/studios/members',
+                    JSON.stringify({
+                        studioId,
+                        addedPhoneNumber: '555',
+                        role: 'member',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const list = await recordsStore.listStudioAssignments(studioId, {
+                userId: 'userId3',
+            });
+
+            expect(list).toEqual([
+                {
+                    studioId,
+                    userId: 'userId3',
+                    role: 'member',
+                    isPrimaryContact: false,
+                    user: {
+                        id: 'userId3',
+                        email: null,
+                        phoneNumber: '555',
+                    },
+                },
+            ]);
+        });
+
+        testUrl('POST', '/api/v2/studios/members', () =>
+            JSON.stringify({
+                studioId,
+                addedUserId: 'userId2',
+                role: 'member',
+            })
+        );
+    });
+
+    describe('DELETE /api/v2/studios/members', () => {
+        let studioId: string;
+        beforeEach(async () => {
+            studioId = 'studioId1';
+            await authStore.saveUser({
+                id: 'userId2',
+                email: 'test2@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await authStore.saveUser({
+                id: 'userId3',
+                email: null,
+                phoneNumber: '555',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await recordsStore.addStudio({
+                id: studioId,
+                displayName: 'studio 1',
+            });
+
+            await recordsStore.addStudioAssignment({
+                studioId: studioId,
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            await recordsStore.addStudioAssignment({
+                studioId: studioId,
+                userId: 'userId2',
+                isPrimaryContact: false,
+                role: 'member',
+            });
+        });
+
+        it('should remove the member from the studio', async () => {
+            const result = await server.handleRequest(
+                httpDelete(
+                    '/api/v2/studios/members',
+                    JSON.stringify({
+                        studioId,
+                        removedUserId: 'userId2',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const list = await recordsStore.listStudioAssignments(studioId, {
+                userId: 'userId2',
+            });
+
+            expect(list).toEqual([]);
+        });
+
+        testUrl('DELETE', '/api/v2/studios/members', () =>
+            JSON.stringify({
+                studioId,
+                removedUserId: 'userId2',
+            })
+        );
+    });
+
+    describe('GET /api/v2/subscriptions', () => {
+        describe('?userId', () => {
+            let user: AuthUser;
+            beforeEach(async () => {
+                user = await authStore.findUser(userId);
+                await authStore.saveUser({
+                    ...user,
+                    stripeCustomerId: 'customerId',
+                });
+                user = await authStore.findUser(userId);
+            });
+
+            it('should return a list of subscriptions for the user', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [
+                            {
+                                id: 'subscription_id',
+                                status: 'active',
+                                start_date: 123,
+                                ended_at: null,
+                                cancel_at: null,
+                                canceled_at: null,
+                                current_period_start: 456,
+                                current_period_end: 999,
+                                items: [
+                                    {
+                                        id: 'item_id',
+                                        price: {
+                                            id: 'price_id',
+                                            interval: 'month',
+                                            interval_count: 1,
+                                            currency: 'usd',
+                                            unit_amount: 123,
+
+                                            product: {
+                                                id: 'product_id',
+                                                name: 'Product Name',
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                );
+
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?userId=${userId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        publishableKey: 'publishable_key',
+                        subscriptions: [
+                            {
+                                active: true,
+                                statusCode: 'active',
+                                productName: 'Product Name',
+                                startDate: 123,
+                                endedDate: null,
+                                cancelDate: null,
+                                canceledDate: null,
+                                currentPeriodStart: 456,
+                                currentPeriodEnd: 999,
+                                renewalInterval: 'month',
+                                intervalLength: 1,
+                                intervalCost: 123,
+                                currency: 'usd',
+                                featureList: ['Feature 1', 'Feature 2'],
+                            },
+                        ],
+                        purchasableSubscriptions: [],
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a list of purchasable subscriptions for the user', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [],
+                    }
+                );
+
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?userId=${userId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        publishableKey: 'publishable_key',
+                        subscriptions: [],
+                        purchasableSubscriptions: [
+                            {
+                                id: 'sub_id',
+                                name: 'Product Name',
+                                description: 'Product Description',
+                                featureList: ['Feature 1', 'Feature 2'],
+                                prices: [
+                                    {
+                                        id: 'default',
+                                        cost: 100,
+                                        currency: 'usd',
+                                        interval: 'month',
+                                        intervalLength: 1,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 403 status code if the origin is invalid', async () => {
+                authenticatedHeaders['origin'] = 'https://wrong.origin.com';
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?userId=${userId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 403,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'invalid_origin',
+                        errorMessage:
+                            'The request must be made from an authorized origin.',
+                    }),
+                    headers: {},
+                });
+            });
+
+            it('should return a 403 status code if the session key is invalid', async () => {
+                authenticatedHeaders[
+                    'authorization'
+                ] = `Bearer ${formatV1SessionKey(
+                    'wrong user',
+                    'wrong session',
+                    'wrong secret',
+                    1000
+                )}`;
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?userId=${userId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 403,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'invalid_key',
+                        errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 401 status code if no session key is provided', async () => {
+                delete authenticatedHeaders['authorization'];
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?userId=${userId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 401,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage:
+                            'The user is not logged in. A session key must be provided for this operation.',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 400 status code if the session key is wrongly formatted', async () => {
+                authenticatedHeaders['authorization'] = `Bearer wrong`;
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?userId=${userId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 400,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'unacceptable_session_key',
+                        errorMessage:
+                            'The given session key is invalid. It must be a correctly formatted string.',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+        });
+
+        describe('?studioId', () => {
+            let studio: Studio;
+            let studioId: string;
+            beforeEach(async () => {
+                studioId = 'studioId';
+                studio = {
+                    id: studioId,
+                    displayName: 'my studio',
+                    stripeCustomerId: 'customerId',
+                };
+
+                await recordsStore.addStudio(studio);
+                await recordsStore.addStudioAssignment({
+                    studioId,
+                    userId,
+                    isPrimaryContact: true,
+                    role: 'admin',
+                });
+                studio = await recordsStore.getStudioById(studioId);
+            });
+
+            it('should return a list of subscriptions for the studio', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [
+                            {
+                                id: 'subscription_id',
+                                status: 'active',
+                                start_date: 123,
+                                ended_at: null,
+                                cancel_at: null,
+                                canceled_at: null,
+                                current_period_start: 456,
+                                current_period_end: 999,
+                                items: [
+                                    {
+                                        id: 'item_id',
+                                        price: {
+                                            id: 'price_id',
+                                            interval: 'month',
+                                            interval_count: 1,
+                                            currency: 'usd',
+                                            unit_amount: 123,
+
+                                            product: {
+                                                id: 'product_id',
+                                                name: 'Product Name',
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                );
+
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?studioId=${studioId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        publishableKey: 'publishable_key',
+                        subscriptions: [
+                            {
+                                active: true,
+                                statusCode: 'active',
+                                productName: 'Product Name',
+                                startDate: 123,
+                                endedDate: null,
+                                cancelDate: null,
+                                canceledDate: null,
+                                currentPeriodStart: 456,
+                                currentPeriodEnd: 999,
+                                renewalInterval: 'month',
+                                intervalLength: 1,
+                                intervalCost: 123,
+                                currency: 'usd',
+                                featureList: ['Feature 1', 'Feature 2'],
+                            },
+                        ],
+                        purchasableSubscriptions: [],
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a list of purchasable subscriptions for the studio', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [],
+                    }
+                );
+
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?studioId=${studioId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        publishableKey: 'publishable_key',
+                        subscriptions: [],
+                        purchasableSubscriptions: [
+                            {
+                                id: 'sub_id',
+                                name: 'Product Name',
+                                description: 'Product Description',
+                                featureList: ['Feature 1', 'Feature 2'],
+                                prices: [
+                                    {
+                                        id: 'default',
+                                        cost: 100,
+                                        currency: 'usd',
+                                        interval: 'month',
+                                        intervalLength: 1,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 403 status code if the origin is invalid', async () => {
+                authenticatedHeaders['origin'] = 'https://wrong.origin.com';
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?studioId=${studioId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 403,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'invalid_origin',
+                        errorMessage:
+                            'The request must be made from an authorized origin.',
+                    }),
+                    headers: {},
+                });
+            });
+
+            it('should return a 403 status code if the session key is invalid', async () => {
+                authenticatedHeaders[
+                    'authorization'
+                ] = `Bearer ${formatV1SessionKey(
+                    'wrong user',
+                    'wrong session',
+                    'wrong secret',
+                    1000
+                )}`;
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?studioId=${studioId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 403,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'invalid_key',
+                        errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 401 status code if no session key is provided', async () => {
+                delete authenticatedHeaders['authorization'];
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?studioId=${studioId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 401,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage:
+                            'The user is not logged in. A session key must be provided for this operation.',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 400 status code if the session key is wrongly formatted', async () => {
+                authenticatedHeaders['authorization'] = `Bearer wrong`;
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?studioId=${studioId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 400,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'unacceptable_session_key',
+                        errorMessage:
+                            'The given session key is invalid. It must be a correctly formatted string.',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+        });
+
+        testRateLimit('GET', `/api/v3/subscriptions`);
+    });
+
+    describe('POST /api/v2/subscriptions/manage', () => {
+        describe('userId', () => {
+            let user: AuthUser;
+            beforeEach(async () => {
+                user = await authStore.findUser(userId);
+                await authStore.saveUser({
+                    ...user,
+                    stripeCustomerId: 'customerId',
+                });
+                user = await authStore.findUser(userId);
+            });
+
+            it('should return the URL that the user should be redirected to', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [
+                            {
+                                id: 'subscription_id',
+                                status: 'active',
+                                start_date: 123,
+                                ended_at: null,
+                                cancel_at: null,
+                                canceled_at: null,
+                                current_period_start: 456,
+                                current_period_end: 999,
+                                items: [
+                                    {
+                                        id: 'item_id',
+                                        price: {
+                                            id: 'price_id',
+                                            interval: 'month',
+                                            interval_count: 1,
+                                            currency: 'usd',
+                                            unit_amount: 123,
+
+                                            product: {
+                                                id: 'product_id',
+                                                name: 'Product Name',
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                );
+
+                stripeMock.createPortalSession.mockResolvedValueOnce({
+                    url: 'http://portal_url',
+                });
+
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            userId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        success: true,
+                        url: 'http://portal_url',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should include the given Subscription ID and expected price info', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [],
+                    }
+                );
+                stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                    url: 'http://create_url',
+                });
+
+                stripeMock.createPortalSession.mockResolvedValueOnce({
+                    url: 'http://portal_url',
+                });
+
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            userId,
+                            subscriptionId: 'sub-1',
+                            expectedPrice: {
+                                currency: 'usd',
+                                cost: 100,
+                                interval: 'month',
+                                intervalLength: 1,
+                            },
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        success: true,
+                        url: 'http://create_url',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+                expect(stripeMock.getProductAndPriceInfo).toHaveBeenCalledWith(
+                    'product_id'
+                );
+            });
+
+            it('should return a price_does_not_match error if the expected price does not match', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [],
+                    }
+                );
+                stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                    url: 'http://create_url',
+                });
+
+                stripeMock.createPortalSession.mockResolvedValueOnce({
+                    url: 'http://portal_url',
+                });
+
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            userId,
+                            subscriptionId: 'sub-1',
+                            expectedPrice: {
+                                currency: 'usd',
+                                cost: 1000,
+                                interval: 'month',
+                                intervalLength: 1,
+                            },
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 412,
+                    body: {
+                        success: false,
+                        errorCode: 'price_does_not_match',
+                        errorMessage: expect.any(String),
+                    },
+                    headers: accountCorsHeaders,
+                });
+                expect(stripeMock.getProductAndPriceInfo).toHaveBeenCalledWith(
+                    'product_id'
+                );
+            });
+
+            it('should return a 400 status code if given an invalid encoded user ID', async () => {
+                const result = await server.handleRequest({
+                    method: 'POST',
+                    body: '',
+                    headers: authenticatedHeaders,
+                    pathParams: {
+                        userId: 'invali%d',
+                    },
+                    path: '/api/invali%d/subscription/manage',
+                    ipAddress: '123.456.789',
+                    query: {},
+                });
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 400,
+                    body: {
+                        success: false,
+                        errorCode: 'unacceptable_user_id',
+                        errorMessage: expect.any(String),
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 403 status code if the origin is invalid', async () => {
+                authenticatedHeaders['origin'] = 'https://wrong.origin.com';
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            userId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 403,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'invalid_origin',
+                        errorMessage:
+                            'The request must be made from an authorized origin.',
+                    }),
+                    headers: {},
+                });
+            });
+
+            it('should return a 403 status code if the session key is invalid', async () => {
+                authenticatedHeaders[
+                    'authorization'
+                ] = `Bearer ${formatV1SessionKey(
+                    'wrong user',
+                    'wrong session',
+                    'wrong secret',
+                    1000
+                )}`;
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            userId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 403,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'invalid_key',
+                        errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 401 status code if no session key is provided', async () => {
+                delete authenticatedHeaders['authorization'];
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            userId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 401,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage:
+                            'The user is not logged in. A session key must be provided for this operation.',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 400 status code if the session key is wrongly formatted', async () => {
+                authenticatedHeaders['authorization'] = `Bearer wrong`;
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            userId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 400,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'unacceptable_session_key',
+                        errorMessage:
+                            'The given session key is invalid. It must be a correctly formatted string.',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            testUrl('POST', '/api/v2/subscriptions/manage', () =>
+                JSON.stringify({
+                    userId,
+                })
+            );
+        });
+
+        describe('studioId', () => {
+            let studio: Studio;
+            let studioId: string;
+            beforeEach(async () => {
+                studioId = 'studioId';
+                studio = {
+                    id: studioId,
+                    displayName: 'my studio',
+                    stripeCustomerId: 'customerId',
+                };
+                await recordsStore.addStudio(studio);
+                await recordsStore.addStudioAssignment({
+                    userId,
+                    studioId,
+                    isPrimaryContact: true,
+                    role: 'admin',
+                });
+            });
+
+            it('should return the URL that the user should be redirected to', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [
+                            {
+                                id: 'subscription_id',
+                                status: 'active',
+                                start_date: 123,
+                                ended_at: null,
+                                cancel_at: null,
+                                canceled_at: null,
+                                current_period_start: 456,
+                                current_period_end: 999,
+                                items: [
+                                    {
+                                        id: 'item_id',
+                                        price: {
+                                            id: 'price_id',
+                                            interval: 'month',
+                                            interval_count: 1,
+                                            currency: 'usd',
+                                            unit_amount: 123,
+
+                                            product: {
+                                                id: 'product_id',
+                                                name: 'Product Name',
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                );
+
+                stripeMock.createPortalSession.mockResolvedValueOnce({
+                    url: 'http://portal_url',
+                });
+
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            studioId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        success: true,
+                        url: 'http://portal_url',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should include the given Subscription ID and expected price info', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [],
+                    }
+                );
+                stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                    url: 'http://create_url',
+                });
+
+                stripeMock.createPortalSession.mockResolvedValueOnce({
+                    url: 'http://portal_url',
+                });
+
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            studioId,
+                            subscriptionId: 'sub-1',
+                            expectedPrice: {
+                                currency: 'usd',
+                                cost: 100,
+                                interval: 'month',
+                                intervalLength: 1,
+                            },
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        success: true,
+                        url: 'http://create_url',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+                expect(stripeMock.getProductAndPriceInfo).toHaveBeenCalledWith(
+                    'product_id'
+                );
+            });
+
+            it('should return a price_does_not_match error if the expected price does not match', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [],
+                    }
+                );
+                stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                    url: 'http://create_url',
+                });
+
+                stripeMock.createPortalSession.mockResolvedValueOnce({
+                    url: 'http://portal_url',
+                });
+
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            studioId,
+                            subscriptionId: 'sub-1',
+                            expectedPrice: {
+                                currency: 'usd',
+                                cost: 1000,
+                                interval: 'month',
+                                intervalLength: 1,
+                            },
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 412,
+                    body: {
+                        success: false,
+                        errorCode: 'price_does_not_match',
+                        errorMessage: expect.any(String),
+                    },
+                    headers: accountCorsHeaders,
+                });
+                expect(stripeMock.getProductAndPriceInfo).toHaveBeenCalledWith(
+                    'product_id'
+                );
+            });
+
+            it('should return a 400 status code if given an invalid encoded user ID', async () => {
+                const result = await server.handleRequest({
+                    method: 'POST',
+                    body: '',
+                    headers: authenticatedHeaders,
+                    pathParams: {
+                        userId: 'invali%d',
+                    },
+                    path: '/api/invali%d/subscription/manage',
+                    ipAddress: '123.456.789',
+                    query: {},
+                });
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 400,
+                    body: {
+                        success: false,
+                        errorCode: 'unacceptable_user_id',
+                        errorMessage: expect.any(String),
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 403 status code if the origin is invalid', async () => {
+                authenticatedHeaders['origin'] = 'https://wrong.origin.com';
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            studioId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 403,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'invalid_origin',
+                        errorMessage:
+                            'The request must be made from an authorized origin.',
+                    }),
+                    headers: {},
+                });
+            });
+
+            it('should return a 403 status code if the session key is invalid', async () => {
+                authenticatedHeaders[
+                    'authorization'
+                ] = `Bearer ${formatV1SessionKey(
+                    'wrong user',
+                    'wrong session',
+                    'wrong secret',
+                    1000
+                )}`;
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            studioId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 403,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'invalid_key',
+                        errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 401 status code if no session key is provided', async () => {
+                delete authenticatedHeaders['authorization'];
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            studioId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 401,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage:
+                            'The user is not logged in. A session key must be provided for this operation.',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 400 status code if the session key is wrongly formatted', async () => {
+                authenticatedHeaders['authorization'] = `Bearer wrong`;
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            studioId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 400,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'unacceptable_session_key',
+                        errorMessage:
+                            'The given session key is invalid. It must be a correctly formatted string.',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            testUrl('POST', '/api/v2/subscriptions/manage', () =>
+                JSON.stringify({
+                    studioId,
+                })
+            );
+        });
     });
 
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {

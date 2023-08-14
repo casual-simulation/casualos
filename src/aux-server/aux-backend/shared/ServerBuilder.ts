@@ -23,12 +23,6 @@ import {
     StabilityAIImageInterface,
 } from '@casual-simulation/aux-records';
 import {
-    DynamoDBAuthStore,
-    DynamoDBDataStore,
-    DynamoDBEventStore,
-    DynamoDBFileStore,
-    DynamoDBPolicyStore,
-    DynamoDBRecordsStore,
     S3FileRecordsStore,
     SimpleEmailServiceAuthMessenger,
     SimpleEmailServiceAuthMessengerOptions,
@@ -68,6 +62,7 @@ import {
     MongoDBPolicyStore,
     MongoDBRecordsStore,
     MongoDBFileRecordsLookup,
+    MongoDBStudio,
 } from '../mongo';
 import { sortBy } from 'lodash';
 import { PrismaClient } from '@prisma/client';
@@ -154,72 +149,6 @@ export class ServerBuilder {
         this._options = options ?? {};
     }
 
-    useDynamoDB(
-        options: Pick<BuilderOptions, 'dynamodb' | 's3'> = this._options
-    ): this {
-        console.log('[ServerBuilder] Using DynamoDB.');
-
-        if (!options.dynamodb) {
-            throw new Error('DynamoDB options must be provided.');
-        }
-        if (!options.s3) {
-            throw new Error('S3 options must be provided.');
-        }
-
-        const dynamodb = options.dynamodb;
-        const s3 = options.s3;
-
-        this._docClient = new DocumentClient({
-            endpoint: dynamodb.endpoint,
-        });
-        this._authStore = new DynamoDBAuthStore(
-            this._docClient,
-            dynamodb.usersTable,
-            dynamodb.userAddressesTable,
-            dynamodb.loginRequestsTable,
-            dynamodb.sessionsTable,
-            'ExpireTimeIndex',
-            dynamodb.emailTable,
-            dynamodb.smsTable,
-            dynamodb.stripeCustomerIdsIndexName
-        );
-        this._recordsStore = new DynamoDBRecordsStore(
-            this._docClient,
-            dynamodb.publicRecordsTable,
-            dynamodb.publicRecordsKeysTable
-        );
-        this._policyStore = new DynamoDBPolicyStore(
-            this._docClient,
-            dynamodb.policiesTable,
-            dynamodb.subjectRolesTable,
-            dynamodb.roleSubjectsTable,
-            dynamodb.rolesTable
-        );
-        this._dataStore = new DynamoDBDataStore(
-            this._docClient,
-            dynamodb.dataTable
-        );
-        this._manualDataStore = new DynamoDBDataStore(
-            this._docClient,
-            dynamodb.manualDataTable
-        );
-        this._filesStore = new DynamoDBFileStore(
-            s3.region,
-            s3.filesBucket,
-            this._docClient,
-            dynamodb.filesTable,
-            s3.filesStorageClass,
-            undefined,
-            s3.host,
-            s3.options
-        );
-        this._eventsStore = new DynamoDBEventStore(
-            this._docClient,
-            dynamodb.eventsTable
-        );
-        return this;
-    }
-
     useMongoDB(options: Pick<BuilderOptions, 'mongodb'> = this._options): this {
         console.log('[ServerBuilder] Using MongoDB.');
 
@@ -243,6 +172,7 @@ export class ServerBuilder {
                 const loginRequests =
                     db.collection<MongoDBLoginRequest>('loginRequests');
                 const sessions = db.collection<MongoDBAuthSession>('sessions');
+                const studios = db.collection<MongoDBStudio>('sessions');
                 const recordsCollection = db.collection<Record>('records');
                 const recordsKeysCollection =
                     db.collection<RecordKey>('recordsKeys');
@@ -270,7 +200,9 @@ export class ServerBuilder {
 
                 this._recordsStore = new MongoDBRecordsStore(
                     recordsCollection,
-                    recordsKeysCollection
+                    recordsKeysCollection,
+                    studios,
+                    this._authStore
                 );
                 this._policyStore = new MongoDBPolicyStore(policies, roles);
                 this._dataStore = new MongoDBDataRecordsStore(
@@ -757,6 +689,7 @@ export class ServerBuilder {
                 this._stripe,
                 this._authController,
                 this._authStore,
+                this._recordsStore,
                 this._subscriptionConfig
             );
         }
@@ -911,6 +844,8 @@ const subscriptionConfigSchema = z.object({
             defaultSubscription: z.boolean().optional(),
             purchasable: z.boolean().optional(),
             tier: z.string().nonempty().optional(),
+            userOnly: z.boolean().optional(),
+            studioOnly: z.boolean().optional(),
         })
     ),
 });

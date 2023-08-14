@@ -83,6 +83,7 @@ import 'virtual:svg-icons-register';
 import AuthRecordsEvents from './AuthRecordsEvents/AuthRecordsEvents';
 import AuthRecordsPolicies from './AuthRecordsPolicies/AuthRecordsPolicies';
 import AuthRecordsRoles from './AuthRecordsRoles/AuthRecordsRoles';
+import AuthStudio from './AuthStudio/AuthStudio';
 import './global.css';
 
 Vue.use(VueRouter);
@@ -202,6 +203,15 @@ const routes: RouteConfig[] = [
                 component: AuthRecordsRoles,
             },
         ],
+    },
+    {
+        path: '/studios/:studioId/:studioName',
+        name: 'studio',
+        props: (route) => ({
+            studioId: route.params.studioId,
+            studioName: route.params.studioName,
+        }),
+        component: AuthStudio,
     },
 ];
 

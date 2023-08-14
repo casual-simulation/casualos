@@ -43,7 +43,104 @@ export interface RecordsStore {
      *
      * @param ownerId The ID of the user that owns the records.
      */
-    listRecordsByOwnerId?(ownerId: string): Promise<ListedRecord[]>;
+    listRecordsByOwnerId(ownerId: string): Promise<ListedRecord[]>;
+
+    /**
+     * Gets the list of records that the studio with the given ID owns.
+     *
+     * If null or undefined, then this store does not support this method.
+     *
+     * @param studioId The ID of the studio that owns the records.
+     */
+    listRecordsByStudioId(studioId: string): Promise<ListedRecord[]>;
+
+    /**
+     * Gets the list of records that the studio with the given ID owns and that the user with the given ID has access to.
+     * @param studioId The ID of the studio.
+     * @param userId The ID of the user.
+     */
+    listRecordsByStudioIdAndUserId(
+        studioId: string,
+        userId: string
+    ): Promise<ListedRecord[]>;
+
+    /**
+     * Adds the given studio to the store.
+     * @param studio The studio to add.
+     */
+    addStudio(studio: Studio): Promise<void>;
+
+    /**
+     * Creates a new studio and adds the given user as an admin.
+     * @param studio The studio to create.
+     * @param adminId The ID of the admin user.
+     */
+    createStudioForUser(
+        studio: Studio,
+        adminId: string
+    ): Promise<{
+        studio: Studio;
+        assignment: StudioAssignment;
+    }>;
+
+    /**
+     * Updates the given studio.
+     * @param studio The studio record that should be updated.
+     */
+    updateStudio(studio: Studio): Promise<void>;
+
+    /**
+     * Gets the studio with the given ID.
+     * @param id The ID of the studio.
+     */
+    getStudioById(id: string): Promise<Studio>;
+
+    /**
+     * Gets the studio that has the given stripe customer ID.
+     * @param customerId The stripe customer ID for the studio.
+     */
+    getStudioByStripeCustomerId(customerId: string): Promise<Studio>;
+
+    /**
+     * Gets the list of studios that the user with the given ID has access to.
+     * @param userId The ID of the user.
+     */
+    listStudiosForUser(userId: string): Promise<ListedStudio[]>;
+
+    /**
+     * Adds the given studio assignment to the store.
+     * @param assignment The assignment to add.
+     */
+    addStudioAssignment(assignment: StudioAssignment): Promise<void>;
+
+    /**
+     * Updates the given studio assignment.
+     * @param assignment The assignment that should be updated.
+     */
+    updateStudioAssignment(assignment: StudioAssignment): Promise<void>;
+
+    /**
+     * Removes the given user from the given studio.
+     * @param studioId The ID of the studio.
+     * @param userId The ID of the user.
+     */
+    removeStudioAssignment(studioId: string, userId: string): Promise<void>;
+
+    /**
+     * Gets the list of users that have been assigned to the given studio.
+     * @param studioId The ID of the studio.
+     * @param filters The additional filters that should be used.
+     */
+    listStudioAssignments(
+        studioId: string,
+        filters?: ListStudioAssignmentFilters
+    ): Promise<ListedStudioAssignment[]>;
+
+    /**
+     * Gets the list of studio assignments that the user with the given ID has access to.
+     * @param userId The ID of the user.
+     */
+    listUserAssignments(userId: string): Promise<ListedUserAssignment[]>;
 }
 
 /**
@@ -56,9 +153,16 @@ export interface Record {
     name: string;
 
     /**
-     * The ID of the user that created the record.
+     * The ID of the user that owns the record.
+     * Null if the record is owned by a studio.
      */
-    ownerId: string;
+    ownerId: string | null;
+
+    /**
+     * The ID of the studio that owns the record.
+     * Null if the record is owned by a user.
+     */
+    studioId: string | null;
 
     /**
      * The scrypt hashes of the secrets that allow access to the record.
@@ -81,9 +185,191 @@ export interface ListedRecord {
     name: string;
 
     /**
-     * The ID of the user that created the record.
+     * The ID of the user that owns the record.
+     * Null if owned by a studio.
      */
-    ownerId: string;
+    ownerId: string | null;
+
+    /**
+     * The ID of the studio that owns the record.
+     * Null if owned by a user.
+     */
+    studioId: string | null;
+}
+
+/**
+ * Defines an interface for studio objects.
+ */
+export interface Studio {
+    /**
+     * The ID of the studio.
+     */
+    id: string;
+
+    /**
+     * The name of the studio.
+     */
+    displayName: string;
+
+    /**
+     * The ID of the stripe customer for this studio.
+     */
+    stripeCustomerId?: string;
+
+    /**
+     * The current subscription status for this studio.
+     */
+    subscriptionStatus?: string;
+
+    /**
+     * The ID of the stripe subscription that this studio currently has.
+     */
+    subscriptionId?: string;
+}
+
+export type StudioAssignmentRole = 'admin' | 'member';
+
+/**
+ * Defines an interface for studio assignment objects.
+ */
+export interface StudioAssignment {
+    /**
+     * The ID of the studio that this assignment applies to.
+     */
+    studioId: string;
+
+    /**
+     * The ID of the user that this assignment applies to.
+     */
+    userId: string;
+
+    /**
+     * Whether the user is the primary contact for this studio.
+     */
+    isPrimaryContact: boolean;
+
+    /**
+     * The role that this user has in the studio.
+     */
+    role: StudioAssignmentRole;
+}
+
+export interface ListedStudioAssignment {
+    /**
+     * The ID of the studio that this assignment applies to.
+     */
+    studioId: string;
+
+    /**
+     * The ID of the user that this assignment applies to.
+     */
+    userId: string;
+
+    /**
+     * Whether the user is the primary contact for this studio.
+     */
+    isPrimaryContact: boolean;
+
+    /**
+     * The role that this user has in the studio.
+     */
+    role: StudioAssignmentRole;
+
+    /**
+     * The user that this assignment applies to.
+     */
+    user: ListedStudioAssignmentUser;
+}
+
+export interface ListedUserAssignment {
+    /**
+     * The name of the studio that this assignment applies to.
+     */
+    displayName: string;
+
+    /**
+     * The ID of the studio that this assignment applies to.
+     */
+    studioId: string;
+
+    /**
+     * The ID of the user that this assignment applies to.
+     */
+    userId: string;
+
+    /**
+     * Whether the user is the primary contact for this studio.
+     */
+    isPrimaryContact: boolean;
+
+    /**
+     * The role that this user has in the studio.
+     */
+    role: StudioAssignmentRole;
+}
+
+/**
+ * The user information for a listed studio assignment.
+ */
+export interface ListedStudioAssignmentUser {
+    /**
+     * The ID of the user.
+     */
+    id: string;
+
+    /**
+     * The name of the user.
+     */
+    name: string;
+
+    /**
+     * The email address of the user.
+     */
+    email: string;
+
+    /**
+     * The phone number of the user.
+     */
+    phoneNumber: string;
+}
+
+export interface ListedStudio {
+    /**
+     * The ID of the studio.
+     */
+    studioId: string;
+
+    /**
+     * The name of the studio.
+     */
+    displayName: string;
+
+    /**
+     * The role that the user has in the studio.
+     */
+    role: StudioAssignmentRole;
+
+    /**
+     * Whether the user is the primary contact for this studio.
+     */
+    isPrimaryContact: boolean;
+}
+
+export interface ListStudioAssignmentFilters {
+    /**
+     * The ID of the user to filter by.
+     */
+    userId?: string;
+
+    /**
+     * The role to filter by.
+     */
+    role?: string;
+
+    /**
+     * Whether to filter by primary contact.
+     */
+    isPrimaryContact?: boolean;
 }
 
 /**
