@@ -317,6 +317,21 @@ Resources:
                     Properties:
                         Path: /api/v2/studios/members/list
                         Method: GET
+                AddStudioMember:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/studios/members
+                        Method: POST
+                DeleteStudioMember:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/studios/members
+                        Method: DELETE
+                CreateRecord:
+                    Type: Api
+                    Properties:
+                        Path: /api/v2/records
+                        Method: POST
                 StripeWebhook:
                     Type: Api
                     Properties:
