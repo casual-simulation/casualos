@@ -28,6 +28,8 @@ model User {
     subscriptionStatus String?
     stripeCustomerId String? @unique
     subscriptionId String?
+    subscriptionPeriodStart DateTime?
+    subscriptionPeriodEnd DateTime?
 
     loginRequests LoginRequest[]
     sessions AuthSession[]
@@ -120,6 +122,8 @@ model Studio {
     subscriptionStatus String?
     stripeCustomerId String? @unique
     subscriptionId String?
+    subscriptionPeriodStart DateTime?
+    subscriptionPeriodEnd DateTime?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
