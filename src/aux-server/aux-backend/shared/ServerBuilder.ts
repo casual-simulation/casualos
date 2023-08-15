@@ -207,6 +207,8 @@ export class ServerBuilder {
 
                 this._metricsStore = new MongoDBMetricsStore(
                     recordsDataCollection,
+                    recordsFilesCollection,
+                    recordsEventsCollection,
                     studios,
                     recordsCollection,
                     users
