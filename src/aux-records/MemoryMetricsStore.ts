@@ -82,7 +82,6 @@ export class MemoryMetricsStore implements MetricsStore {
         return {
             ...info,
             totalFiles,
-            totalFileBytesStored: totalBytesStored,
             totalFileBytesReserved: totalBytesReserved,
         };
     }
