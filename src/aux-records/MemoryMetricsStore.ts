@@ -91,18 +91,18 @@ export class MemoryMetricsStore implements MetricsStore {
         const info = await this._getSubscriptionInfo(recordName);
         const records = await this._listRecordsForSubscription(recordName);
 
-        let totalEvents = 0;
+        let totalEventNames = 0;
         for (let record of records) {
             let bucket = this._eventStore.buckets.get(record.name);
             if (!bucket) {
                 continue;
             }
-            totalEvents += bucket.size;
+            totalEventNames += bucket.size;
         }
 
         return {
             ...info,
-            totalEvents,
+            totalEventNames,
         };
     }
 

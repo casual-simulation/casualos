@@ -7,6 +7,7 @@ import {
     EventRecordsController,
     GetCountFailure,
     GetCountSuccess,
+    UpdateEventRecordFailure,
     UpdateEventRecordSuccess,
 } from './EventRecordsController';
 import { MemoryEventRecordsStore } from './MemoryEventRecordsStore';
@@ -34,6 +35,7 @@ import {
     allowAllFeatures,
 } from './SubscriptionConfiguration';
 import { MemoryAuthStore } from './MemoryAuthStore';
+import { MemoryMetricsStore } from './MemoryMetricsStore';
 
 console.log = jest.fn();
 
@@ -46,7 +48,9 @@ describe('EventRecordsController', () => {
     let manager: EventRecordsController;
     let configStore: MemoryConfigurationStore;
     let authStore: MemoryAuthStore;
+    let metrics: MemoryMetricsStore;
     const userId = 'testUser';
+    let ownerId: string;
     let key: string;
     let recordName: string;
 
@@ -60,9 +64,22 @@ describe('EventRecordsController', () => {
         authStore = controllers.authStore;
 
         store = new MemoryEventRecordsStore();
-        manager = new EventRecordsController(policies, store);
+        metrics = new MemoryMetricsStore(
+            null,
+            null,
+            store as MemoryEventRecordsStore,
+            recordsStore as MemoryRecordsStore,
+            authStore
+        );
+        manager = new EventRecordsController({
+            policies,
+            store,
+            metrics,
+            config: configStore,
+        });
 
         const owner = await createTestUser(controllers, 'owner@example.com');
+        ownerId = owner.userId;
 
         const recordKeyResult = await createTestRecordKey(
             controllers,
@@ -263,9 +280,13 @@ describe('EventRecordsController', () => {
                 } as Partial<SubscriptionConfiguration>
             );
 
-            const user = await authStore.findUser(userId);
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const owner = await authStore.findUser(ownerId);
             await authStore.saveUser({
-                ...user,
+                ...owner,
                 subscriptionId: 'sub1',
                 subscriptionStatus: 'active',
             });
@@ -280,7 +301,8 @@ describe('EventRecordsController', () => {
             expect(result).toEqual({
                 success: false,
                 errorCode: 'not_authorized',
-                errorMessage: 'Events are not allowed for this subscription.',
+                errorMessage:
+                    'The subscription does not permit the recording of events.',
             });
 
             await expect(
@@ -649,6 +671,66 @@ describe('EventRecordsController', () => {
 
             await expect(
                 store.getEventCount(recordName, 'address')
+            ).resolves.toEqual({
+                success: true,
+                count: 10,
+            });
+        });
+
+        it('should deny the request if event records are not allowed', async () => {
+            configStore.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                events: {
+                                    allowed: false,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            policyStore.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const owner = await authStore.findUser(ownerId);
+            await authStore.saveUser({
+                ...owner,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await store.addEventCount('testRecord', 'address', 10);
+
+            const result = (await manager.updateEvent({
+                recordKeyOrRecordName: recordName,
+                eventName: 'address',
+                userId,
+                count: 0,
+            })) as UpdateEventRecordFailure;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'The subscription does not permit the recording of events.',
+            });
+
+            await expect(
+                store.getEventCount('testRecord', 'address')
             ).resolves.toEqual({
                 success: true,
                 count: 10,

@@ -70,7 +70,7 @@ export interface FileSubscriptionMetrics extends SubscriptionMetrics {
 
 export interface EventSubscriptionMetrics extends SubscriptionMetrics {
     /**
-     * The total number of events stored in the subscription.
+     * The total number of events names stored in the subscription.
      */
-    totalEvents: number;
+    totalEventNames: number;
 }
