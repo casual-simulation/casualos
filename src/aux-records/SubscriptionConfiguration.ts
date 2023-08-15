@@ -78,6 +78,11 @@ export const subscriptionConfigSchema = z.object({
         })
         .optional(),
 });
+type ZodConfigSchema = z.infer<typeof subscriptionConfigSchema>;
+type ZodConfigSchemaAssertion = HasType<
+    ZodConfigSchema,
+    SubscriptionConfiguration
+>;
 
 export function parseSubscriptionConfig(
     config: any,
@@ -429,3 +434,5 @@ export function getSubscriptionFeatures(
 
     return config.defaultFeatures?.[type] ?? allowAllFeatures();
 }
+
+type HasType<T, Q extends T> = Q;
