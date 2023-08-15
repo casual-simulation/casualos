@@ -71,7 +71,12 @@ export const subscriptionConfigSchema = z.object({
         )
         .optional(),
 
-    defaultFeatures: subscriptionFeaturesSchema.optional(),
+    defaultFeatures: z
+        .object({
+            user: subscriptionFeaturesSchema.optional(),
+            studio: subscriptionFeaturesSchema.optional(),
+        })
+        .optional(),
 });
 
 export function parseSubscriptionConfig(
@@ -422,5 +427,5 @@ export function getSubscriptionFeatures(
         }
     }
 
-    return config.defaultFeatures[type];
+    return config.defaultFeatures?.[type] ?? allowAllFeatures();
 }

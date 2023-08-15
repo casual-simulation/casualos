@@ -25,7 +25,7 @@ export class MongoDBMetricsStore implements MetricsStore {
     constructor(
         dataRecords: Collection<DataRecord>,
         fileRecords: Collection<MongoFileRecord>,
-        eventRecords: CollectioN<EventRecord>,
+        eventRecords: Collection<EventRecord>,
         studios: Collection<MongoDBStudio>,
         records: Collection<Record>,
         users: Collection<MongoDBAuthUser>

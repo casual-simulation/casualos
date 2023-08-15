@@ -301,7 +301,10 @@ export class ServerBuilder {
     }
 
     usePrismaWithMongoDBFileStore(
-        options: Pick<BuilderOptions, 'prisma' | 'mongodb'> = this._options
+        options: Pick<
+            BuilderOptions,
+            'prisma' | 'mongodb' | 'subscriptions'
+        > = this._options
     ): this {
         console.log('[ServerBuilder] Using Prisma with MongoDB File Store.');
         if (!options.prisma) {
@@ -327,6 +330,14 @@ export class ServerBuilder {
                 const db = mongo.db(mongodb.database);
                 this._mongoDb = db;
 
+                this._metricsStore = new PrismaMetricsStore(this._prismaClient);
+                this._configStore = new PrismaConfigurationStore(
+                    this._prismaClient,
+                    {
+                        subscriptions:
+                            options.subscriptions as SubscriptionConfiguration,
+                    }
+                );
                 this._authStore = new PrismaAuthStore(this._prismaClient);
                 this._recordsStore = new PrismaRecordsStore(this._prismaClient);
                 this._policyStore = new PrismaPolicyStore(this._prismaClient);
@@ -671,6 +682,12 @@ export class ServerBuilder {
         }
         if (!this._eventsStore) {
             throw new Error('An events store must be configured!');
+        }
+        if (!this._metricsStore) {
+            throw new Error('A metrics store must be configured!');
+        }
+        if (!this._configStore) {
+            throw new Error('A config store must be configured!');
         }
 
         if (!this._rateLimitController) {
