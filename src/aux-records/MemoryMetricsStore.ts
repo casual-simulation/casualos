@@ -5,6 +5,8 @@ import {
     SubscriptionMetrics,
     FileSubscriptionMetrics,
     EventSubscriptionMetrics,
+    RecordSubscriptionMetrics,
+    SubscriptionFilter,
 } from './MetricsStore';
 import { MemoryFileRecordsStore } from './MemoryFileRecordsStore';
 import { MemoryEventRecordsStore } from './MemoryEventRecordsStore';
@@ -106,31 +108,54 @@ export class MemoryMetricsStore implements MetricsStore {
         };
     }
 
+    async getSubscriptionRecordMetrics(
+        filter: SubscriptionFilter
+    ): Promise<RecordSubscriptionMetrics> {
+        const metrics = await this._getSubscriptionMetrics(filter);
+        const totalRecords = await this._recordsStore.countRecords(filter);
+
+        return {
+            ...metrics,
+            totalRecords,
+        };
+    }
+
     private async _getSubscriptionInfo(
         recordName: string
     ): Promise<SubscriptionMetrics> {
         const record = await this._recordsStore.getRecordByName(recordName);
 
+        const metrics = await this._getSubscriptionMetrics(record);
+        return {
+            ...metrics,
+            recordName: record.name,
+        };
+    }
+
+    private async _getSubscriptionMetrics(filter: SubscriptionFilter) {
         let metrics: SubscriptionMetrics = {
-            recordName,
-            ownerId: record.ownerId,
-            studioId: record.studioId,
+            ownerId: filter.ownerId,
+            studioId: filter.studioId,
             subscriptionId: null,
             subscriptionStatus: null,
         };
 
-        if (record.ownerId) {
-            const user = await this._authStore.findUser(record.ownerId);
+        if (filter.ownerId) {
+            const user = await this._authStore.findUser(filter.ownerId);
 
-            metrics.subscriptionStatus = user.subscriptionStatus;
-            metrics.subscriptionId = user.subscriptionId;
-        } else if (record.studioId) {
+            if (user) {
+                metrics.subscriptionStatus = user.subscriptionStatus;
+                metrics.subscriptionId = user.subscriptionId;
+            }
+        } else if (filter.studioId) {
             const studio = await this._recordsStore.getStudioById(
-                record.studioId
+                filter.studioId
             );
 
-            metrics.subscriptionId = studio.subscriptionId;
-            metrics.subscriptionStatus = studio.subscriptionStatus;
+            if (studio) {
+                metrics.subscriptionId = studio.subscriptionId;
+                metrics.subscriptionStatus = studio.subscriptionStatus;
+            }
         }
 
         return metrics;

@@ -11,6 +11,7 @@ import {
     ListedUserAssignment,
     ListedStudio,
     ListStudioAssignmentFilters,
+    CountRecordsFilter,
 } from '@casual-simulation/aux-records';
 import { Collection, FilterQuery } from 'mongodb';
 
@@ -369,6 +370,20 @@ export class MongoDBRecordsStore implements RecordsStore {
         }
 
         return assignments;
+    }
+
+    async countRecords(filter: CountRecordsFilter): Promise<number> {
+        let query: FilterQuery<Record> = {};
+
+        if (hasValue(filter.studioId)) {
+            query.studioId = filter.studioId;
+        }
+
+        if (hasValue(filter.ownerId)) {
+            query.ownerId = filter.ownerId;
+        }
+
+        return await this._collection.count(query);
     }
 }
 

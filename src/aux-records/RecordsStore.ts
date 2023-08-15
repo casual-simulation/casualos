@@ -141,6 +141,24 @@ export interface RecordsStore {
      * @param userId The ID of the user.
      */
     listUserAssignments(userId: string): Promise<ListedUserAssignment[]>;
+
+    /**
+     * Counts the number of records that match the given filter.
+     * @param filter The filter.
+     */
+    countRecords(filter: CountRecordsFilter): Promise<number>;
+}
+
+export interface CountRecordsFilter {
+    /**
+     * The ID of user that owns the record.
+     */
+    ownerId?: string;
+
+    /**
+     * The ID of the studio that owns the record.
+     */
+    studioId?: string;
 }
 
 /**

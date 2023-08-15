@@ -4,6 +4,8 @@ import {
     FileSubscriptionMetrics,
     MetricsStore,
     Record,
+    RecordSubscriptionMetrics,
+    SubscriptionFilter,
 } from '@casual-simulation/aux-records';
 import { Collection, FilterQuery } from 'mongodb';
 import { DataRecord } from './MongoDBDataRecordsStore';
@@ -85,6 +87,12 @@ export class MongoDBMetricsStore implements MetricsStore {
     getSubscriptionEventMetricsByRecordName(
         recordName: string
     ): Promise<EventSubscriptionMetrics> {
+        throw new Error('Method not implemented.');
+    }
+
+    getSubscriptionRecordMetrics(
+        filter: SubscriptionFilter
+    ): Promise<RecordSubscriptionMetrics> {
         throw new Error('Method not implemented.');
     }
 }

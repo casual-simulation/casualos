@@ -11,6 +11,7 @@ import {
     allowAllFeatures,
 } from './SubscriptionConfiguration';
 import { MemoryConfigurationStore } from './MemoryConfigurationStore';
+import { MemoryMetricsStore } from './MemoryMetricsStore';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
@@ -45,7 +46,19 @@ export function createTestControllers(config?: SubscriptionConfiguration) {
         true
     );
     const recordsStore = new MemoryRecordsStore(authStore);
-    const records = new RecordsController(recordsStore, authStore);
+    const metricsStore = new MemoryMetricsStore(
+        null,
+        null,
+        null,
+        recordsStore,
+        authStore
+    );
+    const records = new RecordsController({
+        store: recordsStore,
+        auth: authStore,
+        config: configStore,
+        metrics: metricsStore,
+    });
     const policyStore = new MemoryPolicyStore();
     const policies = new PolicyController(auth, records, policyStore);
 

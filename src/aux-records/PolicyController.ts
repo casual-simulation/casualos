@@ -5,7 +5,11 @@ import {
     ValidatePublicRecordKeyFailure,
     ValidatePublicRecordKeyResult,
 } from './RecordsController';
-import { NotSupportedError, ServerError } from './Errors';
+import {
+    NotSupportedError,
+    ServerError,
+    SubscriptionLimitReached,
+} from './Errors';
 import {
     ADMIN_ROLE_NAME,
     AssignPolicyPermission,
@@ -4319,7 +4323,11 @@ export interface ConstructAuthorizationContextSuccess {
 
 export interface ConstructAuthorizationContextFailure {
     success: false;
-    errorCode: ValidatePublicRecordKeyFailure['errorCode'];
+    errorCode:
+        | ValidatePublicRecordKeyFailure['errorCode']
+        | 'not_authorized'
+        | SubscriptionLimitReached
+        | ServerError;
     errorMessage: string;
 }
 
@@ -4892,6 +4900,7 @@ export interface AuthorizeDenied {
         | 'action_not_supported'
         | 'not_logged_in'
         | 'not_authorized'
+        | SubscriptionLimitReached
         | 'unacceptable_request';
     errorMessage: string;
 

@@ -5,8 +5,10 @@ import {
     FileSubscriptionMetrics,
     MemoryConfiguration,
     MetricsStore,
+    RecordSubscriptionMetrics,
     SUBSCRIPTIONS_CONFIG_KEY,
     SubscriptionConfiguration,
+    SubscriptionFilter,
     parseSubscriptionConfig,
 } from '@casual-simulation/aux-records';
 import { PrismaClient, Prisma } from '@prisma/client';
@@ -79,6 +81,12 @@ export class PrismaMetricsStore implements MetricsStore {
     getSubscriptionEventMetricsByRecordName(
         recordName: string
     ): Promise<EventSubscriptionMetrics> {
+        throw new Error('Method not implemented.');
+    }
+
+    getSubscriptionRecordMetrics(
+        filter: SubscriptionFilter
+    ): Promise<RecordSubscriptionMetrics> {
         throw new Error('Method not implemented.');
     }
 }

@@ -12,6 +12,7 @@ import {
     ListedStudio,
     ListStudioAssignmentFilters,
     StudioAssignmentRole,
+    CountRecordsFilter,
 } from '@casual-simulation/aux-records';
 import { PrismaClient, Prisma } from '@prisma/client';
 
@@ -387,6 +388,19 @@ export class PrismaRecordsStore implements RecordsStore {
             };
 
             return assignment;
+        });
+    }
+
+    async countRecords(filter: CountRecordsFilter): Promise<number> {
+        let where: Prisma.RecordWhereInput = {};
+        if ('ownerId' in filter) {
+            where.ownerId = filter.ownerId;
+        }
+        if ('studioId' in filter) {
+            where.studioId = filter.studioId;
+        }
+        return await this._client.record.count({
+            where,
         });
     }
 }

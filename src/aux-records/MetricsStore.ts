@@ -25,6 +25,14 @@ export interface MetricsStore {
     getSubscriptionEventMetricsByRecordName(
         recordName: string
     ): Promise<EventSubscriptionMetrics>;
+
+    /**
+     * Gets the record metrics for the given user/studio.
+     * @param filter The filter.
+     */
+    getSubscriptionRecordMetrics(
+        filter: SubscriptionFilter
+    ): Promise<RecordSubscriptionMetrics>;
 }
 
 export interface SubscriptionMetrics {
@@ -73,4 +81,23 @@ export interface EventSubscriptionMetrics extends SubscriptionMetrics {
      * The total number of events names stored in the subscription.
      */
     totalEventNames: number;
+}
+
+export interface RecordSubscriptionMetrics extends SubscriptionMetrics {
+    /**
+     * The total number of records stored in the subscription.
+     */
+    totalRecords: number;
+}
+
+export interface SubscriptionFilter {
+    /**
+     * The ID of the user that owns the subscription.
+     */
+    ownerId?: string;
+
+    /**
+     * The ID of the studio that owns the subscription.
+     */
+    studioId?: string;
 }

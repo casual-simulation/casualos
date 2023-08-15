@@ -1,5 +1,6 @@
 import { sortBy } from 'lodash';
 import {
+    CountRecordsFilter,
     ListStudioAssignmentFilters,
     ListedRecord,
     ListedStudio,
@@ -282,5 +283,20 @@ export class MemoryRecordsStore implements RecordsStore {
                 role: s.role,
             };
         });
+    }
+
+    async countRecords(filter: CountRecordsFilter): Promise<number> {
+        let count = 0;
+        for (let record of this._records) {
+            if (filter.studioId && record.studioId === filter.studioId) {
+                count++;
+            } else if (filter.ownerId && record.ownerId === filter.ownerId) {
+                count++;
+            } else {
+                count++;
+            }
+        }
+
+        return count;
     }
 }

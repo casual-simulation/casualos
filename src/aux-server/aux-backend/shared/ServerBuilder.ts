@@ -691,10 +691,12 @@ export class ServerBuilder {
             this._configStore,
             this._forceAllowAllSubscriptionFeatures
         );
-        this._recordsController = new RecordsController(
-            this._recordsStore,
-            this._authStore
-        );
+        this._recordsController = new RecordsController({
+            store: this._recordsStore,
+            auth: this._authStore,
+            config: this._configStore,
+            metrics: this._metricsStore,
+        });
         this._policyController = new PolicyController(
             this._authController,
             this._recordsController,
@@ -712,14 +714,18 @@ export class ServerBuilder {
             policies: this._policyController,
             metrics: this._metricsStore,
         });
-        this._filesController = new FileRecordsController(
-            this._policyController,
-            this._filesStore
-        );
-        this._eventsController = new EventRecordsController(
-            this._policyController,
-            this._eventsStore
-        );
+        this._filesController = new FileRecordsController({
+            store: this._filesStore,
+            config: this._configStore,
+            policies: this._policyController,
+            metrics: this._metricsStore,
+        });
+        this._eventsController = new EventRecordsController({
+            store: this._eventsStore,
+            config: this._configStore,
+            policies: this._policyController,
+            metrics: this._metricsStore,
+        });
 
         if (this._stripe && this._subscriptionConfig) {
             this._subscriptionController = new SubscriptionController(
