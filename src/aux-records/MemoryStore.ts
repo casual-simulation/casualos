@@ -92,7 +92,7 @@ import {
     SubscriptionMetrics,
 } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
-import { SubscriptionConfiguration } from 'SubscriptionConfiguration';
+import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
