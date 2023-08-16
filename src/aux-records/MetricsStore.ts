@@ -33,6 +33,14 @@ export interface MetricsStore {
     getSubscriptionRecordMetrics(
         filter: SubscriptionFilter
     ): Promise<RecordSubscriptionMetrics>;
+
+    /**
+     * Gets the AI Chat metrics for the given user/studio.
+     * @param filter The filter.
+     */
+    getSubscriptionAiChatMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AiChatSubscriptionMetrics>;
 }
 
 export interface SubscriptionMetrics {
@@ -50,6 +58,16 @@ export interface SubscriptionMetrics {
      * The ID of the subscription.
      */
     subscriptionId: string;
+
+    /**
+     * The unix time in miliseconds of the start of the current subscription period.
+     */
+    currentPeriodStartMs: number | null;
+
+    /**
+     * The unix time in miliseconds of the end of the current subscription period.
+     */
+    currentPeriodEndMs: number | null;
 }
 
 export interface DataSubscriptionMetrics extends SubscriptionMetrics {
@@ -95,4 +113,25 @@ export interface SubscriptionFilter {
      * The ID of the studio that owns the subscription.
      */
     studioId?: string;
+}
+
+export interface AiChatSubscriptionMetrics extends SubscriptionMetrics {
+    /**
+     * The total number of tokens that have been used for the current period.
+     */
+    totalTokensInCurrentPeriod: number;
+}
+
+export interface AIImageSubscriptionMetrics extends SubscriptionMetrics {
+    /**
+     * The total number of pixels that have been generated for the current period.
+     */
+    totalPixelsInCurrentPeriod: number;
+}
+
+export interface AISkyboxSubscriptionMetrics extends SubscriptionMetrics {
+    /**
+     * The total number of skyboxes that have been generated for the current period.
+     */
+    totalSkyboxesInCurrentPeriod: number;
 }

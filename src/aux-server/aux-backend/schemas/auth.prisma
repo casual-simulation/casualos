@@ -25,6 +25,9 @@ model User {
     banTime DateTime?
     banReason String?
 
+    subscriptionInfoId BigInt? @unique
+    subscriptionInfo Subscription? @relation(fields: [subscriptionInfoId], references: [id])
+
     subscriptionStatus String?
     stripeCustomerId String? @unique
     subscriptionId String?
@@ -118,6 +121,9 @@ model Studio {
 
     records Record[]
     assignments StudioAssignment[]
+
+    subscriptionInfoId BigInt? @unique
+    subscriptionInfo Subscription? @relation(fields: [subscriptionInfoId], references: [id])
 
     subscriptionStatus String?
     stripeCustomerId String? @unique
@@ -325,4 +331,96 @@ model Configuration {
     data Json
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+}
+
+model Subscription {
+    id BigInt @id @default(autoincrement())
+    stripeSubscriptionId String @unique
+
+    userId String? @unique
+    user User? @relation()
+
+    studioId String? @unique
+    studio Studio? @relation()
+
+    subscriptionStatus String?
+    stripeCustomerId String? @unique
+    subscriptionId String?
+
+    currentPeriodStart DateTime?
+    currentPeriodEnd DateTime?
+
+    periods SubscriptionPeriod[]
+    invoices Invoice[]
+
+    aiChatMetrics AiChatMetrics[]
+    aiImageMetrics AiImageMetrics[]
+    aiSkyboxMetrics AiSkyboxMetrics[]
+}
+
+model SubscriptionPeriod {
+    id BigInt @id @default(autoincrement())
+
+    subscriptionId BigInt
+    subscription Subscription @relation(fields: [subscriptionId], references: [id])
+
+    invoiceId BigInt? @unique
+    invoice Invoice? @relation()
+
+    periodStart DateTime
+    periodEnd DateTime
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Invoice {
+    id BigInt @id @default(autoincrement())
+    stripeInvoiceId String @unique
+
+    subscriptionId BigInt
+    subscription Subscription @relation(fields: [subscriptionId], references: [id])
+
+    periodId BigInt? @unique
+    period SubscriptionPeriod? @relation(fields: [periodId], references: [id])
+
+    description String
+    status String
+    paid Boolean
+    currency String
+    total Int
+    subtotal Int
+    tax Int
+
+    stripeHostedInvoiceUrl String
+    stripeInvoicePdfUrl String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model AiChatMetrics {
+    id BigInt @id @default(autoincrement())
+    createdAt DateTime @default(now())
+
+    tokens Int
+    
+    subscriptionId BigInt
+    subscription Subscription @relation(fields: [subscriptionId], references: [id])
+}
+
+model AiImageMetrics {
+    id BigInt @id @default(autoincrement())
+    pixelsGenerated Int
+    subscriptionId BigInt
+    subscription Subscription @relation(fields: [subscriptionId], references: [id])
+    createdAt DateTime @default(now())
+}
+
+model AiSkyboxMetrics {
+    id BigInt @id @default(autoincrement())
+    skyboxesGenerated Int
+    subscriptionId BigInt
+    subscription Subscription @relation(fields: [subscriptionId], references: [id])
+    createdAt DateTime @default(now())
 }
