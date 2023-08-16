@@ -7,7 +7,7 @@ import {
     SubscriptionConfiguration,
     allowAllFeatures,
 } from './SubscriptionConfiguration';
-import { MemoryStore } from 'MemoryStore';
+import { MemoryStore } from './MemoryStore';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 

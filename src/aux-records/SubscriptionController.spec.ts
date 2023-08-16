@@ -3487,7 +3487,7 @@ describe('SubscriptionController', () => {
         });
     });
 
-    describe.only('handleStripeWebhook()', () => {
+    describe('handleStripeWebhook()', () => {
         describe('user', () => {
             let user: AuthUser;
 

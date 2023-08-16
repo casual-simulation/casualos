@@ -22,7 +22,10 @@ import {
 } from '@casual-simulation/crypto';
 import { fromBase64String, toBase64String } from './Utils';
 import { padStart } from 'lodash';
-import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import {
+    allowAllFeatures,
+    SubscriptionConfiguration,
+} from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
 
 jest.mock('tweetnacl', () => {
@@ -78,6 +81,11 @@ describe('AuthController', () => {
                 successUrl: 'success_url',
                 cancelUrl: 'cancel_url',
                 returnUrl: 'return_url',
+                tiers: {},
+                defaultFeatures: {
+                    user: allowAllFeatures(),
+                    studio: allowAllFeatures(),
+                },
             },
         });
         messenger = new MemoryAuthMessenger();

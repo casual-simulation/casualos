@@ -11,26 +11,23 @@ import {
     ValidatePublicRecordKeyFailure,
     ValidatePublicRecordKeySuccess,
 } from './RecordsController';
-import { MemoryRecordsStore } from './MemoryRecordsStore';
 import {
     hashHighEntropyPasswordWithSalt,
     hashPassword,
     hashPasswordWithSalt,
 } from '@casual-simulation/crypto';
-import { MemoryAuthStore } from './MemoryAuthStore';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import { v4 as uuid } from 'uuid';
 import { ConfigurationStore } from './ConfigurationStore';
-import { MemoryConfigurationStore } from './MemoryConfigurationStore';
 import { createTestSubConfiguration } from './TestUtils';
-import { MemoryMetricsStore } from './MemoryMetricsStore';
 import { merge } from 'lodash';
 import {
     FeaturesConfiguration,
     SubscriptionConfiguration,
     allowAllFeatures,
 } from './SubscriptionConfiguration';
+import { MemoryStore } from './MemoryStore';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -40,24 +37,18 @@ console.log = jest.fn();
 
 describe('RecordsController', () => {
     let manager: RecordsController;
-    let store: MemoryRecordsStore;
-    let auth: MemoryAuthStore;
-    let config: MemoryConfigurationStore;
-    let metrics: MemoryMetricsStore;
+    let store: MemoryStore;
 
     beforeEach(() => {
-        config = new MemoryConfigurationStore({
+        store = new MemoryStore({
             subscriptions: createTestSubConfiguration(),
         });
 
-        auth = new MemoryAuthStore();
-        store = new MemoryRecordsStore(auth);
-        metrics = new MemoryMetricsStore(null, null, null, store, auth);
         manager = new RecordsController({
-            auth,
             store,
-            metrics,
-            config,
+            auth: store,
+            metrics: store,
+            config: store,
         });
     });
 
@@ -130,7 +121,7 @@ describe('RecordsController', () => {
         });
 
         it('should be able to add a key to an existing record if the user is an admin in the studio', async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
@@ -185,7 +176,7 @@ describe('RecordsController', () => {
         });
 
         it('should not be able to add a key to an existing record if the user is not an admin in the studio', async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
@@ -222,7 +213,7 @@ describe('RecordsController', () => {
         });
 
         it('not issue a key if the record name matches a different user ID', async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 email: 'test@example.com',
                 phoneNumber: null,
@@ -297,7 +288,7 @@ describe('RecordsController', () => {
         });
 
         it('should be able to issue a key if the record name matches a studio ID but the record was created by a different user', async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
@@ -1314,14 +1305,14 @@ describe('RecordsController', () => {
         });
 
         it('should include info about the record studio', async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 email: 'test@example.com',
                 phoneNumber: null,
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
             });
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'otherUserId',
                 email: 'other@example.com',
                 phoneNumber: null,
@@ -1423,7 +1414,7 @@ describe('RecordsController', () => {
         });
 
         it('should create the record if it doesnt exist and the name matches a studio that the user is a member of', async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 email: 'test@example.com',
                 phoneNumber: null,
@@ -1504,7 +1495,7 @@ describe('RecordsController', () => {
         });
 
         it('should update the record if the name matches a studio ID but the owner is different', async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 email: 'test@example.com',
                 phoneNumber: null,
@@ -1576,7 +1567,7 @@ describe('RecordsController', () => {
         });
 
         it('should return an error if the record needs to be created and records are not allowed for the user', async () => {
-            config.subscriptionConfiguration = merge(
+            store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
                 {
                     subscriptions: [
@@ -1600,7 +1591,7 @@ describe('RecordsController', () => {
                 } as Partial<SubscriptionConfiguration>
             );
 
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
@@ -1624,7 +1615,7 @@ describe('RecordsController', () => {
         });
 
         it('should return an error if the record needs to be updated and records are not allowed for the user', async () => {
-            config.subscriptionConfiguration = merge(
+            store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
                 {
                     subscriptions: [
@@ -1648,7 +1639,7 @@ describe('RecordsController', () => {
                 } as Partial<SubscriptionConfiguration>
             );
 
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 email: 'test@example.com',
                 phoneNumber: null,
@@ -1690,7 +1681,7 @@ describe('RecordsController', () => {
         });
 
         it('should return an error if the record needs to be created and records are not allowed for the studio', async () => {
-            config.subscriptionConfiguration = merge(
+            store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
                 {
                     subscriptions: [
@@ -1714,7 +1705,7 @@ describe('RecordsController', () => {
                 } as Partial<SubscriptionConfiguration>
             );
 
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 email: 'test@example.com',
                 phoneNumber: null,
@@ -1750,7 +1741,7 @@ describe('RecordsController', () => {
         });
 
         it('should return an error if the record needs to be updated and records are not allowed for the studio', async () => {
-            config.subscriptionConfiguration = merge(
+            store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
                 {
                     subscriptions: [
@@ -1774,7 +1765,7 @@ describe('RecordsController', () => {
                 } as Partial<SubscriptionConfiguration>
             );
 
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 email: 'test@example.com',
                 phoneNumber: null,
@@ -1902,7 +1893,7 @@ describe('RecordsController', () => {
 
     describe('listStudioRecords()', () => {
         beforeEach(async () => {
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId',
                 email: 'test@example.com',
                 phoneNumber: null,
@@ -1997,7 +1988,7 @@ describe('RecordsController', () => {
         });
 
         it('should assign the given user as an owner', async () => {
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId',
                 email: 'test@example.com',
                 name: 'test user',
@@ -2030,7 +2021,7 @@ describe('RecordsController', () => {
 
     describe('listStudios()', () => {
         beforeEach(async () => {
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId',
                 name: 'test user',
                 email: 'test@example.com',
@@ -2096,7 +2087,7 @@ describe('RecordsController', () => {
         beforeEach(async () => {
             studioId = 'studioId';
 
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId',
                 name: 'test user',
                 email: 'test@example.com',
@@ -2105,7 +2096,7 @@ describe('RecordsController', () => {
                 currentLoginRequestId: null,
             });
 
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId2',
                 name: 'test user 2',
                 email: 'test2@example.com',
@@ -2114,7 +2105,7 @@ describe('RecordsController', () => {
                 currentLoginRequestId: null,
             });
 
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId3',
                 name: 'test user 3',
                 email: null,
@@ -2253,7 +2244,7 @@ describe('RecordsController', () => {
         beforeEach(async () => {
             studioId = 'studioId';
 
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId',
                 name: 'test user',
                 email: 'test@example.com',
@@ -2262,7 +2253,7 @@ describe('RecordsController', () => {
                 currentLoginRequestId: null,
             });
 
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId2',
                 name: 'test user 2',
                 email: 'test2@example.com',
@@ -2271,7 +2262,7 @@ describe('RecordsController', () => {
                 currentLoginRequestId: null,
             });
 
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId3',
                 name: 'test user 3',
                 email: null,
@@ -2492,7 +2483,7 @@ describe('RecordsController', () => {
         beforeEach(async () => {
             studioId = 'studioId';
 
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId',
                 name: 'test user',
                 email: 'test@example.com',
@@ -2501,7 +2492,7 @@ describe('RecordsController', () => {
                 currentLoginRequestId: null,
             });
 
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId2',
                 name: 'test user 2',
                 email: 'test2@example.com',
@@ -2510,7 +2501,7 @@ describe('RecordsController', () => {
                 currentLoginRequestId: null,
             });
 
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId3',
                 name: 'test user 3',
                 email: null,
@@ -2622,7 +2613,7 @@ describe('RecordsController', () => {
 
     describe('createRecord()', () => {
         beforeEach(async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 email: 'test@example.com',
                 phoneNumber: null,
@@ -2676,7 +2667,7 @@ describe('RecordsController', () => {
         });
 
         it('should not create the record the name matches another user ID', async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'newUserId',
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
@@ -2806,7 +2797,7 @@ describe('RecordsController', () => {
         });
 
         it('should fix records to be owned by the studio if the record name is the same as a studio ID', async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
@@ -2853,7 +2844,7 @@ describe('RecordsController', () => {
         });
 
         it('should return an error if records are not allowed for users', async () => {
-            config.subscriptionConfiguration = merge(
+            store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
                 {
                     subscriptions: [
@@ -2877,7 +2868,7 @@ describe('RecordsController', () => {
                 } as Partial<SubscriptionConfiguration>
             );
 
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
@@ -2905,7 +2896,7 @@ describe('RecordsController', () => {
         });
 
         it('should return an error if the user would exceed their record limit', async () => {
-            config.subscriptionConfiguration = merge(
+            store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
                 {
                     subscriptions: [
@@ -2929,7 +2920,7 @@ describe('RecordsController', () => {
                 } as Partial<SubscriptionConfiguration>
             );
 
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
@@ -2971,7 +2962,7 @@ describe('RecordsController', () => {
         });
 
         it('should return an error if the user would exceed their record limit even when creating a record that matches its user ID', async () => {
-            config.subscriptionConfiguration = merge(
+            store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
                 {
                     subscriptions: [
@@ -2995,7 +2986,7 @@ describe('RecordsController', () => {
                 } as Partial<SubscriptionConfiguration>
             );
 
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
@@ -3037,7 +3028,7 @@ describe('RecordsController', () => {
         });
 
         it('should return an error if records are not allowed for studios', async () => {
-            config.subscriptionConfiguration = merge(
+            store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
                 {
                     subscriptions: [
@@ -3074,7 +3065,7 @@ describe('RecordsController', () => {
                 role: 'admin',
             });
 
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
@@ -3100,7 +3091,7 @@ describe('RecordsController', () => {
         });
 
         it('should return an error if the studio would exceed their record limit', async () => {
-            config.subscriptionConfiguration = merge(
+            store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
                 {
                     subscriptions: [
@@ -3137,7 +3128,7 @@ describe('RecordsController', () => {
                 role: 'admin',
             });
 
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
@@ -3177,7 +3168,7 @@ describe('RecordsController', () => {
         });
 
         it('should return an error if the studio would exceed their record limit even when creating a record that matches its studioId', async () => {
-            config.subscriptionConfiguration = merge(
+            store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
                 {
                     subscriptions: [
@@ -3214,7 +3205,7 @@ describe('RecordsController', () => {
                 role: 'admin',
             });
 
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,

@@ -29,7 +29,10 @@ import { FileRecordsStore } from './FileRecordsStore';
 import { getHash } from '@casual-simulation/crypto';
 import { SubscriptionController } from './SubscriptionController';
 import { StripeInterface, StripeProduct } from './StripeInterface';
-import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import {
+    SubscriptionConfiguration,
+    allowAllFeatures,
+} from './SubscriptionConfiguration';
 import { PolicyController } from './PolicyController';
 import {
     ACCOUNT_MARKER,
@@ -163,8 +166,17 @@ describe('RecordsHttpServer', () => {
                 cancelUrl: 'http://cancel_url',
                 successUrl: 'http://success_url',
                 returnUrl: 'http://return_url',
+                tiers: {},
+                defaultFeatures: {
+                    user: allowAllFeatures(),
+                    studio: allowAllFeatures(),
+                },
             },
         });
+        manualDataStore = new MemoryStore({
+            subscriptions: null,
+        });
+
         authMessenger = new MemoryAuthMessenger();
         authController = new AuthController(store, authMessenger, store);
         livekitController = new LivekitController(
