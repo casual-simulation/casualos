@@ -1,5 +1,4 @@
 import { RecordsStore } from './RecordsStore';
-import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { RecordsController } from './RecordsController';
 import {
     DataRecordsController,
@@ -12,48 +11,35 @@ import {
     RecordDataSuccess,
 } from './DataRecordsController';
 import { DataRecordsStore, UserPolicy } from './DataRecordsStore';
-import { MemoryDataRecordsStore } from './MemoryDataRecordsStore';
 import { PolicyController } from './PolicyController';
-import { AuthController } from './AuthController';
-import { AuthStore } from './AuthStore';
-import { AuthMessenger } from './AuthMessenger';
 import {
     createTestControllers,
     createTestRecordKey,
     createTestSubConfiguration,
     createTestUser,
 } from './TestUtils';
-import { PolicyStore } from './PolicyStore';
-import { MemoryPolicyStore } from './MemoryPolicyStore';
 import {
     ACCOUNT_MARKER,
     ADMIN_ROLE_NAME,
     PUBLIC_READ_MARKER,
 } from './PolicyPermissions';
-import { MemoryMetricsStore } from './MemoryMetricsStore';
-import { MemoryConfigurationStore } from './MemoryConfigurationStore';
-import { MemoryAuthStore } from './MemoryAuthStore';
 import { merge } from 'lodash';
 import {
     FeaturesConfiguration,
     SubscriptionConfiguration,
     allowAllFeatures,
 } from './SubscriptionConfiguration';
+import { MemoryStore } from './MemoryStore';
 
 console.log = jest.fn();
 
 describe('DataRecordsController', () => {
-    let recordsStore: RecordsStore;
+    let store: MemoryStore;
     let records: RecordsController;
-    let policiesStore: MemoryPolicyStore;
     let policies: PolicyController;
-    let store: DataRecordsStore;
     let manager: DataRecordsController;
-    let metricsStore: MemoryMetricsStore;
     let key: string;
     let subjectlessKey: string;
-    let configStore: MemoryConfigurationStore;
-    let authStore: MemoryAuthStore;
 
     let userId: string;
     let sessionKey: string;
@@ -62,25 +48,14 @@ describe('DataRecordsController', () => {
     beforeEach(async () => {
         const services = createTestControllers();
 
-        authStore = services.authStore;
-        configStore = services.configStore;
-        policiesStore = services.policyStore;
+        store = services.store;
         policies = services.policies;
-        recordsStore = services.recordsStore;
         records = services.records;
-        let dataStore = (store = new MemoryDataRecordsStore());
-        metricsStore = new MemoryMetricsStore(
-            dataStore,
-            null,
-            null,
-            recordsStore as MemoryRecordsStore,
-            authStore
-        );
         manager = new DataRecordsController({
             policies,
             store,
-            metrics: metricsStore,
-            config: configStore,
+            metrics: store,
+            config: store,
         });
 
         const user = await createTestUser(services, 'test@example.com');
@@ -104,7 +79,7 @@ describe('DataRecordsController', () => {
         subjectlessKey = subjectlessRecordKey.recordKey;
 
         otherUserId = 'otherUserId';
-        await authStore.saveUser({
+        await store.saveUser({
             id: otherUserId,
             allSessionRevokeTimeMs: null,
             currentLoginRequestId: null,
@@ -347,7 +322,7 @@ describe('DataRecordsController', () => {
         });
 
         it('should be able to use a policy to create some data', async () => {
-            policiesStore.policies['testRecord'] = {
+            store.policies['testRecord'] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -367,7 +342,7 @@ describe('DataRecordsController', () => {
                 },
             };
 
-            policiesStore.roles['testRecord'] = {
+            store.roles['testRecord'] = {
                 [otherUserId]: new Set(['developer']),
             };
 
@@ -399,7 +374,7 @@ describe('DataRecordsController', () => {
         });
 
         it('should be able to use a policy to update some data', async () => {
-            policiesStore.policies['testRecord'] = {
+            store.policies['testRecord'] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -414,7 +389,7 @@ describe('DataRecordsController', () => {
                 },
             };
 
-            policiesStore.roles['testRecord'] = {
+            store.roles['testRecord'] = {
                 [otherUserId]: new Set(['developer']),
             };
 
@@ -456,7 +431,7 @@ describe('DataRecordsController', () => {
         });
 
         it('should be able to use a policy to add a resource marker to some data', async () => {
-            policiesStore.policies['testRecord'] = {
+            store.policies['testRecord'] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -493,7 +468,7 @@ describe('DataRecordsController', () => {
                 },
             };
 
-            policiesStore.roles['testRecord'] = {
+            store.roles['testRecord'] = {
                 [otherUserId]: new Set(['developer']),
             };
 
@@ -598,7 +573,7 @@ describe('DataRecordsController', () => {
         });
 
         it('should reject the request if the user does not have permission to create the data', async () => {
-            policiesStore.policies['testRecord'] = {
+            store.policies['testRecord'] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -613,7 +588,7 @@ describe('DataRecordsController', () => {
                 },
             };
 
-            policiesStore.roles['testRecord'] = {
+            store.roles['testRecord'] = {
                 [otherUserId]: new Set(['developer']),
             };
 
@@ -640,7 +615,7 @@ describe('DataRecordsController', () => {
         });
 
         it('should reject the request if the inst does not have permission to create the data', async () => {
-            policiesStore.roles['testRecord'] = {
+            store.roles['testRecord'] = {
                 [otherUserId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -668,7 +643,7 @@ describe('DataRecordsController', () => {
         });
 
         it('should reject the request if the maximum number of items has been hit for the users subscription', async () => {
-            configStore.subscriptionConfiguration = merge(
+            store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
                 {
                     subscriptions: [
@@ -703,8 +678,8 @@ describe('DataRecordsController', () => {
                 [PUBLIC_READ_MARKER]
             );
 
-            const user = await authStore.findUser(userId);
-            await authStore.saveUser({
+            const user = await store.findUser(userId);
+            await store.saveUser({
                 ...user,
                 subscriptionId: 'sub1',
                 subscriptionStatus: 'active',
@@ -737,7 +712,7 @@ describe('DataRecordsController', () => {
         });
 
         it('should reject the request if data features are disabled', async () => {
-            configStore.subscriptionConfiguration = merge(
+            store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
                 {
                     subscriptions: [
@@ -772,8 +747,8 @@ describe('DataRecordsController', () => {
                 [PUBLIC_READ_MARKER]
             );
 
-            const user = await authStore.findUser(userId);
-            await authStore.saveUser({
+            const user = await store.findUser(userId);
+            await store.saveUser({
                 ...user,
                 subscriptionId: 'sub1',
                 subscriptionStatus: 'active',
@@ -919,7 +894,7 @@ describe('DataRecordsController', () => {
         });
 
         it('should reject if the inst does not have permission', async () => {
-            policiesStore.roles['testRecord'] = {
+            store.roles['testRecord'] = {
                 [otherUserId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -957,7 +932,7 @@ describe('DataRecordsController', () => {
         });
 
         it('should be able to retrieve secret data if the user has the admin role', async () => {
-            policiesStore.roles['testRecord'] = {
+            store.roles['testRecord'] = {
                 [otherUserId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -1089,7 +1064,7 @@ describe('DataRecordsController', () => {
                 );
             }
 
-            policiesStore.roles['testRecord'] = {
+            store.roles['testRecord'] = {
                 [otherUserId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -1167,7 +1142,7 @@ describe('DataRecordsController', () => {
                 );
             }
 
-            policiesStore.roles['testRecord'] = {
+            store.roles['testRecord'] = {
                 [otherUserId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -1231,7 +1206,7 @@ describe('DataRecordsController', () => {
         });
 
         it('should only return data that the inst is allowed to access', async () => {
-            policiesStore.roles['testRecord'] = {
+            store.roles['testRecord'] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -1542,7 +1517,7 @@ describe('DataRecordsController', () => {
         });
 
         it('should be able to use the admin policy to delete data without a marker', async () => {
-            policiesStore.roles['testRecord'] = {
+            store.roles['testRecord'] = {
                 [otherUserId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -1571,11 +1546,11 @@ describe('DataRecordsController', () => {
         });
 
         it('should be able to use the marker policy to delete data', async () => {
-            policiesStore.roles['testRecord'] = {
+            store.roles['testRecord'] = {
                 [otherUserId]: new Set(['developer']),
             };
 
-            policiesStore.policies['testRecord'] = {
+            store.policies['testRecord'] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -1615,7 +1590,7 @@ describe('DataRecordsController', () => {
         });
 
         it('should reject the request if no policy allows the deletion of the data', async () => {
-            policiesStore.roles['testRecord'] = {
+            store.roles['testRecord'] = {
                 [otherUserId]: new Set(['developer']),
             };
 
@@ -1652,7 +1627,7 @@ describe('DataRecordsController', () => {
         });
 
         it('should reject the request if the inst is not authorized', async () => {
-            policiesStore.roles['testRecord'] = {
+            store.roles['testRecord'] = {
                 [otherUserId]: new Set([ADMIN_ROLE_NAME]),
             };
 

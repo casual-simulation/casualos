@@ -2,8 +2,7 @@ import { AuthController } from './AuthController';
 import { AuthMessenger } from './AuthMessenger';
 import { AuthStore } from './AuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
-import { MemoryAuthStore } from './MemoryAuthStore';
-import { MemoryRecordsStore } from './MemoryRecordsStore';
+import { MemoryStore } from './MemoryStore';
 import {
     AuthorizeRequest,
     AuthorizeResult,
@@ -19,7 +18,6 @@ import {
     PUBLIC_READ_MARKER,
 } from './PolicyPermissions';
 import { PolicyStore } from './PolicyStore';
-import { MemoryPolicyStore } from './MemoryPolicyStore';
 import {
     CreateRecordSuccess,
     CreateStudioResult,
@@ -38,9 +36,8 @@ import { InvalidZone } from 'luxon';
 console.log = jest.fn();
 
 describe('PolicyController', () => {
-    let store: MemoryPolicyStore;
+    let store: MemoryStore;
     let controller: PolicyController;
-    let recordsStore: MemoryRecordsStore;
 
     let ownerId: string;
     let ownerSessionKey: string;
@@ -59,9 +56,8 @@ describe('PolicyController', () => {
     beforeEach(async () => {
         const services = createTestControllers();
 
-        store = services.policyStore;
+        store = services.store;
         controller = services.policies;
-        recordsStore = services.recordsStore;
 
         const owner = await createTestUser(services, 'owner@example.com');
         const user = await createTestUser(services);
@@ -86,8 +82,8 @@ describe('PolicyController', () => {
         recordKey = testRecordKey.recordKey;
         recordName = testRecordKey.recordName;
 
-        const record = await services.recordsStore.getRecordByName(recordName);
-        await services.recordsStore.updateRecord({
+        const record = await services.store.getRecordByName(recordName);
+        await services.store.updateRecord({
             name: recordName,
             ownerId: ownerId,
             studioId: null,
@@ -470,7 +466,7 @@ describe('PolicyController', () => {
                     instances: [],
                 });
 
-                expect(await recordsStore.getRecordByName(ownerId)).toEqual({
+                expect(await store.getRecordByName(ownerId)).toEqual({
                     name: ownerId,
                     ownerId: ownerId,
                     secretHashes: [],
@@ -1711,7 +1707,7 @@ describe('PolicyController', () => {
                 });
 
                 expect(result.allowed).toBe(true);
-                expect(await recordsStore.getRecordByName(ownerId)).toEqual({
+                expect(await store.getRecordByName(ownerId)).toEqual({
                     name: ownerId,
                     ownerId: ownerId,
                     secretHashes: [],
@@ -2020,7 +2016,7 @@ describe('PolicyController', () => {
                     instances: [],
                 });
 
-                expect(await recordsStore.getRecordByName(ownerId)).toEqual({
+                expect(await store.getRecordByName(ownerId)).toEqual({
                     name: ownerId,
                     ownerId: ownerId,
                     secretHashes: [],
@@ -3378,7 +3374,7 @@ describe('PolicyController', () => {
                     instances: [],
                 });
 
-                expect(await recordsStore.getRecordByName(ownerId)).toEqual({
+                expect(await store.getRecordByName(ownerId)).toEqual({
                     name: ownerId,
                     ownerId: ownerId,
                     secretHashes: [],

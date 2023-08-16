@@ -1,5 +1,4 @@
 import { RecordsStore } from './RecordsStore';
-import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { RecordsController } from './RecordsController';
 import {
     EraseFileFailure,
@@ -17,8 +16,6 @@ import {
     GetFileRecordSuccess,
     UpdateFileFailure,
 } from './FileRecordsStore';
-import { MemoryFileRecordsStore } from './MemoryFileRecordsStore';
-import { MemoryPolicyStore } from './MemoryPolicyStore';
 import { PolicyController } from './PolicyController';
 import {
     createTestControllers,
@@ -32,30 +29,22 @@ import {
     PUBLIC_READ_MARKER,
 } from './PolicyPermissions';
 import { merge, sortBy } from 'lodash';
-import { MemoryConfigurationStore } from './MemoryConfigurationStore';
 import {
     FeaturesConfiguration,
     SubscriptionConfiguration,
     allowAllFeatures,
 } from './SubscriptionConfiguration';
-import { MemoryAuthStore } from './MemoryAuthStore';
-import { MetricsStore } from './MetricsStore';
-import { MemoryMetricsStore } from './MemoryMetricsStore';
+import { MemoryStore } from './MemoryStore';
 
 console.log = jest.fn();
 
 describe('FileRecordsController', () => {
-    let recordsStore: RecordsStore;
+    let store: MemoryStore;
     let records: RecordsController;
-    let policiesStore: MemoryPolicyStore;
     let policies: PolicyController;
-    let store: FileRecordsStore;
     let presignUrlMock: jest.Mock;
     let presignReadMock: jest.Mock;
-    let configStore: MemoryConfigurationStore;
-    let authStore: MemoryAuthStore;
     let manager: FileRecordsController;
-    let metrics: MemoryMetricsStore;
     let key: string;
     let subjectlessKey: string;
 
@@ -68,32 +57,21 @@ describe('FileRecordsController', () => {
     beforeEach(async () => {
         const services = createTestControllers();
 
-        authStore = services.authStore;
-        configStore = services.configStore;
-        policiesStore = services.policyStore;
+        store = services.store;
         policies = services.policies;
-        recordsStore = services.recordsStore;
         records = services.records;
 
-        store = new MemoryFileRecordsStore();
-        metrics = new MemoryMetricsStore(
-            null,
-            store as MemoryFileRecordsStore,
-            null,
-            recordsStore as MemoryRecordsStore,
-            authStore
-        );
         manager = new FileRecordsController({
             policies,
             store,
-            metrics: metrics,
-            config: configStore,
+            metrics: store,
+            config: store,
         });
         presignUrlMock = store.presignFileUpload = jest.fn();
         presignReadMock = store.presignFileRead = jest.fn();
 
         ownerId = 'testUser';
-        await authStore.saveUser({
+        await store.saveUser({
             id: ownerId,
             allSessionRevokeTimeMs: null,
             currentLoginRequestId: null,
@@ -514,7 +492,7 @@ describe('FileRecordsController', () => {
                 },
             });
 
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -626,7 +604,7 @@ describe('FileRecordsController', () => {
                 },
             });
 
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -685,7 +663,7 @@ describe('FileRecordsController', () => {
                 },
             });
 
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -733,7 +711,7 @@ describe('FileRecordsController', () => {
                 },
             });
 
-            configStore.subscriptionConfiguration = merge(
+            store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
                 {
                     subscriptions: [
@@ -757,8 +735,8 @@ describe('FileRecordsController', () => {
                 } as Partial<SubscriptionConfiguration>
             );
 
-            const user = await authStore.findUser(ownerId);
-            await authStore.saveUser({
+            const user = await store.findUser(ownerId);
+            await store.saveUser({
                 ...user,
                 subscriptionId: 'sub1',
                 subscriptionStatus: 'active',
@@ -790,7 +768,7 @@ describe('FileRecordsController', () => {
                 },
             });
 
-            configStore.subscriptionConfiguration = merge(
+            store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
                 {
                     subscriptions: [
@@ -824,8 +802,8 @@ describe('FileRecordsController', () => {
                 [PUBLIC_READ_MARKER]
             );
 
-            const user = await authStore.findUser(ownerId);
-            await authStore.saveUser({
+            const user = await store.findUser(ownerId);
+            await store.saveUser({
                 ...user,
                 subscriptionId: 'sub1',
                 subscriptionStatus: 'active',
@@ -858,7 +836,7 @@ describe('FileRecordsController', () => {
                 },
             });
 
-            configStore.subscriptionConfiguration = merge(
+            store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
                 {
                     subscriptions: [
@@ -892,8 +870,8 @@ describe('FileRecordsController', () => {
                 [PUBLIC_READ_MARKER]
             );
 
-            const user = await authStore.findUser(ownerId);
-            await authStore.saveUser({
+            const user = await store.findUser(ownerId);
+            await store.saveUser({
                 ...user,
                 subscriptionId: 'sub1',
                 subscriptionStatus: 'active',
@@ -1023,7 +1001,7 @@ describe('FileRecordsController', () => {
         });
 
         it('should be able to erase a file if the user has the correct permissions', async () => {
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -1129,7 +1107,7 @@ describe('FileRecordsController', () => {
         });
 
         it('should reject the request if the inst does not have the correct permissions', async () => {
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -1234,7 +1212,7 @@ describe('FileRecordsController', () => {
                 ['secret']
             );
 
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -1343,7 +1321,7 @@ describe('FileRecordsController', () => {
         });
 
         it('should deny requests if the inst doesnt have permissions', async () => {
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -1449,7 +1427,7 @@ describe('FileRecordsController', () => {
 
             files = sortBy(files, (f) => f.fileName);
 
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
         });
@@ -1497,11 +1475,11 @@ describe('FileRecordsController', () => {
             await store.setFileRecordAsUploaded(recordName, 'test2.txt');
             await store.setFileRecordAsUploaded(recordName, 'test3.txt');
 
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set(['developer']),
             };
 
-            policiesStore.policies[recordName] = {
+            store.policies[recordName] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -1662,7 +1640,7 @@ describe('FileRecordsController', () => {
                 [PUBLIC_READ_MARKER]
             );
 
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -1760,7 +1738,7 @@ describe('FileRecordsController', () => {
                 [PUBLIC_READ_MARKER]
             );
 
-            // policiesStore.roles[recordName] = {
+            // store.roles[recordName] = {
             //     [userId]: new Set([ADMIN_ROLE_NAME])
             // };
 
@@ -1862,7 +1840,7 @@ describe('FileRecordsController', () => {
         });
 
         it('should deny the request if the inst does not have permission', async () => {
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 

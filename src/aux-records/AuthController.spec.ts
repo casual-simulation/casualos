@@ -12,7 +12,6 @@ import {
     formatV1SessionKey,
     parseSessionKey,
 } from './AuthUtils';
-import { MemoryAuthStore } from './MemoryAuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { v4 as uuid } from 'uuid';
 import { randomBytes } from 'tweetnacl';
@@ -24,6 +23,7 @@ import {
 import { fromBase64String, toBase64String } from './Utils';
 import { padStart } from 'lodash';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import { MemoryStore } from './MemoryStore';
 
 jest.mock('tweetnacl', () => {
     const originalModule = jest.requireActual('tweetnacl');
@@ -46,47 +46,43 @@ console.log = jest.fn();
 const randomBytesMock: jest.Mock<Uint8Array, [number]> = <any>randomBytes;
 
 describe('AuthController', () => {
-    let authStore: MemoryAuthStore;
+    let store: MemoryStore;
     let messenger: MemoryAuthMessenger;
     let controller: AuthController;
-    let subscriptionConfig: SubscriptionConfiguration;
     let nowMock: jest.Mock<number>;
 
     beforeEach(() => {
         nowMock = Date.now = jest.fn();
-        authStore = new MemoryAuthStore();
+        store = new MemoryStore({
+            subscriptions: {
+                subscriptions: [
+                    {
+                        id: 'sub_2',
+                        product: 'product_2',
+                        eligibleProducts: ['product_2'],
+                        featureList: [],
+                        purchasable: true,
+                        tier: 'alpha',
+                    },
+                    {
+                        id: 'sub_1',
+                        product: 'product_1',
+                        eligibleProducts: ['product_1'],
+                        featureList: [],
+                        purchasable: true,
+                        tier: 'beta',
+                        defaultSubscription: true,
+                    },
+                ],
+                webhookSecret: 'webhook',
+                successUrl: 'success_url',
+                cancelUrl: 'cancel_url',
+                returnUrl: 'return_url',
+            },
+        });
         messenger = new MemoryAuthMessenger();
-        subscriptionConfig = {
-            subscriptions: [
-                {
-                    id: 'sub_2',
-                    product: 'product_2',
-                    eligibleProducts: ['product_2'],
-                    featureList: [],
-                    purchasable: true,
-                    tier: 'alpha',
-                },
-                {
-                    id: 'sub_1',
-                    product: 'product_1',
-                    eligibleProducts: ['product_1'],
-                    featureList: [],
-                    purchasable: true,
-                    tier: 'beta',
-                    defaultSubscription: true,
-                },
-            ],
-            webhookSecret: 'webhook',
-            successUrl: 'success_url',
-            cancelUrl: 'cancel_url',
-            returnUrl: 'return_url',
-        };
 
-        controller = new AuthController(
-            authStore,
-            messenger,
-            subscriptionConfig
-        );
+        controller = new AuthController(store, messenger, store);
 
         uuidMock.mockReset();
         randomBytesMock.mockReset();
@@ -144,7 +140,7 @@ describe('AuthController', () => {
                 });
 
                 if (type === 'email') {
-                    expect(authStore.users).toEqual([
+                    expect(store.users).toEqual([
                         {
                             id: 'uuid1',
                             email: address,
@@ -154,7 +150,7 @@ describe('AuthController', () => {
                         },
                     ]);
                 } else {
-                    expect(authStore.users).toEqual([
+                    expect(store.users).toEqual([
                         {
                             id: 'uuid1',
                             email: null,
@@ -165,7 +161,7 @@ describe('AuthController', () => {
                     ]);
                 }
 
-                expect(authStore.loginRequests).toEqual([
+                expect(store.loginRequests).toEqual([
                     {
                         userId: 'uuid1',
                         requestId: fromByteArray(salt),
@@ -197,7 +193,7 @@ describe('AuthController', () => {
             });
 
             it('should create a new login request for the existing user', async () => {
-                await authStore.saveUser({
+                await store.saveUser({
                     id: 'myid',
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
@@ -229,7 +225,7 @@ describe('AuthController', () => {
                     expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
                 });
 
-                expect(authStore.users).toEqual([
+                expect(store.users).toEqual([
                     {
                         id: 'myid',
                         email: type === 'email' ? address : null,
@@ -238,7 +234,7 @@ describe('AuthController', () => {
                     },
                 ]);
 
-                expect(authStore.loginRequests).toEqual([
+                expect(store.loginRequests).toEqual([
                     {
                         userId: 'myid',
                         requestId: fromByteArray(salt),
@@ -271,7 +267,7 @@ describe('AuthController', () => {
             });
 
             it('should create a new login request for the existing user even if the address is denied by a rule', async () => {
-                await authStore.saveUser({
+                await store.saveUser({
                     id: 'myid',
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
@@ -289,12 +285,12 @@ describe('AuthController', () => {
                 uuidMock.mockReturnValueOnce('uuid1');
 
                 if (type === 'email') {
-                    authStore.emailRules.push({
+                    store.emailRules.push({
                         pattern: `^${address}$`,
                         type: 'deny',
                     });
                 } else {
-                    authStore.smsRules.push({
+                    store.smsRules.push({
                         pattern: `^${address}$`,
                         type: 'deny',
                     });
@@ -315,7 +311,7 @@ describe('AuthController', () => {
                     expireTimeMs: 100 + LOGIN_REQUEST_LIFETIME_MS,
                 });
 
-                expect(authStore.users).toEqual([
+                expect(store.users).toEqual([
                     {
                         id: 'myid',
                         email: type === 'email' ? address : null,
@@ -324,7 +320,7 @@ describe('AuthController', () => {
                     },
                 ]);
 
-                expect(authStore.loginRequests).toEqual([
+                expect(store.loginRequests).toEqual([
                     {
                         userId: 'myid',
                         requestId: fromByteArray(salt),
@@ -375,8 +371,8 @@ describe('AuthController', () => {
                             : 'Phone numbers are not supported',
                 });
 
-                expect(authStore.users).toEqual([]);
-                expect(authStore.loginRequests).toEqual([]);
+                expect(store.users).toEqual([]);
+                expect(store.loginRequests).toEqual([]);
                 expect(messenger.messages).toEqual([]);
 
                 expect(randomBytesMock).not.toHaveBeenCalled();
@@ -413,8 +409,8 @@ describe('AuthController', () => {
                     errorMessage: 'The address is invalid.',
                 });
 
-                expect(authStore.users).toEqual([]);
-                expect(authStore.loginRequests).toEqual([]);
+                expect(store.users).toEqual([]);
+                expect(store.loginRequests).toEqual([]);
                 expect(messenger.messages).toEqual([]);
 
                 expect(randomBytesMock).toHaveBeenCalled();
@@ -423,7 +419,7 @@ describe('AuthController', () => {
             });
 
             it('should fail if the user is banned', async () => {
-                await authStore.saveUser({
+                await store.saveUser({
                     id: 'myid',
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
@@ -455,7 +451,7 @@ describe('AuthController', () => {
                     banReason: 'terms_of_service_violation',
                 });
 
-                expect(authStore.users).toEqual([
+                expect(store.users).toEqual([
                     {
                         id: 'myid',
                         email: type === 'email' ? address : null,
@@ -465,7 +461,7 @@ describe('AuthController', () => {
                     },
                 ]);
 
-                expect(authStore.loginRequests).toEqual([]);
+                expect(store.loginRequests).toEqual([]);
                 expect(messenger.messages).toEqual([]);
             });
         });
@@ -478,7 +474,7 @@ describe('AuthController', () => {
             randomBytesMock.mockReturnValueOnce(salt).mockReturnValueOnce(code);
             uuidMock.mockReturnValueOnce('uuid1');
 
-            authStore.emailRules.push({
+            store.emailRules.push({
                 pattern: '^test@casualsimulation\\.org$',
                 type: 'deny',
             });
@@ -498,8 +494,8 @@ describe('AuthController', () => {
                     'The given email address is too long. It must be 200 characters or shorter in length.',
             });
 
-            expect(authStore.users).toEqual([]);
-            expect(authStore.loginRequests).toEqual([]);
+            expect(store.users).toEqual([]);
+            expect(store.loginRequests).toEqual([]);
             expect(messenger.messages).toEqual([]);
 
             expect(randomBytesMock).not.toHaveBeenCalled();
@@ -514,7 +510,7 @@ describe('AuthController', () => {
             randomBytesMock.mockReturnValueOnce(salt).mockReturnValueOnce(code);
             uuidMock.mockReturnValueOnce('uuid1');
 
-            authStore.emailRules.push({
+            store.emailRules.push({
                 pattern: '^test@casualsimulation\\.org$',
                 type: 'deny',
             });
@@ -534,8 +530,8 @@ describe('AuthController', () => {
                     'The given SMS address is too long. It must be 30 digits or shorter in length.',
             });
 
-            expect(authStore.users).toEqual([]);
-            expect(authStore.loginRequests).toEqual([]);
+            expect(store.users).toEqual([]);
+            expect(store.loginRequests).toEqual([]);
             expect(messenger.messages).toEqual([]);
 
             expect(randomBytesMock).not.toHaveBeenCalled();
@@ -550,7 +546,7 @@ describe('AuthController', () => {
             randomBytesMock.mockReturnValueOnce(salt).mockReturnValueOnce(code);
             uuidMock.mockReturnValueOnce('uuid1');
 
-            authStore.emailRules.push({
+            store.emailRules.push({
                 pattern: '^test@casualsimulation\\.org$',
                 type: 'deny',
             });
@@ -567,8 +563,8 @@ describe('AuthController', () => {
                 errorMessage: 'The given address is not accepted.',
             });
 
-            expect(authStore.users).toEqual([]);
-            expect(authStore.loginRequests).toEqual([]);
+            expect(store.users).toEqual([]);
+            expect(store.loginRequests).toEqual([]);
             expect(messenger.messages).toEqual([]);
 
             expect(randomBytesMock).not.toHaveBeenCalled();
@@ -583,7 +579,7 @@ describe('AuthController', () => {
             randomBytesMock.mockReturnValueOnce(salt).mockReturnValueOnce(code);
             uuidMock.mockReturnValueOnce('uuid1');
 
-            authStore.smsRules.push({
+            store.smsRules.push({
                 pattern: '^5555555555$',
                 type: 'deny',
             });
@@ -600,8 +596,8 @@ describe('AuthController', () => {
                 errorMessage: 'The given address is not accepted.',
             });
 
-            expect(authStore.users).toEqual([]);
-            expect(authStore.loginRequests).toEqual([]);
+            expect(store.users).toEqual([]);
+            expect(store.loginRequests).toEqual([]);
             expect(messenger.messages).toEqual([]);
 
             expect(randomBytesMock).not.toHaveBeenCalled();
@@ -635,8 +631,8 @@ describe('AuthController', () => {
                             'The given address is invalid. It must be a string.',
                     });
 
-                    expect(authStore.users).toEqual([]);
-                    expect(authStore.loginRequests).toEqual([]);
+                    expect(store.users).toEqual([]);
+                    expect(store.loginRequests).toEqual([]);
                     expect(messenger.messages).toEqual([]);
 
                     expect(randomBytesMock).not.toHaveBeenCalled();
@@ -671,8 +667,8 @@ describe('AuthController', () => {
                             'The given address type is invalid. It must be a string containing either "email" or "phone".',
                     });
 
-                    expect(authStore.users).toEqual([]);
-                    expect(authStore.loginRequests).toEqual([]);
+                    expect(store.users).toEqual([]);
+                    expect(store.loginRequests).toEqual([]);
                     expect(messenger.messages).toEqual([]);
 
                     expect(randomBytesMock).not.toHaveBeenCalled();
@@ -706,8 +702,8 @@ describe('AuthController', () => {
                             'The given IP address is invalid. It must be a string.',
                     });
 
-                    expect(authStore.users).toEqual([]);
-                    expect(authStore.loginRequests).toEqual([]);
+                    expect(store.users).toEqual([]);
+                    expect(store.loginRequests).toEqual([]);
                     expect(messenger.messages).toEqual([]);
 
                     expect(randomBytesMock).not.toHaveBeenCalled();
@@ -731,7 +727,7 @@ describe('AuthController', () => {
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
 
-                await authStore.saveUser({
+                await store.saveUser({
                     id: 'myid',
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
@@ -739,7 +735,7 @@ describe('AuthController', () => {
                     allSessionRevokeTimeMs: undefined,
                 });
 
-                await authStore.saveLoginRequest({
+                await store.saveLoginRequest({
                     userId: 'myid',
                     requestId: requestId,
                     secretHash: hashPasswordWithSalt(code, requestId),
@@ -780,7 +776,7 @@ describe('AuthController', () => {
                 expect(randomBytesMock).toHaveBeenNthCalledWith(1, 16); // Should request 16 bytes (128 bits) for the session ID
                 expect(randomBytesMock).toHaveBeenNthCalledWith(2, 16); // Should request 16 bytes (128 bits) for the session secret
 
-                expect(authStore.sessions).toEqual([
+                expect(store.sessions).toEqual([
                     {
                         userId: 'myid',
                         sessionId: fromByteArray(sessionId),
@@ -799,7 +795,7 @@ describe('AuthController', () => {
                         ipAddress: '127.0.0.1',
                     },
                 ]);
-                expect(authStore.loginRequests).toEqual([
+                expect(store.loginRequests).toEqual([
                     {
                         userId: 'myid',
                         requestId: requestId,
@@ -813,7 +809,7 @@ describe('AuthController', () => {
                         ipAddress: '127.0.0.1',
                     },
                 ]);
-                expect(authStore.users).toEqual([
+                expect(store.users).toEqual([
                     {
                         id: 'myid',
                         email: type === 'email' ? address : null,
@@ -844,7 +840,7 @@ describe('AuthController', () => {
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
 
-                await authStore.saveUser({
+                await store.saveUser({
                     id: 'myid',
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
@@ -852,7 +848,7 @@ describe('AuthController', () => {
                     allSessionRevokeTimeMs: undefined,
                 });
 
-                await authStore.saveLoginRequest({
+                await store.saveLoginRequest({
                     userId: 'myid',
                     requestId: requestId,
                     secretHash: hashPasswordWithSalt(code, requestId),
@@ -883,7 +879,7 @@ describe('AuthController', () => {
                     errorMessage: 'The code is invalid.',
                 });
                 expect(
-                    await authStore.findLoginRequest('myid', requestId)
+                    await store.findLoginRequest('myid', requestId)
                 ).toHaveProperty('attemptCount', 1);
             });
 
@@ -893,7 +889,7 @@ describe('AuthController', () => {
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
 
-                await authStore.saveUser({
+                await store.saveUser({
                     id: 'myid',
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
@@ -901,7 +897,7 @@ describe('AuthController', () => {
                     allSessionRevokeTimeMs: undefined,
                 });
 
-                await authStore.saveLoginRequest({
+                await store.saveLoginRequest({
                     userId: 'myid',
                     requestId: requestId,
                     secretHash: hashPasswordWithSalt(code, requestId),
@@ -939,7 +935,7 @@ describe('AuthController', () => {
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
 
-                await authStore.saveUser({
+                await store.saveUser({
                     id: 'myid',
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
@@ -947,7 +943,7 @@ describe('AuthController', () => {
                     allSessionRevokeTimeMs: undefined,
                 });
 
-                await authStore.saveLoginRequest({
+                await store.saveLoginRequest({
                     userId: 'myid',
                     requestId: requestId,
                     secretHash: hashPasswordWithSalt(code, requestId),
@@ -985,7 +981,7 @@ describe('AuthController', () => {
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
 
-                await authStore.saveUser({
+                await store.saveUser({
                     id: 'myid',
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
@@ -993,7 +989,7 @@ describe('AuthController', () => {
                     allSessionRevokeTimeMs: undefined,
                 });
 
-                await authStore.saveLoginRequest({
+                await store.saveLoginRequest({
                     userId: 'myid',
                     requestId: requestId,
                     secretHash: hashPasswordWithSalt(code, requestId),
@@ -1031,7 +1027,7 @@ describe('AuthController', () => {
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
 
-                await authStore.saveUser({
+                await store.saveUser({
                     id: 'myid',
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
@@ -1039,7 +1035,7 @@ describe('AuthController', () => {
                     allSessionRevokeTimeMs: undefined,
                 });
 
-                await authStore.saveLoginRequest({
+                await store.saveLoginRequest({
                     userId: 'myid',
                     requestId: requestId,
                     secretHash: hashPasswordWithSalt(code, requestId),
@@ -1077,7 +1073,7 @@ describe('AuthController', () => {
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
 
-                await authStore.saveUser({
+                await store.saveUser({
                     id: 'myid',
                     email: type === 'email' ? address : null,
                     phoneNumber: type === 'phone' ? address : null,
@@ -1085,7 +1081,7 @@ describe('AuthController', () => {
                     allSessionRevokeTimeMs: undefined,
                 });
 
-                await authStore.saveLoginRequest({
+                await store.saveLoginRequest({
                     userId: 'myid',
                     requestId: requestId,
                     secretHash: hashPasswordWithSalt(code, requestId),
@@ -1145,7 +1141,7 @@ describe('AuthController', () => {
                         errorMessage:
                             'The given userId is invalid. It must be a string.',
                     });
-                    expect(authStore.sessions).toEqual([]);
+                    expect(store.sessions).toEqual([]);
                 }
             );
 
@@ -1165,7 +1161,7 @@ describe('AuthController', () => {
                         errorMessage:
                             'The given requestId is invalid. It must be a string.',
                     });
-                    expect(authStore.sessions).toEqual([]);
+                    expect(store.sessions).toEqual([]);
                 }
             );
 
@@ -1185,7 +1181,7 @@ describe('AuthController', () => {
                         errorMessage:
                             'The given code is invalid. It must be a string.',
                     });
-                    expect(authStore.sessions).toEqual([]);
+                    expect(store.sessions).toEqual([]);
                 }
             );
 
@@ -1205,7 +1201,7 @@ describe('AuthController', () => {
                         errorMessage:
                             'The given IP address is invalid. It must be a string.',
                     });
-                    expect(authStore.sessions).toEqual([]);
+                    expect(store.sessions).toEqual([]);
                 }
             );
         });
@@ -1214,7 +1210,7 @@ describe('AuthController', () => {
     describe('validateSessionKey()', () => {
         describe('v1 keys', () => {
             beforeEach(async () => {
-                await authStore.saveUser({
+                await store.saveUser({
                     id: 'myid',
                     email: 'email',
                     phoneNumber: 'phonenumber',
@@ -1237,7 +1233,7 @@ describe('AuthController', () => {
                         200
                     );
 
-                    await authStore.saveSession({
+                    await store.saveSession({
                         requestId,
                         sessionId,
                         secretHash: hashPasswordWithSalt(code, sessionId),
@@ -1274,7 +1270,7 @@ describe('AuthController', () => {
                         123
                     );
 
-                    await authStore.saveSession({
+                    await store.saveSession({
                         requestId,
                         sessionId,
                         secretHash: hashPasswordWithSalt(code, sessionId),
@@ -1299,7 +1295,7 @@ describe('AuthController', () => {
                 });
 
                 it('should return the User ID if given a valid key', async () => {
-                    await authStore.saveUser({
+                    await store.saveUser({
                         id: 'myid',
                         email: 'email',
                         phoneNumber: 'phonenumber',
@@ -1321,7 +1317,7 @@ describe('AuthController', () => {
                         200
                     );
 
-                    await authStore.saveSession({
+                    await store.saveSession({
                         requestId,
                         sessionId,
                         secretHash: hashPasswordWithSalt(code, sessionId),
@@ -1362,7 +1358,7 @@ describe('AuthController', () => {
                         200
                     );
 
-                    await authStore.saveSession({
+                    await store.saveSession({
                         requestId,
                         sessionId,
                         secretHash: hashHighEntropyPasswordWithSalt(
@@ -1402,7 +1398,7 @@ describe('AuthController', () => {
                         123
                     );
 
-                    await authStore.saveSession({
+                    await store.saveSession({
                         requestId,
                         sessionId,
                         secretHash: hashHighEntropyPasswordWithSalt(
@@ -1430,7 +1426,7 @@ describe('AuthController', () => {
                 });
 
                 it('should include the users subscription tier', async () => {
-                    await authStore.saveUser({
+                    await store.saveUser({
                         id: 'myid',
                         email: 'email',
                         phoneNumber: 'phonenumber',
@@ -1452,7 +1448,7 @@ describe('AuthController', () => {
                         200
                     );
 
-                    await authStore.saveSession({
+                    await store.saveSession({
                         requestId,
                         sessionId,
                         secretHash: hashHighEntropyPasswordWithSalt(
@@ -1490,7 +1486,7 @@ describe('AuthController', () => {
 
                 const sessionKey = 'wrong';
 
-                await authStore.saveSession({
+                await store.saveSession({
                     requestId,
                     sessionId,
                     secretHash: hashPasswordWithSalt(code, sessionId),
@@ -1526,7 +1522,7 @@ describe('AuthController', () => {
                     999
                 );
 
-                await authStore.saveSession({
+                await store.saveSession({
                     requestId,
                     sessionId,
                     secretHash: hashPasswordWithSalt(code, sessionId),
@@ -1563,7 +1559,7 @@ describe('AuthController', () => {
                     1000
                 );
 
-                await authStore.saveSession({
+                await store.saveSession({
                     requestId,
                     sessionId,
                     secretHash: hashPasswordWithSalt(code, sessionId),
@@ -1600,7 +1596,7 @@ describe('AuthController', () => {
                     999
                 );
 
-                await authStore.saveUser({
+                await store.saveUser({
                     id: userId,
                     email: 'email',
                     phoneNumber: 'phonenumber',
@@ -1608,7 +1604,7 @@ describe('AuthController', () => {
                     currentLoginRequestId: requestId,
                 });
 
-                await authStore.saveSession({
+                await store.saveSession({
                     requestId,
                     sessionId,
                     secretHash: hashPasswordWithSalt(code, sessionId),
@@ -1641,7 +1637,7 @@ describe('AuthController', () => {
             const sessionId = new Uint8Array([7, 8, 9]);
             const sessionSecret = new Uint8Array([10, 11, 12]);
 
-            await authStore.saveUser({
+            await store.saveUser({
                 id: 'myid',
                 email: address,
                 phoneNumber: address,
@@ -1649,7 +1645,7 @@ describe('AuthController', () => {
                 allSessionRevokeTimeMs: undefined,
             });
 
-            await authStore.saveLoginRequest({
+            await store.saveLoginRequest({
                 userId: 'myid',
                 requestId: requestId,
                 secretHash: hashPasswordWithSalt(code, requestId),
@@ -1693,7 +1689,7 @@ describe('AuthController', () => {
             const sessionId = new Uint8Array([7, 8, 9]);
             const sessionSecret = new Uint8Array([10, 11, 12]);
 
-            await authStore.saveUser({
+            await store.saveUser({
                 id: 'myid',
                 email: address,
                 phoneNumber: address,
@@ -1701,7 +1697,7 @@ describe('AuthController', () => {
                 allSessionRevokeTimeMs: undefined,
             });
 
-            await authStore.saveLoginRequest({
+            await store.saveLoginRequest({
                 userId: 'myid',
                 requestId: requestId,
                 secretHash: hashPasswordWithSalt(code, requestId),
@@ -1726,7 +1722,7 @@ describe('AuthController', () => {
                 ipAddress: '127.0.0.1',
             })) as CompleteLoginSuccess;
 
-            await authStore.saveUser({
+            await store.saveUser({
                 id: 'myid',
                 email: address,
                 phoneNumber: address,
@@ -1776,7 +1772,7 @@ describe('AuthController', () => {
 
     describe('revokeSessionKey()', () => {
         beforeEach(async () => {
-            await authStore.saveUser({
+            await store.saveUser({
                 id: 'myid',
                 email: 'email',
                 phoneNumber: 'phonenumber',
@@ -1793,7 +1789,7 @@ describe('AuthController', () => {
 
             const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
 
-            await authStore.saveSession({
+            await store.saveSession({
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
@@ -1806,7 +1802,7 @@ describe('AuthController', () => {
                 ipAddress: '127.0.0.1',
             });
 
-            await authStore.saveSession({
+            await store.saveSession({
                 requestId,
                 sessionId: 'otherSession',
                 secretHash: 'otherHash',
@@ -1830,20 +1826,18 @@ describe('AuthController', () => {
             expect(result).toEqual({
                 success: true,
             });
-            expect(await authStore.findSession(userId, 'otherSession')).toEqual(
-                {
-                    requestId,
-                    sessionId: 'otherSession',
-                    secretHash: 'otherHash',
-                    expireTimeMs: 1000,
-                    grantedTimeMs: 100,
-                    previousSessionId: null,
-                    nextSessionId: null,
-                    revokeTimeMs: 400,
-                    userId,
-                    ipAddress: '127.0.0.1',
-                }
-            );
+            expect(await store.findSession(userId, 'otherSession')).toEqual({
+                requestId,
+                sessionId: 'otherSession',
+                secretHash: 'otherHash',
+                expireTimeMs: 1000,
+                grantedTimeMs: 100,
+                previousSessionId: null,
+                nextSessionId: null,
+                revokeTimeMs: 400,
+                userId,
+                ipAddress: '127.0.0.1',
+            });
         });
 
         it('should fail if the session could not be found', async () => {
@@ -1854,7 +1848,7 @@ describe('AuthController', () => {
 
             const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
 
-            await authStore.saveSession({
+            await store.saveSession({
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
@@ -1890,7 +1884,7 @@ describe('AuthController', () => {
 
             const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
 
-            await authStore.saveSession({
+            await store.saveSession({
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
@@ -1903,7 +1897,7 @@ describe('AuthController', () => {
                 ipAddress: '127.0.0.1',
             });
 
-            await authStore.saveSession({
+            await store.saveSession({
                 requestId,
                 sessionId: 'otherSession',
                 secretHash: 'otherHash',
@@ -1944,7 +1938,7 @@ describe('AuthController', () => {
                 5000
             );
 
-            await authStore.saveSession({
+            await store.saveSession({
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
@@ -1957,7 +1951,7 @@ describe('AuthController', () => {
                 ipAddress: '127.0.0.1',
             });
 
-            await authStore.saveSession({
+            await store.saveSession({
                 requestId,
                 sessionId: 'otherSession',
                 secretHash: 'otherHash',
@@ -1991,7 +1985,7 @@ describe('AuthController', () => {
             const code = 'code';
             const userId = 'myid';
 
-            await authStore.saveSession({
+            await store.saveSession({
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
@@ -2004,7 +1998,7 @@ describe('AuthController', () => {
                 ipAddress: '127.0.0.1',
             });
 
-            await authStore.saveSession({
+            await store.saveSession({
                 requestId,
                 sessionId: 'otherSession',
                 secretHash: 'otherHash',
@@ -2046,7 +2040,7 @@ describe('AuthController', () => {
                 200
             );
 
-            await authStore.saveSession({
+            await store.saveSession({
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
@@ -2059,7 +2053,7 @@ describe('AuthController', () => {
                 ipAddress: '127.0.0.1',
             });
 
-            await authStore.saveSession({
+            await store.saveSession({
                 requestId,
                 sessionId: 'otherSession',
                 secretHash: 'otherHash',
@@ -2158,7 +2152,7 @@ describe('AuthController', () => {
         const userId = 'myid';
 
         beforeEach(async () => {
-            await authStore.saveUser({
+            await store.saveUser({
                 id: userId,
                 email: 'email',
                 phoneNumber: 'phonenumber',
@@ -2174,7 +2168,7 @@ describe('AuthController', () => {
 
             const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
 
-            await authStore.saveSession({
+            await store.saveSession({
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
@@ -2197,7 +2191,7 @@ describe('AuthController', () => {
             expect(result).toEqual({
                 success: true,
             });
-            expect(await authStore.findUser(userId)).toEqual({
+            expect(await store.findUser(userId)).toEqual({
                 id: userId,
                 email: 'email',
                 phoneNumber: 'phonenumber',
@@ -2261,7 +2255,7 @@ describe('AuthController', () => {
         const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
 
         beforeEach(async () => {
-            await authStore.saveUser({
+            await store.saveUser({
                 id: 'myid',
                 email: 'email',
                 phoneNumber: 'phonenumber',
@@ -2269,7 +2263,7 @@ describe('AuthController', () => {
                 currentLoginRequestId: undefined,
             });
 
-            await authStore.saveSession({
+            await store.saveSession({
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
@@ -2309,7 +2303,7 @@ describe('AuthController', () => {
                 expireTimeMs: 150 + SESSION_LIFETIME_MS,
             });
 
-            expect(await authStore.findSession(userId, sessionId)).toEqual({
+            expect(await store.findSession(userId, sessionId)).toEqual({
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
@@ -2323,7 +2317,7 @@ describe('AuthController', () => {
             });
 
             expect(
-                await authStore.findSession(userId, fromByteArray(newSessionId))
+                await store.findSession(userId, fromByteArray(newSessionId))
             ).toEqual({
                 previousSessionId: sessionId,
                 nextSessionId: null,
@@ -2356,7 +2350,7 @@ describe('AuthController', () => {
         });
 
         it('should fail if given a revoked session key', async () => {
-            await authStore.saveSession({
+            await store.saveSession({
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
@@ -2439,7 +2433,7 @@ describe('AuthController', () => {
         const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
 
         beforeEach(async () => {
-            await authStore.saveUser({
+            await store.saveUser({
                 id: userId,
                 email: 'email',
                 phoneNumber: 'phonenumber',
@@ -2447,7 +2441,7 @@ describe('AuthController', () => {
                 currentLoginRequestId: undefined,
             });
 
-            await authStore.saveSession({
+            await store.saveSession({
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
@@ -2461,7 +2455,7 @@ describe('AuthController', () => {
             });
 
             for (let i = 0; i < 20; i++) {
-                await authStore.saveSession({
+                await store.saveSession({
                     requestId,
                     sessionId: 'session' + (i + 1),
                     secretHash: 'hash' + (i + 1),
@@ -2519,7 +2513,7 @@ describe('AuthController', () => {
 
         it('should use the time that all sessions were revoked at if the token was granted before all sessions were revoked', async () => {
             nowMock.mockReturnValue(400);
-            await authStore.saveUser({
+            await store.saveUser({
                 id: userId,
                 email: 'email',
                 phoneNumber: 'phonenumber',
@@ -2527,7 +2521,7 @@ describe('AuthController', () => {
                 currentLoginRequestId: undefined,
             });
 
-            await authStore.saveSession({
+            await store.saveSession({
                 requestId,
                 sessionId: 'session20',
                 secretHash: 'hash20',
@@ -2635,7 +2629,7 @@ describe('AuthController', () => {
         const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
 
         beforeEach(async () => {
-            await authStore.saveUser({
+            await store.saveUser({
                 id: userId,
                 email: 'email',
                 phoneNumber: 'phonenumber',
@@ -2646,7 +2640,7 @@ describe('AuthController', () => {
                 currentLoginRequestId: undefined,
             });
 
-            await authStore.saveSession({
+            await store.saveSession({
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
@@ -2680,13 +2674,7 @@ describe('AuthController', () => {
         });
 
         it('should work if there is no subscription config', async () => {
-            subscriptionConfig = null as any;
-            controller = new AuthController(
-                authStore,
-                messenger,
-                subscriptionConfig,
-                false
-            );
+            store.subscriptionConfiguration = null;
 
             const result = await controller.getUserInfo({
                 userId,
@@ -2707,7 +2695,7 @@ describe('AuthController', () => {
         });
 
         it('should include the subscription tier from the subscription matching the user subscriptionId', async () => {
-            await authStore.saveUser({
+            await store.saveUser({
                 id: userId,
                 email: 'email',
                 phoneNumber: 'phonenumber',
@@ -2825,7 +2813,7 @@ describe('AuthController', () => {
         const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
 
         beforeEach(async () => {
-            await authStore.saveUser({
+            await store.saveUser({
                 id: userId,
                 email: 'email',
                 phoneNumber: 'phonenumber',
@@ -2836,7 +2824,7 @@ describe('AuthController', () => {
                 currentLoginRequestId: undefined,
             });
 
-            await authStore.saveSession({
+            await store.saveSession({
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
@@ -2868,7 +2856,7 @@ describe('AuthController', () => {
                 userId: userId,
             });
 
-            const user = await authStore.findUser(userId);
+            const user = await store.findUser(userId);
 
             expect(user).toEqual({
                 id: userId,
@@ -2901,7 +2889,7 @@ describe('AuthController', () => {
                 errorMessage: INVALID_KEY_ERROR_MESSAGE,
             });
 
-            const user = await authStore.findUser(userId);
+            const user = await store.findUser(userId);
 
             expect(user).toEqual({
                 id: userId,
@@ -2931,7 +2919,7 @@ describe('AuthController', () => {
                 userId: userId,
             });
 
-            const user = await authStore.findUser(userId);
+            const user = await store.findUser(userId);
 
             expect(user).toEqual({
                 id: userId,
@@ -2964,7 +2952,7 @@ describe('AuthController', () => {
                 userId: userId,
             });
 
-            const user = await authStore.findUser(userId);
+            const user = await store.findUser(userId);
 
             expect(user).toEqual({
                 id: userId,
@@ -3068,7 +3056,7 @@ describe('AuthController', () => {
 
     describe('listEmailRules()', () => {
         it('should return the list of email rules stored in the store', async () => {
-            authStore.emailRules.push({
+            store.emailRules.push({
                 type: 'allow',
                 pattern: 'abc',
             });
@@ -3089,7 +3077,7 @@ describe('AuthController', () => {
 
     describe('listSmsRules()', () => {
         it('should return the list of email rules stored in the store', async () => {
-            authStore.smsRules.push({
+            store.smsRules.push({
                 type: 'allow',
                 pattern: 'abc',
             });

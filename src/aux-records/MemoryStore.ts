@@ -82,6 +82,7 @@ import {
     PolicyDocument,
 } from './PolicyPermissions';
 import {
+    AiChatSubscriptionMetrics,
     DataSubscriptionMetrics,
     EventSubscriptionMetrics,
     FileSubscriptionMetrics,
@@ -1596,6 +1597,12 @@ export class MemoryStore
             ...metrics,
             totalRecords,
         };
+    }
+
+    getSubscriptionAiChatMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AiChatSubscriptionMetrics> {
+        throw new Error('Method not implemented.');
     }
 
     private async _getSubscriptionInfo(

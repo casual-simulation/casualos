@@ -1,5 +1,3 @@
-import { RecordsStore } from './RecordsStore';
-import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { RecordsController } from './RecordsController';
 import {
     AddCountFailure,
@@ -10,7 +8,6 @@ import {
     UpdateEventRecordFailure,
     UpdateEventRecordSuccess,
 } from './EventRecordsController';
-import { MemoryEventRecordsStore } from './MemoryEventRecordsStore';
 import { EventRecordsStore } from './EventRecordsStore';
 import {
     createTestControllers,
@@ -19,36 +16,26 @@ import {
     createTestUser,
 } from './TestUtils';
 import { PolicyController } from './PolicyController';
-import { PolicyStore } from './PolicyStore';
-import { MemoryPolicyStore } from './MemoryPolicyStore';
 import {
     ACCOUNT_MARKER,
     ADMIN_ROLE_NAME,
     PUBLIC_READ_MARKER,
 } from './PolicyPermissions';
-import { ConfigurationStore } from './ConfigurationStore';
-import { MemoryConfigurationStore } from './MemoryConfigurationStore';
 import { merge } from 'lodash';
 import {
     FeaturesConfiguration,
     SubscriptionConfiguration,
     allowAllFeatures,
 } from './SubscriptionConfiguration';
-import { MemoryAuthStore } from './MemoryAuthStore';
-import { MemoryMetricsStore } from './MemoryMetricsStore';
+import { MemoryStore } from './MemoryStore';
 
 console.log = jest.fn();
 
 describe('EventRecordsController', () => {
-    let recordsStore: RecordsStore;
+    let store: MemoryStore;
     let records: RecordsController;
     let policies: PolicyController;
-    let policyStore: MemoryPolicyStore;
-    let store: EventRecordsStore;
     let manager: EventRecordsController;
-    let configStore: MemoryConfigurationStore;
-    let authStore: MemoryAuthStore;
-    let metrics: MemoryMetricsStore;
     const userId = 'testUser';
     let ownerId: string;
     let key: string;
@@ -56,26 +43,15 @@ describe('EventRecordsController', () => {
 
     beforeEach(async () => {
         const controllers = createTestControllers();
-        recordsStore = controllers.recordsStore;
+        store = controllers.store;
         records = controllers.records;
         policies = controllers.policies;
-        policyStore = controllers.policyStore;
-        configStore = controllers.configStore;
-        authStore = controllers.authStore;
 
-        store = new MemoryEventRecordsStore();
-        metrics = new MemoryMetricsStore(
-            null,
-            null,
-            store as MemoryEventRecordsStore,
-            recordsStore as MemoryRecordsStore,
-            authStore
-        );
         manager = new EventRecordsController({
             policies,
             store,
-            metrics,
-            config: configStore,
+            metrics: store,
+            config: store,
         });
 
         const owner = await createTestUser(controllers, 'owner@example.com');
@@ -91,10 +67,8 @@ describe('EventRecordsController', () => {
         key = recordKeyResult.recordKey;
         recordName = recordKeyResult.recordName;
 
-        const record = await controllers.recordsStore.getRecordByName(
-            recordName
-        );
-        await controllers.recordsStore.updateRecord({
+        const record = await controllers.store.getRecordByName(recordName);
+        await controllers.store.updateRecord({
             name: recordName,
             ownerId: owner.userId,
             secretHashes: record.secretHashes,
@@ -147,7 +121,7 @@ describe('EventRecordsController', () => {
         });
 
         it('should be able to add the given count if the user has the correct permissions', async () => {
-            policyStore.policies[recordName] = {
+            store.policies[recordName] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -162,7 +136,7 @@ describe('EventRecordsController', () => {
                 },
             };
 
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set(['developer']),
             };
 
@@ -221,7 +195,7 @@ describe('EventRecordsController', () => {
         });
 
         it('should deny the request if the inst does not have permissions', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -256,7 +230,7 @@ describe('EventRecordsController', () => {
         });
 
         it('should deny the request if event records are not allowed', async () => {
-            configStore.subscriptionConfiguration = merge(
+            store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
                 {
                     subscriptions: [
@@ -280,12 +254,12 @@ describe('EventRecordsController', () => {
                 } as Partial<SubscriptionConfiguration>
             );
 
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
-            const owner = await authStore.findUser(ownerId);
-            await authStore.saveUser({
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
                 ...owner,
                 subscriptionId: 'sub1',
                 subscriptionStatus: 'active',
@@ -356,7 +330,7 @@ describe('EventRecordsController', () => {
         });
 
         it('should be able to get the event count if the user has permission', async () => {
-            policyStore.policies[recordName] = {
+            store.policies[recordName] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -371,7 +345,7 @@ describe('EventRecordsController', () => {
                 },
             };
 
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set(['developer']),
             };
 
@@ -425,7 +399,7 @@ describe('EventRecordsController', () => {
         });
 
         it('should deny requests for events that the inst doesnt have permission for', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
             await store.updateEvent(recordName, 'address', {
@@ -459,7 +433,7 @@ describe('EventRecordsController', () => {
 
     describe('updateEvent()', () => {
         it('should be able to update the count for an event', async () => {
-            policyStore.policies[recordName] = {
+            store.policies[recordName] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -496,7 +470,7 @@ describe('EventRecordsController', () => {
                 },
             };
 
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set(['developer']),
             };
 
@@ -522,7 +496,7 @@ describe('EventRecordsController', () => {
         });
 
         it('should be able to update the markers for an event', async () => {
-            policyStore.policies[recordName] = {
+            store.policies[recordName] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -559,7 +533,7 @@ describe('EventRecordsController', () => {
                 },
             };
 
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set(['developer']),
             };
 
@@ -642,7 +616,7 @@ describe('EventRecordsController', () => {
         });
 
         it('should deny the request if the inst doesnt have permissions', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
             await store.addEventCount('testRecord', 'address', 10);
@@ -678,7 +652,7 @@ describe('EventRecordsController', () => {
         });
 
         it('should deny the request if event records are not allowed', async () => {
-            configStore.subscriptionConfiguration = merge(
+            store.subscriptionConfiguration = merge(
                 createTestSubConfiguration(),
                 {
                     subscriptions: [
@@ -702,12 +676,12 @@ describe('EventRecordsController', () => {
                 } as Partial<SubscriptionConfiguration>
             );
 
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
-            const owner = await authStore.findUser(ownerId);
-            await authStore.saveUser({
+            const owner = await store.findUser(ownerId);
+            await store.saveUser({
                 ...owner,
                 subscriptionId: 'sub1',
                 subscriptionStatus: 'active',
@@ -754,7 +728,7 @@ describe('EventRecordsController', () => {
         });
 
         it('should be able to list events', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -778,7 +752,7 @@ describe('EventRecordsController', () => {
         });
 
         it('should skip events until after the given event name', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -796,7 +770,7 @@ describe('EventRecordsController', () => {
         });
 
         it('should return an empty list if the inst is not authorized', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -814,7 +788,7 @@ describe('EventRecordsController', () => {
         it('should return a not_supported result if the store does not implement listEvents()', async () => {
             (store as any).listEvents = null;
 
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 

@@ -14,6 +14,7 @@ import { isActiveSubscription, JsonParseResult, tryParseJson } from './Utils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ListedStudioAssignment, RecordsStore, Studio } from './RecordsStore';
 import { ConfigurationStore } from './ConfigurationStore';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Defines a class that is able to handle subscriptions.
@@ -790,66 +791,97 @@ export class SubscriptionController {
                 const active = isActiveSubscription(status);
                 const tier = sub.tier ?? 'beta';
                 const customerId = subscription.customer;
+                const stripeSubscriptionId = subscription.id;
 
                 console.log(
                     `[SubscriptionController] [handleStripeWebhook] Customer ID: ${customerId}. Subscription status: ${status}. Tier: ${tier}. Is Active: ${active}.`
                 );
-                const user = await this._authStore.findUserByStripeCustomerId(
+                let user = await this._authStore.findUserByStripeCustomerId(
                     customerId
                 );
+                let studio: Studio;
 
                 if (user) {
-                    if (
-                        user.subscriptionStatus !== status ||
-                        user.subscriptionId !== sub.id
-                    ) {
-                        console.log(
-                            `[SubscriptionController] [handleStripeWebhook] User (${user.id}) subscription status doesn't match stored. Updating...`
-                        );
-                        await this._authStore.saveUser({
-                            ...user,
-                            subscriptionStatus: status,
-                            subscriptionId: sub.id,
-                        });
-                    } else {
-                        return {
-                            success: true,
-                        };
-                    }
-                }
+                    await this._authStore.updateSubscriptionInfo({
+                        userId: user.id,
+                        subscriptionStatus: status,
+                        subscriptionId: sub.id,
+                        stripeSubscriptionId,
+                        stripeCustomerId: customerId,
+                        currentPeriodEndMs: null,
+                        currentPeriodStartMs: null,
+                    });
 
-                console.log(
-                    `[SubscriptionController] [handleStripeWebhook] No user found for Customer ID (${customerId})`
-                );
-
-                const studio =
-                    await this._recordsStore.getStudioByStripeCustomerId(
-                        customerId
+                    // if (
+                    //     user.subscriptionStatus !== status ||
+                    //     user.subscriptionId !== sub.id
+                    // ) {
+                    //     console.log(
+                    //         `[SubscriptionController] [handleStripeWebhook] User (${user.id}) subscription status doesn't match stored. Updating...`
+                    //     );
+                    //     await this._authStore.saveUser({
+                    //         ...user,
+                    //         subscriptionStatus: status,
+                    //         subscriptionId: sub.id,
+                    //     });
+                    // }
+                } else {
+                    console.log(
+                        `[SubscriptionController] [handleStripeWebhook] No user found for Customer ID (${customerId})`
                     );
 
-                if (studio) {
-                    if (
-                        studio.subscriptionStatus !== status ||
-                        studio.subscriptionId !== sub.id
-                    ) {
-                        console.log(
-                            `[SubscriptionController] [handleStripeWebhook] Studio ((${studio.id})) subscription status doesn't match stored. Updating...`
+                    studio =
+                        await this._recordsStore.getStudioByStripeCustomerId(
+                            customerId
                         );
-                        await this._recordsStore.updateStudio({
-                            ...studio,
+
+                    if (studio) {
+                        await this._authStore.updateSubscriptionInfo({
+                            studioId: studio.id,
                             subscriptionStatus: status,
                             subscriptionId: sub.id,
+                            stripeSubscriptionId,
+                            stripeCustomerId: customerId,
+                            currentPeriodEndMs: null,
+                            currentPeriodStartMs: null,
                         });
                     } else {
-                        return {
-                            success: true,
-                        };
+                        console.log(
+                            `[SubscriptionController] [handleStripeWebhook] No studio found for Customer ID (${customerId})`
+                        );
                     }
                 }
 
-                console.log(
-                    `[SubscriptionController] [handleStripeWebhook] No studio found for Customer ID (${customerId})`
-                );
+                // if (user || studio) {
+                //     const authSubscription = await this._authStore.getSubscriptionByStripeSubscriptionId(stripeSubscriptionId);
+                //     if (authSubscription) {
+                //         if (authSubscription.subscriptionStatus !== status || authSubscription.subscriptionId !== sub.id) {
+                //             console.log(
+                //                 `[SubscriptionController] [handleStripeWebhook] Subscription ((${authSubscription.id})) doesn't match stored. Updating...`
+                //             );
+                //             await this._authStore.saveSubscription({
+                //                 ...authSubscription,
+                //                 subscriptionStatus: status,
+                //                 subscriptionId: sub.id,
+                //             });
+                //         }
+                //     } else {
+                //         console.log(
+                //             `[SubscriptionController] [handleStripeWebhook] No subscription object found. Creating...`
+                //         );
+                //         await this._authStore.saveSubscription({
+                //             id: uuid(),
+                //             stripeSubscriptionId: stripeSubscriptionId,
+                //             userId: user?.id,
+                //             studioId: studio?.id,
+                //             stripeCustomerId: customerId,
+                //             subscriptionId: sub.id,
+                //             subscriptionStatus: status,
+                //             currentPeriodEndMs: null,
+                //             currentPeriodStartMs: null
+                //         });
+                //     }
+                // }
 
                 return {
                     success: true,
