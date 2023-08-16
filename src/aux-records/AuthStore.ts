@@ -169,6 +169,16 @@ export interface AuthUser {
     subscriptionId?: string;
 
     /**
+     * The unix time in miliseconds that the user's current subscription period started at.
+     */
+    subscriptionPeriodStartMs?: number | null;
+
+    /**
+     * The unix time in miliseconds that the user's current subscription period ends at.
+     */
+    subscriptionPeriodEndMs?: number | null;
+
+    /**
      * The last Unix time that all the sessions were revoked at.
      */
     allSessionRevokeTimeMs: number | null | undefined;

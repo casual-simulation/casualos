@@ -243,6 +243,16 @@ export interface Studio {
      * The ID of the stripe subscription that this studio currently has.
      */
     subscriptionId?: string;
+
+    /**
+     * The unix time in miliseconds that the studio's current subscription period started at.
+     */
+    subscriptionPeriodStartMs?: number | null;
+
+    /**
+     * The unix time in miliseconds that the studio's current subscription period ends at.
+     */
+    subscriptionPeriodEndMs?: number | null;
 }
 
 export type StudioAssignmentRole = 'admin' | 'member';

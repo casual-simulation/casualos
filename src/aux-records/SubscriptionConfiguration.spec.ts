@@ -120,7 +120,7 @@ describe('getSubscriptionFeatures()', () => {
             'user'
         );
 
-        expect(features === config.tiers.beta).toBe(true);
+        expect(features === config.tiers.beta.features).toBe(true);
     });
 
     it('should return the default features for the user subscriber type', () => {
@@ -139,7 +139,7 @@ describe('getSubscriptionFeatures()', () => {
             config,
             'active',
             'missing',
-            'user'
+            'studio'
         );
 
         expect(features === config.defaultFeatures.studio).toBe(true);
@@ -169,7 +169,7 @@ describe('getSubscriptionFeatures()', () => {
                     'subId',
                     'user'
                 );
-                expect(features === config.tiers.beta).toBe(true);
+                expect(features === config.tiers.beta.features).toBe(true);
             });
 
             it('should return the features for the subscription ID for the studio', () => {
@@ -179,7 +179,7 @@ describe('getSubscriptionFeatures()', () => {
                     'subId',
                     'studio'
                 );
-                expect(features === config.tiers.beta).toBe(true);
+                expect(features === config.tiers.beta.features).toBe(true);
             });
         } else {
             it('should return the default features for the user', () => {

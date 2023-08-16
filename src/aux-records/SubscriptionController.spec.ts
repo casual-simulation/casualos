@@ -6,9 +6,13 @@ import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { AuthMessenger } from './AuthMessenger';
 import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
 import { StripeInterface, StripeProduct } from './StripeInterface';
-import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import {
+    SubscriptionConfiguration,
+    allowAllFeatures,
+} from './SubscriptionConfiguration';
 import { Studio } from './RecordsStore';
 import { MemoryRecordsStore } from './MemoryRecordsStore';
+import { MemoryConfigurationStore } from './MemoryConfigurationStore';
 
 console.log = jest.fn();
 
@@ -34,6 +38,7 @@ describe('SubscriptionController', () => {
     let userId: string;
     let sessionKey: string;
     let config: SubscriptionConfiguration;
+    let configStore: MemoryConfigurationStore;
 
     beforeEach(async () => {
         authStore = new MemoryAuthStore();
@@ -69,8 +74,16 @@ describe('SubscriptionController', () => {
             cancelUrl: 'http://cancel_url/',
             returnUrl: 'http://return_url/',
             successUrl: 'http://success_url/',
+            tiers: {},
+            defaultFeatures: {
+                user: allowAllFeatures(),
+                studio: allowAllFeatures(),
+            },
         };
-        auth = new AuthController(authStore, authMessenger, config);
+        configStore = new MemoryConfigurationStore({
+            subscriptions: config,
+        });
+        auth = new AuthController(authStore, authMessenger, configStore);
 
         stripe = stripeMock = {
             publishableKey: 'publishable_key',
@@ -123,7 +136,7 @@ describe('SubscriptionController', () => {
             auth,
             authStore,
             recordsStore,
-            config
+            configStore
         );
 
         const request = await auth.requestLogin({
@@ -224,7 +237,7 @@ describe('SubscriptionController', () => {
                     auth,
                     authStore,
                     recordsStore,
-                    config
+                    new MemoryConfigurationStore({ subscriptions: config })
                 );
 
                 const result = await controller.getSubscriptionStatus({
@@ -644,7 +657,7 @@ describe('SubscriptionController', () => {
                     auth,
                     authStore,
                     recordsStore,
-                    config
+                    new MemoryConfigurationStore({ subscriptions: config })
                 );
 
                 const result = await controller.getSubscriptionStatus({
@@ -1114,40 +1127,48 @@ describe('SubscriptionController', () => {
                         auth,
                         authStore,
                         recordsStore,
-                        {
-                            subscriptions: [
-                                {
-                                    id: 'sub_1',
-                                    product: 'product_99_id',
-                                    eligibleProducts: [
-                                        'product_99_id',
-                                        'product_1_id',
-                                        'product_2_id',
-                                        'product_3_id',
-                                    ],
-                                    featureList: [
-                                        'Feature 1',
-                                        'Feature 2',
-                                        'Feature 3',
-                                    ],
-                                    defaultSubscription: true,
+                        new MemoryConfigurationStore({
+                            subscriptions: {
+                                subscriptions: [
+                                    {
+                                        id: 'sub_1',
+                                        product: 'product_99_id',
+                                        eligibleProducts: [
+                                            'product_99_id',
+                                            'product_1_id',
+                                            'product_2_id',
+                                            'product_3_id',
+                                        ],
+                                        featureList: [
+                                            'Feature 1',
+                                            'Feature 2',
+                                            'Feature 3',
+                                        ],
+                                        defaultSubscription: true,
+                                    },
+                                    {
+                                        id: 'sub_2',
+                                        product: 'product_100_id',
+                                        eligibleProducts: ['product_100_id'],
+                                        featureList: [
+                                            'Feature 1',
+                                            'Feature 2',
+                                            'Feature 3',
+                                        ],
+                                    },
+                                ],
+                                webhookSecret: 'webhook_secret',
+                                cancelUrl: 'http://cancel_url/',
+                                returnUrl: 'http://return_url/',
+                                successUrl: 'http://success_url/',
+
+                                tiers: {},
+                                defaultFeatures: {
+                                    user: allowAllFeatures(),
+                                    studio: allowAllFeatures(),
                                 },
-                                {
-                                    id: 'sub_2',
-                                    product: 'product_100_id',
-                                    eligibleProducts: ['product_100_id'],
-                                    featureList: [
-                                        'Feature 1',
-                                        'Feature 2',
-                                        'Feature 3',
-                                    ],
-                                },
-                            ],
-                            webhookSecret: 'webhook_secret',
-                            cancelUrl: 'http://cancel_url/',
-                            returnUrl: 'http://return_url/',
-                            successUrl: 'http://success_url/',
-                        }
+                            },
+                        })
                     );
 
                     stripeMock.createCustomer.mockResolvedValueOnce({
@@ -1654,32 +1675,40 @@ describe('SubscriptionController', () => {
                     auth,
                     authStore,
                     recordsStore,
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub_1',
-                                product: 'product_99_id',
-                                eligibleProducts: [
-                                    'product_99_id',
-                                    'product_1_id',
-                                    'product_2_id',
-                                    'product_3_id',
-                                ],
-                                featureList: [
-                                    'Feature 1',
-                                    'Feature 2',
-                                    'Feature 3',
-                                ],
+                    new MemoryConfigurationStore({
+                        subscriptions: {
+                            subscriptions: [
+                                {
+                                    id: 'sub_1',
+                                    product: 'product_99_id',
+                                    eligibleProducts: [
+                                        'product_99_id',
+                                        'product_1_id',
+                                        'product_2_id',
+                                        'product_3_id',
+                                    ],
+                                    featureList: [
+                                        'Feature 1',
+                                        'Feature 2',
+                                        'Feature 3',
+                                    ],
+                                },
+                            ],
+                            checkoutConfig: {
+                                mySpecialKey: 123,
                             },
-                        ],
-                        checkoutConfig: {
-                            mySpecialKey: 123,
+                            webhookSecret: 'webhook_secret',
+                            cancelUrl: 'http://cancel_url/',
+                            returnUrl: 'http://return_url/',
+                            successUrl: 'http://success_url/',
+
+                            tiers: {},
+                            defaultFeatures: {
+                                user: allowAllFeatures(),
+                                studio: allowAllFeatures(),
+                            },
                         },
-                        webhookSecret: 'webhook_secret',
-                        cancelUrl: 'http://cancel_url/',
-                        returnUrl: 'http://return_url/',
-                        successUrl: 'http://success_url/',
-                    }
+                    })
                 );
 
                 const result = await controller.createManageSubscriptionLink({
@@ -1768,32 +1797,39 @@ describe('SubscriptionController', () => {
                     auth,
                     authStore,
                     recordsStore,
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub_1',
-                                product: 'product_99_id',
-                                eligibleProducts: [
-                                    'product_99_id',
-                                    'product_1_id',
-                                    'product_2_id',
-                                    'product_3_id',
-                                ],
-                                featureList: [
-                                    'Feature 1',
-                                    'Feature 2',
-                                    'Feature 3',
-                                ],
+                    new MemoryConfigurationStore({
+                        subscriptions: {
+                            subscriptions: [
+                                {
+                                    id: 'sub_1',
+                                    product: 'product_99_id',
+                                    eligibleProducts: [
+                                        'product_99_id',
+                                        'product_1_id',
+                                        'product_2_id',
+                                        'product_3_id',
+                                    ],
+                                    featureList: [
+                                        'Feature 1',
+                                        'Feature 2',
+                                        'Feature 3',
+                                    ],
+                                },
+                            ],
+                            portalConfig: {
+                                mySpecialKey: 123,
                             },
-                        ],
-                        portalConfig: {
-                            mySpecialKey: 123,
+                            webhookSecret: 'webhook_secret',
+                            cancelUrl: 'http://cancel_url/',
+                            returnUrl: 'http://return_url/',
+                            successUrl: 'http://success_url/',
+                            tiers: {},
+                            defaultFeatures: {
+                                user: allowAllFeatures(),
+                                studio: allowAllFeatures(),
+                            },
                         },
-                        webhookSecret: 'webhook_secret',
-                        cancelUrl: 'http://cancel_url/',
-                        returnUrl: 'http://return_url/',
-                        successUrl: 'http://success_url/',
-                    }
+                    })
                 );
 
                 await authStore.saveUser({
@@ -2356,40 +2392,48 @@ describe('SubscriptionController', () => {
                         auth,
                         authStore,
                         recordsStore,
-                        {
-                            subscriptions: [
-                                {
-                                    id: 'sub_1',
-                                    product: 'product_99_id',
-                                    eligibleProducts: [
-                                        'product_99_id',
-                                        'product_1_id',
-                                        'product_2_id',
-                                        'product_3_id',
-                                    ],
-                                    featureList: [
-                                        'Feature 1',
-                                        'Feature 2',
-                                        'Feature 3',
-                                    ],
-                                    defaultSubscription: true,
+                        new MemoryConfigurationStore({
+                            subscriptions: {
+                                subscriptions: [
+                                    {
+                                        id: 'sub_1',
+                                        product: 'product_99_id',
+                                        eligibleProducts: [
+                                            'product_99_id',
+                                            'product_1_id',
+                                            'product_2_id',
+                                            'product_3_id',
+                                        ],
+                                        featureList: [
+                                            'Feature 1',
+                                            'Feature 2',
+                                            'Feature 3',
+                                        ],
+                                        defaultSubscription: true,
+                                    },
+                                    {
+                                        id: 'sub_2',
+                                        product: 'product_100_id',
+                                        eligibleProducts: ['product_100_id'],
+                                        featureList: [
+                                            'Feature 1',
+                                            'Feature 2',
+                                            'Feature 3',
+                                        ],
+                                    },
+                                ],
+                                webhookSecret: 'webhook_secret',
+                                cancelUrl: `http://cancel_url/`,
+                                returnUrl: `http://return_url/`,
+                                successUrl: `http://success_url/`,
+
+                                tiers: {},
+                                defaultFeatures: {
+                                    user: allowAllFeatures(),
+                                    studio: allowAllFeatures(),
                                 },
-                                {
-                                    id: 'sub_2',
-                                    product: 'product_100_id',
-                                    eligibleProducts: ['product_100_id'],
-                                    featureList: [
-                                        'Feature 1',
-                                        'Feature 2',
-                                        'Feature 3',
-                                    ],
-                                },
-                            ],
-                            webhookSecret: 'webhook_secret',
-                            cancelUrl: `http://cancel_url/`,
-                            returnUrl: `http://return_url/`,
-                            successUrl: `http://success_url/`,
-                        }
+                            },
+                        })
                     );
 
                     stripeMock.createCustomer.mockResolvedValueOnce({
@@ -2909,32 +2953,40 @@ describe('SubscriptionController', () => {
                     auth,
                     authStore,
                     recordsStore,
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub_1',
-                                product: 'product_99_id',
-                                eligibleProducts: [
-                                    'product_99_id',
-                                    'product_1_id',
-                                    'product_2_id',
-                                    'product_3_id',
-                                ],
-                                featureList: [
-                                    'Feature 1',
-                                    'Feature 2',
-                                    'Feature 3',
-                                ],
+                    new MemoryConfigurationStore({
+                        subscriptions: {
+                            subscriptions: [
+                                {
+                                    id: 'sub_1',
+                                    product: 'product_99_id',
+                                    eligibleProducts: [
+                                        'product_99_id',
+                                        'product_1_id',
+                                        'product_2_id',
+                                        'product_3_id',
+                                    ],
+                                    featureList: [
+                                        'Feature 1',
+                                        'Feature 2',
+                                        'Feature 3',
+                                    ],
+                                },
+                            ],
+                            checkoutConfig: {
+                                mySpecialKey: 123,
                             },
-                        ],
-                        checkoutConfig: {
-                            mySpecialKey: 123,
+                            webhookSecret: 'webhook_secret',
+                            cancelUrl: 'http://cancel_url/',
+                            returnUrl: 'http://return_url/',
+                            successUrl: 'http://success_url/',
+
+                            tiers: {},
+                            defaultFeatures: {
+                                user: allowAllFeatures(),
+                                studio: allowAllFeatures(),
+                            },
                         },
-                        webhookSecret: 'webhook_secret',
-                        cancelUrl: 'http://cancel_url/',
-                        returnUrl: 'http://return_url/',
-                        successUrl: 'http://success_url/',
-                    }
+                    })
                 );
 
                 const result = await controller.createManageSubscriptionLink({
@@ -3029,32 +3081,40 @@ describe('SubscriptionController', () => {
                     auth,
                     authStore,
                     recordsStore,
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub_1',
-                                product: 'product_99_id',
-                                eligibleProducts: [
-                                    'product_99_id',
-                                    'product_1_id',
-                                    'product_2_id',
-                                    'product_3_id',
-                                ],
-                                featureList: [
-                                    'Feature 1',
-                                    'Feature 2',
-                                    'Feature 3',
-                                ],
+                    new MemoryConfigurationStore({
+                        subscriptions: {
+                            subscriptions: [
+                                {
+                                    id: 'sub_1',
+                                    product: 'product_99_id',
+                                    eligibleProducts: [
+                                        'product_99_id',
+                                        'product_1_id',
+                                        'product_2_id',
+                                        'product_3_id',
+                                    ],
+                                    featureList: [
+                                        'Feature 1',
+                                        'Feature 2',
+                                        'Feature 3',
+                                    ],
+                                },
+                            ],
+                            portalConfig: {
+                                mySpecialKey: 123,
                             },
-                        ],
-                        portalConfig: {
-                            mySpecialKey: 123,
+                            webhookSecret: 'webhook_secret',
+                            cancelUrl: 'http://cancel_url/',
+                            returnUrl: 'http://return_url/',
+                            successUrl: 'http://success_url/',
+
+                            tiers: {},
+                            defaultFeatures: {
+                                user: allowAllFeatures(),
+                                studio: allowAllFeatures(),
+                            },
                         },
-                        webhookSecret: 'webhook_secret',
-                        cancelUrl: 'http://cancel_url/',
-                        returnUrl: 'http://return_url/',
-                        successUrl: 'http://success_url/',
-                    }
+                    })
                 );
 
                 await recordsStore.updateStudio({
@@ -3524,7 +3584,7 @@ describe('SubscriptionController', () => {
                 expect(user.subscriptionStatus).toBeFalsy();
             });
 
-            const eventTypes = [
+            const subscriptionEventTypes = [
                 ['customer.subscription.created'],
                 ['customer.subscription.updated'],
                 ['customer.subscription.deleted'],
@@ -3542,125 +3602,200 @@ describe('SubscriptionController', () => {
                 ['paused', false] as const,
             ];
 
-            describe.each(eventTypes)('should handle %s events', (type) => {
-                describe.each(statusTypes)('%s', (status, active) => {
-                    beforeEach(async () => {
-                        await authStore.saveUser({
-                            ...user,
-                            subscriptionStatus: 'anything',
+            describe.each(subscriptionEventTypes)(
+                'should handle %s events',
+                (type) => {
+                    describe.each(statusTypes)('%s', (status, active) => {
+                        beforeEach(async () => {
+                            await authStore.saveUser({
+                                ...user,
+                                subscriptionStatus: 'anything',
+                            });
+                        });
+
+                        it('should handle subscriptions', async () => {
+                            stripeMock.constructWebhookEvent.mockReturnValueOnce(
+                                {
+                                    id: 'event_id',
+                                    object: 'event',
+                                    account: 'account_id',
+                                    api_version: 'api_version',
+                                    created: 123,
+                                    data: {
+                                        object: {
+                                            id: 'subscription',
+                                            status: status,
+                                            customer: 'customer_id',
+                                            items: {
+                                                object: 'list',
+                                                data: [
+                                                    {
+                                                        price: {
+                                                            id: 'price_1',
+                                                            product:
+                                                                'product_1_id',
+                                                        },
+                                                    },
+                                                ],
+                                            },
+                                        },
+                                    },
+                                    livemode: true,
+                                    pending_webhooks: 1,
+                                    request: {},
+                                    type: type,
+                                }
+                            );
+
+                            const result = await controller.handleStripeWebhook(
+                                {
+                                    requestBody: 'request_body',
+                                    signature: 'request_signature',
+                                }
+                            );
+
+                            expect(result).toEqual({
+                                success: true,
+                            });
+                            expect(
+                                stripeMock.constructWebhookEvent
+                            ).toHaveBeenCalledTimes(1);
+                            expect(
+                                stripeMock.constructWebhookEvent
+                            ).toHaveBeenCalledWith(
+                                'request_body',
+                                'request_signature',
+                                'webhook_secret'
+                            );
+
+                            const user = await authStore.findUser(userId);
+                            expect(user.subscriptionStatus).toBe(status);
+                            expect(user.subscriptionId).toBe('sub_1');
+                        });
+
+                        it('should do nothing for products that are not configured', async () => {
+                            stripeMock.constructWebhookEvent.mockReturnValueOnce(
+                                {
+                                    id: 'event_id',
+                                    object: 'event',
+                                    account: 'account_id',
+                                    api_version: 'api_version',
+                                    created: 123,
+                                    data: {
+                                        object: {
+                                            id: 'subscription',
+                                            status: status,
+                                            customer: 'customer_id',
+                                            items: {
+                                                object: 'list',
+                                                data: [
+                                                    {
+                                                        price: {
+                                                            id: 'price_1',
+                                                            product:
+                                                                'wrong_product_id',
+                                                        },
+                                                    },
+                                                ],
+                                            },
+                                        },
+                                    },
+                                    livemode: true,
+                                    pending_webhooks: 1,
+                                    request: {},
+                                    type: type,
+                                }
+                            );
+
+                            const result = await controller.handleStripeWebhook(
+                                {
+                                    requestBody: 'request_body',
+                                    signature: 'request_signature',
+                                }
+                            );
+
+                            expect(result).toEqual({
+                                success: true,
+                            });
+                            expect(
+                                stripeMock.constructWebhookEvent
+                            ).toHaveBeenCalledTimes(1);
+                            expect(
+                                stripeMock.constructWebhookEvent
+                            ).toHaveBeenCalledWith(
+                                'request_body',
+                                'request_signature',
+                                'webhook_secret'
+                            );
+
+                            const user = await authStore.findUser(userId);
+
+                            // Do nothing
+                            expect(user.subscriptionStatus).toBe('anything');
                         });
                     });
+                }
+            );
 
-                    it('should handle subscriptions', async () => {
-                        stripeMock.constructWebhookEvent.mockReturnValueOnce({
-                            id: 'event_id',
-                            object: 'event',
-                            account: 'account_id',
-                            api_version: 'api_version',
-                            created: 123,
-                            data: {
-                                object: {
-                                    id: 'subscription',
-                                    status: status,
-                                    customer: 'customer_id',
-                                    items: {
-                                        object: 'list',
-                                        data: [
-                                            {
-                                                price: {
-                                                    id: 'price_1',
-                                                    product: 'product_1_id',
-                                                },
+            describe('should handle invoice.paid events', () => {
+                it('should update subscription periods', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'invoice.paid',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'invoiceId',
+                                customer: 'customer_id',
+                                lines: {
+                                    object: 'list',
+                                    data: [
+                                        {
+                                            id: 'line_item_1_id',
+                                            price: {
+                                                id: 'price_1',
+                                                product: 'product_1_id',
                                             },
-                                        ],
-                                    },
+                                        },
+                                    ],
+                                },
+                                subscription: {
+                                    id: 'sub',
+                                    current_period_start: 456,
+                                    current_period_end: 999,
                                 },
                             },
-                            livemode: true,
-                            pending_webhooks: 1,
-                            request: {},
-                            type: type,
-                        });
-
-                        const result = await controller.handleStripeWebhook({
-                            requestBody: 'request_body',
-                            signature: 'request_signature',
-                        });
-
-                        expect(result).toEqual({
-                            success: true,
-                        });
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledTimes(1);
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledWith(
-                            'request_body',
-                            'request_signature',
-                            'webhook_secret'
-                        );
-
-                        const user = await authStore.findUser(userId);
-                        expect(user.subscriptionStatus).toBe(status);
-                        expect(user.subscriptionId).toBe('sub_1');
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
                     });
 
-                    it('should do nothing for products that are not configured', async () => {
-                        stripeMock.constructWebhookEvent.mockReturnValueOnce({
-                            id: 'event_id',
-                            object: 'event',
-                            account: 'account_id',
-                            api_version: 'api_version',
-                            created: 123,
-                            data: {
-                                object: {
-                                    id: 'subscription',
-                                    status: status,
-                                    customer: 'customer_id',
-                                    items: {
-                                        object: 'list',
-                                        data: [
-                                            {
-                                                price: {
-                                                    id: 'price_1',
-                                                    product: 'wrong_product_id',
-                                                },
-                                            },
-                                        ],
-                                    },
-                                },
-                            },
-                            livemode: true,
-                            pending_webhooks: 1,
-                            request: {},
-                            type: type,
-                        });
-
-                        const result = await controller.handleStripeWebhook({
-                            requestBody: 'request_body',
-                            signature: 'request_signature',
-                        });
-
-                        expect(result).toEqual({
-                            success: true,
-                        });
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledTimes(1);
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledWith(
-                            'request_body',
-                            'request_signature',
-                            'webhook_secret'
-                        );
-
-                        const user = await authStore.findUser(userId);
-
-                        // Do nothing
-                        expect(user.subscriptionStatus).toBe('anything');
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
                     });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledTimes(1);
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledWith(
+                        'request_body',
+                        'request_signature',
+                        'webhook_secret'
+                    );
+
+                    const user = await authStore.findUser(userId);
+                    expect(user?.subscriptionPeriodStartMs).toBe(456000);
+                    expect(user?.subscriptionPeriodEndMs).toBe(999000);
                 });
             });
         });
@@ -3827,6 +3962,68 @@ describe('SubscriptionController', () => {
                         // Do nothing
                         expect(studio.subscriptionStatus).toBe('anything');
                     });
+                });
+            });
+
+            describe('should handle invoice.paid events', () => {
+                it('should update subscription periods', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'invoice.paid',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'invoiceId',
+                                customer: 'customer_id',
+                                lines: {
+                                    object: 'list',
+                                    data: [
+                                        {
+                                            id: 'line_item_1_id',
+                                            price: {
+                                                id: 'price_1',
+                                                product: 'product_1_id',
+                                            },
+                                        },
+                                    ],
+                                },
+                                subscription: {
+                                    id: 'sub',
+                                    current_period_start: 456,
+                                    current_period_end: 999,
+                                },
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledTimes(1);
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledWith(
+                        'request_body',
+                        'request_signature',
+                        'webhook_secret'
+                    );
+
+                    const studio = await recordsStore.getStudioById(studioId);
+                    expect(studio?.subscriptionPeriodStartMs).toBe(456000);
+                    expect(studio?.subscriptionPeriodEndMs).toBe(999000);
                 });
             });
         });
