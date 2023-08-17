@@ -387,13 +387,13 @@ model Invoice {
     periodId String @unique @db.Uuid
     period SubscriptionPeriod @relation(fields: [periodId], references: [id])
 
-    description String
+    description String?
     status String
     paid Boolean
     currency String
     total Int
     subtotal Int
-    tax Int
+    tax Int?
 
     stripeHostedInvoiceUrl String
     stripeInvoicePdfUrl String
