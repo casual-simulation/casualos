@@ -1,4 +1,5 @@
 import {
+    AiChatSubscriptionMetrics,
     ConfigurationStore,
     DataSubscriptionMetrics,
     EventSubscriptionMetrics,
@@ -12,12 +13,19 @@ import {
     parseSubscriptionConfig,
 } from '@casual-simulation/aux-records';
 import { PrismaClient, Prisma } from '@prisma/client';
+import { convertToMillis } from './Utils';
 
 export class PrismaMetricsStore implements MetricsStore {
     private _client: PrismaClient;
 
     constructor(client: PrismaClient) {
         this._client = client;
+    }
+
+    getSubscriptionAiChatMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AiChatSubscriptionMetrics> {
+        throw new Error('Method not implemented.');
     }
 
     async getSubscriptionDataMetricsByRecordName(
@@ -50,6 +58,14 @@ export class PrismaMetricsStore implements MetricsStore {
                 result.owner?.subscriptionStatus ||
                 result.studio?.subscriptionStatus,
             totalItems: totalItems,
+            currentPeriodEndMs: convertToMillis(
+                result.owner?.subscriptionPeriodEnd ||
+                    result.studio?.subscriptionPeriodEnd
+            ),
+            currentPeriodStartMs: convertToMillis(
+                result.owner?.subscriptionPeriodStart ||
+                    result.studio?.subscriptionPeriodStart
+            ),
         };
     }
 
@@ -90,6 +106,14 @@ export class PrismaMetricsStore implements MetricsStore {
                 result.studio?.subscriptionStatus,
             totalItems: stats._count._all,
             totalFileBytesReserved: Number(stats._sum.sizeInBytes),
+            currentPeriodEndMs: convertToMillis(
+                result.owner?.subscriptionPeriodEnd ||
+                    result.studio?.subscriptionPeriodEnd
+            ),
+            currentPeriodStartMs: convertToMillis(
+                result.owner?.subscriptionPeriodStart ||
+                    result.studio?.subscriptionPeriodStart
+            ),
         };
     }
 
@@ -126,6 +150,14 @@ export class PrismaMetricsStore implements MetricsStore {
                 result.owner?.subscriptionStatus ||
                 result.studio?.subscriptionStatus,
             totalEventNames: stats._count._all,
+            currentPeriodEndMs: convertToMillis(
+                result.owner?.subscriptionPeriodEnd ||
+                    result.studio?.subscriptionPeriodEnd
+            ),
+            currentPeriodStartMs: convertToMillis(
+                result.owner?.subscriptionPeriodStart ||
+                    result.studio?.subscriptionPeriodStart
+            ),
         };
     }
 
@@ -146,6 +178,8 @@ export class PrismaMetricsStore implements MetricsStore {
                     id: true,
                     subscriptionId: true,
                     subscriptionStatus: true,
+                    subscriptionPeriodEnd: true,
+                    subscriptionPeriodStart: true,
                 },
             });
 
@@ -155,6 +189,10 @@ export class PrismaMetricsStore implements MetricsStore {
                 subscriptionId: user.subscriptionId,
                 subscriptionStatus: user.subscriptionStatus,
                 totalRecords: user._count.records,
+                currentPeriodStartMs: convertToMillis(
+                    user.subscriptionPeriodStart
+                ),
+                currentPeriodEndMs: convertToMillis(user.subscriptionPeriodEnd),
             };
         } else {
             const studio = await this._client.studio.findUnique({
@@ -170,6 +208,8 @@ export class PrismaMetricsStore implements MetricsStore {
                     id: true,
                     subscriptionId: true,
                     subscriptionStatus: true,
+                    subscriptionPeriodEnd: true,
+                    subscriptionPeriodStart: true,
                 },
             });
 
@@ -179,6 +219,12 @@ export class PrismaMetricsStore implements MetricsStore {
                 subscriptionId: studio.subscriptionId,
                 subscriptionStatus: studio.subscriptionStatus,
                 totalRecords: studio._count.records,
+                currentPeriodStartMs: convertToMillis(
+                    studio.subscriptionPeriodStart
+                ),
+                currentPeriodEndMs: convertToMillis(
+                    studio.subscriptionPeriodEnd
+                ),
             };
         }
     }
@@ -194,6 +240,8 @@ export class PrismaMetricsStore implements MetricsStore {
                         id: true,
                         subscriptionId: true,
                         subscriptionStatus: true,
+                        subscriptionPeriodStart: true,
+                        subscriptionPeriodEnd: true,
                     },
                 },
                 studio: {
@@ -201,6 +249,8 @@ export class PrismaMetricsStore implements MetricsStore {
                         id: true,
                         subscriptionId: true,
                         subscriptionStatus: true,
+                        subscriptionPeriodStart: true,
+                        subscriptionPeriodEnd: true,
                     },
                 },
             },

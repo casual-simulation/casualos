@@ -1781,6 +1781,8 @@ export class MemoryStore
             if (user) {
                 metrics.subscriptionStatus = user.subscriptionStatus;
                 metrics.subscriptionId = user.subscriptionId;
+                metrics.currentPeriodEndMs = user.subscriptionPeriodEndMs;
+                metrics.currentPeriodStartMs = user.subscriptionPeriodStartMs;
             }
         } else if (filter.studioId) {
             const studio = await this.getStudioById(filter.studioId);
@@ -1788,6 +1790,8 @@ export class MemoryStore
             if (studio) {
                 metrics.subscriptionId = studio.subscriptionId;
                 metrics.subscriptionStatus = studio.subscriptionStatus;
+                metrics.currentPeriodEndMs = studio.subscriptionPeriodEndMs;
+                metrics.currentPeriodStartMs = studio.subscriptionPeriodStartMs;
             }
         }
 

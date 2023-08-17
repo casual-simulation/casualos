@@ -1094,6 +1094,8 @@ export interface MongoDBAuthUser {
     stripeCustomerId?: string;
     subscriptionStatus?: string;
     subscriptionId?: string;
+    subscriptionPeriodStartMs?: number;
+    subscriptionPeriodEndMs?: number;
     banTimeMs?: number;
     banReason?: AuthUser['banReason'];
 }

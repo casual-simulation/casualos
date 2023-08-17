@@ -1,4 +1,5 @@
 import {
+    AiChatSubscriptionMetrics,
     DataSubscriptionMetrics,
     EventSubscriptionMetrics,
     FileSubscriptionMetrics,
@@ -36,12 +37,23 @@ export class MongoDBMetricsStore implements MetricsStore {
         this._records = records;
         this._users = users;
     }
+    getSubscriptionAiChatMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AiChatSubscriptionMetrics> {
+        throw new Error('Method not implemented.');
+    }
 
     async getSubscriptionDataMetricsByRecordName(
         recordName: string
     ): Promise<DataSubscriptionMetrics> {
-        const { subscriptionId, subscriptionStatus, records, record } =
-            await this._listRecords(recordName);
+        const {
+            subscriptionId,
+            subscriptionStatus,
+            records,
+            record,
+            periodStart,
+            periodEnd,
+        } = await this._listRecords(recordName);
 
         let count = 0;
         for (let record of records) {
@@ -57,14 +69,22 @@ export class MongoDBMetricsStore implements MetricsStore {
             subscriptionStatus: subscriptionStatus,
             recordName: record.name,
             totalItems: count,
+            currentPeriodEndMs: periodEnd,
+            currentPeriodStartMs: periodStart,
         };
     }
 
     async getSubscriptionFileMetricsByRecordName(
         recordName: string
     ): Promise<FileSubscriptionMetrics> {
-        const { subscriptionId, subscriptionStatus, records, record } =
-            await this._listRecords(recordName);
+        const {
+            subscriptionId,
+            subscriptionStatus,
+            records,
+            record,
+            periodStart,
+            periodEnd,
+        } = await this._listRecords(recordName);
 
         let count = 0;
         let reservedSize = 0;
@@ -97,14 +117,22 @@ export class MongoDBMetricsStore implements MetricsStore {
             recordName: record.name,
             totalFiles: count,
             totalFileBytesReserved: reservedSize,
+            currentPeriodEndMs: periodEnd,
+            currentPeriodStartMs: periodStart,
         };
     }
 
     async getSubscriptionEventMetricsByRecordName(
         recordName: string
     ): Promise<EventSubscriptionMetrics> {
-        const { subscriptionId, subscriptionStatus, records, record } =
-            await this._listRecords(recordName);
+        const {
+            subscriptionId,
+            subscriptionStatus,
+            records,
+            record,
+            periodEnd,
+            periodStart,
+        } = await this._listRecords(recordName);
 
         let count = 0;
         for (let record of records) {
@@ -120,6 +148,8 @@ export class MongoDBMetricsStore implements MetricsStore {
             subscriptionStatus: subscriptionStatus,
             recordName: record.name,
             totalEventNames: count,
+            currentPeriodEndMs: periodEnd,
+            currentPeriodStartMs: periodStart,
         };
     }
 
@@ -142,6 +172,8 @@ export class MongoDBMetricsStore implements MetricsStore {
                 subscriptionId: user.subscriptionId,
                 subscriptionStatus: user.subscriptionStatus,
                 totalRecords: count,
+                currentPeriodEndMs: user.subscriptionPeriodEndMs,
+                currentPeriodStartMs: user.subscriptionPeriodStartMs,
             };
         } else {
             const studio = await this._studios.findOne({
@@ -159,6 +191,8 @@ export class MongoDBMetricsStore implements MetricsStore {
                 subscriptionId: studio.subscriptionId,
                 subscriptionStatus: studio.subscriptionStatus,
                 totalRecords: count,
+                currentPeriodEndMs: studio.subscriptionPeriodEndMs,
+                currentPeriodStartMs: studio.subscriptionPeriodStartMs,
             };
         }
     }
@@ -172,6 +206,8 @@ export class MongoDBMetricsStore implements MetricsStore {
 
         let subscriptionStatus: string;
         let subscriptionId: string;
+        let periodStart: number;
+        let periodEnd: number;
         if (record.ownerId) {
             filter.recordName = record.name;
 
@@ -181,6 +217,8 @@ export class MongoDBMetricsStore implements MetricsStore {
 
             subscriptionId = user.subscriptionId;
             subscriptionStatus = user.subscriptionStatus;
+            periodStart = user.subscriptionPeriodStartMs;
+            periodEnd = user.subscriptionPeriodEndMs;
         } else if (record.studioId) {
             filter.recordName = record.name;
             const studio = await this._studios.findOne({
@@ -188,6 +226,8 @@ export class MongoDBMetricsStore implements MetricsStore {
             });
             subscriptionId = studio.subscriptionId;
             subscriptionStatus = studio.subscriptionStatus;
+            periodStart = studio.subscriptionPeriodStartMs;
+            periodEnd = studio.subscriptionPeriodEndMs;
         }
 
         const records = await this._records.find(filter).toArray();
@@ -197,6 +237,8 @@ export class MongoDBMetricsStore implements MetricsStore {
             records,
             subscriptionId,
             subscriptionStatus,
+            periodStart,
+            periodEnd,
         };
     }
 }
