@@ -25,7 +25,7 @@ model User {
     banTime DateTime?
     banReason String?
 
-    subscriptionInfoId BigInt? @unique
+    subscriptionInfoId String? @unique @db.Uuid
     subscriptionInfo Subscription? @relation(fields: [subscriptionInfoId], references: [id])
 
     subscriptionStatus String?
@@ -122,7 +122,7 @@ model Studio {
     records Record[]
     assignments StudioAssignment[]
 
-    subscriptionInfoId BigInt? @unique
+    subscriptionInfoId String? @unique @db.Uuid
     subscriptionInfo Subscription? @relation(fields: [subscriptionInfoId], references: [id])
 
     subscriptionStatus String?
@@ -334,7 +334,7 @@ model Configuration {
 }
 
 model Subscription {
-    id BigInt @id @default(autoincrement())
+    id String @id @db.Uuid
     stripeSubscriptionId String @unique
 
     userId String? @unique
@@ -356,16 +356,19 @@ model Subscription {
     aiChatMetrics AiChatMetrics[]
     aiImageMetrics AiImageMetrics[]
     aiSkyboxMetrics AiSkyboxMetrics[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
 
 model SubscriptionPeriod {
-    id BigInt @id @default(autoincrement())
+    id String @id @db.Uuid
 
-    subscriptionId BigInt
+    subscriptionId String @db.Uuid
     subscription Subscription @relation(fields: [subscriptionId], references: [id])
 
-    invoiceId BigInt? @unique
-    invoice Invoice? @relation()
+    invoiceId String @unique @db.Uuid
+    invoice Invoice?
 
     periodStart DateTime
     periodEnd DateTime
@@ -375,14 +378,14 @@ model SubscriptionPeriod {
 }
 
 model Invoice {
-    id BigInt @id @default(autoincrement())
+    id String @id @db.Uuid
     stripeInvoiceId String @unique
 
-    subscriptionId BigInt
+    subscriptionId String @db.Uuid
     subscription Subscription @relation(fields: [subscriptionId], references: [id])
 
-    periodId BigInt? @unique
-    period SubscriptionPeriod? @relation(fields: [periodId], references: [id])
+    periodId String @unique @db.Uuid
+    period SubscriptionPeriod @relation(fields: [periodId], references: [id])
 
     description String
     status String
@@ -400,27 +403,27 @@ model Invoice {
 }
 
 model AiChatMetrics {
-    id BigInt @id @default(autoincrement())
+    id String @id @db.Uuid
     createdAt DateTime @default(now())
 
     tokens Int
     
-    subscriptionId BigInt
+    subscriptionId String @db.Uuid
     subscription Subscription @relation(fields: [subscriptionId], references: [id])
 }
 
 model AiImageMetrics {
-    id BigInt @id @default(autoincrement())
+    id String @id @db.Uuid
     pixelsGenerated Int
-    subscriptionId BigInt
+    subscriptionId String @db.Uuid
     subscription Subscription @relation(fields: [subscriptionId], references: [id])
     createdAt DateTime @default(now())
 }
 
 model AiSkyboxMetrics {
-    id BigInt @id @default(autoincrement())
+    id String @id @db.Uuid
     skyboxesGenerated Int
-    subscriptionId BigInt
+    subscriptionId String @db.Uuid
     subscription Subscription @relation(fields: [subscriptionId], references: [id])
     createdAt DateTime @default(now())
 }
