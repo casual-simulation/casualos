@@ -70,7 +70,7 @@ export interface StripeInterface {
      *
      * @param id The ID of the subscription.
      */
-    getSubscriptionById(id: string): Promise<StripeSubscription>;
+    getSubscriptionById(id: string): Promise<Omit<StripeSubscription, 'items'>>;
 }
 
 export interface StripePrice {

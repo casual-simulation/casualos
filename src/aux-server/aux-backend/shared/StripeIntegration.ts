@@ -10,6 +10,7 @@ import {
     StripePortalResponse,
     StripePrice,
     StripeProduct,
+    StripeSubscription,
     StripeSubscriptionItem,
 } from '@casual-simulation/aux-records';
 import Stripe from 'stripe';
@@ -143,5 +144,11 @@ export class StripeIntegration implements StripeInterface {
         secret: string
     ): StripeEvent {
         return this._stripe.webhooks.constructEvent(payload, signature, secret);
+    }
+
+    async getSubscriptionById(
+        id: string
+    ): Promise<Omit<StripeSubscription, 'items'>> {
+        return await this._stripe.subscriptions.retrieve(id);
     }
 }
