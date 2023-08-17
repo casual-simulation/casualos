@@ -10,8 +10,7 @@ import {
 import { Collection, FilterQuery } from 'mongodb';
 import { DataRecord } from './MongoDBDataRecordsStore';
 import { MongoFileRecord } from './MongoDBFileRecordsStore';
-import { MongoDBStudio } from './MongoDBRecordsStore';
-import { MongoDBAuthUser } from './MongoDBAuthStore';
+import { MongoDBAuthUser, MongoDBStudio } from './MongoDBAuthStore';
 import { EventRecord } from './MongoDBEventRecordsStore';
 
 export class MongoDBMetricsStore implements MetricsStore {

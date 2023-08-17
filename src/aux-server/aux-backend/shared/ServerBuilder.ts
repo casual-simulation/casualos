@@ -64,11 +64,17 @@ import {
     MongoDBEventRecordsStore,
     MongoDBDataRecordsStore,
     MongoDBPolicyStore,
-    MongoDBRecordsStore,
     MongoDBFileRecordsLookup,
     MongoDBStudio,
     MongoDBConfigurationStore,
     MongoDBMetricsStore,
+    USERS_COLLECTION_NAME,
+    LOGIN_REQUESTS_COLLECTION_NAME,
+    SESSIONS_COLLECTION_NAME,
+    EMAIL_RULES_COLLECTION_NAME,
+    SMS_RULES_COLLECTION_NAME,
+    RECORDS_COLLECTION_NAME,
+    STUDIOS_COLLECTION_NAME,
 } from '../mongo';
 import { sortBy } from 'lodash';
 import { PrismaClient } from '@prisma/client';
@@ -182,14 +188,15 @@ export class ServerBuilder {
                 const db = mongo.db(mongodb.database);
 
                 this._mongoDb = db;
-                const users = db.collection<MongoDBAuthUser>('users');
-                const loginRequests =
-                    db.collection<MongoDBLoginRequest>('loginRequests');
-                const sessions = db.collection<MongoDBAuthSession>('sessions');
-                const studios = db.collection<MongoDBStudio>('sessions');
-                const recordsCollection = db.collection<Record>('records');
-                const recordsKeysCollection =
-                    db.collection<RecordKey>('recordsKeys');
+                const users = db.collection<MongoDBAuthUser>(
+                    USERS_COLLECTION_NAME
+                );
+                const studios = db.collection<MongoDBStudio>(
+                    STUDIOS_COLLECTION_NAME
+                );
+                const recordsCollection = db.collection<Record>(
+                    RECORDS_COLLECTION_NAME
+                );
                 const recordsDataCollection =
                     db.collection<DataRecord>('recordsData');
                 const manualRecordsDataCollection =
@@ -198,8 +205,6 @@ export class ServerBuilder {
                     db.collection<any>('recordsFilesInfo');
                 const recordsEventsCollection =
                     db.collection<any>('recordsEvents');
-                const emailRules = db.collection<any>('emailRules');
-                const smsRules = db.collection<any>('smsRules');
                 const configuration = db.collection<any>('configuration');
 
                 const policies = db.collection<any>('policies');
@@ -220,20 +225,9 @@ export class ServerBuilder {
                     },
                     configuration
                 );
-                this._authStore = new MongoDBAuthStore(
-                    users,
-                    loginRequests,
-                    sessions,
-                    emailRules,
-                    smsRules
-                );
-
-                this._recordsStore = new MongoDBRecordsStore(
-                    recordsCollection,
-                    recordsKeysCollection,
-                    studios,
-                    this._authStore
-                );
+                const authStore = new MongoDBAuthStore(db);
+                this._authStore = authStore;
+                this._recordsStore = authStore;
                 this._policyStore = new MongoDBPolicyStore(policies, roles);
                 this._dataStore = new MongoDBDataRecordsStore(
                     recordsDataCollection
