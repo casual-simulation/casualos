@@ -245,6 +245,11 @@ export interface Studio {
     subscriptionId?: string;
 
     /**
+     * The ID of the subscription that this studio record references.
+     */
+    subscriptionInfoId?: string;
+
+    /**
      * The unix time in miliseconds that the studio's current subscription period started at.
      */
     subscriptionPeriodStartMs?: number | null;

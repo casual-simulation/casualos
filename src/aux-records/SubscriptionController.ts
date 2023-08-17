@@ -3,11 +3,19 @@ import {
     INVALID_KEY_ERROR_MESSAGE,
     ValidateSessionKeyFailure,
 } from './AuthController';
-import { AuthSession, AuthStore, AuthUser } from './AuthStore';
 import {
+    AuthInvoice,
+    AuthSession,
+    AuthStore,
+    AuthUser,
+    UpdateSubscriptionPeriodRequest,
+} from './AuthStore';
+import {
+    STRIPE_EVENT_INVOICE_PAID_SCHEMA,
     StripeCheckoutResponse,
     StripeEvent,
     StripeInterface,
+    StripeInvoice,
 } from './StripeInterface';
 import { ServerError } from './Errors';
 import { isActiveSubscription, JsonParseResult, tryParseJson } from './Utils';
@@ -811,20 +819,6 @@ export class SubscriptionController {
                         currentPeriodEndMs: null,
                         currentPeriodStartMs: null,
                     });
-
-                    // if (
-                    //     user.subscriptionStatus !== status ||
-                    //     user.subscriptionId !== sub.id
-                    // ) {
-                    //     console.log(
-                    //         `[SubscriptionController] [handleStripeWebhook] User (${user.id}) subscription status doesn't match stored. Updating...`
-                    //     );
-                    //     await this._authStore.saveUser({
-                    //         ...user,
-                    //         subscriptionStatus: status,
-                    //         subscriptionId: sub.id,
-                    //     });
-                    // }
                 } else {
                     console.log(
                         `[SubscriptionController] [handleStripeWebhook] No user found for Customer ID (${customerId})`
@@ -852,47 +846,48 @@ export class SubscriptionController {
                     }
                 }
 
-                // if (user || studio) {
-                //     const authSubscription = await this._authStore.getSubscriptionByStripeSubscriptionId(stripeSubscriptionId);
-                //     if (authSubscription) {
-                //         if (authSubscription.subscriptionStatus !== status || authSubscription.subscriptionId !== sub.id) {
-                //             console.log(
-                //                 `[SubscriptionController] [handleStripeWebhook] Subscription ((${authSubscription.id})) doesn't match stored. Updating...`
-                //             );
-                //             await this._authStore.saveSubscription({
-                //                 ...authSubscription,
-                //                 subscriptionStatus: status,
-                //                 subscriptionId: sub.id,
-                //             });
-                //         }
-                //     } else {
-                //         console.log(
-                //             `[SubscriptionController] [handleStripeWebhook] No subscription object found. Creating...`
-                //         );
-                //         await this._authStore.saveSubscription({
-                //             id: uuid(),
-                //             stripeSubscriptionId: stripeSubscriptionId,
-                //             userId: user?.id,
-                //             studioId: studio?.id,
-                //             stripeCustomerId: customerId,
-                //             subscriptionId: sub.id,
-                //             subscriptionStatus: status,
-                //             currentPeriodEndMs: null,
-                //             currentPeriodStartMs: null
-                //         });
-                //     }
-                // }
-
                 return {
                     success: true,
                 };
             } else if (event.type === 'invoice.paid') {
-                const invoice = event.data.object;
-                const subscription = invoice.subscription;
+                const parseResult =
+                    STRIPE_EVENT_INVOICE_PAID_SCHEMA.safeParse(event);
+
+                if (parseResult.success === false) {
+                    console.error(
+                        `[SubscriptionController] [handleStripeWebhook] Unable to parse stripe event!`,
+                        parseResult.error
+                    );
+                    return {
+                        success: true,
+                    };
+                }
+
+                const invoice = parseResult.data.data.object;
+                const stripeSubscriptionId = invoice.subscription;
+                const subscription = await this._stripe.getSubscriptionById(
+                    stripeSubscriptionId
+                );
+                const status = subscription.status;
                 const customerId = invoice.customer;
                 const lineItems = invoice.lines.data;
                 const periodStartMs = subscription.current_period_start * 1000;
                 const periodEndMs = subscription.current_period_end * 1000;
+                const { sub, item } = findMatchingSubscription(lineItems);
+
+                const authInvoice: UpdateSubscriptionPeriodRequest['invoice'] =
+                    {
+                        currency: invoice.currency,
+                        description: invoice.description,
+                        paid: invoice.paid,
+                        status: invoice.status,
+                        tax: invoice.tax,
+                        total: invoice.total,
+                        subtotal: invoice.subtotal,
+                        stripeInvoiceId: invoice.id,
+                        stripeHostedInvoiceUrl: invoice.hosted_invoice_url,
+                        stripeInvoicePdfUrl: invoice.invoice_pdf,
+                    };
 
                 console.log(
                     `[SubscriptionController] [handleStripeWebhook] New invoice paid for customer ID (${customerId}). Subscription ID: ${subscription.id}. Period start: ${periodStartMs}. Period end: ${periodEndMs}.`
@@ -907,37 +902,15 @@ export class SubscriptionController {
                         `[SubscriptionController] [handleStripeWebhook] Found user (${user.id}) with customer ID (${customerId}).`
                     );
 
-                    const { item, sub } = findMatchingSubscription(
-                        lineItems,
-                        user.subscriptionId
-                    );
-
-                    if (!sub && user.subscriptionId) {
-                        console.error(
-                            `[SubscriptionController] [handleStripeWebhook] An invoice was paid for a user (${user.id}) with a subscription ID (${user.subscriptionId}) that does not match the user subscription ID!`
-                        );
-
-                        return {
-                            success: true,
-                        };
-                    } else if (!sub && !user.subscriptionId) {
-                        console.error(
-                            `[SubscriptionController] [handleStripeWebhook] An invoice was paid for a user (${user.id}) but no subscription could be found in the line items!`
-                        );
-
-                        return {
-                            success: true,
-                        };
-                    }
-
-                    console.log(
-                        `[SubscriptionController] [handleStripeWebhook] Subscription (${sub.id}) found!`
-                    );
-
-                    await this._authStore.saveUser({
-                        ...user,
-                        subscriptionPeriodStartMs: periodStartMs,
-                        subscriptionPeriodEndMs: periodEndMs,
+                    await this._authStore.updateSubscriptionPeriod({
+                        userId: user.id,
+                        subscriptionStatus: status,
+                        subscriptionId: sub.id,
+                        stripeSubscriptionId,
+                        stripeCustomerId: customerId,
+                        currentPeriodEndMs: periodEndMs,
+                        currentPeriodStartMs: periodStartMs,
+                        invoice: authInvoice,
                     });
                 } else {
                     console.log(
@@ -950,41 +923,15 @@ export class SubscriptionController {
                         );
 
                     if (studio) {
-                        console.log(
-                            `[SubscriptionController] [handleStripeWebhook] Found studio (${studio.id}) with customer ID (${customerId}).`
-                        );
-
-                        const { item, sub } = findMatchingSubscription(
-                            lineItems,
-                            studio.subscriptionId
-                        );
-
-                        if (!sub && studio.subscriptionId) {
-                            console.error(
-                                `[SubscriptionController] [handleStripeWebhook] An invoice was paid for a studio (${studio.id}) with a subscription ID (${studio.subscriptionId}) that does not match the studio subscription ID!`
-                            );
-
-                            return {
-                                success: true,
-                            };
-                        } else if (!sub && !studio.subscriptionId) {
-                            console.error(
-                                `[SubscriptionController] [handleStripeWebhook] An invoice was paid for a studio (${studio.id}) but no subscription could be found in the line items!`
-                            );
-
-                            return {
-                                success: true,
-                            };
-                        }
-
-                        console.log(
-                            `[SubscriptionController] [handleStripeWebhook] Subscription (${sub.id}) found!`
-                        );
-
-                        await this._recordsStore.updateStudio({
-                            ...studio,
-                            subscriptionPeriodStartMs: periodStartMs,
-                            subscriptionPeriodEndMs: periodEndMs,
+                        await this._authStore.updateSubscriptionPeriod({
+                            studioId: studio.id,
+                            subscriptionStatus: status,
+                            subscriptionId: sub.id,
+                            stripeSubscriptionId,
+                            stripeCustomerId: customerId,
+                            currentPeriodEndMs: periodEndMs,
+                            currentPeriodStartMs: periodStartMs,
+                            invoice: authInvoice,
                         });
                     } else {
                         console.log(
@@ -994,8 +941,7 @@ export class SubscriptionController {
                 }
 
                 function findMatchingSubscription(
-                    lineItems: any[],
-                    subId: string
+                    lineItems: StripeInvoice['lines']['data']
                 ) {
                     let item: any;
                     let sub: SubscriptionConfiguration['subscriptions'][0];
@@ -1003,9 +949,7 @@ export class SubscriptionController {
                         for (let s of config.subscriptions) {
                             if (
                                 s.eligibleProducts.some(
-                                    (p) =>
-                                        p === i.price.product &&
-                                        (!subId || subId === s.id)
+                                    (p) => p === i.price.product
                                 )
                             ) {
                                 sub = s;

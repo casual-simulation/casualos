@@ -12,6 +12,7 @@ import {
     ListSessionsDataResult,
     SaveNewUserResult,
     UpdateSubscriptionInfoRequest,
+    UpdateSubscriptionPeriodRequest,
 } from './AuthStore';
 import {
     ListStudioAssignmentFilters,
@@ -773,6 +774,153 @@ export class MemoryStore
                 subscriptionPeriodStartMs: request.currentPeriodStartMs,
                 subscriptionPeriodEndMs: request.currentPeriodEndMs,
                 subscriptionInfoId: subscription.id,
+            });
+        } else if (request.studioId) {
+            const studio = await this.getStudioById(request.studioId);
+            let subscription = await this.getSubscriptionByStripeSubscriptionId(
+                request.stripeSubscriptionId
+            );
+
+            if (subscription) {
+                await this.saveSubscription({
+                    ...subscription,
+                    stripeCustomerId: request.stripeCustomerId,
+                    stripeSubscriptionId: request.stripeSubscriptionId,
+                    subscriptionId: request.subscriptionId,
+                    subscriptionStatus: request.subscriptionStatus,
+                    currentPeriodEndMs: request.currentPeriodEndMs,
+                    currentPeriodStartMs: request.currentPeriodStartMs,
+                });
+            } else {
+                subscription = {
+                    id: uuid(),
+                    userId: null,
+                    studioId: studio.id,
+                    stripeCustomerId: request.stripeCustomerId,
+                    stripeSubscriptionId: request.stripeSubscriptionId,
+                    subscriptionId: request.subscriptionId,
+                    subscriptionStatus: request.subscriptionStatus,
+                    currentPeriodEndMs: request.currentPeriodEndMs,
+                    currentPeriodStartMs: request.currentPeriodStartMs,
+                };
+
+                await this.saveSubscription(subscription);
+            }
+
+            await this.updateStudio({
+                ...studio,
+                subscriptionId: request.subscriptionId,
+                subscriptionStatus: request.subscriptionStatus,
+                stripeCustomerId: request.stripeCustomerId,
+                subscriptionPeriodStartMs: request.currentPeriodStartMs,
+                subscriptionPeriodEndMs: request.currentPeriodEndMs,
+                subscriptionInfoId: subscription.id,
+            });
+        }
+    }
+
+    async updateSubscriptionPeriod(
+        request: UpdateSubscriptionPeriodRequest
+    ): Promise<void> {
+        if (request.userId) {
+            let user = await this.findUser(request.userId);
+            let subscription = await this.getSubscriptionByStripeSubscriptionId(
+                request.stripeSubscriptionId
+            );
+
+            if (!subscription) {
+                subscription = {
+                    id: uuid(),
+                    userId: user.id,
+                    studioId: null,
+                    stripeCustomerId: request.stripeCustomerId,
+                    stripeSubscriptionId: request.stripeSubscriptionId,
+                    subscriptionId: request.subscriptionId,
+                    subscriptionStatus: request.subscriptionStatus,
+                    currentPeriodEndMs: request.currentPeriodEndMs,
+                    currentPeriodStartMs: request.currentPeriodStartMs,
+                };
+
+                user.stripeCustomerId = request.stripeCustomerId;
+                user.subscriptionStatus = request.subscriptionStatus;
+                user.subscriptionId = request.subscriptionId;
+                user.subscriptionInfoId = subscription.id;
+
+                await this.saveSubscription(subscription);
+            }
+
+            await this.saveUser({
+                ...user,
+                subscriptionPeriodStartMs: request.currentPeriodStartMs,
+                subscriptionPeriodEndMs: request.currentPeriodEndMs,
+            });
+
+            const periodId: string = uuid();
+            const invoiceId: string = uuid();
+
+            await this.saveInvoice({
+                id: invoiceId,
+                periodId: periodId,
+                subscriptionId: subscription.id,
+                ...request.invoice,
+            });
+
+            await this.saveSubscriptionPeriod({
+                id: periodId,
+                invoiceId: invoiceId,
+                subscriptionId: subscription.id,
+                periodEndMs: request.currentPeriodEndMs,
+                periodStartMs: request.currentPeriodStartMs,
+            });
+        } else if (request.studioId) {
+            let studio = await this.getStudioById(request.studioId);
+            let subscription = await this.getSubscriptionByStripeSubscriptionId(
+                request.stripeSubscriptionId
+            );
+
+            if (!subscription) {
+                subscription = {
+                    id: uuid(),
+                    userId: null,
+                    studioId: studio.id,
+                    stripeCustomerId: request.stripeCustomerId,
+                    stripeSubscriptionId: request.stripeSubscriptionId,
+                    subscriptionId: request.subscriptionId,
+                    subscriptionStatus: request.subscriptionStatus,
+                    currentPeriodEndMs: request.currentPeriodEndMs,
+                    currentPeriodStartMs: request.currentPeriodStartMs,
+                };
+
+                studio.stripeCustomerId = request.stripeCustomerId;
+                studio.subscriptionStatus = request.subscriptionStatus;
+                studio.subscriptionId = request.subscriptionId;
+                studio.subscriptionInfoId = subscription.id;
+
+                await this.saveSubscription(subscription);
+            }
+
+            await this.updateStudio({
+                ...studio,
+                subscriptionPeriodStartMs: request.currentPeriodStartMs,
+                subscriptionPeriodEndMs: request.currentPeriodEndMs,
+            });
+
+            const periodId: string = uuid();
+            const invoiceId: string = uuid();
+
+            await this.saveInvoice({
+                id: invoiceId,
+                periodId: periodId,
+                subscriptionId: subscription.id,
+                ...request.invoice,
+            });
+
+            await this.saveSubscriptionPeriod({
+                id: periodId,
+                invoiceId: invoiceId,
+                subscriptionId: subscription.id,
+                periodEndMs: request.currentPeriodEndMs,
+                periodStartMs: request.currentPeriodStartMs,
             });
         }
     }

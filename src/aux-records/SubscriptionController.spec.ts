@@ -29,6 +29,7 @@ describe('SubscriptionController', () => {
         createCustomer: jest.Mock<any>;
         listActiveSubscriptionsForCustomer: jest.Mock<any>;
         constructWebhookEvent: jest.Mock<any>;
+        getSubscriptionById: jest.Mock<any>;
     };
 
     let stripe: StripeInterface;
@@ -85,6 +86,7 @@ describe('SubscriptionController', () => {
             createCustomer: jest.fn(),
             listActiveSubscriptionsForCustomer: jest.fn(),
             constructWebhookEvent: jest.fn(),
+            getSubscriptionById: jest.fn(),
         };
 
         stripeMock.getProductAndPriceInfo.mockImplementation(async (id) => {
@@ -3716,16 +3718,18 @@ describe('SubscriptionController', () => {
                                         },
                                     ],
                                 },
-                                subscription: {
-                                    id: 'sub',
-                                    current_period_start: 456,
-                                    current_period_end: 999,
-                                },
+                                subscription: 'sub',
                             },
                         },
                         livemode: true,
                         pending_webhooks: 1,
                         request: {},
+                    });
+                    stripeMock.getSubscriptionById.mockResolvedValueOnce({
+                        id: 'sub',
+                        status: 'active',
+                        current_period_start: 456,
+                        current_period_end: 999,
                     });
 
                     const result = await controller.handleStripeWebhook({
@@ -3746,25 +3750,28 @@ describe('SubscriptionController', () => {
                         'request_signature',
                         'webhook_secret'
                     );
+                    expect(stripeMock.getSubscriptionById).toHaveBeenCalledWith(
+                        'sub'
+                    );
 
                     const user = await store.findUser(userId);
                     expect(user?.subscriptionPeriodStartMs).toBe(456000);
                     expect(user?.subscriptionPeriodEndMs).toBe(999000);
 
-                    // Should create/update subscription info
+                    // Should create subscription info
                     const sub = await store.getSubscriptionById(
                         user?.subscriptionInfoId
                     );
                     expect(sub).toEqual({
                         id: expect.any(String),
                         stripeCustomerId: 'customer_id',
-                        stripeSubscriptionId: 'subscription',
+                        stripeSubscriptionId: 'sub',
                         subscriptionStatus: 'active',
                         subscriptionId: 'sub_1',
                         userId: user?.id,
                         studioId: null,
-                        currentPeriodStartMs: null,
-                        currentPeriodEndMs: null,
+                        currentPeriodStartMs: 456000,
+                        currentPeriodEndMs: 999000,
                     });
 
                     const subPeriods =
@@ -3874,6 +3881,8 @@ describe('SubscriptionController', () => {
                                             },
                                         ],
                                     },
+                                    current_period_start: 123,
+                                    current_period_end: 456,
                                 },
                             },
                             livemode: true,
@@ -3902,8 +3911,27 @@ describe('SubscriptionController', () => {
                         );
 
                         const studio = await store.getStudioById(studioId);
-                        expect(studio.subscriptionStatus).toBe(status);
-                        expect(studio.subscriptionId).toBe('sub_1');
+                        expect(studio?.subscriptionStatus).toBe(status);
+                        expect(studio?.subscriptionId).toBe('sub_1');
+                        expect(studio?.subscriptionInfoId).toBeTruthy();
+                        expect(studio?.subscriptionPeriodStartMs).toBe(null);
+                        expect(studio?.subscriptionPeriodEndMs).toBe(null);
+
+                        // Should create/update subscription info
+                        const sub = await store.getSubscriptionById(
+                            studio?.subscriptionInfoId
+                        );
+                        expect(sub).toEqual({
+                            id: expect.any(String),
+                            stripeCustomerId: 'customer_id',
+                            stripeSubscriptionId: 'subscription',
+                            subscriptionStatus: status,
+                            subscriptionId: 'sub_1',
+                            userId: null,
+                            studioId: studio?.id,
+                            currentPeriodStartMs: null,
+                            currentPeriodEndMs: null,
+                        });
                     });
 
                     it('should do nothing for products that are not configured', async () => {
@@ -3977,6 +4005,15 @@ describe('SubscriptionController', () => {
                             object: {
                                 id: 'invoiceId',
                                 customer: 'customer_id',
+                                currency: 'usd',
+                                total: 1000,
+                                subtotal: 1000,
+                                tax: 0,
+                                description: 'description',
+                                status: 'paid',
+                                paid: true,
+                                hosted_invoice_url: 'invoiceUrl',
+                                invoice_pdf: 'pdfUrl',
                                 lines: {
                                     object: 'list',
                                     data: [
@@ -3989,16 +4026,18 @@ describe('SubscriptionController', () => {
                                         },
                                     ],
                                 },
-                                subscription: {
-                                    id: 'sub',
-                                    current_period_start: 456,
-                                    current_period_end: 999,
-                                },
+                                subscription: 'sub',
                             },
                         },
                         livemode: true,
                         pending_webhooks: 1,
                         request: {},
+                    });
+                    stripeMock.getSubscriptionById.mockResolvedValueOnce({
+                        id: 'sub',
+                        status: 'active',
+                        current_period_start: 456,
+                        current_period_end: 999,
                     });
 
                     const result = await controller.handleStripeWebhook({

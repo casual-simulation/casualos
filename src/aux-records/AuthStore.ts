@@ -197,10 +197,22 @@ export interface AuthStore {
 
     /**
      * Updates the subscription info for a user/studio.
-     * @param request
+     *
+     * This will create/update a subscription object, update the info on the user/studio and subscription, and optionally update the period of the subscription.
+     * @param request The request.
      */
     updateSubscriptionInfo(
         request: UpdateSubscriptionInfoRequest
+    ): Promise<void>;
+
+    /**
+     * Updates the subscription period for a user/studio.
+     *
+     * This will update the period of the subscription, and optionally create subscription objects for the user/studio if neccesary.
+     * @param request The request.
+     */
+    updateSubscriptionPeriod(
+        request: UpdateSubscriptionPeriodRequest
     ): Promise<void>;
 }
 
@@ -571,4 +583,51 @@ export interface UpdateSubscriptionInfoRequest {
      * The unix time in miliseconds that the current subscription period ends at.
      */
     currentPeriodEndMs: number;
+}
+
+export interface UpdateSubscriptionPeriodRequest {
+    /**
+     * The ID of the user that the subscription info should be updated for.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the studio that the subscription info should be updated for.
+     */
+    studioId?: string;
+
+    /**
+     * The current status of the subscription.
+     */
+    subscriptionStatus: string;
+
+    /**
+     * The ID of the purchasable subscription that the user has.
+     */
+    subscriptionId: string;
+
+    /**
+     * The ID of the subscription in Stripe's database.
+     */
+    stripeSubscriptionId: string;
+
+    /**
+     * The ID of the stripe customer.
+     */
+    stripeCustomerId: string;
+
+    /**
+     * The unix time in miliseconds that the current subscription period started at.
+     */
+    currentPeriodStartMs: number;
+
+    /**
+     * The unix time in miliseconds that the current subscription period ends at.
+     */
+    currentPeriodEndMs: number;
+
+    /**
+     * The invoice that should be created.
+     */
+    invoice: Omit<AuthInvoice, 'id' | 'subscriptionId' | 'periodId'>;
 }

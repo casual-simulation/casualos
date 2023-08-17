@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 /**
  * Defines an interface that represents the high-level Stripe-like functions that the SubscriptionController uses.
  */
@@ -62,6 +64,13 @@ export interface StripeInterface {
         signature: string,
         secret: string
     ): StripeEvent;
+
+    /**
+     * Gets the subscription with the given ID.
+     *
+     * @param id The ID of the subscription.
+     */
+    getSubscriptionById(id: string): Promise<StripeSubscription>;
 }
 
 export interface StripePrice {
@@ -454,3 +463,46 @@ export interface StripeProduct {
      */
     default_price: StripePrice;
 }
+
+export const STRIPE_INVOICE_SCHEMA = z.object({
+    id: z.string(),
+    currency: z.string(),
+    customer: z.string(),
+    description: z.string(),
+    subscription: z.string(),
+    hosted_invoice_url: z.string(),
+    invoice_pdf: z.string(),
+    total: z.number(),
+    subtotal: z.number(),
+    tax: z.number(),
+    status: z.union([
+        z.literal('draft'),
+        z.literal('open'),
+        z.literal('void'),
+        z.literal('paid'),
+        z.literal('uncollectible'),
+    ]),
+    paid: z.boolean(),
+
+    lines: z.object({
+        object: z.literal('list'),
+        data: z.array(
+            z.object({
+                id: z.string(),
+                price: z.object({
+                    id: z.string(),
+                    product: z.string(),
+                }),
+            })
+        ),
+    }),
+});
+
+export const STRIPE_EVENT_INVOICE_PAID_SCHEMA = z.object({
+    type: z.literal('invoice.paid'),
+    data: z.object({
+        object: STRIPE_INVOICE_SCHEMA,
+    }),
+});
+
+export type StripeInvoice = z.infer<typeof STRIPE_INVOICE_SCHEMA>;
