@@ -488,6 +488,7 @@ export class PrismaAuthStore implements AuthStore {
                                 id: uuid(),
                                 userId: request.userId,
                                 subscriptionId: request.subscriptionId,
+                                subscriptionStatus: request.subscriptionStatus,
                                 stripeCustomerId: request.stripeCustomerId,
                                 stripeSubscriptionId:
                                     request.stripeSubscriptionId,
@@ -496,6 +497,7 @@ export class PrismaAuthStore implements AuthStore {
                             },
                             update: {
                                 subscriptionId: request.subscriptionId,
+                                subscriptionStatus: request.subscriptionStatus,
                                 stripeCustomerId: request.stripeCustomerId,
                                 stripeSubscriptionId:
                                     request.stripeSubscriptionId,
@@ -523,6 +525,7 @@ export class PrismaAuthStore implements AuthStore {
                                 id: uuid(),
                                 studioId: request.studioId,
                                 subscriptionId: request.subscriptionId,
+                                subscriptionStatus: request.subscriptionStatus,
                                 stripeCustomerId: request.stripeCustomerId,
                                 stripeSubscriptionId:
                                     request.stripeSubscriptionId,
@@ -531,6 +534,7 @@ export class PrismaAuthStore implements AuthStore {
                             },
                             update: {
                                 subscriptionId: request.subscriptionId,
+                                subscriptionStatus: request.subscriptionStatus,
                                 stripeCustomerId: request.stripeCustomerId,
                                 stripeSubscriptionId:
                                     request.stripeSubscriptionId,
