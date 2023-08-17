@@ -522,11 +522,18 @@ export class ServerBuilder {
         if (!options.subscriptions) {
             throw new Error('Subscription options must be provided.');
         }
+        if (options.stripe.testClock) {
+            console.log(
+                '[ServerBuilder] Using test clock: ',
+                options.stripe.testClock
+            );
+        }
         this._stripe = new StripeIntegration(
             new Stripe(options.stripe.secretKey, {
                 apiVersion: '2022-11-15',
             }),
-            options.stripe.publishableKey
+            options.stripe.publishableKey,
+            options.stripe.testClock
         );
         this._subscriptionConfig = options.subscriptions as any;
         return this;
@@ -746,7 +753,7 @@ export class ServerBuilder {
                 this._authController,
                 this._authStore,
                 this._recordsStore,
-                this._subscriptionConfig
+                this._configStore
             );
         }
 
@@ -880,6 +887,7 @@ const rateLimitSchema = z.object({
 const stripeSchema = z.object({
     secretKey: z.string().nonempty(),
     publishableKey: z.string().nonempty(),
+    testClock: z.string().nonempty().optional(),
 });
 
 const mongodbSchema = z.object({
