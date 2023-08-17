@@ -93,6 +93,7 @@ describe('RecordsHttpServer', () => {
         createCustomer: jest.Mock<any>;
         listActiveSubscriptionsForCustomer: jest.Mock<any>;
         constructWebhookEvent: jest.Mock<any>;
+        getSubscriptionById: jest.Mock<any>;
     };
 
     let aiController: AIController;
@@ -244,6 +245,7 @@ describe('RecordsHttpServer', () => {
             createCustomer: jest.fn(),
             listActiveSubscriptionsForCustomer: jest.fn(),
             constructWebhookEvent: jest.fn(),
+            getSubscriptionById: jest.fn(),
         };
 
         stripeMock.getProductAndPriceInfo.mockImplementation(async (id) => {
