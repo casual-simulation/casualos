@@ -104,7 +104,7 @@ export class PrismaMetricsStore implements MetricsStore {
             subscriptionStatus:
                 result.owner?.subscriptionStatus ||
                 result.studio?.subscriptionStatus,
-            totalItems: stats._count._all,
+            totalFiles: stats._count._all,
             totalFileBytesReserved: Number(stats._sum.sizeInBytes),
             currentPeriodEndMs: convertToMillis(
                 result.owner?.subscriptionPeriodEnd ||
