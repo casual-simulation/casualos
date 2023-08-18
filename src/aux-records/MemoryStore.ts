@@ -83,7 +83,10 @@ import {
     PolicyDocument,
 } from './PolicyPermissions';
 import {
-    AiChatSubscriptionMetrics,
+    AIChatMetrics,
+    AIImageMetrics,
+    AISkyboxMetrics,
+    AIChatSubscriptionMetrics,
     DataSubscriptionMetrics,
     EventSubscriptionMetrics,
     FileSubscriptionMetrics,
@@ -91,9 +94,12 @@ import {
     RecordSubscriptionMetrics,
     SubscriptionFilter,
     SubscriptionMetrics,
+    AIImageSubscriptionMetrics,
+    AISkyboxSubscriptionMetrics,
 } from './MetricsStore';
 import { ConfigurationStore } from './ConfigurationStore';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import { DateTime } from 'luxon';
 
 export interface MemoryConfiguration {
     subscriptions: SubscriptionConfiguration;
@@ -121,6 +127,10 @@ export class MemoryStore
     private _recordKeys: RecordKey[] = [];
     private _studios: Studio[] = [];
     private _studioAssignments: StudioAssignment[] = [];
+
+    private _aiChatMetrics: AIChatMetrics[] = [];
+    private _aiImageMetrics: AIImageMetrics[] = [];
+    private _aiSkyboxMetrics: AISkyboxMetrics[] = [];
 
     private _dataBuckets: Map<string, Map<string, RecordData>> = new Map();
     private _eventBuckets: Map<string, Map<string, EventData>> = new Map();
@@ -1747,10 +1757,109 @@ export class MemoryStore
         };
     }
 
-    getSubscriptionAiChatMetrics(
+    async getSubscriptionAiChatMetrics(
         filter: SubscriptionFilter
-    ): Promise<AiChatSubscriptionMetrics> {
-        throw new Error('Method not implemented.');
+    ): Promise<AIChatSubscriptionMetrics> {
+        const info = await this._getSubscriptionMetrics(filter);
+        const metrics = filter.ownerId
+            ? this._aiChatMetrics.filter(
+                  (m) =>
+                      m.userId === filter.ownerId &&
+                      (!info.currentPeriodStartMs ||
+                          (m.createdAtMs >= info.currentPeriodStartMs &&
+                              m.createdAtMs < info.currentPeriodEndMs))
+              )
+            : this._aiChatMetrics.filter(
+                  (m) =>
+                      m.studioId === filter.studioId &&
+                      (!info.currentPeriodStartMs ||
+                          (m.createdAtMs >= info.currentPeriodStartMs &&
+                              m.createdAtMs < info.currentPeriodEndMs))
+              );
+
+        let totalTokens = 0;
+        for (let m of metrics) {
+            totalTokens += m.tokens;
+        }
+
+        return {
+            ...info,
+            totalTokensInCurrentPeriod: totalTokens,
+        };
+    }
+
+    async recordChatMetrics(metrics: AIChatMetrics): Promise<void> {
+        this._aiChatMetrics.push(metrics);
+    }
+
+    async getSubscriptionAiImageMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AIImageSubscriptionMetrics> {
+        const info = await this._getSubscriptionMetrics(filter);
+        const metrics = filter.ownerId
+            ? this._aiImageMetrics.filter(
+                  (m) =>
+                      m.userId === filter.ownerId &&
+                      (!info.currentPeriodStartMs ||
+                          (m.createdAtMs >= info.currentPeriodStartMs &&
+                              m.createdAtMs < info.currentPeriodEndMs))
+              )
+            : this._aiImageMetrics.filter(
+                  (m) =>
+                      m.studioId === filter.studioId &&
+                      (!info.currentPeriodStartMs ||
+                          (m.createdAtMs >= info.currentPeriodStartMs &&
+                              m.createdAtMs < info.currentPeriodEndMs))
+              );
+
+        let totalPixels = 0;
+        for (let m of metrics) {
+            totalPixels += m.pixels;
+        }
+
+        return {
+            ...info,
+            totalPixelsInCurrentPeriod: totalPixels,
+        };
+    }
+
+    async recordImageMetrics(metrics: AIImageMetrics): Promise<void> {
+        this._aiImageMetrics.push(metrics);
+    }
+
+    async getSubscriptionAiSkyboxMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AISkyboxSubscriptionMetrics> {
+        const info = await this._getSubscriptionMetrics(filter);
+        const metrics = filter.ownerId
+            ? this._aiSkyboxMetrics.filter(
+                  (m) =>
+                      m.userId === filter.ownerId &&
+                      (!info.currentPeriodStartMs ||
+                          (m.createdAtMs >= info.currentPeriodStartMs &&
+                              m.createdAtMs < info.currentPeriodEndMs))
+              )
+            : this._aiSkyboxMetrics.filter(
+                  (m) =>
+                      m.studioId === filter.studioId &&
+                      (!info.currentPeriodStartMs ||
+                          (m.createdAtMs >= info.currentPeriodStartMs &&
+                              m.createdAtMs < info.currentPeriodEndMs))
+              );
+
+        let totalSkyboxes = 0;
+        for (let m of metrics) {
+            totalSkyboxes += m.skyboxes;
+        }
+
+        return {
+            ...info,
+            totalSkyboxesInCurrentPeriod: totalSkyboxes,
+        };
+    }
+
+    async recordSkyboxMetrics(metrics: AISkyboxMetrics): Promise<void> {
+        this._aiSkyboxMetrics.push(metrics);
     }
 
     private async _getSubscriptionInfo(
@@ -1766,13 +1875,28 @@ export class MemoryStore
     }
 
     private async _getSubscriptionMetrics(filter: SubscriptionFilter) {
+        const config = await this.getSubscriptionConfiguration();
+
+        let currentPeriodStart: number = null;
+        let currentPeriodEnd: number = null;
+
+        if (config?.defaultFeatures?.defaultPeriodLength) {
+            const now = DateTime.utc();
+            const periodStart = now.minus(
+                config.defaultFeatures.defaultPeriodLength
+            );
+
+            currentPeriodStart = periodStart.toMillis();
+            currentPeriodEnd = now.toMillis();
+        }
+
         let metrics: SubscriptionMetrics = {
             ownerId: filter.ownerId,
             studioId: filter.studioId,
             subscriptionId: null,
             subscriptionStatus: null,
-            currentPeriodStartMs: null,
-            currentPeriodEndMs: null,
+            currentPeriodStartMs: currentPeriodStart,
+            currentPeriodEndMs: currentPeriodEnd,
         };
 
         if (filter.ownerId) {

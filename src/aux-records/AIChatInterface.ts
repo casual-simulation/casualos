@@ -70,6 +70,11 @@ export interface AIChatInterfaceResponse {
      * The messages that the AI responded with.
      */
     choices: AIChatMessage[];
+
+    /**
+     * The total number of tokens that were used.
+     */
+    totalTokens: number;
 }
 
 /**

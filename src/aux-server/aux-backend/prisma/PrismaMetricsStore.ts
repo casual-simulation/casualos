@@ -1,5 +1,5 @@
 import {
-    AiChatSubscriptionMetrics,
+    AIChatSubscriptionMetrics,
     ConfigurationStore,
     DataSubscriptionMetrics,
     EventSubscriptionMetrics,
@@ -24,7 +24,7 @@ export class PrismaMetricsStore implements MetricsStore {
 
     getSubscriptionAiChatMetrics(
         filter: SubscriptionFilter
-    ): Promise<AiChatSubscriptionMetrics> {
+    ): Promise<AIChatSubscriptionMetrics> {
         throw new Error('Method not implemented.');
     }
 

@@ -11,11 +11,13 @@ import {
     AIGenerateSkyboxInterfaceBlockadeLabsOptions,
 } from './AIGenerateSkyboxInterface';
 import { AIGeneratedImage, AIImageInterface } from './AIImageInterface';
+import { MetricsStore } from './MetricsStore';
 
 export interface AIConfiguration {
     chat: AIChatConfiguration | null;
     generateSkybox: AIGenerateSkyboxConfiguration | null;
     images: AIGenerateImageConfiguration | null;
+    metrics: MetricsStore;
 }
 
 export interface AIChatConfiguration {
@@ -139,6 +141,7 @@ export class AIController {
     private _allowedImageModels: Map<string, string>;
     private _allowedImageSubscriptionTiers: true | Set<string>;
     private _imageOptions: AIGenerateImageOptions;
+    private _metrics: MetricsStore;
 
     constructor(configuration: AIConfiguration) {
         if (configuration.chat) {
@@ -178,6 +181,7 @@ export class AIController {
                 }
             }
         }
+        this._metrics = configuration.metrics;
     }
 
     async chat(request: AIChatRequest): Promise<AIChatResponse> {
@@ -251,6 +255,14 @@ export class AIController {
                 stopWords: request.stopWords,
                 userId: request.userId,
             });
+
+            if (result.totalTokens > 0) {
+                await this._metrics.recordChatMetrics({
+                    userId: request.userId,
+                    createdAtMs: Date.now(),
+                    tokens: result.totalTokens,
+                });
+            }
 
             return {
                 success: true,
@@ -326,6 +338,12 @@ export class AIController {
             });
 
             if (result.success === true) {
+                await this._metrics.recordSkyboxMetrics({
+                    userId: request.userId,
+                    createdAtMs: Date.now(),
+                    skyboxes: 1,
+                });
+
                 return {
                     success: true,
                     skyboxId: result.skyboxId,
@@ -497,22 +515,26 @@ export class AIController {
                 };
             }
 
+            const width = Math.min(
+                request.width ?? this._imageOptions.defaultWidth,
+                this._imageOptions.maxWidth
+            );
+            const height = Math.min(
+                request.height ?? this._imageOptions.defaultHeight,
+                this._imageOptions.maxHeight
+            );
+            const numberOfImages = Math.min(
+                request.numberOfImages ?? 1,
+                this._imageOptions.maxImages
+            );
+
             const result = await provider.generateImage({
                 model,
                 prompt: request.prompt,
                 negativePrompt: request.negativePrompt,
-                width: Math.min(
-                    request.width ?? this._imageOptions.defaultWidth,
-                    this._imageOptions.maxWidth
-                ),
-                height: Math.min(
-                    request.height ?? this._imageOptions.defaultHeight,
-                    this._imageOptions.maxHeight
-                ),
-                numberOfImages: Math.min(
-                    request.numberOfImages ?? 1,
-                    this._imageOptions.maxImages
-                ),
+                width: width,
+                height: height,
+                numberOfImages: numberOfImages,
                 seed: request.seed,
                 steps: Math.min(
                     request.steps ?? 30,
@@ -523,6 +545,13 @@ export class AIController {
                 clipGuidancePreset: request.clipGuidancePreset,
                 stylePreset: request.stylePreset,
                 userId: request.userId,
+            });
+
+            const totalPixels = width * height * numberOfImages;
+            await this._metrics.recordImageMetrics({
+                userId: request.userId,
+                createdAtMs: Date.now(),
+                pixels: totalPixels,
             });
 
             return {

@@ -1,5 +1,5 @@
 import {
-    AiChatSubscriptionMetrics,
+    AIChatSubscriptionMetrics,
     DataSubscriptionMetrics,
     EventSubscriptionMetrics,
     FileSubscriptionMetrics,
@@ -39,7 +39,7 @@ export class MongoDBMetricsStore implements MetricsStore {
     }
     getSubscriptionAiChatMetrics(
         filter: SubscriptionFilter
-    ): Promise<AiChatSubscriptionMetrics> {
+    ): Promise<AIChatSubscriptionMetrics> {
         throw new Error('Method not implemented.');
     }
 

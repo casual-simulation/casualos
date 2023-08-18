@@ -13,6 +13,7 @@ import {
     AIGenerateImageInterfaceResponse,
 } from './AIImageInterface';
 import { AIController } from './AIController';
+import { MemoryStore } from './MemoryStore';
 
 describe('AIController', () => {
     let controller: AIController;
@@ -37,6 +38,7 @@ describe('AIController', () => {
     };
     let userId: string;
     let userSubscriptionTier: string;
+    let store: MemoryStore;
 
     beforeEach(() => {
         userId = 'test-user';
@@ -51,6 +53,9 @@ describe('AIController', () => {
         generateImageInterface = {
             generateImage: jest.fn(),
         };
+        store = new MemoryStore({
+            subscriptions: null,
+        });
         controller = new AIController({
             chat: {
                 interface: chatInterface,
@@ -85,6 +90,7 @@ describe('AIController', () => {
                     allowedSubscriptionTiers: ['test-tier'],
                 },
             },
+            metrics: store,
         });
     });
 
@@ -99,6 +105,7 @@ describe('AIController', () => {
                             stopReason: 'stop',
                         },
                     ],
+                    totalTokens: 1,
                 })
             );
 
@@ -148,6 +155,7 @@ describe('AIController', () => {
                             stopReason: 'stop',
                         },
                     ],
+                    totalTokens: 1,
                 })
             );
 
@@ -290,6 +298,7 @@ describe('AIController', () => {
                             stopReason: 'stop',
                         },
                     ],
+                    totalTokens: 1,
                 })
             );
 
@@ -304,6 +313,7 @@ describe('AIController', () => {
                 },
                 generateSkybox: null,
                 images: null,
+                metrics: store,
             });
 
             const result = await controller.chat({
@@ -347,6 +357,7 @@ describe('AIController', () => {
                 chat: null,
                 generateSkybox: null,
                 images: null,
+                metrics: store,
             });
 
             const result = await controller.chat({
@@ -366,6 +377,69 @@ describe('AIController', () => {
                 success: false,
                 errorCode: 'not_supported',
                 errorMessage: 'This operation is not supported.',
+            });
+        });
+
+        it('should track metrics for chat operations', async () => {
+            chatInterface.chat.mockReturnValueOnce(
+                Promise.resolve({
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            stopReason: 'stop',
+                        },
+                    ],
+                    totalTokens: 123,
+                })
+            );
+
+            const result = await controller.chat({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                choices: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                        stopReason: 'stop',
+                    },
+                ],
+            });
+            expect(chatInterface.chat).toBeCalledWith({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId: 'test-user',
+            });
+
+            const metrics = await store.getSubscriptionAiChatMetrics({
+                ownerId: userId,
+            });
+
+            expect(metrics).toEqual({
+                ownerId: userId,
+                subscriptionStatus: null,
+                subscriptionId: null,
+                currentPeriodStartMs: null,
+                currentPeriodEndMs: null,
+                totalTokensInCurrentPeriod: 123,
             });
         });
     });
@@ -392,6 +466,19 @@ describe('AIController', () => {
             expect(generateSkyboxInterface.generateSkybox).toBeCalledWith({
                 prompt: 'test',
             });
+
+            const metrics = await store.getSubscriptionAiSkyboxMetrics({
+                ownerId: userId,
+            });
+
+            expect(metrics).toEqual({
+                ownerId: userId,
+                subscriptionStatus: null,
+                subscriptionId: null,
+                currentPeriodStartMs: null,
+                currentPeriodEndMs: null,
+                totalSkyboxesInCurrentPeriod: 1,
+            });
         });
 
         it('should return a not_supported result if no generateSkybox configuration is provided', async () => {
@@ -399,6 +486,7 @@ describe('AIController', () => {
                 generateSkybox: null,
                 chat: null,
                 images: null,
+                metrics: store,
             });
 
             const result = await controller.generateSkybox({
@@ -482,6 +570,7 @@ describe('AIController', () => {
                     },
                 },
                 images: null,
+                metrics: store,
             });
 
             const result = await controller.generateSkybox({
@@ -533,6 +622,7 @@ describe('AIController', () => {
                 generateSkybox: null,
                 chat: null,
                 images: null,
+                metrics: store,
             });
 
             const result = await controller.getSkybox({
@@ -618,6 +708,7 @@ describe('AIController', () => {
                     },
                 },
                 images: null,
+                metrics: store,
             });
 
             const result = await controller.getSkybox({
@@ -677,6 +768,19 @@ describe('AIController', () => {
                 steps: 30,
                 userId: 'test-user',
             });
+
+            const metrics = await store.getSubscriptionAiImageMetrics({
+                ownerId: userId,
+            });
+
+            expect(metrics).toEqual({
+                ownerId: userId,
+                subscriptionStatus: null,
+                subscriptionId: null,
+                currentPeriodStartMs: null,
+                currentPeriodEndMs: null,
+                totalPixelsInCurrentPeriod: 512 * 512,
+            });
         });
 
         it('should use the provider associated with the given model type', async () => {
@@ -712,6 +816,7 @@ describe('AIController', () => {
                         allowedSubscriptionTiers: ['test-tier'],
                     },
                 },
+                metrics: store,
             });
 
             otherInterface.generateImage.mockReturnValueOnce(
@@ -759,6 +864,7 @@ describe('AIController', () => {
                 generateSkybox: null,
                 chat: null,
                 images: null,
+                metrics: store,
             });
 
             const result = await controller.generateImage({
@@ -859,6 +965,7 @@ describe('AIController', () => {
                         allowedSubscriptionTiers: true,
                     },
                 },
+                metrics: store,
             });
 
             const result = await controller.generateImage({

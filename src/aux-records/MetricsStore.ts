@@ -40,7 +40,38 @@ export interface MetricsStore {
      */
     getSubscriptionAiChatMetrics(
         filter: SubscriptionFilter
-    ): Promise<AiChatSubscriptionMetrics>;
+    ): Promise<AIChatSubscriptionMetrics>;
+
+    /**
+     * Saves the given AI Chat metrics.
+     */
+    recordChatMetrics(metrics: AIChatMetrics): Promise<void>;
+
+    /**
+     * Gets the AI Image metrics for the given user/studio.
+     * @param filter The filter.
+     */
+    getSubscriptionAiImageMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AIImageSubscriptionMetrics>;
+
+    /**
+     * Saves the given AI Image metrics.
+     */
+    recordImageMetrics(metrics: AIImageMetrics): Promise<void>;
+
+    /**
+     * Gets the AI Image metrics for the given user/studio.
+     * @param filter The filter.
+     */
+    getSubscriptionAiSkyboxMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AISkyboxSubscriptionMetrics>;
+
+    /**
+     * Saves the given AI Skybox metrics.
+     */
+    recordSkyboxMetrics(metrics: AISkyboxMetrics): Promise<void>;
 }
 
 export interface SubscriptionMetrics {
@@ -115,7 +146,7 @@ export interface SubscriptionFilter {
     studioId?: string;
 }
 
-export interface AiChatSubscriptionMetrics extends SubscriptionMetrics {
+export interface AIChatSubscriptionMetrics extends SubscriptionMetrics {
     /**
      * The total number of tokens that have been used for the current period.
      */
@@ -134,4 +165,70 @@ export interface AISkyboxSubscriptionMetrics extends SubscriptionMetrics {
      * The total number of skyboxes that have been generated for the current period.
      */
     totalSkyboxesInCurrentPeriod: number;
+}
+
+export interface AIChatMetrics {
+    /**
+     * The ID of the user that the metrics are for.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the studio that the metrics are for.
+     */
+    studioId?: string;
+
+    /**
+     * The number of tokens that have been used.
+     */
+    tokens: number;
+
+    /**
+     * The unix time in miliseconds of when the metrics were created.
+     */
+    createdAtMs: number;
+}
+
+export interface AIImageMetrics {
+    /**
+     * The ID of the user that the metrics are for.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the studio that the metrics are for.
+     */
+    studioId?: string;
+
+    /**
+     * The number of pixels that have been used.
+     */
+    pixels: number;
+
+    /**
+     * The unix time in miliseconds of when the metrics were created.
+     */
+    createdAtMs: number;
+}
+
+export interface AISkyboxMetrics {
+    /**
+     * The ID of the user that the metrics are for.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the studio that the metrics are for.
+     */
+    studioId?: string;
+
+    /**
+     * The number of skyboxes that have been used.
+     */
+    skyboxes: number;
+
+    /**
+     * The unix time in miliseconds of when the metrics were created.
+     */
+    createdAtMs: number;
 }

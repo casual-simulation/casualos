@@ -75,6 +75,15 @@ export const subscriptionConfigSchema = z.object({
         .object({
             user: subscriptionFeaturesSchema.optional(),
             studio: subscriptionFeaturesSchema.optional(),
+            defaultPeriodLength: z
+                .object({
+                    days: z.number().int().positive().optional(),
+                    months: z.number().int().positive().optional(),
+                })
+                .default({
+                    days: 0,
+                    months: 1,
+                }),
         })
         .optional(),
 });
@@ -218,6 +227,24 @@ export interface DefaultFeaturesConfiguration {
      * The default features for studios.
      */
     studio: FeaturesConfiguration;
+
+    /**
+     * The default period length.
+     * Only used for users that do not have an active subscription.
+     */
+    defaultPeriodLength?: {
+        /**
+         * The number of days in the period.
+         * Defaults to 0.
+         */
+        days?: number;
+
+        /**
+         * The number of months in the period.
+         * Defaults to 0.
+         */
+        months?: number;
+    };
 }
 
 /**
