@@ -15,6 +15,7 @@ import {
     getBotScaleMode,
     calculateStringTagValue,
     StartFormAnimationAction,
+    calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
@@ -48,6 +49,7 @@ import {
     DEFAULT_TRANSPARENT,
     registerMaterial,
     setOpacity,
+    setDepthTest,
 } from '../SceneUtils';
 import { createCubeStroke } from '../MeshUtils';
 import { LineSegments } from '../LineSegments';
@@ -218,6 +220,7 @@ export class BotShapeDecorator
         this._updateRenderOrder(calc);
         this._updateAnimation(animation);
         this._updateAspectRatio(aspectRatio);
+        this._updateDepth(calc);
 
         if (this._iframe) {
             const gridScale = this.bot3D.gridScale;
@@ -550,6 +553,15 @@ export class BotShapeDecorator
         const color = calculateBotValue(calc, this.bot3D.bot, 'auxColor');
         this._setColor(color);
     }
+    private _updateDepth(calc: BotCalculationContext) {
+        const depthTest = calculateBooleanTagValue(
+            calc,
+            this.bot3D.bot,
+            'formDepthTest',
+            true
+        );
+        this._setDepthTest(depthTest);
+    }
 
     private _updateOpacity(calc: BotCalculationContext) {
         const opacity = calculateNumericalTagValue(
@@ -602,7 +614,18 @@ export class BotShapeDecorator
             }
         }
     }
-
+    private _setDepthTest(depthTest: boolean) {
+        if (this.scene) {
+            // Change depth
+            this.scene.traverse((obj) => {
+                if (obj instanceof Mesh) {
+                    setDepthTest(obj, depthTest);
+                }
+            });
+        } else {
+            setDepthTest(this.mesh, depthTest);
+        }
+    }
     private _setOpacity(opacity: number) {
         if (this.scene) {
             // Set opacity on all meshes inside the gltf scene.
