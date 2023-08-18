@@ -7,6 +7,7 @@
         v-on:keyup.stop
     >
         <div v-shortkey="['ctrl-cmd', 'shift', 'f']" @shortkey.stop.prevent="showSearch()" />
+        <div v-shortkey="['ctrl-cmd', 'b']" @shortkey.stop.prevent="selectRecentTag(recents[0])" />
         <!-- <hotkey :keys="['ctrl', 'shift', 'f']" @triggered="showSearch()" /> -->
         <div
             v-if="selectedPane !== 'sheet'"
@@ -18,6 +19,7 @@
             :keys="['ctrl', 'p']"
             @triggered="showQuickAccess()"
         /> -->
+
         <md-card ref="card" class="portal-card">
             <md-card-content>
                 <div class="panes">

@@ -22,9 +22,9 @@ model User {
     allSessionRevokeTime DateTime?
     currentLoginRequestId String? @unique
     currentLoginRequest LoginRequest? @relation("CurrentLoginRequest", fields: [currentLoginRequestId], references: [requestId])
-    openAiKey String?
     banTime DateTime?
     banReason String?
+
     subscriptionStatus String?
     stripeCustomerId String? @unique
     subscriptionId String?
@@ -43,6 +43,8 @@ model User {
 
     publishedFileRecords FileRecord[] @relation("PublishedFileRecords")
     subjectFileRecords FileRecord[] @relation("SubjectFileRecords")
+
+    studios StudioAssignment[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -108,10 +110,44 @@ model SmsRule {
 }
 
 // Records
+model Studio {
+    id String @id
+    displayName String
+
+    records Record[]
+    assignments StudioAssignment[]
+
+    subscriptionStatus String?
+    stripeCustomerId String? @unique
+    subscriptionId String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model StudioAssignment {
+    @@id([studioId, userId])
+
+    studioId String
+    studio Studio @relation(fields: [studioId], references: [id])
+
+    userId String
+    user User @relation(fields: [userId], references: [id])
+
+    isPrimaryContact Boolean
+    role String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
 model Record {
     name String @id
-    ownerId String
-    owner User @relation(fields: [ownerId], references: [id])
+    ownerId String?
+    owner User? @relation(fields: [ownerId], references: [id], map: "Record_ownerId_fkey1")
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id])
 
     secretHashes String[]
     secretSalt String

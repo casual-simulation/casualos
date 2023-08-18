@@ -2710,7 +2710,6 @@ export const KNOWN_TAGS: string[] = [
     'name',
     'hasActiveSubscription',
     'subscriptionTier',
-    'openAiKey',
 
     CLICK_ACTION_NAME,
     'onAnyBotClicked',

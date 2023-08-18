@@ -1,7 +1,10 @@
 import {
     ListedRecord,
+    ListedStudio,
+    ListedStudioAssignment,
     PublicRecordKeyPolicy,
     RecordsStore,
+    StudioAssignmentRole,
 } from './RecordsStore';
 import { toBase64String, fromBase64String } from './Utils';
 import {
@@ -20,6 +23,7 @@ import {
 } from './Errors';
 import type { ValidateSessionKeyFailure } from './AuthController';
 import { AuthStore } from './AuthStore';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Defines a class that manages records and their keys.
@@ -31,6 +35,158 @@ export class RecordsController {
     constructor(store: RecordsStore, auth: AuthStore) {
         this._store = store;
         this._auth = auth;
+    }
+
+    /**
+     * Creates a new record.
+     * @param request The request that should be used to create the record.
+     */
+    async createRecord(
+        request: CreateRecordRequest
+    ): Promise<CreateRecordResult> {
+        try {
+            if (!request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'The user must be logged in in order to create a record.',
+                };
+            }
+
+            const record = await this._store.getRecordByName(
+                request.recordName
+            );
+
+            if (record) {
+                if (
+                    record.name === request.userId &&
+                    record.ownerId !== request.userId &&
+                    request.ownerId === request.userId
+                ) {
+                    console.log(
+                        `[RecordsController] [action: record.create recordName: ${record.name}, userId: ${request.userId}] Fixing record owner to match actual owner.`
+                    );
+
+                    record.ownerId = request.userId;
+                    record.studioId = null;
+                    // Clear the hashes and re-create the salt so that access to the record is revoked for any record key that was created before.
+                    record.secretHashes = [];
+                    record.secretSalt = this._createSalt();
+                    await this._store.updateRecord({
+                        ...record,
+                    });
+
+                    return {
+                        success: true,
+                    };
+                }
+
+                let existingStudioMembers =
+                    await this._store.listStudioAssignments(record.name);
+                if (
+                    existingStudioMembers.length > 0 &&
+                    record.studioId !== record.name &&
+                    request.studioId === record.name
+                ) {
+                    console.log(
+                        `[RecordsController] [action: record.create recordName: ${record.name}, userId: ${request.userId}, studioId: ${request.studioId}] Fixing record owner to match actual owner.`
+                    );
+
+                    record.ownerId = null;
+                    record.studioId = request.studioId;
+                    // Clear the hashes and re-create the salt so that access to the record is revoked for any record key that was created before.
+                    record.secretHashes = [];
+                    record.secretSalt = this._createSalt();
+                    await this._store.updateRecord({
+                        ...record,
+                    });
+
+                    return {
+                        success: true,
+                    };
+                }
+
+                return {
+                    success: false,
+                    errorCode: 'record_already_exists',
+                    errorMessage: 'A record with that name already exists.',
+                };
+            }
+
+            if (!request.ownerId && !request.studioId) {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'You must provide an owner ID or a studio ID.',
+                };
+            }
+
+            if (request.ownerId) {
+                if (request.ownerId !== request.userId) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to create a record for another user.',
+                    };
+                }
+
+                console.log(
+                    `[RecordsController] [action: record.create recordName: ${request.recordName}, userId: ${request.userId}, ownerId: ${request.ownerId}] Creating record.`
+                );
+
+                await this._store.addRecord({
+                    name: request.recordName,
+                    ownerId: request.ownerId,
+                    secretHashes: [],
+                    secretSalt: this._createSalt(),
+                    studioId: null,
+                });
+            } else {
+                const assignments = await this._store.listStudioAssignments(
+                    request.studioId,
+                    {
+                        userId: request.userId,
+                        role: 'admin',
+                    }
+                );
+
+                if (assignments.length <= 0) {
+                    return {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to create a record for this studio.',
+                    };
+                }
+
+                console.log(
+                    `[RecordsController] [action: record.create recordName: ${request.recordName}, userId: ${request.userId}, studioId: ${request.studioId}] Creating record.`
+                );
+                await this._store.addRecord({
+                    name: request.recordName,
+                    ownerId: null,
+                    secretHashes: [],
+                    secretSalt: this._createSalt(),
+                    studioId: request.studioId,
+                });
+            }
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [createRecord] An error occurred while creating a record:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
     }
 
     /**
@@ -73,20 +229,6 @@ export class RecordsController {
             }
 
             if (record) {
-                if (record.ownerId !== userId && name !== userId) {
-                    return {
-                        success: false,
-                        errorCode: 'unauthorized_to_create_record_key',
-                        errorMessage:
-                            'Another user has already created this record.',
-                        errorReason: 'record_owned_by_different_user',
-                    };
-                }
-
-                console.log(
-                    `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}] Creating record key.`
-                );
-
                 if (name === userId) {
                     // The user is not currently the owner of their own record.
                     // This is an issue that needs to be fixed because users should always own the record that has the same name as their ID.
@@ -94,13 +236,68 @@ export class RecordsController {
                         `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}] Fixing record owner to match actual owner.`
                     );
                     record.ownerId = userId;
+                    record.studioId = null;
                     // Clear the hashes and re-create the salt so that access to the record is revoked for any record key that was created before.
                     record.secretHashes = [];
                     record.secretSalt = this._createSalt();
                     await this._store.updateRecord({
                         ...record,
                     });
+                } else {
+                    let existingStudioMembers =
+                        await this._store.listStudioAssignments(name);
+
+                    if (
+                        existingStudioMembers.length > 0 &&
+                        record.studioId !== name
+                    ) {
+                        // The studio is not currently the owner of their own record.
+                        // This is an issue that needs to be fixed because studios should always own the record that has the same name as their ID.
+                        console.log(
+                            `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}, studioId: ${name}] Fixing record owner to match actual owner.`
+                        );
+                        record.ownerId = null;
+                        record.studioId = record.name;
+                        // Clear the hashes and re-create the salt so that access to the record is revoked for any record key that was created before.
+                        record.secretHashes = [];
+                        record.secretSalt = this._createSalt();
+                        await this._store.updateRecord({
+                            ...record,
+                        });
+                    }
                 }
+
+                if (record.ownerId !== userId && name !== userId) {
+                    let valid = false;
+                    if (record.studioId) {
+                        const assignments =
+                            await this._store.listStudioAssignments(
+                                record.studioId,
+                                {
+                                    userId: userId,
+                                    role: 'admin',
+                                }
+                            );
+
+                        if (assignments.length > 0) {
+                            valid = true;
+                        }
+                    }
+
+                    if (!valid) {
+                        return {
+                            success: false,
+                            errorCode: 'unauthorized_to_create_record_key',
+                            errorMessage:
+                                'Another user has already created this record.',
+                            errorReason: 'record_owned_by_different_user',
+                        };
+                    }
+                }
+
+                console.log(
+                    `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}] Creating record key.`
+                );
 
                 const passwordBytes = randomBytes(16);
                 const password = fromByteArray(passwordBytes); // convert to human-readable string
@@ -114,7 +311,7 @@ export class RecordsController {
                     recordName: name,
                     secretHash: passwordHash,
                     policy: policy ?? DEFAULT_RECORD_KEY_POLICY,
-                    creatorId: record.ownerId,
+                    creatorId: record.ownerId ?? userId,
                 });
 
                 return {
@@ -153,6 +350,7 @@ export class RecordsController {
                 await this._store.addRecord({
                     name,
                     ownerId: userId,
+                    studioId: null,
                     secretHashes: [],
                     secretSalt: salt,
                 });
@@ -171,11 +369,14 @@ export class RecordsController {
                 };
             }
         } catch (err) {
-            console.error(err);
+            console.error(
+                '[RecordsController] [createPublicRecordKey] An error occurred while creating a public record key:',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
                 errorReason: 'server_error',
             };
         }
@@ -304,11 +505,14 @@ export class RecordsController {
                 };
             }
         } catch (err) {
-            console.error(err);
+            console.error(
+                '[RecordsController] [validatePublicRecordKey] An error occurred while creating a public record key:',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }
@@ -333,6 +537,7 @@ export class RecordsController {
                     await this._store.addRecord({
                         name,
                         ownerId: userId,
+                        studioId: null,
                         secretHashes: [],
                         secretSalt: this._createSalt(),
                     });
@@ -341,6 +546,33 @@ export class RecordsController {
                         success: true,
                         recordName: name,
                         ownerId: userId,
+                        studioId: null,
+                    };
+                }
+
+                let studioMembers = await this._store.listStudioAssignments(
+                    name
+                );
+
+                if (studioMembers.length > 0) {
+                    console.log(
+                        `[RecordsController] [validateRecordName recordName: ${name}, userId: ${userId}, studioId: ${name}] Creating record for studio.`
+                    );
+
+                    await this._store.addRecord({
+                        name,
+                        ownerId: null,
+                        studioId: name,
+                        secretHashes: [],
+                        secretSalt: this._createSalt(),
+                    });
+
+                    return {
+                        success: true,
+                        recordName: name,
+                        ownerId: null,
+                        studioId: name,
+                        studioMembers,
                     };
                 }
 
@@ -369,23 +601,58 @@ export class RecordsController {
                 });
             }
 
+            let existingStudioMembers = await this._store.listStudioAssignments(
+                name
+            );
+            if (
+                existingStudioMembers.length > 0 &&
+                record.studioId !== name &&
+                record.ownerId !== null
+            ) {
+                console.log(
+                    `[RecordsController] [validateRecordName recordName: ${name}, userId: ${userId}, studioId: ${name}] Fixing record studio to match actual studio.`
+                );
+
+                record.ownerId = null;
+                record.studioId = name;
+                record.secretHashes = [];
+                record.secretSalt = this._createSalt();
+                await this._store.updateRecord({
+                    ...record,
+                });
+            }
+
+            let studioMembers: ListedStudioAssignment[] = undefined;
+            if (existingStudioMembers.length > 0) {
+                studioMembers = existingStudioMembers;
+            } else if (record.studioId) {
+                studioMembers = await this._store.listStudioAssignments(
+                    record.studioId
+                );
+            }
+
             return {
                 success: true,
                 recordName: name,
                 ownerId: record.ownerId,
+                studioId: record.studioId,
+                studioMembers,
             };
         } catch (err) {
-            console.error(err);
+            console.error(
+                '[RecordsController] [validateRecordName] An error occurred while creating a public record key:',
+                err
+            );
             return {
                 success: false,
                 errorCode: 'server_error',
-                errorMessage: err.toString(),
+                errorMessage: 'A server error occurred.',
             };
         }
     }
 
     /**
-     * Gets the list of records that the user with the given ID owns.
+     * Gets the list of records that the user with the given ID has access to.
      * @param userId The ID of the user.
      */
     async listRecords(userId: string): Promise<ListRecordsResult> {
@@ -415,9 +682,363 @@ export class RecordsController {
         }
     }
 
+    /**
+     * Gets the list of records in the given studio that the user with the given ID has access to.
+     * @param studioId The ID of the studio.
+     * @param userId The ID of the user that is currently logged in.
+     */
+    async listStudioRecords(
+        studioId: string,
+        userId: string
+    ): Promise<ListRecordsResult> {
+        try {
+            if (!this._store.listRecordsByStudioIdAndUserId) {
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'This operation is not supported.',
+                };
+            }
+            const records = await this._store.listRecordsByStudioIdAndUserId(
+                studioId,
+                userId
+            );
+            return {
+                success: true,
+                records: records,
+            };
+        } catch (err) {
+            console.log(
+                '[RecordsController] [listStudioRecords] Error listing records: ',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Attempts to create a new studio. That is, an entity that can be used to group records.
+     * @param studioName The name of the studio.
+     * @param userId The ID of the user that is creating the studio.
+     */
+    async createStudio(
+        studioName: string,
+        userId: string
+    ): Promise<CreateStudioResult> {
+        try {
+            const studioId = uuid();
+
+            await this._store.createStudioForUser(
+                {
+                    id: studioId,
+                    displayName: studioName,
+                },
+                userId
+            );
+
+            return {
+                success: true,
+                studioId: studioId,
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [createStudio] An error occurred while creating a studio:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Gets the list of studios that the user with the given ID has access to.
+     * @param userId The ID of the user.
+     */
+    async listStudios(userId: string): Promise<ListStudiosResult> {
+        try {
+            const studios = await this._store.listStudiosForUser(userId);
+
+            return {
+                success: true,
+                studios: studios.map((s) => ({
+                    studioId: s.studioId,
+                    displayName: s.displayName,
+                    role: s.role,
+                    isPrimaryContact: s.isPrimaryContact,
+                })),
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [listStudios] An error occurred while listing studios:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    /**
+     * Gets the list of members in a studio.
+     * @param studioId The ID of the studio.
+     * @param userId The ID of the user that is currently logged in.
+     */
+    async listStudioMembers(
+        studioId: string,
+        userId: string
+    ): Promise<ListStudioMembersResult> {
+        try {
+            const members = await this._store.listStudioAssignments(studioId);
+
+            const userAssignment = members.find((m) => m.userId === userId);
+
+            if (!userAssignment) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to access this studio.',
+                };
+            }
+
+            if (userAssignment.role === 'admin') {
+                return {
+                    success: true,
+                    members: members.map((m) => ({
+                        studioId: m.studioId,
+                        userId: m.userId,
+                        isPrimaryContact: m.isPrimaryContact,
+                        role: m.role,
+                        user: {
+                            id: m.user.id,
+                            name: m.user.name,
+                            email: m.user.email,
+                            phoneNumber: m.user.phoneNumber,
+                        },
+                    })),
+                };
+            }
+
+            return {
+                success: true,
+                members: members.map((m) => ({
+                    studioId: m.studioId,
+                    userId: m.userId,
+                    isPrimaryContact: m.isPrimaryContact,
+                    role: m.role,
+                    user: {
+                        id: m.user.id,
+                        name: m.user.name,
+                    },
+                })),
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [listStudioMembers] An error occurred while listing studio members:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async addStudioMember(
+        request: AddStudioMemberRequest
+    ): Promise<AddStudioMemberResult> {
+        try {
+            if (!request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'You must be logged in to add a studio member.',
+                };
+            }
+
+            const list = await this._store.listStudioAssignments(
+                request.studioId,
+                {
+                    userId: request.userId,
+                    role: 'admin',
+                }
+            );
+
+            if (list.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                };
+            }
+
+            let addedUserId: string = null;
+            if (request.addedUserId) {
+                addedUserId = request.addedUserId;
+            } else if (request.addedEmail || request.addedPhoneNumber) {
+                const addedUser = await this._auth.findUserByAddress(
+                    request.addedEmail ?? request.addedPhoneNumber,
+                    request.addedEmail ? 'email' : 'phone'
+                );
+
+                if (!addedUser) {
+                    return {
+                        success: false,
+                        errorCode: 'user_not_found',
+                        errorMessage: 'The user was not able to be found.',
+                    };
+                }
+
+                addedUserId = addedUser.id;
+            } else {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'You must provide an email, phone number, or user ID to add a studio member.',
+                };
+            }
+
+            await this._store.addStudioAssignment({
+                studioId: request.studioId,
+                userId: addedUserId,
+                isPrimaryContact: false,
+                role: request.role,
+            });
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [addStudioMember] An error occurred while adding a studio member:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async removeStudioMember(
+        request: RemoveStudioMemberRequest
+    ): Promise<RemoveStudioMemberResult> {
+        try {
+            if (!request.userId) {
+                return {
+                    success: false,
+                    errorCode: 'not_logged_in',
+                    errorMessage:
+                        'You must be logged in to remove a studio member.',
+                };
+            }
+
+            if (request.userId === request.removedUserId) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                };
+            }
+
+            const list = await this._store.listStudioAssignments(
+                request.studioId,
+                {
+                    userId: request.userId,
+                    role: 'admin',
+                }
+            );
+
+            if (list.length <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to perform this operation.',
+                };
+            }
+
+            await this._store.removeStudioAssignment(
+                request.studioId,
+                request.removedUserId
+            );
+
+            return {
+                success: true,
+            };
+        } catch (err) {
+            console.error(
+                '[RecordsController] [removeStudioMember] An error occurred while removing a studio member:',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
     private _createSalt(): string {
         return fromByteArray(randomBytes(16));
     }
+}
+
+/**
+ * Defines an interface that represents a request to create a record.
+ */
+export interface CreateRecordRequest {
+    /**
+     * The name of the record that should be created.
+     */
+    recordName: string;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The ID of the user that should be the owner of the record.
+     */
+    ownerId?: string;
+
+    /**
+     * The ID of the studio that should own the record.
+     */
+    studioId?: string;
+}
+
+export type CreateRecordResult = CreateRecordSuccess | CreateRecordFailure;
+
+export interface CreateRecordSuccess {
+    success: true;
+}
+
+export interface CreateRecordFailure {
+    success: false;
+    errorCode:
+        | ServerError
+        | NotLoggedInError
+        | NotAuthorizedError
+        | 'record_already_exists'
+        | 'unacceptable_request';
+    errorMessage: string;
 }
 
 export type ValidatePublicRecordKeyResult =
@@ -561,6 +1182,12 @@ export interface ValidateRecordNameSuccess {
     success: true;
     recordName: string;
     ownerId: string;
+    studioId: string;
+
+    /**
+     * The IDs of the members of the studio.
+     */
+    studioMembers?: ListedStudioAssignment[];
 }
 
 export interface ValidateRecordNameFailure {
@@ -617,6 +1244,145 @@ export type UnauthorizedToCreateRecordKeyError =
  * Defines an error that occurs when an invalid record key is used to
  */
 export type InvalidRecordKey = 'invalid_record_key';
+
+export type CreateStudioResult = CreateStudioSuccess | CreateStudioFailure;
+
+export interface CreateStudioSuccess {
+    success: true;
+    studioId: string;
+}
+
+export interface CreateStudioFailure {
+    success: false;
+    errorCode: NotLoggedInError | NotAuthorizedError | ServerError;
+    errorMessage: string;
+}
+
+export type ListStudiosResult = ListStudiosSuccess | ListStudiosFailure;
+
+export interface ListStudiosSuccess {
+    success: true;
+    studios: ListedStudio[];
+}
+
+export interface ListStudiosFailure {
+    success: false;
+    errorCode: NotLoggedInError | NotAuthorizedError | ServerError;
+    errorMessage: string;
+}
+
+export type ListStudioMembersResult =
+    | ListStudioMembersSuccess
+    | ListStudioMembersFailure;
+
+export interface ListStudioMembersSuccess {
+    success: true;
+    members: ListedStudioMember[];
+}
+
+export interface ListedStudioMember {
+    userId: string;
+    studioId: string;
+    role: 'admin' | 'member';
+    isPrimaryContact: boolean;
+    user: ListedStudioMemberUser;
+}
+
+export interface ListedStudioMemberUser {
+    id: string;
+    name: string;
+    email?: string;
+    phoneNumber?: string;
+}
+
+export interface ListStudioMembersFailure {
+    success: false;
+    errorCode: NotLoggedInError | NotAuthorizedError | ServerError;
+    errorMessage: string;
+}
+
+export interface AddStudioMemberRequest {
+    /**
+     * The ID of the studio.
+     */
+    studioId: string;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The email address of the user that should be added to the studio.
+     */
+    addedEmail?: string;
+
+    /**
+     * The phone number of the user that should be added to the studio.
+     */
+    addedPhoneNumber?: string;
+
+    /**
+     * The ID of the user that should be added to the studio.
+     */
+    addedUserId?: string;
+
+    /**
+     * The role that the added user should have in the studio.
+     */
+    role: StudioAssignmentRole;
+}
+
+export type AddStudioMemberResult =
+    | AddStudioMemberSuccess
+    | AddStudioMemberFailure;
+
+export interface AddStudioMemberSuccess {
+    success: true;
+}
+
+export interface AddStudioMemberFailure {
+    success: false;
+    errorCode:
+        | NotLoggedInError
+        | NotAuthorizedError
+        | ServerError
+        | 'studio_not_found'
+        | 'unacceptable_request'
+        | 'user_not_found';
+    errorMessage: string;
+}
+
+export interface RemoveStudioMemberRequest {
+    /**
+     * The ID of the studio.
+     */
+    studioId: string;
+
+    /**
+     * The ID of the user that is currently logged in.
+     */
+    userId: string;
+
+    /**
+     * The ID of the user that should be removed from the studio.
+     */
+    removedUserId: string;
+}
+
+export type RemoveStudioMemberResult =
+    | RemoveStudioMemberSuccess
+    | RemoveStudioMemberFailure;
+
+export interface RemoveStudioMemberSuccess {
+    success: true;
+}
+
+export interface RemoveStudioMemberFailure {
+    success: false;
+    errorCode: NotLoggedInError | NotAuthorizedError | ServerError;
+    errorMessage: string;
+}
 
 /**
  * The default policy for keys that do not have a specified record key.

@@ -47,17 +47,6 @@
                         @updateAvatar="updateAvatar"
                     ></avatar>
                 </div>
-                <div v-if="!subscriptionsSupported || hasActiveSubscription">
-                    <md-field>
-                        <label for="openAiKey">OpenAI API Key</label>
-                        <md-input
-                            id="openAiKey"
-                            v-model="metadata.openAiKey"
-                            type="text"
-                            placeholder="Enter your OpenAI API Key"
-                        ></md-input>
-                    </md-field>
-                </div>
 
                 <p v-show="updating">Updating...</p>
                 <p v-show="updated">Updated!</p>

@@ -12,6 +12,7 @@ import {
 import { ServerError } from './Errors';
 import { isActiveSubscription, JsonParseResult, tryParseJson } from './Utils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import { ListedStudioAssignment, RecordsStore, Studio } from './RecordsStore';
 
 /**
  * Defines a class that is able to handle subscriptions.
@@ -20,17 +21,20 @@ export class SubscriptionController {
     private _stripe: StripeInterface;
     private _auth: AuthController;
     private _authStore: AuthStore;
+    private _recordsStore: RecordsStore;
     private _config: SubscriptionConfiguration;
 
     constructor(
         stripe: StripeInterface,
         auth: AuthController,
         authStore: AuthStore,
+        recordsStore: RecordsStore,
         config: SubscriptionConfiguration
     ) {
         this._stripe = stripe;
         this._auth = auth;
         this._authStore = authStore;
+        this._recordsStore = recordsStore;
         this._config = config;
     }
 
@@ -50,12 +54,44 @@ export class SubscriptionController {
         }
 
         try {
-            if (typeof request.userId !== 'string' || request.userId === '') {
+            if (request.userId && request.studioId) {
                 return {
                     success: false,
-                    errorCode: 'unacceptable_user_id',
+                    errorCode: 'unacceptable_request',
                     errorMessage:
-                        'The given user ID is invalid. It must be a correctly formatted string.',
+                        'The given request is invalid. It must not specify both a user ID and a studio ID.',
+                };
+            }
+            if (request.userId) {
+                if (
+                    typeof request.userId !== 'string' ||
+                    request.userId === ''
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_user_id',
+                        errorMessage:
+                            'The given user ID is invalid. It must be a correctly formatted string.',
+                    };
+                }
+            } else if (request.studioId) {
+                if (
+                    typeof request.studioId !== 'string' ||
+                    request.studioId === ''
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_studio_id',
+                        errorMessage:
+                            'The given studio ID is invalid. It must be a correctly formatted string.',
+                    };
+                }
+            } else {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The given request is invalid. It must have a valid user ID or studio ID.',
                 };
             }
 
@@ -63,30 +99,69 @@ export class SubscriptionController {
                 request.sessionKey
             );
 
+            let customerId: string;
+            let role: 'user' | 'studio';
             if (keyResult.success === false) {
                 return keyResult;
-            } else if (keyResult.userId !== request.userId) {
-                console.log(
-                    '[SubscriptionController] [getSubscriptionStatus] Request User ID doesnt match session key User ID!'
-                );
-                return {
-                    success: false,
-                    errorCode: 'invalid_key',
-                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
-                };
+            } else {
+                if (request.userId) {
+                    if (keyResult.userId !== request.userId) {
+                        console.log(
+                            '[SubscriptionController] [getSubscriptionStatus] Request User ID doesnt match session key User ID!'
+                        );
+                        return {
+                            success: false,
+                            errorCode: 'invalid_key',
+                            errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                        };
+                    }
+
+                    const user = await this._authStore.findUser(
+                        keyResult.userId
+                    );
+                    customerId = user.stripeCustomerId;
+                    role = 'user';
+                } else if (request.studioId) {
+                    const assignments =
+                        await this._recordsStore.listStudioAssignments(
+                            request.studioId,
+                            {
+                                userId: keyResult.userId,
+                                role: 'admin',
+                            }
+                        );
+
+                    if (assignments.length <= 0) {
+                        console.log(
+                            '[SubscriptionController] [getSubscriptionStatus] Request user does not have access to studio!'
+                        );
+                        return {
+                            success: false,
+                            errorCode: 'invalid_key',
+                            errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                        };
+                    }
+
+                    const studio = await this._recordsStore.getStudioById(
+                        request.studioId
+                    );
+                    customerId = studio.stripeCustomerId;
+                    role = 'studio';
+                }
             }
 
-            const user = await this._authStore.findUser(keyResult.userId);
-            let customerId = user.stripeCustomerId;
+            // const user = await this._authStore.findUser(keyResult.userId);
+            // let customerId = user.stripeCustomerId;
 
             if (!customerId) {
                 return {
                     success: true,
                     userId: keyResult.userId,
+                    studioId: request.studioId,
                     publishableKey: this._stripe.publishableKey,
                     subscriptions: [],
                     purchasableSubscriptions:
-                        await this._getPurchasableSubscriptions(),
+                        await this._getPurchasableSubscriptions(role),
                 };
             }
 
@@ -129,10 +204,12 @@ export class SubscriptionController {
             const purchasableSubscriptions =
                 subscriptions.length > 0
                     ? []
-                    : await this._getPurchasableSubscriptions();
+                    : await this._getPurchasableSubscriptions(role);
+
             return {
                 success: true,
                 userId: keyResult.userId,
+                studioId: request.studioId,
                 publishableKey: this._stripe.publishableKey,
                 subscriptions,
                 purchasableSubscriptions,
@@ -150,15 +227,28 @@ export class SubscriptionController {
         }
     }
 
-    private async _getPurchasableSubscriptions(): Promise<
-        PurchasableSubscription[]
-    > {
-        const promises = this._config.subscriptions
-            .filter((s) => s.purchasable ?? true)
-            .map(async (s) => ({
+    private _getPurchasableSubscriptionsForRole(role: 'user' | 'studio') {
+        return this._config.subscriptions.filter((s) => {
+            const isPurchasable = s.purchasable ?? true;
+            const isUserOnly = s.userOnly ?? false;
+            const isStudioOnly = s.studioOnly ?? false;
+            const matchesRole =
+                (isUserOnly && role === 'user') ||
+                (isStudioOnly && role === 'studio') ||
+                (!isUserOnly && !isStudioOnly);
+            return isPurchasable && matchesRole;
+        });
+    }
+
+    private async _getPurchasableSubscriptions(
+        role: 'user' | 'studio'
+    ): Promise<PurchasableSubscription[]> {
+        const promises = this._getPurchasableSubscriptionsForRole(role).map(
+            async (s) => ({
                 sub: s,
                 info: await this._stripe.getProductAndPriceInfo(s.product),
-            }));
+            })
+        );
         const productInfo = await Promise.all(promises);
 
         return productInfo
@@ -197,12 +287,45 @@ export class SubscriptionController {
         }
 
         try {
-            if (typeof request.userId !== 'string' || request.userId === '') {
+            if (request.userId && request.studioId) {
                 return {
                     success: false,
-                    errorCode: 'unacceptable_user_id',
+                    errorCode: 'unacceptable_request',
                     errorMessage:
-                        'The given user ID is invalid. It must be a correctly formatted string.',
+                        'The given request is invalid. It must not specify both a user ID and a studio ID.',
+                };
+            }
+
+            if (request.userId) {
+                if (
+                    typeof request.userId !== 'string' ||
+                    request.userId === ''
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_user_id',
+                        errorMessage:
+                            'The given user ID is invalid. It must be a correctly formatted string.',
+                    };
+                }
+            } else if (request.studioId) {
+                if (
+                    typeof request.studioId !== 'string' ||
+                    request.studioId === ''
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'unacceptable_studio_id',
+                        errorMessage:
+                            'The given studio ID is invalid. It must be a correctly formatted string.',
+                    };
+                }
+            } else {
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The given request is invalid. It must have a valid user ID or studio ID.',
                 };
             }
 
@@ -234,32 +357,101 @@ export class SubscriptionController {
                 request.sessionKey
             );
 
+            let customerId: string;
+            let customerName: string;
+            let customerEmail: string;
+            let customerPhone: string;
+            let role: 'user' | 'studio';
+            let user: AuthUser;
+            let studio: Studio;
+            let customerMetadata: any = {};
+            let metadata: any = {};
             if (keyResult.success === false) {
                 return keyResult;
-            } else if (keyResult.userId !== request.userId) {
+            } else if (request.userId) {
+                if (keyResult.userId !== request.userId) {
+                    console.log(
+                        '[SubscriptionController] [createManageSubscriptionLink] Request User ID doesnt match session key User ID!'
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'invalid_key',
+                        errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    };
+                }
+
+                user = await this._authStore.findUser(keyResult.userId);
+                customerId = user.stripeCustomerId;
+                customerName = user.name;
+                customerEmail = user.email;
+                customerPhone = user.phoneNumber;
+                metadata.userId = user.id;
+                customerMetadata.role = 'user';
+                customerMetadata.userId = user.id;
+                role = 'user';
+
                 console.log(
-                    '[SubscriptionController] [createManageSubscriptionLink] Request User ID doesnt match session key User ID!'
+                    `[SubscriptionController] [createManageSubscriptionLink] Creating a checkout/management session for User (${keyResult.userId}).`
                 );
-                return {
-                    success: false,
-                    errorCode: 'invalid_key',
-                    errorMessage: INVALID_KEY_ERROR_MESSAGE,
-                };
+            } else if (request.studioId) {
+                const assignments =
+                    await this._recordsStore.listStudioAssignments(
+                        request.studioId,
+                        {
+                            role: 'admin',
+                        }
+                    );
+
+                const userAssignment = assignments.find(
+                    (a) => a.userId === keyResult.userId
+                );
+
+                if (!userAssignment) {
+                    console.log(
+                        '[SubscriptionController] [getSubscriptionStatus] Request user does not have access to studio!'
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'invalid_key',
+                        errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    };
+                }
+                studio = await this._recordsStore.getStudioById(
+                    request.studioId
+                );
+                customerId = studio.stripeCustomerId;
+                customerName = studio.displayName;
+                customerMetadata.role = 'studio';
+                customerMetadata.studioId = studio.id;
+                metadata.studioId = studio.id;
+
+                let primaryAssignment: ListedStudioAssignment;
+
+                if (userAssignment.isPrimaryContact) {
+                    primaryAssignment = userAssignment;
+                } else {
+                    primaryAssignment = assignments.find(
+                        (a) => a.isPrimaryContact
+                    );
+                }
+
+                if (primaryAssignment) {
+                    customerEmail = primaryAssignment.user.email;
+                    customerPhone = primaryAssignment.user.phoneNumber;
+                    metadata.contactUserId = keyResult.userId;
+                    customerMetadata.contactUserId = keyResult.userId;
+                }
+
+                role = 'studio';
+
+                console.log(
+                    `[SubscriptionController] [createManageSubscriptionLink] Creating a checkout/management session for Studio (userId: ${keyResult.userId}, studioId: ${studio.id}).`
+                );
+            } else {
+                throw new Error('Should not reach this point');
             }
 
-            // if (this._config.subscriptions.length <= 0) {
-            //     return {
-            //         success: false,
-            //         errorCode: 'not_supported',
-            //         errorMessage: 'This method is not supported.',
-            //     };
-            // }
-
-            console.log(
-                `[SubscriptionController] [createManageSubscriptionLink] Creating a checkout/management session for User (${keyResult.userId}).`
-            );
-            const user = await this._authStore.findUser(keyResult.userId);
-            let customerId = user.stripeCustomerId;
+            metadata.subjectId = keyResult.userId;
 
             if (!customerId) {
                 if (this._config.subscriptions.length <= 0) {
@@ -274,28 +466,45 @@ export class SubscriptionController {
                     '[SubscriptionController] [createManageSubscriptionLink] No Stripe Customer ID. Creating New Customer and Checkout Session in Stripe.'
                 );
                 const result = await this._stripe.createCustomer({
-                    name: user.name,
-                    email: user.email,
-                    phone: user.phoneNumber,
+                    name: customerName,
+                    email: customerEmail,
+                    phone: customerPhone,
+                    metadata: customerMetadata,
                 });
 
-                customerId = user.stripeCustomerId = result.id;
-                console.log(
-                    `[SubscriptionController] [createManageSubscriptionLink] Saving Stripe Customer ID (${customerId}) to User Record (${user.id}).`
-                );
-                await this._authStore.saveUser({
-                    ...user,
-                });
+                customerId = result.id;
+
+                if (user) {
+                    user.stripeCustomerId = customerId;
+                    console.log(
+                        `[SubscriptionController] [createManageSubscriptionLink] Saving Stripe Customer ID (${customerId}) to User Record (${user.id}).`
+                    );
+                    await this._authStore.saveUser({
+                        ...user,
+                    });
+                } else if (studio) {
+                    studio.stripeCustomerId = customerId;
+
+                    console.log(
+                        `[SubscriptionController] [createManageSubscriptionLink] Saving Stripe Customer ID (${customerId}) to Studio Record (${studio.id}).`
+                    );
+                    await this._recordsStore.updateStudio({
+                        ...studio,
+                    });
+                }
 
                 return await this._createCheckoutSession(
                     request,
+                    customerId,
+                    metadata,
+                    role,
                     user,
-                    customerId
+                    studio
                 );
             }
 
             console.log(
-                `[SubscriptionController] [createManageSubscriptionLink] User (${user.id}) Has Stripe Customer ID (${user.stripeCustomerId}). Checking active subscriptions for customer.`
+                `[SubscriptionController] [createManageSubscriptionLink] Has Stripe Customer ID (${customerId}). Checking active subscriptions for customer.`
             );
             const subs = await this._stripe.listActiveSubscriptionsForCustomer(
                 customerId
@@ -331,7 +540,11 @@ export class SubscriptionController {
                 const session = await this._stripe.createPortalSession({
                     ...(this._config.portalConfig ?? {}),
                     customer: customerId,
-                    return_url: this._config.returnUrl,
+                    return_url: returnRoute(
+                        this._config.returnUrl,
+                        user,
+                        studio
+                    ),
                 });
 
                 console.log(
@@ -347,9 +560,16 @@ export class SubscriptionController {
             console.log(
                 `[SubscriptionController] [createManageSubscriptionLink] Customer does not have a managable subscription. Creating a checkout session.`
             );
-            return await this._createCheckoutSession(request, user, customerId);
+            return await this._createCheckoutSession(
+                request,
+                customerId,
+                metadata,
+                role,
+                user,
+                studio
+            );
         } catch (err) {
-            console.log(
+            console.error(
                 '[SubscriptionController] An error occurred while creating a manage subscription link:',
                 err
             );
@@ -363,12 +583,18 @@ export class SubscriptionController {
 
     private async _createCheckoutSession(
         request: CreateManageSubscriptionRequest,
+        customerId: string,
+        metadata: any,
+        role: 'user' | 'studio',
         user: AuthUser,
-        customerId: string
+        studio: Studio
     ): Promise<CreateManageSubscriptionResult> {
+        const purchasableSubscriptions =
+            this._getPurchasableSubscriptionsForRole(role);
+
         let sub: SubscriptionConfiguration['subscriptions'][0];
         if (request.subscriptionId) {
-            sub = this._config.subscriptions.find(
+            sub = purchasableSubscriptions.find(
                 (s) => s.id === request.subscriptionId
             );
             if (sub) {
@@ -379,7 +605,7 @@ export class SubscriptionController {
         }
 
         if (!sub) {
-            sub = this._config.subscriptions.find((s) => s.defaultSubscription);
+            sub = purchasableSubscriptions.find((s) => s.defaultSubscription);
             if (sub) {
                 console.log(
                     `[SubscriptionController] [createManageSubscriptionLink] Using default subscription.`
@@ -388,7 +614,7 @@ export class SubscriptionController {
         }
 
         if (!sub) {
-            sub = this._config.subscriptions[0];
+            sub = purchasableSubscriptions[0];
             console.log(
                 `[SubscriptionController] [createManageSubscriptionLink] Using first subscription.`
             );
@@ -428,8 +654,8 @@ export class SubscriptionController {
         const session = await this._stripe.createCheckoutSession({
             ...(this._config.checkoutConfig ?? {}),
             customer: customerId,
-            success_url: this._config.successUrl,
-            cancel_url: this._config.cancelUrl,
+            success_url: returnRoute(this._config.successUrl, user, studio),
+            cancel_url: returnRoute(this._config.cancelUrl, user, studio),
             line_items: [
                 {
                     price: productInfo.default_price.id,
@@ -437,9 +663,7 @@ export class SubscriptionController {
                 },
             ],
             mode: 'subscription',
-            metadata: {
-                userId: user.id,
-            },
+            metadata: metadata,
         });
 
         console.log(
@@ -563,28 +787,62 @@ export class SubscriptionController {
                     customerId
                 );
 
-                if (!user) {
-                    console.log(
-                        `[SubscriptionController] [handleStripeWebhook] No user found for Customer ID (${customerId})`
-                    );
-                    return {
-                        success: true,
-                    };
+                if (user) {
+                    if (
+                        user.subscriptionStatus !== status ||
+                        user.subscriptionId !== sub.id
+                    ) {
+                        console.log(
+                            `[SubscriptionController] [handleStripeWebhook] User (${user.id}) subscription status doesn't match stored. Updating...`
+                        );
+                        await this._authStore.saveUser({
+                            ...user,
+                            subscriptionStatus: status,
+                            subscriptionId: sub.id,
+                        });
+                    } else {
+                        return {
+                            success: true,
+                        };
+                    }
                 }
 
-                if (
-                    user.subscriptionStatus !== status ||
-                    user.subscriptionId !== sub.id
-                ) {
-                    console.log(
-                        `[SubscriptionController] [handleStripeWebhook] User subscription status doesn't match stored. Updating...`
+                console.log(
+                    `[SubscriptionController] [handleStripeWebhook] No user found for Customer ID (${customerId})`
+                );
+
+                const studio =
+                    await this._recordsStore.getStudioByStripeCustomerId(
+                        customerId
                     );
-                    await this._authStore.saveUser({
-                        ...user,
-                        subscriptionStatus: status,
-                        subscriptionId: sub.id,
-                    });
+
+                if (studio) {
+                    if (
+                        studio.subscriptionStatus !== status ||
+                        studio.subscriptionId !== sub.id
+                    ) {
+                        console.log(
+                            `[SubscriptionController] [handleStripeWebhook] Studio ((${studio.id})) subscription status doesn't match stored. Updating...`
+                        );
+                        await this._recordsStore.updateStudio({
+                            ...studio,
+                            subscriptionStatus: status,
+                            subscriptionId: sub.id,
+                        });
+                    } else {
+                        return {
+                            success: true,
+                        };
+                    }
                 }
+
+                console.log(
+                    `[SubscriptionController] [handleStripeWebhook] No studio found for Customer ID (${customerId})`
+                );
+
+                return {
+                    success: true,
+                };
             }
 
             return {
@@ -647,6 +905,23 @@ function isValidSubscription(
     );
 }
 
+function returnRoute(basePath: string, user: AuthUser, studio: Studio) {
+    if (user) {
+        return basePath;
+    } else {
+        return studiosRoute(basePath, studio.id, studio.displayName);
+    }
+}
+
+function studiosRoute(basePath: string, studioId: string, studioName: string) {
+    return new URL(
+        `/studios/${encodeURIComponent(studioId)}/${encodeURIComponent(
+            studioName
+        )}`,
+        basePath
+    ).href;
+}
+
 /**
  * Defines a request for managing a user's subscription.
  */
@@ -659,7 +934,12 @@ export interface CreateManageSubscriptionRequest {
     /**
      * The User ID that the management session should be created for.
      */
-    userId: string;
+    userId?: string;
+
+    /**
+     * The ID of the studio that the management session should be created for.
+     */
+    studioId?: string;
 
     /**
      * The subscription that was selected for purcahse by the user.
@@ -700,6 +980,7 @@ export interface CreateManageSubscriptionFailure {
         | ServerError
         | ValidateSessionKeyFailure['errorCode']
         | 'unacceptable_user_id'
+        | 'unacceptable_studio_id'
         | 'unacceptable_request'
         | 'price_does_not_match'
         | 'not_supported';
@@ -719,7 +1000,12 @@ export interface GetSubscriptionStatusRequest {
     /**
      * The ID of the user whose subscription status should be retrieved.
      */
-    userId: string;
+    userId?: string;
+
+    /**
+     * The ID of the studio whose subscrition status should be retrieved.
+     */
+    studioId?: string;
 }
 
 export type GetSubscriptionStatusResult =
@@ -732,7 +1018,12 @@ export interface GetSubscriptionStatusSuccess {
     /**
      * The ID of the user.
      */
-    userId: string;
+    userId?: string;
+
+    /**
+     * The ID of the studio.
+     */
+    studioId?: string;
 
     /**
      * The publishable stripe API key.
@@ -902,6 +1193,8 @@ export interface GetSubscriptionStatusFailure {
         | ServerError
         | ValidateSessionKeyFailure['errorCode']
         | 'unacceptable_user_id'
+        | 'unacceptable_studio_id'
+        | 'unacceptable_request'
         | 'not_supported';
 
     /**
