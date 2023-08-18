@@ -2673,6 +2673,7 @@ export const KNOWN_TAGS: string[] = [
     'formOpacity',
     'formRenderOrder',
     'formDepthTest',
+    'formDepthWrite',
     'orientationMode',
     'anchorPoint',
     'gltfVersion',
