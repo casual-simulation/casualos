@@ -6,6 +6,7 @@
 
 ### :rocket: Improvements
 
+-   Added `formDepthWrite` tag.
 -   Added `formDepthTest` tag.
 -   Added the ability to use `Ctrl+B` to automatically focus the last visisted tag.
 -   Added a "Done" button to the `os.showInput()` modal.
