@@ -1,9 +1,11 @@
 import {
     InvalidSubscriptionTierError,
+    NotAuthorizedError,
     NotLoggedInError,
     NotSubscribedError,
     NotSupportedError,
     ServerError,
+    SubscriptionLimitReached,
 } from './Errors';
 import { AIChatInterface, AIChatMessage } from './AIChatInterface';
 import {
@@ -12,12 +14,15 @@ import {
 } from './AIGenerateSkyboxInterface';
 import { AIGeneratedImage, AIImageInterface } from './AIImageInterface';
 import { MetricsStore } from './MetricsStore';
+import { ConfigurationStore } from './ConfigurationStore';
+import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 
 export interface AIConfiguration {
     chat: AIChatConfiguration | null;
     generateSkybox: AIGenerateSkyboxConfiguration | null;
     images: AIGenerateImageConfiguration | null;
     metrics: MetricsStore;
+    config: ConfigurationStore;
 }
 
 export interface AIChatConfiguration {
@@ -142,6 +147,7 @@ export class AIController {
     private _allowedImageSubscriptionTiers: true | Set<string>;
     private _imageOptions: AIGenerateImageOptions;
     private _metrics: MetricsStore;
+    private _config: ConfigurationStore;
 
     constructor(configuration: AIConfiguration) {
         if (configuration.chat) {
@@ -182,6 +188,7 @@ export class AIController {
             }
         }
         this._metrics = configuration.metrics;
+        this._config = configuration.config;
     }
 
     async chat(request: AIChatRequest): Promise<AIChatResponse> {
@@ -245,6 +252,52 @@ export class AIController {
                 };
             }
 
+            const metrics = await this._metrics.getSubscriptionAiChatMetrics({
+                ownerId: request.userId,
+            });
+            const config = await this._config.getSubscriptionConfiguration();
+            const allowedFeatures = getSubscriptionFeatures(
+                config,
+                metrics.subscriptionStatus,
+                metrics.subscriptionId,
+                'user'
+            );
+
+            if (!allowedFeatures.ai.chat.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit AI Chat features.',
+                };
+            }
+
+            let maxTokens: number = undefined;
+            if (allowedFeatures.ai.chat.maxTokensPerPeriod) {
+                maxTokens =
+                    allowedFeatures.ai.chat.maxTokensPerPeriod -
+                    metrics.totalTokensInCurrentPeriod;
+            }
+
+            if (maxTokens <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage: `The user has reached their limit for the current subscription period.`,
+                };
+            }
+
+            if (allowedFeatures.ai.chat.maxTokensPerRequest) {
+                if (maxTokens) {
+                    maxTokens = Math.min(
+                        maxTokens,
+                        allowedFeatures.ai.chat.maxTokensPerRequest
+                    );
+                } else {
+                    maxTokens = allowedFeatures.ai.chat.maxTokensPerRequest;
+                }
+            }
+
             const result = await this._chat.chat({
                 messages: request.messages,
                 model: request.model ?? this._chatOptions.defaultModel,
@@ -254,6 +307,7 @@ export class AIController {
                 presencePenalty: request.presencePenalty,
                 stopWords: request.stopWords,
                 userId: request.userId,
+                maxTokens,
             });
 
             if (result.totalTokens > 0) {
@@ -651,6 +705,8 @@ export interface AIChatFailure {
         | NotSubscribedError
         | InvalidSubscriptionTierError
         | NotSupportedError
+        | SubscriptionLimitReached
+        | NotAuthorizedError
         | 'invalid_model';
     errorMessage: string;
 
