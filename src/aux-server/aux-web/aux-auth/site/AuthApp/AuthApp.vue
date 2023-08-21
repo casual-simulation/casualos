@@ -26,14 +26,12 @@
                             <md-list-item
                                 v-for="record in records"
                                 :key="record.name"
-                                class="md-inset"
+                                class="md-inset record-item"
                                 :to="{ name: 'records-data', params: { recordName: record.name } }"
                             >
                                 <md-icon>description</md-icon>
-                                <span v-if="record.name !== userId">
-                                    {{ record.label }}
-                                </span>
-                                <span v-else> User Record ({{ record.name }}) </span>
+                                <span v-if="record.name !== userId">{{ record.label }}</span>
+                                <span v-else>User Record ({{ record.name }})</span>
                             </md-list-item>
                             <md-list-item v-if="loadingRecords" class="md-inset">
                                 <md-progress-spinner
@@ -82,7 +80,7 @@
                             <md-list-item
                                 v-for="record in studio.records"
                                 :key="record.name"
-                                class="md-inset"
+                                class="md-inset record-item"
                                 :to="{ name: 'records-data', params: { recordName: record.name } }"
                             >
                                 <md-icon>description</md-icon>
@@ -173,3 +171,4 @@
 </template>
 <script src="./AuthApp.ts"></script>
 <style src="./AuthApp.css"></style>
+<style src="./AuthAppScoped.css" scoped></style>

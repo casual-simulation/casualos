@@ -141,6 +141,24 @@ export interface RecordsStore {
      * @param userId The ID of the user.
      */
     listUserAssignments(userId: string): Promise<ListedUserAssignment[]>;
+
+    /**
+     * Counts the number of records that match the given filter.
+     * @param filter The filter.
+     */
+    countRecords(filter: CountRecordsFilter): Promise<number>;
+}
+
+export interface CountRecordsFilter {
+    /**
+     * The ID of user that owns the record.
+     */
+    ownerId?: string;
+
+    /**
+     * The ID of the studio that owns the record.
+     */
+    studioId?: string;
 }
 
 /**
@@ -225,6 +243,21 @@ export interface Studio {
      * The ID of the stripe subscription that this studio currently has.
      */
     subscriptionId?: string;
+
+    /**
+     * The ID of the subscription that this studio record references.
+     */
+    subscriptionInfoId?: string;
+
+    /**
+     * The unix time in miliseconds that the studio's current subscription period started at.
+     */
+    subscriptionPeriodStartMs?: number | null;
+
+    /**
+     * The unix time in miliseconds that the studio's current subscription period ends at.
+     */
+    subscriptionPeriodEndMs?: number | null;
 }
 
 export type StudioAssignmentRole = 'admin' | 'member';

@@ -1,40 +1,58 @@
 import { AuthController } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
-import { MemoryAuthStore } from './MemoryAuthStore';
-import { MemoryPolicyStore } from './MemoryPolicyStore';
-import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { PolicyController } from './PolicyController';
 import { RecordsController } from './RecordsController';
 import { PublicRecordKeyPolicy } from './RecordsStore';
-import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import {
+    SubscriptionConfiguration,
+    allowAllFeatures,
+} from './SubscriptionConfiguration';
+import { MemoryStore } from './MemoryStore';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
-export function createTestControllers(config?: SubscriptionConfiguration) {
-    const subConfig = config ?? {
+export function createTestSubConfiguration(): SubscriptionConfiguration {
+    return {
         cancelUrl: 'cancel-url',
         returnUrl: 'return-url',
         successUrl: 'success-url',
         webhookSecret: 'webhook-secret',
         subscriptions: [],
+        tiers: {},
+        defaultFeatures: {
+            studio: allowAllFeatures(),
+            user: allowAllFeatures(),
+        },
     };
+}
 
-    const authStore = new MemoryAuthStore();
+export function createTestControllers(config?: SubscriptionConfiguration) {
+    const subConfig: SubscriptionConfiguration =
+        config ?? createTestSubConfiguration();
+
+    const store = new MemoryStore({
+        subscriptions: subConfig,
+    });
     const authMessenger = new MemoryAuthMessenger();
-    const auth = new AuthController(authStore, authMessenger, subConfig, true);
-    const recordsStore = new MemoryRecordsStore(authStore);
-    const records = new RecordsController(recordsStore, authStore);
-    const policyStore = new MemoryPolicyStore();
-    const policies = new PolicyController(auth, records, policyStore);
+    const auth = new AuthController(store, authMessenger, store, true);
+    const records = new RecordsController({
+        store: store,
+        auth: store,
+        config: store,
+        metrics: store,
+    });
+    const policies = new PolicyController(auth, records, store);
 
     return {
-        authStore,
+        store,
+        authStore: store,
         authMessenger,
         auth,
-        recordsStore,
+        recordsStore: store,
         records,
-        policyStore,
+        policyStore: store,
         policies,
+        configStore: store,
     };
 }
 

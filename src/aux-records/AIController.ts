@@ -1,9 +1,11 @@
 import {
     InvalidSubscriptionTierError,
+    NotAuthorizedError,
     NotLoggedInError,
     NotSubscribedError,
     NotSupportedError,
     ServerError,
+    SubscriptionLimitReached,
 } from './Errors';
 import { AIChatInterface, AIChatMessage } from './AIChatInterface';
 import {
@@ -11,11 +13,16 @@ import {
     AIGenerateSkyboxInterfaceBlockadeLabsOptions,
 } from './AIGenerateSkyboxInterface';
 import { AIGeneratedImage, AIImageInterface } from './AIImageInterface';
+import { MetricsStore } from './MetricsStore';
+import { ConfigurationStore } from './ConfigurationStore';
+import { getSubscriptionFeatures } from './SubscriptionConfiguration';
 
 export interface AIConfiguration {
     chat: AIChatConfiguration | null;
     generateSkybox: AIGenerateSkyboxConfiguration | null;
     images: AIGenerateImageConfiguration | null;
+    metrics: MetricsStore;
+    config: ConfigurationStore;
 }
 
 export interface AIChatConfiguration {
@@ -139,6 +146,8 @@ export class AIController {
     private _allowedImageModels: Map<string, string>;
     private _allowedImageSubscriptionTiers: true | Set<string>;
     private _imageOptions: AIGenerateImageOptions;
+    private _metrics: MetricsStore;
+    private _config: ConfigurationStore;
 
     constructor(configuration: AIConfiguration) {
         if (configuration.chat) {
@@ -178,6 +187,8 @@ export class AIController {
                 }
             }
         }
+        this._metrics = configuration.metrics;
+        this._config = configuration.config;
     }
 
     async chat(request: AIChatRequest): Promise<AIChatResponse> {
@@ -241,6 +252,52 @@ export class AIController {
                 };
             }
 
+            const metrics = await this._metrics.getSubscriptionAiChatMetrics({
+                ownerId: request.userId,
+            });
+            const config = await this._config.getSubscriptionConfiguration();
+            const allowedFeatures = getSubscriptionFeatures(
+                config,
+                metrics.subscriptionStatus,
+                metrics.subscriptionId,
+                'user'
+            );
+
+            if (!allowedFeatures.ai.chat.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit AI Chat features.',
+                };
+            }
+
+            let maxTokens: number = undefined;
+            if (allowedFeatures.ai.chat.maxTokensPerPeriod) {
+                maxTokens =
+                    allowedFeatures.ai.chat.maxTokensPerPeriod -
+                    metrics.totalTokensInCurrentPeriod;
+            }
+
+            if (maxTokens <= 0) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage: `The user has reached their limit for the current subscription period.`,
+                };
+            }
+
+            if (allowedFeatures.ai.chat.maxTokensPerRequest) {
+                if (maxTokens) {
+                    maxTokens = Math.min(
+                        maxTokens,
+                        allowedFeatures.ai.chat.maxTokensPerRequest
+                    );
+                } else {
+                    maxTokens = allowedFeatures.ai.chat.maxTokensPerRequest;
+                }
+            }
+
             const result = await this._chat.chat({
                 messages: request.messages,
                 model: request.model ?? this._chatOptions.defaultModel,
@@ -250,7 +307,16 @@ export class AIController {
                 presencePenalty: request.presencePenalty,
                 stopWords: request.stopWords,
                 userId: request.userId,
+                maxTokens,
             });
+
+            if (result.totalTokens > 0) {
+                await this._metrics.recordChatMetrics({
+                    userId: request.userId,
+                    createdAtMs: Date.now(),
+                    tokens: result.totalTokens,
+                });
+            }
 
             return {
                 success: true,
@@ -319,6 +385,38 @@ export class AIController {
                 }
             }
 
+            const metrics = await this._metrics.getSubscriptionAiSkyboxMetrics({
+                ownerId: request.userId,
+            });
+            const config = await this._config.getSubscriptionConfiguration();
+            const allowedFeatures = getSubscriptionFeatures(
+                config,
+                metrics.subscriptionStatus,
+                metrics.subscriptionId,
+                'user'
+            );
+
+            if (!allowedFeatures.ai.skyboxes.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit AI Skybox features.',
+                };
+            }
+
+            if (
+                allowedFeatures.ai.skyboxes.maxSkyboxesPerPeriod > 0 &&
+                metrics.totalSkyboxesInCurrentPeriod + 1 >
+                    allowedFeatures.ai.skyboxes.maxSkyboxesPerPeriod
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage: `The user has reached their limit for the current subscription period.`,
+                };
+            }
+
             const result = await this._generateSkybox.generateSkybox({
                 prompt: request.prompt,
                 negativePrompt: request.negativePrompt,
@@ -326,6 +424,12 @@ export class AIController {
             });
 
             if (result.success === true) {
+                await this._metrics.recordSkyboxMetrics({
+                    userId: request.userId,
+                    createdAtMs: Date.now(),
+                    skyboxes: 1,
+                });
+
                 return {
                     success: true,
                     skyboxId: result.skyboxId,
@@ -497,22 +601,72 @@ export class AIController {
                 };
             }
 
+            const width = Math.min(
+                request.width ?? this._imageOptions.defaultWidth,
+                this._imageOptions.maxWidth
+            );
+            const height = Math.min(
+                request.height ?? this._imageOptions.defaultHeight,
+                this._imageOptions.maxHeight
+            );
+            const numberOfImages = Math.min(
+                request.numberOfImages ?? 1,
+                this._imageOptions.maxImages
+            );
+
+            const totalPixels = Math.max(width, height) * numberOfImages;
+
+            const metrics = await this._metrics.getSubscriptionAiImageMetrics({
+                ownerId: request.userId,
+            });
+            const config = await this._config.getSubscriptionConfiguration();
+            const allowedFeatures = getSubscriptionFeatures(
+                config,
+                metrics.subscriptionStatus,
+                metrics.subscriptionId,
+                'user'
+            );
+
+            if (!allowedFeatures.ai.images.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit AI Image features.',
+                };
+            }
+
+            if (
+                allowedFeatures.ai.images.maxSquarePixelsPerRequest > 0 &&
+                totalPixels >
+                    allowedFeatures.ai.images.maxSquarePixelsPerRequest
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage: `The request exceeds allowed subscription limits.`,
+                };
+            }
+
+            if (
+                allowedFeatures.ai.images.maxSquarePixelsPerPeriod > 0 &&
+                totalPixels + metrics.totalSquarePixelsInCurrentPeriod >
+                    allowedFeatures.ai.images.maxSquarePixelsPerPeriod
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage: `The user has reached their limit for the current subscription period.`,
+                };
+            }
+
             const result = await provider.generateImage({
                 model,
                 prompt: request.prompt,
                 negativePrompt: request.negativePrompt,
-                width: Math.min(
-                    request.width ?? this._imageOptions.defaultWidth,
-                    this._imageOptions.maxWidth
-                ),
-                height: Math.min(
-                    request.height ?? this._imageOptions.defaultHeight,
-                    this._imageOptions.maxHeight
-                ),
-                numberOfImages: Math.min(
-                    request.numberOfImages ?? 1,
-                    this._imageOptions.maxImages
-                ),
+                width: width,
+                height: height,
+                numberOfImages: numberOfImages,
                 seed: request.seed,
                 steps: Math.min(
                     request.steps ?? 30,
@@ -523,6 +677,12 @@ export class AIController {
                 clipGuidancePreset: request.clipGuidancePreset,
                 stylePreset: request.stylePreset,
                 userId: request.userId,
+            });
+
+            await this._metrics.recordImageMetrics({
+                userId: request.userId,
+                createdAtMs: Date.now(),
+                squarePixels: totalPixels,
             });
 
             return {
@@ -622,6 +782,8 @@ export interface AIChatFailure {
         | NotSubscribedError
         | InvalidSubscriptionTierError
         | NotSupportedError
+        | SubscriptionLimitReached
+        | NotAuthorizedError
         | 'invalid_model';
     errorMessage: string;
 
@@ -673,7 +835,9 @@ export interface AIGenerateSkyboxFailure {
         | NotLoggedInError
         | NotSubscribedError
         | InvalidSubscriptionTierError
-        | NotSupportedError;
+        | NotSupportedError
+        | SubscriptionLimitReached
+        | NotAuthorizedError;
     errorMessage: string;
 
     allowedSubscriptionTiers?: string[];
@@ -816,6 +980,8 @@ export interface AIGenerateImageFailure {
         | NotSubscribedError
         | InvalidSubscriptionTierError
         | NotSupportedError
+        | SubscriptionLimitReached
+        | NotAuthorizedError
         | 'invalid_model';
     errorMessage: string;
 

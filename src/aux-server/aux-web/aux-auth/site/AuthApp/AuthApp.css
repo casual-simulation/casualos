@@ -17,3 +17,7 @@
 #app {
     height: 100%;
 }
+
+.record-item .md-list-item-content {
+    justify-content: flex-start;
+}
