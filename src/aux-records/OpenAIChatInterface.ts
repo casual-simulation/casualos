@@ -72,6 +72,7 @@ export class OpenAIChatInterface implements AIChatInterface {
 
         return {
             choices: choices,
+            totalTokens: result.data.usage.total_tokens,
         };
     }
 }
