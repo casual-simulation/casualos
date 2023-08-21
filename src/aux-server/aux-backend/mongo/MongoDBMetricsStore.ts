@@ -5,6 +5,7 @@ import {
     AIImageSubscriptionMetrics,
     AISkyboxMetrics,
     AISkyboxSubscriptionMetrics,
+    ConfigurationStore,
     DataSubscriptionMetrics,
     EventSubscriptionMetrics,
     FileSubscriptionMetrics,
@@ -18,6 +19,7 @@ import { DataRecord } from './MongoDBDataRecordsStore';
 import { MongoFileRecord } from './MongoDBFileRecordsStore';
 import { MongoDBAuthUser, MongoDBStudio } from './MongoDBAuthStore';
 import { EventRecord } from './MongoDBEventRecordsStore';
+import { DateTime } from 'luxon';
 
 export const CHAT_METRICS_COLLECTION = 'chatMetrics';
 export const IMAGE_METRICS_COLLECTION = 'imageMetrics';
@@ -34,6 +36,7 @@ export class MongoDBMetricsStore implements MetricsStore {
     private _imageMetrics: Collection<AIImageMetrics>;
     private _skyboxMetrics: Collection<AISkyboxMetrics>;
     private _db: Db;
+    private _config: ConfigurationStore;
 
     constructor(
         dataRecords: Collection<DataRecord>,
@@ -42,7 +45,8 @@ export class MongoDBMetricsStore implements MetricsStore {
         studios: Collection<MongoDBStudio>,
         records: Collection<Record>,
         users: Collection<MongoDBAuthUser>,
-        db: Db
+        db: Db,
+        configStore: ConfigurationStore
     ) {
         this._dataRecords = dataRecords;
         this._fileRecords = fileRecords;
@@ -55,6 +59,7 @@ export class MongoDBMetricsStore implements MetricsStore {
         this._chatMetrics = this._db.collection(CHAT_METRICS_COLLECTION);
         this._imageMetrics = this._db.collection(IMAGE_METRICS_COLLECTION);
         this._skyboxMetrics = this._db.collection(SKYBOX_METRICS_COLLECTION);
+        this._config = configStore;
     }
 
     async getSubscriptionAiImageMetrics(
@@ -215,8 +220,7 @@ export class MongoDBMetricsStore implements MetricsStore {
             subscriptionStatus: subscriptionStatus,
             recordName: record.name,
             totalItems: count,
-            currentPeriodEndMs: periodEnd,
-            currentPeriodStartMs: periodStart,
+            ...(await this._getSubscriptionPeriod(periodStart, periodEnd)),
         };
     }
 
@@ -263,8 +267,7 @@ export class MongoDBMetricsStore implements MetricsStore {
             recordName: record.name,
             totalFiles: count,
             totalFileBytesReserved: reservedSize,
-            currentPeriodEndMs: periodEnd,
-            currentPeriodStartMs: periodStart,
+            ...(await this._getSubscriptionPeriod(periodStart, periodEnd)),
         };
     }
 
@@ -294,8 +297,7 @@ export class MongoDBMetricsStore implements MetricsStore {
             subscriptionStatus: subscriptionStatus,
             recordName: record.name,
             totalEventNames: count,
-            currentPeriodEndMs: periodEnd,
-            currentPeriodStartMs: periodStart,
+            ...(await this._getSubscriptionPeriod(periodStart, periodEnd)),
         };
     }
 
@@ -318,8 +320,10 @@ export class MongoDBMetricsStore implements MetricsStore {
                 subscriptionId: user.subscriptionId,
                 subscriptionStatus: user.subscriptionStatus,
                 totalRecords: count,
-                currentPeriodEndMs: user.subscriptionPeriodEndMs,
-                currentPeriodStartMs: user.subscriptionPeriodStartMs,
+                ...(await this._getSubscriptionPeriod(
+                    user.subscriptionPeriodStartMs,
+                    user.subscriptionPeriodEndMs
+                )),
             };
         } else {
             const studio = await this._studios.findOne({
@@ -337,10 +341,44 @@ export class MongoDBMetricsStore implements MetricsStore {
                 subscriptionId: studio.subscriptionId,
                 subscriptionStatus: studio.subscriptionStatus,
                 totalRecords: count,
-                currentPeriodEndMs: studio.subscriptionPeriodEndMs,
-                currentPeriodStartMs: studio.subscriptionPeriodStartMs,
+                ...(await this._getSubscriptionPeriod(
+                    studio.subscriptionPeriodStartMs,
+                    studio.subscriptionPeriodEndMs
+                )),
             };
         }
+    }
+
+    private async _getSubscriptionPeriod(startMs: number, endMs: number) {
+        if (!startMs || !endMs) {
+            return await this._getDefaultSubscriptionPeriod();
+        }
+
+        return {
+            currentPeriodStartMs: startMs,
+            currentPeriodEndMs: endMs,
+        };
+    }
+
+    private async _getDefaultSubscriptionPeriod() {
+        const config = await this._config.getSubscriptionConfiguration();
+        let currentPeriodStartMs: number = null;
+        let currentPeriodEndMs: number = null;
+
+        if (config?.defaultFeatures?.defaultPeriodLength) {
+            const now = DateTime.utc();
+            const periodStart = now.minus(
+                config.defaultFeatures.defaultPeriodLength
+            );
+
+            currentPeriodStartMs = periodStart.toMillis();
+            currentPeriodEndMs = now.toMillis();
+        }
+
+        return {
+            currentPeriodStartMs,
+            currentPeriodEndMs,
+        };
     }
 
     private async _listRecords(recordName: string) {

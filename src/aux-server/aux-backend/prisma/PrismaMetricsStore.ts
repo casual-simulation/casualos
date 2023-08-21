@@ -20,12 +20,15 @@ import {
 import { PrismaClient, Prisma } from '@prisma/client';
 import { convertToMillis } from './Utils';
 import { v4 as uuid } from 'uuid';
+import { DateTime } from 'luxon';
 
 export class PrismaMetricsStore implements MetricsStore {
     private _client: PrismaClient;
+    private _config: ConfigurationStore;
 
-    constructor(client: PrismaClient) {
+    constructor(client: PrismaClient, configStore: ConfigurationStore) {
         this._client = client;
+        this._config = configStore;
     }
 
     async getSubscriptionAiImageMetrics(
@@ -194,14 +197,16 @@ export class PrismaMetricsStore implements MetricsStore {
                 result.owner?.subscriptionStatus ||
                 result.studio?.subscriptionStatus,
             totalItems: totalItems,
-            currentPeriodEndMs: convertToMillis(
-                result.owner?.subscriptionPeriodEnd ||
-                    result.studio?.subscriptionPeriodEnd
-            ),
-            currentPeriodStartMs: convertToMillis(
-                result.owner?.subscriptionPeriodStart ||
-                    result.studio?.subscriptionPeriodStart
-            ),
+            ...(await this._getSubscriptionPeriod(
+                convertToMillis(
+                    result.owner?.subscriptionPeriodStart ||
+                        result.studio?.subscriptionPeriodStart
+                ),
+                convertToMillis(
+                    result.owner?.subscriptionPeriodEnd ||
+                        result.studio?.subscriptionPeriodEnd
+                )
+            )),
         };
     }
 
@@ -242,14 +247,16 @@ export class PrismaMetricsStore implements MetricsStore {
                 result.studio?.subscriptionStatus,
             totalFiles: stats._count._all,
             totalFileBytesReserved: Number(stats._sum.sizeInBytes),
-            currentPeriodEndMs: convertToMillis(
-                result.owner?.subscriptionPeriodEnd ||
-                    result.studio?.subscriptionPeriodEnd
-            ),
-            currentPeriodStartMs: convertToMillis(
-                result.owner?.subscriptionPeriodStart ||
-                    result.studio?.subscriptionPeriodStart
-            ),
+            ...(await this._getSubscriptionPeriod(
+                convertToMillis(
+                    result.owner?.subscriptionPeriodStart ||
+                        result.studio?.subscriptionPeriodStart
+                ),
+                convertToMillis(
+                    result.owner?.subscriptionPeriodEnd ||
+                        result.studio?.subscriptionPeriodEnd
+                )
+            )),
         };
     }
 
@@ -286,14 +293,16 @@ export class PrismaMetricsStore implements MetricsStore {
                 result.owner?.subscriptionStatus ||
                 result.studio?.subscriptionStatus,
             totalEventNames: stats._count._all,
-            currentPeriodEndMs: convertToMillis(
-                result.owner?.subscriptionPeriodEnd ||
-                    result.studio?.subscriptionPeriodEnd
-            ),
-            currentPeriodStartMs: convertToMillis(
-                result.owner?.subscriptionPeriodStart ||
-                    result.studio?.subscriptionPeriodStart
-            ),
+            ...(await this._getSubscriptionPeriod(
+                convertToMillis(
+                    result.owner?.subscriptionPeriodStart ||
+                        result.studio?.subscriptionPeriodStart
+                ),
+                convertToMillis(
+                    result.owner?.subscriptionPeriodEnd ||
+                        result.studio?.subscriptionPeriodEnd
+                )
+            )),
         };
     }
 
@@ -325,10 +334,10 @@ export class PrismaMetricsStore implements MetricsStore {
                 subscriptionId: user.subscriptionId,
                 subscriptionStatus: user.subscriptionStatus,
                 totalRecords: user._count.records,
-                currentPeriodStartMs: convertToMillis(
-                    user.subscriptionPeriodStart
-                ),
-                currentPeriodEndMs: convertToMillis(user.subscriptionPeriodEnd),
+                ...(await this._getSubscriptionPeriod(
+                    convertToMillis(user.subscriptionPeriodStart),
+                    convertToMillis(user.subscriptionPeriodEnd)
+                )),
             };
         } else {
             const studio = await this._client.studio.findUnique({
@@ -355,14 +364,44 @@ export class PrismaMetricsStore implements MetricsStore {
                 subscriptionId: studio.subscriptionId,
                 subscriptionStatus: studio.subscriptionStatus,
                 totalRecords: studio._count.records,
-                currentPeriodStartMs: convertToMillis(
-                    studio.subscriptionPeriodStart
-                ),
-                currentPeriodEndMs: convertToMillis(
-                    studio.subscriptionPeriodEnd
-                ),
+                ...(await this._getSubscriptionPeriod(
+                    convertToMillis(studio.subscriptionPeriodStart),
+                    convertToMillis(studio.subscriptionPeriodEnd)
+                )),
             };
         }
+    }
+
+    private async _getSubscriptionPeriod(startMs: number, endMs: number) {
+        if (!startMs || !endMs) {
+            return await this._getDefaultSubscriptionPeriod();
+        }
+
+        return {
+            currentPeriodStartMs: startMs,
+            currentPeriodEndMs: endMs,
+        };
+    }
+
+    private async _getDefaultSubscriptionPeriod() {
+        const config = await this._config.getSubscriptionConfiguration();
+        let currentPeriodStartMs: number = null;
+        let currentPeriodEndMs: number = null;
+
+        if (config?.defaultFeatures?.defaultPeriodLength) {
+            const now = DateTime.utc();
+            const periodStart = now.minus(
+                config.defaultFeatures.defaultPeriodLength
+            );
+
+            currentPeriodStartMs = periodStart.toMillis();
+            currentPeriodEndMs = now.toMillis();
+        }
+
+        return {
+            currentPeriodStartMs,
+            currentPeriodEndMs,
+        };
     }
 
     private async _findSubscriptionInfoByRecordName(recordName: string) {
