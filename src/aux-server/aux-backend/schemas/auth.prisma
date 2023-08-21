@@ -421,7 +421,7 @@ model AiChatMetrics {
 model AiImageMetrics {
     id String @id @db.Uuid
     createdAt DateTime @default(now())
-    pixelsGenerated Int
+    squarePixelsGenerated Int
 
     userId String?
     user User? @relation(fields: [userId], references: [id])
