@@ -746,6 +746,40 @@ export function setColor(
         shapeMat.color = (<any>shapeMat)[DEFAULT_COLOR] ?? new Color(0xffffff);
     }
 }
+/**
+ * Changes the mesh's Depth Test Property.
+ * @param mesh The mesh.
+ * @param depthTest The depth test value.
+ */
+export function setDepthTest(
+    mesh: Mesh | Sprite | ThreeLineSegments,
+    depthTest: boolean
+) {
+    if (!mesh) {
+        return;
+    }
+    const shapeMat = <
+        MeshStandardMaterial | MeshToonMaterial | LineBasicMaterial
+    >mesh.material;
+    shapeMat.depthTest = depthTest;
+}
+/**
+ * Changes the mesh's Depth Write Property.
+ * @param mesh The mesh.
+ * @param depthWrite The depth test value.
+ */
+export function setDepthWrite(
+    mesh: Mesh | Sprite | ThreeLineSegments,
+    depthWrite: boolean
+) {
+    if (!mesh) {
+        return;
+    }
+    const shapeMat = <
+        MeshStandardMaterial | MeshToonMaterial | LineBasicMaterial
+    >mesh.material;
+    shapeMat.depthWrite = depthWrite;
+}
 
 /**
  * Changes the mesh's opacity level.

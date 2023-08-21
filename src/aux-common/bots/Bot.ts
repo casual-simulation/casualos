@@ -2672,6 +2672,8 @@ export const KNOWN_TAGS: string[] = [
     'formAnimationAddress',
     'formOpacity',
     'formRenderOrder',
+    'formDepthTest',
+    'formDepthWrite',
     'orientationMode',
     'anchorPoint',
     'gltfVersion',
