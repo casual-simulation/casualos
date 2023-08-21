@@ -1085,7 +1085,7 @@ describe('AIController', () => {
                 subscriptionId: null,
                 currentPeriodStartMs: null,
                 currentPeriodEndMs: null,
-                totalPixelsInCurrentPeriod: 512 * 512,
+                totalSquarePixelsInCurrentPeriod: 512,
             });
         });
 

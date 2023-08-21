@@ -1814,12 +1814,12 @@ export class MemoryStore
 
         let totalPixels = 0;
         for (let m of metrics) {
-            totalPixels += m.pixels;
+            totalPixels += m.squarePixels;
         }
 
         return {
             ...info,
-            totalPixelsInCurrentPeriod: totalPixels,
+            totalSquarePixelsInCurrentPeriod: totalPixels,
         };
     }
 

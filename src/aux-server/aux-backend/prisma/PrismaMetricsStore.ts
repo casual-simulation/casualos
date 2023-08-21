@@ -1,5 +1,10 @@
 import {
+    AIChatMetrics,
     AIChatSubscriptionMetrics,
+    AIImageMetrics,
+    AIImageSubscriptionMetrics,
+    AISkyboxMetrics,
+    AISkyboxSubscriptionMetrics,
     ConfigurationStore,
     DataSubscriptionMetrics,
     EventSubscriptionMetrics,
@@ -14,6 +19,7 @@ import {
 } from '@casual-simulation/aux-records';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { convertToMillis } from './Utils';
+import { v4 as uuid } from 'uuid';
 
 export class PrismaMetricsStore implements MetricsStore {
     private _client: PrismaClient;
@@ -22,10 +28,140 @@ export class PrismaMetricsStore implements MetricsStore {
         this._client = client;
     }
 
-    getSubscriptionAiChatMetrics(
+    async getSubscriptionAiImageMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AIImageSubscriptionMetrics> {
+        const metrics = await this.getSubscriptionRecordMetrics(filter);
+
+        const where: Prisma.AiImageMetricsWhereInput = {
+            createdAt: {
+                lt: new Date(metrics.currentPeriodEndMs),
+                gte: new Date(metrics.currentPeriodStartMs),
+            },
+        };
+
+        if (filter.ownerId) {
+            where.userId = filter.ownerId;
+        } else if (filter.studioId) {
+            where.studioId = filter.studioId;
+        } else {
+            throw new Error('Invalid filter');
+        }
+
+        const chatMetrics = await this._client.aiImageMetrics.aggregate({
+            where,
+            _sum: {
+                squarePixelsGenerated: true,
+            },
+        });
+
+        return {
+            ...metrics,
+            totalSquarePixelsInCurrentPeriod:
+                chatMetrics._sum.squarePixelsGenerated,
+        };
+    }
+
+    async recordImageMetrics(metrics: AIImageMetrics): Promise<void> {
+        await this._client.aiImageMetrics.create({
+            data: {
+                id: uuid(),
+                userId: metrics.userId,
+                studioId: metrics.studioId,
+                squarePixelsGenerated: metrics.squarePixels,
+                createdAt: new Date(metrics.createdAtMs),
+            },
+        });
+    }
+
+    async getSubscriptionAiSkyboxMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AISkyboxSubscriptionMetrics> {
+        const metrics = await this.getSubscriptionRecordMetrics(filter);
+
+        const where: Prisma.AiSkyboxMetricsWhereInput = {
+            createdAt: {
+                lt: new Date(metrics.currentPeriodEndMs),
+                gte: new Date(metrics.currentPeriodStartMs),
+            },
+        };
+
+        if (filter.ownerId) {
+            where.userId = filter.ownerId;
+        } else if (filter.studioId) {
+            where.studioId = filter.studioId;
+        } else {
+            throw new Error('Invalid filter');
+        }
+
+        const chatMetrics = await this._client.aiSkyboxMetrics.aggregate({
+            where,
+            _sum: {
+                skyboxesGenerated: true,
+            },
+        });
+
+        return {
+            ...metrics,
+            totalSkyboxesInCurrentPeriod: chatMetrics._sum.skyboxesGenerated,
+        };
+    }
+
+    async recordSkyboxMetrics(metrics: AISkyboxMetrics): Promise<void> {
+        await this._client.aiSkyboxMetrics.create({
+            data: {
+                id: uuid(),
+                userId: metrics.userId,
+                studioId: metrics.studioId,
+                skyboxesGenerated: metrics.skyboxes,
+                createdAt: new Date(metrics.createdAtMs),
+            },
+        });
+    }
+
+    async recordChatMetrics(metrics: AIChatMetrics): Promise<void> {
+        await this._client.aiChatMetrics.create({
+            data: {
+                id: uuid(),
+                userId: metrics.userId,
+                studioId: metrics.studioId,
+                tokens: metrics.tokens,
+                createdAt: new Date(metrics.createdAtMs),
+            },
+        });
+    }
+
+    async getSubscriptionAiChatMetrics(
         filter: SubscriptionFilter
     ): Promise<AIChatSubscriptionMetrics> {
-        throw new Error('Method not implemented.');
+        const metrics = await this.getSubscriptionRecordMetrics(filter);
+
+        const where: Prisma.AiChatMetricsWhereInput = {
+            createdAt: {
+                lt: new Date(metrics.currentPeriodEndMs),
+                gte: new Date(metrics.currentPeriodStartMs),
+            },
+        };
+
+        if (filter.ownerId) {
+            where.userId = filter.ownerId;
+        } else if (filter.studioId) {
+            where.studioId = filter.studioId;
+        } else {
+            throw new Error('Invalid filter');
+        }
+
+        const chatMetrics = await this._client.aiChatMetrics.aggregate({
+            where,
+            _sum: {
+                tokens: true,
+            },
+        });
+
+        return {
+            ...metrics,
+            totalTokensInCurrentPeriod: chatMetrics._sum.tokens,
+        };
     }
 
     async getSubscriptionDataMetricsByRecordName(

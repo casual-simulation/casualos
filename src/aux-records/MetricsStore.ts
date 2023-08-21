@@ -157,7 +157,7 @@ export interface AIImageSubscriptionMetrics extends SubscriptionMetrics {
     /**
      * The total number of pixels that have been generated for the current period.
      */
-    totalPixelsInCurrentPeriod: number;
+    totalSquarePixelsInCurrentPeriod: number;
 }
 
 export interface AISkyboxSubscriptionMetrics extends SubscriptionMetrics {
@@ -201,9 +201,10 @@ export interface AIImageMetrics {
     studioId?: string;
 
     /**
-     * The number of pixels that have been used.
+     * The number of square pixels that have been used.
+     * This is the number of pixels squared.
      */
-    pixels: number;
+    squarePixels: number;
 
     /**
      * The unix time in miliseconds of when the metrics were created.

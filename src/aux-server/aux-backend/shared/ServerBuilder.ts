@@ -216,7 +216,8 @@ export class ServerBuilder {
                     recordsEventsCollection,
                     studios,
                     recordsCollection,
-                    users
+                    users,
+                    db
                 );
                 this._configStore = new MongoDBConfigurationStore(
                     {

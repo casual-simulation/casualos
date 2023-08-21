@@ -601,11 +601,11 @@ export class AIController {
                 userId: request.userId,
             });
 
-            const totalPixels = width * height * numberOfImages;
+            const totalPixels = Math.max(width, height) * numberOfImages;
             await this._metrics.recordImageMetrics({
                 userId: request.userId,
                 createdAtMs: Date.now(),
-                pixels: totalPixels,
+                squarePixels: totalPixels,
             });
 
             return {

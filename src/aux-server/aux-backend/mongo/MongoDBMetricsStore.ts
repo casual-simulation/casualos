@@ -1,5 +1,10 @@
 import {
+    AIChatMetrics,
     AIChatSubscriptionMetrics,
+    AIImageMetrics,
+    AIImageSubscriptionMetrics,
+    AISkyboxMetrics,
+    AISkyboxSubscriptionMetrics,
     DataSubscriptionMetrics,
     EventSubscriptionMetrics,
     FileSubscriptionMetrics,
@@ -8,11 +13,15 @@ import {
     RecordSubscriptionMetrics,
     SubscriptionFilter,
 } from '@casual-simulation/aux-records';
-import { Collection, FilterQuery } from 'mongodb';
+import { Collection, FilterQuery, Db } from 'mongodb';
 import { DataRecord } from './MongoDBDataRecordsStore';
 import { MongoFileRecord } from './MongoDBFileRecordsStore';
 import { MongoDBAuthUser, MongoDBStudio } from './MongoDBAuthStore';
 import { EventRecord } from './MongoDBEventRecordsStore';
+
+export const CHAT_METRICS_COLLECTION = 'chatMetrics';
+export const IMAGE_METRICS_COLLECTION = 'imageMetrics';
+export const SKYBOX_METRICS_COLLECTION = 'skyboxMetrics';
 
 export class MongoDBMetricsStore implements MetricsStore {
     private _dataRecords: Collection<DataRecord>;
@@ -21,6 +30,10 @@ export class MongoDBMetricsStore implements MetricsStore {
     private _studios: Collection<MongoDBStudio>;
     private _users: Collection<MongoDBAuthUser>;
     private _records: Collection<Record>;
+    private _chatMetrics: Collection<AIChatMetrics>;
+    private _imageMetrics: Collection<AIImageMetrics>;
+    private _skyboxMetrics: Collection<AISkyboxMetrics>;
+    private _db: Db;
 
     constructor(
         dataRecords: Collection<DataRecord>,
@@ -28,7 +41,8 @@ export class MongoDBMetricsStore implements MetricsStore {
         eventRecords: Collection<EventRecord>,
         studios: Collection<MongoDBStudio>,
         records: Collection<Record>,
-        users: Collection<MongoDBAuthUser>
+        users: Collection<MongoDBAuthUser>,
+        db: Db
     ) {
         this._dataRecords = dataRecords;
         this._fileRecords = fileRecords;
@@ -36,11 +50,143 @@ export class MongoDBMetricsStore implements MetricsStore {
         this._studios = studios;
         this._records = records;
         this._users = users;
+        this._db = db;
+
+        this._chatMetrics = this._db.collection(CHAT_METRICS_COLLECTION);
+        this._imageMetrics = this._db.collection(IMAGE_METRICS_COLLECTION);
+        this._skyboxMetrics = this._db.collection(SKYBOX_METRICS_COLLECTION);
     }
-    getSubscriptionAiChatMetrics(
+
+    async getSubscriptionAiImageMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AIImageSubscriptionMetrics> {
+        const metrics = await this.getSubscriptionRecordMetrics(filter);
+        const match: FilterQuery<AIImageMetrics> = {
+            createdAtMs: {
+                $gte: metrics.currentPeriodStartMs,
+                $lt: metrics.currentPeriodEndMs,
+            },
+        };
+        if (filter.ownerId) {
+            match.userId = filter.ownerId;
+        } else if (filter.studioId) {
+            match.studioId = filter.studioId;
+        } else {
+            throw new Error('Invalid filter');
+        }
+        const imageMetrics = await this._imageMetrics
+            .aggregate([
+                { $match: match },
+                { $group: { squarePixels: { $sum: '$squarePixels' } } },
+            ])
+            .toArray();
+
+        let squarePixels = 0;
+        if (imageMetrics.length > 0) {
+            squarePixels += imageMetrics[0].squarePixels;
+        }
+
+        return {
+            ...metrics,
+            totalSquarePixelsInCurrentPeriod: squarePixels,
+        };
+    }
+
+    async recordImageMetrics(metrics: AIImageMetrics): Promise<void> {
+        await this._imageMetrics.insertOne({
+            createdAtMs: metrics.createdAtMs,
+            squarePixels: metrics.squarePixels,
+            studioId: metrics.studioId,
+            userId: metrics.userId,
+        });
+    }
+
+    async getSubscriptionAiSkyboxMetrics(
+        filter: SubscriptionFilter
+    ): Promise<AISkyboxSubscriptionMetrics> {
+        const metrics = await this.getSubscriptionRecordMetrics(filter);
+        const match: FilterQuery<AISkyboxMetrics> = {
+            createdAtMs: {
+                $gte: metrics.currentPeriodStartMs,
+                $lt: metrics.currentPeriodEndMs,
+            },
+        };
+        if (filter.ownerId) {
+            match.userId = filter.ownerId;
+        } else if (filter.studioId) {
+            match.studioId = filter.studioId;
+        } else {
+            throw new Error('Invalid filter');
+        }
+        const skyboxMetrics = await this._skyboxMetrics
+            .aggregate([
+                { $match: match },
+                { $group: { skyboxes: { $sum: '$skyboxes' } } },
+            ])
+            .toArray();
+
+        let totalSkyboxes = 0;
+        if (skyboxMetrics.length > 0) {
+            totalSkyboxes += skyboxMetrics[0].skyboxes;
+        }
+
+        return {
+            ...metrics,
+            totalSkyboxesInCurrentPeriod: totalSkyboxes,
+        };
+    }
+
+    async recordSkyboxMetrics(metrics: AISkyboxMetrics): Promise<void> {
+        await this._skyboxMetrics.insertOne({
+            studioId: metrics.studioId,
+            userId: metrics.userId,
+            createdAtMs: metrics.createdAtMs,
+            skyboxes: metrics.skyboxes,
+        });
+    }
+
+    async recordChatMetrics(metrics: AIChatMetrics): Promise<void> {
+        await this._chatMetrics.insertOne({
+            studioId: metrics.studioId,
+            userId: metrics.userId,
+            createdAtMs: metrics.createdAtMs,
+            tokens: metrics.tokens,
+        });
+    }
+
+    async getSubscriptionAiChatMetrics(
         filter: SubscriptionFilter
     ): Promise<AIChatSubscriptionMetrics> {
-        throw new Error('Method not implemented.');
+        const metrics = await this.getSubscriptionRecordMetrics(filter);
+        const match: FilterQuery<AIChatMetrics> = {
+            createdAtMs: {
+                $gte: metrics.currentPeriodStartMs,
+                $lt: metrics.currentPeriodEndMs,
+            },
+        };
+        if (filter.ownerId) {
+            match.userId = filter.ownerId;
+        } else if (filter.studioId) {
+            match.studioId = filter.studioId;
+        } else {
+            throw new Error('Invalid filter');
+        }
+        const chatMetrics = await this._chatMetrics
+            .aggregate([
+                { $match: match },
+                { $group: { tokens: { $sum: '$tokens' } } },
+            ])
+            .toArray();
+
+        let totalTokens = 0;
+        if (chatMetrics.length > 0) {
+            totalTokens += chatMetrics[0].tokens;
+        }
+
+        return {
+            ...metrics,
+            totalTokensInCurrentPeriod: totalTokens,
+        };
     }
 
     async getSubscriptionDataMetricsByRecordName(
