@@ -210,6 +210,13 @@ export class ServerBuilder {
                 const policies = db.collection<any>('policies');
                 const roles = db.collection<any>('roles');
 
+                this._configStore = new MongoDBConfigurationStore(
+                    {
+                        subscriptions:
+                            options.subscriptions as SubscriptionConfiguration,
+                    },
+                    configuration
+                );
                 this._metricsStore = new MongoDBMetricsStore(
                     recordsDataCollection,
                     recordsFilesCollection,
@@ -217,14 +224,8 @@ export class ServerBuilder {
                     studios,
                     recordsCollection,
                     users,
-                    db
-                );
-                this._configStore = new MongoDBConfigurationStore(
-                    {
-                        subscriptions:
-                            options.subscriptions as SubscriptionConfiguration,
-                    },
-                    configuration
+                    db,
+                    this._configStore
                 );
                 const authStore = new MongoDBAuthStore(db);
                 this._authStore = authStore;
@@ -268,10 +269,13 @@ export class ServerBuilder {
         const s3 = options.s3;
 
         this._prismaClient = new PrismaClient(prisma.options as any);
-        this._metricsStore = new PrismaMetricsStore(this._prismaClient);
         this._configStore = new PrismaConfigurationStore(this._prismaClient, {
             subscriptions: options.subscriptions as SubscriptionConfiguration,
         });
+        this._metricsStore = new PrismaMetricsStore(
+            this._prismaClient,
+            this._configStore
+        );
         this._authStore = new PrismaAuthStore(this._prismaClient);
         this._recordsStore = new PrismaRecordsStore(this._prismaClient);
         this._policyStore = new PrismaPolicyStore(this._prismaClient);
@@ -325,13 +329,16 @@ export class ServerBuilder {
                 const db = mongo.db(mongodb.database);
                 this._mongoDb = db;
 
-                this._metricsStore = new PrismaMetricsStore(this._prismaClient);
                 this._configStore = new PrismaConfigurationStore(
                     this._prismaClient,
                     {
                         subscriptions:
                             options.subscriptions as SubscriptionConfiguration,
                     }
+                );
+                this._metricsStore = new PrismaMetricsStore(
+                    this._prismaClient,
+                    this._configStore
                 );
                 this._authStore = new PrismaAuthStore(this._prismaClient);
                 this._recordsStore = new PrismaRecordsStore(this._prismaClient);
@@ -602,6 +609,8 @@ export class ServerBuilder {
             chat: null,
             generateSkybox: null,
             images: null,
+            config: this._configStore,
+            metrics: this._metricsStore,
         };
 
         if (this._chatInterface && options.ai.chat) {

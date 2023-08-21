@@ -319,6 +319,8 @@ describe('RecordsHttpServer', () => {
                     maxSteps: 50,
                 },
             },
+            config: store,
+            metrics: store,
         });
 
         server = new RecordsHttpServer(
@@ -8671,6 +8673,7 @@ describe('RecordsHttpServer', () => {
                         content: 'hi!',
                     },
                 ],
+                totalTokens: 0,
             });
         });
 
@@ -8759,6 +8762,7 @@ describe('RecordsHttpServer', () => {
                         content: 'hi!',
                     },
                 ],
+                totalTokens: 0,
             });
 
             const result = await server.handleRequest(
