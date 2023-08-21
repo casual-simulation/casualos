@@ -30,11 +30,11 @@ export const subscriptionFeaturesSchema = z.object({
         }),
         images: z.object({
             allowed: z.boolean(),
-            maxPixelsPerPeriod: z.number().int().positive().optional(),
+            maxSquarePixelsPerPeriod: z.number().int().positive().optional(),
         }),
         skyboxes: z.object({
             allowed: z.boolean(),
-            maxPixelsPerPeriod: z.number().int().positive().optional(),
+            maxSquarePixelsPerPeriod: z.number().int().positive().optional(),
         }),
     }),
 });
@@ -387,16 +387,20 @@ export interface AIImageFeaturesConfiguration {
     allowed: boolean;
 
     /**
-     * The maximum number of pixels that are allowed to be generated per request.
+     * The maximum number of square pixels that are allowed to be generated per request.
      * If not specified, then there is no limit.
+     *
+     * total pixels = (square pixels) ^ 2
      */
-    maxPixelsPerRequest?: number;
+    maxSquarePixelsPerRequest?: number;
 
     /**
      * The maximum number of pixels that are allowed to be generated per subscription period.
      * If not specified, then there is no limit.
+     *
+     * total pixels = (square pixels) ^ 2
      */
-    maxPixelsPerPeriod?: number;
+    maxSquarePixelsPerPeriod?: number;
 }
 
 export interface AISkyboxFeaturesConfiguration {

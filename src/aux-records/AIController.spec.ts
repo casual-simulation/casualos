@@ -1303,5 +1303,168 @@ describe('AIController', () => {
                 userId: 'test-user',
             });
         });
+
+        describe('subscriptions', () => {
+            beforeEach(async () => {
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        subscriptions: [
+                            {
+                                id: 'sub1',
+                                eligibleProducts: [],
+                                product: '',
+                                featureList: [],
+                                tier: 'tier1',
+                            },
+                        ],
+                        tiers: {
+                            tier1: {
+                                features: merge(allowAllFeatures(), {
+                                    ai: {
+                                        images: {
+                                            maxSquarePixelsPerRequest: 512,
+                                            maxSquarePixelsPerPeriod: 2048,
+                                        },
+                                    },
+                                } as Partial<FeaturesConfiguration>),
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+            });
+
+            it('should reject the request if the feature is not allowed', async () => {
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        subscriptions: [
+                            {
+                                id: 'sub1',
+                                eligibleProducts: [],
+                                product: '',
+                                featureList: [],
+                                tier: 'tier1',
+                            },
+                        ],
+                        tiers: {
+                            tier1: {
+                                features: merge(allowAllFeatures(), {
+                                    ai: {
+                                        images: {
+                                            allowed: false,
+                                        },
+                                    },
+                                } as Partial<FeaturesConfiguration>),
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                generateImageInterface.generateImage.mockReturnValueOnce(
+                    Promise.resolve({
+                        images: [
+                            {
+                                base64: 'base64',
+                                seed: 123,
+                                mimeType: 'image/png',
+                            },
+                        ],
+                    })
+                );
+
+                const result = await controller.generateImage({
+                    prompt: 'test',
+                    userId,
+                    userSubscriptionTier,
+                    width: 512,
+                    height: 512,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit AI Image features.',
+                });
+                expect(generateImageInterface.generateImage).not.toBeCalled();
+            });
+
+            it('should reject the request if it would exceed the subscription request limits', async () => {
+                generateImageInterface.generateImage.mockReturnValueOnce(
+                    Promise.resolve({
+                        images: [
+                            {
+                                base64: 'base64',
+                                seed: 123,
+                                mimeType: 'image/png',
+                            },
+                        ],
+                    })
+                );
+
+                const result = await controller.generateImage({
+                    prompt: 'test',
+                    userId,
+                    userSubscriptionTier,
+                    width: 1024,
+                    height: 1024,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The request exceeds allowed subscription limits.',
+                });
+                expect(generateImageInterface.generateImage).not.toBeCalled();
+            });
+
+            it('should reject the request if it would exceed the subscription period limits', async () => {
+                generateImageInterface.generateImage.mockReturnValueOnce(
+                    Promise.resolve({
+                        images: [
+                            {
+                                base64: 'base64',
+                                seed: 123,
+                                mimeType: 'image/png',
+                            },
+                        ],
+                    })
+                );
+
+                await store.recordImageMetrics({
+                    userId: userId,
+                    createdAtMs: Date.now(),
+                    squarePixels: 2048,
+                });
+
+                const result = await controller.generateImage({
+                    prompt: 'test',
+                    userId,
+                    userSubscriptionTier,
+                    width: 512,
+                    height: 512,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The user has reached their limit for the current subscription period.',
+                });
+                expect(generateImageInterface.generateImage).not.toBeCalled();
+            });
+        });
     });
 });

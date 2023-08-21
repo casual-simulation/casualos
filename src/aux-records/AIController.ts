@@ -582,6 +582,52 @@ export class AIController {
                 this._imageOptions.maxImages
             );
 
+            const totalPixels = Math.max(width, height) * numberOfImages;
+
+            const metrics = await this._metrics.getSubscriptionAiImageMetrics({
+                ownerId: request.userId,
+            });
+            const config = await this._config.getSubscriptionConfiguration();
+            const allowedFeatures = getSubscriptionFeatures(
+                config,
+                metrics.subscriptionStatus,
+                metrics.subscriptionId,
+                'user'
+            );
+
+            if (!allowedFeatures.ai.images.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit AI Image features.',
+                };
+            }
+
+            if (
+                allowedFeatures.ai.images.maxSquarePixelsPerRequest > 0 &&
+                totalPixels >
+                    allowedFeatures.ai.images.maxSquarePixelsPerRequest
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage: `The request exceeds allowed subscription limits.`,
+                };
+            }
+
+            if (
+                allowedFeatures.ai.images.maxSquarePixelsPerPeriod > 0 &&
+                totalPixels + metrics.totalSquarePixelsInCurrentPeriod >
+                    allowedFeatures.ai.images.maxSquarePixelsPerPeriod
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage: `The user has reached their limit for the current subscription period.`,
+                };
+            }
+
             const result = await provider.generateImage({
                 model,
                 prompt: request.prompt,
@@ -601,7 +647,6 @@ export class AIController {
                 userId: request.userId,
             });
 
-            const totalPixels = Math.max(width, height) * numberOfImages;
             await this._metrics.recordImageMetrics({
                 userId: request.userId,
                 createdAtMs: Date.now(),
@@ -758,7 +803,9 @@ export interface AIGenerateSkyboxFailure {
         | NotLoggedInError
         | NotSubscribedError
         | InvalidSubscriptionTierError
-        | NotSupportedError;
+        | NotSupportedError
+        | SubscriptionLimitReached
+        | NotAuthorizedError;
     errorMessage: string;
 
     allowedSubscriptionTiers?: string[];
@@ -901,6 +948,8 @@ export interface AIGenerateImageFailure {
         | NotSubscribedError
         | InvalidSubscriptionTierError
         | NotSupportedError
+        | SubscriptionLimitReached
+        | NotAuthorizedError
         | 'invalid_model';
     errorMessage: string;
 
