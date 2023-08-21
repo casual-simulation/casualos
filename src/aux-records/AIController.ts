@@ -385,6 +385,38 @@ export class AIController {
                 }
             }
 
+            const metrics = await this._metrics.getSubscriptionAiSkyboxMetrics({
+                ownerId: request.userId,
+            });
+            const config = await this._config.getSubscriptionConfiguration();
+            const allowedFeatures = getSubscriptionFeatures(
+                config,
+                metrics.subscriptionStatus,
+                metrics.subscriptionId,
+                'user'
+            );
+
+            if (!allowedFeatures.ai.skyboxes.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit AI Skybox features.',
+                };
+            }
+
+            if (
+                allowedFeatures.ai.skyboxes.maxSkyboxesPerPeriod > 0 &&
+                metrics.totalSkyboxesInCurrentPeriod + 1 >
+                    allowedFeatures.ai.skyboxes.maxSkyboxesPerPeriod
+            ) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage: `The user has reached their limit for the current subscription period.`,
+                };
+            }
+
             const result = await this._generateSkybox.generateSkybox({
                 prompt: request.prompt,
                 negativePrompt: request.negativePrompt,

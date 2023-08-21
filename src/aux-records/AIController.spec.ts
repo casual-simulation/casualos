@@ -891,6 +891,124 @@ describe('AIController', () => {
                 prompt: 'test',
             });
         });
+
+        describe('subscriptions', () => {
+            beforeEach(async () => {
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        subscriptions: [
+                            {
+                                id: 'sub1',
+                                eligibleProducts: [],
+                                product: '',
+                                featureList: [],
+                                tier: 'tier1',
+                            },
+                        ],
+                        tiers: {
+                            tier1: {
+                                features: merge(allowAllFeatures(), {
+                                    ai: {
+                                        skyboxes: {
+                                            maxSkyboxesPerPeriod: 4,
+                                        },
+                                    },
+                                } as Partial<FeaturesConfiguration>),
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+            });
+
+            it('should reject the request if the feature is not allowed', async () => {
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        subscriptions: [
+                            {
+                                id: 'sub1',
+                                eligibleProducts: [],
+                                product: '',
+                                featureList: [],
+                                tier: 'tier1',
+                            },
+                        ],
+                        tiers: {
+                            tier1: {
+                                features: merge(allowAllFeatures(), {
+                                    ai: {
+                                        skyboxes: {
+                                            allowed: false,
+                                        },
+                                    },
+                                } as Partial<FeaturesConfiguration>),
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                generateSkyboxInterface.generateSkybox.mockReturnValueOnce(
+                    Promise.resolve({
+                        success: true,
+                        skyboxId: 'test-skybox-id',
+                    })
+                );
+
+                const result = await controller.generateSkybox({
+                    prompt: 'test',
+                    userId,
+                    userSubscriptionTier,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit AI Skybox features.',
+                });
+                expect(generateSkyboxInterface.generateSkybox).not.toBeCalled();
+            });
+
+            it('should reject the request if it would exceed the subscription period limits', async () => {
+                generateSkyboxInterface.generateSkybox.mockReturnValueOnce(
+                    Promise.resolve({
+                        success: true,
+                        skyboxId: 'test-skybox-id',
+                    })
+                );
+
+                await store.recordSkyboxMetrics({
+                    createdAtMs: Date.now(),
+                    skyboxes: 10,
+                    userId: userId,
+                });
+
+                const result = await controller.generateSkybox({
+                    prompt: 'test',
+                    userId,
+                    userSubscriptionTier,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The user has reached their limit for the current subscription period.',
+                });
+                expect(generateSkyboxInterface.generateSkybox).not.toBeCalled();
+            });
+        });
     });
 
     describe('getSkybox()', () => {
