@@ -31,6 +31,7 @@ import {
     randomCode,
 } from './AuthUtils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import { ConfigurationStore } from './ConfigurationStore';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -94,17 +95,18 @@ export class AuthController {
     private _store: AuthStore;
     private _messenger: AuthMessenger;
     private _forceAllowSubscriptionFeatures: boolean;
-    private _subscriptionConfig: SubscriptionConfiguration | null;
+    private _config: ConfigurationStore;
+    // private _subscriptionConfig: SubscriptionConfiguration | null;
 
     constructor(
         authStore: AuthStore,
         messenger: AuthMessenger,
-        subscriptionConfig: SubscriptionConfiguration | null,
+        configStore: ConfigurationStore,
         forceAllowSubscriptionFeatures: boolean = false
     ) {
         this._store = authStore;
         this._messenger = messenger;
-        this._subscriptionConfig = subscriptionConfig;
+        this._config = configStore;
         this._forceAllowSubscriptionFeatures = forceAllowSubscriptionFeatures;
     }
 
@@ -609,7 +611,7 @@ export class AuthController {
             }
 
             const { subscriptionId, subscriptionTier } =
-                this._getSubscriptionInfo(userInfo);
+                await this._getSubscriptionInfo(userInfo);
 
             return {
                 success: true,
@@ -1019,7 +1021,7 @@ export class AuthController {
             }
 
             const { hasActiveSubscription, subscriptionTier: tier } =
-                this._getSubscriptionInfo(result);
+                await this._getSubscriptionInfo(result);
 
             return {
                 success: true,
@@ -1031,7 +1033,6 @@ export class AuthController {
                 avatarUrl: result.avatarUrl,
                 hasActiveSubscription: hasActiveSubscription,
                 subscriptionTier: hasActiveSubscription ? tier : null,
-                openAiKey: hasActiveSubscription ? result.openAiKey : null,
             };
         } catch (err) {
             console.error(
@@ -1046,7 +1047,7 @@ export class AuthController {
         }
     }
 
-    private _getSubscriptionInfo(user: AuthUser) {
+    private async _getSubscriptionInfo(user: AuthUser) {
         const hasActiveSubscription =
             this._forceAllowSubscriptionFeatures ||
             isActiveSubscription(user.subscriptionStatus);
@@ -1054,13 +1055,15 @@ export class AuthController {
         let tier: string = null;
         let sub: SubscriptionConfiguration['subscriptions'][0] = null;
         if (hasActiveSubscription) {
+            const subscriptionConfig =
+                await this._config.getSubscriptionConfiguration();
             if (user.subscriptionId) {
-                sub = this._subscriptionConfig?.subscriptions.find(
+                sub = subscriptionConfig?.subscriptions.find(
                     (s) => s.id === user.subscriptionId
                 );
             }
             if (!sub) {
-                sub = this._subscriptionConfig?.subscriptions.find(
+                sub = subscriptionConfig?.subscriptions.find(
                     (s) => s.defaultSubscription
                 );
                 if (sub) {
@@ -1071,7 +1074,7 @@ export class AuthController {
             }
 
             if (!sub) {
-                sub = this._subscriptionConfig?.subscriptions[0];
+                sub = subscriptionConfig?.subscriptions[0];
                 if (sub) {
                     console.log(
                         '[AuthController] [getUserInfo] Using first subscription for user.'
@@ -1152,24 +1155,13 @@ export class AuthController {
                 );
             }
 
-            const hasActiveSubscription =
-                this._forceAllowSubscriptionFeatures ||
-                isActiveSubscription(user.subscriptionStatus);
-
             const cleaned = cleanupObject({
                 name: request.update.name,
                 avatarUrl: request.update.avatarUrl,
                 avatarPortraitUrl: request.update.avatarPortraitUrl,
                 email: request.update.email,
                 phoneNumber: request.update.phoneNumber,
-                openAiKey: hasActiveSubscription
-                    ? request.update.openAiKey
-                    : undefined,
             });
-
-            if (cleaned.openAiKey) {
-                cleaned.openAiKey = formatV1OpenAiKey(cleaned.openAiKey);
-            }
 
             await this._store.saveUser({
                 ...user,
@@ -1673,11 +1665,6 @@ export interface GetUserInfoSuccess {
      * The subscription tier that the user is subscribed to.
      */
     subscriptionTier: string;
-
-    /**
-     * The OpenAI API Key that the user has configured in their account.
-     */
-    openAiKey: string | null;
 }
 
 export interface GetUserInfoFailure {
@@ -1709,12 +1696,7 @@ export interface UpdateUserInfoRequest {
     update: Partial<
         Pick<
             AuthUser,
-            | 'name'
-            | 'email'
-            | 'phoneNumber'
-            | 'avatarUrl'
-            | 'avatarPortraitUrl'
-            | 'openAiKey'
+            'name' | 'email' | 'phoneNumber' | 'avatarUrl' | 'avatarPortraitUrl'
         >
     >;
 }

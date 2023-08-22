@@ -69,8 +69,6 @@ const builder = new ServerBuilder(config)
 
 if (config.prisma && config.s3) {
     builder.usePrismaWithS3();
-} else if (config.dynamodb) {
-    builder.useDynamoDB();
 }
 
 if (config.livekit) {

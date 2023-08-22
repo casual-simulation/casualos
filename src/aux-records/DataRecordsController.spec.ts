@@ -1,5 +1,4 @@
 import { RecordsStore } from './RecordsStore';
-import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { RecordsController } from './RecordsController';
 import {
     DataRecordsController,
@@ -12,48 +11,52 @@ import {
     RecordDataSuccess,
 } from './DataRecordsController';
 import { DataRecordsStore, UserPolicy } from './DataRecordsStore';
-import { MemoryDataRecordsStore } from './MemoryDataRecordsStore';
 import { PolicyController } from './PolicyController';
-import { AuthController } from './AuthController';
-import { AuthStore } from './AuthStore';
-import { AuthMessenger } from './AuthMessenger';
 import {
     createTestControllers,
     createTestRecordKey,
+    createTestSubConfiguration,
     createTestUser,
 } from './TestUtils';
-import { PolicyStore } from './PolicyStore';
-import { MemoryPolicyStore } from './MemoryPolicyStore';
 import {
     ACCOUNT_MARKER,
     ADMIN_ROLE_NAME,
     PUBLIC_READ_MARKER,
 } from './PolicyPermissions';
+import { merge } from 'lodash';
+import {
+    FeaturesConfiguration,
+    SubscriptionConfiguration,
+    allowAllFeatures,
+} from './SubscriptionConfiguration';
+import { MemoryStore } from './MemoryStore';
 
 console.log = jest.fn();
 
 describe('DataRecordsController', () => {
-    let recordsStore: RecordsStore;
+    let store: MemoryStore;
     let records: RecordsController;
-    let policiesStore: MemoryPolicyStore;
     let policies: PolicyController;
-    let store: DataRecordsStore;
     let manager: DataRecordsController;
     let key: string;
     let subjectlessKey: string;
 
     let userId: string;
     let sessionKey: string;
+    let otherUserId: string;
 
     beforeEach(async () => {
         const services = createTestControllers();
 
-        policiesStore = services.policyStore;
+        store = services.store;
         policies = services.policies;
-        recordsStore = services.recordsStore;
         records = services.records;
-        store = new MemoryDataRecordsStore();
-        manager = new DataRecordsController(policies, store);
+        manager = new DataRecordsController({
+            policies,
+            store,
+            metrics: store,
+            config: store,
+        });
 
         const user = await createTestUser(services, 'test@example.com');
         userId = user.userId;
@@ -61,7 +64,7 @@ describe('DataRecordsController', () => {
 
         const testRecordKey = await createTestRecordKey(
             services,
-            'testUser',
+            userId,
             'testRecord',
             'subjectfull'
         );
@@ -69,11 +72,20 @@ describe('DataRecordsController', () => {
 
         const subjectlessRecordKey = await createTestRecordKey(
             services,
-            'testUser',
+            userId,
             'testRecord',
             'subjectless'
         );
         subjectlessKey = subjectlessRecordKey.recordKey;
+
+        otherUserId = 'otherUserId';
+        await store.saveUser({
+            id: otherUserId,
+            allSessionRevokeTimeMs: null,
+            currentLoginRequestId: null,
+            email: 'other@example.com',
+            phoneNumber: null,
+        });
     });
 
     describe('recordData()', () => {
@@ -96,7 +108,7 @@ describe('DataRecordsController', () => {
             ).resolves.toEqual({
                 success: true,
                 data: 'data',
-                publisherId: 'testUser',
+                publisherId: userId,
                 subjectId: 'subjectId',
                 updatePolicy: true,
                 deletePolicy: true,
@@ -123,7 +135,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 ['different_subjectId'],
                 true,
@@ -247,7 +259,7 @@ describe('DataRecordsController', () => {
             ).resolves.toEqual({
                 success: true,
                 data: 'data',
-                publisherId: 'testUser',
+                publisherId: userId,
                 subjectId: null,
                 updatePolicy: true,
                 deletePolicy: true,
@@ -274,7 +286,7 @@ describe('DataRecordsController', () => {
             ).resolves.toEqual({
                 success: true,
                 data: 'data',
-                publisherId: 'testUser',
+                publisherId: userId,
                 subjectId: null,
                 updatePolicy: true,
                 deletePolicy: true,
@@ -301,7 +313,7 @@ describe('DataRecordsController', () => {
             ).resolves.toEqual({
                 success: true,
                 data: 'data',
-                publisherId: 'testUser',
+                publisherId: userId,
                 subjectId: 'subjectId',
                 updatePolicy: ['abc'],
                 deletePolicy: true,
@@ -310,7 +322,7 @@ describe('DataRecordsController', () => {
         });
 
         it('should be able to use a policy to create some data', async () => {
-            policiesStore.policies['testRecord'] = {
+            store.policies['testRecord'] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -330,15 +342,15 @@ describe('DataRecordsController', () => {
                 },
             };
 
-            policiesStore.roles['testRecord'] = {
-                [userId]: new Set(['developer']),
+            store.roles['testRecord'] = {
+                [otherUserId]: new Set(['developer']),
             };
 
             const result = (await manager.recordData(
                 'testRecord',
                 'address',
                 'data',
-                userId,
+                otherUserId,
                 null,
                 null,
                 ['secret']
@@ -353,8 +365,8 @@ describe('DataRecordsController', () => {
             ).resolves.toEqual({
                 success: true,
                 data: 'data',
-                publisherId: userId,
-                subjectId: userId,
+                publisherId: otherUserId,
+                subjectId: otherUserId,
                 updatePolicy: true,
                 deletePolicy: true,
                 markers: ['secret'],
@@ -362,7 +374,7 @@ describe('DataRecordsController', () => {
         });
 
         it('should be able to use a policy to update some data', async () => {
-            policiesStore.policies['testRecord'] = {
+            store.policies['testRecord'] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -377,16 +389,16 @@ describe('DataRecordsController', () => {
                 },
             };
 
-            policiesStore.roles['testRecord'] = {
-                [userId]: new Set(['developer']),
+            store.roles['testRecord'] = {
+                [otherUserId]: new Set(['developer']),
             };
 
             await store.setData(
                 'testRecord',
                 'address',
                 123,
-                'testUser',
-                'testUser',
+                userId,
+                userId,
                 null,
                 null,
                 ['secret']
@@ -396,7 +408,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 'data',
-                userId,
+                otherUserId,
                 null,
                 null
             )) as RecordDataSuccess;
@@ -410,8 +422,8 @@ describe('DataRecordsController', () => {
             ).resolves.toEqual({
                 success: true,
                 data: 'data',
-                publisherId: userId,
-                subjectId: userId,
+                publisherId: otherUserId,
+                subjectId: otherUserId,
                 updatePolicy: true,
                 deletePolicy: true,
                 markers: ['secret'],
@@ -419,7 +431,7 @@ describe('DataRecordsController', () => {
         });
 
         it('should be able to use a policy to add a resource marker to some data', async () => {
-            policiesStore.policies['testRecord'] = {
+            store.policies['testRecord'] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -456,16 +468,16 @@ describe('DataRecordsController', () => {
                 },
             };
 
-            policiesStore.roles['testRecord'] = {
-                [userId]: new Set(['developer']),
+            store.roles['testRecord'] = {
+                [otherUserId]: new Set(['developer']),
             };
 
             await store.setData(
                 'testRecord',
                 'address',
                 123,
-                'testUser',
-                'testUser',
+                userId,
+                userId,
                 null,
                 null,
                 [PUBLIC_READ_MARKER]
@@ -475,7 +487,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 'data',
-                userId,
+                otherUserId,
                 null,
                 null,
                 [PUBLIC_READ_MARKER, 'secret']
@@ -490,8 +502,8 @@ describe('DataRecordsController', () => {
             ).resolves.toEqual({
                 success: true,
                 data: 'data',
-                publisherId: userId,
-                subjectId: userId,
+                publisherId: otherUserId,
+                subjectId: otherUserId,
                 updatePolicy: true,
                 deletePolicy: true,
                 markers: [PUBLIC_READ_MARKER, 'secret'],
@@ -529,8 +541,8 @@ describe('DataRecordsController', () => {
                 userId,
                 'address',
                 123,
-                'testUser',
-                'testUser',
+                userId,
+                userId,
                 null,
                 null,
                 ['secret']
@@ -561,7 +573,7 @@ describe('DataRecordsController', () => {
         });
 
         it('should reject the request if the user does not have permission to create the data', async () => {
-            policiesStore.policies['testRecord'] = {
+            store.policies['testRecord'] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -576,15 +588,15 @@ describe('DataRecordsController', () => {
                 },
             };
 
-            policiesStore.roles['testRecord'] = {
-                [userId]: new Set(['developer']),
+            store.roles['testRecord'] = {
+                [otherUserId]: new Set(['developer']),
             };
 
             const result = (await manager.recordData(
                 'testRecord',
                 'address',
                 'data',
-                userId,
+                otherUserId,
                 null,
                 null,
                 ['secret']
@@ -603,15 +615,15 @@ describe('DataRecordsController', () => {
         });
 
         it('should reject the request if the inst does not have permission to create the data', async () => {
-            policiesStore.roles['testRecord'] = {
-                [userId]: new Set([ADMIN_ROLE_NAME]),
+            store.roles['testRecord'] = {
+                [otherUserId]: new Set([ADMIN_ROLE_NAME]),
             };
 
             const result = (await manager.recordData(
                 'testRecord',
                 'address',
                 'data',
-                userId,
+                otherUserId,
                 null,
                 null,
                 ['secret'],
@@ -629,6 +641,144 @@ describe('DataRecordsController', () => {
                 errorMessage: expect.any(String),
             });
         });
+
+        it('should reject the request if the maximum number of items has been hit for the users subscription', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                data: {
+                                    maxItems: 1,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.setData(
+                'testRecord',
+                'address1',
+                'data',
+                userId,
+                userId,
+                null,
+                null,
+                [PUBLIC_READ_MARKER]
+            );
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = (await manager.recordData(
+                key,
+                'address2',
+                'data',
+                'subjectId',
+                null,
+                null
+            )) as RecordDataFailure;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'The maximum number of items has been reached for your subscription.',
+                errorReason: 'too_many_items',
+            });
+
+            await expect(
+                store.getData('testRecord', 'address2')
+            ).resolves.toEqual({
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
+
+        it('should reject the request if data features are disabled', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                data: {
+                                    allowed: false,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.setData(
+                'testRecord',
+                'address1',
+                'data',
+                userId,
+                userId,
+                null,
+                null,
+                [PUBLIC_READ_MARKER]
+            );
+
+            const user = await store.findUser(userId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = (await manager.recordData(
+                key,
+                'address2',
+                'data',
+                'subjectId',
+                null,
+                null
+            )) as RecordDataFailure;
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage:
+                    'The subscription does not permit the recording of data.',
+                errorReason: 'data_not_allowed',
+            });
+
+            await expect(
+                store.getData('testRecord', 'address2')
+            ).resolves.toEqual({
+                success: false,
+                errorCode: 'data_not_found',
+                errorMessage: expect.any(String),
+            });
+        });
     });
 
     describe('getData()', () => {
@@ -637,7 +787,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 true,
@@ -651,7 +801,7 @@ describe('DataRecordsController', () => {
 
             expect(result.success).toBe(true);
             expect(result.data).toBe('data');
-            expect(result.publisherId).toBe('testUser');
+            expect(result.publisherId).toBe(userId);
             expect(result.subjectId).toBe('subjectId');
             expect(result.updatePolicy).toBe(true);
             expect(result.deletePolicy).toBe(true);
@@ -662,7 +812,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 null,
                 null,
@@ -676,7 +826,7 @@ describe('DataRecordsController', () => {
 
             expect(result.success).toBe(true);
             expect(result.data).toBe('data');
-            expect(result.publisherId).toBe('testUser');
+            expect(result.publisherId).toBe(userId);
             expect(result.subjectId).toBe('subjectId');
             expect(result.updatePolicy).toBe(true);
             expect(result.deletePolicy).toBe(true);
@@ -698,7 +848,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 true,
@@ -712,7 +862,7 @@ describe('DataRecordsController', () => {
 
             expect(result.success).toBe(true);
             expect(result.data).toBe('data');
-            expect(result.publisherId).toBe('testUser');
+            expect(result.publisherId).toBe(userId);
             expect(result.subjectId).toBe('subjectId');
             expect(result.updatePolicy).toBe(true);
             expect(result.deletePolicy).toBe(true);
@@ -724,7 +874,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 true,
@@ -744,15 +894,15 @@ describe('DataRecordsController', () => {
         });
 
         it('should reject if the inst does not have permission', async () => {
-            policiesStore.roles['testRecord'] = {
-                [userId]: new Set([ADMIN_ROLE_NAME]),
+            store.roles['testRecord'] = {
+                [otherUserId]: new Set([ADMIN_ROLE_NAME]),
             };
 
             await store.setData(
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 true,
@@ -762,7 +912,7 @@ describe('DataRecordsController', () => {
             const result = (await manager.getData(
                 'testRecord',
                 'address',
-                userId,
+                otherUserId,
                 ['inst']
             )) as GetDataFailure;
 
@@ -782,15 +932,15 @@ describe('DataRecordsController', () => {
         });
 
         it('should be able to retrieve secret data if the user has the admin role', async () => {
-            policiesStore.roles['testRecord'] = {
-                [userId]: new Set([ADMIN_ROLE_NAME]),
+            store.roles['testRecord'] = {
+                [otherUserId]: new Set([ADMIN_ROLE_NAME]),
             };
 
             await store.setData(
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 true,
@@ -800,12 +950,12 @@ describe('DataRecordsController', () => {
             const result = (await manager.getData(
                 'testRecord',
                 'address',
-                userId
+                otherUserId
             )) as GetDataSuccess;
 
             expect(result.success).toBe(true);
             expect(result.data).toBe('data');
-            expect(result.publisherId).toBe('testUser');
+            expect(result.publisherId).toBe(userId);
             expect(result.subjectId).toBe('subjectId');
             expect(result.updatePolicy).toBe(true);
             expect(result.deletePolicy).toBe(true);
@@ -816,7 +966,7 @@ describe('DataRecordsController', () => {
                 userId,
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 true,
@@ -831,7 +981,7 @@ describe('DataRecordsController', () => {
 
             expect(result.success).toBe(true);
             expect(result.data).toBe('data');
-            expect(result.publisherId).toBe('testUser');
+            expect(result.publisherId).toBe(userId);
             expect(result.subjectId).toBe('subjectId');
             expect(result.updatePolicy).toBe(true);
             expect(result.deletePolicy).toBe(true);
@@ -842,7 +992,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 true,
@@ -857,7 +1007,7 @@ describe('DataRecordsController', () => {
 
             expect(result.success).toBe(true);
             expect(result.data).toBe('data');
-            expect(result.publisherId).toBe('testUser');
+            expect(result.publisherId).toBe(userId);
             expect(result.subjectId).toBe('subjectId');
             expect(result.updatePolicy).toBe(true);
             expect(result.deletePolicy).toBe(true);
@@ -871,7 +1021,7 @@ describe('DataRecordsController', () => {
                     'testRecord',
                     'address/' + i,
                     'data' + i,
-                    'testUser',
+                    userId,
                     'subjectId',
                     true,
                     true,
@@ -906,7 +1056,7 @@ describe('DataRecordsController', () => {
                     'testRecord',
                     'address/' + i,
                     'data' + i,
-                    'testUser',
+                    userId,
                     'subjectId',
                     true,
                     true,
@@ -914,14 +1064,14 @@ describe('DataRecordsController', () => {
                 );
             }
 
-            policiesStore.roles['testRecord'] = {
-                [userId]: new Set([ADMIN_ROLE_NAME]),
+            store.roles['testRecord'] = {
+                [otherUserId]: new Set([ADMIN_ROLE_NAME]),
             };
 
             const result = await manager.listData(
                 'testRecord',
                 'address/2',
-                userId
+                otherUserId
             );
 
             expect(result).toEqual({
@@ -949,7 +1099,7 @@ describe('DataRecordsController', () => {
                     userId,
                     'address/' + i,
                     'data' + i,
-                    'testUser',
+                    userId,
                     'subjectId',
                     true,
                     true,
@@ -984,7 +1134,7 @@ describe('DataRecordsController', () => {
                     'testRecord',
                     'address/' + i,
                     'data' + i,
-                    'testUser',
+                    userId,
                     'subjectId',
                     true,
                     true,
@@ -992,11 +1142,15 @@ describe('DataRecordsController', () => {
                 );
             }
 
-            policiesStore.roles['testRecord'] = {
-                [userId]: new Set([ADMIN_ROLE_NAME]),
+            store.roles['testRecord'] = {
+                [otherUserId]: new Set([ADMIN_ROLE_NAME]),
             };
 
-            const result = await manager.listData(key, 'address/2', userId);
+            const result = await manager.listData(
+                key,
+                'address/2',
+                otherUserId
+            );
 
             expect(result).toEqual({
                 success: true,
@@ -1023,7 +1177,7 @@ describe('DataRecordsController', () => {
                     'testRecord',
                     'address/' + i,
                     'data' + i,
-                    'testUser',
+                    userId,
                     'subjectId',
                     true,
                     true,
@@ -1034,7 +1188,7 @@ describe('DataRecordsController', () => {
             const result = await manager.listData(
                 'testRecord',
                 'address/2',
-                userId
+                otherUserId
             );
 
             expect(result).toEqual({
@@ -1052,7 +1206,7 @@ describe('DataRecordsController', () => {
         });
 
         it('should only return data that the inst is allowed to access', async () => {
-            policiesStore.roles['testRecord'] = {
+            store.roles['testRecord'] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -1061,7 +1215,7 @@ describe('DataRecordsController', () => {
                     'testRecord',
                     'address/' + i,
                     'data' + i,
-                    'testUser',
+                    userId,
                     'subjectId',
                     true,
                     true,
@@ -1091,7 +1245,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 true,
@@ -1119,7 +1273,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 true,
@@ -1139,7 +1293,7 @@ describe('DataRecordsController', () => {
 
             expect(storeResult.success).toBe(true);
             expect(storeResult.data).toBe('data');
-            expect(storeResult.publisherId).toBe('testUser');
+            expect(storeResult.publisherId).toBe(userId);
             expect(storeResult.subjectId).toBe('subjectId');
         });
 
@@ -1148,7 +1302,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 true,
@@ -1175,7 +1329,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 true,
@@ -1203,7 +1357,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 true,
@@ -1225,7 +1379,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 ['different_subjectId'],
@@ -1248,7 +1402,7 @@ describe('DataRecordsController', () => {
 
             expect(storeResult.success).toBe(true);
             expect(storeResult.data).toBe('data');
-            expect(storeResult.publisherId).toBe('testUser');
+            expect(storeResult.publisherId).toBe(userId);
             expect(storeResult.subjectId).toBe('subjectId');
         });
 
@@ -1257,7 +1411,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 ['userId'],
@@ -1280,7 +1434,7 @@ describe('DataRecordsController', () => {
 
             expect(storeResult.success).toBe(true);
             expect(storeResult.data).toBe('data');
-            expect(storeResult.publisherId).toBe('testUser');
+            expect(storeResult.publisherId).toBe(userId);
             expect(storeResult.subjectId).toBe('subjectId');
         });
 
@@ -1289,7 +1443,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 ['different_subjectId'],
@@ -1299,7 +1453,7 @@ describe('DataRecordsController', () => {
             const result = (await manager.eraseData(
                 key,
                 'address',
-                'testUser'
+                userId
             )) as EraseDataFailure;
 
             expect(result.success).toBe(true);
@@ -1315,7 +1469,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 ['different_subjectId'],
@@ -1325,7 +1479,7 @@ describe('DataRecordsController', () => {
             const result = (await manager.eraseData(
                 'testRecord',
                 'address',
-                'testUser'
+                userId
             )) as EraseDataFailure;
 
             expect(result.success).toBe(true);
@@ -1341,7 +1495,7 @@ describe('DataRecordsController', () => {
                 userId,
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 ['different_subjectId'],
@@ -1363,15 +1517,15 @@ describe('DataRecordsController', () => {
         });
 
         it('should be able to use the admin policy to delete data without a marker', async () => {
-            policiesStore.roles['testRecord'] = {
-                [userId]: new Set([ADMIN_ROLE_NAME]),
+            store.roles['testRecord'] = {
+                [otherUserId]: new Set([ADMIN_ROLE_NAME]),
             };
 
             await store.setData(
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 true,
@@ -1381,7 +1535,7 @@ describe('DataRecordsController', () => {
             const result = (await manager.eraseData(
                 'testRecord',
                 'address',
-                userId
+                otherUserId
             )) as EraseDataSuccess;
 
             expect(result).toEqual({
@@ -1392,11 +1546,11 @@ describe('DataRecordsController', () => {
         });
 
         it('should be able to use the marker policy to delete data', async () => {
-            policiesStore.roles['testRecord'] = {
-                [userId]: new Set(['developer']),
+            store.roles['testRecord'] = {
+                [otherUserId]: new Set(['developer']),
             };
 
-            policiesStore.policies['testRecord'] = {
+            store.policies['testRecord'] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -1415,7 +1569,7 @@ describe('DataRecordsController', () => {
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 true,
@@ -1425,7 +1579,7 @@ describe('DataRecordsController', () => {
             const result = (await manager.eraseData(
                 'testRecord',
                 'address',
-                userId
+                otherUserId
             )) as EraseDataSuccess;
 
             expect(result).toEqual({
@@ -1436,15 +1590,15 @@ describe('DataRecordsController', () => {
         });
 
         it('should reject the request if no policy allows the deletion of the data', async () => {
-            policiesStore.roles['testRecord'] = {
-                [userId]: new Set(['developer']),
+            store.roles['testRecord'] = {
+                [otherUserId]: new Set(['developer']),
             };
 
             await store.setData(
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 true,
@@ -1454,7 +1608,7 @@ describe('DataRecordsController', () => {
             const result = (await manager.eraseData(
                 'testRecord',
                 'address',
-                userId
+                otherUserId
             )) as EraseDataSuccess;
 
             expect(result).toEqual({
@@ -1464,7 +1618,7 @@ describe('DataRecordsController', () => {
                 reason: {
                     type: 'missing_permission',
                     kind: 'user',
-                    id: userId,
+                    id: otherUserId,
                     marker: 'secret',
                     permission: 'data.delete',
                     role: null,
@@ -1473,15 +1627,15 @@ describe('DataRecordsController', () => {
         });
 
         it('should reject the request if the inst is not authorized', async () => {
-            policiesStore.roles['testRecord'] = {
-                [userId]: new Set([ADMIN_ROLE_NAME]),
+            store.roles['testRecord'] = {
+                [otherUserId]: new Set([ADMIN_ROLE_NAME]),
             };
 
             await store.setData(
                 'testRecord',
                 'address',
                 'data',
-                'testUser',
+                userId,
                 'subjectId',
                 true,
                 true,
@@ -1491,7 +1645,7 @@ describe('DataRecordsController', () => {
             const result = (await manager.eraseData(
                 'testRecord',
                 'address',
-                userId,
+                otherUserId,
                 ['inst']
             )) as EraseDataSuccess;
 

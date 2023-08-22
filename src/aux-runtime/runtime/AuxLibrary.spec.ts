@@ -227,6 +227,7 @@ import {
     aiChat,
     aiGenerateSkybox,
     aiGenerateImage,
+    listUserStudios,
 } from '@casual-simulation/aux-common/bots';
 import { types } from 'util';
 import { attachRuntime, detachRuntime } from './RuntimeEvents';
@@ -5515,7 +5516,6 @@ describe('AuxLibrary', () => {
                         avatarUrl: 'myAvatarUrl',
                         avatarPortraitUrl: 'portraitUrl',
                         name: 'name',
-                        openAiKey: 'api key',
                         hasActiveSubscription: true,
                     } as AuthData,
                     false
@@ -5534,7 +5534,6 @@ describe('AuxLibrary', () => {
                     'portraitUrl'
                 );
                 expect(resultBot.tags.name).toEqual('name');
-                expect(resultBot.tags.openAiKey).toEqual('api key');
                 expect(resultBot.tags.hasActiveSubscription).toEqual(true);
             });
 
@@ -7048,6 +7047,27 @@ describe('AuxLibrary', () => {
                 expect(() => {
                     library.api.os.countEvents('key', {} as string);
                 }).toThrow('eventName must be a string.');
+            });
+        });
+
+        describe('os.listUserStudios()', () => {
+            it('should emit a GetEventCountAction', async () => {
+                const action: any = library.api.os.listUserStudios();
+                const expected = listUserStudios({}, context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom endpoints', async () => {
+                const action: any = library.api.os.listUserStudios(
+                    'http://localhost:5000'
+                );
+                const expected = listUserStudios(
+                    { endpoint: 'http://localhost:5000' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

@@ -5,7 +5,11 @@ import {
     ValidatePublicRecordKeyFailure,
     ValidatePublicRecordKeyResult,
 } from './RecordsController';
-import { NotSupportedError, ServerError } from './Errors';
+import {
+    NotSupportedError,
+    ServerError,
+    SubscriptionLimitReached,
+} from './Errors';
 import {
     ADMIN_ROLE_NAME,
     AssignPolicyPermission,
@@ -23,7 +27,12 @@ import {
     ACCOUNT_MARKER,
     AvailableRolePermissions,
 } from './PolicyPermissions';
-import { PublicRecordKeyPolicy } from './RecordsStore';
+import {
+    ListedStudio,
+    ListedStudioAssignment,
+    PublicRecordKeyPolicy,
+    StudioAssignmentRole,
+} from './RecordsStore';
 import {
     AssignedRole,
     getExpireTime,
@@ -97,6 +106,8 @@ export class PolicyController {
         let recordKeyResult: ValidatePublicRecordKeyResult | null = null;
         let recordName: string;
         let ownerId: string;
+        let studioId: string;
+        let studioMembers: ListedStudioAssignment[] = undefined;
         const recordKeyProvided = isRecordKey(request.recordKeyOrRecordName);
         if (recordKeyProvided) {
             recordKeyResult = await this._records.validatePublicRecordKey(
@@ -128,6 +139,8 @@ export class PolicyController {
 
             recordName = result.recordName;
             ownerId = result.ownerId;
+            studioId = result.studioId;
+            studioMembers = result.studioMembers;
         }
 
         const subjectPolicy =
@@ -141,6 +154,8 @@ export class PolicyController {
             subjectPolicy,
             recordKeyProvided,
             recordOwnerId: ownerId,
+            recordStudioId: studioId,
+            recordStudioMembers: studioMembers,
         };
 
         return {
@@ -2889,7 +2904,8 @@ export class PolicyController {
                                   context.recordName,
                                   id
                               ),
-                              this._byRecordOwner(context, type, id)
+                              this._byRecordOwner(context, type, id),
+                              this._byStudioRole(context, type, id, 'admin')
                           )
                         : this._byRole(role)
                 )
@@ -2980,7 +2996,8 @@ export class PolicyController {
                                   context.recordName,
                                   id
                               ),
-                              this._byRecordOwner(context, type, id)
+                              this._byRecordOwner(context, type, id),
+                              this._byStudioRole(context, type, id, 'admin')
                           )
                         : this._byRole(role)
                 )
@@ -3068,7 +3085,8 @@ export class PolicyController {
                                   context.recordName,
                                   id
                               ),
-                              this._byRecordOwner(context, type, id)
+                              this._byRecordOwner(context, type, id),
+                              this._byStudioRole(context, type, id, 'admin')
                           )
                         : this._byRole(role)
                 )
@@ -3156,7 +3174,8 @@ export class PolicyController {
                                   context.recordName,
                                   id
                               ),
-                              this._byRecordOwner(context, type, id)
+                              this._byRecordOwner(context, type, id),
+                              this._byStudioRole(context, type, id, 'admin')
                           )
                         : this._byRole(role)
                 )
@@ -3244,7 +3263,8 @@ export class PolicyController {
                                   context.recordName,
                                   id
                               ),
-                              this._byRecordOwner(context, type, id)
+                              this._byRecordOwner(context, type, id),
+                              this._byStudioRole(context, type, id, 'admin')
                           )
                         : this._byRole(role)
                 )
@@ -3332,7 +3352,8 @@ export class PolicyController {
                                   context.recordName,
                                   id
                               ),
-                              this._byRecordOwner(context, type, id)
+                              this._byRecordOwner(context, type, id),
+                              this._byStudioRole(context, type, id, 'admin')
                           )
                         : this._byRole(role)
                 )
@@ -3429,7 +3450,8 @@ export class PolicyController {
                                   context.recordName,
                                   id
                               ),
-                              this._byRecordOwner(context, type, id)
+                              this._byRecordOwner(context, type, id),
+                              this._byStudioRole(context, type, id, 'admin')
                           )
                         : this._byRole(role)
                 )
@@ -3522,7 +3544,8 @@ export class PolicyController {
                                   context.recordName,
                                   id
                               ),
-                              this._byRecordOwner(context, type, id)
+                              this._byRecordOwner(context, type, id),
+                              this._byStudioRole(context, type, id, 'admin')
                           )
                         : this._byRole(role)
                 )
@@ -3921,6 +3944,35 @@ export class PolicyController {
         return async () => false;
     }
 
+    private _byStudioRole(
+        context: AuthorizationContext,
+        subjectType: 'user' | 'inst',
+        id: string,
+        role?: StudioAssignmentRole
+    ) {
+        if (subjectType === 'inst') {
+            return async () => false;
+        }
+
+        if (
+            !context.recordStudioId ||
+            !context.recordStudioMembers ||
+            context.recordStudioMembers.length <= 0
+        ) {
+            return async () => false;
+        }
+
+        if (role) {
+            return async () =>
+                context.recordStudioMembers.some(
+                    (m) => m.userId === id && m.role === role
+                );
+        }
+
+        return async () =>
+            context.recordStudioMembers.some((m) => m.userId === id);
+    }
+
     private _byEveryoneRole(): PermissionFilter {
         return this._byRole(true);
     }
@@ -3932,6 +3984,8 @@ export class PolicyController {
     ): PermissionFilter {
         if (!!context.recordKeyResult && context.recordKeyResult.success) {
             return this._byRole(ADMIN_ROLE_NAME);
+        } else if (context.recordStudioId) {
+            return this._byStudioRole(context, subjectType, id);
         } else {
             return this._byRecordOwner(context, subjectType, id);
         }
@@ -4269,7 +4323,11 @@ export interface ConstructAuthorizationContextSuccess {
 
 export interface ConstructAuthorizationContextFailure {
     success: false;
-    errorCode: ValidatePublicRecordKeyFailure['errorCode'];
+    errorCode:
+        | ValidatePublicRecordKeyFailure['errorCode']
+        | 'not_authorized'
+        | SubscriptionLimitReached
+        | ServerError;
     errorMessage: string;
 }
 
@@ -4278,6 +4336,8 @@ export interface AuthorizationContext {
     recordKeyProvided: boolean;
     recordName: string;
     recordOwnerId: string;
+    recordStudioId: string;
+    recordStudioMembers?: ListedStudioAssignment[];
     subjectPolicy: PublicRecordKeyPolicy;
 }
 
@@ -4840,6 +4900,7 @@ export interface AuthorizeDenied {
         | 'action_not_supported'
         | 'not_logged_in'
         | 'not_authorized'
+        | SubscriptionLimitReached
         | 'unacceptable_request';
     errorMessage: string;
 

@@ -110,6 +110,9 @@
                             :disableAlpha="true"
                         ></color-picker-basic>
                     </div>
+                    <md-dialog-actions>
+                        <md-button class="md-primary" @click="saveInputDialog()">Done</md-button>
+                    </md-dialog-actions>
                 </md-dialog-content>
             </div>
         </md-dialog>

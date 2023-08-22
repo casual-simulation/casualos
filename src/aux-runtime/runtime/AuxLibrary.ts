@@ -339,6 +339,7 @@ import {
     AIGenerateImageAction,
     aiGenerateImage,
     getEasing,
+    listUserStudios as calcListUserStudios,
 } from '@casual-simulation/aux-common/bots';
 import {
     sortBy,
@@ -436,6 +437,7 @@ import {
 import type {
     AIChatMessage,
     AvailablePermissions,
+    ListStudiosResult,
 } from '@casual-simulation/aux-records';
 import SeedRandom from 'seedrandom';
 import { DateTime } from 'luxon';
@@ -3387,6 +3389,8 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
 
                 recordEvent,
                 countEvents,
+
+                listUserStudios,
 
                 convertGeolocationToWhat3Words,
 
@@ -8067,7 +8071,6 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
                         avatarAddress: data.avatarUrl,
                         avatarPortraitAddress: data.avatarPortraitUrl,
                         name: data.name,
-                        openAiKey: data.openAiKey,
                         hasActiveSubscription: data.hasActiveSubscription,
                         subscriptionTier: data.subscriptionTier,
                     },
@@ -9273,6 +9276,37 @@ export function createDefaultLibrary(context: AuxGlobalContext) {
             options,
             task.taskId
         );
+        return addAsyncAction(task, event);
+    }
+
+    /**
+     * Gets the list of studios that the currently logged in user has access to.
+     *
+     * Returns a promise that resolves with an object that contains the list of studios (if successful) or information about the error that occurred.
+     *
+     * @param endpoint the HTTP Endpoint of the records website that the data should be retrieved from. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
+     *
+     * @example Get the list of studios that the user has access to
+     * const result = await os.listUserStudios();
+     *
+     * if (result.success) {
+     *      os.toast(result.studios.map(s => s.name).join(', '));
+     * } else {
+     *      os.toast('Failed to get studios ' + result.errorMessage);
+     * }
+     *
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.listUserStudios
+     */
+    function listUserStudios(endpoint?: string): Promise<ListStudiosResult> {
+        let options: RecordActionOptions = {};
+        if (hasValue(endpoint)) {
+            options.endpoint = endpoint;
+        }
+
+        const task = context.createTask();
+        const event = calcListUserStudios(options, task.taskId);
         return addAsyncAction(task, event);
     }
 

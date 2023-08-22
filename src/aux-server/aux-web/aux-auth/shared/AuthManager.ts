@@ -13,6 +13,18 @@ import type {
     ListUserPoliciesResult,
     ListEventsResult,
     ListRoleAssignmentsResult,
+    ListStudiosResult,
+    ListedStudio,
+    Studio,
+    CreateStudioResult,
+    ListedStudioMember,
+    ListStudioMembersResult,
+    AddStudioMemberRequest,
+    AddStudioMemberResult,
+    RemoveStudioMemberRequest,
+    RemoveStudioMemberResult,
+    CreateRecordRequest,
+    CreateRecordResult,
 } from '@casual-simulation/aux-records';
 import { parseSessionKey } from '@casual-simulation/aux-records/AuthUtils';
 import type {
@@ -31,6 +43,7 @@ import type {
     CreateManageSubscriptionResult,
     GetSubscriptionStatusSuccess,
     CreateManageSubscriptionRequest,
+    GetSubscriptionStatusRequest,
 } from '@casual-simulation/aux-records/SubscriptionController';
 import { omitBy } from 'lodash';
 
@@ -99,10 +112,6 @@ export class AuthManager {
 
     get subscriptionTier() {
         return this._appMetadata?.subscriptionTier;
-    }
-
-    get openAiKey() {
-        return this._appMetadata?.openAiKey;
     }
 
     get userInfoLoaded() {
@@ -249,6 +258,35 @@ export class AuthManager {
         }
     }
 
+    async listSubscriptionsV2(
+        request: Pick<GetSubscriptionStatusRequest, 'studioId' | 'userId'>
+    ): Promise<GetSubscriptionStatusSuccess> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/subscriptions`);
+
+        if ('studioId' in request) {
+            url.searchParams.set('studioId', request.studioId);
+        }
+        if ('userId' in request) {
+            url.searchParams.set('userId', request.userId);
+        }
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as GetSubscriptionStatusResult;
+
+        if (result.success === true) {
+            return result;
+        } else {
+            if (result.errorCode === 'not_supported') {
+                return null;
+            }
+            return null;
+        }
+    }
+
     async listRecords(): Promise<ListedRecord[]> {
         const url = new URL(`${this.apiEndpoint}/api/v2/records/list`);
 
@@ -267,6 +305,138 @@ export class AuthManager {
         }
 
         return null;
+    }
+
+    async listStudioRecords(studioId: string): Promise<ListedRecord[]> {
+        const url = new URL(
+            `${
+                this.apiEndpoint
+            }/api/v2/records/list?studioId=${encodeURIComponent(studioId)}`
+        );
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as ListRecordsResult;
+        if (result.success === true) {
+            return result.records;
+        } else {
+            if (result.errorCode === 'not_supported') {
+                return [];
+            }
+        }
+
+        return null;
+    }
+
+    async listStudioMembers(studioId: string): Promise<ListedStudioMember[]> {
+        const url = new URL(
+            `${
+                this.apiEndpoint
+            }/api/v2/studios/members/list?studioId=${encodeURIComponent(
+                studioId
+            )}`
+        );
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as ListStudioMembersResult;
+        if (result.success === true) {
+            return result.members;
+        } else {
+            return [];
+        }
+    }
+
+    async addStudioMember(
+        request: Omit<AddStudioMemberRequest, 'userId'>
+    ): Promise<AddStudioMemberResult> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/studios/members`);
+
+        const response = await axios.post(url.href, request, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as AddStudioMemberResult;
+        return result;
+    }
+
+    async removeStudioMember(
+        request: Omit<RemoveStudioMemberRequest, 'userId'>
+    ): Promise<RemoveStudioMemberResult> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/studios/members`);
+
+        const response = await axios.delete(url.href, {
+            data: request,
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as RemoveStudioMemberResult;
+        return result;
+    }
+
+    async listStudios(): Promise<ListedStudio[]> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/studios/list`);
+
+        const response = await axios.get(url.href, {
+            headers: this._authenticationHeaders(),
+            validateStatus: (status) => status < 500 || status === 501,
+        });
+
+        const result = response.data as ListStudiosResult;
+        if (result.success === true) {
+            return result.studios;
+        }
+
+        return null;
+    }
+
+    async createStudio(displayName: string): Promise<string> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/studios`);
+
+        const response = await axios.post(
+            url.href,
+            {
+                displayName,
+            },
+            {
+                headers: this._authenticationHeaders(),
+                validateStatus: (status) => status < 500 || status === 501,
+            }
+        );
+
+        const result = response.data as CreateStudioResult;
+        if (result.success === true) {
+            return result.studioId;
+        } else {
+            return null;
+        }
+    }
+
+    async createRecord(
+        request: Omit<CreateRecordRequest, 'userId'>
+    ): Promise<CreateRecordResult> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/records`);
+
+        const response = await axios.post(
+            url.href,
+            {
+                ...request,
+            },
+            {
+                headers: this._authenticationHeaders(),
+                validateStatus: (status) => status < 500 || status === 501,
+            }
+        );
+
+        return response.data as CreateRecordResult;
     }
 
     async listData(recordName: string, startingAddress?: string) {
@@ -440,6 +610,29 @@ export class AuthManager {
             `${this.apiEndpoint}/api/${this.userId}/subscription/manage`
         );
         const response = await axios.post(url.href, !!options ? options : {}, {
+            headers: this._authenticationHeaders(),
+        });
+
+        const result = response.data as CreateManageSubscriptionResult;
+
+        if (result.success === true) {
+            location.href = result.url;
+        } else {
+            console.error(
+                '[AuthManager] Unable to manage subscriptions!',
+                result
+            );
+        }
+    }
+
+    async manageSubscriptionsV2(
+        options: Pick<
+            CreateManageSubscriptionRequest,
+            'subscriptionId' | 'expectedPrice' | 'userId' | 'studioId'
+        >
+    ): Promise<void> {
+        const url = new URL(`${this.apiEndpoint}/api/v2/subscriptions/manage`);
+        const response = await axios.post(url.href, options, {
             headers: this._authenticationHeaders(),
         });
 
@@ -654,7 +847,6 @@ export class AuthManager {
             name: this.name,
             email: this.email,
             phoneNumber: this.phone,
-            openAiKey: this.openAiKey,
             ...newMetadata,
         });
         await this.loadUserInfo();

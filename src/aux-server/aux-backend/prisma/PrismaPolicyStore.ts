@@ -17,7 +17,6 @@ import {
     getExpireTime,
 } from '@casual-simulation/aux-records';
 import { Prisma, PrismaClient } from '@prisma/client';
-import { Collection, FilterQuery } from 'mongodb';
 import { convertMarkers, convertToDate, convertToMillis } from './Utils';
 
 /**

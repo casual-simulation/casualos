@@ -13,6 +13,14 @@ import {
     AIGenerateImageInterfaceResponse,
 } from './AIImageInterface';
 import { AIController } from './AIController';
+import { MemoryStore } from './MemoryStore';
+import { createTestSubConfiguration } from './TestUtils';
+import {
+    FeaturesConfiguration,
+    SubscriptionConfiguration,
+    allowAllFeatures,
+} from './SubscriptionConfiguration';
+import { merge } from 'lodash';
 
 describe('AIController', () => {
     let controller: AIController;
@@ -37,6 +45,7 @@ describe('AIController', () => {
     };
     let userId: string;
     let userSubscriptionTier: string;
+    let store: MemoryStore;
 
     beforeEach(() => {
         userId = 'test-user';
@@ -51,6 +60,9 @@ describe('AIController', () => {
         generateImageInterface = {
             generateImage: jest.fn(),
         };
+        store = new MemoryStore({
+            subscriptions: null,
+        });
         controller = new AIController({
             chat: {
                 interface: chatInterface,
@@ -85,6 +97,8 @@ describe('AIController', () => {
                     allowedSubscriptionTiers: ['test-tier'],
                 },
             },
+            metrics: store,
+            config: store,
         });
     });
 
@@ -99,6 +113,7 @@ describe('AIController', () => {
                             stopReason: 'stop',
                         },
                     ],
+                    totalTokens: 1,
                 })
             );
 
@@ -148,6 +163,7 @@ describe('AIController', () => {
                             stopReason: 'stop',
                         },
                     ],
+                    totalTokens: 1,
                 })
             );
 
@@ -290,6 +306,7 @@ describe('AIController', () => {
                             stopReason: 'stop',
                         },
                     ],
+                    totalTokens: 1,
                 })
             );
 
@@ -304,6 +321,8 @@ describe('AIController', () => {
                 },
                 generateSkybox: null,
                 images: null,
+                metrics: store,
+                config: store,
             });
 
             const result = await controller.chat({
@@ -347,6 +366,8 @@ describe('AIController', () => {
                 chat: null,
                 generateSkybox: null,
                 images: null,
+                metrics: store,
+                config: store,
             });
 
             const result = await controller.chat({
@@ -366,6 +387,361 @@ describe('AIController', () => {
                 success: false,
                 errorCode: 'not_supported',
                 errorMessage: 'This operation is not supported.',
+            });
+        });
+
+        it('should track metrics for chat operations', async () => {
+            chatInterface.chat.mockReturnValueOnce(
+                Promise.resolve({
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            stopReason: 'stop',
+                        },
+                    ],
+                    totalTokens: 123,
+                })
+            );
+
+            const result = await controller.chat({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId,
+                userSubscriptionTier,
+            });
+
+            expect(result).toEqual({
+                success: true,
+                choices: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                        stopReason: 'stop',
+                    },
+                ],
+            });
+            expect(chatInterface.chat).toBeCalledWith({
+                model: 'test-model1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'test',
+                    },
+                ],
+                temperature: 0.5,
+                userId: 'test-user',
+            });
+
+            const metrics = await store.getSubscriptionAiChatMetrics({
+                ownerId: userId,
+            });
+
+            expect(metrics).toEqual({
+                ownerId: userId,
+                subscriptionStatus: null,
+                subscriptionId: null,
+                currentPeriodStartMs: null,
+                currentPeriodEndMs: null,
+                totalTokensInCurrentPeriod: 123,
+            });
+        });
+
+        describe('subscriptions', () => {
+            beforeEach(async () => {
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        subscriptions: [
+                            {
+                                id: 'sub1',
+                                eligibleProducts: [],
+                                product: '',
+                                featureList: [],
+                                tier: 'tier1',
+                            },
+                        ],
+                        tiers: {
+                            tier1: {
+                                features: merge(allowAllFeatures(), {
+                                    ai: {
+                                        chat: {
+                                            maxTokensPerPeriod: 100,
+                                            maxTokensPerRequest: 75,
+                                        },
+                                    },
+                                } as Partial<FeaturesConfiguration>),
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+            });
+
+            it('should specify the maximum number of tokens allowed based on how many tokens the subscription has left in the period', async () => {
+                chatInterface.chat.mockReturnValueOnce(
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                stopReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 25,
+                    })
+                );
+
+                await store.recordChatMetrics({
+                    userId: userId,
+                    createdAtMs: Date.now(),
+                    tokens: 50,
+                });
+
+                const result = await controller.chat({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            stopReason: 'stop',
+                        },
+                    ],
+                });
+                expect(chatInterface.chat).toBeCalledWith({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId: 'test-user',
+                    maxTokens: 50,
+                });
+
+                const metrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: userId,
+                });
+
+                expect(metrics).toEqual({
+                    ownerId: userId,
+                    subscriptionStatus: 'active',
+                    subscriptionId: 'sub1',
+                    totalTokensInCurrentPeriod: 75,
+                });
+            });
+
+            it('should specify the maximum number of tokens allowed based on the maximum number of tokens per request', async () => {
+                chatInterface.chat.mockReturnValueOnce(
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                stopReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 25,
+                    })
+                );
+
+                await store.recordChatMetrics({
+                    userId: userId,
+                    createdAtMs: Date.now(),
+                    tokens: 10,
+                });
+
+                const result = await controller.chat({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                });
+
+                expect(result).toEqual({
+                    success: true,
+                    choices: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                            stopReason: 'stop',
+                        },
+                    ],
+                });
+                expect(chatInterface.chat).toBeCalledWith({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId: 'test-user',
+                    maxTokens: 75,
+                });
+
+                const metrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: userId,
+                });
+
+                expect(metrics).toEqual({
+                    ownerId: userId,
+                    subscriptionStatus: 'active',
+                    subscriptionId: 'sub1',
+                    totalTokensInCurrentPeriod: 35,
+                });
+            });
+
+            it('should deny the request if the user has run out of available tokens in the period', async () => {
+                chatInterface.chat.mockReturnValueOnce(
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                stopReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 123,
+                    })
+                );
+
+                await store.recordChatMetrics({
+                    userId: userId,
+                    createdAtMs: Date.now(),
+                    tokens: 100,
+                });
+
+                const result = await controller.chat({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The user has reached their limit for the current subscription period.',
+                });
+                expect(chatInterface.chat).not.toBeCalled();
+
+                const metrics = await store.getSubscriptionAiChatMetrics({
+                    ownerId: userId,
+                });
+
+                expect(metrics).toEqual({
+                    ownerId: userId,
+                    subscriptionStatus: 'active',
+                    subscriptionId: 'sub1',
+                    totalTokensInCurrentPeriod: 100,
+                });
+            });
+
+            it('should deny the request if the feature is not allowed', async () => {
+                chatInterface.chat.mockReturnValueOnce(
+                    Promise.resolve({
+                        choices: [
+                            {
+                                role: 'user',
+                                content: 'test',
+                                stopReason: 'stop',
+                            },
+                        ],
+                        totalTokens: 123,
+                    })
+                );
+
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        subscriptions: [
+                            {
+                                id: 'sub1',
+                                eligibleProducts: [],
+                                product: '',
+                                featureList: [],
+                                tier: 'tier1',
+                            },
+                        ],
+                        tiers: {
+                            tier1: {
+                                features: merge(allowAllFeatures(), {
+                                    ai: {
+                                        chat: {
+                                            allowed: false,
+                                        },
+                                    },
+                                } as Partial<FeaturesConfiguration>),
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                const result = await controller.chat({
+                    model: 'test-model1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'test',
+                        },
+                    ],
+                    temperature: 0.5,
+                    userId,
+                    userSubscriptionTier,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit AI Chat features.',
+                });
+                expect(chatInterface.chat).not.toBeCalled();
             });
         });
     });
@@ -392,6 +768,19 @@ describe('AIController', () => {
             expect(generateSkyboxInterface.generateSkybox).toBeCalledWith({
                 prompt: 'test',
             });
+
+            const metrics = await store.getSubscriptionAiSkyboxMetrics({
+                ownerId: userId,
+            });
+
+            expect(metrics).toEqual({
+                ownerId: userId,
+                subscriptionStatus: null,
+                subscriptionId: null,
+                currentPeriodStartMs: null,
+                currentPeriodEndMs: null,
+                totalSkyboxesInCurrentPeriod: 1,
+            });
         });
 
         it('should return a not_supported result if no generateSkybox configuration is provided', async () => {
@@ -399,6 +788,8 @@ describe('AIController', () => {
                 generateSkybox: null,
                 chat: null,
                 images: null,
+                metrics: store,
+                config: store,
             });
 
             const result = await controller.generateSkybox({
@@ -482,6 +873,8 @@ describe('AIController', () => {
                     },
                 },
                 images: null,
+                metrics: store,
+                config: store,
             });
 
             const result = await controller.generateSkybox({
@@ -496,6 +889,124 @@ describe('AIController', () => {
             });
             expect(generateSkyboxInterface.generateSkybox).toBeCalledWith({
                 prompt: 'test',
+            });
+        });
+
+        describe('subscriptions', () => {
+            beforeEach(async () => {
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        subscriptions: [
+                            {
+                                id: 'sub1',
+                                eligibleProducts: [],
+                                product: '',
+                                featureList: [],
+                                tier: 'tier1',
+                            },
+                        ],
+                        tiers: {
+                            tier1: {
+                                features: merge(allowAllFeatures(), {
+                                    ai: {
+                                        skyboxes: {
+                                            maxSkyboxesPerPeriod: 4,
+                                        },
+                                    },
+                                } as Partial<FeaturesConfiguration>),
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+            });
+
+            it('should reject the request if the feature is not allowed', async () => {
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        subscriptions: [
+                            {
+                                id: 'sub1',
+                                eligibleProducts: [],
+                                product: '',
+                                featureList: [],
+                                tier: 'tier1',
+                            },
+                        ],
+                        tiers: {
+                            tier1: {
+                                features: merge(allowAllFeatures(), {
+                                    ai: {
+                                        skyboxes: {
+                                            allowed: false,
+                                        },
+                                    },
+                                } as Partial<FeaturesConfiguration>),
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                generateSkyboxInterface.generateSkybox.mockReturnValueOnce(
+                    Promise.resolve({
+                        success: true,
+                        skyboxId: 'test-skybox-id',
+                    })
+                );
+
+                const result = await controller.generateSkybox({
+                    prompt: 'test',
+                    userId,
+                    userSubscriptionTier,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit AI Skybox features.',
+                });
+                expect(generateSkyboxInterface.generateSkybox).not.toBeCalled();
+            });
+
+            it('should reject the request if it would exceed the subscription period limits', async () => {
+                generateSkyboxInterface.generateSkybox.mockReturnValueOnce(
+                    Promise.resolve({
+                        success: true,
+                        skyboxId: 'test-skybox-id',
+                    })
+                );
+
+                await store.recordSkyboxMetrics({
+                    createdAtMs: Date.now(),
+                    skyboxes: 10,
+                    userId: userId,
+                });
+
+                const result = await controller.generateSkybox({
+                    prompt: 'test',
+                    userId,
+                    userSubscriptionTier,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The user has reached their limit for the current subscription period.',
+                });
+                expect(generateSkyboxInterface.generateSkybox).not.toBeCalled();
             });
         });
     });
@@ -533,6 +1044,8 @@ describe('AIController', () => {
                 generateSkybox: null,
                 chat: null,
                 images: null,
+                metrics: store,
+                config: store,
             });
 
             const result = await controller.getSkybox({
@@ -618,6 +1131,8 @@ describe('AIController', () => {
                     },
                 },
                 images: null,
+                metrics: store,
+                config: store,
             });
 
             const result = await controller.getSkybox({
@@ -677,6 +1192,19 @@ describe('AIController', () => {
                 steps: 30,
                 userId: 'test-user',
             });
+
+            const metrics = await store.getSubscriptionAiImageMetrics({
+                ownerId: userId,
+            });
+
+            expect(metrics).toEqual({
+                ownerId: userId,
+                subscriptionStatus: null,
+                subscriptionId: null,
+                currentPeriodStartMs: null,
+                currentPeriodEndMs: null,
+                totalSquarePixelsInCurrentPeriod: 512,
+            });
         });
 
         it('should use the provider associated with the given model type', async () => {
@@ -712,6 +1240,8 @@ describe('AIController', () => {
                         allowedSubscriptionTiers: ['test-tier'],
                     },
                 },
+                metrics: store,
+                config: store,
             });
 
             otherInterface.generateImage.mockReturnValueOnce(
@@ -759,6 +1289,8 @@ describe('AIController', () => {
                 generateSkybox: null,
                 chat: null,
                 images: null,
+                metrics: store,
+                config: store,
             });
 
             const result = await controller.generateImage({
@@ -859,6 +1391,8 @@ describe('AIController', () => {
                         allowedSubscriptionTiers: true,
                     },
                 },
+                metrics: store,
+                config: store,
             });
 
             const result = await controller.generateImage({
@@ -885,6 +1419,169 @@ describe('AIController', () => {
                 numberOfImages: 1,
                 steps: 30,
                 userId: 'test-user',
+            });
+        });
+
+        describe('subscriptions', () => {
+            beforeEach(async () => {
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        subscriptions: [
+                            {
+                                id: 'sub1',
+                                eligibleProducts: [],
+                                product: '',
+                                featureList: [],
+                                tier: 'tier1',
+                            },
+                        ],
+                        tiers: {
+                            tier1: {
+                                features: merge(allowAllFeatures(), {
+                                    ai: {
+                                        images: {
+                                            maxSquarePixelsPerRequest: 512,
+                                            maxSquarePixelsPerPeriod: 2048,
+                                        },
+                                    },
+                                } as Partial<FeaturesConfiguration>),
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'test@example.com',
+                    phoneNumber: null,
+                    allSessionRevokeTimeMs: null,
+                    currentLoginRequestId: null,
+                    subscriptionId: 'sub1',
+                    subscriptionStatus: 'active',
+                });
+            });
+
+            it('should reject the request if the feature is not allowed', async () => {
+                store.subscriptionConfiguration = merge(
+                    createTestSubConfiguration(),
+                    {
+                        subscriptions: [
+                            {
+                                id: 'sub1',
+                                eligibleProducts: [],
+                                product: '',
+                                featureList: [],
+                                tier: 'tier1',
+                            },
+                        ],
+                        tiers: {
+                            tier1: {
+                                features: merge(allowAllFeatures(), {
+                                    ai: {
+                                        images: {
+                                            allowed: false,
+                                        },
+                                    },
+                                } as Partial<FeaturesConfiguration>),
+                            },
+                        },
+                    } as Partial<SubscriptionConfiguration>
+                );
+
+                generateImageInterface.generateImage.mockReturnValueOnce(
+                    Promise.resolve({
+                        images: [
+                            {
+                                base64: 'base64',
+                                seed: 123,
+                                mimeType: 'image/png',
+                            },
+                        ],
+                    })
+                );
+
+                const result = await controller.generateImage({
+                    prompt: 'test',
+                    userId,
+                    userSubscriptionTier,
+                    width: 512,
+                    height: 512,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit AI Image features.',
+                });
+                expect(generateImageInterface.generateImage).not.toBeCalled();
+            });
+
+            it('should reject the request if it would exceed the subscription request limits', async () => {
+                generateImageInterface.generateImage.mockReturnValueOnce(
+                    Promise.resolve({
+                        images: [
+                            {
+                                base64: 'base64',
+                                seed: 123,
+                                mimeType: 'image/png',
+                            },
+                        ],
+                    })
+                );
+
+                const result = await controller.generateImage({
+                    prompt: 'test',
+                    userId,
+                    userSubscriptionTier,
+                    width: 1024,
+                    height: 1024,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The request exceeds allowed subscription limits.',
+                });
+                expect(generateImageInterface.generateImage).not.toBeCalled();
+            });
+
+            it('should reject the request if it would exceed the subscription period limits', async () => {
+                generateImageInterface.generateImage.mockReturnValueOnce(
+                    Promise.resolve({
+                        images: [
+                            {
+                                base64: 'base64',
+                                seed: 123,
+                                mimeType: 'image/png',
+                            },
+                        ],
+                    })
+                );
+
+                await store.recordImageMetrics({
+                    userId: userId,
+                    createdAtMs: Date.now(),
+                    squarePixels: 2048,
+                });
+
+                const result = await controller.generateImage({
+                    prompt: 'test',
+                    userId,
+                    userSubscriptionTier,
+                    width: 512,
+                    height: 512,
+                });
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage:
+                        'The user has reached their limit for the current subscription period.',
+                });
+                expect(generateImageInterface.generateImage).not.toBeCalled();
             });
         });
     });
