@@ -29,6 +29,7 @@ import {
     AIChatAction,
     AIGenerateSkyboxAction,
     AIGenerateImageAction,
+    ListUserStudiosAction,
 } from '@casual-simulation/aux-common';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
@@ -194,6 +195,8 @@ export class RecordsManager {
                 this._aiGenerateSkybox(event);
             } else if (event.type === 'ai_generate_image') {
                 this._aiGenerateImage(event);
+            } else if (event.type === 'list_user_studios') {
+                this._listUserStudios(event);
             }
         }
     }
@@ -1492,6 +1495,51 @@ export class RecordsManager {
         }
     }
 
+    private async _listUserStudios(event: ListUserStudiosAction) {
+        try {
+            const info = await this._resolveInfoForEvent(event);
+
+            if (info.error) {
+                return;
+            }
+
+            if (!info.token) {
+                if (hasValue(event.taskId)) {
+                    this._helper.transaction(
+                        asyncResult(event.taskId, {
+                            success: false,
+                            errorCode: 'not_logged_in',
+                            errorMessage: 'The user is not logged in.',
+                        })
+                    );
+                }
+                return;
+            }
+
+            const result: AxiosResponse<ListUserStudiosAction> =
+                await axios.get(
+                    await this._publishUrl(info.auth, '/api/v2/studios/list'),
+                    {
+                        ...this._axiosOptions,
+                        headers: info.headers,
+                    }
+                );
+
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncResult(event.taskId, result.data)
+                );
+            }
+        } catch (e) {
+            console.error('[RecordsManager] Error listing studios:', e);
+            if (hasValue(event.taskId)) {
+                this._helper.transaction(
+                    asyncError(event.taskId, e.toString())
+                );
+            }
+        }
+    }
+
     private async _resolveInfoForEvent(
         event:
             | RecordFileAction
@@ -1510,7 +1558,8 @@ export class RecordsManager {
             | RevokeRoleAction
             | AIChatAction
             | AIGenerateSkyboxAction
-            | AIGenerateImageAction,
+            | AIGenerateImageAction
+            | ListUserStudiosAction,
         authenticateIfNotLoggedIn: boolean = true
     ): Promise<{
         error: boolean;

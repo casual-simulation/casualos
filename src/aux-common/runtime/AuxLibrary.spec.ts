@@ -229,6 +229,7 @@ import {
     aiChat,
     aiGenerateSkybox,
     aiGenerateImage,
+    listUserStudios,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -7048,6 +7049,27 @@ describe('AuxLibrary', () => {
                 expect(() => {
                     library.api.os.countEvents('key', {} as string);
                 }).toThrow('eventName must be a string.');
+            });
+        });
+
+        describe('os.listUserStudios()', () => {
+            it('should emit a GetEventCountAction', async () => {
+                const action: any = library.api.os.listUserStudios();
+                const expected = listUserStudios({}, context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom endpoints', async () => {
+                const action: any = library.api.os.listUserStudios(
+                    'http://localhost:5000'
+                );
+                const expected = listUserStudios(
+                    { endpoint: 'http://localhost:5000' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 

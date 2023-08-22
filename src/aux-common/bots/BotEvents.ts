@@ -265,7 +265,8 @@ export type AsyncActions =
     | OpenPhotoCameraAction
     | AIChatAction
     | AIGenerateSkyboxAction
-    | AIGenerateImageAction;
+    | AIGenerateImageAction
+    | ListUserStudiosAction;
 
 /**
  * Defines an interface for actions that represent asynchronous tasks.
@@ -4350,6 +4351,13 @@ export interface GetRecordsActionResult {
     hasMoreRecords: boolean;
     totalCount: number;
     cursor?: string;
+}
+
+/**
+ * Defines an action that retrieves the list of studios that the user has access to.
+ */
+export interface ListUserStudiosAction extends RecordsAction {
+    type: 'list_user_studios';
 }
 
 /**
@@ -8605,6 +8613,22 @@ export function getEventCount(
         type: 'get_event_count',
         recordName,
         eventName,
+        options,
+        taskId,
+    };
+}
+
+/**
+ * Creates a ListUserStudiosAction.
+ * @param options The options that should be used for the action.
+ * @param taskId The ID of the task.
+ */
+export function listUserStudios(
+    options: RecordActionOptions,
+    taskId?: number | string
+): ListUserStudiosAction {
+    return {
+        type: 'list_user_studios',
         options,
         taskId,
     };
