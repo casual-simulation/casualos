@@ -1,6 +1,6 @@
 import {
     branchNamespace,
-    ApiaryCausalRepoServer,
+    WebsocketController,
     isEventForDevice,
     connectionInfo,
 } from './WebsocketController';
@@ -89,8 +89,8 @@ const device4Info: DeviceConnection = {
     token: 'device4',
 };
 
-describe('ApiaryCausalRepoServer', () => {
-    let server: ApiaryCausalRepoServer;
+describe('WebsocketController', () => {
+    let server: WebsocketController;
     let connectionStore: MemoryWebsocketConnectionStore;
     let messenger: MemoryWebsocketMessenger;
     let updateStore: MemoryUpdatesStore;
@@ -107,7 +107,7 @@ describe('ApiaryCausalRepoServer', () => {
         connectionStore = new MemoryWebsocketConnectionStore();
         messenger = new MemoryWebsocketMessenger();
         updateStore = new MemoryUpdatesStore();
-        server = new ApiaryCausalRepoServer(
+        server = new WebsocketController(
             connectionStore,
             messenger,
             updateStore

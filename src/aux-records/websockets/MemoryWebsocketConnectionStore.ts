@@ -33,24 +33,26 @@ export class MemoryWebsocketConnectionStore
     }
 
     async saveConnection(connection: DeviceConnection): Promise<void> {
-        this._connections.set(connection.connectionId, connection);
+        this._connections.set(connection.serverConnectionId, connection);
     }
 
     async saveNamespaceConnection(
         connection: DeviceNamespaceConnection
     ): Promise<void> {
         let namespaceList = this._getNamespaceList(connection.namespace);
-        let connectionList = this._getConnectionList(connection.connectionId);
+        let connectionList = this._getConnectionList(
+            connection.serverConnectionId
+        );
 
         const namespaceIndex = sortedIndexBy(
             namespaceList,
             connection,
-            (c) => c.connectionId
+            (c) => c.serverConnectionId
         );
         const namespaceItem = namespaceList[namespaceIndex];
         if (
             !namespaceItem ||
-            namespaceItem.connectionId !== connection.connectionId
+            namespaceItem.serverConnectionId !== connection.serverConnectionId
         ) {
             namespaceList.splice(namespaceIndex, 0, connection);
         }
@@ -70,19 +72,19 @@ export class MemoryWebsocketConnectionStore
     }
 
     async deleteNamespaceConnection(
-        connectionId: string,
+        serverConnectionId: string,
         namespace: string
     ): Promise<void> {
         let namespaceList = this._getNamespaceList(namespace);
-        let connectionList = this._getConnectionList(connectionId);
+        let connectionList = this._getConnectionList(serverConnectionId);
 
         const namespaceIndex = sortedIndexBy(
             namespaceList,
-            { connectionId } as any,
-            (c) => c.connectionId
+            { serverConnectionId: serverConnectionId } as any,
+            (c) => c.serverConnectionId
         );
         const namespaceItem = namespaceList[namespaceIndex];
-        if (namespaceItem.connectionId === connectionId) {
+        if (namespaceItem.serverConnectionId === serverConnectionId) {
             namespaceList.splice(namespaceIndex, 1);
         }
 
@@ -97,31 +99,31 @@ export class MemoryWebsocketConnectionStore
         }
     }
 
-    async clearConnection(connectionId: string): Promise<void> {
-        let connectionList = this._getConnectionList(connectionId);
+    async clearConnection(serverConnectionId: string): Promise<void> {
+        let connectionList = this._getConnectionList(serverConnectionId);
 
         for (let connection of connectionList) {
             let namespaceList = this._getNamespaceList(connection.namespace);
             const namespaceIndex = sortedIndexBy(
                 namespaceList,
                 connection,
-                (c) => c.connectionId
+                (c) => c.serverConnectionId
             );
             const namespaceItem = namespaceList[namespaceIndex];
-            if (namespaceItem.connectionId === connectionId) {
+            if (namespaceItem.serverConnectionId === serverConnectionId) {
                 namespaceList.splice(namespaceIndex, 1);
             }
         }
 
-        this._connectionMap.set(connectionId, []);
-        this._connections.delete(connectionId);
+        this._connectionMap.set(serverConnectionId, []);
+        this._connections.delete(serverConnectionId);
     }
 
-    expireConnection(connectionId: string): Promise<void> {
+    expireConnection(serverConnectionId: string): Promise<void> {
         return new Promise((resolve, reject) => {
             setTimeout(async () => {
                 try {
-                    await this.clearConnection(connectionId);
+                    await this.clearConnection(serverConnectionId);
                     resolve();
                 } catch (err) {
                     reject(err);
