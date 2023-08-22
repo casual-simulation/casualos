@@ -1923,10 +1923,6 @@ export class RecordsHttpServer {
             return returnResult(INVALID_ORIGIN_RESULT);
         }
 
-        if (!this._aiController) {
-            return returnResult(AI_NOT_SUPPORTED_RESULT);
-        }
-
         const schema = z.object({});
 
         const parseResult = schema.safeParse(request.query);
@@ -1956,10 +1952,6 @@ export class RecordsHttpServer {
     ): Promise<GenericHttpResponse> {
         if (!validateOrigin(request, this._allowedAccountOrigins)) {
             return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (!this._aiController) {
-            return returnResult(AI_NOT_SUPPORTED_RESULT);
         }
 
         const schema = z.object({
