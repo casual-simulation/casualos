@@ -101,6 +101,11 @@ export function parseSubscriptionConfig(
         const result = subscriptionConfigSchema.safeParse(config);
         if (result.success) {
             return result.data as SubscriptionConfiguration;
+        } else {
+            console.error(
+                '[SubscriptionConfiguration] Invalid subscription config',
+                result
+            );
         }
     }
     return defaultConfig;
