@@ -3,16 +3,26 @@ import {
     INVALID_KEY_ERROR_MESSAGE,
     ValidateSessionKeyFailure,
 } from './AuthController';
-import { AuthSession, AuthStore, AuthUser } from './AuthStore';
 import {
+    AuthInvoice,
+    AuthSession,
+    AuthStore,
+    AuthUser,
+    UpdateSubscriptionPeriodRequest,
+} from './AuthStore';
+import {
+    STRIPE_EVENT_INVOICE_PAID_SCHEMA,
     StripeCheckoutResponse,
     StripeEvent,
     StripeInterface,
+    StripeInvoice,
 } from './StripeInterface';
 import { ServerError } from './Errors';
 import { isActiveSubscription, JsonParseResult, tryParseJson } from './Utils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ListedStudioAssignment, RecordsStore, Studio } from './RecordsStore';
+import { ConfigurationStore } from './ConfigurationStore';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Defines a class that is able to handle subscriptions.
@@ -22,20 +32,24 @@ export class SubscriptionController {
     private _auth: AuthController;
     private _authStore: AuthStore;
     private _recordsStore: RecordsStore;
-    private _config: SubscriptionConfiguration;
+    private _config: ConfigurationStore;
 
     constructor(
         stripe: StripeInterface,
         auth: AuthController,
         authStore: AuthStore,
         recordsStore: RecordsStore,
-        config: SubscriptionConfiguration
+        config: ConfigurationStore
     ) {
         this._stripe = stripe;
         this._auth = auth;
         this._authStore = authStore;
         this._recordsStore = recordsStore;
         this._config = config;
+    }
+
+    private async _getConfig() {
+        return await this._config.getSubscriptionConfiguration();
     }
 
     /**
@@ -154,6 +168,7 @@ export class SubscriptionController {
             // let customerId = user.stripeCustomerId;
 
             if (!customerId) {
+                const config = await this._getConfig();
                 return {
                     success: true,
                     userId: keyResult.userId,
@@ -161,7 +176,7 @@ export class SubscriptionController {
                     publishableKey: this._stripe.publishableKey,
                     subscriptions: [],
                     purchasableSubscriptions:
-                        await this._getPurchasableSubscriptions(role),
+                        await this._getPurchasableSubscriptions(role, config),
                 };
             }
 
@@ -170,10 +185,11 @@ export class SubscriptionController {
                     customerId
                 );
 
+            const config = await this._getConfig();
             const subscriptions: SubscriptionStatus[] =
                 listResult.subscriptions.map((s) => {
                     const item = s.items[0];
-                    const subscriptionInfo = this._config.subscriptions.find(
+                    const subscriptionInfo = config.subscriptions.find(
                         (sub) => {
                             return sub.eligibleProducts.some(
                                 (p) => p === item.price.product.id
@@ -204,7 +220,7 @@ export class SubscriptionController {
             const purchasableSubscriptions =
                 subscriptions.length > 0
                     ? []
-                    : await this._getPurchasableSubscriptions(role);
+                    : await this._getPurchasableSubscriptions(role, config);
 
             return {
                 success: true,
@@ -227,8 +243,11 @@ export class SubscriptionController {
         }
     }
 
-    private _getPurchasableSubscriptionsForRole(role: 'user' | 'studio') {
-        return this._config.subscriptions.filter((s) => {
+    private _getPurchasableSubscriptionsForRole(
+        role: 'user' | 'studio',
+        config: SubscriptionConfiguration
+    ) {
+        return config.subscriptions.filter((s) => {
             const isPurchasable = s.purchasable ?? true;
             const isUserOnly = s.userOnly ?? false;
             const isStudioOnly = s.studioOnly ?? false;
@@ -241,14 +260,16 @@ export class SubscriptionController {
     }
 
     private async _getPurchasableSubscriptions(
-        role: 'user' | 'studio'
+        role: 'user' | 'studio',
+        config: SubscriptionConfiguration
     ): Promise<PurchasableSubscription[]> {
-        const promises = this._getPurchasableSubscriptionsForRole(role).map(
-            async (s) => ({
-                sub: s,
-                info: await this._stripe.getProductAndPriceInfo(s.product),
-            })
-        );
+        const promises = this._getPurchasableSubscriptionsForRole(
+            role,
+            config
+        ).map(async (s) => ({
+            sub: s,
+            info: await this._stripe.getProductAndPriceInfo(s.product),
+        }));
         const productInfo = await Promise.all(promises);
 
         return productInfo
@@ -453,8 +474,9 @@ export class SubscriptionController {
 
             metadata.subjectId = keyResult.userId;
 
+            const config = await this._getConfig();
             if (!customerId) {
-                if (this._config.subscriptions.length <= 0) {
+                if (config.subscriptions.length <= 0) {
                     return {
                         success: false,
                         errorCode: 'not_supported',
@@ -523,11 +545,10 @@ export class SubscriptionController {
                     return false;
                 }
 
-                const hasManagableProduct = this._config.subscriptions.some(
-                    (sub) =>
-                        sub.eligibleProducts.some((p) =>
-                            s.items.some((i) => i.price.product.id === p)
-                        )
+                const hasManagableProduct = config.subscriptions.some((sub) =>
+                    sub.eligibleProducts.some((p) =>
+                        s.items.some((i) => i.price.product.id === p)
+                    )
                 );
 
                 return hasManagableProduct;
@@ -538,13 +559,9 @@ export class SubscriptionController {
                     `[SubscriptionController] [createManageSubscriptionLink] Customer has a managable subscription. Creating a portal session.`
                 );
                 const session = await this._stripe.createPortalSession({
-                    ...(this._config.portalConfig ?? {}),
+                    ...(config.portalConfig ?? {}),
                     customer: customerId,
-                    return_url: returnRoute(
-                        this._config.returnUrl,
-                        user,
-                        studio
-                    ),
+                    return_url: returnRoute(config.returnUrl, user, studio),
                 });
 
                 console.log(
@@ -589,8 +606,9 @@ export class SubscriptionController {
         user: AuthUser,
         studio: Studio
     ): Promise<CreateManageSubscriptionResult> {
+        const config = await this._getConfig();
         const purchasableSubscriptions =
-            this._getPurchasableSubscriptionsForRole(role);
+            this._getPurchasableSubscriptionsForRole(role, config);
 
         let sub: SubscriptionConfiguration['subscriptions'][0];
         if (request.subscriptionId) {
@@ -652,10 +670,10 @@ export class SubscriptionController {
         );
 
         const session = await this._stripe.createCheckoutSession({
-            ...(this._config.checkoutConfig ?? {}),
+            ...(config.checkoutConfig ?? {}),
             customer: customerId,
-            success_url: returnRoute(this._config.successUrl, user, studio),
-            cancel_url: returnRoute(this._config.cancelUrl, user, studio),
+            success_url: returnRoute(config.successUrl, user, studio),
+            cancel_url: returnRoute(config.cancelUrl, user, studio),
             line_items: [
                 {
                     price: productInfo.default_price.id,
@@ -713,6 +731,8 @@ export class SubscriptionController {
                 };
             }
 
+            const config = await this._getConfig();
+
             const body = request.requestBody;
             const signature = request.signature;
             let event: StripeEvent;
@@ -720,7 +740,7 @@ export class SubscriptionController {
                 event = this._stripe.constructWebhookEvent(
                     body,
                     signature,
-                    this._config.webhookSecret
+                    config.webhookSecret
                 );
             } catch (err) {
                 console.log(
@@ -749,7 +769,7 @@ export class SubscriptionController {
                 let item: any;
                 let sub: SubscriptionConfiguration['subscriptions'][0];
                 items_loop: for (let i of items) {
-                    for (let s of this._config.subscriptions) {
+                    for (let s of config.subscriptions) {
                         if (
                             s.eligibleProducts.some(
                                 (p) => p === i.price.product
@@ -779,70 +799,168 @@ export class SubscriptionController {
                 const active = isActiveSubscription(status);
                 const tier = sub.tier ?? 'beta';
                 const customerId = subscription.customer;
+                const stripeSubscriptionId = subscription.id;
 
                 console.log(
                     `[SubscriptionController] [handleStripeWebhook] Customer ID: ${customerId}. Subscription status: ${status}. Tier: ${tier}. Is Active: ${active}.`
                 );
+                let user = await this._authStore.findUserByStripeCustomerId(
+                    customerId
+                );
+                let studio: Studio;
+
+                if (user) {
+                    await this._authStore.updateSubscriptionInfo({
+                        userId: user.id,
+                        subscriptionStatus: status,
+                        subscriptionId: sub.id,
+                        stripeSubscriptionId,
+                        stripeCustomerId: customerId,
+                        currentPeriodEndMs: null,
+                        currentPeriodStartMs: null,
+                    });
+                } else {
+                    console.log(
+                        `[SubscriptionController] [handleStripeWebhook] No user found for Customer ID (${customerId})`
+                    );
+
+                    studio =
+                        await this._recordsStore.getStudioByStripeCustomerId(
+                            customerId
+                        );
+
+                    if (studio) {
+                        await this._authStore.updateSubscriptionInfo({
+                            studioId: studio.id,
+                            subscriptionStatus: status,
+                            subscriptionId: sub.id,
+                            stripeSubscriptionId,
+                            stripeCustomerId: customerId,
+                            currentPeriodEndMs: null,
+                            currentPeriodStartMs: null,
+                        });
+                    } else {
+                        console.log(
+                            `[SubscriptionController] [handleStripeWebhook] No studio found for Customer ID (${customerId})`
+                        );
+                    }
+                }
+
+                return {
+                    success: true,
+                };
+            } else if (event.type === 'invoice.paid') {
+                const parseResult =
+                    STRIPE_EVENT_INVOICE_PAID_SCHEMA.safeParse(event);
+
+                if (parseResult.success === false) {
+                    console.error(
+                        `[SubscriptionController] [handleStripeWebhook] Unable to parse stripe event!`,
+                        parseResult.error
+                    );
+                    return {
+                        success: true,
+                    };
+                }
+
+                const invoice = parseResult.data.data.object;
+                const stripeSubscriptionId = invoice.subscription;
+                const subscription = await this._stripe.getSubscriptionById(
+                    stripeSubscriptionId
+                );
+                const status = subscription.status;
+                const customerId = invoice.customer;
+                const lineItems = invoice.lines.data;
+                const periodStartMs = subscription.current_period_start * 1000;
+                const periodEndMs = subscription.current_period_end * 1000;
+                const { sub, item } = findMatchingSubscription(lineItems);
+
+                const authInvoice: UpdateSubscriptionPeriodRequest['invoice'] =
+                    {
+                        currency: invoice.currency,
+                        description: invoice.description,
+                        paid: invoice.paid,
+                        status: invoice.status,
+                        tax: invoice.tax,
+                        total: invoice.total,
+                        subtotal: invoice.subtotal,
+                        stripeInvoiceId: invoice.id,
+                        stripeHostedInvoiceUrl: invoice.hosted_invoice_url,
+                        stripeInvoicePdfUrl: invoice.invoice_pdf,
+                    };
+
+                console.log(
+                    `[SubscriptionController] [handleStripeWebhook] New invoice paid for customer ID (${customerId}). Subscription ID: ${subscription.id}. Period start: ${periodStartMs}. Period end: ${periodEndMs}.`
+                );
+
                 const user = await this._authStore.findUserByStripeCustomerId(
                     customerId
                 );
 
                 if (user) {
-                    if (
-                        user.subscriptionStatus !== status ||
-                        user.subscriptionId !== sub.id
-                    ) {
-                        console.log(
-                            `[SubscriptionController] [handleStripeWebhook] User (${user.id}) subscription status doesn't match stored. Updating...`
-                        );
-                        await this._authStore.saveUser({
-                            ...user,
-                            subscriptionStatus: status,
-                            subscriptionId: sub.id,
-                        });
-                    } else {
-                        return {
-                            success: true,
-                        };
-                    }
-                }
-
-                console.log(
-                    `[SubscriptionController] [handleStripeWebhook] No user found for Customer ID (${customerId})`
-                );
-
-                const studio =
-                    await this._recordsStore.getStudioByStripeCustomerId(
-                        customerId
+                    console.log(
+                        `[SubscriptionController] [handleStripeWebhook] Found user (${user.id}) with customer ID (${customerId}).`
                     );
 
-                if (studio) {
-                    if (
-                        studio.subscriptionStatus !== status ||
-                        studio.subscriptionId !== sub.id
-                    ) {
-                        console.log(
-                            `[SubscriptionController] [handleStripeWebhook] Studio ((${studio.id})) subscription status doesn't match stored. Updating...`
+                    await this._authStore.updateSubscriptionPeriod({
+                        userId: user.id,
+                        subscriptionStatus: status,
+                        subscriptionId: sub.id,
+                        stripeSubscriptionId,
+                        stripeCustomerId: customerId,
+                        currentPeriodEndMs: periodEndMs,
+                        currentPeriodStartMs: periodStartMs,
+                        invoice: authInvoice,
+                    });
+                } else {
+                    console.log(
+                        `[SubscriptionController] [handleStripeWebhook] No user found for customer ID (${customerId}).`
+                    );
+
+                    const studio =
+                        await this._recordsStore.getStudioByStripeCustomerId(
+                            customerId
                         );
-                        await this._recordsStore.updateStudio({
-                            ...studio,
+
+                    if (studio) {
+                        await this._authStore.updateSubscriptionPeriod({
+                            studioId: studio.id,
                             subscriptionStatus: status,
                             subscriptionId: sub.id,
+                            stripeSubscriptionId,
+                            stripeCustomerId: customerId,
+                            currentPeriodEndMs: periodEndMs,
+                            currentPeriodStartMs: periodStartMs,
+                            invoice: authInvoice,
                         });
                     } else {
-                        return {
-                            success: true,
-                        };
+                        console.log(
+                            `[SubscriptionController] [handleStripeWebhook] No studio found for customer ID (${customerId}).`
+                        );
                     }
                 }
 
-                console.log(
-                    `[SubscriptionController] [handleStripeWebhook] No studio found for Customer ID (${customerId})`
-                );
+                function findMatchingSubscription(
+                    lineItems: StripeInvoice['lines']['data']
+                ) {
+                    let item: any;
+                    let sub: SubscriptionConfiguration['subscriptions'][0];
+                    items_loop: for (let i of lineItems) {
+                        for (let s of config.subscriptions) {
+                            if (
+                                s.eligibleProducts.some(
+                                    (p) => p === i.price.product
+                                )
+                            ) {
+                                sub = s;
+                                item = i;
+                                break items_loop;
+                            }
+                        }
+                    }
 
-                return {
-                    success: true,
-                };
+                    return { item, sub };
+                }
             }
 
             return {

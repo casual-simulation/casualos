@@ -1,5 +1,4 @@
 import { RecordsStore } from './RecordsStore';
-import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { RecordsController } from './RecordsController';
 import {
     EraseFileFailure,
@@ -17,12 +16,11 @@ import {
     GetFileRecordSuccess,
     UpdateFileFailure,
 } from './FileRecordsStore';
-import { MemoryFileRecordsStore } from './MemoryFileRecordsStore';
-import { MemoryPolicyStore } from './MemoryPolicyStore';
 import { PolicyController } from './PolicyController';
 import {
     createTestControllers,
     createTestRecordKey,
+    createTestSubConfiguration,
     createTestUser,
 } from './TestUtils';
 import {
@@ -30,16 +28,20 @@ import {
     ADMIN_ROLE_NAME,
     PUBLIC_READ_MARKER,
 } from './PolicyPermissions';
-import { sortBy } from 'lodash';
+import { merge, sortBy } from 'lodash';
+import {
+    FeaturesConfiguration,
+    SubscriptionConfiguration,
+    allowAllFeatures,
+} from './SubscriptionConfiguration';
+import { MemoryStore } from './MemoryStore';
 
 console.log = jest.fn();
 
 describe('FileRecordsController', () => {
-    let recordsStore: RecordsStore;
+    let store: MemoryStore;
     let records: RecordsController;
-    let policiesStore: MemoryPolicyStore;
     let policies: PolicyController;
-    let store: FileRecordsStore;
     let presignUrlMock: jest.Mock;
     let presignReadMock: jest.Mock;
     let manager: FileRecordsController;
@@ -50,18 +52,32 @@ describe('FileRecordsController', () => {
     let sessionKey: string;
     const recordName = 'testRecord';
 
+    let ownerId: string;
+
     beforeEach(async () => {
         const services = createTestControllers();
 
-        policiesStore = services.policyStore;
+        store = services.store;
         policies = services.policies;
-        recordsStore = services.recordsStore;
         records = services.records;
 
-        store = new MemoryFileRecordsStore();
-        manager = new FileRecordsController(policies, store);
+        manager = new FileRecordsController({
+            policies,
+            store,
+            metrics: store,
+            config: store,
+        });
         presignUrlMock = store.presignFileUpload = jest.fn();
         presignReadMock = store.presignFileRead = jest.fn();
+
+        ownerId = 'testUser';
+        await store.saveUser({
+            id: ownerId,
+            allSessionRevokeTimeMs: null,
+            currentLoginRequestId: null,
+            email: 'other@example.com',
+            phoneNumber: null,
+        });
 
         const user = await createTestUser(services, 'test@example.com');
         userId = user.userId;
@@ -69,7 +85,7 @@ describe('FileRecordsController', () => {
 
         const testRecordKey = await createTestRecordKey(
             services,
-            'testUser',
+            ownerId,
             recordName,
             'subjectfull'
         );
@@ -77,7 +93,7 @@ describe('FileRecordsController', () => {
 
         const subjectlessRecordKey = await createTestRecordKey(
             services,
-            'testUser',
+            ownerId,
             recordName,
             'subjectless'
         );
@@ -476,7 +492,7 @@ describe('FileRecordsController', () => {
                 },
             });
 
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -588,7 +604,7 @@ describe('FileRecordsController', () => {
                 },
             });
 
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -647,7 +663,7 @@ describe('FileRecordsController', () => {
                 },
             });
 
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -682,6 +698,199 @@ describe('FileRecordsController', () => {
                 success: false,
                 errorCode: 'file_not_found',
                 errorMessage: 'The file was not found in the store.',
+            });
+        });
+
+        it('should reject the request if the file is larger than the configured maximum file size', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                files: {
+                                    maxBytesPerFile: 10,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            const user = await store.findUser(ownerId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = await manager.recordFile(recordName, ownerId, {
+                fileByteLength: 11,
+                fileDescription: 'description',
+                fileMimeType: 'text/plain',
+                fileSha256Hex: 'hex',
+                headers: {},
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'The file is too large.',
+            });
+        });
+
+        it('should reject the request if the file would put the total size of files stored above the limit', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                files: {
+                                    maxBytesTotal: 10,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.addFileRecord(
+                recordName,
+                'myFile.txt',
+                ownerId,
+                'subjectId',
+                5,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+
+            const user = await store.findUser(ownerId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = await manager.recordFile(recordName, ownerId, {
+                fileByteLength: 6,
+                fileDescription: 'description',
+                fileMimeType: 'text/plain',
+                fileSha256Hex: 'hex',
+                headers: {},
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'The file storage limit has been reached for the subscription.',
+            });
+        });
+
+        it('should reject the request if the file would put the total number of files above the allowed limit', async () => {
+            presignUrlMock.mockResolvedValueOnce({
+                success: true,
+                uploadUrl: 'testUrl',
+                uploadMethod: 'POST',
+                uploadHeaders: {
+                    myHeader: 'myValue',
+                },
+            });
+
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                files: {
+                                    maxFiles: 1,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.addFileRecord(
+                recordName,
+                'myFile.txt',
+                ownerId,
+                'subjectId',
+                5,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+
+            const user = await store.findUser(ownerId);
+            await store.saveUser({
+                ...user,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = await manager.recordFile(recordName, ownerId, {
+                fileByteLength: 6,
+                fileDescription: 'description',
+                fileMimeType: 'text/plain',
+                fileSha256Hex: 'hex',
+                headers: {},
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage:
+                    'The file count limit has been reached for the subscription.',
             });
         });
     });
@@ -792,7 +1001,7 @@ describe('FileRecordsController', () => {
         });
 
         it('should be able to erase a file if the user has the correct permissions', async () => {
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -898,7 +1107,7 @@ describe('FileRecordsController', () => {
         });
 
         it('should reject the request if the inst does not have the correct permissions', async () => {
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -1003,7 +1212,7 @@ describe('FileRecordsController', () => {
                 ['secret']
             );
 
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -1112,7 +1321,7 @@ describe('FileRecordsController', () => {
         });
 
         it('should deny requests if the inst doesnt have permissions', async () => {
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -1218,7 +1427,7 @@ describe('FileRecordsController', () => {
 
             files = sortBy(files, (f) => f.fileName);
 
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
         });
@@ -1266,11 +1475,11 @@ describe('FileRecordsController', () => {
             await store.setFileRecordAsUploaded(recordName, 'test2.txt');
             await store.setFileRecordAsUploaded(recordName, 'test3.txt');
 
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set(['developer']),
             };
 
-            policiesStore.policies[recordName] = {
+            store.policies[recordName] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -1431,7 +1640,7 @@ describe('FileRecordsController', () => {
                 [PUBLIC_READ_MARKER]
             );
 
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -1529,7 +1738,7 @@ describe('FileRecordsController', () => {
                 [PUBLIC_READ_MARKER]
             );
 
-            // policiesStore.roles[recordName] = {
+            // store.roles[recordName] = {
             //     [userId]: new Set([ADMIN_ROLE_NAME])
             // };
 
@@ -1631,7 +1840,7 @@ describe('FileRecordsController', () => {
         });
 
         it('should deny the request if the inst does not have permission', async () => {
-            policiesStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 

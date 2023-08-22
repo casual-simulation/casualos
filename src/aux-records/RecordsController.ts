@@ -20,10 +20,21 @@ import {
     NotLoggedInError,
     NotSupportedError,
     ServerError,
+    SubscriptionLimitReached,
 } from './Errors';
 import type { ValidateSessionKeyFailure } from './AuthController';
 import { AuthStore } from './AuthStore';
 import { v4 as uuid } from 'uuid';
+import { MetricsStore, SubscriptionFilter } from './MetricsStore';
+import { ConfigurationStore } from './ConfigurationStore';
+import { getSubscriptionFeatures } from './SubscriptionConfiguration';
+
+export interface RecordsControllerConfig {
+    store: RecordsStore;
+    auth: AuthStore;
+    metrics: MetricsStore;
+    config: ConfigurationStore;
+}
 
 /**
  * Defines a class that manages records and their keys.
@@ -31,10 +42,14 @@ import { v4 as uuid } from 'uuid';
 export class RecordsController {
     private _store: RecordsStore;
     private _auth: AuthStore;
+    private _metrics: MetricsStore;
+    private _config: ConfigurationStore;
 
-    constructor(store: RecordsStore, auth: AuthStore) {
-        this._store = store;
-        this._auth = auth;
+    constructor(config: RecordsControllerConfig) {
+        this._store = config.store;
+        this._auth = config.auth;
+        this._metrics = config.metrics;
+        this._config = config.config;
     }
 
     /**
@@ -64,6 +79,15 @@ export class RecordsController {
                     record.ownerId !== request.userId &&
                     request.ownerId === request.userId
                 ) {
+                    const allowed =
+                        await this._doesSubscriptionAllowToCreateRecord({
+                            ownerId: request.userId,
+                        });
+
+                    if (!allowed.success) {
+                        return allowed;
+                    }
+
                     console.log(
                         `[RecordsController] [action: record.create recordName: ${record.name}, userId: ${request.userId}] Fixing record owner to match actual owner.`
                     );
@@ -89,6 +113,15 @@ export class RecordsController {
                     record.studioId !== record.name &&
                     request.studioId === record.name
                 ) {
+                    const allowed =
+                        await this._doesSubscriptionAllowToCreateRecord({
+                            studioId: request.studioId,
+                        });
+
+                    if (!allowed.success) {
+                        return allowed;
+                    }
+
                     console.log(
                         `[RecordsController] [action: record.create recordName: ${record.name}, userId: ${request.userId}, studioId: ${request.studioId}] Fixing record owner to match actual owner.`
                     );
@@ -114,6 +147,22 @@ export class RecordsController {
                 };
             }
 
+            if (
+                request.recordName !== request.ownerId &&
+                request.recordName !== request.studioId
+            ) {
+                const existingUser = await this._auth.findUser(
+                    request.recordName
+                );
+                if (existingUser) {
+                    return {
+                        success: false,
+                        errorCode: 'record_already_exists',
+                        errorMessage: 'A record with that name already exists.',
+                    };
+                }
+            }
+
             if (!request.ownerId && !request.studioId) {
                 return {
                     success: false,
@@ -131,6 +180,16 @@ export class RecordsController {
                         errorMessage:
                             'You are not authorized to create a record for another user.',
                     };
+                }
+
+                const allowed = await this._doesSubscriptionAllowToCreateRecord(
+                    {
+                        ownerId: request.userId,
+                    }
+                );
+
+                if (!allowed.success) {
+                    return allowed;
                 }
 
                 console.log(
@@ -160,6 +219,16 @@ export class RecordsController {
                         errorMessage:
                             'You are not authorized to create a record for this studio.',
                     };
+                }
+
+                const allowed = await this._doesSubscriptionAllowToCreateRecord(
+                    {
+                        studioId: request.studioId,
+                    }
+                );
+
+                if (!allowed.success) {
+                    return allowed;
                 }
 
                 console.log(
@@ -212,8 +281,6 @@ export class RecordsController {
                 };
             }
 
-            const record = await this._store.getRecordByName(name);
-
             if (
                 !!policy &&
                 policy !== 'subjectfull' &&
@@ -228,146 +295,126 @@ export class RecordsController {
                 };
             }
 
-            if (record) {
-                if (name === userId) {
-                    // The user is not currently the owner of their own record.
-                    // This is an issue that needs to be fixed because users should always own the record that has the same name as their ID.
-                    console.log(
-                        `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}] Fixing record owner to match actual owner.`
-                    );
-                    record.ownerId = userId;
-                    record.studioId = null;
-                    // Clear the hashes and re-create the salt so that access to the record is revoked for any record key that was created before.
-                    record.secretHashes = [];
-                    record.secretSalt = this._createSalt();
-                    await this._store.updateRecord({
-                        ...record,
-                    });
-                } else {
-                    let existingStudioMembers =
-                        await this._store.listStudioAssignments(name);
+            let existingStudioMembers = await this._store.listStudioAssignments(
+                name
+            );
 
-                    if (
-                        existingStudioMembers.length > 0 &&
-                        record.studioId !== name
-                    ) {
-                        // The studio is not currently the owner of their own record.
-                        // This is an issue that needs to be fixed because studios should always own the record that has the same name as their ID.
-                        console.log(
-                            `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}, studioId: ${name}] Fixing record owner to match actual owner.`
-                        );
-                        record.ownerId = null;
-                        record.studioId = record.name;
-                        // Clear the hashes and re-create the salt so that access to the record is revoked for any record key that was created before.
-                        record.secretHashes = [];
-                        record.secretSalt = this._createSalt();
-                        await this._store.updateRecord({
-                            ...record,
-                        });
-                    }
-                }
-
-                if (record.ownerId !== userId && name !== userId) {
-                    let valid = false;
-                    if (record.studioId) {
-                        const assignments =
-                            await this._store.listStudioAssignments(
-                                record.studioId,
-                                {
-                                    userId: userId,
-                                    role: 'admin',
-                                }
-                            );
-
-                        if (assignments.length > 0) {
-                            valid = true;
-                        }
-                    }
-
-                    if (!valid) {
-                        return {
-                            success: false,
-                            errorCode: 'unauthorized_to_create_record_key',
-                            errorMessage:
-                                'Another user has already created this record.',
-                            errorReason: 'record_owned_by_different_user',
-                        };
-                    }
-                }
-
-                console.log(
-                    `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}] Creating record key.`
-                );
-
-                const passwordBytes = randomBytes(16);
-                const password = fromByteArray(passwordBytes); // convert to human-readable string
-                const salt = record.secretSalt;
-                const passwordHash = hashHighEntropyPasswordWithSalt(
-                    password,
-                    salt
-                );
-
-                await this._store.addRecordKey({
+            let createResult: CreateRecordResult;
+            // recordName matches studioId
+            if (existingStudioMembers.length > 0) {
+                createResult = await this.createRecord({
                     recordName: name,
-                    secretHash: passwordHash,
-                    policy: policy ?? DEFAULT_RECORD_KEY_POLICY,
-                    creatorId: record.ownerId ?? userId,
+                    userId: userId,
+                    studioId: name,
                 });
-
-                return {
-                    success: true,
-                    recordKey: formatV2RecordKey(name, password, policy),
-                    recordName: name,
-                };
             } else {
-                if (name !== userId) {
-                    const user = await this._auth.findUser(name);
+                createResult = await this.createRecord({
+                    recordName: name,
+                    userId: userId,
+                    ownerId: userId,
+                });
+            }
 
-                    if (user) {
-                        // User exists for record. They should own the record and all record keys for it.
-                        return {
-                            success: false,
-                            errorCode: 'unauthorized_to_create_record_key',
-                            errorMessage:
-                                'Another user has already created this record.',
-                            errorReason: 'record_owned_by_different_user',
-                        };
-                    }
+            if (createResult.success === false) {
+                if (createResult.errorCode !== 'record_already_exists') {
+                    return {
+                        ...createResult,
+                        errorReason: 'not_authorized',
+                    };
+                }
+            }
+
+            const record = await this._store.getRecordByName(name);
+
+            if (!record) {
+                if (
+                    createResult.success === false &&
+                    createResult.errorCode === 'record_already_exists'
+                ) {
+                    return {
+                        success: false,
+                        errorCode: 'unauthorized_to_create_record_key',
+                        errorMessage:
+                            'Another user has already created this record.',
+                        errorReason: 'record_owned_by_different_user',
+                    };
                 }
 
-                console.log(
-                    `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}] Creating record.`
+                console.error(
+                    `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}] Unable to find record that was just created!`
                 );
-
-                const passwordBytes = randomBytes(16);
-                const password = fromByteArray(passwordBytes); // convert to human-readable string
-                const salt = this._createSalt();
-                const passwordHash = hashHighEntropyPasswordWithSalt(
-                    password,
-                    salt
-                );
-
-                await this._store.addRecord({
-                    name,
-                    ownerId: userId,
-                    studioId: null,
-                    secretHashes: [],
-                    secretSalt: salt,
-                });
-
-                await this._store.addRecordKey({
-                    recordName: name,
-                    secretHash: passwordHash,
-                    policy: policy ?? DEFAULT_RECORD_KEY_POLICY,
-                    creatorId: userId,
-                });
 
                 return {
-                    success: true,
-                    recordKey: formatV2RecordKey(name, password, policy),
-                    recordName: name,
+                    success: false,
+                    errorCode: 'server_error',
+                    errorMessage: 'A server error occurred.',
+                    errorReason: 'server_error',
                 };
             }
+
+            if (record.ownerId) {
+                if (existingStudioMembers.length > 0) {
+                    console.error(
+                        `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}] Studio members exist for the record, but the record is owned by a user!`
+                    );
+                    return {
+                        success: false,
+                        errorCode: 'server_error',
+                        errorMessage: 'A server error occurred.',
+                        errorReason: 'server_error',
+                    };
+                }
+                if (record.ownerId !== userId) {
+                    return {
+                        success: false,
+                        errorCode: 'unauthorized_to_create_record_key',
+                        errorMessage:
+                            'Another user has already created this record.',
+                        errorReason: 'record_owned_by_different_user',
+                    };
+                }
+            } else if (record.studioId) {
+                let existingStudioMembers =
+                    await this._store.listStudioAssignments(record.studioId, {
+                        userId: userId,
+                        role: 'admin',
+                    });
+
+                if (existingStudioMembers.length <= 0) {
+                    return {
+                        success: false,
+                        errorCode: 'unauthorized_to_create_record_key',
+                        errorMessage:
+                            'You are not authorized to create a record key for this record.',
+                        errorReason: 'record_owned_by_different_user',
+                    };
+                }
+            }
+
+            console.log(
+                `[RecordsController] [action: recordKey.create recordName: ${name}, userId: ${userId}] Creating record key.`
+            );
+
+            const passwordBytes = randomBytes(16);
+            const password = fromByteArray(passwordBytes); // convert to human-readable string
+            const salt = record.secretSalt;
+            const passwordHash = hashHighEntropyPasswordWithSalt(
+                password,
+                salt
+            );
+
+            await this._store.addRecordKey({
+                recordName: name,
+                secretHash: passwordHash,
+                policy: policy ?? DEFAULT_RECORD_KEY_POLICY,
+                creatorId: record.ownerId ?? userId,
+            });
+
+            return {
+                success: true,
+                recordKey: formatV2RecordKey(name, password, policy),
+                recordName: name,
+            };
         } catch (err) {
             console.error(
                 '[RecordsController] [createPublicRecordKey] An error occurred while creating a public record key:',
@@ -531,6 +578,15 @@ export class RecordsController {
 
             if (!record) {
                 if (userId && name === userId) {
+                    const allowed =
+                        await this._doesSubscriptionAllowToCreateRecord({
+                            ownerId: userId,
+                        });
+
+                    if (allowed.success === false) {
+                        return allowed;
+                    }
+
                     console.log(
                         `[RecordsController] [validateRecordName recordName: ${name}, userId: ${userId}] Creating record for user.`
                     );
@@ -555,6 +611,15 @@ export class RecordsController {
                 );
 
                 if (studioMembers.length > 0) {
+                    const allowed =
+                        await this._doesSubscriptionAllowToCreateRecord({
+                            studioId: name,
+                        });
+
+                    if (allowed.success === false) {
+                        return allowed;
+                    }
+
                     console.log(
                         `[RecordsController] [validateRecordName recordName: ${name}, userId: ${userId}, studioId: ${name}] Creating record for studio.`
                     );
@@ -586,6 +651,16 @@ export class RecordsController {
                 record.name === userId &&
                 record.ownerId !== userId
             ) {
+                const allowed = await this._doesSubscriptionAllowToCreateRecord(
+                    {
+                        ownerId: userId,
+                    }
+                );
+
+                if (allowed.success === false) {
+                    return allowed;
+                }
+
                 // The user is not currently the owner of their own record.
                 // This is an issue that needs to be fixed because users should always own the record that has the same name as their ID.
                 console.log(
@@ -609,6 +684,16 @@ export class RecordsController {
                 record.studioId !== name &&
                 record.ownerId !== null
             ) {
+                const allowed = await this._doesSubscriptionAllowToCreateRecord(
+                    {
+                        studioId: name,
+                    }
+                );
+
+                if (allowed.success === false) {
+                    return allowed;
+                }
+
                 console.log(
                     `[RecordsController] [validateRecordName recordName: ${name}, userId: ${userId}, studioId: ${name}] Fixing record studio to match actual studio.`
                 );
@@ -649,6 +734,52 @@ export class RecordsController {
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    private async _doesSubscriptionAllowToCreateRecord(
+        filter: SubscriptionFilter
+    ) {
+        const { features, metrics } = await this._getSubscriptionFeatures(
+            filter
+        );
+
+        if (!features.records.allowed) {
+            return {
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'Records are not allowed for this subscription.',
+            } as const;
+        } else if (features.records.maxRecords >= 0) {
+            if (features.records.maxRecords <= metrics.totalRecords + 1) {
+                return {
+                    success: false,
+                    errorCode: 'subscription_limit_reached',
+                    errorMessage: 'This subscription has hit its record limit.',
+                } as const;
+            }
+        }
+
+        return {
+            success: true,
+        } as const;
+    }
+
+    private async _getSubscriptionFeatures(filter: SubscriptionFilter) {
+        const metrics = await this._metrics.getSubscriptionRecordMetrics(
+            filter
+        );
+        const config = await this._config.getSubscriptionConfiguration();
+
+        return {
+            metrics,
+            config,
+            features: getSubscriptionFeatures(
+                config,
+                metrics.subscriptionStatus,
+                metrics.subscriptionId,
+                metrics.ownerId ? 'user' : 'studio'
+            ),
+        };
     }
 
     /**
@@ -1036,6 +1167,7 @@ export interface CreateRecordFailure {
         | ServerError
         | NotLoggedInError
         | NotAuthorizedError
+        | SubscriptionLimitReached
         | 'record_already_exists'
         | 'unacceptable_request';
     errorMessage: string;
@@ -1153,8 +1285,12 @@ export interface CreatePublicRecordKeyFailure {
         | UnauthorizedToCreateRecordKeyError
         | NotLoggedInError
         | ValidateSessionKeyFailure['errorCode']
+        | SubscriptionLimitReached
+        | 'record_already_exists'
+        | 'unacceptable_request'
         | 'invalid_policy'
         | ServerError
+        | NotAuthorizedError
         | 'not_supported';
 
     /**
@@ -1171,6 +1307,7 @@ export interface CreatePublicRecordKeyFailure {
         | 'record_owned_by_different_user'
         | 'invalid_policy'
         | 'not_supported'
+        | 'not_authorized'
         | ServerError;
 }
 
@@ -1192,7 +1329,11 @@ export interface ValidateRecordNameSuccess {
 
 export interface ValidateRecordNameFailure {
     success: false;
-    errorCode: ValidatePublicRecordKeyFailure['errorCode'];
+    errorCode:
+        | ValidatePublicRecordKeyFailure['errorCode']
+        | 'not_authorized'
+        | SubscriptionLimitReached
+        | ServerError;
     errorMessage: string;
 }
 

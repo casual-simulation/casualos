@@ -31,6 +31,7 @@ import {
     randomCode,
 } from './AuthUtils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import { ConfigurationStore } from './ConfigurationStore';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -94,17 +95,18 @@ export class AuthController {
     private _store: AuthStore;
     private _messenger: AuthMessenger;
     private _forceAllowSubscriptionFeatures: boolean;
-    private _subscriptionConfig: SubscriptionConfiguration | null;
+    private _config: ConfigurationStore;
+    // private _subscriptionConfig: SubscriptionConfiguration | null;
 
     constructor(
         authStore: AuthStore,
         messenger: AuthMessenger,
-        subscriptionConfig: SubscriptionConfiguration | null,
+        configStore: ConfigurationStore,
         forceAllowSubscriptionFeatures: boolean = false
     ) {
         this._store = authStore;
         this._messenger = messenger;
-        this._subscriptionConfig = subscriptionConfig;
+        this._config = configStore;
         this._forceAllowSubscriptionFeatures = forceAllowSubscriptionFeatures;
     }
 
@@ -609,7 +611,7 @@ export class AuthController {
             }
 
             const { subscriptionId, subscriptionTier } =
-                this._getSubscriptionInfo(userInfo);
+                await this._getSubscriptionInfo(userInfo);
 
             return {
                 success: true,
@@ -1019,7 +1021,7 @@ export class AuthController {
             }
 
             const { hasActiveSubscription, subscriptionTier: tier } =
-                this._getSubscriptionInfo(result);
+                await this._getSubscriptionInfo(result);
 
             return {
                 success: true,
@@ -1045,7 +1047,7 @@ export class AuthController {
         }
     }
 
-    private _getSubscriptionInfo(user: AuthUser) {
+    private async _getSubscriptionInfo(user: AuthUser) {
         const hasActiveSubscription =
             this._forceAllowSubscriptionFeatures ||
             isActiveSubscription(user.subscriptionStatus);
@@ -1053,13 +1055,15 @@ export class AuthController {
         let tier: string = null;
         let sub: SubscriptionConfiguration['subscriptions'][0] = null;
         if (hasActiveSubscription) {
+            const subscriptionConfig =
+                await this._config.getSubscriptionConfiguration();
             if (user.subscriptionId) {
-                sub = this._subscriptionConfig?.subscriptions.find(
+                sub = subscriptionConfig?.subscriptions.find(
                     (s) => s.id === user.subscriptionId
                 );
             }
             if (!sub) {
-                sub = this._subscriptionConfig?.subscriptions.find(
+                sub = subscriptionConfig?.subscriptions.find(
                     (s) => s.defaultSubscription
                 );
                 if (sub) {
@@ -1070,7 +1074,7 @@ export class AuthController {
             }
 
             if (!sub) {
-                sub = this._subscriptionConfig?.subscriptions[0];
+                sub = subscriptionConfig?.subscriptions[0];
                 if (sub) {
                     console.log(
                         '[AuthController] [getUserInfo] Using first subscription for user.'

@@ -140,6 +140,80 @@ export interface AuthStore {
      * Gets the list of SMS rules.
      */
     listSmsRules(): Promise<RegexRule[]>;
+
+    /**
+     * Creates or updates the given subscription.
+     * @param subscription The subscription to save.
+     */
+    saveSubscription(subscription: AuthSubscription): Promise<void>;
+
+    /**
+     * Gets the subscription with the given ID.
+     * @param id The ID of the subscription.
+     */
+    getSubscriptionById(id: string): Promise<AuthSubscription | null>;
+
+    /**
+     * Gets the subscription with the given stripe subscription ID.
+     * @param id The ID of the stripe subscription.
+     */
+    getSubscriptionByStripeSubscriptionId(
+        id: string
+    ): Promise<AuthSubscription | null>;
+
+    /**
+     * Creates or updates the given subscription period.
+     * @param period The subscription period.
+     */
+    saveSubscriptionPeriod(period: AuthSubscriptionPeriod): Promise<void>;
+
+    /**
+     * Gets the subscription period with the given ID.
+     * @param id The ID of the subscription period.
+     */
+    getSubscriptionPeriodById(
+        id: string
+    ): Promise<AuthSubscriptionPeriod | null>;
+
+    /**
+     * Gets the subscription periods that belong to the given subscription.
+     * @param subscriptionId The ID of the subscription.
+     */
+    listSubscriptionPeriodsBySubscriptionId(
+        subscriptionId: string
+    ): Promise<AuthSubscriptionPeriod[]>;
+
+    /**
+     * Creates or updates the given invoice.
+     * @param invoice The invoice that should be saved.
+     */
+    saveInvoice(invoice: AuthInvoice): Promise<void>;
+
+    /**
+     * Gets the invoice with the given ID.
+     * @param id The ID of the invoice.
+     */
+    getInvoiceById(id: string): Promise<AuthInvoice | null>;
+
+    /**
+     * Updates the subscription info for a user/studio.
+     *
+     * This will create/update a subscription object, update the info on the user/studio and subscription, and optionally update the period of the subscription.
+     * @param request The request.
+     */
+    updateSubscriptionInfo(
+        request: UpdateSubscriptionInfoRequest
+    ): Promise<void>;
+
+    /**
+     * Updates the subscription period for a user/studio.
+     *
+     * This will update the period of the subscription, and optionally create subscription objects for the user/studio if neccesary.
+     * @param request The request.
+     */
+    updateSubscriptionPeriod(
+        request: UpdateSubscriptionPeriodRequest
+    ): Promise<void>;
 }
 
 export type AddressType = 'email' | 'phone';
@@ -167,6 +241,21 @@ export interface AuthUser {
      * Note that this is the ID of the subscription in the config, not the ID of the stripe subscription.
      */
     subscriptionId?: string;
+
+    /**
+     * The ID of the subscription that this user record references.
+     */
+    subscriptionInfoId?: string;
+
+    /**
+     * The unix time in miliseconds that the user's current subscription period started at.
+     */
+    subscriptionPeriodStartMs?: number | null;
+
+    /**
+     * The unix time in miliseconds that the user's current subscription period ends at.
+     */
+    subscriptionPeriodEndMs?: number | null;
 
     /**
      * The last Unix time that all the sessions were revoked at.
@@ -305,6 +394,128 @@ export interface AuthSession {
     ipAddress: string;
 }
 
+export interface AuthSubscription {
+    id: string;
+    stripeSubscriptionId: string;
+    userId: string;
+    studioId: string;
+
+    /**
+     * The ID of the stripe customer that is associated with this subscription.
+     */
+    stripeCustomerId: string | null;
+
+    /**
+     * The current status of the subscription.
+     */
+    subscriptionStatus: string | null;
+
+    /**
+     * The ID of the purchasable subscription that the user has.
+     * Note that this is the ID of the subscription in the config, not the ID of the stripe subscription.
+     */
+    subscriptionId: string;
+
+    /**
+     * The unix time in miliseconds that the current subscription period started at.
+     */
+    currentPeriodStartMs: number | null;
+
+    /**
+     * The unix time in miliseconds that the current subscription period ends at.
+     */
+    currentPeriodEndMs: number | null;
+}
+
+export interface AuthSubscriptionPeriod {
+    id: string;
+
+    /**
+     * The ID of the subscription that this period is for.
+     */
+    subscriptionId: string;
+
+    /**
+     * The ID of the invoice for this period.
+     */
+    invoiceId: string;
+
+    /**
+     * The unix time in miliseconds that the subscription period started at.
+     */
+    periodStartMs: number;
+
+    /**
+     * The unix time in miliseconds that the subscription period ends at.
+     */
+    periodEndMs: number;
+}
+
+export interface AuthInvoice {
+    id: string;
+
+    /**
+     * The ID of the stripe invoice that is associated with this invoice.
+     */
+    stripeInvoiceId: string;
+
+    /**
+     * The ID of the subscription that this invoice is for.
+     */
+    subscriptionId: string;
+
+    /**
+     * The ID of the subscription period that this invoice is for.
+     */
+    periodId: string;
+
+    /**
+     * The description of the invoice.
+     */
+    description: string;
+
+    /**
+     * The status of the invoice.
+     */
+    status: string;
+
+    /**
+     * Whether the invoice is paid.
+     */
+    paid: boolean;
+
+    /**
+     * The three-letter ISO code for the currency that the invoice is in.
+     */
+    currency: string;
+
+    /**
+     * The amount of the invoice in the smallest unit of the currency.
+     */
+    total: number;
+
+    /**
+     * The subtotal of the invoice.
+     */
+    subtotal: number;
+
+    /**
+     * The amount of tax collected.
+     */
+    tax: number;
+
+    /**
+     * The URL of the stripe hosted invoice.
+     * Users can use this to pay and see the invoice.
+     */
+    stripeHostedInvoiceUrl: string;
+
+    /**
+     * The URL of the stripe hosted invoice PDF.
+     */
+    stripeInvoicePdfUrl: string;
+}
+
 export type SaveNewUserResult = SaveNewUserSuccess | SaveNewUserFailure;
 
 export interface SaveNewUserSuccess {
@@ -330,4 +541,93 @@ export interface ListSessionsDataFailure {
     success: false;
     errorCode: ServerError;
     errorMessage: string;
+}
+
+export interface UpdateSubscriptionInfoRequest {
+    /**
+     * The ID of the user that the subscription info should be updated for.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the studio that the subscription info should be updated for.
+     */
+    studioId?: string;
+
+    /**
+     * The current status of the subscription.
+     */
+    subscriptionStatus: string;
+
+    /**
+     * The ID of the purchasable subscription that the user has.
+     */
+    subscriptionId: string;
+
+    /**
+     * The ID of the subscription in Stripe's database.
+     */
+    stripeSubscriptionId: string;
+
+    /**
+     * The ID of the stripe customer.
+     */
+    stripeCustomerId: string;
+
+    /**
+     * The unix time in miliseconds that the current subscription period started at.
+     */
+    currentPeriodStartMs: number;
+
+    /**
+     * The unix time in miliseconds that the current subscription period ends at.
+     */
+    currentPeriodEndMs: number;
+}
+
+export interface UpdateSubscriptionPeriodRequest {
+    /**
+     * The ID of the user that the subscription info should be updated for.
+     */
+    userId?: string;
+
+    /**
+     * The ID of the studio that the subscription info should be updated for.
+     */
+    studioId?: string;
+
+    /**
+     * The current status of the subscription.
+     */
+    subscriptionStatus: string;
+
+    /**
+     * The ID of the purchasable subscription that the user has.
+     */
+    subscriptionId: string;
+
+    /**
+     * The ID of the subscription in Stripe's database.
+     */
+    stripeSubscriptionId: string;
+
+    /**
+     * The ID of the stripe customer.
+     */
+    stripeCustomerId: string;
+
+    /**
+     * The unix time in miliseconds that the current subscription period started at.
+     */
+    currentPeriodStartMs: number;
+
+    /**
+     * The unix time in miliseconds that the current subscription period ends at.
+     */
+    currentPeriodEndMs: number;
+
+    /**
+     * The invoice that should be created.
+     */
+    invoice: Omit<AuthInvoice, 'id' | 'subscriptionId' | 'periodId'>;
 }

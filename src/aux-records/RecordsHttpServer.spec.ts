@@ -10,7 +10,6 @@ import {
     GenericHttpResponse,
 } from './RecordsHttpServer';
 import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
-import { MemoryAuthStore } from './MemoryAuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import {
     formatV1OpenAiKey,
@@ -21,22 +20,20 @@ import { AuthSession, AuthUser } from './AuthStore';
 import { LivekitController } from './LivekitController';
 import { isRecordKey, RecordsController } from './RecordsController';
 import { RecordsStore, Studio } from './RecordsStore';
-import { MemoryRecordsStore } from './MemoryRecordsStore';
 import { EventRecordsController } from './EventRecordsController';
 import { EventRecordsStore } from './EventRecordsStore';
-import { MemoryEventRecordsStore } from './MemoryEventRecordsStore';
 import { DataRecordsController } from './DataRecordsController';
 import { DataRecordsStore } from './DataRecordsStore';
-import { MemoryDataRecordsStore } from './MemoryDataRecordsStore';
 import { FileRecordsController } from './FileRecordsController';
 import { FileRecordsStore } from './FileRecordsStore';
-import { MemoryFileRecordsStore } from './MemoryFileRecordsStore';
 import { getHash } from '@casual-simulation/crypto';
 import { SubscriptionController } from './SubscriptionController';
 import { StripeInterface, StripeProduct } from './StripeInterface';
-import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import {
+    SubscriptionConfiguration,
+    allowAllFeatures,
+} from './SubscriptionConfiguration';
 import { PolicyController } from './PolicyController';
-import { MemoryPolicyStore } from './MemoryPolicyStore';
 import {
     ACCOUNT_MARKER,
     ADMIN_ROLE_NAME,
@@ -61,11 +58,12 @@ import {
     AIGenerateImageInterfaceResponse,
 } from './AIImageInterface';
 import { sortBy } from 'lodash';
+import { MemoryStore } from './MemoryStore';
 
 console.log = jest.fn();
 
 describe('RecordsHttpServer', () => {
-    let authStore: MemoryAuthStore;
+    let store: MemoryStore;
     let authMessenger: MemoryAuthMessenger;
     let authController: AuthController;
     let server: RecordsHttpServer;
@@ -74,21 +72,16 @@ describe('RecordsHttpServer', () => {
     let apiHeaders: GenericHttpHeaders;
     let livekitController: LivekitController;
     let recordsController: RecordsController;
-    let recordsStore: RecordsStore;
     let eventsController: EventRecordsController;
-    let eventsStore: EventRecordsStore;
     let dataController: DataRecordsController;
-    let dataStore: DataRecordsStore;
     let manualDataController: DataRecordsController;
     let manualDataStore: DataRecordsStore;
 
     let policyController: PolicyController;
-    let policyStore: MemoryPolicyStore;
 
     let rateLimiter: RateLimiter;
     let rateLimitController: RateLimitController;
 
-    let filesStore: FileRecordsStore;
     let filesController: FileRecordsController;
 
     let stripeMock: {
@@ -100,6 +93,7 @@ describe('RecordsHttpServer', () => {
         createCustomer: jest.Mock<any>;
         listActiveSubscriptionsForCustomer: jest.Mock<any>;
         constructWebhookEvent: jest.Mock<any>;
+        getSubscriptionById: jest.Mock<any>;
     };
 
     let aiController: AIController;
@@ -153,74 +147,88 @@ describe('RecordsHttpServer', () => {
     const apiOrigin = 'https://api-origin.com';
     const recordName = 'testRecord';
 
-    let subscriptionConfig: SubscriptionConfiguration;
-
     beforeEach(async () => {
         allowedAccountOrigins = new Set([accountOrigin]);
 
         allowedApiOrigins = new Set([apiOrigin]);
 
-        subscriptionConfig = {
-            subscriptions: [
-                {
-                    id: 'sub_id',
-                    eligibleProducts: ['product_id'],
-                    featureList: ['Feature 1', 'Feature 2'],
-                    product: 'product_id',
-                    defaultSubscription: true,
+        store = new MemoryStore({
+            subscriptions: {
+                subscriptions: [
+                    {
+                        id: 'sub_id',
+                        eligibleProducts: ['product_id'],
+                        featureList: ['Feature 1', 'Feature 2'],
+                        product: 'product_id',
+                        defaultSubscription: true,
+                    },
+                ],
+                webhookSecret: 'webhook_secret',
+                cancelUrl: 'http://cancel_url',
+                successUrl: 'http://success_url',
+                returnUrl: 'http://return_url',
+                tiers: {},
+                defaultFeatures: {
+                    user: allowAllFeatures(),
+                    studio: allowAllFeatures(),
                 },
-            ],
-            webhookSecret: 'webhook_secret',
-            cancelUrl: 'http://cancel_url',
-            successUrl: 'http://success_url',
-            returnUrl: 'http://return_url',
-        };
+            },
+        });
+        manualDataStore = new MemoryStore({
+            subscriptions: null,
+        });
 
-        authStore = new MemoryAuthStore();
         authMessenger = new MemoryAuthMessenger();
-        authController = new AuthController(
-            authStore,
-            authMessenger,
-            subscriptionConfig
-        );
+        authController = new AuthController(store, authMessenger, store);
         livekitController = new LivekitController(
             livekitApiKey,
             livekitSecretKey,
             livekitEndpoint
         );
 
-        const memRecordsStore = (recordsStore = new MemoryRecordsStore(
-            authStore
-        ));
-        recordsController = new RecordsController(recordsStore, authStore);
+        // const memRecordsStore = (store = new MemoryRecordsStore(
+        //     store
+        // ));
+        recordsController = new RecordsController({
+            auth: store,
+            store,
+            config: store,
+            metrics: store,
+        });
 
-        policyStore = new MemoryPolicyStore();
         policyController = new PolicyController(
             authController,
             recordsController,
-            policyStore
+            store
         );
 
-        eventsStore = new MemoryEventRecordsStore();
-        eventsController = new EventRecordsController(
-            policyController,
-            eventsStore
-        );
+        eventsController = new EventRecordsController({
+            config: store,
+            metrics: store,
+            policies: policyController,
+            store,
+        });
 
-        dataStore = new MemoryDataRecordsStore();
-        dataController = new DataRecordsController(policyController, dataStore);
+        dataController = new DataRecordsController({
+            config: store,
+            metrics: store,
+            policies: policyController,
+            store,
+        });
 
-        manualDataStore = new MemoryDataRecordsStore();
-        manualDataController = new DataRecordsController(
-            policyController,
-            manualDataStore
-        );
+        manualDataController = new DataRecordsController({
+            config: store,
+            metrics: store,
+            policies: policyController,
+            store: manualDataStore,
+        });
 
-        filesStore = new MemoryFileRecordsStore();
-        filesController = new FileRecordsController(
-            policyController,
-            filesStore
-        );
+        filesController = new FileRecordsController({
+            config: store,
+            metrics: store,
+            policies: policyController,
+            store,
+        });
 
         rateLimiter = new MemoryRateLimiter();
         rateLimitController = new RateLimitController(rateLimiter, {
@@ -237,6 +245,7 @@ describe('RecordsHttpServer', () => {
             createCustomer: jest.fn(),
             listActiveSubscriptionsForCustomer: jest.fn(),
             constructWebhookEvent: jest.fn(),
+            getSubscriptionById: jest.fn(),
         };
 
         stripeMock.getProductAndPriceInfo.mockImplementation(async (id) => {
@@ -262,9 +271,9 @@ describe('RecordsHttpServer', () => {
         subscriptionController = new SubscriptionController(
             stripe,
             authController,
-            authStore,
-            recordsStore,
-            subscriptionConfig
+            store,
+            store,
+            store
         );
 
         chatInterface = {
@@ -310,6 +319,8 @@ describe('RecordsHttpServer', () => {
                     maxSteps: 50,
                 },
             },
+            config: store,
+            metrics: store,
         });
 
         server = new RecordsHttpServer(
@@ -372,13 +383,15 @@ describe('RecordsHttpServer', () => {
         userId = loginResult.userId;
 
         const services = {
-            authStore: authStore,
+            authStore: store,
             auth: authController,
             authMessenger: authMessenger,
             policies: policyController,
-            policyStore: policyStore,
             records: recordsController,
-            recordsStore: memRecordsStore,
+            store,
+            recordsStore: store,
+            policyStore: store,
+            configStore: store,
         };
         const owner = await createTestUser(services, 'owner@example.com');
 
@@ -404,8 +417,8 @@ describe('RecordsHttpServer', () => {
 
         recordKey = recordKeyResult.recordKey;
 
-        const record = await services.recordsStore.getRecordByName(recordName);
-        await services.recordsStore.updateRecord({
+        const record = await services.store.getRecordByName(recordName);
+        await services.store.updateRecord({
             name: recordName,
             ownerId: ownerId,
             studioId: null,
@@ -443,7 +456,7 @@ describe('RecordsHttpServer', () => {
         it('should be able to decode URI components for the userId', async () => {
             const userId =
                 'did:ethr:0xA31b9288725d2B99137f4af10CaFdaA67B80C769';
-            await authStore.saveNewUser({
+            await store.saveNewUser({
                 id: userId,
                 email: 'other@example.com',
                 phoneNumber: null,
@@ -646,7 +659,7 @@ describe('RecordsHttpServer', () => {
                 headers: accountCorsHeaders,
             });
 
-            const user = await authStore.findUser(userId);
+            const user = await store.findUser(userId);
             expect(user).toMatchObject({
                 id: userId,
                 name: 'Kal',
@@ -658,7 +671,7 @@ describe('RecordsHttpServer', () => {
         it('should be able to decode URI components for the userId', async () => {
             const userId =
                 'did:ethr:0xA31b9288725d2B99137f4af10CaFdaA67B80C769';
-            await authStore.saveNewUser({
+            await store.saveNewUser({
                 id: userId,
                 email: 'other@example.com',
                 phoneNumber: null,
@@ -777,12 +790,12 @@ describe('RecordsHttpServer', () => {
     describe('GET /api/{userId}/subscription', () => {
         let user: AuthUser;
         beforeEach(async () => {
-            user = await authStore.findUser(userId);
-            await authStore.saveUser({
+            user = await store.findUser(userId);
+            await store.saveUser({
                 ...user,
                 stripeCustomerId: 'customerId',
             });
-            user = await authStore.findUser(userId);
+            user = await store.findUser(userId);
         });
 
         it('should return a list of subscriptions for the user', async () => {
@@ -1018,12 +1031,12 @@ describe('RecordsHttpServer', () => {
     describe('POST /api/{userId}/subscription/manage', () => {
         let user: AuthUser;
         beforeEach(async () => {
-            user = await authStore.findUser(userId);
-            await authStore.saveUser({
+            user = await store.findUser(userId);
+            await store.saveUser({
                 ...user,
                 stripeCustomerId: 'customerId',
             });
-            user = await authStore.findUser(userId);
+            user = await store.findUser(userId);
         });
 
         it('should return the URL that the user should be redirected to', async () => {
@@ -1298,12 +1311,12 @@ describe('RecordsHttpServer', () => {
     describe('POST /api/stripeWebhook', () => {
         let user: AuthUser;
         beforeEach(async () => {
-            user = await authStore.findUser(userId);
-            await authStore.saveUser({
+            user = await store.findUser(userId);
+            await store.saveUser({
                 ...user,
                 stripeCustomerId: 'customer_id',
             });
-            user = await authStore.findUser(userId);
+            user = await store.findUser(userId);
         });
 
         const eventTypes = [
@@ -1372,7 +1385,7 @@ describe('RecordsHttpServer', () => {
                         headers: {},
                     });
 
-                    const user = await authStore.findUser(userId);
+                    const user = await store.findUser(userId);
                     expect(user.subscriptionStatus).toBe(status);
                 }
             );
@@ -1381,7 +1394,7 @@ describe('RecordsHttpServer', () => {
 
     describe('GET /api/emailRules', () => {
         it('should return a 404', async () => {
-            authStore.emailRules.push(
+            store.emailRules.push(
                 {
                     type: 'allow',
                     pattern: 'hello',
@@ -1415,7 +1428,7 @@ describe('RecordsHttpServer', () => {
 
     describe('GET /api/smsRules', () => {
         it('should return a 404', async () => {
-            authStore.smsRules.push(
+            store.smsRules.push(
                 {
                     type: 'allow',
                     pattern: 'hello',
@@ -1535,11 +1548,11 @@ describe('RecordsHttpServer', () => {
 
             const [uid, sid] = parsed;
 
-            const session = await authStore.findSession(uid, sid);
+            const session = await store.findSession(uid, sid);
 
             expect(session.ipAddress).toBe('999.999.999.999');
 
-            const old = await authStore.findSession(userId, sessionId);
+            const old = await store.findSession(userId, sessionId);
             expect(old.revokeTimeMs).toBeGreaterThanOrEqual(old.grantedTimeMs);
         });
 
@@ -1570,7 +1583,7 @@ describe('RecordsHttpServer', () => {
                 headers: accountCorsHeaders,
             });
 
-            const user = await authStore.findUser(userId);
+            const user = await store.findUser(userId);
             expect(user.allSessionRevokeTimeMs).toBeGreaterThan(0);
         });
 
@@ -1588,7 +1601,7 @@ describe('RecordsHttpServer', () => {
 
     describe('POST /api/v2/revokeSession', () => {
         it('should revoke the given session ID for the given user', async () => {
-            let session: AuthSession = await authStore.findSession(
+            let session: AuthSession = await store.findSession(
                 userId,
                 sessionId
             );
@@ -1613,12 +1626,12 @@ describe('RecordsHttpServer', () => {
                 headers: accountCorsHeaders,
             });
 
-            session = await authStore.findSession(userId, sessionId);
+            session = await store.findSession(userId, sessionId);
             expect(session.revokeTimeMs).toBeGreaterThan(0);
         });
 
         it('should revoke the given session key', async () => {
-            let session: AuthSession = await authStore.findSession(
+            let session: AuthSession = await store.findSession(
                 userId,
                 sessionId
             );
@@ -1642,7 +1655,7 @@ describe('RecordsHttpServer', () => {
                 headers: accountCorsHeaders,
             });
 
-            session = await authStore.findSession(userId, sessionId);
+            session = await store.findSession(userId, sessionId);
             expect(session.revokeTimeMs).toBeGreaterThan(0);
         });
 
@@ -1930,12 +1943,12 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should be able to create a record for a studio', async () => {
-            await recordsStore.addStudio({
+            await store.addStudio({
                 id: 'studioId',
                 displayName: 'myStudio',
             });
 
-            await recordsStore.addStudioAssignment({
+            await store.addStudioAssignment({
                 studioId: 'studioId',
                 userId: userId,
                 isPrimaryContact: true,
@@ -1963,7 +1976,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should return a 403 status code if the user does not have admin permissions for the studio', async () => {
-            await recordsStore.addStudio({
+            await store.addStudio({
                 id: 'studioId',
                 displayName: 'myStudio',
             });
@@ -2346,7 +2359,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should get a list of events', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -2369,7 +2382,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should return the events that are listed after the given event name', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -2392,7 +2405,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should return an empty list if the inst doesnt have permission', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -2415,7 +2428,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should get a list of events if the inst and user have permission', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
                 ['inst']: new Set([ADMIN_ROLE_NAME]),
             };
@@ -2439,7 +2452,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should return an unacceptable_request result if recordName is omitted', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -2506,9 +2519,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            expect(
-                await eventsStore.getEventCount(recordName, 'testEvent')
-            ).toEqual({
+            expect(await store.getEventCount(recordName, 'testEvent')).toEqual({
                 success: true,
                 count: 5,
                 markers: ['secret'],
@@ -2536,9 +2547,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            expect(
-                await eventsStore.getEventCount(recordName, 'testEvent')
-            ).toEqual({
+            expect(await store.getEventCount(recordName, 'testEvent')).toEqual({
                 success: true,
                 count: 15,
                 markers: [PUBLIC_READ_MARKER],
@@ -2579,9 +2588,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            expect(
-                await eventsStore.getEventCount(recordName, 'testEvent')
-            ).toEqual({
+            expect(await store.getEventCount(recordName, 'testEvent')).toEqual({
                 success: true,
                 count: 10,
                 markers: ['secret'],
@@ -2733,7 +2740,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should delete the data if the user has permission', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -2838,7 +2845,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should return not_authorized if the inst does not have permission', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -3099,7 +3106,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should return a 403 when the inst is not authorized', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -3344,7 +3351,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
             expect(data).toEqual({
                 success: false,
                 errorCode: 'data_not_found',
@@ -3353,7 +3360,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should reject the request if the inst is not authorized', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -3389,7 +3396,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
             expect(data).toEqual({
                 success: false,
                 errorCode: 'data_not_found',
@@ -3565,7 +3572,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await filesStore.getFileRecord(recordName, fileName);
+            const data = await store.getFileRecord(recordName, fileName);
             expect(data).toEqual({
                 success: false,
                 errorCode: 'file_not_found',
@@ -3605,7 +3612,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await filesStore.getFileRecord(recordName, fileName);
+            const data = await store.getFileRecord(recordName, fileName);
             expect(data).toEqual({
                 success: false,
                 errorCode: 'file_not_found',
@@ -3614,7 +3621,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should support instances', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -3649,7 +3656,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await filesStore.getFileRecord(recordName, fileName);
+            const data = await store.getFileRecord(recordName, fileName);
             expect(data).toMatchObject({
                 success: true,
             });
@@ -3784,10 +3791,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await filesStore.getFileRecord(
-                recordName,
-                `${hash}.json`
-            );
+            const data = await store.getFileRecord(recordName, `${hash}.json`);
             expect(data).toEqual({
                 success: true,
                 recordName: 'testRecord',
@@ -3844,10 +3848,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await filesStore.getFileRecord(
-                recordName,
-                `${hash}.json`
-            );
+            const data = await store.getFileRecord(recordName, `${hash}.json`);
             expect(data).toEqual({
                 success: true,
                 recordName: 'testRecord',
@@ -3863,7 +3864,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should support markers', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -3899,10 +3900,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await filesStore.getFileRecord(
-                recordName,
-                `${hash}.json`
-            );
+            const data = await store.getFileRecord(recordName, `${hash}.json`);
             expect(data).toEqual({
                 success: true,
                 recordName: 'testRecord',
@@ -3918,7 +3916,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should support instances', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -3957,10 +3955,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await filesStore.getFileRecord(
-                recordName,
-                `${hash}.json`
-            );
+            const data = await store.getFileRecord(recordName, `${hash}.json`);
             expect(data).toMatchObject({
                 success: false,
             });
@@ -4218,7 +4213,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should get a link to the file with the given name', async () => {
-            policyStore.policies[recordName] = {
+            store.policies[recordName] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -4232,7 +4227,7 @@ describe('RecordsHttpServer', () => {
                 },
             };
 
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set(['developer']),
             };
 
@@ -4258,7 +4253,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should get a link to the file at the given URL', async () => {
-            policyStore.policies[recordName] = {
+            store.policies[recordName] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -4272,7 +4267,7 @@ describe('RecordsHttpServer', () => {
                 },
             };
 
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set(['developer']),
             };
 
@@ -4401,7 +4396,7 @@ describe('RecordsHttpServer', () => {
 
     describe('GET /api/v2/records/file/list', () => {
         beforeEach(async () => {
-            await filesStore.addFileRecord(
+            await store.addFileRecord(
                 recordName,
                 'test1.txt',
                 userId,
@@ -4410,7 +4405,7 @@ describe('RecordsHttpServer', () => {
                 'description',
                 [PUBLIC_READ_MARKER]
             );
-            await filesStore.addFileRecord(
+            await store.addFileRecord(
                 recordName,
                 'test2.txt',
                 userId,
@@ -4419,7 +4414,7 @@ describe('RecordsHttpServer', () => {
                 'description',
                 [PUBLIC_READ_MARKER]
             );
-            await filesStore.addFileRecord(
+            await store.addFileRecord(
                 recordName,
                 'test3.txt',
                 userId,
@@ -4428,13 +4423,13 @@ describe('RecordsHttpServer', () => {
                 'description',
                 [PUBLIC_READ_MARKER]
             );
-            await filesStore.setFileRecordAsUploaded(recordName, 'test1.txt');
-            await filesStore.setFileRecordAsUploaded(recordName, 'test2.txt');
-            await filesStore.setFileRecordAsUploaded(recordName, 'test3.txt');
+            await store.setFileRecordAsUploaded(recordName, 'test1.txt');
+            await store.setFileRecordAsUploaded(recordName, 'test2.txt');
+            await store.setFileRecordAsUploaded(recordName, 'test3.txt');
         });
 
         it('should return a list of files', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -4483,7 +4478,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should be able to list files by name', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -4524,11 +4519,11 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should list what the user can access', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set(['developer']),
             };
 
-            policyStore.policies[recordName] = {
+            store.policies[recordName] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -4542,12 +4537,8 @@ describe('RecordsHttpServer', () => {
                 },
             };
 
-            await filesStore.updateFileRecord(recordName, 'test1.txt', [
-                'secret',
-            ]);
-            await filesStore.updateFileRecord(recordName, 'test3.txt', [
-                'secret',
-            ]);
+            await store.updateFileRecord(recordName, 'test1.txt', ['secret']);
+            await store.updateFileRecord(recordName, 'test3.txt', ['secret']);
 
             const result = await server.handleRequest(
                 httpGet(
@@ -4586,12 +4577,12 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should list what the inst can access', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
                 ['inst']: new Set(['developer']),
             };
 
-            policyStore.policies[recordName] = {
+            store.policies[recordName] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -4604,12 +4595,8 @@ describe('RecordsHttpServer', () => {
                     markers: [ACCOUNT_MARKER],
                 },
             };
-            await filesStore.updateFileRecord(recordName, 'test1.txt', [
-                'secret',
-            ]);
-            await filesStore.updateFileRecord(recordName, 'test3.txt', [
-                'secret',
-            ]);
+            await store.updateFileRecord(recordName, 'test1.txt', ['secret']);
+            await store.updateFileRecord(recordName, 'test3.txt', ['secret']);
 
             const result = await server.handleRequest(
                 httpGet(
@@ -4707,7 +4694,7 @@ describe('RecordsHttpServer', () => {
             fileName = fileResult.fileName;
             fileUrl = fileResult.uploadUrl;
 
-            policyStore.policies[recordName] = {
+            store.policies[recordName] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -4742,7 +4729,7 @@ describe('RecordsHttpServer', () => {
                 },
             };
 
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set(['developer']),
             };
         });
@@ -4768,7 +4755,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await filesStore.getFileRecord(recordName, fileName);
+            const data = await store.getFileRecord(recordName, fileName);
             expect(data).toEqual({
                 success: true,
                 recordName: 'testRecord',
@@ -4814,7 +4801,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await filesStore.getFileRecord(recordName, fileName);
+            const data = await store.getFileRecord(recordName, fileName);
             expect(data).toEqual({
                 success: true,
                 recordName: 'testRecord',
@@ -5022,7 +5009,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
 
             expect(data).toEqual({
                 success: false,
@@ -5063,7 +5050,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
 
             expect(data).toEqual({
                 success: false,
@@ -5073,7 +5060,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should delete the data if the user has permission', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -5108,7 +5095,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
 
             expect(data).toEqual({
                 success: false,
@@ -5158,7 +5145,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
 
             expect(data).toEqual({
                 success: true,
@@ -5172,7 +5159,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should return not_authorized if the inst does not have permission', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -5217,7 +5204,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
 
             expect(data).toEqual({
                 success: true,
@@ -5433,7 +5420,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should return a 403 when the inst is not authorized', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -5655,7 +5642,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should list what the user can access', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -5723,7 +5710,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should list what the inst can access', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -5840,7 +5827,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
             expect(data).toEqual({
                 success: true,
                 data: 'hello, world',
@@ -5886,7 +5873,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
             expect(data).toEqual({
                 success: true,
                 data: 'hello, world',
@@ -5930,7 +5917,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
             expect(data).toEqual({
                 success: false,
                 errorCode: 'data_not_found',
@@ -5939,7 +5926,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should reject the request if the inst is not authorized', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -5975,7 +5962,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
             expect(data).toEqual({
                 success: false,
                 errorCode: 'data_not_found',
@@ -6256,35 +6243,35 @@ describe('RecordsHttpServer', () => {
 
     describe('GET /api/v2/records/list', () => {
         beforeEach(async () => {
-            await recordsStore.addRecord({
+            await store.addRecord({
                 name: 'test0',
                 ownerId: 'otherUserId',
                 studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });
-            await recordsStore.addRecord({
+            await store.addRecord({
                 name: 'test1',
                 ownerId: userId,
                 studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });
-            await recordsStore.addRecord({
+            await store.addRecord({
                 name: 'test2',
                 ownerId: userId,
                 studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });
-            await recordsStore.addRecord({
+            await store.addRecord({
                 name: 'test3',
                 ownerId: userId,
                 studioId: null,
                 secretHashes: [],
                 secretSalt: '',
             });
-            await recordsStore.addRecord({
+            await store.addRecord({
                 name: 'test4',
                 ownerId: 'otherUserId',
                 studioId: null,
@@ -6328,46 +6315,46 @@ describe('RecordsHttpServer', () => {
             let studioId: string;
             beforeEach(async () => {
                 studioId = 'studioId';
-                await recordsStore.addStudio({
+                await store.addStudio({
                     id: studioId,
                     displayName: 'my studio',
                 });
-                await recordsStore.addStudioAssignment({
+                await store.addStudioAssignment({
                     studioId,
                     userId,
                     isPrimaryContact: true,
                     role: 'admin',
                 });
 
-                await recordsStore.addRecord({
+                await store.addRecord({
                     name: 'test5',
                     ownerId: null,
                     studioId: studioId,
                     secretHashes: [],
                     secretSalt: '',
                 });
-                await recordsStore.addRecord({
+                await store.addRecord({
                     name: 'test6',
                     ownerId: null,
                     studioId: studioId,
                     secretHashes: [],
                     secretSalt: '',
                 });
-                await recordsStore.addRecord({
+                await store.addRecord({
                     name: 'test7',
                     ownerId: null,
                     studioId: studioId,
                     secretHashes: [],
                     secretSalt: '',
                 });
-                await recordsStore.addRecord({
+                await store.addRecord({
                     name: 'test8',
                     ownerId: null,
                     studioId: 'otherStudio',
                     secretHashes: [],
                     secretSalt: '',
                 });
-                await recordsStore.addRecord({
+                await store.addRecord({
                     name: 'test9',
                     ownerId: null,
                     studioId: studioId,
@@ -6442,7 +6429,7 @@ describe('RecordsHttpServer', () => {
 
     describe('POST /api/v2/records/policy/grantPermission', () => {
         beforeEach(() => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
         });
@@ -6472,7 +6459,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await policyStore.getUserPolicy(recordName, 'test');
+            const data = await store.getUserPolicy(recordName, 'test');
             expect(data).toEqual({
                 success: true,
                 document: {
@@ -6489,7 +6476,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should deny the request if the user is not authorized', async () => {
-            delete policyStore.roles[recordName][userId];
+            delete store.roles[recordName][userId];
 
             const result = await server.handleRequest(
                 httpPost(
@@ -6526,7 +6513,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const policy = await policyStore.getUserPolicy(recordName, 'test');
+            const policy = await store.getUserPolicy(recordName, 'test');
 
             expect(policy).toEqual({
                 success: false,
@@ -6572,7 +6559,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const policy = await policyStore.getUserPolicy(recordName, 'test');
+            const policy = await store.getUserPolicy(recordName, 'test');
 
             expect(policy).toEqual({
                 success: false,
@@ -6741,10 +6728,10 @@ describe('RecordsHttpServer', () => {
 
     describe('POST /api/v2/records/policy/revokePermission', () => {
         beforeEach(() => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
-            policyStore.policies[recordName] = {
+            store.policies[recordName] = {
                 test: {
                     document: {
                         permissions: [
@@ -6785,7 +6772,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await policyStore.getUserPolicy(recordName, 'test');
+            const data = await store.getUserPolicy(recordName, 'test');
             expect(data).toEqual({
                 success: true,
                 document: {
@@ -6796,7 +6783,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should deny the request if the user is not authorized', async () => {
-            delete policyStore.roles[recordName][userId];
+            delete store.roles[recordName][userId];
 
             const result = await server.handleRequest(
                 httpPost(
@@ -6833,7 +6820,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const policy = await policyStore.getUserPolicy(recordName, 'test');
+            const policy = await store.getUserPolicy(recordName, 'test');
 
             expect(policy).toEqual({
                 success: true,
@@ -6887,7 +6874,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const policy = await policyStore.getUserPolicy(recordName, 'test');
+            const policy = await store.getUserPolicy(recordName, 'test');
 
             expect(policy).toEqual({
                 success: true,
@@ -7068,10 +7055,10 @@ describe('RecordsHttpServer', () => {
 
     describe('GET /api/v2/records/policy', () => {
         beforeEach(() => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
-            policyStore.policies[recordName] = {
+            store.policies[recordName] = {
                 test: {
                     document: {
                         permissions: [
@@ -7191,10 +7178,10 @@ describe('RecordsHttpServer', () => {
 
     describe('GET /api/v2/records/policy/list', () => {
         beforeEach(() => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
-            policyStore.policies[recordName] = {
+            store.policies[recordName] = {
                 test: {
                     document: {
                         permissions: [
@@ -7385,10 +7372,10 @@ describe('RecordsHttpServer', () => {
 
     describe('GET /api/v2/records/role/user/list', () => {
         beforeEach(() => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
-            policyStore.roleAssignments[recordName] = {
+            store.roleAssignments[recordName] = {
                 ['testId']: [
                     {
                         role: 'role1',
@@ -7430,7 +7417,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should deny the request if the user is not authorized', async () => {
-            delete policyStore.roles[recordName][userId];
+            delete store.roles[recordName][userId];
 
             const result = await server.handleRequest(
                 httpGet(
@@ -7567,10 +7554,10 @@ describe('RecordsHttpServer', () => {
 
     describe('GET /api/v2/records/role/inst/list', () => {
         beforeEach(() => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
-            policyStore.roleAssignments[recordName] = {
+            store.roleAssignments[recordName] = {
                 ['testId']: [
                     {
                         role: 'role1',
@@ -7612,7 +7599,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should deny the request if the user is not authorized', async () => {
-            delete policyStore.roles[recordName][userId];
+            delete store.roles[recordName][userId];
 
             const result = await server.handleRequest(
                 httpGet(
@@ -7749,10 +7736,10 @@ describe('RecordsHttpServer', () => {
 
     describe('GET /api/v2/records/role/assignments/list', () => {
         beforeEach(() => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
-            policyStore.roleAssignments[recordName] = {
+            store.roleAssignments[recordName] = {
                 ['testId']: [
                     {
                         role: 'role1',
@@ -7865,7 +7852,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should deny the request if the user is not authorized', async () => {
-            delete policyStore.roles[recordName][userId];
+            delete store.roles[recordName][userId];
 
             const result = await server.handleRequest(
                 httpGet(
@@ -8004,7 +7991,7 @@ describe('RecordsHttpServer', () => {
             });
 
             it('should deny the request if the user is not authorized', async () => {
-                delete policyStore.roles[recordName][userId];
+                delete store.roles[recordName][userId];
 
                 const result = await server.handleRequest(
                     httpGet(
@@ -8113,7 +8100,7 @@ describe('RecordsHttpServer', () => {
 
     describe('POST /api/v2/records/role/grant', () => {
         beforeEach(() => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
         });
@@ -8139,10 +8126,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const roles = await policyStore.listRolesForUser(
-                recordName,
-                'testId'
-            );
+            const roles = await store.listRolesForUser(recordName, 'testId');
 
             expect(roles).toEqual([
                 {
@@ -8173,10 +8157,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const roles = await policyStore.listRolesForInst(
-                recordName,
-                'testId'
-            );
+            const roles = await store.listRolesForInst(recordName, 'testId');
 
             expect(roles).toEqual([
                 {
@@ -8187,7 +8168,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should deny the request if the user is not authorized', async () => {
-            delete policyStore.roles[recordName][userId];
+            delete store.roles[recordName][userId];
 
             const result = await server.handleRequest(
                 httpPost(
@@ -8220,10 +8201,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const roles = await policyStore.listRolesForUser(
-                recordName,
-                'testId'
-            );
+            const roles = await store.listRolesForUser(recordName, 'testId');
 
             expect(roles).toEqual([]);
         });
@@ -8261,10 +8239,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const roles = await policyStore.listRolesForUser(
-                recordName,
-                'testId'
-            );
+            const roles = await store.listRolesForUser(recordName, 'testId');
 
             expect(roles).toEqual([]);
         });
@@ -8292,10 +8267,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const roles = await policyStore.listRolesForUser(
-                recordName,
-                'testId'
-            );
+            const roles = await store.listRolesForUser(recordName, 'testId');
 
             expect(roles).toEqual([
                 {
@@ -8437,11 +8409,11 @@ describe('RecordsHttpServer', () => {
 
     describe('POST /api/v2/records/role/revoke', () => {
         beforeEach(() => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
-            policyStore.roleAssignments[recordName] = {
+            store.roleAssignments[recordName] = {
                 ['testId']: [
                     {
                         role: 'role1',
@@ -8472,16 +8444,13 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const roles = await policyStore.listRolesForUser(
-                recordName,
-                'testId'
-            );
+            const roles = await store.listRolesForUser(recordName, 'testId');
 
             expect(roles).toEqual([]);
         });
 
         it('should reject the request if the user is not authorized', async () => {
-            delete policyStore.roles[recordName][userId];
+            delete store.roles[recordName][userId];
 
             const result = await server.handleRequest(
                 httpPost(
@@ -8514,10 +8483,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const roles = await policyStore.listRolesForInst(
-                recordName,
-                'testId'
-            );
+            const roles = await store.listRolesForInst(recordName, 'testId');
 
             expect(roles).toEqual([
                 {
@@ -8560,10 +8526,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const roles = await policyStore.listRolesForInst(
-                recordName,
-                'testId'
-            );
+            const roles = await store.listRolesForInst(recordName, 'testId');
 
             expect(roles).toEqual([
                 {
@@ -8594,10 +8557,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const roles = await policyStore.listRolesForInst(
-                recordName,
-                'testId'
-            );
+            const roles = await store.listRolesForInst(recordName, 'testId');
 
             expect(roles).toEqual([]);
         });
@@ -8699,8 +8659,8 @@ describe('RecordsHttpServer', () => {
 
     describe('POST /api/v2/ai/chat', () => {
         beforeEach(async () => {
-            const u = await authStore.findUser(userId);
-            await authStore.saveUser({
+            const u = await store.findUser(userId);
+            await store.saveUser({
                 ...u,
                 subscriptionId: 'sub_id',
                 subscriptionStatus: 'active',
@@ -8713,6 +8673,7 @@ describe('RecordsHttpServer', () => {
                         content: 'hi!',
                     },
                 ],
+                totalTokens: 0,
             });
         });
 
@@ -8801,6 +8762,7 @@ describe('RecordsHttpServer', () => {
                         content: 'hi!',
                     },
                 ],
+                totalTokens: 0,
             });
 
             const result = await server.handleRequest(
@@ -8888,8 +8850,8 @@ describe('RecordsHttpServer', () => {
 
     describe('POST /api/v2/ai/skybox', () => {
         beforeEach(async () => {
-            const u = await authStore.findUser(userId);
-            await authStore.saveUser({
+            const u = await store.findUser(userId);
+            await store.saveUser({
                 ...u,
                 subscriptionId: 'sub_id',
                 subscriptionStatus: 'active',
@@ -9003,8 +8965,8 @@ describe('RecordsHttpServer', () => {
 
     describe('GET /api/v2/ai/skybox', () => {
         beforeEach(async () => {
-            const u = await authStore.findUser(userId);
-            await authStore.saveUser({
+            const u = await store.findUser(userId);
+            await store.saveUser({
                 ...u,
                 subscriptionId: 'sub_id',
                 subscriptionStatus: 'active',
@@ -9080,8 +9042,8 @@ describe('RecordsHttpServer', () => {
 
     describe('POST /api/v2/ai/image', () => {
         beforeEach(async () => {
-            const u = await authStore.findUser(userId);
-            await authStore.saveUser({
+            const u = await store.findUser(userId);
+            await store.saveUser({
                 ...u,
                 subscriptionId: 'sub_id',
                 subscriptionStatus: 'active',
@@ -9247,28 +9209,28 @@ describe('RecordsHttpServer', () => {
 
     describe('GET /api/v2/studios/list', () => {
         beforeEach(async () => {
-            await recordsStore.addStudio({
+            await store.addStudio({
                 id: 'studioId1',
                 displayName: 'studio 1',
             });
 
-            await recordsStore.addStudio({
+            await store.addStudio({
                 id: 'studioId2',
                 displayName: 'studio 2',
             });
 
-            await recordsStore.addStudio({
+            await store.addStudio({
                 id: 'studioId3',
                 displayName: 'studio 3',
             });
 
-            await recordsStore.addStudioAssignment({
+            await store.addStudioAssignment({
                 studioId: 'studioId2',
                 userId: userId,
                 isPrimaryContact: true,
                 role: 'admin',
             });
-            await recordsStore.addStudioAssignment({
+            await store.addStudioAssignment({
                 studioId: 'studioId3',
                 userId: userId,
                 isPrimaryContact: true,
@@ -9317,7 +9279,7 @@ describe('RecordsHttpServer', () => {
         let studioId: string;
         beforeEach(async () => {
             studioId = 'studioId1';
-            await authStore.saveUser({
+            await store.saveUser({
                 id: 'userId2',
                 email: 'test2@example.com',
                 phoneNumber: null,
@@ -9325,18 +9287,18 @@ describe('RecordsHttpServer', () => {
                 currentLoginRequestId: null,
             });
 
-            await recordsStore.addStudio({
+            await store.addStudio({
                 id: studioId,
                 displayName: 'studio 1',
             });
 
-            await recordsStore.addStudioAssignment({
+            await store.addStudioAssignment({
                 studioId: studioId,
                 userId: userId,
                 isPrimaryContact: true,
                 role: 'admin',
             });
-            await recordsStore.addStudioAssignment({
+            await store.addStudioAssignment({
                 studioId: studioId,
                 userId: 'userId2',
                 isPrimaryContact: false,
@@ -9407,7 +9369,7 @@ describe('RecordsHttpServer', () => {
         let studioId: string;
         beforeEach(async () => {
             studioId = 'studioId1';
-            await authStore.saveUser({
+            await store.saveUser({
                 id: 'userId2',
                 email: 'test2@example.com',
                 phoneNumber: null,
@@ -9415,7 +9377,7 @@ describe('RecordsHttpServer', () => {
                 currentLoginRequestId: null,
             });
 
-            await authStore.saveUser({
+            await store.saveUser({
                 id: 'userId3',
                 email: null,
                 phoneNumber: '555',
@@ -9423,12 +9385,12 @@ describe('RecordsHttpServer', () => {
                 currentLoginRequestId: null,
             });
 
-            await recordsStore.addStudio({
+            await store.addStudio({
                 id: studioId,
                 displayName: 'studio 1',
             });
 
-            await recordsStore.addStudioAssignment({
+            await store.addStudioAssignment({
                 studioId: studioId,
                 userId: userId,
                 isPrimaryContact: true,
@@ -9457,7 +9419,7 @@ describe('RecordsHttpServer', () => {
                 headers: accountCorsHeaders,
             });
 
-            const list = await recordsStore.listStudioAssignments(studioId, {
+            const list = await store.listStudioAssignments(studioId, {
                 userId: 'userId2',
             });
 
@@ -9497,7 +9459,7 @@ describe('RecordsHttpServer', () => {
                 headers: accountCorsHeaders,
             });
 
-            const list = await recordsStore.listStudioAssignments(studioId, {
+            const list = await store.listStudioAssignments(studioId, {
                 userId: 'userId2',
             });
 
@@ -9537,7 +9499,7 @@ describe('RecordsHttpServer', () => {
                 headers: accountCorsHeaders,
             });
 
-            const list = await recordsStore.listStudioAssignments(studioId, {
+            const list = await store.listStudioAssignments(studioId, {
                 userId: 'userId3',
             });
 
@@ -9569,7 +9531,7 @@ describe('RecordsHttpServer', () => {
         let studioId: string;
         beforeEach(async () => {
             studioId = 'studioId1';
-            await authStore.saveUser({
+            await store.saveUser({
                 id: 'userId2',
                 email: 'test2@example.com',
                 phoneNumber: null,
@@ -9577,7 +9539,7 @@ describe('RecordsHttpServer', () => {
                 currentLoginRequestId: null,
             });
 
-            await authStore.saveUser({
+            await store.saveUser({
                 id: 'userId3',
                 email: null,
                 phoneNumber: '555',
@@ -9585,19 +9547,19 @@ describe('RecordsHttpServer', () => {
                 currentLoginRequestId: null,
             });
 
-            await recordsStore.addStudio({
+            await store.addStudio({
                 id: studioId,
                 displayName: 'studio 1',
             });
 
-            await recordsStore.addStudioAssignment({
+            await store.addStudioAssignment({
                 studioId: studioId,
                 userId: userId,
                 isPrimaryContact: true,
                 role: 'admin',
             });
 
-            await recordsStore.addStudioAssignment({
+            await store.addStudioAssignment({
                 studioId: studioId,
                 userId: 'userId2',
                 isPrimaryContact: false,
@@ -9625,7 +9587,7 @@ describe('RecordsHttpServer', () => {
                 headers: accountCorsHeaders,
             });
 
-            const list = await recordsStore.listStudioAssignments(studioId, {
+            const list = await store.listStudioAssignments(studioId, {
                 userId: 'userId2',
             });
 
@@ -9644,12 +9606,12 @@ describe('RecordsHttpServer', () => {
         describe('?userId', () => {
             let user: AuthUser;
             beforeEach(async () => {
-                user = await authStore.findUser(userId);
-                await authStore.saveUser({
+                user = await store.findUser(userId);
+                await store.saveUser({
                     ...user,
                     stripeCustomerId: 'customerId',
                 });
-                user = await authStore.findUser(userId);
+                user = await store.findUser(userId);
             });
 
             it('should return a list of subscriptions for the user', async () => {
@@ -9867,14 +9829,14 @@ describe('RecordsHttpServer', () => {
                     stripeCustomerId: 'customerId',
                 };
 
-                await recordsStore.addStudio(studio);
-                await recordsStore.addStudioAssignment({
+                await store.addStudio(studio);
+                await store.addStudioAssignment({
                     studioId,
                     userId,
                     isPrimaryContact: true,
                     role: 'admin',
                 });
-                studio = await recordsStore.getStudioById(studioId);
+                studio = await store.getStudioById(studioId);
             });
 
             it('should return a list of subscriptions for the studio', async () => {
@@ -10088,12 +10050,12 @@ describe('RecordsHttpServer', () => {
         describe('userId', () => {
             let user: AuthUser;
             beforeEach(async () => {
-                user = await authStore.findUser(userId);
-                await authStore.saveUser({
+                user = await store.findUser(userId);
+                await store.saveUser({
                     ...user,
                     stripeCustomerId: 'customerId',
                 });
-                user = await authStore.findUser(userId);
+                user = await store.findUser(userId);
             });
 
             it('should return the URL that the user should be redirected to', async () => {
@@ -10387,8 +10349,8 @@ describe('RecordsHttpServer', () => {
                     displayName: 'my studio',
                     stripeCustomerId: 'customerId',
                 };
-                await recordsStore.addStudio(studio);
-                await recordsStore.addStudioAssignment({
+                await store.addStudio(studio);
+                await store.addStudioAssignment({
                     userId,
                     studioId,
                     isPrimaryContact: true,

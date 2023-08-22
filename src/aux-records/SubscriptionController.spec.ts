@@ -1,23 +1,24 @@
 import { SubscriptionController } from './SubscriptionController';
 import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import { AuthStore, AuthUser } from './AuthStore';
-import { MemoryAuthStore } from './MemoryAuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import { AuthMessenger } from './AuthMessenger';
 import { formatV1SessionKey, parseSessionKey } from './AuthUtils';
 import { StripeInterface, StripeProduct } from './StripeInterface';
-import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import {
+    SubscriptionConfiguration,
+    allowAllFeatures,
+} from './SubscriptionConfiguration';
 import { Studio } from './RecordsStore';
-import { MemoryRecordsStore } from './MemoryRecordsStore';
+import { MemoryStore } from './MemoryStore';
 
 console.log = jest.fn();
 
 describe('SubscriptionController', () => {
     let controller: SubscriptionController;
     let auth: AuthController;
-    let authStore: AuthStore;
+    let store: MemoryStore;
     let authMessenger: MemoryAuthMessenger;
-    let recordsStore: MemoryRecordsStore;
 
     let stripeMock: {
         publishableKey: string;
@@ -28,49 +29,53 @@ describe('SubscriptionController', () => {
         createCustomer: jest.Mock<any>;
         listActiveSubscriptionsForCustomer: jest.Mock<any>;
         constructWebhookEvent: jest.Mock<any>;
+        getSubscriptionById: jest.Mock<any>;
     };
 
     let stripe: StripeInterface;
     let userId: string;
     let sessionKey: string;
-    let config: SubscriptionConfiguration;
 
     beforeEach(async () => {
-        authStore = new MemoryAuthStore();
+        store = new MemoryStore({
+            subscriptions: {
+                subscriptions: [
+                    {
+                        id: 'sub_1',
+                        product: 'product_99_id',
+                        eligibleProducts: [
+                            'product_99_id',
+                            'product_1_id',
+                            'product_2_id',
+                            'product_3_id',
+                        ],
+                        featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
+                    },
+                    {
+                        id: 'sub_2',
+                        product: 'product_1000_id',
+                        eligibleProducts: ['product_1000_id'],
+                        featureList: [
+                            'Feature 1000',
+                            'Feature 2000',
+                            'Feature 3000',
+                        ],
+                        purchasable: false,
+                    },
+                ],
+                webhookSecret: 'webhook_secret',
+                cancelUrl: 'http://cancel_url/',
+                returnUrl: 'http://return_url/',
+                successUrl: 'http://success_url/',
+                tiers: {},
+                defaultFeatures: {
+                    user: allowAllFeatures(),
+                    studio: allowAllFeatures(),
+                },
+            },
+        });
         authMessenger = new MemoryAuthMessenger();
-        recordsStore = new MemoryRecordsStore(authStore);
-
-        config = {
-            subscriptions: [
-                {
-                    id: 'sub_1',
-                    product: 'product_99_id',
-                    eligibleProducts: [
-                        'product_99_id',
-                        'product_1_id',
-                        'product_2_id',
-                        'product_3_id',
-                    ],
-                    featureList: ['Feature 1', 'Feature 2', 'Feature 3'],
-                },
-                {
-                    id: 'sub_2',
-                    product: 'product_1000_id',
-                    eligibleProducts: ['product_1000_id'],
-                    featureList: [
-                        'Feature 1000',
-                        'Feature 2000',
-                        'Feature 3000',
-                    ],
-                    purchasable: false,
-                },
-            ],
-            webhookSecret: 'webhook_secret',
-            cancelUrl: 'http://cancel_url/',
-            returnUrl: 'http://return_url/',
-            successUrl: 'http://success_url/',
-        };
-        auth = new AuthController(authStore, authMessenger, config);
+        auth = new AuthController(store, authMessenger, store);
 
         stripe = stripeMock = {
             publishableKey: 'publishable_key',
@@ -81,6 +86,7 @@ describe('SubscriptionController', () => {
             createCustomer: jest.fn(),
             listActiveSubscriptionsForCustomer: jest.fn(),
             constructWebhookEvent: jest.fn(),
+            getSubscriptionById: jest.fn(),
         };
 
         stripeMock.getProductAndPriceInfo.mockImplementation(async (id) => {
@@ -121,9 +127,9 @@ describe('SubscriptionController', () => {
         controller = new SubscriptionController(
             stripe,
             auth,
-            authStore,
-            recordsStore,
-            config
+            store,
+            store,
+            store
         );
 
         const request = await auth.requestLogin({
@@ -157,10 +163,7 @@ describe('SubscriptionController', () => {
         let user: AuthUser;
 
         beforeEach(async () => {
-            user = await authStore.findUserByAddress(
-                'test@example.com',
-                'email'
-            );
+            user = await store.findUserByAddress('test@example.com', 'email');
             expect(user.stripeCustomerId).toBeFalsy();
         });
 
@@ -201,8 +204,8 @@ describe('SubscriptionController', () => {
             });
 
             it('should only list subscriptions purchasable by users', async () => {
-                config.subscriptions = [
-                    ...config.subscriptions,
+                store.subscriptionConfiguration.subscriptions = [
+                    ...store.subscriptionConfiguration.subscriptions,
                     {
                         id: 'sub_3',
                         eligibleProducts: ['product_99_id'],
@@ -218,14 +221,6 @@ describe('SubscriptionController', () => {
                         featureList: ['Feature 1'],
                     },
                 ];
-
-                controller = new SubscriptionController(
-                    stripe,
-                    auth,
-                    authStore,
-                    recordsStore,
-                    config
-                );
 
                 const result = await controller.getSubscriptionStatus({
                     sessionKey,
@@ -277,11 +272,11 @@ describe('SubscriptionController', () => {
             });
 
             it('should be able list subscriptions when the user has a customer ID', async () => {
-                await authStore.saveUser({
+                await store.saveUser({
                     ...user,
                     stripeCustomerId: 'stripe_customer',
                 });
-                user = await authStore.findUserByAddress(
+                user = await store.findUserByAddress(
                     'test@example.com',
                     'email'
                 );
@@ -328,11 +323,11 @@ describe('SubscriptionController', () => {
             });
 
             it('should be able to list subscriptions that the user has', async () => {
-                await authStore.saveUser({
+                await store.saveUser({
                     ...user,
                     stripeCustomerId: 'stripe_customer',
                 });
-                user = await authStore.findUserByAddress(
+                user = await store.findUserByAddress(
                     'test@example.com',
                     'email'
                 );
@@ -403,11 +398,11 @@ describe('SubscriptionController', () => {
             });
 
             it('should include the feature list for the active subscription', async () => {
-                await authStore.saveUser({
+                await store.saveUser({
                     ...user,
                     stripeCustomerId: 'stripe_customer',
                 });
-                user = await authStore.findUserByAddress(
+                user = await store.findUserByAddress(
                     'test@example.com',
                     'email'
                 );
@@ -575,8 +570,8 @@ describe('SubscriptionController', () => {
                     id: studioId,
                     displayName: 'studio name',
                 };
-                await recordsStore.addStudio(studio);
-                await recordsStore.addStudioAssignment({
+                await store.addStudio(studio);
+                await store.addStudioAssignment({
                     studioId: studioId,
                     userId: user.id,
                     isPrimaryContact: true,
@@ -621,8 +616,8 @@ describe('SubscriptionController', () => {
             });
 
             it('should only list subscriptions purchasable by studios', async () => {
-                config.subscriptions = [
-                    ...config.subscriptions,
+                store.subscriptionConfiguration.subscriptions = [
+                    ...store.subscriptionConfiguration.subscriptions,
                     {
                         id: 'sub_3',
                         eligibleProducts: ['product_99_id'],
@@ -638,14 +633,6 @@ describe('SubscriptionController', () => {
                         featureList: ['Feature 1'],
                     },
                 ];
-
-                controller = new SubscriptionController(
-                    stripe,
-                    auth,
-                    authStore,
-                    recordsStore,
-                    config
-                );
 
                 const result = await controller.getSubscriptionStatus({
                     sessionKey,
@@ -698,11 +685,11 @@ describe('SubscriptionController', () => {
             });
 
             it('should be able list subscriptions when the studio has a customer ID', async () => {
-                await recordsStore.updateStudio({
+                await store.updateStudio({
                     ...studio,
                     stripeCustomerId: 'stripe_customer',
                 });
-                studio = await recordsStore.getStudioById(studioId);
+                studio = await store.getStudioById(studioId);
                 expect(studio.stripeCustomerId).toBe('stripe_customer');
 
                 stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
@@ -747,11 +734,11 @@ describe('SubscriptionController', () => {
             });
 
             it('should be able to list subscriptions that the studio has', async () => {
-                await recordsStore.updateStudio({
+                await store.updateStudio({
                     ...studio,
                     stripeCustomerId: 'stripe_customer',
                 });
-                studio = await recordsStore.getStudioById(studioId);
+                studio = await store.getStudioById(studioId);
                 expect(studio.stripeCustomerId).toBe('stripe_customer');
 
                 stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
@@ -820,11 +807,11 @@ describe('SubscriptionController', () => {
             });
 
             it('should include the feature list for the active subscription', async () => {
-                await recordsStore.updateStudio({
+                await store.updateStudio({
                     ...studio,
                     stripeCustomerId: 'stripe_customer',
                 });
-                studio = await recordsStore.getStudioById(studioId);
+                studio = await store.getStudioById(studioId);
                 expect(studio.stripeCustomerId).toBe('stripe_customer');
 
                 stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
@@ -898,8 +885,8 @@ describe('SubscriptionController', () => {
             });
 
             it('should return a invalid_key result if the user is not an admin', async () => {
-                await recordsStore.removeStudioAssignment(studioId, user.id);
-                await recordsStore.addStudioAssignment({
+                await store.removeStudioAssignment(studioId, user.id);
+                await store.addStudioAssignment({
                     studioId: studioId,
                     userId: user.id,
                     isPrimaryContact: true,
@@ -1007,7 +994,7 @@ describe('SubscriptionController', () => {
             let user: AuthUser;
 
             beforeEach(async () => {
-                user = await authStore.findUserByAddress(
+                user = await store.findUserByAddress(
                     'test@example.com',
                     'email'
                 );
@@ -1025,7 +1012,7 @@ describe('SubscriptionController', () => {
                     url: 'checkout_url',
                 });
 
-                await authStore.saveUser({
+                await store.saveUser({
                     ...user,
                     name: 'test name',
                 });
@@ -1109,46 +1096,46 @@ describe('SubscriptionController', () => {
                         }
                     );
 
-                    controller = new SubscriptionController(
-                        stripe,
-                        auth,
-                        authStore,
-                        recordsStore,
-                        {
-                            subscriptions: [
-                                {
-                                    id: 'sub_1',
-                                    product: 'product_99_id',
-                                    eligibleProducts: [
-                                        'product_99_id',
-                                        'product_1_id',
-                                        'product_2_id',
-                                        'product_3_id',
-                                    ],
-                                    featureList: [
-                                        'Feature 1',
-                                        'Feature 2',
-                                        'Feature 3',
-                                    ],
-                                    defaultSubscription: true,
-                                },
-                                {
-                                    id: 'sub_2',
-                                    product: 'product_100_id',
-                                    eligibleProducts: ['product_100_id'],
-                                    featureList: [
-                                        'Feature 1',
-                                        'Feature 2',
-                                        'Feature 3',
-                                    ],
-                                },
-                            ],
-                            webhookSecret: 'webhook_secret',
-                            cancelUrl: 'http://cancel_url/',
-                            returnUrl: 'http://return_url/',
-                            successUrl: 'http://success_url/',
-                        }
-                    );
+                    store.subscriptionConfiguration = {
+                        subscriptions: [
+                            {
+                                id: 'sub_1',
+                                product: 'product_99_id',
+                                eligibleProducts: [
+                                    'product_99_id',
+                                    'product_1_id',
+                                    'product_2_id',
+                                    'product_3_id',
+                                ],
+                                featureList: [
+                                    'Feature 1',
+                                    'Feature 2',
+                                    'Feature 3',
+                                ],
+                                defaultSubscription: true,
+                            },
+                            {
+                                id: 'sub_2',
+                                product: 'product_100_id',
+                                eligibleProducts: ['product_100_id'],
+                                featureList: [
+                                    'Feature 1',
+                                    'Feature 2',
+                                    'Feature 3',
+                                ],
+                            },
+                        ],
+                        webhookSecret: 'webhook_secret',
+                        cancelUrl: 'http://cancel_url/',
+                        returnUrl: 'http://return_url/',
+                        successUrl: 'http://success_url/',
+
+                        tiers: {},
+                        defaultFeatures: {
+                            user: allowAllFeatures(),
+                            studio: allowAllFeatures(),
+                        },
+                    };
 
                     stripeMock.createCustomer.mockResolvedValueOnce({
                         id: 'stripe_customer',
@@ -1160,7 +1147,7 @@ describe('SubscriptionController', () => {
                         url: 'checkout_url',
                     });
 
-                    await authStore.saveUser({
+                    await store.saveUser({
                         ...user,
                         name: 'test name',
                     });
@@ -1272,7 +1259,7 @@ describe('SubscriptionController', () => {
                     new Error('Should not be hit')
                 );
 
-                await authStore.saveUser({
+                await store.saveUser({
                     ...user,
                     name: 'test name',
                     stripeCustomerId: 'stripe_customer',
@@ -1341,7 +1328,7 @@ describe('SubscriptionController', () => {
                     url: 'checkout_url',
                 });
 
-                await authStore.saveUser({
+                await store.saveUser({
                     ...user,
                     name: 'test name',
                     stripeCustomerId: 'stripe_customer',
@@ -1424,7 +1411,7 @@ describe('SubscriptionController', () => {
                     url: 'checkout_url',
                 });
 
-                await authStore.saveUser({
+                await store.saveUser({
                     ...user,
                     name: 'test name',
                     stripeCustomerId: 'stripe_customer',
@@ -1507,7 +1494,7 @@ describe('SubscriptionController', () => {
                     url: 'checkout_url',
                 });
 
-                await authStore.saveUser({
+                await store.saveUser({
                     ...user,
                     name: 'test name',
                     stripeCustomerId: 'stripe_customer',
@@ -1590,7 +1577,7 @@ describe('SubscriptionController', () => {
                     url: 'checkout_url',
                 });
 
-                await authStore.saveUser({
+                await store.saveUser({
                     ...user,
                     name: 'test name',
                     stripeCustomerId: 'stripe_customer',
@@ -1644,43 +1631,43 @@ describe('SubscriptionController', () => {
                     url: 'checkout_url',
                 });
 
-                await authStore.saveUser({
+                await store.saveUser({
                     ...user,
                     name: 'test name',
                 });
 
-                controller = new SubscriptionController(
-                    stripe,
-                    auth,
-                    authStore,
-                    recordsStore,
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub_1',
-                                product: 'product_99_id',
-                                eligibleProducts: [
-                                    'product_99_id',
-                                    'product_1_id',
-                                    'product_2_id',
-                                    'product_3_id',
-                                ],
-                                featureList: [
-                                    'Feature 1',
-                                    'Feature 2',
-                                    'Feature 3',
-                                ],
-                            },
-                        ],
-                        checkoutConfig: {
-                            mySpecialKey: 123,
+                store.subscriptionConfiguration = {
+                    subscriptions: [
+                        {
+                            id: 'sub_1',
+                            product: 'product_99_id',
+                            eligibleProducts: [
+                                'product_99_id',
+                                'product_1_id',
+                                'product_2_id',
+                                'product_3_id',
+                            ],
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
                         },
-                        webhookSecret: 'webhook_secret',
-                        cancelUrl: 'http://cancel_url/',
-                        returnUrl: 'http://return_url/',
-                        successUrl: 'http://success_url/',
-                    }
-                );
+                    ],
+                    checkoutConfig: {
+                        mySpecialKey: 123,
+                    },
+                    webhookSecret: 'webhook_secret',
+                    cancelUrl: 'http://cancel_url/',
+                    returnUrl: 'http://return_url/',
+                    successUrl: 'http://success_url/',
+
+                    tiers: {},
+                    defaultFeatures: {
+                        user: allowAllFeatures(),
+                        studio: allowAllFeatures(),
+                    },
+                };
 
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
@@ -1763,40 +1750,39 @@ describe('SubscriptionController', () => {
                     new Error('Should not be hit')
                 );
 
-                controller = new SubscriptionController(
-                    stripe,
-                    auth,
-                    authStore,
-                    recordsStore,
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub_1',
-                                product: 'product_99_id',
-                                eligibleProducts: [
-                                    'product_99_id',
-                                    'product_1_id',
-                                    'product_2_id',
-                                    'product_3_id',
-                                ],
-                                featureList: [
-                                    'Feature 1',
-                                    'Feature 2',
-                                    'Feature 3',
-                                ],
-                            },
-                        ],
-                        portalConfig: {
-                            mySpecialKey: 123,
+                store.subscriptionConfiguration = {
+                    subscriptions: [
+                        {
+                            id: 'sub_1',
+                            product: 'product_99_id',
+                            eligibleProducts: [
+                                'product_99_id',
+                                'product_1_id',
+                                'product_2_id',
+                                'product_3_id',
+                            ],
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
                         },
-                        webhookSecret: 'webhook_secret',
-                        cancelUrl: 'http://cancel_url/',
-                        returnUrl: 'http://return_url/',
-                        successUrl: 'http://success_url/',
-                    }
-                );
+                    ],
+                    portalConfig: {
+                        mySpecialKey: 123,
+                    },
+                    webhookSecret: 'webhook_secret',
+                    cancelUrl: 'http://cancel_url/',
+                    returnUrl: 'http://return_url/',
+                    successUrl: 'http://success_url/',
+                    tiers: {},
+                    defaultFeatures: {
+                        user: allowAllFeatures(),
+                        studio: allowAllFeatures(),
+                    },
+                };
 
-                await authStore.saveUser({
+                await store.saveUser({
                     ...user,
                     name: 'test name',
                     stripeCustomerId: 'stripe_customer',
@@ -1866,7 +1852,7 @@ describe('SubscriptionController', () => {
                     new Error('Should not be hit')
                 );
 
-                await authStore.saveUser({
+                await store.saveUser({
                     ...user,
                     name: 'test name',
                     stripeCustomerId: 'stripe_customer',
@@ -1935,7 +1921,7 @@ describe('SubscriptionController', () => {
                     new Error('Should not be hit')
                 );
 
-                await authStore.saveUser({
+                await store.saveUser({
                     ...user,
                     name: 'test name',
                     stripeCustomerId: 'stripe_customer',
@@ -2004,7 +1990,7 @@ describe('SubscriptionController', () => {
                     new Error('Should not be hit')
                 );
 
-                await authStore.saveUser({
+                await store.saveUser({
                     ...user,
                     name: 'test name',
                     stripeCustomerId: 'stripe_customer',
@@ -2073,7 +2059,7 @@ describe('SubscriptionController', () => {
                     new Error('Should not be hit')
                 );
 
-                await authStore.saveUser({
+                await store.saveUser({
                     ...user,
                     name: 'test name',
                     stripeCustomerId: 'stripe_customer',
@@ -2142,7 +2128,7 @@ describe('SubscriptionController', () => {
                     new Error('Should not be hit')
                 );
 
-                await authStore.saveUser({
+                await store.saveUser({
                     ...user,
                     name: 'test name',
                     stripeCustomerId: 'stripe_customer',
@@ -2246,8 +2232,8 @@ describe('SubscriptionController', () => {
                     displayName: 'my studio',
                 };
 
-                await recordsStore.addStudio(studio);
-                await recordsStore.addStudioAssignment({
+                await store.addStudio(studio);
+                await store.addStudioAssignment({
                     studioId,
                     userId,
                     role: 'admin',
@@ -2351,46 +2337,46 @@ describe('SubscriptionController', () => {
                         }
                     );
 
-                    controller = new SubscriptionController(
-                        stripe,
-                        auth,
-                        authStore,
-                        recordsStore,
-                        {
-                            subscriptions: [
-                                {
-                                    id: 'sub_1',
-                                    product: 'product_99_id',
-                                    eligibleProducts: [
-                                        'product_99_id',
-                                        'product_1_id',
-                                        'product_2_id',
-                                        'product_3_id',
-                                    ],
-                                    featureList: [
-                                        'Feature 1',
-                                        'Feature 2',
-                                        'Feature 3',
-                                    ],
-                                    defaultSubscription: true,
-                                },
-                                {
-                                    id: 'sub_2',
-                                    product: 'product_100_id',
-                                    eligibleProducts: ['product_100_id'],
-                                    featureList: [
-                                        'Feature 1',
-                                        'Feature 2',
-                                        'Feature 3',
-                                    ],
-                                },
-                            ],
-                            webhookSecret: 'webhook_secret',
-                            cancelUrl: `http://cancel_url/`,
-                            returnUrl: `http://return_url/`,
-                            successUrl: `http://success_url/`,
-                        }
-                    );
+                    store.subscriptionConfiguration = {
+                        subscriptions: [
+                            {
+                                id: 'sub_1',
+                                product: 'product_99_id',
+                                eligibleProducts: [
+                                    'product_99_id',
+                                    'product_1_id',
+                                    'product_2_id',
+                                    'product_3_id',
+                                ],
+                                featureList: [
+                                    'Feature 1',
+                                    'Feature 2',
+                                    'Feature 3',
+                                ],
+                                defaultSubscription: true,
+                            },
+                            {
+                                id: 'sub_2',
+                                product: 'product_100_id',
+                                eligibleProducts: ['product_100_id'],
+                                featureList: [
+                                    'Feature 1',
+                                    'Feature 2',
+                                    'Feature 3',
+                                ],
+                            },
+                        ],
+                        webhookSecret: 'webhook_secret',
+                        cancelUrl: `http://cancel_url/`,
+                        returnUrl: `http://return_url/`,
+                        successUrl: `http://success_url/`,
+
+                        tiers: {},
+                        defaultFeatures: {
+                            user: allowAllFeatures(),
+                            studio: allowAllFeatures(),
+                        },
+                    };
 
                     stripeMock.createCustomer.mockResolvedValueOnce({
                         id: 'stripe_customer',
@@ -2515,7 +2501,7 @@ describe('SubscriptionController', () => {
                     new Error('Should not be hit')
                 );
 
-                await recordsStore.updateStudio({
+                await store.updateStudio({
                     ...studio,
                     stripeCustomerId: 'stripe_customer',
                 });
@@ -2585,7 +2571,7 @@ describe('SubscriptionController', () => {
                     url: 'checkout_url',
                 });
 
-                await recordsStore.updateStudio({
+                await store.updateStudio({
                     ...studio,
                     stripeCustomerId: 'stripe_customer',
                 });
@@ -2672,7 +2658,7 @@ describe('SubscriptionController', () => {
                     url: 'checkout_url',
                 });
 
-                await recordsStore.updateStudio({
+                await store.updateStudio({
                     ...studio,
                     stripeCustomerId: 'stripe_customer',
                 });
@@ -2759,7 +2745,7 @@ describe('SubscriptionController', () => {
                     url: 'checkout_url',
                 });
 
-                await recordsStore.updateStudio({
+                await store.updateStudio({
                     ...studio,
                     stripeCustomerId: 'stripe_customer',
                 });
@@ -2846,7 +2832,7 @@ describe('SubscriptionController', () => {
                     url: 'checkout_url',
                 });
 
-                await recordsStore.updateStudio({
+                await store.updateStudio({
                     ...studio,
                     stripeCustomerId: 'stripe_customer',
                 });
@@ -2904,38 +2890,38 @@ describe('SubscriptionController', () => {
                     url: 'checkout_url',
                 });
 
-                controller = new SubscriptionController(
-                    stripe,
-                    auth,
-                    authStore,
-                    recordsStore,
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub_1',
-                                product: 'product_99_id',
-                                eligibleProducts: [
-                                    'product_99_id',
-                                    'product_1_id',
-                                    'product_2_id',
-                                    'product_3_id',
-                                ],
-                                featureList: [
-                                    'Feature 1',
-                                    'Feature 2',
-                                    'Feature 3',
-                                ],
-                            },
-                        ],
-                        checkoutConfig: {
-                            mySpecialKey: 123,
+                store.subscriptionConfiguration = {
+                    subscriptions: [
+                        {
+                            id: 'sub_1',
+                            product: 'product_99_id',
+                            eligibleProducts: [
+                                'product_99_id',
+                                'product_1_id',
+                                'product_2_id',
+                                'product_3_id',
+                            ],
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
                         },
-                        webhookSecret: 'webhook_secret',
-                        cancelUrl: 'http://cancel_url/',
-                        returnUrl: 'http://return_url/',
-                        successUrl: 'http://success_url/',
-                    }
-                );
+                    ],
+                    checkoutConfig: {
+                        mySpecialKey: 123,
+                    },
+                    webhookSecret: 'webhook_secret',
+                    cancelUrl: 'http://cancel_url/',
+                    returnUrl: 'http://return_url/',
+                    successUrl: 'http://success_url/',
+
+                    tiers: {},
+                    defaultFeatures: {
+                        user: allowAllFeatures(),
+                        studio: allowAllFeatures(),
+                    },
+                };
 
                 const result = await controller.createManageSubscriptionLink({
                     sessionKey,
@@ -3024,40 +3010,40 @@ describe('SubscriptionController', () => {
                     new Error('Should not be hit')
                 );
 
-                controller = new SubscriptionController(
-                    stripe,
-                    auth,
-                    authStore,
-                    recordsStore,
-                    {
-                        subscriptions: [
-                            {
-                                id: 'sub_1',
-                                product: 'product_99_id',
-                                eligibleProducts: [
-                                    'product_99_id',
-                                    'product_1_id',
-                                    'product_2_id',
-                                    'product_3_id',
-                                ],
-                                featureList: [
-                                    'Feature 1',
-                                    'Feature 2',
-                                    'Feature 3',
-                                ],
-                            },
-                        ],
-                        portalConfig: {
-                            mySpecialKey: 123,
+                store.subscriptionConfiguration = {
+                    subscriptions: [
+                        {
+                            id: 'sub_1',
+                            product: 'product_99_id',
+                            eligibleProducts: [
+                                'product_99_id',
+                                'product_1_id',
+                                'product_2_id',
+                                'product_3_id',
+                            ],
+                            featureList: [
+                                'Feature 1',
+                                'Feature 2',
+                                'Feature 3',
+                            ],
                         },
-                        webhookSecret: 'webhook_secret',
-                        cancelUrl: 'http://cancel_url/',
-                        returnUrl: 'http://return_url/',
-                        successUrl: 'http://success_url/',
-                    }
-                );
+                    ],
+                    portalConfig: {
+                        mySpecialKey: 123,
+                    },
+                    webhookSecret: 'webhook_secret',
+                    cancelUrl: 'http://cancel_url/',
+                    returnUrl: 'http://return_url/',
+                    successUrl: 'http://success_url/',
 
-                await recordsStore.updateStudio({
+                    tiers: {},
+                    defaultFeatures: {
+                        user: allowAllFeatures(),
+                        studio: allowAllFeatures(),
+                    },
+                };
+
+                await store.updateStudio({
                     ...studio,
                     stripeCustomerId: 'stripe_customer',
                 });
@@ -3128,7 +3114,7 @@ describe('SubscriptionController', () => {
                     new Error('Should not be hit')
                 );
 
-                await recordsStore.updateStudio({
+                await store.updateStudio({
                     ...studio,
                     stripeCustomerId: 'stripe_customer',
                 });
@@ -3198,7 +3184,7 @@ describe('SubscriptionController', () => {
                     new Error('Should not be hit')
                 );
 
-                await recordsStore.updateStudio({
+                await store.updateStudio({
                     ...studio,
                     stripeCustomerId: 'stripe_customer',
                 });
@@ -3268,7 +3254,7 @@ describe('SubscriptionController', () => {
                     new Error('Should not be hit')
                 );
 
-                await recordsStore.updateStudio({
+                await store.updateStudio({
                     ...studio,
                     stripeCustomerId: 'stripe_customer',
                 });
@@ -3338,7 +3324,7 @@ describe('SubscriptionController', () => {
                     new Error('Should not be hit')
                 );
 
-                await recordsStore.updateStudio({
+                await store.updateStudio({
                     ...studio,
                     stripeCustomerId: 'stripe_customer',
                 });
@@ -3408,7 +3394,7 @@ describe('SubscriptionController', () => {
                     new Error('Should not be hit')
                 );
 
-                await recordsStore.updateStudio({
+                await store.updateStudio({
                     ...studio,
                     stripeCustomerId: 'stripe_customer',
                 });
@@ -3508,15 +3494,15 @@ describe('SubscriptionController', () => {
             let user: AuthUser;
 
             beforeEach(async () => {
-                user = await authStore.findUserByAddress(
+                user = await store.findUserByAddress(
                     'test@example.com',
                     'email'
                 );
-                await authStore.saveUser({
+                await store.saveUser({
                     ...user,
                     stripeCustomerId: 'customer_id',
                 });
-                user = await authStore.findUserByAddress(
+                user = await store.findUserByAddress(
                     'test@example.com',
                     'email'
                 );
@@ -3524,7 +3510,7 @@ describe('SubscriptionController', () => {
                 expect(user.subscriptionStatus).toBeFalsy();
             });
 
-            const eventTypes = [
+            const subscriptionEventTypes = [
                 ['customer.subscription.created'],
                 ['customer.subscription.updated'],
                 ['customer.subscription.deleted'],
@@ -3542,124 +3528,283 @@ describe('SubscriptionController', () => {
                 ['paused', false] as const,
             ];
 
-            describe.each(eventTypes)('should handle %s events', (type) => {
-                describe.each(statusTypes)('%s', (status, active) => {
-                    beforeEach(async () => {
-                        await authStore.saveUser({
-                            ...user,
-                            subscriptionStatus: 'anything',
+            describe.each(subscriptionEventTypes)(
+                'should handle %s events',
+                (type) => {
+                    describe.each(statusTypes)('%s', (status, active) => {
+                        beforeEach(async () => {
+                            await store.saveUser({
+                                ...user,
+                                subscriptionStatus: 'anything',
+                            });
+                        });
+
+                        it('should handle subscriptions', async () => {
+                            stripeMock.constructWebhookEvent.mockReturnValueOnce(
+                                {
+                                    id: 'event_id',
+                                    object: 'event',
+                                    account: 'account_id',
+                                    api_version: 'api_version',
+                                    created: 123,
+                                    data: {
+                                        object: {
+                                            id: 'subscription',
+                                            status: status,
+                                            customer: 'customer_id',
+                                            items: {
+                                                object: 'list',
+                                                data: [
+                                                    {
+                                                        price: {
+                                                            id: 'price_1',
+                                                            product:
+                                                                'product_1_id',
+                                                        },
+                                                    },
+                                                ],
+                                            },
+                                            current_period_start: 123,
+                                            current_period_end: 456,
+                                        },
+                                    },
+                                    livemode: true,
+                                    pending_webhooks: 1,
+                                    request: {},
+                                    type: type,
+                                }
+                            );
+
+                            const result = await controller.handleStripeWebhook(
+                                {
+                                    requestBody: 'request_body',
+                                    signature: 'request_signature',
+                                }
+                            );
+
+                            expect(result).toEqual({
+                                success: true,
+                            });
+                            expect(
+                                stripeMock.constructWebhookEvent
+                            ).toHaveBeenCalledTimes(1);
+                            expect(
+                                stripeMock.constructWebhookEvent
+                            ).toHaveBeenCalledWith(
+                                'request_body',
+                                'request_signature',
+                                'webhook_secret'
+                            );
+
+                            const user = await store.findUser(userId);
+                            expect(user?.subscriptionStatus).toBe(status);
+                            expect(user?.subscriptionId).toBe('sub_1');
+                            expect(user?.subscriptionInfoId).toBeTruthy();
+                            expect(user?.subscriptionPeriodStartMs).toBe(null);
+                            expect(user?.subscriptionPeriodEndMs).toBe(null);
+
+                            // Should create/update subscription info
+                            const sub = await store.getSubscriptionById(
+                                user?.subscriptionInfoId
+                            );
+                            expect(sub).toEqual({
+                                id: expect.any(String),
+                                stripeCustomerId: 'customer_id',
+                                stripeSubscriptionId: 'subscription',
+                                subscriptionStatus: status,
+                                subscriptionId: 'sub_1',
+                                userId: user?.id,
+                                studioId: null,
+                                currentPeriodStartMs: null,
+                                currentPeriodEndMs: null,
+                            });
+                        });
+
+                        it('should do nothing for products that are not configured', async () => {
+                            stripeMock.constructWebhookEvent.mockReturnValueOnce(
+                                {
+                                    id: 'event_id',
+                                    object: 'event',
+                                    account: 'account_id',
+                                    api_version: 'api_version',
+                                    created: 123,
+                                    data: {
+                                        object: {
+                                            id: 'subscription',
+                                            status: status,
+                                            customer: 'customer_id',
+                                            items: {
+                                                object: 'list',
+                                                data: [
+                                                    {
+                                                        price: {
+                                                            id: 'price_1',
+                                                            product:
+                                                                'wrong_product_id',
+                                                        },
+                                                    },
+                                                ],
+                                            },
+                                        },
+                                    },
+                                    livemode: true,
+                                    pending_webhooks: 1,
+                                    request: {},
+                                    type: type,
+                                }
+                            );
+
+                            const result = await controller.handleStripeWebhook(
+                                {
+                                    requestBody: 'request_body',
+                                    signature: 'request_signature',
+                                }
+                            );
+
+                            expect(result).toEqual({
+                                success: true,
+                            });
+                            expect(
+                                stripeMock.constructWebhookEvent
+                            ).toHaveBeenCalledTimes(1);
+                            expect(
+                                stripeMock.constructWebhookEvent
+                            ).toHaveBeenCalledWith(
+                                'request_body',
+                                'request_signature',
+                                'webhook_secret'
+                            );
+
+                            const user = await store.findUser(userId);
+
+                            // Do nothing
+                            expect(user.subscriptionStatus).toBe('anything');
                         });
                     });
+                }
+            );
 
-                    it('should handle subscriptions', async () => {
-                        stripeMock.constructWebhookEvent.mockReturnValueOnce({
-                            id: 'event_id',
-                            object: 'event',
-                            account: 'account_id',
-                            api_version: 'api_version',
-                            created: 123,
-                            data: {
-                                object: {
-                                    id: 'subscription',
-                                    status: status,
-                                    customer: 'customer_id',
-                                    items: {
-                                        object: 'list',
-                                        data: [
-                                            {
-                                                price: {
-                                                    id: 'price_1',
-                                                    product: 'product_1_id',
-                                                },
+            describe('should handle invoice.paid events', () => {
+                it('should update subscription periods', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'invoice.paid',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'invoiceId',
+                                customer: 'customer_id',
+                                currency: 'usd',
+                                total: 1000,
+                                subtotal: 1000,
+                                tax: 0,
+                                description: 'description',
+                                status: 'paid',
+                                paid: true,
+                                hosted_invoice_url: 'invoiceUrl',
+                                invoice_pdf: 'pdfUrl',
+                                lines: {
+                                    object: 'list',
+                                    data: [
+                                        {
+                                            id: 'line_item_1_id',
+                                            price: {
+                                                id: 'price_1',
+                                                product: 'product_1_id',
                                             },
-                                        ],
-                                    },
+                                        },
+                                    ],
                                 },
+                                subscription: 'sub',
                             },
-                            livemode: true,
-                            pending_webhooks: 1,
-                            request: {},
-                            type: type,
-                        });
-
-                        const result = await controller.handleStripeWebhook({
-                            requestBody: 'request_body',
-                            signature: 'request_signature',
-                        });
-
-                        expect(result).toEqual({
-                            success: true,
-                        });
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledTimes(1);
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledWith(
-                            'request_body',
-                            'request_signature',
-                            'webhook_secret'
-                        );
-
-                        const user = await authStore.findUser(userId);
-                        expect(user.subscriptionStatus).toBe(status);
-                        expect(user.subscriptionId).toBe('sub_1');
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+                    stripeMock.getSubscriptionById.mockResolvedValueOnce({
+                        id: 'sub',
+                        status: 'active',
+                        current_period_start: 456,
+                        current_period_end: 999,
                     });
 
-                    it('should do nothing for products that are not configured', async () => {
-                        stripeMock.constructWebhookEvent.mockReturnValueOnce({
-                            id: 'event_id',
-                            object: 'event',
-                            account: 'account_id',
-                            api_version: 'api_version',
-                            created: 123,
-                            data: {
-                                object: {
-                                    id: 'subscription',
-                                    status: status,
-                                    customer: 'customer_id',
-                                    items: {
-                                        object: 'list',
-                                        data: [
-                                            {
-                                                price: {
-                                                    id: 'price_1',
-                                                    product: 'wrong_product_id',
-                                                },
-                                            },
-                                        ],
-                                    },
-                                },
-                            },
-                            livemode: true,
-                            pending_webhooks: 1,
-                            request: {},
-                            type: type,
-                        });
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
 
-                        const result = await controller.handleStripeWebhook({
-                            requestBody: 'request_body',
-                            signature: 'request_signature',
-                        });
+                    expect(result).toEqual({
+                        success: true,
+                    });
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledTimes(1);
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledWith(
+                        'request_body',
+                        'request_signature',
+                        'webhook_secret'
+                    );
+                    expect(stripeMock.getSubscriptionById).toHaveBeenCalledWith(
+                        'sub'
+                    );
 
-                        expect(result).toEqual({
-                            success: true,
-                        });
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledTimes(1);
-                        expect(
-                            stripeMock.constructWebhookEvent
-                        ).toHaveBeenCalledWith(
-                            'request_body',
-                            'request_signature',
-                            'webhook_secret'
+                    const user = await store.findUser(userId);
+                    expect(user?.subscriptionPeriodStartMs).toBe(456000);
+                    expect(user?.subscriptionPeriodEndMs).toBe(999000);
+
+                    // Should create subscription info
+                    const sub = await store.getSubscriptionById(
+                        user?.subscriptionInfoId
+                    );
+                    expect(sub).toEqual({
+                        id: expect.any(String),
+                        stripeCustomerId: 'customer_id',
+                        stripeSubscriptionId: 'sub',
+                        subscriptionStatus: 'active',
+                        subscriptionId: 'sub_1',
+                        userId: user?.id,
+                        studioId: null,
+                        currentPeriodStartMs: 456000,
+                        currentPeriodEndMs: 999000,
+                    });
+
+                    const subPeriods =
+                        await store.listSubscriptionPeriodsBySubscriptionId(
+                            sub.id
                         );
+                    expect(subPeriods).toEqual([
+                        {
+                            id: expect.any(String),
+                            subscriptionId: sub.id,
+                            periodStartMs: 456000,
+                            periodEndMs: 999000,
+                            invoiceId: expect.any(String),
+                        },
+                    ]);
 
-                        const user = await authStore.findUser(userId);
-
-                        // Do nothing
-                        expect(user.subscriptionStatus).toBe('anything');
+                    const invoice = await store.getInvoiceById(
+                        subPeriods[0].invoiceId
+                    );
+                    expect(invoice).toEqual({
+                        id: expect.any(String),
+                        stripeInvoiceId: 'invoiceId',
+                        stripeHostedInvoiceUrl: 'invoiceUrl',
+                        stripeInvoicePdfUrl: 'pdfUrl',
+                        periodId: subPeriods[0].id,
+                        subscriptionId: sub.id,
+                        description: 'description',
+                        status: 'paid',
+                        paid: true,
+                        currency: 'usd',
+                        total: 1000,
+                        subtotal: 1000,
+                        tax: 0,
                     });
                 });
             });
@@ -3677,8 +3822,8 @@ describe('SubscriptionController', () => {
                     stripeCustomerId: 'customer_id',
                 };
 
-                await recordsStore.addStudio(studio);
-                await recordsStore.addStudioAssignment({
+                await store.addStudio(studio);
+                await store.addStudioAssignment({
                     userId,
                     studioId,
                     isPrimaryContact: true,
@@ -3707,7 +3852,7 @@ describe('SubscriptionController', () => {
             describe.each(eventTypes)('should handle %s events', (type) => {
                 describe.each(statusTypes)('%s', (status, active) => {
                     beforeEach(async () => {
-                        await recordsStore.updateStudio({
+                        await store.updateStudio({
                             ...studio,
                             subscriptionStatus: 'anything',
                         });
@@ -3736,6 +3881,8 @@ describe('SubscriptionController', () => {
                                             },
                                         ],
                                     },
+                                    current_period_start: 123,
+                                    current_period_end: 456,
                                 },
                             },
                             livemode: true,
@@ -3763,11 +3910,28 @@ describe('SubscriptionController', () => {
                             'webhook_secret'
                         );
 
-                        const studio = await recordsStore.getStudioById(
-                            studioId
+                        const studio = await store.getStudioById(studioId);
+                        expect(studio?.subscriptionStatus).toBe(status);
+                        expect(studio?.subscriptionId).toBe('sub_1');
+                        expect(studio?.subscriptionInfoId).toBeTruthy();
+                        expect(studio?.subscriptionPeriodStartMs).toBe(null);
+                        expect(studio?.subscriptionPeriodEndMs).toBe(null);
+
+                        // Should create/update subscription info
+                        const sub = await store.getSubscriptionById(
+                            studio?.subscriptionInfoId
                         );
-                        expect(studio.subscriptionStatus).toBe(status);
-                        expect(studio.subscriptionId).toBe('sub_1');
+                        expect(sub).toEqual({
+                            id: expect.any(String),
+                            stripeCustomerId: 'customer_id',
+                            stripeSubscriptionId: 'subscription',
+                            subscriptionStatus: status,
+                            subscriptionId: 'sub_1',
+                            userId: null,
+                            studioId: studio?.id,
+                            currentPeriodStartMs: null,
+                            currentPeriodEndMs: null,
+                        });
                     });
 
                     it('should do nothing for products that are not configured', async () => {
@@ -3820,13 +3984,84 @@ describe('SubscriptionController', () => {
                             'webhook_secret'
                         );
 
-                        const studio = await recordsStore.getStudioById(
-                            studioId
-                        );
+                        const studio = await store.getStudioById(studioId);
 
                         // Do nothing
                         expect(studio.subscriptionStatus).toBe('anything');
                     });
+                });
+            });
+
+            describe('should handle invoice.paid events', () => {
+                it('should update subscription periods', async () => {
+                    stripeMock.constructWebhookEvent.mockReturnValueOnce({
+                        id: 'event_id',
+                        type: 'invoice.paid',
+                        object: 'event',
+                        account: 'account_id',
+                        api_version: 'api_version',
+                        created: 123,
+                        data: {
+                            object: {
+                                id: 'invoiceId',
+                                customer: 'customer_id',
+                                currency: 'usd',
+                                total: 1000,
+                                subtotal: 1000,
+                                tax: 0,
+                                description: 'description',
+                                status: 'paid',
+                                paid: true,
+                                hosted_invoice_url: 'invoiceUrl',
+                                invoice_pdf: 'pdfUrl',
+                                lines: {
+                                    object: 'list',
+                                    data: [
+                                        {
+                                            id: 'line_item_1_id',
+                                            price: {
+                                                id: 'price_1',
+                                                product: 'product_1_id',
+                                            },
+                                        },
+                                    ],
+                                },
+                                subscription: 'sub',
+                            },
+                        },
+                        livemode: true,
+                        pending_webhooks: 1,
+                        request: {},
+                    });
+                    stripeMock.getSubscriptionById.mockResolvedValueOnce({
+                        id: 'sub',
+                        status: 'active',
+                        current_period_start: 456,
+                        current_period_end: 999,
+                    });
+
+                    const result = await controller.handleStripeWebhook({
+                        requestBody: 'request_body',
+                        signature: 'request_signature',
+                    });
+
+                    expect(result).toEqual({
+                        success: true,
+                    });
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledTimes(1);
+                    expect(
+                        stripeMock.constructWebhookEvent
+                    ).toHaveBeenCalledWith(
+                        'request_body',
+                        'request_signature',
+                        'webhook_secret'
+                    );
+
+                    const studio = await store.getStudioById(studioId);
+                    expect(studio?.subscriptionPeriodStartMs).toBe(456000);
+                    expect(studio?.subscriptionPeriodEndMs).toBe(999000);
                 });
             });
         });

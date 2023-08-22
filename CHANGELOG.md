@@ -2,10 +2,12 @@
 
 ## V3.2.4
 
-#### Date: 8/14/2023
+#### Date: 8/22/2023
 
 ### :rocket: Improvements
 
+-   Added `formDepthWrite` tag.
+-   Added `formDepthTest` tag.
 -   Added the ability to use `Ctrl+B` to automatically focus the last visisted tag.
 -   Added a "Done" button to the `os.showInput()` modal.
 -   Added the ability to create Studios.

@@ -11,16 +11,23 @@ import {
     ValidatePublicRecordKeyFailure,
     ValidatePublicRecordKeySuccess,
 } from './RecordsController';
-import { MemoryRecordsStore } from './MemoryRecordsStore';
 import {
     hashHighEntropyPasswordWithSalt,
     hashPassword,
     hashPasswordWithSalt,
 } from '@casual-simulation/crypto';
-import { MemoryAuthStore } from './MemoryAuthStore';
 import { randomBytes } from 'tweetnacl';
 import { fromByteArray } from 'base64-js';
 import { v4 as uuid } from 'uuid';
+import { ConfigurationStore } from './ConfigurationStore';
+import { createTestSubConfiguration } from './TestUtils';
+import { merge } from 'lodash';
+import {
+    FeaturesConfiguration,
+    SubscriptionConfiguration,
+    allowAllFeatures,
+} from './SubscriptionConfiguration';
+import { MemoryStore } from './MemoryStore';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -30,13 +37,19 @@ console.log = jest.fn();
 
 describe('RecordsController', () => {
     let manager: RecordsController;
-    let store: MemoryRecordsStore;
-    let auth: MemoryAuthStore;
+    let store: MemoryStore;
 
     beforeEach(() => {
-        auth = new MemoryAuthStore();
-        store = new MemoryRecordsStore(auth);
-        manager = new RecordsController(store, auth);
+        store = new MemoryStore({
+            subscriptions: createTestSubConfiguration(),
+        });
+
+        manager = new RecordsController({
+            store,
+            auth: store,
+            metrics: store,
+            config: store,
+        });
     });
 
     describe('createPublicRecordKey()', () => {
@@ -108,7 +121,7 @@ describe('RecordsController', () => {
         });
 
         it('should be able to add a key to an existing record if the user is an admin in the studio', async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
@@ -163,7 +176,7 @@ describe('RecordsController', () => {
         });
 
         it('should not be able to add a key to an existing record if the user is not an admin in the studio', async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
@@ -200,7 +213,7 @@ describe('RecordsController', () => {
         });
 
         it('not issue a key if the record name matches a different user ID', async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 email: 'test@example.com',
                 phoneNumber: null,
@@ -275,7 +288,7 @@ describe('RecordsController', () => {
         });
 
         it('should be able to issue a key if the record name matches a studio ID but the record was created by a different user', async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
@@ -1292,14 +1305,14 @@ describe('RecordsController', () => {
         });
 
         it('should include info about the record studio', async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 email: 'test@example.com',
                 phoneNumber: null,
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
             });
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'otherUserId',
                 email: 'other@example.com',
                 phoneNumber: null,
@@ -1401,7 +1414,7 @@ describe('RecordsController', () => {
         });
 
         it('should create the record if it doesnt exist and the name matches a studio that the user is a member of', async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 email: 'test@example.com',
                 phoneNumber: null,
@@ -1482,7 +1495,7 @@ describe('RecordsController', () => {
         });
 
         it('should update the record if the name matches a studio ID but the owner is different', async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 email: 'test@example.com',
                 phoneNumber: null,
@@ -1551,6 +1564,257 @@ describe('RecordsController', () => {
                 errorCode: 'record_not_found',
                 errorMessage: 'Record not found.',
             });
+        });
+
+        it('should return an error if the record needs to be created and records are not allowed for the user', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                records: {
+                                    allowed: false,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.saveUser({
+                id: 'userId',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                email: 'test@example.com',
+                phoneNumber: null,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = await manager.validateRecordName('userId', 'userId');
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'Records are not allowed for this subscription.',
+            });
+
+            const records = await store.listRecordsByOwnerId('userId');
+
+            expect(records).toEqual([]);
+        });
+
+        it('should return an error if the record needs to be updated and records are not allowed for the user', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                records: {
+                                    allowed: false,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.saveUser({
+                id: 'userId',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await store.addRecord({
+                name: 'userId',
+                ownerId: 'otherUserId',
+                studioId: null,
+                secretHashes: [],
+                secretSalt: 'salt',
+            });
+
+            const result = await manager.validateRecordName('userId', 'userId');
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'Records are not allowed for this subscription.',
+            });
+
+            const userRecords = await store.listRecordsByOwnerId('userId');
+            expect(userRecords).toEqual([]);
+
+            const otherUserRecords = await store.listRecordsByOwnerId(
+                'otherUserId'
+            );
+            expect(otherUserRecords).toEqual([
+                {
+                    name: 'userId',
+                    ownerId: 'otherUserId',
+                    studioId: null,
+                },
+            ]);
+        });
+
+        it('should return an error if the record needs to be created and records are not allowed for the studio', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                records: {
+                                    allowed: false,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.saveUser({
+                id: 'userId',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'myStudio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'userId',
+                isPrimaryContact: false,
+                role: 'member',
+            });
+
+            const result = await manager.validateRecordName(
+                'studioId',
+                'userId'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'Records are not allowed for this subscription.',
+            });
+
+            const studioRecords = await store.listRecordsByStudioId('studioId');
+            expect(studioRecords).toEqual([]);
+        });
+
+        it('should return an error if the record needs to be updated and records are not allowed for the studio', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                records: {
+                                    allowed: false,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.saveUser({
+                id: 'userId',
+                email: 'test@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'myStudio',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'userId',
+                isPrimaryContact: false,
+                role: 'member',
+            });
+
+            await store.addRecord({
+                name: 'studioId',
+                ownerId: 'otherUserId',
+                studioId: null,
+                secretHashes: [],
+                secretSalt: 'salt',
+            });
+
+            const result = await manager.validateRecordName(
+                'studioId',
+                'userId'
+            );
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'Records are not allowed for this subscription.',
+            });
+
+            const studioRecords = await store.listRecordsByStudioId('studioId');
+            expect(studioRecords).toEqual([]);
+
+            const userRecords = await store.listRecordsByOwnerId('otherUserId');
+            expect(userRecords).toEqual([
+                {
+                    name: 'studioId',
+                    ownerId: 'otherUserId',
+                    studioId: null,
+                },
+            ]);
         });
     });
 
@@ -1629,7 +1893,7 @@ describe('RecordsController', () => {
 
     describe('listStudioRecords()', () => {
         beforeEach(async () => {
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId',
                 email: 'test@example.com',
                 phoneNumber: null,
@@ -1724,7 +1988,7 @@ describe('RecordsController', () => {
         });
 
         it('should assign the given user as an owner', async () => {
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId',
                 email: 'test@example.com',
                 name: 'test user',
@@ -1757,7 +2021,7 @@ describe('RecordsController', () => {
 
     describe('listStudios()', () => {
         beforeEach(async () => {
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId',
                 name: 'test user',
                 email: 'test@example.com',
@@ -1823,7 +2087,7 @@ describe('RecordsController', () => {
         beforeEach(async () => {
             studioId = 'studioId';
 
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId',
                 name: 'test user',
                 email: 'test@example.com',
@@ -1832,7 +2096,7 @@ describe('RecordsController', () => {
                 currentLoginRequestId: null,
             });
 
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId2',
                 name: 'test user 2',
                 email: 'test2@example.com',
@@ -1841,7 +2105,7 @@ describe('RecordsController', () => {
                 currentLoginRequestId: null,
             });
 
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId3',
                 name: 'test user 3',
                 email: null,
@@ -1980,7 +2244,7 @@ describe('RecordsController', () => {
         beforeEach(async () => {
             studioId = 'studioId';
 
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId',
                 name: 'test user',
                 email: 'test@example.com',
@@ -1989,7 +2253,7 @@ describe('RecordsController', () => {
                 currentLoginRequestId: null,
             });
 
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId2',
                 name: 'test user 2',
                 email: 'test2@example.com',
@@ -1998,7 +2262,7 @@ describe('RecordsController', () => {
                 currentLoginRequestId: null,
             });
 
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId3',
                 name: 'test user 3',
                 email: null,
@@ -2219,7 +2483,7 @@ describe('RecordsController', () => {
         beforeEach(async () => {
             studioId = 'studioId';
 
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId',
                 name: 'test user',
                 email: 'test@example.com',
@@ -2228,7 +2492,7 @@ describe('RecordsController', () => {
                 currentLoginRequestId: null,
             });
 
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId2',
                 name: 'test user 2',
                 email: 'test2@example.com',
@@ -2237,7 +2501,7 @@ describe('RecordsController', () => {
                 currentLoginRequestId: null,
             });
 
-            await auth.saveNewUser({
+            await store.saveNewUser({
                 id: 'userId3',
                 name: 'test user 3',
                 email: null,
@@ -2349,7 +2613,7 @@ describe('RecordsController', () => {
 
     describe('createRecord()', () => {
         beforeEach(async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 email: 'test@example.com',
                 phoneNumber: null,
@@ -2391,6 +2655,28 @@ describe('RecordsController', () => {
 
             const result = await manager.createRecord({
                 recordName: 'myRecord',
+                userId: 'userId',
+                ownerId: 'userId',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'record_already_exists',
+                errorMessage: 'A record with that name already exists.',
+            });
+        });
+
+        it('should not create the record the name matches another user ID', async () => {
+            await store.saveUser({
+                id: 'newUserId',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                email: 'email@example.com',
+                phoneNumber: null,
+            });
+
+            const result = await manager.createRecord({
+                recordName: 'newUserId',
                 userId: 'userId',
                 ownerId: 'userId',
             });
@@ -2511,7 +2797,7 @@ describe('RecordsController', () => {
         });
 
         it('should fix records to be owned by the studio if the record name is the same as a studio ID', async () => {
-            await auth.saveUser({
+            await store.saveUser({
                 id: 'userId',
                 allSessionRevokeTimeMs: null,
                 currentLoginRequestId: null,
@@ -2555,6 +2841,407 @@ describe('RecordsController', () => {
                 secretSalt: expect.any(String),
             });
             expect(record.secretSalt).not.toBe('test');
+        });
+
+        it('should return an error if records are not allowed for users', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                records: {
+                                    allowed: false,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.saveUser({
+                id: 'userId',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                email: 'test@example.com',
+                phoneNumber: null,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            const result = await manager.createRecord({
+                recordName: 'myRecord',
+                userId: 'userId',
+                ownerId: 'userId',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'Records are not allowed for this subscription.',
+            });
+
+            const records = await store.listRecordsByOwnerId('userId');
+
+            expect(records).toEqual([]);
+        });
+
+        it('should return an error if the user would exceed their record limit', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                records: {
+                                    maxRecords: 1,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.saveUser({
+                id: 'userId',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                email: 'test@example.com',
+                phoneNumber: null,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await store.addRecord({
+                name: 'record1',
+                ownerId: 'userId',
+                secretHashes: [],
+                secretSalt: 'salt',
+                studioId: null,
+            });
+
+            const result = await manager.createRecord({
+                recordName: 'myRecord',
+                userId: 'userId',
+                ownerId: 'userId',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage: 'This subscription has hit its record limit.',
+            });
+
+            const records = await store.listRecordsByOwnerId('userId');
+
+            expect(records).toEqual([
+                {
+                    name: 'record1',
+                    ownerId: 'userId',
+                    studioId: null,
+                },
+            ]);
+        });
+
+        it('should return an error if the user would exceed their record limit even when creating a record that matches its user ID', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                records: {
+                                    maxRecords: 1,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.saveUser({
+                id: 'userId',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                email: 'test@example.com',
+                phoneNumber: null,
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+
+            await store.addRecord({
+                name: 'record1',
+                secretHashes: [],
+                secretSalt: 'salt',
+                ownerId: 'userId',
+                studioId: null,
+            });
+
+            const result = await manager.createRecord({
+                recordName: 'userId',
+                userId: 'userId',
+                ownerId: 'userId',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage: 'This subscription has hit its record limit.',
+            });
+
+            const records = await store.listRecordsByOwnerId('userId');
+
+            expect(records).toEqual([
+                {
+                    name: 'record1',
+                    ownerId: 'userId',
+                    studioId: null,
+                },
+            ]);
+        });
+
+        it('should return an error if records are not allowed for studios', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                records: {
+                                    allowed: false,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'name',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            await store.saveUser({
+                id: 'userId',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                email: 'test@example.com',
+                phoneNumber: null,
+            });
+
+            const result = await manager.createRecord({
+                recordName: 'myRecord',
+                userId: 'userId',
+                studioId: 'studioId',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'not_authorized',
+                errorMessage: 'Records are not allowed for this subscription.',
+            });
+
+            const records = await store.listRecordsByStudioId('studioId');
+
+            expect(records).toEqual([]);
+        });
+
+        it('should return an error if the studio would exceed their record limit', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                records: {
+                                    maxRecords: 1,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'name',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            await store.saveUser({
+                id: 'userId',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                email: 'test@example.com',
+                phoneNumber: null,
+            });
+
+            await store.addRecord({
+                name: 'record1',
+                secretHashes: [],
+                secretSalt: 'salt',
+                ownerId: null,
+                studioId: 'studioId',
+            });
+
+            const result = await manager.createRecord({
+                recordName: 'myRecord',
+                userId: 'userId',
+                studioId: 'studioId',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage: 'This subscription has hit its record limit.',
+            });
+
+            const records = await store.listRecordsByStudioId('studioId');
+
+            expect(records).toEqual([
+                {
+                    name: 'record1',
+                    ownerId: null,
+                    studioId: 'studioId',
+                },
+            ]);
+        });
+
+        it('should return an error if the studio would exceed their record limit even when creating a record that matches its studioId', async () => {
+            store.subscriptionConfiguration = merge(
+                createTestSubConfiguration(),
+                {
+                    subscriptions: [
+                        {
+                            id: 'sub1',
+                            eligibleProducts: [],
+                            product: '',
+                            featureList: [],
+                            tier: 'tier1',
+                        },
+                    ],
+                    tiers: {
+                        tier1: {
+                            features: merge(allowAllFeatures(), {
+                                records: {
+                                    maxRecords: 1,
+                                },
+                            } as Partial<FeaturesConfiguration>),
+                        },
+                    },
+                } as Partial<SubscriptionConfiguration>
+            );
+
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'name',
+                subscriptionId: 'sub1',
+                subscriptionStatus: 'active',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: 'userId',
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            await store.saveUser({
+                id: 'userId',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+                email: 'test@example.com',
+                phoneNumber: null,
+            });
+
+            await store.addRecord({
+                name: 'record1',
+                secretHashes: [],
+                secretSalt: 'salt',
+                ownerId: null,
+                studioId: 'studioId',
+            });
+
+            const result = await manager.createRecord({
+                recordName: 'studioId',
+                userId: 'userId',
+                studioId: 'studioId',
+            });
+
+            expect(result).toEqual({
+                success: false,
+                errorCode: 'subscription_limit_reached',
+                errorMessage: 'This subscription has hit its record limit.',
+            });
+
+            const records = await store.listRecordsByStudioId('studioId');
+
+            expect(records).toEqual([
+                {
+                    name: 'record1',
+                    ownerId: null,
+                    studioId: 'studioId',
+                },
+            ]);
         });
     });
 });
