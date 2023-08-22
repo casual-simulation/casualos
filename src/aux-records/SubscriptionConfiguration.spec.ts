@@ -5,7 +5,7 @@ import {
 } from './SubscriptionConfiguration';
 
 describe('getSubscriptionFeatures()', () => {
-    const config: SubscriptionConfiguration = {
+    let config: SubscriptionConfiguration = {
         cancelUrl: 'url',
         returnUrl: 'url',
         successUrl: 'url',
@@ -102,7 +102,106 @@ describe('getSubscriptionFeatures()', () => {
         webhookSecret: 'secret',
     };
 
-    it('should allow all features when given a null config', () => {
+    beforeEach(() => {
+        config = {
+            cancelUrl: 'url',
+            returnUrl: 'url',
+            successUrl: 'url',
+            subscriptions: [
+                {
+                    id: 'subId',
+                    tier: 'beta',
+                    eligibleProducts: [],
+                    featureList: [],
+                    product: '',
+                },
+            ],
+            tiers: {
+                beta: {
+                    features: {
+                        data: {
+                            allowed: true,
+                        },
+                        events: {
+                            allowed: true,
+                        },
+                        files: {
+                            allowed: true,
+                        },
+                        records: {
+                            allowed: true,
+                        },
+                        ai: {
+                            chat: {
+                                allowed: false,
+                            },
+                            images: {
+                                allowed: false,
+                            },
+                            skyboxes: {
+                                allowed: false,
+                            },
+                        },
+                    },
+                },
+            },
+            defaultFeatures: {
+                studio: {
+                    data: {
+                        allowed: true,
+                    },
+                    events: {
+                        allowed: true,
+                    },
+                    files: {
+                        allowed: true,
+                    },
+                    records: {
+                        allowed: true,
+                    },
+                    ai: {
+                        chat: {
+                            allowed: false,
+                        },
+                        images: {
+                            allowed: false,
+                        },
+                        skyboxes: {
+                            allowed: false,
+                        },
+                    },
+                },
+                user: {
+                    data: {
+                        allowed: true,
+                    },
+                    events: {
+                        allowed: true,
+                    },
+                    files: {
+                        allowed: true,
+                    },
+                    records: {
+                        allowed: true,
+                    },
+                    ai: {
+                        chat: {
+                            allowed: false,
+                        },
+                        images: {
+                            allowed: false,
+                        },
+                        skyboxes: {
+                            allowed: false,
+                        },
+                    },
+                },
+            },
+            webhookSecret: 'secret',
+        };
+    });
+
+    it('should allow all but AI features when given a null config', () => {
         const features = getSubscriptionFeatures(
             null,
             'active',
@@ -143,6 +242,18 @@ describe('getSubscriptionFeatures()', () => {
         );
 
         expect(features === config.defaultFeatures.studio).toBe(true);
+    });
+
+    it('should allow all features when no default features are provided', () => {
+        delete (config as any).defaultFeatures;
+        const features = getSubscriptionFeatures(
+            config,
+            'active',
+            'missing',
+            'studio'
+        );
+
+        expect(features).toEqual(allowAllFeatures());
     });
 
     const statusTypes = [
@@ -202,5 +313,11 @@ describe('getSubscriptionFeatures()', () => {
                 expect(features === config.defaultFeatures.studio).toBe(true);
             });
         }
+    });
+});
+
+describe('allowAllFeatures()', () => {
+    it('should match the snapshot', () => {
+        expect(allowAllFeatures()).toMatchSnapshot();
     });
 });
