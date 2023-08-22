@@ -18,6 +18,16 @@ import {
 import { cleanupObject, getMarkersOrDefault } from './Utils';
 import { without } from 'lodash';
 import { PUBLIC_READ_MARKER } from './PolicyPermissions';
+import { MetricsStore } from './MetricsStore';
+import { ConfigurationStore } from './ConfigurationStore';
+import { getSubscriptionFeatures } from './SubscriptionConfiguration';
+
+export interface EventRecordsConfiguration {
+    policies: PolicyController;
+    store: EventRecordsStore;
+    metrics: MetricsStore;
+    config: ConfigurationStore;
+}
 
 /**
  * Defines a class that is able to manage event (count) records.
@@ -26,15 +36,18 @@ export class EventRecordsController {
     private _policies: PolicyController;
     // private _manager: RecordsController;
     private _store: EventRecordsStore;
+    private _metrics: MetricsStore;
+    private _config: ConfigurationStore;
 
     /**
      * Creates a DataRecordsController.
-     * @param policies The controller that should be used to validate policies.
-     * @param store The store that should be used to save data.
+     * @param config The configuration to use.
      */
-    constructor(policies: PolicyController, store: EventRecordsStore) {
-        this._policies = policies;
-        this._store = store;
+    constructor(config: EventRecordsConfiguration) {
+        this._policies = config.policies;
+        this._store = config.store;
+        this._metrics = config.metrics;
+        this._config = config.config;
     }
 
     /**
@@ -102,6 +115,27 @@ export class EventRecordsController {
                     errorCode: 'not_logged_in',
                     errorMessage:
                         'The user must be logged in in order to record events.',
+                };
+            }
+
+            const metricsResult =
+                await this._metrics.getSubscriptionEventMetricsByRecordName(
+                    recordName
+                );
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getSubscriptionFeatures(
+                config,
+                metricsResult.subscriptionStatus,
+                metricsResult.subscriptionId,
+                metricsResult.ownerId ? 'user' : 'studio'
+            );
+
+            if (!features.events.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit the recording of events.',
                 };
             }
 
@@ -255,6 +289,27 @@ export class EventRecordsController {
 
             if (authorizeResult.allowed === false) {
                 return returnAuthorizationResult(authorizeResult);
+            }
+
+            const metricsResult =
+                await this._metrics.getSubscriptionEventMetricsByRecordName(
+                    recordName
+                );
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getSubscriptionFeatures(
+                config,
+                metricsResult.subscriptionStatus,
+                metricsResult.subscriptionId,
+                metricsResult.ownerId ? 'user' : 'studio'
+            );
+
+            if (!features.events.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit the recording of events.',
+                };
             }
 
             const update = await this._store.updateEvent(

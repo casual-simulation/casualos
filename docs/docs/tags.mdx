@@ -43,7 +43,7 @@ CasualOS has many tags.
 
 ## Tag types
 
-Tags are peices of data that are contained in bots. They are used to describe all sorts of properties about a bot, including how the bot looks, where it is visible, and what it does.
+Tags are pieces of data that are contained in bots. They are used to describe all sorts of properties about a bot, including how the bot looks, where it is visible, and what it does.
 
 Each tag is made up of two parts: a name and a value.
 
@@ -1026,6 +1026,36 @@ Higher values mean the bot will be rendered first, and lower values means the bo
   <PossibleValue value='Any Number'>
     Use the given render ordering. Bots are rendered from the highest value to the lowest value.
   </PossibleValue>
+</PossibleValuesTable>
+
+### `formDepthTest`
+
+Whether depth testing is enabled for this bot in the grid portals.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    Disable depth testing.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formDepthWrite`
+
+Whether depth writing is enabled for this bot in the grid portals.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    Disable depth writing.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `gltfVersion`
@@ -3508,16 +3538,6 @@ On deployments that do not support subscriptions, this is always `true`.
 ### `subscriptionTier`
 
 The subscription tier that is currently active for the user. It is a string containing the feature level that should be active for the user.
-
-### `openAiKey`
-
-The OpenAI API Key that the user has configured in their profile.
-
-It has the following format:
-
-```
-vAI1.{base64OfKey}
-```
 
 ## Hidden Tags
 

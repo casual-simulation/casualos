@@ -1,79 +1,82 @@
-import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
-import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
-    calculateBotValue,
-    getBotShape,
+    BotScaleMode,
     BotShape,
-    getBotSubShape,
     BotSubShape,
+    LocalActions,
+    StartFormAnimationAction,
+    calculateBooleanTagValue,
+    calculateBotValue,
     calculateNumericalTagValue,
+    calculateStringTagValue,
+    getBotScaleMode,
+    getBotShape,
+    getBotSubShape,
     hasValue,
     isBotPointable,
-    LocalActions,
-    BotScaleMode,
-    getBotScaleMode,
-    calculateStringTagValue,
-    StartFormAnimationAction,
 } from '@casual-simulation/aux-common';
+import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import {
-    Mesh,
-    Group,
-    Vector3,
-    Box3,
-    Object3D,
-    AnimationMixer,
     AnimationAction,
-    MathUtils as ThreeMath,
-    LoopRepeat,
-    LoopOnce,
+    AnimationMixer,
+    Box3,
     Color,
+    Group,
+    LoopOnce,
+    LoopRepeat,
+    Mesh,
+    Object3D,
+    MathUtils as ThreeMath,
+    Vector3,
 } from '@casual-simulation/three';
+import { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
+import { sortBy } from 'lodash';
+import { SubscriptionLike } from 'rxjs';
+import HelixUrl from '../../public/meshes/dna_form.glb';
+import EggUrl from '../../public/meshes/egg.glb';
+import { AuxBot3D } from '../AuxBot3D';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { getGLTFPool } from '../GLTFHelpers';
+import { Game } from '../Game';
+import { GameObject } from '../GameObject';
+import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
+import { LineSegments } from '../LineSegments';
+import { createCubeStroke } from '../MeshUtils';
 import {
+    DEFAULT_COLOR,
+    DEFAULT_OPACITY,
+    DEFAULT_TRANSPARENT,
+    baseAuxMeshMaterial,
+    buildSRGBColor,
+    calculateScale,
+    createCircle,
     createCube,
-    isTransparent,
-    disposeMesh,
     createSkybox,
     createSphere,
     createSprite,
     disposeGroup,
+    disposeMesh,
     disposeObject3D,
-    setColor,
-    buildSRGBColor,
-    calculateScale,
-    baseAuxMeshMaterial,
-    createCircle,
-    DEFAULT_COLOR,
-    DEFAULT_OPACITY,
-    DEFAULT_TRANSPARENT,
+    isTransparent,
     registerMaterial,
+    setColor,
+    setDepthTest,
+    setDepthWrite,
     setOpacity,
 } from '../SceneUtils';
-import { createCubeStroke } from '../MeshUtils';
-import { LineSegments } from '../LineSegments';
-import { IMeshDecorator } from './IMeshDecorator';
-import { ArgEvent } from '@casual-simulation/aux-common/Events';
-import { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
-import { getGLTFPool } from '../GLTFHelpers';
-import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
-import { Game } from '../Game';
-import { GameObject } from '../GameObject';
 import { FrustumHelper } from '../helpers/FrustumHelper';
-import HelixUrl from '../../public/meshes/dna_form.glb';
-import EggUrl from '../../public/meshes/egg.glb';
 import { Axial, HexMesh } from '../hex';
-import { sortBy } from 'lodash';
-import { SubscriptionLike } from 'rxjs';
+import { IMeshDecorator } from './IMeshDecorator';
 // import { MeshLineMaterial } from 'three.meshline';
 import { LineMaterial } from '@casual-simulation/three/examples/jsm/lines/LineMaterial';
 import { Arrow3D } from '../Arrow3D';
 
+import { Block, Keyboard, update as updateMeshUI } from 'three-mesh-ui';
 import FontJSON from 'three-mesh-ui/examples/assets/Roboto-msdf.json';
 import FontImage from 'three-mesh-ui/examples/assets/Roboto-msdf.png';
 import Backspace from 'three-mesh-ui/examples/assets/backspace.png';
 import Enter from 'three-mesh-ui/examples/assets/enter.png';
 import Shift from 'three-mesh-ui/examples/assets/shift.png';
-import { Keyboard, Block, update as updateMeshUI } from 'three-mesh-ui';
 import { AnimationMixerHandle } from '../AnimationHelper';
 
 export const gltfPool = getGLTFPool('main');
@@ -218,6 +221,8 @@ export class BotShapeDecorator
         this._updateRenderOrder(calc);
         this._updateAnimation(animation);
         this._updateAspectRatio(aspectRatio);
+        this._updateDepth(calc);
+        this._updateDepthWrite(calc);
 
         if (this._iframe) {
             const gridScale = this.bot3D.gridScale;
@@ -550,6 +555,25 @@ export class BotShapeDecorator
         const color = calculateBotValue(calc, this.bot3D.bot, 'auxColor');
         this._setColor(color);
     }
+    private _updateDepth(calc: BotCalculationContext) {
+        const depthTest = calculateBooleanTagValue(
+            calc,
+            this.bot3D.bot,
+            'formDepthTest',
+            true
+        );
+        this._setDepthTest(depthTest);
+    }
+
+    private _updateDepthWrite(calc: BotCalculationContext) {
+        const depthWrite = calculateBooleanTagValue(
+            calc,
+            this.bot3D.bot,
+            'formDepthWrite',
+            true
+        );
+        this._setDepthWrite(depthWrite);
+    }
 
     private _updateOpacity(calc: BotCalculationContext) {
         const opacity = calculateNumericalTagValue(
@@ -602,7 +626,30 @@ export class BotShapeDecorator
             }
         }
     }
-
+    private _setDepthTest(depthTest: boolean) {
+        if (this.scene) {
+            // Change depth
+            this.scene.traverse((obj) => {
+                if (obj instanceof Mesh) {
+                    setDepthTest(obj, depthTest);
+                }
+            });
+        } else {
+            setDepthTest(this.mesh, depthTest);
+        }
+    }
+    private _setDepthWrite(depthWrite: boolean) {
+        if (this.scene) {
+            // Change
+            this.scene.traverse((obj) => {
+                if (obj instanceof Mesh) {
+                    setDepthWrite(obj, depthWrite);
+                }
+            });
+        } else {
+            setDepthWrite(this.mesh, depthWrite);
+        }
+    }
     private _setOpacity(opacity: number) {
         if (this.scene) {
             // Set opacity on all meshes inside the gltf scene.

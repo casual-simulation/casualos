@@ -24,7 +24,7 @@ Make sure you have all the prerequisite tools installed:
 1. Clone the repository.
     - `git clone https://github.com/casual-simulation/casualos.git`
 2. Make sure global dependencies are installed.
-    - `npm install -g lerna jake node-gyp prisma`
+    - `npm install -g lerna@6.0.3 jake node-gyp prisma`
     - (Windows Only) [Tell NPM to use the global `node-gyp`.](https://github.com/nodejs/node-gyp/issues/2272) (Older versions of node-gyp cannot detect Visual Studio 2022)
         - Powershell: `npm prefix -g | % {npm config set node_gyp "$_\node_modules\node-gyp\bin\node-gyp.js"}`
 3. Start CockroachDB
@@ -65,6 +65,8 @@ Most of them are NPM scripts, so they're easy to run.
     -   `npm run test:watch`
 -   Run tests
     -   `npm test`
+-   Start CockroachDB
+    -   `npm run cockroach`
 -   Reset your database
     -   `prisma migrate reset`
 -   Update your database to match schema (creates a migration if needed)

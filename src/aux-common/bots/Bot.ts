@@ -2672,6 +2672,8 @@ export const KNOWN_TAGS: string[] = [
     'formAnimationAddress',
     'formOpacity',
     'formRenderOrder',
+    'formDepthTest',
+    'formDepthWrite',
     'orientationMode',
     'anchorPoint',
     'gltfVersion',
@@ -2709,7 +2711,6 @@ export const KNOWN_TAGS: string[] = [
     'name',
     'hasActiveSubscription',
     'subscriptionTier',
-    'openAiKey',
 
     CLICK_ACTION_NAME,
     'onAnyBotClicked',

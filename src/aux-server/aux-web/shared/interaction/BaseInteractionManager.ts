@@ -1054,7 +1054,12 @@ export abstract class BaseInteractionManager {
         gameObjectFilter: (obj: GameObject) => boolean
     ) {
         const ray = objectForwardRay(controller.ray);
-        return this.findHoveredGameObjectFromRay(ray, gameObjectFilter);
+        const viewport = this._game.getMainCameraRig().viewport;
+        return this.findHoveredGameObjectFromRay(
+            ray,
+            gameObjectFilter,
+            viewport
+        );
     }
 
     /**

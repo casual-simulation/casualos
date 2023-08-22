@@ -27,3 +27,8 @@ export type NotSubscribedError = 'not_subscribed';
  * Defines an error that occurrs when the user tries to perform an action that requires a subscription tier that .
  */
 export type InvalidSubscriptionTierError = 'invalid_subscription_tier';
+
+/**
+ * Defines an error that occurs when the user tries to perform an action that would exceed their subscription limit.
+ */
+export type SubscriptionLimitReached = 'subscription_limit_reached';

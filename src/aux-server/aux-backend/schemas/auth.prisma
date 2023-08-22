@@ -22,12 +22,17 @@ model User {
     allSessionRevokeTime DateTime?
     currentLoginRequestId String? @unique
     currentLoginRequest LoginRequest? @relation("CurrentLoginRequest", fields: [currentLoginRequestId], references: [requestId])
-    openAiKey String?
     banTime DateTime?
     banReason String?
+
+    subscriptionInfoId String? @unique @db.Uuid
+    subscriptionInfo Subscription? @relation(fields: [subscriptionInfoId], references: [id])
+
     subscriptionStatus String?
     stripeCustomerId String? @unique
     subscriptionId String?
+    subscriptionPeriodStart DateTime?
+    subscriptionPeriodEnd DateTime?
 
     loginRequests LoginRequest[]
     sessions AuthSession[]
@@ -43,6 +48,11 @@ model User {
 
     publishedFileRecords FileRecord[] @relation("PublishedFileRecords")
     subjectFileRecords FileRecord[] @relation("SubjectFileRecords")
+
+    studios StudioAssignment[]
+    aiChatMetrics AiChatMetrics[]
+    aiImageMetrics AiImageMetrics[]
+    aiSkyboxMetrics AiSkyboxMetrics[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -108,10 +118,53 @@ model SmsRule {
 }
 
 // Records
+model Studio {
+    id String @id
+    displayName String
+
+    records Record[]
+    assignments StudioAssignment[]
+
+    subscriptionInfoId String? @unique @db.Uuid
+    subscriptionInfo Subscription? @relation(fields: [subscriptionInfoId], references: [id])
+
+    subscriptionStatus String?
+    stripeCustomerId String? @unique
+    subscriptionId String?
+    subscriptionPeriodStart DateTime?
+    subscriptionPeriodEnd DateTime?
+
+    aiChatMetrics AiChatMetrics[]
+    aiImageMetrics AiImageMetrics[]
+    aiSkyboxMetrics AiSkyboxMetrics[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model StudioAssignment {
+    @@id([studioId, userId])
+
+    studioId String
+    studio Studio @relation(fields: [studioId], references: [id])
+
+    userId String
+    user User @relation(fields: [userId], references: [id])
+
+    isPrimaryContact Boolean
+    role String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
 model Record {
     name String @id
-    ownerId String
-    owner User @relation(fields: [ownerId], references: [id])
+    ownerId String?
+    owner User? @relation(fields: [ownerId], references: [id], map: "Record_ownerId_fkey1")
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id])
 
     secretHashes String[]
     secretSalt String
@@ -278,4 +331,113 @@ model EventRecord {
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+}
+
+model Configuration {
+    key String @id
+    data Json
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Subscription {
+    id String @id @db.Uuid
+    stripeSubscriptionId String @unique
+
+    userId String? @unique
+    user User? @relation()
+
+    studioId String? @unique
+    studio Studio? @relation()
+
+    subscriptionStatus String?
+    stripeCustomerId String? @unique
+    subscriptionId String?
+
+    currentPeriodStart DateTime?
+    currentPeriodEnd DateTime?
+
+    periods SubscriptionPeriod[]
+    invoices Invoice[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model SubscriptionPeriod {
+    id String @id @db.Uuid
+
+    subscriptionId String @db.Uuid
+    subscription Subscription @relation(fields: [subscriptionId], references: [id])
+
+    invoiceId String @unique @db.Uuid
+    invoice Invoice?
+
+    periodStart DateTime
+    periodEnd DateTime
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Invoice {
+    id String @id @db.Uuid
+    stripeInvoiceId String @unique
+
+    subscriptionId String @db.Uuid
+    subscription Subscription @relation(fields: [subscriptionId], references: [id])
+
+    periodId String @unique @db.Uuid
+    period SubscriptionPeriod @relation(fields: [periodId], references: [id])
+
+    description String?
+    status String
+    paid Boolean
+    currency String
+    total Int
+    subtotal Int
+    tax Int?
+
+    stripeHostedInvoiceUrl String
+    stripeInvoicePdfUrl String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model AiChatMetrics {
+    id String @id @db.Uuid
+    createdAt DateTime @default(now())
+
+    tokens Int
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id])
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id])
+}
+
+model AiImageMetrics {
+    id String @id @db.Uuid
+    createdAt DateTime @default(now())
+    squarePixelsGenerated Int
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id])
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id])
+}
+
+model AiSkyboxMetrics {
+    id String @id @db.Uuid
+    createdAt DateTime @default(now())
+    skyboxesGenerated Int
+
+    userId String?
+    user User? @relation(fields: [userId], references: [id])
+
+    studioId String?
+    studio Studio? @relation(fields: [studioId], references: [id])
 }
