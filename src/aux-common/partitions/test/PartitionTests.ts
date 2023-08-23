@@ -38,6 +38,7 @@ import {
     generateRandomEditCases,
     generateRandomEditParagraphCases,
 } from '../../test/FuzzingHelpers';
+import '../../BlobPolyfill';
 import '../../../../jest/jest-matchers';
 
 expect.extend({

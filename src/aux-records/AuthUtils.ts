@@ -434,7 +434,7 @@ export function generateV1ConnectionToken(
 
     const [userId, sessionId, connectionSecret, expireTimeMs] = parsed;
 
-    const hash = hmac(sha256(), connectionSecret, 'hex');
+    const hash = hmac(sha256 as any, connectionSecret, 'hex');
     hash.update(connectionId);
     hash.update(deviceId);
     const hashHex = hash.digest('hex');

@@ -36,19 +36,17 @@ import {
     createCausalRepoPartition,
     MemoryPartitionImpl,
     MemoryPartitionStateConfig,
-    RuntimeStateVersion,
     LocalActions,
     asyncResult,
-    DEFAULT_CUSTOM_PORTAL_SCRIPT_PREFIXES,
-    AuxRuntime,
-    attachRuntime,
     botUpdated,
-    asyncError,
-    enableAR,
-    arSupported,
-    updatedBot,
-    detachRuntime,
 } from '@casual-simulation/aux-common';
+import {
+    AuxRuntime,
+    RuntimeActions,
+    RuntimeStateVersion,
+    attachRuntime,
+    detachRuntime,
+} from '@casual-simulation/aux-runtime';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
 import { v4 as uuid } from 'uuid';
@@ -56,7 +54,6 @@ import { merge, cloneDeep } from 'lodash';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { skip, Subject, Subscription } from 'rxjs';
 import { TimeSample, TimeSyncController } from '@casual-simulation/timesync';
-import FeatureTemplatesViewModel from 'esri/widgets/FeatureTemplates/FeatureTemplatesViewModel';
 import {
     edit,
     insert,
@@ -935,7 +932,7 @@ describe('BaseAuxChannel', () => {
                     updates.push(update)
                 );
 
-                let actions = [] as BotAction[];
+                let actions = [] as RuntimeActions[];
                 channel.onLocalEvents.subscribe((events) =>
                     actions.push(...events)
                 );
@@ -1041,7 +1038,7 @@ describe('BaseAuxChannel', () => {
         });
 
         describe('attach_runtime', () => {
-            let events: LocalActions[];
+            let events: RuntimeActions[];
             let subChannels: AuxSubChannel[];
             let stateUpdates: StateUpdatedEvent[];
             let sub: Subscription;
@@ -1566,7 +1563,7 @@ describe('BaseAuxChannel', () => {
         });
 
         describe('detach_runtime', () => {
-            let events: LocalActions[];
+            let events: RuntimeActions[];
             let subChannels: AuxSubChannel[];
             let removedChannels: string[];
             let stateUpdates: StateUpdatedEvent[];

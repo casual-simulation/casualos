@@ -20,6 +20,7 @@ import { YjsPartitionImpl } from './YjsPartition';
 import { DateTime } from 'luxon';
 import { Rotation, Vector2, Vector3 } from '../math';
 import { forOwn } from 'lodash';
+import '../BlobPolyfill';
 
 /**
  * Creates a new initialization update using the given action.

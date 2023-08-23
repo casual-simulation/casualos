@@ -18,6 +18,7 @@ import type {
     InterpreterStop,
 } from '@casual-simulation/js-interpreter';
 import { ScriptError } from './AuxResults';
+import { RuntimeActions } from './RuntimeEvents';
 
 // Types of bots
 // 1. Raw bot - original data
@@ -119,7 +120,7 @@ export interface RuntimeStopState {
     /**
      * The current list of batched actions.
      */
-    actions: BotAction[];
+    actions: RuntimeActions[];
 
     /**
      * The current list of batched errors.

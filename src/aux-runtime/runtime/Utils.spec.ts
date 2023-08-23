@@ -7,7 +7,7 @@ import {
     parseAuthToken,
     toHexString,
 } from './Utils';
-import './BlobPolyfill';
+import '@casual-simulation/aux-common/BlobPolyfill';
 
 describe('embedBase64InPdf()', () => {
     it('should reference the given data in the PDF', () => {

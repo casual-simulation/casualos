@@ -1,5 +1,4 @@
 import {
-    BotAction,
     botAdded,
     createBot,
     botUpdated,
@@ -15,7 +14,6 @@ import {
     createMemoryPartition,
     MemoryBotClient,
     createBotClientPartition,
-    AuxRuntime,
     AuxPartitions,
     iteratePartitions,
     clearSpace,
@@ -28,8 +26,12 @@ import {
     setSpacePassword,
     updatedBot,
     Bot,
-    ScriptError,
 } from '@casual-simulation/aux-common';
+import {
+    AuxRuntime,
+    RuntimeActions,
+    ScriptError,
+} from '@casual-simulation/aux-runtime';
 import { bot, tag, value } from '@casual-simulation/aux-common/aux-format-2';
 import { AuxHelper } from './AuxHelper';
 import {
@@ -57,8 +59,6 @@ import {
 } from '@casual-simulation/aux-common/test/TestHelpers';
 import { SubscriptionLike, Subject } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { MemoryConnection } from '../../causal-tree-server/MemoryConnectionServer';
-import { TestScriptBotFactory } from '@casual-simulation/aux-common/runtime/test/TestScriptBotFactory';
 import { keypair } from '@casual-simulation/aux-common/node_modules/@casual-simulation/crypto';
 
 const uuidMock: jest.Mock = <any>uuid;
@@ -198,7 +198,7 @@ describe('AuxHelper', () => {
             });
             helper.userId = 'test';
 
-            let events: BotAction[] = [];
+            let events: RuntimeActions[] = [];
             helper.localEvents.subscribe((e) => events.push(...e));
 
             await helper.transaction(
@@ -1017,7 +1017,7 @@ describe('AuxHelper', () => {
 
     describe('transaction()', () => {
         it('should emit local events that are sent via transaction()', async () => {
-            let events: LocalActions[] = [];
+            let events: RuntimeActions[] = [];
             helper.localEvents.subscribe((e) => events.push(...e));
 
             await helper.transaction(toast('test'));
@@ -1077,7 +1077,7 @@ describe('AuxHelper', () => {
         });
 
         it('should emit local events from actions', async () => {
-            let events: LocalActions[] = [];
+            let events: RuntimeActions[] = [];
             helper.localEvents.subscribe((e) =>
                 events.push(
                     ...e.filter(
@@ -1099,7 +1099,7 @@ describe('AuxHelper', () => {
         });
 
         it('should not calculate assignment formulas', async () => {
-            let events: LocalActions[] = [];
+            let events: RuntimeActions[] = [];
             helper.localEvents.subscribe((e) => events.push(...e));
 
             await helper.createBot('test', {});
@@ -1325,7 +1325,7 @@ describe('AuxHelper', () => {
             });
 
             it('should be rejected if sent to a non-existant space', async () => {
-                let events = [] as BotAction[];
+                let events = [] as RuntimeActions[];
 
                 helper.localEvents.subscribe((e) => events.push(...e));
                 await helper.transaction(
@@ -1409,7 +1409,7 @@ describe('AuxHelper', () => {
             });
 
             it('should be rejected if sent to a non-existant space', async () => {
-                let events = [] as BotAction[];
+                let events = [] as RuntimeActions[];
 
                 helper.localEvents.subscribe((e) => events.push(...e));
                 await helper.transaction(

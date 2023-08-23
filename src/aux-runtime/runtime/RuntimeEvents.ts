@@ -1,10 +1,20 @@
-import { AsyncAction, LocalActions } from '@casual-simulation/aux-common';
+import {
+    AsyncAction,
+    AsyncActions,
+    BotAction,
+    LocalActions,
+} from '@casual-simulation/aux-common';
 import { AuxRuntime } from './AuxRuntime';
+import { RecordsActions, RecordsAsyncActions } from './RecordsEvents';
 
 export type RuntimeActions =
     | LocalActions
+    | BotAction
     | AttachRuntimeAction
-    | DetachRuntimeAction;
+    | DetachRuntimeAction
+    | RecordsActions;
+
+export type RuntimeAsyncActions = AsyncActions | RecordsAsyncActions;
 
 /**
  * Defines an interface for a tag mapper.

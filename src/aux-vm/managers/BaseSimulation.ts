@@ -27,6 +27,7 @@ import { ProgressStatus, DeviceInfo } from '@casual-simulation/causal-trees';
 import { Simulation } from './Simulation';
 import { CodeLanguageManager } from './CodeLanguageManager';
 import { BotDimensionManager } from './BotDimensionManager';
+import { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 /**
  * Defines a class that interfaces with an AUX VM to reactively edit bots.
@@ -118,10 +119,10 @@ export class BaseSimulation implements Simulation {
         return this._code;
     }
 
-    get localEvents(): Observable<LocalActions> {
+    get localEvents(): Observable<RuntimeActions> {
         return this._vm.localEvents.pipe(
             flatMap((e) => e)
-        ) as Observable<LocalActions>;
+        ) as Observable<RuntimeActions>;
     }
 
     get onError(): Observable<AuxChannelErrorType> {

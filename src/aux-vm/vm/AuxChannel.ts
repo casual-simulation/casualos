@@ -196,7 +196,7 @@ export interface ChannelActionResult {
     /**
      * The actions that were queued.
      */
-    actions: BotAction[];
+    actions: RuntimeActions[];
 
     /**
      * The results from the scripts that were run.

@@ -76,7 +76,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _portalHelper: CustomAppHelper;
     private _statusHelper: StatusHelper;
     private _hasRegisteredSubs: boolean;
-    private _eventBuffer: BotAction[];
+    private _eventBuffer: RuntimeActions[];
     private _hasInitialState: boolean;
     private _version: RuntimeStateVersion;
     private _timeSync: TimeSyncController;
@@ -396,7 +396,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
     }
 
-    async sendEvents(events: BotAction[]): Promise<void> {
+    async sendEvents(events: RuntimeActions[]): Promise<void> {
         if (this._hasInitialState) {
             if (this._tagNameMapper) {
                 let mappedEvents = [];

@@ -364,12 +364,12 @@ describe('generateV1ConnectionToken()', () => {
             'deviceId'
         );
 
-        const [userId, sessionId, password, connectionId, deviceId] =
-            parseV1ConnectionToken(result);
+        const [version, userId, sessionId, password, connectionId, deviceId] =
+            result.split('.');
 
         expect(userId).toBe(toBase64String('userId'));
         expect(sessionId).toBe(toBase64String('sessionId'));
-        expect(password).toBe(expect.any(String));
+        expect(password).toEqual(expect.any(String));
         expect(connectionId).toBe(toBase64String('connectionId'));
         expect(deviceId).toBe(toBase64String('deviceId'));
     });

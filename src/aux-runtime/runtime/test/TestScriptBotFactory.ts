@@ -22,6 +22,7 @@ import {
     applyTagEdit,
     isTagEdit,
 } from '@casual-simulation/aux-common/aux-format-2';
+import { RuntimeActions } from '../RuntimeEvents';
 
 export class TestScriptBotFactory implements RuntimeBotFactory {
     createRuntimeBot(bot: Bot): RuntimeBot {
@@ -96,7 +97,7 @@ export const testScriptBotInterface: RuntimeBotInterface = {
         }
     },
     notifyChange() {},
-    notifyActionEnqueued(action: BotAction) {},
+    notifyActionEnqueued(action: RuntimeActions) {},
     getTagMask(bot: CompiledBot, tag: string): any {
         if (!bot.masks) {
             return undefined;

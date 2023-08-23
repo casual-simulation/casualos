@@ -8,4 +8,5 @@ export * from './AuxRealtimeEditModeProvider';
 export * from './Utils';
 export * from './CompiledBot';
 export * from './RuntimeEvents';
+export * from './RecordsEvents';
 export * from './AuxPartitionRealtimeEditModeProvider';

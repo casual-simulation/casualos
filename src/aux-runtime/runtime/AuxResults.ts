@@ -1,5 +1,6 @@
 import { Bot } from '@casual-simulation/aux-common/bots/Bot';
 import { BotAction } from '@casual-simulation/aux-common/bots/BotEvents';
+import { RuntimeActions } from './RuntimeEvents';
 
 export class RanOutOfEnergyError extends Error {
     constructor() {
@@ -14,7 +15,7 @@ export interface ScriptResult {
     /**
      * The actions that the script queued.
      */
-    actions: BotAction[];
+    actions: RuntimeActions[];
     /**
      * The value that the script returned.
      */
@@ -71,7 +72,7 @@ export interface ActionResult {
     /**
      * The actions that were queued.
      */
-    actions: BotAction[];
+    actions: RuntimeActions[];
 
     /**
      * The results from the scripts that were run.

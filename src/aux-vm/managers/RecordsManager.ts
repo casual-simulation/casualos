@@ -3,13 +3,9 @@ import {
     hasValue,
     asyncResult,
     asyncError,
-    RecordDataAction,
-    GetRecordDataAction,
-    RecordFileAction,
-    FileRecordedResult,
-    EraseRecordDataAction,
-    EraseFileAction,
     APPROVED_SYMBOL,
+} from '@casual-simulation/aux-common';
+import {
     ListRecordDataAction,
     RecordEventAction,
     GetEventCountAction,
@@ -30,7 +26,13 @@ import {
     AIGenerateSkyboxAction,
     AIGenerateImageAction,
     ListUserStudiosAction,
-} from '@casual-simulation/aux-common';
+    RecordDataAction,
+    GetRecordDataAction,
+    RecordFileAction,
+    FileRecordedResult,
+    EraseRecordDataAction,
+    EraseFileAction,
+} from '@casual-simulation/aux-runtime';
 import { AuxConfigParameters } from '../vm/AuxConfig';
 import axios from 'axios';
 import type { AxiosResponse, AxiosRequestConfig } from 'axios';
@@ -54,7 +56,7 @@ import {
 } from '@casual-simulation/aux-records';
 import { sha256 } from 'hash.js';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
-import '@casual-simulation/aux-runtime/runtime/BlobPolyfill';
+import '@casual-simulation/aux-common/BlobPolyfill';
 import { Observable, Subject } from 'rxjs';
 import { DateTime } from 'luxon';
 import {
@@ -63,6 +65,7 @@ import {
     AIGenerateSkyboxResponse,
     AIGetSkyboxResponse,
 } from '@casual-simulation/aux-records/AIController';
+import { RuntimeActions } from '@casual-simulation/aux-runtime';
 
 /**
  * The list of headers that JavaScript applications are not allowed to set by themselves.
@@ -151,7 +154,7 @@ export class RecordsManager {
         this._skipTimers = skipTimers;
     }
 
-    handleEvents(events: BotAction[]): void {
+    handleEvents(events: RuntimeActions[]): void {
         for (let event of events) {
             if (event.type === 'record_data') {
                 this._recordData(event);

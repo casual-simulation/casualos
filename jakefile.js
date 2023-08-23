@@ -36,6 +36,7 @@ let folders = [
     `${__dirname}/src/expect`,
     `${__dirname}/src/chalk`,
     `${__dirname}/temp/aux-server`,
+    `${__dirname}/src/aux-runtime`,
     `${__dirname}/src/aux-records`,
     `${__dirname}/src/aux-records-aws`,
     `${__dirname}/src/timesync`,

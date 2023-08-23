@@ -23,6 +23,7 @@
  * @license MIT
  */
 
+import './BlobPolyfill';
 export * from './utils';
 export * from './state-machine';
 export * from './bots';

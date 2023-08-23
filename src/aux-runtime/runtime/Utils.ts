@@ -8,8 +8,7 @@ import {
     EaseType,
     Bot,
 } from '@casual-simulation/aux-common/bots';
-
-import './BlobPolyfill';
+import '@casual-simulation/aux-common/BlobPolyfill';
 
 export function realtimeStrategyToRealtimeEditMode(
     strategy: AuxPartitionRealtimeStrategy

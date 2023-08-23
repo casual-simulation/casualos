@@ -44,6 +44,7 @@
         "axios": "0.25.0",
         "livekit-server-sdk": "1.0.2",
         "tweetnacl": "1.0.3",
-        "zod": "3.21.4"
+        "zod": "3.21.4",
+        "hash.js": "1.1.7"
     }
 }

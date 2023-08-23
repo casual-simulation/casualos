@@ -8,17 +8,19 @@ import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
     asyncResult,
     asyncError,
-    RecordDataAction,
-    DataRecordAction,
     approveAction,
-    GetRecordDataAction,
-    EraseRecordDataAction,
     APPROVED_SYMBOL,
     hasValue,
     cleanPhoneNumber,
     mightBeEmailAddress,
-    GrantInstAdminPermissionAction,
 } from '@casual-simulation/aux-common';
+import {
+    RecordDataAction,
+    DataRecordAction,
+    GetRecordDataAction,
+    EraseRecordDataAction,
+    GrantInstAdminPermissionAction,
+} from '@casual-simulation/aux-runtime';
 import {
     CreatePublicRecordKeyResult,
     parseRecordKey,

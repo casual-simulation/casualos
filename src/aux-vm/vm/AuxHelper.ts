@@ -251,7 +251,7 @@ export class AuxHelper extends BaseHelper<Bot> {
      * That is, they should be performed in a batch.
      * @param events The events to run.
      */
-    async transaction(...events: BotAction[]): Promise<void> {
+    async transaction(...events: RuntimeActions[]): Promise<void> {
         this._runtime.process(events);
     }
 
@@ -369,7 +369,7 @@ export class AuxHelper extends BaseHelper<Bot> {
         let parsed: StoredAuxVersion1 = JSON.parse(builder);
         let state = getBotsStateFromStoredAux(parsed);
         const objects = getActiveObjects(state);
-        let events = [] as BotActions[];
+        let events = [] as RuntimeActions[];
         for (let bot of objects) {
             const sameBot = this.botsState[bot.id];
             if (sameBot) {
@@ -403,7 +403,7 @@ export class AuxHelper extends BaseHelper<Bot> {
         };
     }
 
-    private async _sendEvents(events: BotAction[]) {
+    private async _sendEvents(events: RuntimeActions[]) {
         let map = new Map<AuxPartition, BotAction[]>();
         let newBotPartitions = new Map<string, AuxPartition>();
         for (let event of events) {
@@ -462,10 +462,10 @@ export class AuxHelper extends BaseHelper<Bot> {
             }
             let batch = map.get(partition);
             if (!batch) {
-                batch = [event];
+                batch = [event as BotAction];
                 map.set(partition, batch);
             } else {
-                batch.push(event);
+                batch.push(event as BotAction);
             }
 
             if (masks) {
@@ -516,7 +516,7 @@ export class AuxHelper extends BaseHelper<Bot> {
      * If undefined is returned, then the event should not be sent anywhere.
      * @param event
      */
-    private _partitionForEvent(event: BotAction): AuxPartition {
+    private _partitionForEvent(event: RuntimeActions): AuxPartition {
         if (event.type === 'remote') {
             return null;
         } else if (event.type === 'remote_result') {
@@ -589,7 +589,7 @@ export class AuxHelper extends BaseHelper<Bot> {
         return getBotSpace(bot);
     }
 
-    private _sendOtherEvents(events: BotAction[]) {
+    private _sendOtherEvents(events: RuntimeActions[]) {
         let remoteEvents: RemoteActions[] = [];
         let localEvents: RuntimeActions[] = [];
         let deviceEvents: DeviceAction[] = [];
@@ -604,7 +604,7 @@ export class AuxHelper extends BaseHelper<Bot> {
             } else if (event.type === 'device') {
                 deviceEvents.push(event);
             } else {
-                localEvents.push(<RuntimeActions>event);
+                localEvents.push(event);
             }
         }
 

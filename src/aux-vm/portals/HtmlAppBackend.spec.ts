@@ -1,7 +1,6 @@
 import {
     asyncResult,
     AuxPartitions,
-    AuxRuntime,
     BotAction,
     botAdded,
     createBot,
@@ -18,6 +17,7 @@ import {
     updateHtmlApp,
     UpdateHtmlAppAction,
 } from '@casual-simulation/aux-common';
+import { AuxRuntime, RuntimeActions } from '@casual-simulation/aux-runtime';
 import { waitAsync } from '@casual-simulation/aux-common/test/TestHelpers';
 import { Subscription } from 'rxjs';
 import { HtmlAppBackend } from './HtmlAppBackend';
@@ -33,7 +33,7 @@ jest.mock('uuid');
 
 describe('HtmlAppBackend', () => {
     let runtime: AuxRuntime;
-    let actions: BotAction[];
+    let actions: RuntimeActions[];
     let memory: MemoryPartition;
     let userId: string = 'user';
     let sub: Subscription;

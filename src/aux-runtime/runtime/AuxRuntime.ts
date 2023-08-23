@@ -178,6 +178,7 @@ import {
     DebuggerScriptExitTrace,
     DebuggerTagMaskUpdate,
     DebuggerTagUpdate,
+    RuntimeActions,
 } from './RuntimeEvents';
 import {
     DeepObjectError,
@@ -233,7 +234,7 @@ export class AuxRuntime
     private _compiledState: CompiledBotsState = {};
     private _existingMasks: { [id: string]: BotTagMasks } = {};
     private _compiler = new AuxCompiler();
-    private _onActions: Subject<BotAction[]>;
+    private _onActions: Subject<RuntimeActions[]>;
     private _onErrors: Subject<ScriptError[]>;
     private _onRuntimeStop: Subject<RuntimeStop>;
     private _stopState: RuntimeStopState = null;
@@ -241,7 +242,7 @@ export class AuxRuntime
     private _currentStopCount = 0;
     private _currentPromise: MaybeRuntimePromise<any> = null;
 
-    private _actionBatch: BotAction[] = [];
+    private _actionBatch: RuntimeActions[] = [];
     private _errorBatch: ScriptError[] = [];
 
     private _userId: string;
@@ -272,9 +273,10 @@ export class AuxRuntime
     private _globalObject: any;
     private _interpretedApi: AuxLibrary['api'];
     private _interpretedTagSpecificApi: AuxLibrary['tagSpecificApi'];
-    private _beforeActionListeners: ((action: BotAction) => void)[] = [];
-    private _scriptActionEnqueuedListeners: ((action: BotAction) => void)[] =
-        [];
+    private _beforeActionListeners: ((action: RuntimeActions) => void)[] = [];
+    private _scriptActionEnqueuedListeners: ((
+        action: RuntimeActions
+    ) => void)[] = [];
     private _scriptUpdatedTagListeners: ((
         update: DebuggerTagUpdate
     ) => void)[] = [];
@@ -523,7 +525,7 @@ export class AuxRuntime
     /**
      * An observable that resolves whenever the runtime issues an action.
      */
-    get onActions(): Observable<BotAction[]> {
+    get onActions(): Observable<RuntimeActions[]> {
         return this._onActions;
     }
 
@@ -545,7 +547,7 @@ export class AuxRuntime
      * Processes the given bot actions and dispatches the resulting actions in the future.
      * @param actions The actions to process.
      */
-    process(actions: BotAction[]) {
+    process(actions: RuntimeActions[]) {
         if (this._beforeActionListeners.length > 0) {
             for (let func of this._beforeActionListeners) {
                 for (let action of actions) {
@@ -597,7 +599,7 @@ export class AuxRuntime
                 return `uuid-${idCount}`;
             };
         }
-        let allActions = [] as BotAction[];
+        let allActions = [] as RuntimeActions[];
         let allErrors = [] as ScriptError[];
 
         let create: any;
@@ -631,7 +633,7 @@ export class AuxRuntime
             });
         }
 
-        const isCommonAction = (action: BotAction) => {
+        const isCommonAction = (action: RuntimeActions) => {
             return !(
                 action.type === 'add_bot' ||
                 action.type === 'remove_bot' ||
@@ -702,10 +704,14 @@ export class AuxRuntime
                 allErrors.push(...errors);
                 return allErrors;
             },
-            onBeforeUserAction: (listener: (action: BotAction) => void) => {
+            onBeforeUserAction: (
+                listener: (action: RuntimeActions) => void
+            ) => {
                 runtime._beforeActionListeners.push(listener);
             },
-            onScriptActionEnqueued: (listener: (action: BotAction) => void) => {
+            onScriptActionEnqueued: (
+                listener: (action: RuntimeActions) => void
+            ) => {
                 runtime._scriptActionEnqueuedListeners.push(listener);
             },
             onAfterScriptUpdatedTag: (
@@ -728,7 +734,7 @@ export class AuxRuntime
                     interpreter.agent.executionContextStack
                 );
             },
-            async performUserAction(...actions: BotAction[]) {
+            async performUserAction(...actions: RuntimeActions[]) {
                 const result = await runtime.process(actions);
                 return result.map((r) => (r ? r.results : null));
             },
@@ -1057,13 +1063,13 @@ export class AuxRuntime
     }
 
     private _processCore(
-        actions: BotAction[]
+        actions: RuntimeActions[]
     ): MaybeRuntimePromise<ProcessActionResult[]> {
         const _this = this;
         const results = [] as ProcessActionResult[];
 
         function processAction(
-            action: BotAction,
+            action: RuntimeActions,
             addToResults: boolean
         ): MaybeRuntimePromise<void> {
             let promise = _this._processAction(action);
@@ -1085,8 +1091,8 @@ export class AuxRuntime
         }
 
         function handleRejection(
-            action: BotAction,
-            rejection: { rejected: boolean; newActions: BotAction[] }
+            action: RuntimeActions,
+            rejection: { rejected: boolean; newActions: RuntimeActions[] }
         ): MaybeRuntimePromise<void> {
             let promise: MaybeRuntimePromise<void> = processListOfMaybePromises(
                 null,
@@ -1129,7 +1135,7 @@ export class AuxRuntime
     }
 
     private _processAction(
-        action: BotAction
+        action: RuntimeActions
     ): MaybeRuntimePromise<ProcessActionResult> {
         if (action.type === 'action') {
             const result = this._shout(
@@ -1349,9 +1355,9 @@ export class AuxRuntime
         }
     }
 
-    private _rejectAction(action: BotAction): MaybeRuntimePromise<{
+    private _rejectAction(action: RuntimeActions): MaybeRuntimePromise<{
         rejected: boolean;
-        newActions: BotAction[];
+        newActions: RuntimeActions[];
     }> {
         const result = this._shout(
             ON_ACTION_ACTION_NAME,
@@ -2272,7 +2278,7 @@ export class AuxRuntime
         }
     }
 
-    notifyActionEnqueued(action: BotAction): void {
+    notifyActionEnqueued(action: RuntimeActions): void {
         if (this._scriptActionEnqueuedListeners.length > 0) {
             for (let listener of this._scriptActionEnqueuedListeners) {
                 try {
@@ -2349,7 +2355,7 @@ export class AuxRuntime
             this._processingErrors = true;
 
             if (errors.length > 0) {
-                const actions: BotAction[] = [];
+                const actions: RuntimeActions[] = [];
 
                 for (let e of errors) {
                     if (e.tag === ON_ERROR) {
@@ -2399,7 +2405,7 @@ export class AuxRuntime
         resetEnergy: boolean
     ): MaybeRuntimePromise<{
         result: T;
-        actions: BotAction[];
+        actions: RuntimeActions[];
         errors: ScriptError[];
     }> {
         const result = this._calculateScriptResults(callback, resetEnergy);
@@ -2430,7 +2436,7 @@ export class AuxRuntime
         resetEnergy: boolean
     ): MaybeRuntimePromise<{
         result: T;
-        actions: BotAction[];
+        actions: RuntimeActions[];
         errors: ScriptError[];
     }> {
         this._globalContext.playerBot = this.userBot;

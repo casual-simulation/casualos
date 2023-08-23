@@ -148,6 +148,7 @@ import {
 import { Interpreter } from '@casual-simulation/js-interpreter';
 import { RuntimeStop } from './CompiledBot';
 import { DynamicImports } from './AuxRuntimeDynamicImports';
+import { RuntimeActions } from './RuntimeEvents';
 
 registerInterpreterModule(DynamicImports);
 
@@ -162,8 +163,8 @@ describe('AuxRuntime', () => {
     describe.each(typeCases)('%s', (type) => {
         let memory: MemoryPartition;
         let runtime: AuxRuntime;
-        let events: BotAction[][];
-        let allEvents: BotAction[];
+        let events: RuntimeActions[][];
+        let allEvents: RuntimeActions[];
         let errors: ScriptError[][];
         let allErrors: ScriptError[];
         let version: AuxVersion;
@@ -5595,7 +5596,7 @@ describe('AuxRuntime', () => {
                 });
 
                 it('should emit register portal actions', async () => {
-                    let actions = [] as BotAction[];
+                    let actions = [] as RuntimeActions[];
                     runtime.onActions.subscribe((a) => actions.push(...a));
 
                     runtime.process([registerCustomApp('grid', 'test1')]);
@@ -6903,7 +6904,7 @@ describe('AuxRuntime', () => {
 
                     const updates = await captureUpdates(async () => {
                         for (let e of events) {
-                            await memory.applyEvents(e);
+                            await memory.applyEvents(e as BotAction[]);
                         }
                         await waitAsync();
                     });
@@ -7475,7 +7476,7 @@ describe('AuxRuntime', () => {
 
                     const updates = await captureUpdates(async () => {
                         for (let e of events) {
-                            await memory.applyEvents(e);
+                            await memory.applyEvents(e as BotAction[]);
                         }
                         await waitAsync();
                     });
@@ -7641,7 +7642,7 @@ describe('AuxRuntime', () => {
 
                     const updates = await captureUpdates(async () => {
                         for (let e of events) {
-                            await memory.applyEvents(e);
+                            await memory.applyEvents(e as BotAction[]);
                         }
                         await waitAsync();
                     });
@@ -7700,7 +7701,7 @@ describe('AuxRuntime', () => {
 
                     const updates = await captureUpdates(async () => {
                         for (let e of events) {
-                            await memory.applyEvents(e);
+                            await memory.applyEvents(e as BotAction[]);
                         }
                         await waitAsync();
                     });
@@ -7760,7 +7761,7 @@ describe('AuxRuntime', () => {
 
                     const updates = await captureUpdates(async () => {
                         for (let e of events) {
-                            await memory.applyEvents(e);
+                            await memory.applyEvents(e as BotAction[]);
                         }
                         await waitAsync();
                     });
@@ -7827,7 +7828,7 @@ describe('AuxRuntime', () => {
 
                     const updates = await captureUpdates(async () => {
                         for (let e of events) {
-                            await memory.applyEvents(e);
+                            await memory.applyEvents(e as BotAction[]);
                         }
                         await waitAsync();
                     });
@@ -7996,7 +7997,7 @@ describe('AuxRuntime', () => {
 
                     const updates = await captureUpdates(async () => {
                         // Apply only the first update
-                        await memory.applyEvents(events[0]);
+                        await memory.applyEvents(events[0] as BotAction[]);
                         await waitAsync();
                     });
 
@@ -11670,8 +11671,8 @@ describe('AuxRuntime', () => {
     describe('debugging', () => {
         let memory: MemoryPartition;
         let runtime: AuxRuntime;
-        let events: BotAction[][];
-        let allEvents: BotAction[];
+        let events: RuntimeActions[][];
+        let allEvents: RuntimeActions[];
         let errors: ScriptError[][];
         let allErrors: ScriptError[];
         let stops: RuntimeStop[];

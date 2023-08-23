@@ -55,6 +55,7 @@ import {
 import { INTERPRETABLE_FUNCTION } from './AuxCompiler';
 import { CompiledBot } from './CompiledBot';
 import { RuntimeStateVersion } from './RuntimeStateVersion';
+import { RuntimeActions } from './RuntimeEvents';
 
 const KNOWN_SYMBOLS = new Set([
     REGULAR_OBJECT,
@@ -973,7 +974,7 @@ export interface RuntimeBatcher {
     /**
      * Notifies the batcher of an action that was added.
      */
-    notifyActionEnqueued(action: BotAction): void;
+    notifyActionEnqueued(action: RuntimeActions): void;
 }
 
 /**

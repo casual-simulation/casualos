@@ -40,6 +40,7 @@ import type {
     InterpreterStop,
 } from '@casual-simulation/js-interpreter';
 import { isGenerator } from '@casual-simulation/js-interpreter/InterpreterUtils';
+import { RuntimeActions } from './RuntimeEvents';
 
 /**
  * The interval between animation frames in miliseconds when using setInterval().
@@ -69,7 +70,7 @@ export interface AuxGlobalContext {
     /**
      * The list of actions that are currently queued in this context.
      */
-    actions: BotAction[];
+    actions: RuntimeActions[];
 
     /**
      * The list of errors that are currently queued in this context.
@@ -148,12 +149,12 @@ export interface AuxGlobalContext {
      * Enqueues the given action.
      * @param action The action to enqueue.
      */
-    enqueueAction(action: BotAction): void;
+    enqueueAction(action: RuntimeActions): void;
 
     /**
      * Gets the list of actions that have been queued and resets the action queue.
      */
-    dequeueActions(): BotAction[];
+    dequeueActions(): RuntimeActions[];
 
     /**
      * Records the given error.
@@ -604,7 +605,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
     /**
      * The list of actions that have been queued.
      */
-    actions: BotAction[] = [];
+    actions: RuntimeActions[] = [];
 
     /**
      * The list of errors that have been queued.
@@ -940,9 +941,9 @@ export class MemoryGlobalContext implements AuxGlobalContext {
      * Enqueues the given action.
      * @param action The action to enqueue.
      */
-    enqueueAction(action: BotAction): void {
+    enqueueAction(action: RuntimeActions): void {
         if (action.type === 'remote') {
-            const index = this.actions.indexOf(<BotAction>action.event);
+            const index = this.actions.indexOf(<RuntimeActions>action.event);
             if (index >= 0) {
                 this.actions[index] = action;
             } else {
@@ -957,7 +958,7 @@ export class MemoryGlobalContext implements AuxGlobalContext {
         }
     }
 
-    dequeueActions(): BotAction[] {
+    dequeueActions(): RuntimeActions[] {
         let actions = this.actions;
         this.actions = [];
         return actions;
