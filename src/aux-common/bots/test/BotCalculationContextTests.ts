@@ -2121,6 +2121,39 @@ export function botCalculationContextTests(
             expect(getBotScale(calc, bot)).toBe(getBotScale(calc, bot));
             expect(getBotScale(calc, bot)).not.toBe(getBotScale(calc2, bot));
         });
+
+        it('should use min scale if 0', () => {
+            const bot = createBot('test', {
+                scaleX: 0,
+                scaleY: 0,
+                scaleZ: 0,
+                scale: 0,
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getBotScale(calc, bot)).toEqual({
+                x: 0.000000000000000001,
+                y: 0.000000000000000001,
+                z: 0.000000000000000001,
+            });
+        });
+
+        it('should support negitive numbers', () => {
+            const bot = createBot('test', {
+                scaleX: -1,
+                scaleY: -1,
+                scaleZ: -1,
+            });
+
+            const calc = createPrecalculatedContext([bot]);
+
+            expect(getBotScale(calc, bot)).toEqual({
+                x: -1,
+                y: -1,
+                z: -1,
+            });
+        });
     });
 
     describe('getPortalConfigBotID()', () => {
