@@ -18,9 +18,9 @@ export interface RateLimiterIncrementResult {
     totalHits: number;
 
     /**
-     * The time when the counter will reset.
+     * The unix time in miliseconds when the counter will reset.
      */
-    resetTime: Date | undefined;
+    resetTimeMs: number;
 }
 
 /**

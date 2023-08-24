@@ -34,7 +34,7 @@ export class MongoDBRateLimiter implements RateLimiter {
         amount?: number
     ): Promise<RateLimiterIncrementResult> {
         await this._updateCollection();
-        const expirationDate = new Date(Date.now() + this._windowMs);
+        const expirationDate = Date.now() + this._windowMs;
 
         const result = await this._collection.findOneAndUpdate(
             {
@@ -43,7 +43,7 @@ export class MongoDBRateLimiter implements RateLimiter {
             {
                 $inc: { count: amount ?? 1 },
                 $setOnInsert: {
-                    expirationDate: expirationDate,
+                    expirationDateMs: expirationDate,
                 },
             },
             {
@@ -56,7 +56,10 @@ export class MongoDBRateLimiter implements RateLimiter {
 
         return {
             totalHits: record.count,
-            resetTime: record.expirationDate,
+            resetTimeMs:
+                record.expirationDateMs ??
+                record.expirationDate?.getTime() ??
+                0,
         };
     }
 
@@ -67,7 +70,7 @@ export class MongoDBRateLimiter implements RateLimiter {
      */
     async decrement(key: string, amount?: number): Promise<void> {
         await this._updateCollection();
-        const expirationDate = new Date(Date.now() + this._windowMs);
+        const expirationDateMs = Date.now() + this._windowMs;
 
         await this._collection.findOneAndUpdate(
             {
@@ -76,7 +79,7 @@ export class MongoDBRateLimiter implements RateLimiter {
             {
                 $inc: { count: -(amount ?? 1) },
                 $setOnInsert: {
-                    expirationDate: expirationDate,
+                    expirationDateMs: expirationDateMs,
                 },
             },
             {
@@ -120,5 +123,10 @@ export interface MongoDBRateLimitRecord {
     /**
      * The expiration date in UTC-0.
      */
-    expirationDate: Date;
+    expirationDate?: Date;
+
+    /**
+     * The expiration date in unix time in miliseconds.
+     */
+    expirationDateMs?: number;
 }

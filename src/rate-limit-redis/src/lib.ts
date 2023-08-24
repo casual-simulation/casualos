@@ -1,18 +1,14 @@
-import {
-    Store,
-    IncrementResponse,
-    Options as RateLimitConfiguration,
-} from 'express-rate-limit';
+import { Options as RateLimitConfiguration } from 'express-rate-limit';
 
 import { Options, RedisReply, SendCommandFn } from './types';
 
-import { RateLimiter } from './RateLimiter';
+import { RateLimiter, RateLimiterIncrementResult } from './RateLimiter';
 
 /**
  * A `Store` for the `express-rate-limit` package that stores hit counts in
  * Redis.
  */
-class RedisStore implements Store, RateLimiter {
+class RedisStore implements RateLimiter {
     /**
      * The function used to send raw commands to Redis.
      */
@@ -110,13 +106,11 @@ class RedisStore implements Store, RateLimiter {
      * Method to increment a client's hit counter.
      *
      * @param key {string} - The identifier for a client
-     *
-     * @returns {IncrementResponse} - The number of hits and reset time for that client
      */
     async increment(
         key: string,
         amount: number = 1
-    ): Promise<IncrementResponse> {
+    ): Promise<RateLimiterIncrementResult> {
         const results = await this._runScript(this.prefixKey(key), amount);
 
         if (!Array.isArray(results)) {
@@ -137,10 +131,10 @@ class RedisStore implements Store, RateLimiter {
             throw new TypeError('Expected value to be a number');
         }
 
-        const resetTime = new Date(Date.now() + timeToExpire);
+        const resetTimeMs = Date.now() + timeToExpire;
         return {
             totalHits,
-            resetTime,
+            resetTimeMs,
         };
     }
 

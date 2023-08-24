@@ -37,6 +37,8 @@ export class RateLimitController {
                     success: false,
                     errorCode: 'rate_limit_exceeded',
                     errorMessage: 'Rate limit exceeded.',
+                    retryAfterSeconds: (hits.resetTimeMs - Date.now()) / 1000,
+                    totalHits: hits.totalHits,
                 };
             }
 
@@ -78,4 +80,7 @@ export interface CheckRateLimitFailure {
     success: false;
     errorCode: ServerError | 'rate_limit_exceeded';
     errorMessage: string;
+
+    retryAfterSeconds?: number;
+    totalHits?: number;
 }

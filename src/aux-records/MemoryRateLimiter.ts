@@ -25,7 +25,7 @@ export class MemoryRateLimiter implements RateLimiter {
 
         return {
             totalHits: state.count,
-            resetTime: new Date(state.resetTimeMs),
+            resetTimeMs: state.resetTimeMs,
         };
     }
 
