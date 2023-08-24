@@ -1,5 +1,6 @@
 import { Action } from './Action';
-import { ConnectionInfo } from './ConnectionInfo';
+import { ConnectionInfo, connectionInfoSchema } from './ConnectionInfo';
+import { z } from 'zod';
 
 /**
  * An event that is used to indicate an event that was sent from a remote device.
@@ -22,6 +23,14 @@ export interface DeviceAction extends Action {
      */
     taskId?: number | string;
 }
+export const deviceActionSchema = z.object({
+    type: z.literal('device'),
+    connection: connectionInfoSchema,
+    event: z.any(),
+    taskId: z.union([z.string(), z.number()]).optional(),
+});
+type ZodDeviceAction = z.infer<typeof deviceActionSchema>;
+type ZodDeviceActionAssertion = HasType<ZodDeviceAction, DeviceAction>;
 
 /**
  * An interface that is used to determine which device to send a remote event to.
@@ -47,6 +56,14 @@ export interface DeviceSelector {
      */
     broadcast?: boolean;
 }
+export const deviceSelectorSchema = z.object({
+    connectionId: z.string().optional(),
+    deviceId: z.string().optional(),
+    userId: z.string().optional(),
+    broadcast: z.boolean().optional(),
+});
+type ZodDeviceSelector = z.infer<typeof deviceSelectorSchema>;
+type ZodDeviceSelectorAssertion = HasType<ZodDeviceSelector, DeviceSelector>;
 
 export type RemoteActions =
     | RemoteAction
@@ -76,6 +93,14 @@ export interface RemoteAction extends Action, DeviceSelector {
      */
     taskId?: number | string;
 }
+export const remoteActionSchema = deviceSelectorSchema.extend({
+    type: z.literal('remote'),
+    event: z.any(),
+    allowBatching: z.boolean().optional(),
+    taskId: z.union([z.string(), z.number()]).optional(),
+});
+type ZodRemoteAction = z.infer<typeof remoteActionSchema>;
+type ZodRemoteActionAssertion = HasType<ZodRemoteAction, RemoteAction>;
 
 /**
  * An event that is used to respond to remote actions with some arbitrary data.
@@ -93,6 +118,16 @@ export interface RemoteActionResult extends Action, DeviceSelector {
      */
     taskId: number | string;
 }
+export const remoteActionResultSchema = deviceSelectorSchema.extend({
+    type: z.literal('remote_result'),
+    result: z.any().optional(),
+    taskId: z.union([z.string(), z.number()]).optional(),
+});
+type ZodRemoteActionResult = z.infer<typeof remoteActionResultSchema>;
+type ZodRemoteActionResultAssertion = HasType<
+    ZodRemoteActionResult,
+    RemoteActionResult
+>;
 
 /**
  * An event that is used to response to remote actions with an error.
@@ -110,6 +145,24 @@ export interface RemoteActionError extends Action, DeviceSelector {
      */
     taskId: number | string;
 }
+export const remoteActionErrorSchema = deviceSelectorSchema.extend({
+    type: z.literal('remote_error'),
+    error: z.any(),
+    taskId: z.union([z.string(), z.number()]).optional(),
+});
+type ZodRemoteActionError = z.infer<typeof remoteActionErrorSchema>;
+type ZodRemoteActionErrorAssertion = HasType<
+    ZodRemoteActionError,
+    RemoteActionError
+>;
+
+export const remoteActionsSchema = z.discriminatedUnion('type', [
+    remoteActionSchema,
+    remoteActionResultSchema,
+    remoteActionErrorSchema,
+]);
+type ZodRemoteActions = z.infer<typeof remoteActionsSchema>;
+type ZodRemoteActionsAssertion = HasType<ZodRemoteActions, RemoteActions>;
 
 /**
  * An event that is used to respond to remote actions with some arbitrary data.
@@ -132,6 +185,17 @@ export interface DeviceActionResult extends Action {
      */
     connection: ConnectionInfo;
 }
+export const deviceActionResultSchema = z.object({
+    type: z.literal('device_result'),
+    result: z.any(),
+    taskId: z.union([z.string(), z.number()]).optional(),
+    connection: connectionInfoSchema,
+});
+type ZodDeviceActionResult = z.infer<typeof deviceActionResultSchema>;
+type ZodDeviceActionResultAssertion = HasType<
+    ZodDeviceActionResult,
+    DeviceActionResult
+>;
 
 /**
  * An event that is used to respond to remote actions with an error.
@@ -154,6 +218,30 @@ export interface DeviceActionError extends Action {
      */
     connection: ConnectionInfo;
 }
+export const deviceActionErrorSchema = z.object({
+    type: z.literal('device_error'),
+    error: z.any(),
+    taskId: z.union([z.string(), z.number()]).optional(),
+    connection: connectionInfoSchema,
+});
+type ZodDeviceActionError = z.infer<typeof deviceActionErrorSchema>;
+type ZodDeviceActionErrorAssertion = HasType<
+    ZodDeviceActionError,
+    DeviceActionError
+>;
+
+export type DeviceActions =
+    | DeviceAction
+    | DeviceActionResult
+    | DeviceActionError;
+
+export const deviceActionsSchema = z.discriminatedUnion('type', [
+    deviceActionSchema,
+    deviceActionResultSchema,
+    deviceActionErrorSchema,
+]);
+type ZodDeviceActions = z.infer<typeof deviceActionsSchema>;
+type ZodDeviceActionsAssertion = HasType<ZodDeviceActions, DeviceActions>;
 
 /**
  * Creates a new remote event.
@@ -273,3 +361,5 @@ export function deviceError(
         taskId,
     };
 }
+
+type HasType<T, Q extends T> = Q;
