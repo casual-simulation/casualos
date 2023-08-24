@@ -59,6 +59,10 @@ import {
 } from './AIImageInterface';
 import { sortBy } from 'lodash';
 import { MemoryStore } from './MemoryStore';
+import { WebsocketController } from './websockets/WebsocketController';
+import { MemoryWebsocketConnectionStore } from './websockets/MemoryWebsocketConnectionStore';
+import { MemoryUpdatesStore } from '@casual-simulation/causal-trees';
+import { MemoryWebsocketMessenger } from './websockets/MemoryWebsocketMessenger';
 
 console.log = jest.fn();
 
@@ -76,6 +80,10 @@ describe('RecordsServer', () => {
     let dataController: DataRecordsController;
     let manualDataController: DataRecordsController;
     let manualDataStore: DataRecordsStore;
+    let websocketConnectionStore: MemoryWebsocketConnectionStore;
+    let updatesStore: MemoryUpdatesStore;
+    let websocketMessenger: MemoryWebsocketMessenger;
+    let websocketController: WebsocketController;
 
     let policyController: PolicyController;
 
@@ -236,6 +244,15 @@ describe('RecordsServer', () => {
             windowMs: 1000,
         });
 
+        websocketConnectionStore = new MemoryWebsocketConnectionStore();
+        updatesStore = new MemoryUpdatesStore();
+        websocketMessenger = new MemoryWebsocketMessenger();
+        websocketController = new WebsocketController(
+            websocketConnectionStore,
+            websocketMessenger,
+            updatesStore
+        );
+
         stripe = stripeMock = {
             publishableKey: 'publishable_key',
             getProductAndPriceInfo: jest.fn(),
@@ -336,7 +353,8 @@ describe('RecordsServer', () => {
             subscriptionController,
             rateLimitController,
             policyController,
-            aiController
+            aiController,
+            websocketController
         );
         defaultHeaders = {
             origin: 'test.com',
@@ -433,7 +451,7 @@ describe('RecordsServer', () => {
 
     describe('GET /api/{userId}/metadata', () => {
         it('should return the metadata for the given userId', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/{userId:${userId}}/metadata`,
                     authenticatedHeaders
@@ -498,7 +516,7 @@ describe('RecordsServer', () => {
                 'authorization'
             ] = `Bearer ${sessionKey}`;
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/{userId:${encodeURIComponent(userId)}}/metadata`,
                     authenticatedHeaders
@@ -519,7 +537,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return a 400 status code if given an invalid encoded user ID', async () => {
-            const result = await server.handleRequest({
+            const result = await server.handleHttpRequest({
                 method: 'GET',
                 body: null,
                 headers: authenticatedHeaders,
@@ -544,7 +562,7 @@ describe('RecordsServer', () => {
 
         it('should return a 403 status code if the origin is invalid', async () => {
             authenticatedHeaders['origin'] = 'https://wrong.origin.com';
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/{userId:${userId}}/metadata`,
                     authenticatedHeaders
@@ -572,7 +590,7 @@ describe('RecordsServer', () => {
                 'wrong secret',
                 1000
             )}`;
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/{userId:${userId}}/metadata`,
                     authenticatedHeaders
@@ -592,7 +610,7 @@ describe('RecordsServer', () => {
 
         it('should return a 401 status code if no session key is provided', async () => {
             delete authenticatedHeaders['authorization'];
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/{userId:${userId}}/metadata`,
                     authenticatedHeaders
@@ -613,7 +631,7 @@ describe('RecordsServer', () => {
 
         it('should return a 400 status code if the session key is wrongly formatted', async () => {
             authenticatedHeaders['authorization'] = `Bearer wrong`;
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/{userId:${userId}}/metadata`,
                     authenticatedHeaders
@@ -637,7 +655,7 @@ describe('RecordsServer', () => {
 
     describe('PUT /api/{userId}/metadata', () => {
         it('should update the metadata for the given userId', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPut(
                     `/api/{userId:${userId}}/metadata`,
                     JSON.stringify({
@@ -713,7 +731,7 @@ describe('RecordsServer', () => {
                 'authorization'
             ] = `Bearer ${sessionKey}`;
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPut(
                     `/api/{userId:${encodeURIComponent(userId)}}/metadata`,
                     JSON.stringify({
@@ -734,7 +752,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return a 400 status code if given an invalid encoded user ID', async () => {
-            const result = await server.handleRequest({
+            const result = await server.handleHttpRequest({
                 method: 'PUT',
                 body: JSON.stringify({
                     name: 'Kal',
@@ -833,7 +851,7 @@ describe('RecordsServer', () => {
                 }
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/{userId:${userId}}/subscription`,
                     authenticatedHeaders
@@ -876,7 +894,7 @@ describe('RecordsServer', () => {
                 }
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/{userId:${userId}}/subscription`,
                     authenticatedHeaders
@@ -912,7 +930,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return a 400 status code if given an invalid encoded user ID', async () => {
-            const result = await server.handleRequest({
+            const result = await server.handleHttpRequest({
                 method: 'GET',
                 body: null,
                 headers: authenticatedHeaders,
@@ -937,7 +955,7 @@ describe('RecordsServer', () => {
 
         it('should return a 403 status code if the origin is invalid', async () => {
             authenticatedHeaders['origin'] = 'https://wrong.origin.com';
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/{userId:${userId}}/subscription`,
                     authenticatedHeaders
@@ -965,7 +983,7 @@ describe('RecordsServer', () => {
                 'wrong secret',
                 1000
             )}`;
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/{userId:${userId}}/subscription`,
                     authenticatedHeaders
@@ -985,7 +1003,7 @@ describe('RecordsServer', () => {
 
         it('should return a 401 status code if no session key is provided', async () => {
             delete authenticatedHeaders['authorization'];
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/{userId:${userId}}/subscription`,
                     authenticatedHeaders
@@ -1006,7 +1024,7 @@ describe('RecordsServer', () => {
 
         it('should return a 400 status code if the session key is wrongly formatted', async () => {
             authenticatedHeaders['authorization'] = `Bearer wrong`;
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/{userId:${userId}}/subscription`,
                     authenticatedHeaders
@@ -1078,7 +1096,7 @@ describe('RecordsServer', () => {
                 url: 'http://portal_url',
             });
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/{userId:${userId}}/subscription/manage`,
                     '',
@@ -1110,7 +1128,7 @@ describe('RecordsServer', () => {
                 url: 'http://portal_url',
             });
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/{userId:${userId}}/subscription/manage`,
                     JSON.stringify({
@@ -1153,7 +1171,7 @@ describe('RecordsServer', () => {
                 url: 'http://portal_url',
             });
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/{userId:${userId}}/subscription/manage`,
                     JSON.stringify({
@@ -1184,7 +1202,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return a 400 status code if given an invalid encoded user ID', async () => {
-            const result = await server.handleRequest({
+            const result = await server.handleHttpRequest({
                 method: 'POST',
                 body: '',
                 headers: authenticatedHeaders,
@@ -1209,7 +1227,7 @@ describe('RecordsServer', () => {
 
         it('should return a 403 status code if the origin is invalid', async () => {
             authenticatedHeaders['origin'] = 'https://wrong.origin.com';
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/{userId:${userId}}/subscription/manage`,
                     '',
@@ -1238,7 +1256,7 @@ describe('RecordsServer', () => {
                 'wrong secret',
                 1000
             )}`;
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/{userId:${userId}}/subscription/manage`,
                     '',
@@ -1259,7 +1277,7 @@ describe('RecordsServer', () => {
 
         it('should return a 401 status code if no session key is provided', async () => {
             delete authenticatedHeaders['authorization'];
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/{userId:${userId}}/subscription/manage`,
                     '',
@@ -1281,7 +1299,7 @@ describe('RecordsServer', () => {
 
         it('should return a 400 status code if the session key is wrongly formatted', async () => {
             authenticatedHeaders['authorization'] = `Bearer wrong`;
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/{userId:${userId}}/subscription/manage`,
                     '',
@@ -1371,7 +1389,7 @@ describe('RecordsServer', () => {
                         type: type,
                     });
 
-                    const response = await server.handleRequest(
+                    const response = await server.handleHttpRequest(
                         httpPost('/api/stripeWebhook', 'request_body', {
                             ['stripe-signature']: 'request_signature',
                         })
@@ -1405,7 +1423,7 @@ describe('RecordsServer', () => {
                 }
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(`/api/emailRules`, defaultHeaders)
             );
 
@@ -1439,7 +1457,7 @@ describe('RecordsServer', () => {
                 }
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(`/api/smsRules`, defaultHeaders)
             );
 
@@ -1462,7 +1480,7 @@ describe('RecordsServer', () => {
 
     describe('GET /api/v2/sessions', () => {
         it('should return the list of sessions for the user', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(`/api/v2/sessions`, authenticatedHeaders)
             );
 
@@ -1490,7 +1508,7 @@ describe('RecordsServer', () => {
         });
 
         it('should use the expireTimeMs query parameter', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/sessions?expireTimeMs=${expireTimeMs}`,
                     authenticatedHeaders
@@ -1518,7 +1536,7 @@ describe('RecordsServer', () => {
 
     describe('POST /api/v2/replaceSession', () => {
         it('should replace the current session', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/replaceSession`,
                     '',
@@ -1565,7 +1583,7 @@ describe('RecordsServer', () => {
 
     describe('POST /api/v2/revokeAllSessions', () => {
         it('should revoke all the sessions', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/revokeAllSessions`,
                     JSON.stringify({
@@ -1607,7 +1625,7 @@ describe('RecordsServer', () => {
             );
             expect(session.revokeTimeMs).toBeNull();
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/revokeSession`,
                     JSON.stringify({
@@ -1637,7 +1655,7 @@ describe('RecordsServer', () => {
             );
             expect(session.revokeTimeMs).toBeNull();
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/revokeSession`,
                     JSON.stringify({
@@ -1702,7 +1720,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return a session key after completing the login', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/completeLogin`,
                     JSON.stringify({
@@ -1734,7 +1752,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an invalid_code result if the code is wrong', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/completeLogin`,
                     JSON.stringify({
@@ -1760,7 +1778,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an invalid_request result if the request id is wrong', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/completeLogin`,
                     JSON.stringify({
@@ -1806,7 +1824,7 @@ describe('RecordsServer', () => {
 
     describe('POST /api/v2/login', () => {
         it('should return a login request and send a auth message with the code', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/login`,
                     JSON.stringify({
@@ -1876,7 +1894,7 @@ describe('RecordsServer', () => {
         const userName = 'userName';
 
         it('should create a new livekit token', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/meet/token`,
                     JSON.stringify({
@@ -1922,7 +1940,7 @@ describe('RecordsServer', () => {
 
     describe('POST /api/v2/records', () => {
         it('should create a new record', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     '/api/v2/records',
                     JSON.stringify({
@@ -1955,7 +1973,7 @@ describe('RecordsServer', () => {
                 role: 'admin',
             });
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     '/api/v2/records',
                     JSON.stringify({
@@ -1981,7 +1999,7 @@ describe('RecordsServer', () => {
                 displayName: 'myStudio',
             });
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     '/api/v2/records',
                     JSON.stringify({
@@ -2005,7 +2023,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return a 403 status code when the record already exists', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     '/api/v2/records',
                     JSON.stringify({
@@ -2037,7 +2055,7 @@ describe('RecordsServer', () => {
 
     describe('POST /api/v2/records/events/count', () => {
         it('should add to the record event count', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/events/count`,
                     JSON.stringify({
@@ -2073,7 +2091,7 @@ describe('RecordsServer', () => {
             }
 
             delete apiHeaders['authorization'];
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/events/count`,
                     JSON.stringify({
@@ -2098,7 +2116,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request when given a non-string recordKey', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/events/count`,
                     JSON.stringify({
@@ -2132,7 +2150,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request when given a non-string eventName', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/events/count`,
                     JSON.stringify({
@@ -2166,7 +2184,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request when given a non-number count', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/events/count`,
                     JSON.stringify({
@@ -2237,7 +2255,7 @@ describe('RecordsServer', () => {
         });
 
         it('should get the current record event count', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/events/count?recordName=${recordName}&eventName=${'testEvent'}`,
                     apiHeaders
@@ -2258,7 +2276,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return 0 when the event name doesnt exist', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/events/count?recordName=${recordName}&eventName=${'missing'}`,
                     apiHeaders
@@ -2279,7 +2297,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result if recordName is omitted', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/events/count?eventName=${'testEvent'}`,
                     apiHeaders
@@ -2308,7 +2326,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result if eventName is omitted', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/events/count?recordName=${recordName}`,
                     apiHeaders
@@ -2363,7 +2381,7 @@ describe('RecordsServer', () => {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/events/list?recordName=${recordName}`,
                     apiHeaders
@@ -2386,7 +2404,7 @@ describe('RecordsServer', () => {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/events/list?recordName=${recordName}&eventName=${'test05'}`,
                     apiHeaders
@@ -2409,7 +2427,7 @@ describe('RecordsServer', () => {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/events/list?recordName=${recordName}&instances=inst`,
                     apiHeaders
@@ -2433,7 +2451,7 @@ describe('RecordsServer', () => {
                 ['inst']: new Set([ADMIN_ROLE_NAME]),
             };
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/events/list?recordName=${recordName}&instances=inst`,
                     apiHeaders
@@ -2456,7 +2474,7 @@ describe('RecordsServer', () => {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/events/list?eventName=${'testEvent'}`,
                     apiHeaders
@@ -2499,7 +2517,7 @@ describe('RecordsServer', () => {
         });
 
         it('should update the event markers', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/events`,
                     JSON.stringify({
@@ -2527,7 +2545,7 @@ describe('RecordsServer', () => {
         });
 
         it('should update the event count', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/events`,
                     JSON.stringify({
@@ -2567,7 +2585,7 @@ describe('RecordsServer', () => {
 
             delete apiHeaders['authorization'];
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/events`,
                     JSON.stringify({
@@ -2596,7 +2614,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result if recordKey is omitted', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/events`,
                     JSON.stringify({
@@ -2629,7 +2647,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result if eventName is omitted', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/events`,
                     JSON.stringify({
@@ -2683,7 +2701,7 @@ describe('RecordsServer', () => {
         });
 
         it('should delete the given manual data record', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     `/api/v2/records/manual/data`,
                     JSON.stringify({
@@ -2717,7 +2735,7 @@ describe('RecordsServer', () => {
             }
 
             delete apiHeaders['authorization'];
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     `/api/v2/records/manual/data`,
                     JSON.stringify({
@@ -2754,7 +2772,7 @@ describe('RecordsServer', () => {
                 ['secret']
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     '/api/v2/records/manual/data',
                     JSON.stringify({
@@ -2798,7 +2816,7 @@ describe('RecordsServer', () => {
                 ['secret']
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     '/api/v2/records/manual/data',
                     JSON.stringify({
@@ -2859,7 +2877,7 @@ describe('RecordsServer', () => {
                 ['secret']
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     '/api/v2/records/manual/data',
                     JSON.stringify({
@@ -2907,7 +2925,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when given a non-string recordKey', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     `/api/v2/records/manual/data`,
                     JSON.stringify({
@@ -2940,7 +2958,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when given a non-string address', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     `/api/v2/records/manual/data`,
                     JSON.stringify({
@@ -3014,7 +3032,7 @@ describe('RecordsServer', () => {
         });
 
         it('should be able to get the data from an address', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/manual/data?recordName=${recordName}&address=testAddress`,
                     defaultHeaders
@@ -3048,7 +3066,7 @@ describe('RecordsServer', () => {
                 ['secret']
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/manual/data?recordName=${recordName}&address=testAddress`,
                     defaultHeaders
@@ -3078,7 +3096,7 @@ describe('RecordsServer', () => {
                 ['secret']
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/manual/data?recordName=${recordName}&address=testAddress`,
                     apiHeaders
@@ -3120,7 +3138,7 @@ describe('RecordsServer', () => {
                 ['secret']
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/manual/data?recordName=${recordName}&address=testAddress&instances=${'inst'}`,
                     apiHeaders
@@ -3148,7 +3166,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when not given a recordName', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/manual/data?address=testAddress`,
                     defaultHeaders
@@ -3177,7 +3195,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when not given a address', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/manual/data?recordName=${recordName}`,
                     defaultHeaders
@@ -3206,7 +3224,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return a 404 when trying to get data that doesnt exist', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/manual/data?recordName=${recordName}&address=missing`,
                     defaultHeaders
@@ -3233,7 +3251,7 @@ describe('RecordsServer', () => {
 
     describe('POST /api/v2/records/manual/data', () => {
         it('should save the given manual data record', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/manual/data`,
                     JSON.stringify({
@@ -3282,7 +3300,7 @@ describe('RecordsServer', () => {
             }
 
             delete apiHeaders['authorization'];
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/manual/data`,
                     JSON.stringify({
@@ -3320,7 +3338,7 @@ describe('RecordsServer', () => {
         });
 
         it('should reject the request if the user is not authorized', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/manual/data`,
                     JSON.stringify({
@@ -3364,7 +3382,7 @@ describe('RecordsServer', () => {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/manual/data`,
                     JSON.stringify({
@@ -3405,7 +3423,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when given a non-string address', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/manual/data`,
                     JSON.stringify({
@@ -3439,7 +3457,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when given a non-string recordKey', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/manual/data`,
                     JSON.stringify({
@@ -3473,7 +3491,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when given undefined data', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/manual/data`,
                     JSON.stringify({
@@ -3551,7 +3569,7 @@ describe('RecordsServer', () => {
         });
 
         it('should delete the file with the given name', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -3591,7 +3609,7 @@ describe('RecordsServer', () => {
                 throw new Error('Unable to create subjectless record key!');
             }
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -3625,7 +3643,7 @@ describe('RecordsServer', () => {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -3663,7 +3681,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request if given a non-string recordKey', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -3696,7 +3714,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request if given a non-string fileUrl', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -3761,7 +3779,7 @@ describe('RecordsServer', () => {
     describe('POST /api/v2/records/file', () => {
         it('should create an un-uploaded file record', async () => {
             const hash = getHash('hello');
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -3818,7 +3836,7 @@ describe('RecordsServer', () => {
             }
 
             const hash = getHash('hello');
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -3869,7 +3887,7 @@ describe('RecordsServer', () => {
             };
 
             const hash = getHash('hello');
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -3921,7 +3939,7 @@ describe('RecordsServer', () => {
             };
 
             const hash = getHash('hello');
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -3963,7 +3981,7 @@ describe('RecordsServer', () => {
 
         it('should return an unacceptable_request if given a non-string recordKey', async () => {
             const hash = getHash('hello');
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -4000,7 +4018,7 @@ describe('RecordsServer', () => {
 
         it('should return an unacceptable_request if given a non-string fileSha256Hex', async () => {
             const hash = getHash('hello');
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -4037,7 +4055,7 @@ describe('RecordsServer', () => {
 
         it('should return an unacceptable_request if given a non-number fileByteLength', async () => {
             const hash = getHash('hello');
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -4075,7 +4093,7 @@ describe('RecordsServer', () => {
 
         it('should return an unacceptable_request if given a non-string fileMimeType', async () => {
             const hash = getHash('hello');
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -4112,7 +4130,7 @@ describe('RecordsServer', () => {
 
         it('should return an unacceptable_request if given a non-string fileDescription', async () => {
             const hash = getHash('hello');
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -4231,7 +4249,7 @@ describe('RecordsServer', () => {
                 [userId]: new Set(['developer']),
             };
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/file?recordName=${recordName}&fileName=${fileName}`,
                     apiHeaders
@@ -4271,7 +4289,7 @@ describe('RecordsServer', () => {
                 [userId]: new Set(['developer']),
             };
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/file?fileUrl=${encodeURIComponent(
                         fileUrl
@@ -4307,7 +4325,7 @@ describe('RecordsServer', () => {
 
             delete apiHeaders['Authorization'];
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/file?recordName=${keyResult.recordKey}&fileName=${fileName}`,
                     apiHeaders
@@ -4329,7 +4347,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request if given a fileName but no recordName', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(`/api/v2/records/file?fileName=${fileName}`, apiHeaders)
             );
 
@@ -4346,7 +4364,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request if given given a recordName but no fileName', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/file?recordName=${recordName}`,
                     apiHeaders
@@ -4366,7 +4384,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request if given neither a recordName or a fileName', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(`/api/v2/records/file`, apiHeaders)
             );
 
@@ -4433,7 +4451,7 @@ describe('RecordsServer', () => {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/file/list?recordName=${recordName}`,
                     apiHeaders
@@ -4482,7 +4500,7 @@ describe('RecordsServer', () => {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/file/list?recordName=${recordName}&fileName=test2`,
                     apiHeaders
@@ -4540,7 +4558,7 @@ describe('RecordsServer', () => {
             await store.updateFileRecord(recordName, 'test1.txt', ['secret']);
             await store.updateFileRecord(recordName, 'test3.txt', ['secret']);
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/file/list?recordName=${recordName}`,
                     apiHeaders
@@ -4598,7 +4616,7 @@ describe('RecordsServer', () => {
             await store.updateFileRecord(recordName, 'test1.txt', ['secret']);
             await store.updateFileRecord(recordName, 'test3.txt', ['secret']);
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/file/list?recordName=${recordName}&instances=${'inst'}`,
                     apiHeaders
@@ -4635,7 +4653,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when not given a recordName', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/file/list?fileName=testAddress`,
                     apiHeaders
@@ -4735,7 +4753,7 @@ describe('RecordsServer', () => {
         });
 
         it('should update the markers on the file with the given URL', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPut(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -4781,7 +4799,7 @@ describe('RecordsServer', () => {
                 throw new Error('Unable to create subjectless record key!');
             }
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPut(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -4817,7 +4835,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request if given a non-string recordKey', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPut(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -4851,7 +4869,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request if given a non-string fileUrl', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPut(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -4885,7 +4903,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request if given a non-array markers', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPut(
                     `/api/v2/records/file`,
                     JSON.stringify({
@@ -4953,7 +4971,7 @@ describe('RecordsServer', () => {
 
     describe('OPTIONS /api/v2/records/file/*', () => {
         it('should return Access-Control-Allow-Headers with the headers that the file store returns', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpRequest('OPTIONS', '/api/v2/records/file/hash.txt', null, {
                     'access-control-request-method': 'POST',
                     'access-control-request-headers':
@@ -4988,7 +5006,7 @@ describe('RecordsServer', () => {
         });
 
         it('should delete the data at the given address', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     '/api/v2/records/data',
                     JSON.stringify({
@@ -5029,7 +5047,7 @@ describe('RecordsServer', () => {
                 throw new Error('Unable to create subjectless record key!');
             }
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     '/api/v2/records/data',
                     JSON.stringify({
@@ -5074,7 +5092,7 @@ describe('RecordsServer', () => {
                 ['secret']
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     '/api/v2/records/data',
                     JSON.stringify({
@@ -5115,7 +5133,7 @@ describe('RecordsServer', () => {
                 ['secret']
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     '/api/v2/records/data',
                     JSON.stringify({
@@ -5173,7 +5191,7 @@ describe('RecordsServer', () => {
                 ['secret']
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     '/api/v2/records/data',
                     JSON.stringify({
@@ -5218,7 +5236,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request if given a non-string recordKey', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     '/api/v2/records/data',
                     JSON.stringify({
@@ -5251,7 +5269,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request if given a non-string address', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     '/api/v2/records/data',
                     JSON.stringify({
@@ -5328,7 +5346,7 @@ describe('RecordsServer', () => {
         });
 
         it('should be able to get the data', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/data?recordName=${recordName}&address=testAddress`,
                     defaultHeaders
@@ -5362,7 +5380,7 @@ describe('RecordsServer', () => {
                 ['secret']
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/data?recordName=${recordName}&address=testAddress`,
                     defaultHeaders
@@ -5392,7 +5410,7 @@ describe('RecordsServer', () => {
                 ['secret']
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/data?recordName=${recordName}&address=testAddress`,
                     apiHeaders
@@ -5434,7 +5452,7 @@ describe('RecordsServer', () => {
                 ['secret']
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/data?recordName=${recordName}&address=testAddress&instances=${'inst'}`,
                     apiHeaders
@@ -5462,7 +5480,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when not given a recordName', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/data?address=testAddress`,
                     defaultHeaders
@@ -5491,7 +5509,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when not given a address', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/data?recordName=${recordName}`,
                     defaultHeaders
@@ -5520,7 +5538,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return a 404 when trying to get data that doesnt exist', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/data?recordName=${recordName}&address=missing`,
                     defaultHeaders
@@ -5575,7 +5593,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return a list of data', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/data/list?recordName=${recordName}`,
                     defaultHeaders
@@ -5611,7 +5629,7 @@ describe('RecordsServer', () => {
         });
 
         it('should be able to list data by address', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/data/list?recordName=${recordName}&address=address1`,
                     defaultHeaders
@@ -5674,7 +5692,7 @@ describe('RecordsServer', () => {
                 ['secret']
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/data/list?recordName=${recordName}`,
                     apiHeaders
@@ -5741,7 +5759,7 @@ describe('RecordsServer', () => {
                 ['secret']
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/data/list?recordName=${recordName}&instances=${'inst'}`,
                     apiHeaders
@@ -5767,7 +5785,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when not given a recordName', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/data/list?address=testAddress`,
                     defaultHeaders
@@ -5805,7 +5823,7 @@ describe('RecordsServer', () => {
 
     describe('POST /api/v2/records/data', () => {
         it('should save the given data record', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/data`,
                     JSON.stringify({
@@ -5851,7 +5869,7 @@ describe('RecordsServer', () => {
             }
 
             delete apiHeaders['authorization'];
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/data`,
                     JSON.stringify({
@@ -5886,7 +5904,7 @@ describe('RecordsServer', () => {
         });
 
         it('should reject the request if the user is not authorized', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/data`,
                     JSON.stringify({
@@ -5930,7 +5948,7 @@ describe('RecordsServer', () => {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/data`,
                     JSON.stringify({
@@ -5971,7 +5989,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when given a non-string address', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/data`,
                     JSON.stringify({
@@ -6005,7 +6023,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when given a non-string recordKey', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/data`,
                     JSON.stringify({
@@ -6039,7 +6057,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when given undefined data', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/data`,
                     JSON.stringify({
@@ -6099,7 +6117,7 @@ describe('RecordsServer', () => {
 
     describe('POST /api/v2/records/key', () => {
         it('should create a record key', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/key`,
                     JSON.stringify({
@@ -6137,7 +6155,7 @@ describe('RecordsServer', () => {
         });
 
         it('should create a subjectless record key', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/key`,
                     JSON.stringify({
@@ -6175,7 +6193,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return a unacceptable_request error if the recordName is not a string', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/key`,
                     JSON.stringify({
@@ -6281,7 +6299,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return the list of records for the user', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet('/api/v2/records/list', apiHeaders)
             );
 
@@ -6364,7 +6382,7 @@ describe('RecordsServer', () => {
             });
 
             it('should return the list of records for the studio', async () => {
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpGet(
                         `/api/v2/records/list?studioId=${studioId}`,
                         apiHeaders
@@ -6408,7 +6426,7 @@ describe('RecordsServer', () => {
 
     describe('OPTIONS /api/v2/records', () => {
         it('should return a 204 response', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpRequest('OPTIONS', `/api/v2/records`, null, {
                     origin: apiHeaders['origin'],
                 })
@@ -6435,7 +6453,7 @@ describe('RecordsServer', () => {
         });
 
         it('should grant the given permission to the policy', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/policy/grantPermission`,
                     JSON.stringify({
@@ -6478,7 +6496,7 @@ describe('RecordsServer', () => {
         it('should deny the request if the user is not authorized', async () => {
             delete store.roles[recordName][userId];
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/policy/grantPermission`,
                     JSON.stringify({
@@ -6523,7 +6541,7 @@ describe('RecordsServer', () => {
         });
 
         it('should deny the request if the inst is not authorized', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/policy/grantPermission`,
                     JSON.stringify({
@@ -6569,7 +6587,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when given a non-string marker', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/policy/grantPermission`,
                     JSON.stringify({
@@ -6607,7 +6625,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when given a non-string recordName', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/policy/grantPermission`,
                     JSON.stringify({
@@ -6645,7 +6663,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when given undefined data', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/policy/grantPermission`,
                     JSON.stringify({
@@ -6748,7 +6766,7 @@ describe('RecordsServer', () => {
         });
 
         it('should revoke the given permission to the policy', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/policy/revokePermission`,
                     JSON.stringify({
@@ -6785,7 +6803,7 @@ describe('RecordsServer', () => {
         it('should deny the request if the user is not authorized', async () => {
             delete store.roles[recordName][userId];
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/policy/revokePermission`,
                     JSON.stringify({
@@ -6838,7 +6856,7 @@ describe('RecordsServer', () => {
         });
 
         it('should deny the request if the inst is not authorized', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/policy/revokePermission`,
                     JSON.stringify({
@@ -6892,7 +6910,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when given a non-string marker', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/policy/revokePermission`,
                     JSON.stringify({
@@ -6930,7 +6948,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when given a non-string recordName', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/policy/revokePermission`,
                     JSON.stringify({
@@ -6968,7 +6986,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when given undefined data', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/policy/revokePermission`,
                     JSON.stringify({
@@ -7075,7 +7093,7 @@ describe('RecordsServer', () => {
         });
 
         it('should get the policy for the given marker', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/policy?recordName=${recordName}&marker=test`,
                     apiHeaders
@@ -7102,7 +7120,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when not given a marker', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/policy?recordName=${recordName}`,
                     apiHeaders
@@ -7131,7 +7149,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when not given a recordName', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(`/api/v2/records/policy?marker=test`, apiHeaders)
             );
 
@@ -7221,7 +7239,7 @@ describe('RecordsServer', () => {
         });
 
         it('should list the policies by marker', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/policy/list?recordName=${recordName}`,
                     apiHeaders
@@ -7279,7 +7297,7 @@ describe('RecordsServer', () => {
         });
 
         it('should start the list after the given startingMarker', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/policy/list?recordName=${recordName}&startingMarker=abc`,
                     apiHeaders
@@ -7325,7 +7343,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when not given a recordName', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(`/api/v2/records/policy/list?marker=test`, apiHeaders)
             );
 
@@ -7390,7 +7408,7 @@ describe('RecordsServer', () => {
         });
 
         it('should list the roles for the given user', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/role/user/list?recordName=${recordName}&userId=${'testId'}`,
                     apiHeaders
@@ -7419,7 +7437,7 @@ describe('RecordsServer', () => {
         it('should deny the request if the user is not authorized', async () => {
             delete store.roles[recordName][userId];
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/role/user/list?recordName=${recordName}&userId=${'testId'}`,
                     apiHeaders
@@ -7447,7 +7465,7 @@ describe('RecordsServer', () => {
         });
 
         it('should deny the request if the inst is not authorized', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/role/user/list?recordName=${recordName}&userId=${'testId'}&instances=${'inst'}`,
                     apiHeaders
@@ -7475,7 +7493,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when not given a recordName', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/role/user/list?userId=${'testId'}`,
                     apiHeaders
@@ -7504,7 +7522,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when not given a userId', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/role/user/list?recordName=${recordName}`,
                     apiHeaders
@@ -7572,7 +7590,7 @@ describe('RecordsServer', () => {
         });
 
         it('should list the roles for the given inst', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/role/inst/list?recordName=${recordName}&inst=${'testId'}`,
                     apiHeaders
@@ -7601,7 +7619,7 @@ describe('RecordsServer', () => {
         it('should deny the request if the user is not authorized', async () => {
             delete store.roles[recordName][userId];
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/role/inst/list?recordName=${recordName}&inst=${'testId'}`,
                     apiHeaders
@@ -7629,7 +7647,7 @@ describe('RecordsServer', () => {
         });
 
         it('should deny the request if the instance is not authorized', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/role/inst/list?recordName=${recordName}&inst=${'testId'}&instances=${'inst'}`,
                     apiHeaders
@@ -7657,7 +7675,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when not given a recordName', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/role/inst/list?inst=${'testId'}`,
                     apiHeaders
@@ -7686,7 +7704,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when not given an inst', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/role/inst/list?recordName=${recordName}`,
                     apiHeaders
@@ -7764,7 +7782,7 @@ describe('RecordsServer', () => {
         });
 
         it('should list the role assignments in the record', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/role/assignments/list?recordName=${recordName}`,
                     apiHeaders
@@ -7824,7 +7842,7 @@ describe('RecordsServer', () => {
         });
 
         it('should list the role assignments after the given startingRole', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/role/assignments/list?recordName=${recordName}&startingRole=${'role1'}`,
                     apiHeaders
@@ -7854,7 +7872,7 @@ describe('RecordsServer', () => {
         it('should deny the request if the user is not authorized', async () => {
             delete store.roles[recordName][userId];
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/role/assignments/list?recordName=${recordName}`,
                     apiHeaders
@@ -7882,7 +7900,7 @@ describe('RecordsServer', () => {
         });
 
         it('should deny the request if the inst is not authorized', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/records/role/assignments/list?recordName=${recordName}&instances=${'inst'}`,
                     apiHeaders
@@ -7910,7 +7928,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when not given a recordName', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(`/api/v2/records/role/assignments/list`, apiHeaders)
             );
 
@@ -7956,7 +7974,7 @@ describe('RecordsServer', () => {
 
         describe('?role', () => {
             it('should list the roles for the given inst', async () => {
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpGet(
                         `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
                         apiHeaders
@@ -7993,7 +8011,7 @@ describe('RecordsServer', () => {
             it('should deny the request if the user is not authorized', async () => {
                 delete store.roles[recordName][userId];
 
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpGet(
                         `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
                         apiHeaders
@@ -8021,7 +8039,7 @@ describe('RecordsServer', () => {
             });
 
             it('should deny the request if the inst is not authorized', async () => {
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpGet(
                         `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}&instances=${'inst'}`,
                         apiHeaders
@@ -8049,7 +8067,7 @@ describe('RecordsServer', () => {
             });
 
             it('should return an unacceptable_request result when not given a recordName', async () => {
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpGet(
                         `/api/v2/records/role/assignments/list?role=${'role1'}`,
                         apiHeaders
@@ -8106,7 +8124,7 @@ describe('RecordsServer', () => {
         });
 
         it('should grant the role to the given user', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/role/grant`,
                     JSON.stringify({
@@ -8137,7 +8155,7 @@ describe('RecordsServer', () => {
         });
 
         it('should grant the role to the given inst', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/role/grant`,
                     JSON.stringify({
@@ -8170,7 +8188,7 @@ describe('RecordsServer', () => {
         it('should deny the request if the user is not authorized', async () => {
             delete store.roles[recordName][userId];
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/role/grant`,
                     JSON.stringify({
@@ -8207,7 +8225,7 @@ describe('RecordsServer', () => {
         });
 
         it('should deny the request if the inst is not authorized', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/role/grant`,
                     JSON.stringify({
@@ -8246,7 +8264,7 @@ describe('RecordsServer', () => {
 
         it('should support setting an expiration time on role grants', async () => {
             const expireTime = Date.now() + 100000;
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/role/grant`,
                     JSON.stringify({
@@ -8278,7 +8296,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when not given a recordName', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/role/grant`,
                     JSON.stringify({
@@ -8311,7 +8329,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when not given a role', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/role/grant`,
                     JSON.stringify({
@@ -8344,7 +8362,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when given a non-number expire time', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/role/grant`,
                     JSON.stringify({
@@ -8424,7 +8442,7 @@ describe('RecordsServer', () => {
         });
 
         it('should revoke the role from the given user', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/role/revoke`,
                     JSON.stringify({
@@ -8452,7 +8470,7 @@ describe('RecordsServer', () => {
         it('should reject the request if the user is not authorized', async () => {
             delete store.roles[recordName][userId];
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/role/revoke`,
                     JSON.stringify({
@@ -8494,7 +8512,7 @@ describe('RecordsServer', () => {
         });
 
         it('should reject the request if the inst is not authorized', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/role/revoke`,
                     JSON.stringify({
@@ -8537,7 +8555,7 @@ describe('RecordsServer', () => {
         });
 
         it('should revoke the role from the given inst', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/role/revoke`,
                     JSON.stringify({
@@ -8563,7 +8581,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when not given a recordName', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/role/revoke`,
                     JSON.stringify({
@@ -8596,7 +8614,7 @@ describe('RecordsServer', () => {
         });
 
         it('should return an unacceptable_request result when not given a role', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/records/role/revoke`,
                     JSON.stringify({
@@ -8694,7 +8712,7 @@ describe('RecordsServer', () => {
                 null
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/ai/chat`,
                     JSON.stringify({
@@ -8723,7 +8741,7 @@ describe('RecordsServer', () => {
         });
 
         it('should call the AI chat interface', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/ai/chat`,
                     JSON.stringify({
@@ -8765,7 +8783,7 @@ describe('RecordsServer', () => {
                 totalTokens: 0,
             });
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/ai/chat`,
                     JSON.stringify({
@@ -8880,7 +8898,7 @@ describe('RecordsServer', () => {
                 null
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/ai/skybox`,
                     JSON.stringify({
@@ -8903,7 +8921,7 @@ describe('RecordsServer', () => {
         });
 
         it('should call the AI skybox interface', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/ai/skybox`,
                     JSON.stringify({
@@ -8997,7 +9015,7 @@ describe('RecordsServer', () => {
                 null
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(`/api/v2/ai/skybox`, apiHeaders)
             );
 
@@ -9014,7 +9032,7 @@ describe('RecordsServer', () => {
         });
 
         it('should call the AI skybox interface', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(`/api/v2/ai/skybox?skyboxId=${'skybox-id'}`, apiHeaders)
             );
 
@@ -9076,7 +9094,7 @@ describe('RecordsServer', () => {
                 null
             );
 
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/ai/image`,
                     JSON.stringify({
@@ -9099,7 +9117,7 @@ describe('RecordsServer', () => {
         });
 
         it('should call the AI image interface', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     `/api/v2/ai/image`,
                     JSON.stringify({
@@ -9162,7 +9180,7 @@ describe('RecordsServer', () => {
 
     describe('POST /api/v2/studios', () => {
         it('should create a studio and return the ID', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     '/api/v2/studios',
                     JSON.stringify({
@@ -9239,7 +9257,7 @@ describe('RecordsServer', () => {
         });
 
         it('should list the studios that the user has access to', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(`/api/v2/studios/list`, apiHeaders)
             );
 
@@ -9303,7 +9321,7 @@ describe('RecordsServer', () => {
         });
 
         it('should list the members of the studio', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpGet(
                     `/api/v2/studios/members/list?studioId=${studioId}`,
                     authenticatedHeaders
@@ -9395,7 +9413,7 @@ describe('RecordsServer', () => {
         });
 
         it('should add a member to the studio', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     '/api/v2/studios/members',
                     JSON.stringify({
@@ -9435,7 +9453,7 @@ describe('RecordsServer', () => {
         });
 
         it('should be able to add members by email address', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     '/api/v2/studios/members',
                     JSON.stringify({
@@ -9475,7 +9493,7 @@ describe('RecordsServer', () => {
         });
 
         it('should be able to add members by phone number', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpPost(
                     '/api/v2/studios/members',
                     JSON.stringify({
@@ -9564,7 +9582,7 @@ describe('RecordsServer', () => {
         });
 
         it('should remove the member from the studio', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpDelete(
                     '/api/v2/studios/members',
                     JSON.stringify({
@@ -9645,7 +9663,7 @@ describe('RecordsServer', () => {
                     }
                 );
 
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpGet(
                         `/api/v2/subscriptions?userId=${userId}`,
                         authenticatedHeaders
@@ -9688,7 +9706,7 @@ describe('RecordsServer', () => {
                     }
                 );
 
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpGet(
                         `/api/v2/subscriptions?userId=${userId}`,
                         authenticatedHeaders
@@ -9725,7 +9743,7 @@ describe('RecordsServer', () => {
 
             it('should return a 403 status code if the origin is invalid', async () => {
                 authenticatedHeaders['origin'] = 'https://wrong.origin.com';
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpGet(
                         `/api/v2/subscriptions?userId=${userId}`,
                         authenticatedHeaders
@@ -9753,7 +9771,7 @@ describe('RecordsServer', () => {
                     'wrong secret',
                     1000
                 )}`;
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpGet(
                         `/api/v2/subscriptions?userId=${userId}`,
                         authenticatedHeaders
@@ -9773,7 +9791,7 @@ describe('RecordsServer', () => {
 
             it('should return a 401 status code if no session key is provided', async () => {
                 delete authenticatedHeaders['authorization'];
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpGet(
                         `/api/v2/subscriptions?userId=${userId}`,
                         authenticatedHeaders
@@ -9794,7 +9812,7 @@ describe('RecordsServer', () => {
 
             it('should return a 400 status code if the session key is wrongly formatted', async () => {
                 authenticatedHeaders['authorization'] = `Bearer wrong`;
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpGet(
                         `/api/v2/subscriptions?userId=${userId}`,
                         authenticatedHeaders
@@ -9870,7 +9888,7 @@ describe('RecordsServer', () => {
                     }
                 );
 
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpGet(
                         `/api/v2/subscriptions?studioId=${studioId}`,
                         authenticatedHeaders
@@ -9913,7 +9931,7 @@ describe('RecordsServer', () => {
                     }
                 );
 
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpGet(
                         `/api/v2/subscriptions?studioId=${studioId}`,
                         authenticatedHeaders
@@ -9950,7 +9968,7 @@ describe('RecordsServer', () => {
 
             it('should return a 403 status code if the origin is invalid', async () => {
                 authenticatedHeaders['origin'] = 'https://wrong.origin.com';
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpGet(
                         `/api/v2/subscriptions?studioId=${studioId}`,
                         authenticatedHeaders
@@ -9978,7 +9996,7 @@ describe('RecordsServer', () => {
                     'wrong secret',
                     1000
                 )}`;
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpGet(
                         `/api/v2/subscriptions?studioId=${studioId}`,
                         authenticatedHeaders
@@ -9998,7 +10016,7 @@ describe('RecordsServer', () => {
 
             it('should return a 401 status code if no session key is provided', async () => {
                 delete authenticatedHeaders['authorization'];
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpGet(
                         `/api/v2/subscriptions?studioId=${studioId}`,
                         authenticatedHeaders
@@ -10019,7 +10037,7 @@ describe('RecordsServer', () => {
 
             it('should return a 400 status code if the session key is wrongly formatted', async () => {
                 authenticatedHeaders['authorization'] = `Bearer wrong`;
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpGet(
                         `/api/v2/subscriptions?studioId=${studioId}`,
                         authenticatedHeaders
@@ -10093,7 +10111,7 @@ describe('RecordsServer', () => {
                     url: 'http://portal_url',
                 });
 
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpPost(
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
@@ -10127,7 +10145,7 @@ describe('RecordsServer', () => {
                     url: 'http://portal_url',
                 });
 
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpPost(
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
@@ -10171,7 +10189,7 @@ describe('RecordsServer', () => {
                     url: 'http://portal_url',
                 });
 
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpPost(
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
@@ -10203,7 +10221,7 @@ describe('RecordsServer', () => {
             });
 
             it('should return a 400 status code if given an invalid encoded user ID', async () => {
-                const result = await server.handleRequest({
+                const result = await server.handleHttpRequest({
                     method: 'POST',
                     body: '',
                     headers: authenticatedHeaders,
@@ -10228,7 +10246,7 @@ describe('RecordsServer', () => {
 
             it('should return a 403 status code if the origin is invalid', async () => {
                 authenticatedHeaders['origin'] = 'https://wrong.origin.com';
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpPost(
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
@@ -10259,7 +10277,7 @@ describe('RecordsServer', () => {
                     'wrong secret',
                     1000
                 )}`;
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpPost(
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
@@ -10282,7 +10300,7 @@ describe('RecordsServer', () => {
 
             it('should return a 401 status code if no session key is provided', async () => {
                 delete authenticatedHeaders['authorization'];
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpPost(
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
@@ -10306,7 +10324,7 @@ describe('RecordsServer', () => {
 
             it('should return a 400 status code if the session key is wrongly formatted', async () => {
                 authenticatedHeaders['authorization'] = `Bearer wrong`;
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpPost(
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
@@ -10393,7 +10411,7 @@ describe('RecordsServer', () => {
                     url: 'http://portal_url',
                 });
 
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpPost(
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
@@ -10427,7 +10445,7 @@ describe('RecordsServer', () => {
                     url: 'http://portal_url',
                 });
 
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpPost(
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
@@ -10471,7 +10489,7 @@ describe('RecordsServer', () => {
                     url: 'http://portal_url',
                 });
 
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpPost(
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
@@ -10503,7 +10521,7 @@ describe('RecordsServer', () => {
             });
 
             it('should return a 400 status code if given an invalid encoded user ID', async () => {
-                const result = await server.handleRequest({
+                const result = await server.handleHttpRequest({
                     method: 'POST',
                     body: '',
                     headers: authenticatedHeaders,
@@ -10528,7 +10546,7 @@ describe('RecordsServer', () => {
 
             it('should return a 403 status code if the origin is invalid', async () => {
                 authenticatedHeaders['origin'] = 'https://wrong.origin.com';
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpPost(
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
@@ -10559,7 +10577,7 @@ describe('RecordsServer', () => {
                     'wrong secret',
                     1000
                 )}`;
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpPost(
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
@@ -10582,7 +10600,7 @@ describe('RecordsServer', () => {
 
             it('should return a 401 status code if no session key is provided', async () => {
                 delete authenticatedHeaders['authorization'];
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpPost(
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
@@ -10606,7 +10624,7 @@ describe('RecordsServer', () => {
 
             it('should return a 400 status code if the session key is wrongly formatted', async () => {
                 authenticatedHeaders['authorization'] = `Bearer wrong`;
-                const result = await server.handleRequest(
+                const result = await server.handleHttpRequest(
                     httpPost(
                         `/api/v2/subscriptions/manage`,
                         JSON.stringify({
@@ -10637,7 +10655,7 @@ describe('RecordsServer', () => {
     });
 
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
-        const result = await server.handleRequest(
+        const result = await server.handleHttpRequest(
             httpRequest('GET', `/api/missing`, null)
         );
 
@@ -10691,7 +10709,7 @@ describe('RecordsServer', () => {
         createBody: () => string | null = () => null
     ) {
         it('should return a 403 status code if the request is made from a non-account origin', async () => {
-            const result = await server.handleRequest(
+            const result = await server.handleHttpRequest(
                 httpRequest(method, url, createBody(), defaultHeaders)
             );
 
@@ -10720,7 +10738,7 @@ describe('RecordsServer', () => {
         it('should return a 401 status code when no session key is included', async () => {
             let request = getRequest();
             delete request.headers.authorization;
-            const result = await server.handleRequest(request);
+            const result = await server.handleHttpRequest(request);
 
             expectResponseBodyToEqual(result, {
                 statusCode: 401,
@@ -10740,7 +10758,7 @@ describe('RecordsServer', () => {
         it('should return a 400 status code when the session key is wrongly formatted', async () => {
             let request = getRequest();
             request.headers['authorization'] = 'Bearer wrong';
-            const result = await server.handleRequest(request);
+            const result = await server.handleHttpRequest(request);
 
             expect(result).toEqual({
                 statusCode: 400,
@@ -10763,7 +10781,7 @@ describe('RecordsServer', () => {
             request.headers['authorization'] =
                 'Bearer ' +
                 formatV1SessionKey(userId, 'sessionId', 'wrong', 9999999999);
-            const result = await server.handleRequest(request);
+            const result = await server.handleHttpRequest(request);
 
             expect(result).toEqual({
                 statusCode: 403,
@@ -10791,7 +10809,7 @@ describe('RecordsServer', () => {
     function testBodyIsJson(getRequest: (body: string) => GenericHttpRequest) {
         it('should return a 400 status code when the body is not JSON', async () => {
             const request = getRequest('{');
-            const result = await server.handleRequest(request);
+            const result = await server.handleHttpRequest(request);
 
             expect(result).toEqual({
                 statusCode: 400,
@@ -10811,7 +10829,7 @@ describe('RecordsServer', () => {
 
         it('should return a 400 status code when the body is not a JSON object', async () => {
             const request = getRequest('true');
-            const result = await server.handleRequest(request);
+            const result = await server.handleHttpRequest(request);
 
             expect(result).toEqual({
                 statusCode: 400,
@@ -10865,7 +10883,7 @@ describe('RecordsServer', () => {
             await rateLimiter.increment(ip, 100);
 
             const request = createRequest();
-            const result = await server.handleRequest(request);
+            const result = await server.handleHttpRequest(request);
 
             expect(result).toEqual({
                 statusCode: 429,
@@ -10906,7 +10924,7 @@ describe('RecordsServer', () => {
             await rateLimiter.increment(ip, 100);
 
             const request = createRequest();
-            const result = await server.handleRequest(request);
+            const result = await server.handleHttpRequest(request);
 
             expect(result.statusCode).not.toEqual(429);
         });

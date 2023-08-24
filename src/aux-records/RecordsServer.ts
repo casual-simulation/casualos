@@ -30,6 +30,7 @@ import { AVAILABLE_PERMISSIONS_VALIDATION } from './PolicyPermissions';
 import { PolicyController } from './PolicyController';
 import { AIController } from './AIController';
 import { AIChatMessage, AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
+import { WebsocketController } from 'websockets/WebsocketController';
 
 /**
  * Defines an interface for a generic HTTP request.
@@ -107,6 +108,28 @@ export interface GenericQueryStringParameters {
 
 export interface GenericPathParameters {
     [key: string]: string;
+}
+
+/**
+ * Defines an interface for a generic Websocket request.
+ */
+export interface GenericWebsocketRequest {
+    type: 'connect' | 'disconnect' | 'message';
+
+    /**
+     * The ID of the connection that the server has associated with this request.
+     */
+    connectionId: string;
+
+    /**
+     * The body of the websocket request.
+     */
+    body?: string | Uint8Array | null;
+
+    /**
+     * The IP address of the request.
+     */
+    ipAddress: string;
 }
 
 const NOT_LOGGED_IN_RESULT = {
@@ -222,6 +245,7 @@ export class RecordsServer {
     private _files: FileRecordsController;
     private _subscriptions: SubscriptionController | null;
     private _aiController: AIController | null;
+    private _websocketController: WebsocketController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -248,7 +272,8 @@ export class RecordsServer {
         subscriptionController: SubscriptionController | null,
         rateLimitController: RateLimitController,
         policyController: PolicyController,
-        aiController: AIController | null
+        aiController: AIController | null,
+        websocketController: WebsocketController | null
     ) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -263,13 +288,14 @@ export class RecordsServer {
         this._rateLimit = rateLimitController;
         this._policyController = policyController;
         this._aiController = aiController;
+        this._websocketController = websocketController;
     }
 
     /**
      * Handles the given request and returns the specified response.
      * @param request The request that should be handled.
      */
-    async handleRequest(
+    async handleHttpRequest(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
         let skipRateLimitCheck = false;
@@ -783,6 +809,66 @@ export class RecordsServer {
             returnResult(OPERATION_NOT_FOUND_RESULT),
             true
         );
+    }
+
+    /**
+     * Handles the given request and returns the specified response.
+     * @param request The request that should be handled.
+     */
+    async handleWebsocketRequest(request: GenericWebsocketRequest) {
+        if (!this._websocketController) {
+            return;
+        }
+
+        let skipRateLimitCheck = false;
+        if (!this._rateLimit) {
+            skipRateLimitCheck = true;
+        } else if (request.type !== 'message') {
+            skipRateLimitCheck = true;
+        }
+
+        if (!skipRateLimitCheck) {
+            const response = await this._rateLimit.checkRateLimit({
+                ipAddress: request.ipAddress,
+            });
+
+            if (response.success === false) {
+                if (response.errorCode === 'rate_limit_exceeded') {
+                    await this._websocketController.rateLimitExceeded(
+                        request.connectionId,
+                        response.retryAfterSeconds ?? 0,
+                        response.totalHits,
+                        Date.now()
+                    );
+                    return;
+                } else {
+                    console.log(
+                        '[RecordsServer] Rate limit check failed. Allowing request to continue.'
+                    );
+                }
+            }
+        }
+
+        if (request.type === 'connect') {
+            await this._websocketController.connect(request.connectionId);
+        } else if (request.type === 'disconnect') {
+            await this._websocketController.disconnect(request.connectionId);
+        } else if (request.type === 'message') {
+            const jsonResult = tryParseJson(request.body);
+
+            if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+                return;
+            }
+
+            const event = jsonResult.value;
+
+            const message = this._websocketController.resolveMessage(json);
+
+            await this._websocketController.message(
+                request.connectionId,
+                request.body
+            );
+        }
     }
 
     private async _stripeWebhook(

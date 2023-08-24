@@ -1,4 +1,8 @@
-import { WebsocketMessenger } from './WebsocketMessenger';
+import { WebsocketEvent, WebsocketEventTypes } from './WebsocketEvents';
+import {
+    ResolvedWebsocketMessage,
+    WebsocketMessenger,
+} from './WebsocketMessenger';
 
 export class MemoryWebsocketMessenger implements WebsocketMessenger {
     private _messages = new Map<string, any[]>();
@@ -23,6 +27,42 @@ export class MemoryWebsocketMessenger implements WebsocketMessenger {
             const list = this._getMessages(id);
             list.push(data);
         }
+    }
+
+    async resolveMessage(
+        event: WebsocketEvent
+    ): Promise<ResolvedWebsocketMessage> {
+        switch (event[0]) {
+            case WebsocketEventTypes.Message:
+                return {
+                    success: true,
+                    message: event[1],
+                };
+            case WebsocketEventTypes.UploadRequest:
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'Upload requests are not supported.',
+                };
+            case WebsocketEventTypes.UploadResponse:
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'Upload responses are not supported.',
+                };
+            case WebsocketEventTypes.DownloadRequest:
+                return {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage: 'Download requests are not supported.',
+                };
+        }
+
+        return {
+            success: false,
+            errorCode: 'not_supported',
+            errorMessage: 'Unknown event type.',
+        };
     }
 
     private _getMessages(connectionId: string): any[] {

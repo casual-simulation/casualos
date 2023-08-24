@@ -1,4 +1,5 @@
 import { WebsocketEvent, WebsocketMessage } from './WebsocketEvents';
+import { ServerError, NotSupportedError } from '../Errors';
 
 /**
  * Defines an interface that is capable of sending messages to connections.
@@ -29,4 +30,25 @@ export interface WebsocketMessenger {
      * @param data The data that should be sent.
      */
     sendRaw?(connectionId: string, data: string): Promise<void>;
+
+    /**
+     * Attempts to resolve the given event into a message.
+     * @param event The event.
+     */
+    resolveMessage(event: WebsocketEvent): Promise<ResolvedWebsocketMessage>;
+}
+
+export type ResolvedWebsocketMessage =
+    | WebsocketMessageSuccess
+    | WebsocketMessageFailure;
+
+export interface WebsocketMessageSuccess {
+    success: true;
+    message: WebsocketMessage;
+}
+
+export interface WebsocketMessageFailure {
+    success: false;
+    errorCode: ServerError | NotSupportedError;
+    errorMessage: string;
 }

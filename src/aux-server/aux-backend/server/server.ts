@@ -673,7 +673,7 @@ export class Server {
                 }
             }
 
-            const response = await server.handleRequest({
+            const response = await server.handleHttpRequest({
                 method: req.method as any,
                 path: req.path,
                 body: req.body,
