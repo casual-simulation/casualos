@@ -36,6 +36,12 @@ export interface UpdatesStore {
         updatesToRemove: StoredUpdates,
         updatesToAdd: string[]
     ): Promise<ReplaceUpdatesResult>;
+
+    /**
+     * Gets the number of updates for the given branch.
+     * @param branch The branch.
+     */
+    countUpdates(branch: string): Promise<number>;
 }
 
 export interface StoredUpdates {

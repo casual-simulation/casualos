@@ -31,6 +31,16 @@ export class MemoryUpdatesStore implements UpdatesStore {
         };
     }
 
+    async countUpdates(branch: string): Promise<number> {
+        let updates = this._branches.get(branch) ?? {
+            updates: [],
+            timestamps: [],
+            instSizeInBytes: 0,
+        };
+
+        return updates.updates.length;
+    }
+
     async addUpdates(
         branch: string,
         updates: string[]

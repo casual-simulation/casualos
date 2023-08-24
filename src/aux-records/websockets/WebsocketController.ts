@@ -564,11 +564,11 @@ export class WebsocketController {
         data: object
     ): Promise<number> {
         const namespace = branchNamespace(branch);
-        // const count = await this._updatesStore..countAtoms(namespace);
+        const count = await this._updatesStore.countUpdates(namespace);
 
-        // if (count <= 0) {
-        //     return 404;
-        // }
+        if (count <= 0) {
+            return 404;
+        }
 
         const connectedDevices =
             await this._connectionStore.getConnectionsByNamespace(namespace);

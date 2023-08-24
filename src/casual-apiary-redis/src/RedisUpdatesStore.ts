@@ -25,6 +25,7 @@ export class RedisUpdatesStore implements UpdatesStore {
         start: number,
         end: number
     ) => Promise<string[]>;
+    private llen: (key: string) => Promise<number>;
     private del: (key: string) => Promise<void>;
     private script: (command: string, script: string) => Promise<string>;
     private evalsha: (script: string, ...args: any[]) => Promise<any>;
@@ -54,6 +55,7 @@ export class RedisUpdatesStore implements UpdatesStore {
         this.incrBy = promisify(this._redis.incrby).bind(this._redis);
         this.script = promisify(this._redis.script.bind(this._redis));
         this.evalsha = promisify(this._redis.evalsha.bind(this._redis));
+        this.llen = promisify(this._redis.llen.bind(this._redis));
     }
 
     async getUpdates(branch: string): Promise<StoredUpdates> {
@@ -77,6 +79,11 @@ export class RedisUpdatesStore implements UpdatesStore {
             updates: u,
             timestamps: timestamps.length > 0 ? timestamps : null,
         };
+    }
+
+    async countUpdates(branch: string): Promise<number> {
+        const key = branchKey(this._globalNamespace, branch);
+        return await this.llen(key);
     }
 
     async addUpdates(
