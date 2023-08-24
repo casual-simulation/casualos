@@ -35,6 +35,12 @@ export class MongoDBUpdatesStore implements UpdatesStore {
         };
     }
 
+    async countUpdates(branch: string): Promise<number> {
+        return await this._updates.count({
+            branch,
+        });
+    }
+
     async addUpdates(
         branch: string,
         updates: string[]
