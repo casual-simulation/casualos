@@ -22,8 +22,6 @@ import {
     createYjsPartition,
     YjsPartitionImpl,
 } from '@casual-simulation/aux-common/partitions/YjsPartition';
-import { CONNECTION_COUNT } from './WebsocketMessenger';
-import { ADD_UPDATES, UPDATES_RECEIVED, SYNC_TIME } from './ExtraEvents';
 import { encodeStateAsUpdate } from 'yjs';
 import { fromByteArray } from 'base64-js';
 import { getStateFromUpdates } from '@casual-simulation/aux-common/partitions/PartitionUtils';
@@ -34,18 +32,7 @@ import {
     remote,
     remoteError,
     remoteResult,
-} from './Events';
-import {
-    CONNECTED_TO_BRANCH,
-    DISCONNECTED_FROM_BRANCH,
-    GET_UPDATES,
-    RECEIVE_EVENT,
-    SEND_EVENT,
-    UNWATCH_BRANCH,
-    UNWATCH_BRANCH_CONNECTIONS,
-    WATCH_BRANCH_CONNECTIONS,
-    WATCH_BRANCH,
-} from './WebsocketEvents';
+} from '../common/RemoteActions';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -131,18 +118,21 @@ describe('WebsocketController', () => {
             await server.connect(device2Info);
 
             await server.watchBranch(device1Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
                 protocol: 'updates',
                 temporary: true,
             });
 
             await server.watchBranch(device2Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
                 protocol: 'updates',
                 temporary: true,
             });
 
             await server.addUpdates(device2Info.serverConnectionId, {
+                type: 'repo/add_updates',
                 branch: 'testBranch',
                 updates: ['111', '222'],
             });
@@ -181,6 +171,7 @@ describe('WebsocketController', () => {
                 ]);
 
                 await server.watchBranch(device1Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
                     branch: 'testBranch',
                     protocol: 'updates',
                 });
@@ -189,12 +180,10 @@ describe('WebsocketController', () => {
                     messenger.getMessages(device1Info.serverConnectionId)
                 ).toEqual([
                     {
-                        name: ADD_UPDATES,
-                        data: {
-                            branch: 'testBranch',
-                            updates: ['123', '456'],
-                            initial: true, // should include whether this event includes the initial data.
-                        },
+                        type: 'repo/add_updates',
+                        branch: 'testBranch',
+                        updates: ['123', '456'],
+                        initial: true, // should include whether this event includes the initial data.
                     },
                 ]);
             });
@@ -203,6 +192,7 @@ describe('WebsocketController', () => {
                 await server.connect(device1Info);
 
                 await server.watchBranch(device1Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
                     branch: 'doesNotExist',
                     protocol: 'updates',
                 });
@@ -211,12 +201,10 @@ describe('WebsocketController', () => {
                     messenger.getMessages(device1Info.serverConnectionId)
                 ).toEqual([
                     {
-                        name: ADD_UPDATES,
-                        data: {
-                            branch: 'doesNotExist',
-                            updates: [] as string[],
-                            initial: true,
-                        },
+                        type: 'repo/add_updates',
+                        branch: 'doesNotExist',
+                        updates: [] as string[],
+                        initial: true,
                     },
                 ]);
             });
@@ -231,6 +219,7 @@ describe('WebsocketController', () => {
                     );
 
                     await server.watchBranch(device1Info.serverConnectionId, {
+                        type: 'repo/watch_branch',
                         branch: 'testBranch',
                         temporary: true,
                         protocol: 'updates',
@@ -240,12 +229,10 @@ describe('WebsocketController', () => {
                         messenger.getMessages(device1Info.serverConnectionId)
                     ).toEqual([
                         {
-                            name: ADD_UPDATES,
-                            data: {
-                                branch: 'testBranch',
-                                updates: ['111', '222'],
-                                initial: true,
-                            },
+                            type: 'repo/add_updates',
+                            branch: 'testBranch',
+                            updates: ['111', '222'],
+                            initial: true,
                         },
                     ]);
                 });
@@ -256,17 +243,20 @@ describe('WebsocketController', () => {
                     await server.connect(device3Info);
 
                     await server.watchBranch(device1Info.serverConnectionId, {
+                        type: 'repo/watch_branch',
                         branch: 'testBranch',
                         protocol: 'updates',
                         temporary: true,
                     });
 
                     await server.addUpdates(device1Info.serverConnectionId, {
+                        type: 'repo/add_updates',
                         branch: 'testBranch',
                         updates: ['abc', 'def'],
                     });
 
                     await server.watchBranch(device3Info.serverConnectionId, {
+                        type: 'repo/watch_branch',
                         branch: 'testBranch',
                         protocol: 'updates',
                         temporary: true,
@@ -276,12 +266,10 @@ describe('WebsocketController', () => {
                         messenger.getMessages(device3Info.serverConnectionId)
                     ).toEqual([
                         {
-                            name: ADD_UPDATES,
-                            data: {
-                                branch: 'testBranch',
-                                updates: ['abc', 'def'],
-                                initial: true,
-                            },
+                            type: 'repo/add_updates',
+                            branch: 'testBranch',
+                            updates: ['abc', 'def'],
+                            initial: true,
                         },
                     ]);
                 });
@@ -296,11 +284,13 @@ describe('WebsocketController', () => {
                 await server.connect(device2Info);
 
                 await server.watchBranch(device1Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
                     branch: 'testBranch',
                     protocol: 'updates',
                 });
 
                 await server.addUpdates(device2Info.serverConnectionId, {
+                    type: 'repo/add_updates',
                     branch: 'testBranch',
                     updates: ['111', '222'],
                 });
@@ -311,6 +301,7 @@ describe('WebsocketController', () => {
                 );
 
                 await server.addUpdates(device2Info.serverConnectionId, {
+                    type: 'repo/add_updates',
                     branch: 'testBranch',
                     updates: ['333', '444'],
                 });
@@ -319,19 +310,15 @@ describe('WebsocketController', () => {
                     messenger.getMessages(device1Info.serverConnectionId)
                 ).toEqual([
                     {
-                        name: ADD_UPDATES,
-                        data: {
-                            branch: 'testBranch',
-                            updates: [],
-                            initial: true,
-                        },
+                        type: 'repo/add_updates',
+                        branch: 'testBranch',
+                        updates: [],
+                        initial: true,
                     },
                     {
-                        name: ADD_UPDATES,
-                        data: {
-                            branch: 'testBranch',
-                            updates: ['111', '222'],
-                        },
+                        type: 'repo/add_updates',
+                        branch: 'testBranch',
+                        updates: ['111', '222'],
                     },
                 ]);
             });
@@ -341,18 +328,21 @@ describe('WebsocketController', () => {
                 await server.connect(device2Info);
 
                 await server.watchBranch(device1Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
                     branch: 'testBranch',
                     temporary: true,
                     protocol: 'updates',
                 });
 
                 await server.watchBranch(device2Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
                     branch: 'testBranch',
                     temporary: true,
                     protocol: 'updates',
                 });
 
                 await server.addUpdates(device2Info.serverConnectionId, {
+                    type: 'repo/add_updates',
                     branch: 'testBranch',
                     updates: ['111', '222'],
                 });
@@ -402,6 +392,7 @@ describe('WebsocketController', () => {
 
             mockedNow.mockReturnValue(100);
             await server.addUpdates(device1Info.serverConnectionId, {
+                type: 'repo/add_updates',
                 branch: 'testBranch',
                 updates: ['111', '222'],
                 updateId: 0,
@@ -418,20 +409,16 @@ describe('WebsocketController', () => {
                 // Server should send a atoms received event
                 // back indicating which atoms it processed
                 {
-                    name: UPDATES_RECEIVED,
-                    data: {
-                        branch: 'testBranch',
-                        updateId: 0,
-                    },
+                    type: 'repo/updates_received',
+                    branch: 'testBranch',
+                    updateId: 0,
                 },
 
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: ['111', '222'],
-                        timestamps: [100, 100],
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: ['111', '222'],
+                    timestamps: [100, 100],
                 },
             ]);
         });
@@ -441,6 +428,7 @@ describe('WebsocketController', () => {
 
             mockedNow.mockReturnValue(100);
             await server.addUpdates(device1Info.serverConnectionId, {
+                type: 'repo/add_updates',
                 branch: 'testBranch',
                 updates: ['111', '222'],
                 updateId: 0,
@@ -452,6 +440,7 @@ describe('WebsocketController', () => {
             );
 
             await server.addUpdates(device1Info.serverConnectionId, {
+                type: 'repo/add_updates',
                 branch: 'testBranch',
                 updates: ['333'],
                 updateId: 1,
@@ -463,30 +452,24 @@ describe('WebsocketController', () => {
                 // Server should send a atoms received event
                 // back indicating which atoms it processed
                 {
-                    name: UPDATES_RECEIVED,
-                    data: {
-                        branch: 'testBranch',
-                        updateId: 0,
-                    },
+                    type: 'repo/updates_received',
+                    branch: 'testBranch',
+                    updateId: 0,
                 },
 
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: ['111', '222'],
-                        timestamps: [100, 100],
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: ['111', '222'],
+                    timestamps: [100, 100],
                 },
 
                 // Server should send a atoms received event
                 // back indicating which atoms it processed
                 {
-                    name: UPDATES_RECEIVED,
-                    data: {
-                        branch: 'testBranch',
-                        updateId: 1,
-                    },
+                    type: 'repo/updates_received',
+                    branch: 'testBranch',
+                    updateId: 1,
                 },
             ]);
         });
@@ -497,6 +480,7 @@ describe('WebsocketController', () => {
             await server.connect(device1Info);
 
             await server.addUpdates(device1Info.serverConnectionId, {
+                type: 'repo/add_updates',
                 branch: 'testBranch',
                 updates: ['111', '222'],
                 updateId: 0,
@@ -507,6 +491,7 @@ describe('WebsocketController', () => {
             ]);
 
             await server.watchBranch(device1Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
                 protocol: 'updates',
             });
@@ -517,20 +502,16 @@ describe('WebsocketController', () => {
                 // Server should send a atoms received event
                 // back indicating which atoms it processed
                 {
-                    name: UPDATES_RECEIVED,
-                    data: {
-                        branch: 'testBranch',
-                        updateId: 0,
-                    },
+                    type: 'repo/updates_received',
+                    branch: 'testBranch',
+                    updateId: 0,
                 },
 
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: ['111', '222', '333'],
-                        initial: true,
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: ['111', '222', '333'],
+                    initial: true,
                 },
             ]);
         });
@@ -546,16 +527,19 @@ describe('WebsocketController', () => {
             ]);
 
             await server.watchBranch(device2Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
                 protocol: 'updates',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
                 protocol: 'updates',
             });
 
             await server.addUpdates(device1Info.serverConnectionId, {
+                type: 'repo/add_updates',
                 branch: 'testBranch',
                 updates: ['333'],
             });
@@ -564,19 +548,15 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device2Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: ['111', '222'],
-                        initial: true,
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: ['111', '222'],
+                    initial: true,
                 },
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: ['333'],
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: ['333'],
                 },
             ]);
 
@@ -584,19 +564,15 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device3Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: ['111', '222'],
-                        initial: true,
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: ['111', '222'],
+                    initial: true,
                 },
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: ['333'],
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: ['333'],
                 },
             ]);
         });
@@ -610,11 +586,13 @@ describe('WebsocketController', () => {
             ]);
 
             await server.watchBranch(device1Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
                 protocol: 'updates',
             });
 
             await server.addUpdates(device1Info.serverConnectionId, {
+                type: 'repo/add_updates',
                 branch: 'testBranch',
                 updates: ['333'],
                 updateId: 0,
@@ -624,22 +602,18 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device1Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: ['111', '222'],
-                        initial: true,
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: ['111', '222'],
+                    initial: true,
                 },
 
                 // Server should send a atoms received event
                 // back indicating which atoms it processed
                 {
-                    name: UPDATES_RECEIVED,
-                    data: {
-                        branch: 'testBranch',
-                        updateId: 0,
-                    },
+                    type: 'repo/updates_received',
+                    branch: 'testBranch',
+                    updateId: 0,
                 },
             ]);
         });
@@ -648,6 +622,7 @@ describe('WebsocketController', () => {
             await server.connect(device1Info);
 
             await server.addUpdates(device1Info.serverConnectionId, {
+                type: 'repo/add_updates',
                 branch: 'testBranch',
                 updates: ['111', '222'],
                 updateId: 0,
@@ -667,6 +642,7 @@ describe('WebsocketController', () => {
             await server.connect(device1Info);
 
             await server.addUpdates(device1Info.serverConnectionId, {
+                type: 'repo/add_updates',
                 branch: null as any,
                 updates: ['111'],
             });
@@ -676,6 +652,7 @@ describe('WebsocketController', () => {
             await server.connect(device1Info);
 
             await server.addUpdates(device1Info.serverConnectionId, {
+                type: 'repo/add_updates',
                 branch: 'abc',
                 updates: ['111'],
             });
@@ -694,6 +671,7 @@ describe('WebsocketController', () => {
             await server.connect(device1Info);
 
             await server.addUpdates(device1Info.serverConnectionId, {
+                type: 'repo/add_updates',
                 branch: 'testBranch',
                 updates: ['111', '222'],
                 updateId: 0,
@@ -713,14 +691,12 @@ describe('WebsocketController', () => {
             );
             expect(messages).toEqual([
                 {
-                    name: UPDATES_RECEIVED,
-                    data: {
-                        branch: 'testBranch',
-                        updateId: 0,
-                        errorCode: 'max_size_reached',
-                        maxBranchSizeInBytes: 5,
-                        neededBranchSizeInBytes: 6,
-                    },
+                    type: 'repo/updates_received',
+                    branch: 'testBranch',
+                    updateId: 0,
+                    errorCode: 'max_size_reached',
+                    maxBranchSizeInBytes: 5,
+                    neededBranchSizeInBytes: 6,
                 },
             ]);
         });
@@ -763,6 +739,7 @@ describe('WebsocketController', () => {
             await server.connect(device1Info);
 
             await server.addUpdates(device1Info.serverConnectionId, {
+                type: 'repo/add_updates',
                 branch: 'testBranch',
                 updates: [update],
                 updateId: 0,
@@ -806,6 +783,7 @@ describe('WebsocketController', () => {
             });
 
             await server.addUpdates(device1Info.serverConnectionId, {
+                type: 'repo/add_updates',
                 branch: 'testBranch',
                 updates: [update2],
                 updateId: 1,
@@ -846,18 +824,14 @@ describe('WebsocketController', () => {
             );
             expect(messages).toEqual([
                 {
-                    name: UPDATES_RECEIVED,
-                    data: {
-                        branch: 'testBranch',
-                        updateId: 0,
-                    },
+                    type: 'repo/updates_received',
+                    branch: 'testBranch',
+                    updateId: 0,
                 },
                 {
-                    name: UPDATES_RECEIVED,
-                    data: {
-                        branch: 'testBranch',
-                        updateId: 1,
-                    },
+                    type: 'repo/updates_received',
+                    branch: 'testBranch',
+                    updateId: 1,
                 },
             ]);
         });
@@ -870,14 +844,17 @@ describe('WebsocketController', () => {
             await server.connect(device3Info);
 
             await server.watchBranch(device2Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
-            await server.sendEvent(device1Info.serverConnectionId, {
+            await server.sendAction(device1Info.serverConnectionId, {
+                type: 'repo/send_action',
                 branch: 'testBranch',
                 action: remote(
                     {
@@ -893,33 +870,27 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device2Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: [],
+                    initial: true,
                 },
             ]);
             expect(
                 messenger.getMessages(device3Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: [],
+                    initial: true,
                 },
                 {
-                    name: RECEIVE_EVENT,
-                    data: {
-                        branch: 'testBranch',
-                        action: device(connectionInfo(device1Info), {
-                            type: 'abc',
-                        }),
-                    },
+                    type: 'repo/receive_action',
+                    branch: 'testBranch',
+                    action: device(connectionInfo(device1Info), {
+                        type: 'abc',
+                    }),
                 },
             ]);
         });
@@ -935,14 +906,17 @@ describe('WebsocketController', () => {
                 randomMock.mockReturnValueOnce(1 / 2);
 
                 await server.watchBranch(device2Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
                     branch: 'testBranch',
                 });
 
                 await server.watchBranch(device3Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
                     branch: 'testBranch',
                 });
 
-                await server.sendEvent(device1Info.serverConnectionId, {
+                await server.sendAction(device1Info.serverConnectionId, {
+                    type: 'repo/send_action',
                     branch: 'testBranch',
                     action: remote({
                         type: 'abc',
@@ -953,33 +927,27 @@ describe('WebsocketController', () => {
                     messenger.getMessages(device2Info.serverConnectionId)
                 ).toEqual([
                     {
-                        name: ADD_UPDATES,
-                        data: {
-                            branch: 'testBranch',
-                            updates: [],
-                            initial: true,
-                        },
+                        type: 'repo/add_updates',
+                        branch: 'testBranch',
+                        updates: [],
+                        initial: true,
                     },
                 ]);
                 expect(
                     messenger.getMessages(device3Info.serverConnectionId)
                 ).toEqual([
                     {
-                        name: ADD_UPDATES,
-                        data: {
-                            branch: 'testBranch',
-                            updates: [],
-                            initial: true,
-                        },
+                        type: 'repo/add_updates',
+                        branch: 'testBranch',
+                        updates: [],
+                        initial: true,
                     },
                     {
-                        name: RECEIVE_EVENT,
-                        data: {
-                            branch: 'testBranch',
-                            action: device(connectionInfo(device1Info), {
-                                type: 'abc',
-                            }),
-                        },
+                        type: 'repo/receive_action',
+                        branch: 'testBranch',
+                        action: device(connectionInfo(device1Info), {
+                            type: 'abc',
+                        }),
                     },
                 ]);
             } finally {
@@ -993,14 +961,17 @@ describe('WebsocketController', () => {
             await server.connect(device3Info);
 
             await server.watchBranch(device1Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
-            await server.sendEvent(device1Info.serverConnectionId, {
+            await server.sendAction(device1Info.serverConnectionId, {
+                type: 'repo/send_action',
                 branch: 'testBranch',
                 action: remote(
                     {
@@ -1016,21 +987,17 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device1Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: [],
+                    initial: true,
                 },
                 {
-                    name: RECEIVE_EVENT,
-                    data: {
-                        branch: 'testBranch',
-                        action: device(connectionInfo(device1Info), {
-                            type: 'abc',
-                        }),
-                    },
+                    type: 'repo/receive_action',
+                    branch: 'testBranch',
+                    action: device(connectionInfo(device1Info), {
+                        type: 'abc',
+                    }),
                 },
             ]);
             expect(
@@ -1040,21 +1007,17 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device3Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: [],
+                    initial: true,
                 },
                 {
-                    name: RECEIVE_EVENT,
-                    data: {
-                        branch: 'testBranch',
-                        action: device(connectionInfo(device1Info), {
-                            type: 'abc',
-                        }),
-                    },
+                    type: 'repo/receive_action',
+                    branch: 'testBranch',
+                    action: device(connectionInfo(device1Info), {
+                        type: 'abc',
+                    }),
                 },
             ]);
         });
@@ -1065,14 +1028,17 @@ describe('WebsocketController', () => {
             await server.connect(device3Info);
 
             await server.watchBranch(device2Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
-            await server.sendEvent(device1Info.serverConnectionId, {
+            await server.sendAction(device1Info.serverConnectionId, {
+                type: 'repo/send_action',
                 branch: 'testBranch',
                 action: remote(
                     {
@@ -1090,12 +1056,10 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device2Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: [],
+                    initial: true,
                 },
             ]);
 
@@ -1103,25 +1067,21 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device3Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: [],
+                    initial: true,
                 },
                 {
-                    name: RECEIVE_EVENT,
-                    data: {
-                        branch: 'testBranch',
-                        action: device(
-                            connectionInfo(device1Info),
-                            {
-                                type: 'abc',
-                            },
-                            'task1'
-                        ),
-                    },
+                    type: 'repo/receive_action',
+                    branch: 'testBranch',
+                    action: device(
+                        connectionInfo(device1Info),
+                        {
+                            type: 'abc',
+                        },
+                        'task1'
+                    ),
                 },
             ]);
         });
@@ -1132,14 +1092,17 @@ describe('WebsocketController', () => {
             await server.connect(device3Info);
 
             await server.watchBranch(device2Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
-            await server.sendEvent(device1Info.serverConnectionId, {
+            await server.sendAction(device1Info.serverConnectionId, {
+                type: 'repo/send_action',
                 branch: 'testBranch',
                 action: remoteResult(
                     'data',
@@ -1154,35 +1117,29 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device2Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: [],
+                    initial: true,
                 },
             ]);
             expect(
                 messenger.getMessages(device3Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: [],
+                    initial: true,
                 },
                 {
-                    name: RECEIVE_EVENT,
-                    data: {
-                        branch: 'testBranch',
-                        action: deviceResult(
-                            connectionInfo(device1Info),
-                            'data',
-                            'task1'
-                        ),
-                    },
+                    type: 'repo/receive_action',
+                    branch: 'testBranch',
+                    action: deviceResult(
+                        connectionInfo(device1Info),
+                        'data',
+                        'task1'
+                    ),
                 },
             ]);
         });
@@ -1193,14 +1150,17 @@ describe('WebsocketController', () => {
             await server.connect(device3Info);
 
             await server.watchBranch(device2Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
-            await server.sendEvent(device1Info.serverConnectionId, {
+            await server.sendAction(device1Info.serverConnectionId, {
+                type: 'repo/send_action',
                 branch: 'testBranch',
                 action: remoteError(
                     'data',
@@ -1215,35 +1175,29 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device2Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: [],
+                    initial: true,
                 },
             ]);
             expect(
                 messenger.getMessages(device3Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: [],
+                    initial: true,
                 },
                 {
-                    name: RECEIVE_EVENT,
-                    data: {
-                        branch: 'testBranch',
-                        action: deviceError(
-                            connectionInfo(device1Info),
-                            'data',
-                            'task1'
-                        ),
-                    },
+                    type: 'repo/receive_action',
+                    branch: 'testBranch',
+                    action: deviceError(
+                        connectionInfo(device1Info),
+                        'data',
+                        'task1'
+                    ),
                 },
             ]);
         });
@@ -1260,6 +1214,7 @@ describe('WebsocketController', () => {
             );
 
             await server.watchBranch(device2Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
@@ -1267,14 +1222,13 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device1Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: CONNECTED_TO_BRANCH,
-                    data: {
-                        broadcast: false,
-                        branch: {
-                            branch: 'testBranch',
-                        },
-                        connection: connectionInfo(device2Info),
+                    type: 'repo/connected_to_branch',
+                    broadcast: false,
+                    branch: {
+                        type: 'repo/watch_branch',
+                        branch: 'testBranch',
                     },
+                    connection: connectionInfo(device2Info),
                 },
             ]);
         });
@@ -1289,6 +1243,7 @@ describe('WebsocketController', () => {
             );
 
             await server.watchBranch(device2Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
@@ -1301,22 +1256,19 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device1Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: CONNECTED_TO_BRANCH,
-                    data: {
-                        broadcast: false,
-                        branch: {
-                            branch: 'testBranch',
-                        },
-                        connection: connectionInfo(device2Info),
+                    type: 'repo/connected_to_branch',
+                    broadcast: false,
+                    branch: {
+                        type: 'repo/watch_branch',
+                        branch: 'testBranch',
                     },
+                    connection: connectionInfo(device2Info),
                 },
                 {
-                    name: DISCONNECTED_FROM_BRANCH,
-                    data: {
-                        broadcast: false,
-                        branch: 'testBranch',
-                        connection: connectionInfo(device2Info),
-                    },
+                    type: 'repo/disconnected_from_branch',
+                    broadcast: false,
+                    branch: 'testBranch',
+                    connection: connectionInfo(device2Info),
                 },
             ]);
         });
@@ -1331,6 +1283,7 @@ describe('WebsocketController', () => {
             );
 
             await server.watchBranch(device2Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
@@ -1340,22 +1293,19 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device1Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: CONNECTED_TO_BRANCH,
-                    data: {
-                        broadcast: false,
-                        branch: {
-                            branch: 'testBranch',
-                        },
-                        connection: connectionInfo(device2Info),
+                    type: 'repo/connected_to_branch',
+                    broadcast: false,
+                    branch: {
+                        type: 'repo/watch_branch',
+                        branch: 'testBranch',
                     },
+                    connection: connectionInfo(device2Info),
                 },
                 {
-                    name: DISCONNECTED_FROM_BRANCH,
-                    data: {
-                        broadcast: false,
-                        branch: 'testBranch',
-                        connection: connectionInfo(device2Info),
-                    },
+                    type: 'repo/disconnected_from_branch',
+                    broadcast: false,
+                    branch: 'testBranch',
+                    connection: connectionInfo(device2Info),
                 },
             ]);
         });
@@ -1367,14 +1317,17 @@ describe('WebsocketController', () => {
             await server.connect(device4Info);
 
             await server.watchBranch(device2Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device4Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch2',
             });
 
@@ -1387,26 +1340,24 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device1Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: CONNECTED_TO_BRANCH,
-                    data: {
-                        broadcast: false,
-                        branch: {
-                            branch: 'testBranch',
-                            temporary: false,
-                        },
-                        connection: connectionInfo(device2Info),
+                    type: 'repo/connected_to_branch',
+                    broadcast: false,
+                    branch: {
+                        type: 'repo/watch_branch',
+                        branch: 'testBranch',
+                        temporary: false,
                     },
+                    connection: connectionInfo(device2Info),
                 },
                 {
-                    name: CONNECTED_TO_BRANCH,
-                    data: {
-                        broadcast: false,
-                        branch: {
-                            branch: 'testBranch',
-                            temporary: false,
-                        },
-                        connection: connectionInfo(device3Info),
+                    type: 'repo/connected_to_branch',
+                    broadcast: false,
+                    branch: {
+                        type: 'repo/watch_branch',
+                        branch: 'testBranch',
+                        temporary: false,
                     },
+                    connection: connectionInfo(device3Info),
                 },
             ]);
         });
@@ -1421,6 +1372,7 @@ describe('WebsocketController', () => {
             );
 
             await server.watchBranch(device2Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
                 temporary: true,
             });
@@ -1429,15 +1381,14 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device1Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: CONNECTED_TO_BRANCH,
-                    data: {
-                        broadcast: false,
-                        branch: {
-                            branch: 'testBranch',
-                            temporary: true,
-                        },
-                        connection: connectionInfo(device2Info),
+                    type: 'repo/connected_to_branch',
+                    broadcast: false,
+                    branch: {
+                        type: 'repo/watch_branch',
+                        branch: 'testBranch',
+                        temporary: true,
                     },
+                    connection: connectionInfo(device2Info),
                 },
             ]);
         });
@@ -1458,6 +1409,7 @@ describe('WebsocketController', () => {
             );
 
             await server.watchBranch(device2Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
@@ -1480,6 +1432,7 @@ describe('WebsocketController', () => {
             await server.connect(device1Info);
 
             await server.watchBranch(device2Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
@@ -1500,11 +1453,9 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device1Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: CONNECTION_COUNT,
-                    data: {
-                        branch: null,
-                        count: 2,
-                    },
+                    type: 'repo/connection_count',
+                    branch: null,
+                    count: 2,
                 },
             ]);
         });
@@ -1515,9 +1466,11 @@ describe('WebsocketController', () => {
             await server.connect(device3Info);
 
             await server.watchBranch(device2Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
             await server.watchBranch(device3Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
@@ -1530,11 +1483,9 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device1Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: CONNECTION_COUNT,
-                    data: {
-                        branch: 'testBranch',
-                        count: 2,
-                    },
+                    type: 'repo/connection_count',
+                    branch: 'testBranch',
+                    count: 2,
                 },
             ]);
         });
@@ -1562,6 +1513,7 @@ describe('WebsocketController', () => {
             await server.syncTime(
                 device1Info.serverConnectionId,
                 {
+                    type: 'sync/time',
                     id: 1,
                     clientRequestTime: 123,
                 },
@@ -1572,13 +1524,11 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device1Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: SYNC_TIME,
-                    data: {
-                        id: 1,
-                        clientRequestTime: 123,
-                        serverReceiveTime: 500,
-                        serverTransmitTime: 1000,
-                    },
+                    type: 'sync/time/response',
+                    id: 1,
+                    clientRequestTime: 123,
+                    serverReceiveTime: 500,
+                    serverTransmitTime: 1000,
                 },
             ]);
         });
@@ -1639,6 +1589,7 @@ describe('WebsocketController', () => {
             await server.connect(device1Info);
 
             await server.watchBranch(device1Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
@@ -1663,20 +1614,18 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device1Info.serverConnectionId).slice(1)
             ).toEqual([
                 {
-                    name: RECEIVE_EVENT,
-                    data: {
-                        branch: 'testBranch',
-                        action: action(ON_WEBHOOK_ACTION_NAME, null, null, {
-                            method: 'method',
-                            url: 'url',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            data: {
-                                value: 'anything',
-                            },
-                        }),
-                    },
+                    type: 'repo/receive_action',
+                    branch: 'testBranch',
+                    action: action(ON_WEBHOOK_ACTION_NAME, null, null, {
+                        method: 'method',
+                        url: 'url',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        data: {
+                            value: 'anything',
+                        },
+                    }),
                 },
             ]);
         });
@@ -1688,6 +1637,7 @@ describe('WebsocketController', () => {
             await server.connect(device1Info);
 
             await server.watchBranch(device1Info.serverConnectionId, {
+                type: 'repo/watch_branch',
                 branch: 'testBranch',
             });
 
@@ -1708,12 +1658,10 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device1Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: ADD_UPDATES,
-                    data: {
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
+                    type: 'repo/add_updates',
+                    branch: 'testBranch',
+                    updates: [],
+                    initial: true,
                 },
             ]);
         });
@@ -1864,11 +1812,9 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device1Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: RATE_LIMIT_EXCEEDED,
-                    data: {
-                        retryAfter: 1000,
-                        totalHits: 10,
-                    },
+                    type: RATE_LIMIT_EXCEEDED,
+                    retryAfter: 1000,
+                    totalHits: 10,
                 },
             ]);
 
@@ -1922,11 +1868,9 @@ describe('WebsocketController', () => {
                 messenger.getMessages(device1Info.serverConnectionId)
             ).toEqual([
                 {
-                    name: RATE_LIMIT_EXCEEDED,
-                    data: {
-                        retryAfter: 1000,
-                        totalHits: 10,
-                    },
+                    type: RATE_LIMIT_EXCEEDED,
+                    retryAfter: 1000,
+                    totalHits: 10,
                 },
             ]);
 

@@ -1,22 +1,5 @@
+import { Action } from './Action';
 import { ConnectionInfo } from './ConnectionInfo';
-
-/**
- * Defines an interface that represents an event.
- * That is, a time-ordered action in a channel.
- */
-export interface Action {
-    /**
-     * The type of the event.
-     * This helps determine how the event should be applied to the state.
-     */
-    type: string;
-
-    /**
-     * Whether the action can be structure cloned.
-     * If true, then the action should not be passed across message ports.
-     */
-    uncopiable?: boolean;
-}
 
 /**
  * An event that is used to indicate an event that was sent from a remote device.
@@ -290,32 +273,3 @@ export function deviceError(
         taskId,
     };
 }
-
-export const LOGIN = 'login';
-export const LOGIN_RESULT = 'login_result';
-export const MESSAGE = 'message';
-
-export interface WebSocketEvent {
-    type: string;
-}
-
-export interface LoginPacket {
-    type: typeof LOGIN;
-
-    /**
-     * The token that should be used to authenticate the connection.
-     */
-    connectionToken: string;
-}
-
-export interface LoginResultPacket {
-    type: typeof LOGIN_RESULT;
-}
-
-export interface MessagePacket {
-    type: typeof MESSAGE;
-    channel: string;
-    data: any;
-}
-
-export type Packet = LoginPacket | LoginResultPacket | MessagePacket;

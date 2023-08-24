@@ -9,26 +9,16 @@ import {
     StoredAux,
 } from '@casual-simulation/aux-common/bots';
 import { YjsPartitionImpl } from '@casual-simulation/aux-common/partitions';
-import { WebsocketMessenger, CONNECTION_COUNT } from './WebsocketMessenger';
+import { WebsocketMessenger } from './WebsocketMessenger';
 import {
     device,
     deviceError,
     deviceResult,
     DeviceSelector,
-    MessagePacket,
     RemoteAction,
     RemoteActionError,
     RemoteActionResult,
-} from './Events';
-import {
-    AddUpdatesEvent,
-    ADD_UPDATES,
-    SYNC_TIME,
-    TimeSyncRequest,
-    TimeSyncResponse,
-    UPDATES_RECEIVED,
-    WatchBranch,
-} from './ExtraEvents';
+} from '../common/RemoteActions';
 import { fromByteArray, toByteArray } from 'base64-js';
 import { applyUpdate, mergeUpdates } from 'yjs';
 import {
@@ -37,14 +27,12 @@ import {
 } from './WebsocketConnectionStore';
 import { UpdatesStore } from '@casual-simulation/causal-trees/core2';
 import {
-    CONNECTED_TO_BRANCH,
-    DISCONNECTED_FROM_BRANCH,
-    RATE_LIMIT_EXCEEDED,
-    RateLimitExceededEvent,
-    RECEIVE_EVENT,
-    SendRemoteActionEvent,
+    AddUpdatesMessage,
+    SendActionMessage,
+    TimeSyncRequestMessage,
+    WatchBranchMessage,
 } from './WebsocketEvents';
-import { ConnectionInfo } from './ConnectionInfo';
+import { ConnectionInfo } from '../common/ConnectionInfo';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -110,21 +98,17 @@ export class WebsocketController {
                 await this._messenger.sendMessage(
                     watchingDevices.map((d) => d.serverConnectionId),
                     {
-                        name: DISCONNECTED_FROM_BRANCH,
-                        data: {
-                            broadcast: false,
-                            branch: branch,
-                            connection: connectionInfo(connection),
-                        },
+                        type: 'repo/disconnected_from_branch',
+                        broadcast: false,
+                        branch: branch,
+                        connection: connectionInfo(connection),
                     }
                 );
             }
         }
     }
 
-    async handlePacket(connectionId: string, packet: MessagePacket) {}
-
-    async watchBranch(connectionId: string, event: WatchBranch) {
+    async watchBranch(connectionId: string, event: WatchBranchMessage) {
         if (!event) {
             console.warn(
                 '[CasualRepoServer] Trying to watch branch with a null event!'
@@ -165,21 +149,17 @@ export class WebsocketController {
             this._messenger.sendMessage(
                 watchingDevices.map((d) => d.serverConnectionId),
                 {
-                    name: CONNECTED_TO_BRANCH,
-                    data: {
-                        broadcast: false,
-                        branch: event,
-                        connection: connectionInfo(connection),
-                    },
+                    type: 'repo/connected_to_branch',
+                    broadcast: false,
+                    branch: event,
+                    connection: connectionInfo(connection),
                 }
             ),
             this._messenger.sendMessage([connection.serverConnectionId], {
-                name: ADD_UPDATES,
-                data: {
-                    branch: event.branch,
-                    updates: updates.updates,
-                    initial: true,
-                },
+                type: 'repo/add_updates',
+                branch: event.branch,
+                updates: updates.updates,
+                initial: true,
             }),
         ];
         await Promise.all(promises);
@@ -225,18 +205,16 @@ export class WebsocketController {
             await this._messenger.sendMessage(
                 watchingDevices.map((d) => d.serverConnectionId),
                 {
-                    name: DISCONNECTED_FROM_BRANCH,
-                    data: {
-                        broadcast: false,
-                        branch: branch,
-                        connection: connectionInfo(connection),
-                    },
+                    type: 'repo/disconnected_from_branch',
+                    broadcast: false,
+                    branch: branch,
+                    connection: connectionInfo(connection),
                 }
             );
         }
     }
 
-    async addUpdates(connectionId: string, event: AddUpdatesEvent) {
+    async addUpdates(connectionId: string, event: AddUpdatesMessage) {
         if (!event) {
             console.warn(
                 '[CasualRepoServer] Trying to add atoms with a null event!'
@@ -300,12 +278,10 @@ export class WebsocketController {
                             let { success, branch, ...rest } = result;
 
                             await this._messenger.sendMessage([connectionId], {
-                                name: UPDATES_RECEIVED,
-                                data: {
-                                    branch: event.branch,
-                                    updateId: event.updateId,
-                                    ...rest,
-                                },
+                                type: 'repo/updates_received',
+                                branch: event.branch,
+                                updateId: event.updateId,
+                                ...rest,
                             });
                         }
                         return;
@@ -321,33 +297,29 @@ export class WebsocketController {
                     namespace
                 );
 
-            let ret: AddUpdatesEvent = {
+            let ret: AddUpdatesMessage = {
+                type: 'repo/add_updates',
                 branch: event.branch,
                 updates: event.updates,
             };
 
             await this._messenger.sendMessage(
                 connectedDevices.map((c) => c.serverConnectionId),
-                {
-                    name: ADD_UPDATES,
-                    data: ret,
-                },
+                ret,
                 connectionId
             );
         }
 
         if ('updateId' in event) {
             await this._messenger.sendMessage([connectionId], {
-                name: UPDATES_RECEIVED,
-                data: {
-                    branch: event.branch,
-                    updateId: event.updateId,
-                },
+                type: 'repo/updates_received',
+                branch: event.branch,
+                updateId: event.updateId,
             });
         }
     }
 
-    async sendEvent(connectionId: string, event: SendRemoteActionEvent) {
+    async sendAction(connectionId: string, event: SendActionMessage) {
         if (!event) {
             console.warn(
                 '[CasualRepoServer] Trying to send event with a null event!'
@@ -420,11 +392,9 @@ export class WebsocketController {
         await this._messenger.sendMessage(
             targetedDevices.map((c) => c.serverConnectionId),
             {
-                name: RECEIVE_EVENT,
-                data: {
-                    branch: event.branch,
-                    action: dEvent,
-                },
+                type: 'repo/receive_action',
+                branch: event.branch,
+                action: dEvent,
             }
         );
     }
@@ -456,14 +426,13 @@ export class WebsocketController {
             );
         const promises = currentDevices.map((device) =>
             this._messenger.sendMessage([connectionId], {
-                name: CONNECTED_TO_BRANCH,
-                data: {
-                    broadcast: false,
-                    branch: {
-                        branch: branch,
-                        temporary: device.temporary,
-                    },
-                    connection: connectionInfo(device),
+                type: 'repo/connected_to_branch',
+                broadcast: false,
+                connection: connectionInfo(device),
+                branch: {
+                    type: 'repo/watch_branch',
+                    branch: branch,
+                    temporary: device.temporary,
                 },
             })
         );
@@ -488,11 +457,9 @@ export class WebsocketController {
                 : await this._connectionStore.countConnections();
 
         await this._messenger.sendMessage([connectionId], {
-            name: CONNECTION_COUNT,
-            data: {
-                branch,
-                count: count,
-            },
+            type: 'repo/connection_count',
+            branch,
+            count: count,
         });
     }
 
@@ -539,12 +506,10 @@ export class WebsocketController {
         const updates = await this._updatesStore.getUpdates(namespace);
 
         this._messenger.sendMessage([connection.serverConnectionId], {
-            name: ADD_UPDATES,
-            data: {
-                branch: branch,
-                updates: updates.updates,
-                timestamps: updates.timestamps,
-            },
+            type: 'repo/add_updates',
+            branch: branch,
+            updates: updates.updates,
+            timestamps: updates.timestamps,
         });
     }
 
@@ -601,11 +566,9 @@ export class WebsocketController {
         });
 
         await this._messenger.sendMessage([randomDevice.serverConnectionId], {
-            name: RECEIVE_EVENT,
-            data: {
-                branch: branch,
-                action: a as any,
-            },
+            type: 'repo/receive_action',
+            branch,
+            action: a as any,
         });
 
         return 200;
@@ -613,17 +576,15 @@ export class WebsocketController {
 
     async syncTime(
         connectionId: string,
-        event: TimeSyncRequest,
+        event: TimeSyncRequestMessage,
         requestTime: number
     ) {
         await this._messenger.sendMessage([connectionId], {
-            name: SYNC_TIME,
-            data: {
-                id: event.id,
-                clientRequestTime: event.clientRequestTime,
-                serverReceiveTime: requestTime,
-                serverTransmitTime: Date.now(),
-            } as TimeSyncResponse,
+            type: 'sync/time/response',
+            id: event.id,
+            clientRequestTime: event.clientRequestTime,
+            serverReceiveTime: requestTime,
+            serverTransmitTime: Date.now(),
         });
     }
 
@@ -652,11 +613,9 @@ export class WebsocketController {
 
         if (difference >= 1000) {
             await this._messenger.sendMessage([connectionId], {
-                name: RATE_LIMIT_EXCEEDED,
-                data: {
-                    retryAfter,
-                    totalHits,
-                } as RateLimitExceededEvent,
+                type: 'rate_limit_exceeded',
+                retryAfter,
+                totalHits,
             });
         }
     }

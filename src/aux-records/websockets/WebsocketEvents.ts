@@ -1,4 +1,5 @@
-import { ConnectionInfo } from './ConnectionInfo';
+import { Action } from '../common/Action';
+import { ConnectionInfo } from '../common/ConnectionInfo';
 import {
     RemoteAction,
     DeviceAction,
@@ -6,171 +7,111 @@ import {
     RemoteActionResult,
     RemoteActionError,
     DeviceActionError,
-} from './Events';
+} from '../common/RemoteActions';
 
 /**
- * The name of the event which starts watching for when branches are loaded/unloaded.
+ * Defines a websocket event.
+ *
+ * That is, an event that is used to manage and communicate over a websocket connection.
+ *
+ * There are currently three types of events:
+ * - message: A message that was recieved.
+ * - upload_request: A request to upload a large message to a large object store. (This event type only exists to get around message size limits)
+ * - upload_response: A response to an upload_request event. (This event type only exists to get around message size limits)
+ * - download_request: A request to tell the client to download a message from from a URL. (This event type only exists to get around message size limits)
  */
-export const WATCH_BRANCHES = 'repo/watch_branches';
+export type WebsocketEvent =
+    | WebsocketMessageEvent
+    | WebsocketUploadRequestEvent
+    | WebsocketUploadResponseEvent
+    | WebsocketDownloadRequestEvent;
+
+export enum WebsocketEventTypes {
+    Message = 1,
+    UploadRequest = 2,
+    UploadResponse = 3,
+    DownloadRequest = 4,
+}
 
 /**
- * The name of the event which stops watching for when branches are loaded/unloaded.
+ * Defines a websocket event that contains a message.
  */
-export const UNWATCH_BRANCHES = 'repo/unwatch_branches';
+export type WebsocketMessageEvent = [
+    type: WebsocketEventTypes.Message,
+    data: any
+];
 
 /**
- * The name of the event which starts watching changes on a branch.
- * In particular, watches for new atoms.
+ * Defines a websocket event that contains a request to upload a large message.
  */
-export const WATCH_BRANCH = 'repo/watch_branch';
+export type WebsocketUploadRequestEvent = [
+    type: WebsocketEventTypes.UploadRequest,
+    id: string
+];
 
 /**
- * The type that indicates that a device is connected to a branch because it is watching.
+ * Defines a websocket event that contains a response to an upload request.
  */
-export type WatchReason = 'watch_branch';
+export type WebsocketUploadResponseEvent = [
+    type: WebsocketEventTypes.UploadResponse,
+    id: string,
+    uploadUrl: string
+];
 
 /**
- * The type that indicates that a device is disconnected from a branch because it is
- * no longer watching it.
+ * Defines a websocket event that contains a request to download a large message.
  */
-export type UnwatchReason = 'unwatch_branch';
+export type WebsocketDownloadRequestEvent = [
+    type: WebsocketEventTypes.DownloadRequest,
+    url: string
+];
+
+export type WebsocketMessage =
+    | LoginMessage
+    | LoginResultMessage
+    | WatchBranchMessage
+    | UnwatchBranchMessage
+    | AddUpdatesMessage
+    | UpdatesReceivedMessage
+    | ResetMessage
+    | SendActionMessage
+    | ReceiveDeviceActionMessage
+    | ConnectedToBranchMessage
+    | DisconnectedFromBranchMessage
+    | BranchInfoMessage
+    | ListBranchesMessage
+    | BranchesStatusMessage
+    | ListConnectionsMessage
+    | ConnectionCountMessage
+    | TimeSyncRequestMessage
+    | TimeSyncResponseMessage
+    | RateLimitExceededMessage;
 
 /**
- * The name of the event which gets all the current atoms on a branch.
- * The atoms are returned via a ADD_ATOMS event.
+ * Defines a login message.
  */
-export const GET_BRANCH = 'repo/get_branch';
+export interface LoginMessage {
+    type: 'login';
+
+    /**
+     * The token that should be used to authenticate the connection.
+     */
+    connectionToken: string;
+}
 
 /**
- * The name of the event which gets all the current updates on a branch.
- * The atoms are returned via a ADD_UPDATES event.
+ * Defines a login result message.
  */
-export const GET_UPDATES = 'repo/get_updates';
-
-/**
- * The name of the event which stops watching changes on a branch.
- */
-export const UNWATCH_BRANCH = 'repo/unwatch_branch';
-
-/**
- * The name of the event which notifies that some updates were added to a branch.
- */
-export const ADD_UPDATES = 'repo/add_updates';
-
-/**
- * The name of the event which notifies that a branch has been reset and that the client should reset its state.
- */
-export const RESET = 'repo/reset';
-
-/**
- * The name of the event which tries to send an event to a device.
- */
-export const SEND_EVENT = 'repo/send_event';
-
-/**
- * The name of the event which notifies that an event was sent to this device.
- */
-export const RECEIVE_EVENT = 'repo/receive_event';
-
-/**
- * The name of the event which notifies that the add_updates event was received.
- */
-export const UPDATES_RECEIVED = 'repo/updates_received';
-
-/**
- * The name of the event which notifies that a branch was loaded into server memory.
- */
-export const LOAD_BRANCH = 'repo/load_branch';
-
-/**
- * The name of the event which notifies that a branch was unloaded from server memory.
- */
-export const UNLOAD_BRANCH = 'repo/unload_branch';
-
-/**
- * The name of the event which starts watching for connection/disconnection events to the server.
- */
-export const WATCH_CONNECTIONS = 'repo/watch_connections';
-
-/**
- * The name of the event which stops watching for connection/disconnection events to the server.
- */
-export const UNWATCH_CONNECTIONS = 'repo/unwatch_connections';
-
-/**
- * The name of the event which starts watching for connection/disconnection events to the server on a particular branch.
- */
-export const WATCH_BRANCH_CONNECTIONS = 'repo/watch_branch_connections';
-
-/**
- * The name of the event which stops watching for connection/disconnection events to the server on a particular branch.
- */
-export const UNWATCH_BRANCH_CONNECTIONS = 'repo/unwatch_branch_connections';
-
-/**
- * The name of the event which notifies that a connection became connected to a branch.
- */
-export const CONNECTED_TO_BRANCH = 'repo/connected_to_branch';
-
-/**
- * The name of the event which notifies that a connection become disconnected from a branch.
- */
-export const DISCONNECTED_FROM_BRANCH = 'repo/disconnected_from_branch';
-
-/**
- * The name of the event which gets information about a branch.
- */
-export const BRANCH_INFO = 'repo/branch_info';
-
-/**
- * The name of the event which gets all the branches.
- */
-export const BRANCHES = 'repo/branches';
-
-/**
- * The name of the event which gets all the branches.
- */
-export const BRANCHES_STATUS = 'repo/branches_status';
-
-/**
- * The name of the event which gets all the connections for a branch.
- */
-export const CONNECTIONS = 'repo/connections';
-
-/**
- * The name of the event which gets the number of connections.
- */
-export const CONNECTION_COUNT = 'repo/connection_count';
-
-/**
- * The name of the event which sets the password used to edit the branch.
- */
-export const SET_BRANCH_PASSWORD = 'repo/set_branch_password';
-
-/**
- * The name of the event which is used to authenticate a device to write to a branch.
- */
-export const AUTHENTICATE_BRANCH_WRITES = 'repo/authenticate_branch_writes';
-
-/**
- * The name of the event which is used to notify that the device is authenticated to a branch.
- */
-export const AUTHENTICATED_TO_BRANCH = 'repo/authenticated_to_branch';
-
-/**
- * The name of the event which is used to attempt to synchronize time between devices.
- */
-export const SYNC_TIME = 'sync/time';
-
-/**
- * The name of the event which is used to notify a connection that the rate limit has been exceeded.
- */
-export const RATE_LIMIT_EXCEEDED = 'rate_limit_exceeded';
+export interface LoginResultMessage {
+    type: 'login_result';
+}
 
 /**
  * Defines an event which indicates that a branch should be watched.
  */
-export interface WatchBranchEvent {
+export interface WatchBranchMessage {
+    type: 'repo/watch_branch';
+
     /**
      * The name of the branch to watch.
      */
@@ -209,11 +150,25 @@ export interface WatchBranchEvent {
 }
 
 /**
+ * Defines an event which indicates that a branch should be unwatched.
+ */
+export interface UnwatchBranchMessage {
+    type: 'repo/unwatch_branch';
+
+    /**
+     * The name of the branch to unwatch.
+     */
+    branch: string;
+}
+
+/**
  * Defines an event which indicates that some arbitrary updates should be added for the given branch.
  * Note that while all branches support both atoms and updates, they do not support mixed usage.
  * This means that clients which use updates should ignore atoms and vice versa.
  */
-export interface AddUpdatesEvent {
+export interface AddUpdatesMessage {
+    type: 'repo/add_updates';
+
     /**
      * The branch that the updates are for.
      */
@@ -251,7 +206,9 @@ export interface AddUpdatesEvent {
 /**
  * Defines an event which indicates that some arbitrary updates where added for the given branch.
  */
-export interface UpdatesReceivedEvent {
+export interface UpdatesReceivedMessage {
+    type: 'repo/updates_received';
+
     /**
      * The branch that the updates were received for.
      */
@@ -282,59 +239,11 @@ export interface UpdatesReceivedEvent {
 }
 
 /**
- * Defines an event which indicates that writing to the specified branch should be authenticated using the given password.
- */
-export interface AuthenticateBranchWritesEvent {
-    /**
-     * The branch that should be authenticated.
-     */
-    branch: string;
-
-    /**
-     * The password that should be used.
-     */
-    password: string;
-}
-
-/**
- * Defines an event which indicates that the device is authenticated to a branch.
- */
-export interface AuthenticatedToBranchEvent {
-    /**
-     * The branch.
-     */
-    branch: string;
-
-    /**
-     * Whether the device is authenticated.
-     */
-    authenticated: boolean;
-}
-
-/**
- * Defines an event which indicates that the branch password should be set to the given new password.
- */
-export interface SetBranchPasswordEvent {
-    /**
-     * The branch that should have its password changed.
-     */
-    branch: string;
-
-    /**
-     * The old password for the branch.
-     */
-    oldPassword: string;
-
-    /**
-     * The new password for the branch.
-     */
-    newPassword: string;
-}
-
-/**
  * Defines an event which indicates that the branch state should be reset.
  */
-export interface ResetEvent {
+export interface ResetMessage {
+    type: 'repo/reset';
+
     /**
      * The branch that the atoms are for.
      */
@@ -344,7 +253,9 @@ export interface ResetEvent {
 /**
  * Sends the given remote action to devices connected to the given branch.
  */
-export interface SendRemoteActionEvent {
+export interface SendActionMessage {
+    type: 'repo/send_action';
+
     /**
      * The branch.
      */
@@ -359,30 +270,19 @@ export interface SendRemoteActionEvent {
 /**
  * Sends the given device action to devices connected to the given branch.
  */
-export interface ReceiveDeviceActionEvent {
+export interface ReceiveDeviceActionMessage {
+    type: 'repo/receive_action';
+
     branch: string;
     action: DeviceAction | DeviceActionResult | DeviceActionError;
 }
 
 /**
- * Defines an event which indicates that atoms were received and processed.
- */
-export interface AtomsReceivedEvent {
-    /**
-     * The branch that the atoms were for.
-     */
-    branch: string;
-
-    /**
-     * The hashes of the atoms that were processed.
-     */
-    hashes: string[];
-}
-
-/**
  * Defines an event which indicates that a connection has been made to a branch.
  */
-export interface ConnectedToBranchEvent {
+export interface ConnectedToBranchMessage {
+    type: 'repo/connected_to_branch';
+
     /**
      * Whether this event is for WATCH_DEVICES listeners or WATCH_BRANCH_DEVICES listeners.
      * If true, then listeners for a specific branch should ignore the event.
@@ -392,7 +292,7 @@ export interface ConnectedToBranchEvent {
     /**
      * The name of the branch that was connected.
      */
-    branch: WatchBranchEvent;
+    branch: WatchBranchMessage;
 
     /**
      * The info of session that connected.
@@ -403,7 +303,9 @@ export interface ConnectedToBranchEvent {
 /**
  * Defines an event which indicates that a connection has been removed from a branch.
  */
-export interface DisconnectedFromBranchEvent {
+export interface DisconnectedFromBranchMessage {
+    type: 'repo/disconnected_from_branch';
+
     /**
      * Whether this event is for WATCH_DEVICES listeners or WATCH_BRANCH_DEVICES listeners.
      * If true, then listeners for a specific branch should ignore the event.
@@ -421,50 +323,52 @@ export interface DisconnectedFromBranchEvent {
     connection: ConnectionInfo;
 }
 
-export type BranchInfoEvent = BranchExistsInfo | BranchDoesNotExistInfo;
+export type BranchInfoMessage =
+    | BranchExistsInfoMessage
+    | BranchDoesNotExistInfoMessage;
 
-export interface BranchExistsInfo {
+export interface BranchExistsInfoMessage {
+    type: 'repo/branch_info';
     branch: string;
     exists: true;
 }
 
-export interface BranchDoesNotExistInfo {
+export interface BranchDoesNotExistInfoMessage {
+    type: 'repo/branch_info';
     branch: string;
     exists: false;
 }
 
-export interface BranchesEvent {
+export interface ListBranchesMessage {
+    type: 'repo/branches';
     branches: string[];
 }
 
-export interface BranchesStatusEvent {
+export interface BranchesStatusMessage {
+    type: 'repo/branches_status';
     branches: {
         branch: string;
         lastUpdateTime: Date;
     }[];
 }
 
-export interface ConnectionsEvent {
+export interface ListConnectionsMessage {
+    type: 'repo/connections';
     connections: ConnectionInfo[];
 }
 
-export interface ConnectionCountEvent {
+export interface ConnectionCountMessage {
+    type: 'repo/connection_count';
     branch: string;
     count: number;
-}
-
-export interface LoadBranchEvent {
-    branch: string;
-}
-
-export interface UnloadBranchEvent {
-    branch: string;
 }
 
 /**
  * Defines an event which attempts to perform a time sync.
  */
-export interface TimeSyncRequest {
+export interface TimeSyncRequestMessage {
+    type: 'sync/time';
+
     /**
      * The ID of the sync request.
      */
@@ -479,7 +383,9 @@ export interface TimeSyncRequest {
 /**
  * Defines an event which is the response for a time sync.
  */
-export interface TimeSyncResponse {
+export interface TimeSyncResponseMessage {
+    type: 'sync/time/response';
+
     /**
      * The ID of the sync request.
      */
@@ -501,7 +407,8 @@ export interface TimeSyncResponse {
     serverTransmitTime: number;
 }
 
-export interface RateLimitExceededEvent {
+export interface RateLimitExceededMessage {
+    type: 'rate_limit_exceeded';
     retryAfter: number;
     totalHits: number;
 }
