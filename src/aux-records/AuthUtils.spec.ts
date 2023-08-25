@@ -458,4 +458,19 @@ describe('verifyConnectionToken()', () => {
 
         expect(verifyConnectionToken(token, password)).toBe(false);
     });
+
+    it('should return false if given invalid base 64', () => {
+        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+        const [userId, sessionId, connectionId, inst, password] =
+            parseConnectionToken(result);
+        const token = formatV1ConnectionToken(
+            userId,
+            sessionId,
+            'connectionIdin',
+            'st',
+            password
+        );
+
+        expect(verifyConnectionToken(token, 'wrong')).toBe(false);
+    });
 });

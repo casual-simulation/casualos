@@ -28,8 +28,10 @@ import {
     formatV1ConnectionKey,
     formatV1OpenAiKey,
     formatV1SessionKey,
+    parseConnectionToken,
     parseSessionKey,
     randomCode,
+    verifyConnectionToken,
 } from './AuthUtils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
 import { ConfigurationStore } from './ConfigurationStore';
@@ -73,6 +75,11 @@ export const MAX_LOGIN_REQUEST_ATTEMPTS = 5;
  * The error message that should be used for invalid_key error messages.
  */
 export const INVALID_KEY_ERROR_MESSAGE = 'The session key is invalid.';
+
+/**
+ * The error message that should be used for invalid_token error messages.
+ */
+export const INVALID_TOKEN_ERROR_MESSAGE = 'The connection token is invalid.';
 
 /**
  * The maximum allowed length for an email address.
@@ -636,6 +643,140 @@ export class AuthController {
         } catch (err) {
             console.error(
                 '[AuthController] Error ocurred while validating a session key',
+                err
+            );
+            return {
+                success: false,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred.',
+            };
+        }
+    }
+
+    async validateConnectionToken(
+        token: string
+    ): Promise<ValidateConnectionTokenResult> {
+        if (typeof token !== 'string' || token === '') {
+            return {
+                success: false,
+                errorCode: 'unacceptable_connection_token',
+                errorMessage:
+                    'The given connection token is invalid. It must be a correctly formatted string.',
+            };
+        }
+
+        try {
+            const tokenValues = parseConnectionToken(token);
+            if (!tokenValues) {
+                console.log(
+                    '[AuthController] [validateConnectionToken] Could not parse token.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'unacceptable_connection_token',
+                    errorMessage:
+                        'The given connection token is invalid. It must be a correctly formatted string.',
+                };
+            }
+
+            const [userId, sessionId, connectionId, inst, hash] = tokenValues;
+            const session = await this._store.findSession(userId, sessionId);
+
+            if (!session) {
+                console.log(
+                    '[AuthController] [validateConnectionToken] Could not find session.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: INVALID_TOKEN_ERROR_MESSAGE,
+                };
+            }
+
+            if (!verifyConnectionToken(token, session.connectionSecret)) {
+                console.log(
+                    '[AuthController] [validateConnectionToken] Connection token was invalid.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: INVALID_TOKEN_ERROR_MESSAGE,
+                };
+            }
+
+            const now = Date.now();
+            if (session.revokeTimeMs && now >= session.revokeTimeMs) {
+                console.log(
+                    '[AuthController] [validateConnectionToken] Session has been revoked.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: INVALID_TOKEN_ERROR_MESSAGE,
+                };
+            }
+
+            if (now >= session.expireTimeMs) {
+                console.log(
+                    '[AuthController] [validateConnectionToken] Session has expired.'
+                );
+                return {
+                    success: false,
+                    errorCode: 'session_expired',
+                    errorMessage: 'The session has expired.',
+                };
+            }
+
+            const userInfo = await this._store.findUser(userId);
+
+            if (!userInfo) {
+                console.log(
+                    '[AuthController] [validateConnectionToken] Unable to find user!'
+                );
+                return {
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: INVALID_TOKEN_ERROR_MESSAGE,
+                };
+            } else {
+                if (typeof userInfo.allSessionRevokeTimeMs === 'number') {
+                    if (
+                        userInfo.allSessionRevokeTimeMs >= session.grantedTimeMs
+                    ) {
+                        return {
+                            success: false,
+                            errorCode: 'invalid_token',
+                            errorMessage: INVALID_TOKEN_ERROR_MESSAGE,
+                        };
+                    }
+                }
+
+                if (userInfo.banTimeMs > 0) {
+                    return {
+                        success: false,
+                        errorCode: 'user_is_banned',
+                        errorMessage: 'The user has been banned.',
+                        banReason: userInfo.banReason,
+                    };
+                }
+            }
+
+            const { subscriptionId, subscriptionTier } =
+                await this._getSubscriptionInfo(userInfo);
+
+            return {
+                success: true,
+                userId: session.userId,
+                sessionId: session.sessionId,
+                connectionId: connectionId,
+                inst: inst,
+                allSessionsRevokedTimeMs: userInfo.allSessionRevokeTimeMs,
+                subscriptionId: subscriptionId ?? undefined,
+                subscriptionTier: subscriptionTier ?? undefined,
+            };
+        } catch (err) {
+            console.error(
+                '[AuthController] Error ocurred while validating a connection token',
                 err
             );
             return {
@@ -1424,6 +1565,43 @@ export interface ValidateSessionKeyFailure {
     errorCode:
         | 'unacceptable_session_key'
         | 'invalid_key'
+        | 'session_expired'
+        | 'user_is_banned'
+        | ServerError;
+    errorMessage: string;
+
+    banReason?: AuthUser['banReason'];
+}
+
+export type ValidateConnectionTokenResult =
+    | ValidateConnectionTokenSuccess
+    | ValidateConnectionTokenFailure;
+
+export interface ValidateConnectionTokenSuccess {
+    success: true;
+    userId: string;
+    sessionId: string;
+    connectionId: string;
+    inst: string;
+
+    allSessionsRevokedTimeMs?: number;
+
+    /**
+     * The subscription ID for the user.
+     */
+    subscriptionTier?: string;
+
+    /**
+     * The ID of the subscription that the user is subscribed to.
+     */
+    subscriptionId?: string;
+}
+
+export interface ValidateConnectionTokenFailure {
+    success: false;
+    errorCode:
+        | 'unacceptable_connection_token'
+        | 'invalid_token'
         | 'session_expired'
         | 'user_is_banned'
         | ServerError;

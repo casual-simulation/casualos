@@ -2,6 +2,7 @@ import {
     AuthController,
     CompleteLoginSuccess,
     INVALID_KEY_ERROR_MESSAGE,
+    INVALID_TOKEN_ERROR_MESSAGE,
     ListSessionsSuccess,
     LOGIN_REQUEST_ID_BYTE_LENGTH,
     LOGIN_REQUEST_LIFETIME_MS,
@@ -11,6 +12,7 @@ import {
     formatV1ConnectionKey,
     formatV1OpenAiKey,
     formatV1SessionKey,
+    generateV1ConnectionToken,
     parseSessionKey,
 } from './AuthUtils';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
@@ -1327,7 +1329,7 @@ describe('AuthController', () => {
                     });
                 });
 
-                it('should return the User ID if given a valid key', async () => {
+                it('should include the users subscription tier', async () => {
                     await store.saveUser({
                         id: 'myid',
                         email: 'email',
@@ -1817,6 +1819,458 @@ describe('AuthController', () => {
                         errorCode: 'unacceptable_session_key',
                         errorMessage:
                             'The given session key is invalid. It must be a correctly formatted string.',
+                    });
+                }
+            );
+        });
+    });
+
+    describe('validateConnectionToken()', () => {
+        describe('v1 tokens', () => {
+            beforeEach(async () => {
+                await store.saveUser({
+                    id: 'myid',
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                });
+            });
+
+            it('should return the User ID if given a valid key', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const connectionSecret = 'connectionSecret';
+                const userId = 'myid';
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        code,
+                        sessionId
+                    ),
+                    connectionSecret: toBase64String(connectionSecret),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                const connectionKey = formatV1ConnectionKey(
+                    userId,
+                    sessionId,
+                    toBase64String(connectionSecret),
+                    200
+                );
+                const token = generateV1ConnectionToken(
+                    connectionKey,
+                    'connectionId',
+                    'inst'
+                );
+                const result = await controller.validateConnectionToken(token);
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                    sessionId: sessionId,
+                    connectionId: 'connectionId',
+                    inst: 'inst',
+                });
+            });
+
+            it('should fail if the token doesnt match the connection secret', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const connectionSecret = 'connectionSecret';
+                const userId = 'myid';
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        code,
+                        sessionId
+                    ),
+                    connectionSecret: toBase64String(connectionSecret),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                const connectionKey = formatV1ConnectionKey(
+                    userId,
+                    sessionId,
+                    toBase64String('wrong'),
+                    200
+                );
+                const token = generateV1ConnectionToken(
+                    connectionKey,
+                    'connectionId',
+                    'inst'
+                );
+                const result = await controller.validateConnectionToken(token);
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: 'The connection token is invalid.',
+                });
+            });
+
+            it('should include the users subscription tier', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const connectionSecret = 'connectionSecret';
+                const userId = 'myid';
+
+                await store.saveUser({
+                    id: 'myid',
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    allSessionRevokeTimeMs: undefined,
+                    currentLoginRequestId: undefined,
+                    subscriptionId: 'sub_2',
+                    subscriptionStatus: 'active',
+                });
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        code,
+                        sessionId
+                    ),
+                    connectionSecret: toBase64String(connectionSecret),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                const connectionKey = formatV1ConnectionKey(
+                    userId,
+                    sessionId,
+                    toBase64String(connectionSecret),
+                    200
+                );
+                const token = generateV1ConnectionToken(
+                    connectionKey,
+                    'connectionId',
+                    'inst'
+                );
+                const result = await controller.validateConnectionToken(token);
+
+                expect(result).toEqual({
+                    success: true,
+                    userId: userId,
+                    sessionId: sessionId,
+                    connectionId: 'connectionId',
+                    inst: 'inst',
+
+                    subscriptionTier: 'alpha',
+                    subscriptionId: 'sub_2',
+                });
+            });
+
+            it('should fail if the token is malformed', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const connectionSecret = 'connectionSecret';
+                const userId = 'myid';
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        code,
+                        sessionId
+                    ),
+                    connectionSecret: toBase64String(connectionSecret),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                // const connectionKey = formatV1ConnectionKey(
+                //     userId,
+                //     sessionId,
+                //     toBase64String(connectionSecret),
+                //     200
+                // );
+                // const token = generateV1ConnectionToken(connectionKey, 'connectionId', 'inst');
+                const result = await controller.validateConnectionToken(
+                    'wrong token'
+                );
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'unacceptable_connection_token',
+                    errorMessage:
+                        'The given connection token is invalid. It must be a correctly formatted string.',
+                });
+            });
+
+            it('should fail if the session has expired', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const connectionSecret = 'connectionSecret';
+                const userId = 'myid';
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        code,
+                        sessionId
+                    ),
+                    connectionSecret: toBase64String(connectionSecret),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                const connectionKey = formatV1ConnectionKey(
+                    userId,
+                    sessionId,
+                    toBase64String(connectionSecret),
+                    200
+                );
+                const token = generateV1ConnectionToken(
+                    connectionKey,
+                    'connectionId',
+                    'inst'
+                );
+
+                nowMock.mockReturnValue(400);
+
+                const result = await controller.validateConnectionToken(token);
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'session_expired',
+                    errorMessage: 'The session has expired.',
+                });
+            });
+
+            it('should fail if the session has been revoked', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const connectionSecret = 'connectionSecret';
+                const userId = 'myid';
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        code,
+                        sessionId
+                    ),
+                    connectionSecret: toBase64String(connectionSecret),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: 150,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                const connectionKey = formatV1ConnectionKey(
+                    userId,
+                    sessionId,
+                    toBase64String(connectionSecret),
+                    200
+                );
+                const token = generateV1ConnectionToken(
+                    connectionKey,
+                    'connectionId',
+                    'inst'
+                );
+
+                nowMock.mockReturnValue(175);
+
+                const result = await controller.validateConnectionToken(token);
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: INVALID_TOKEN_ERROR_MESSAGE,
+                });
+            });
+
+            it('should fail if the session was granted before all sessions were revoked', async () => {
+                const requestId = 'requestId';
+                const sessionId = toBase64String('sessionId');
+                const code = 'code';
+                const connectionSecret = 'connectionSecret';
+                const userId = 'myid';
+
+                await store.saveSession({
+                    requestId,
+                    sessionId,
+                    secretHash: hashHighEntropyPasswordWithSalt(
+                        code,
+                        sessionId
+                    ),
+                    connectionSecret: toBase64String(connectionSecret),
+                    expireTimeMs: 200,
+                    grantedTimeMs: 100,
+                    previousSessionId: null,
+                    nextSessionId: null,
+                    revokeTimeMs: null,
+                    userId,
+                    ipAddress: '127.0.0.1',
+                });
+
+                await store.saveUser({
+                    id: userId,
+                    email: 'email',
+                    phoneNumber: 'phonenumber',
+                    allSessionRevokeTimeMs: 101,
+                    currentLoginRequestId: requestId,
+                });
+
+                const connectionKey = formatV1ConnectionKey(
+                    userId,
+                    sessionId,
+                    toBase64String(connectionSecret),
+                    200
+                );
+                const token = generateV1ConnectionToken(
+                    connectionKey,
+                    'connectionId',
+                    'inst'
+                );
+
+                nowMock.mockReturnValue(175);
+
+                const result = await controller.validateConnectionToken(token);
+
+                expect(result).toEqual({
+                    success: false,
+                    errorCode: 'invalid_token',
+                    errorMessage: INVALID_TOKEN_ERROR_MESSAGE,
+                });
+            });
+        });
+
+        it('should work with keys created by completeLogin()', async () => {
+            const address = 'myAddress';
+            const addressType = 'email';
+            const requestId = fromByteArray(new Uint8Array([1, 2, 3]));
+            const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
+            const sessionId = new Uint8Array([7, 8, 9]);
+            const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([13, 14, 15]);
+
+            await store.saveUser({
+                id: 'myid',
+                email: address,
+                phoneNumber: address,
+                currentLoginRequestId: requestId,
+                allSessionRevokeTimeMs: undefined,
+            });
+
+            await store.saveLoginRequest({
+                userId: 'myid',
+                requestId: requestId,
+                secretHash: hashPasswordWithSalt(code, requestId),
+                expireTimeMs: 200,
+                requestTimeMs: 100,
+                completedTimeMs: null,
+                attemptCount: 0,
+                address,
+                addressType,
+                ipAddress: '127.0.0.1',
+            });
+
+            nowMock.mockReturnValue(150);
+            randomBytesMock
+                .mockReturnValueOnce(sessionId)
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
+
+            const response = (await controller.completeLogin({
+                userId: 'myid',
+                requestId: requestId,
+                code: code,
+                ipAddress: '127.0.0.1',
+            })) as CompleteLoginSuccess;
+
+            expect(response).toEqual({
+                success: true,
+                userId: 'myid',
+                sessionKey: expect.any(String),
+                connectionKey: expect.any(String),
+                expireTimeMs: expect.any(Number),
+            });
+
+            const token = generateV1ConnectionToken(
+                response.connectionKey,
+                'connectionId',
+                'inst'
+            );
+
+            const validateResponse = await controller.validateConnectionToken(
+                token
+            );
+
+            expect(validateResponse).toEqual({
+                success: true,
+                userId: 'myid',
+                sessionId: fromByteArray(sessionId),
+                connectionId: 'connectionId',
+                inst: 'inst',
+            });
+        });
+
+        describe('data validation', () => {
+            const invalidKeyCases = [
+                ['null', null as any],
+                ['empty', ''],
+                ['number', 123],
+                ['boolean', false],
+                ['object', {}],
+                ['array', []],
+                ['undefined', undefined],
+            ];
+            it.each(invalidKeyCases)(
+                'should fail if given a %s key',
+                async (desc, key) => {
+                    const response = await controller.validateConnectionToken(
+                        key
+                    );
+
+                    expect(response).toEqual({
+                        success: false,
+                        errorCode: 'unacceptable_connection_token',
+                        errorMessage:
+                            'The given connection token is invalid. It must be a correctly formatted string.',
                     });
                 }
             );

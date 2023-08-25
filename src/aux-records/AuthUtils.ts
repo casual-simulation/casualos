@@ -479,17 +479,20 @@ export function verifyConnectionToken(
     if (!connectionToken || !connectionSecret) {
         return false;
     }
-
-    const parsed = parseV1ConnectionToken(connectionToken);
-    if (parsed) {
-        const [userId, sessionId, connectionId, inst, hash] = parsed;
-        const expectedHash = v1ConnectionTokenHmac(
-            connectionSecret,
-            connectionId,
-            inst
-        );
-        return hash === expectedHash;
-    } else {
+    try {
+        const parsed = parseV1ConnectionToken(connectionToken);
+        if (parsed) {
+            const [userId, sessionId, connectionId, inst, hash] = parsed;
+            const expectedHash = v1ConnectionTokenHmac(
+                connectionSecret,
+                connectionId,
+                inst
+            );
+            return hash === expectedHash;
+        } else {
+            return false;
+        }
+    } catch {
         return false;
     }
 }
