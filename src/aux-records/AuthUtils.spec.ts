@@ -13,6 +13,7 @@ import {
     parseConnectionToken,
     generateV1ConnectionToken,
     parseV1ConnectionToken,
+    verifyConnectionToken,
 } from './AuthUtils';
 import { toBase64String } from './Utils';
 
@@ -247,35 +248,39 @@ describe('formatV1ConnectionToken()', () => {
             'userId',
             'sessionId',
             'connectionId',
+            'inst',
             'hmac'
         );
 
-        const [version, userId, sessionId, connectionId, hmac] =
+        const [version, userId, sessionId, connectionId, inst, hmac] =
             result.split('.');
 
         expect(version).toBe('vCT1');
         expect(userId).toBe(toBase64String('userId'));
         expect(sessionId).toBe(toBase64String('sessionId'));
         expect(connectionId).toBe(toBase64String('connectionId'));
+        expect(inst).toBe(toBase64String('inst'));
         expect(hmac).toBe(toBase64String('hmac'));
     });
 });
 
 describe('parseConnectionToken()', () => {
     describe('v1', () => {
-        it('should parse the given key into the userId, sessionId, hash, connectionId, and deviceId', () => {
-            const key = formatV1ConnectionToken(
+        it('should parse the given token into the userId, sessionId, hash, connectionId, inst, and deviceId', () => {
+            const token = formatV1ConnectionToken(
                 'userId',
                 'sessionId',
                 'connectionId',
+                'inst',
                 'hash'
             );
-            const [userId, sessionId, connectionId, hash] =
-                parseConnectionToken(key);
+            const [userId, sessionId, connectionId, inst, hash] =
+                parseConnectionToken(token);
 
             expect(userId).toBe('userId');
             expect(sessionId).toBe('sessionId');
             expect(connectionId).toBe('connectionId');
+            expect(inst).toBe('inst');
             expect(hash).toBe('hash');
         });
 
@@ -342,14 +347,115 @@ describe('generateV1ConnectionToken()', () => {
             123
         );
 
-        const result = generateV1ConnectionToken(key, 'connectionId');
+        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
 
-        const [version, userId, sessionId, connectionId, password] =
+        const [version, userId, sessionId, connectionId, inst, password] =
             result.split('.');
 
         expect(userId).toBe(toBase64String('userId'));
         expect(sessionId).toBe(toBase64String('sessionId'));
-        expect(password).toEqual(expect.any(String));
         expect(connectionId).toBe(toBase64String('connectionId'));
+        expect(inst).toBe(toBase64String('inst'));
+        expect(password).toEqual(expect.any(String));
+    });
+});
+
+describe('verifyConnectionToken()', () => {
+    const password = toBase64String('password');
+    const wrongPassword = toBase64String('wrong password');
+    const key = formatV1ConnectionKey('userId', 'sessionId', password, 123);
+
+    it('should return true when the given token is valid', () => {
+        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+        expect(verifyConnectionToken(result, password)).toBe(true);
+    });
+
+    it('should return false when the given given a null token', () => {
+        expect(verifyConnectionToken(null, password)).toBe(false);
+    });
+
+    it('should return false when given a null secret', () => {
+        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+        expect(verifyConnectionToken(result, null)).toBe(false);
+    });
+
+    it('should return false when the given token is invalid', () => {
+        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+        expect(verifyConnectionToken(result, wrongPassword)).toBe(false);
+    });
+
+    it('should return false when the given token hash doesnt match the connection ID', () => {
+        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+        const [userId, sessionId, connectionId, inst, password] =
+            parseConnectionToken(result);
+        const token = formatV1ConnectionToken(
+            userId,
+            sessionId,
+            'wrong connection id',
+            inst,
+            password
+        );
+
+        expect(verifyConnectionToken(token, password)).toBe(false);
+    });
+
+    it('should return false when the given token hash doesnt match the inst', () => {
+        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+        const [userId, sessionId, connectionId, inst, password] =
+            parseConnectionToken(result);
+        const token = formatV1ConnectionToken(
+            userId,
+            sessionId,
+            connectionId,
+            'wrong inst',
+            password
+        );
+
+        expect(verifyConnectionToken(token, password)).toBe(false);
+    });
+
+    it('should return false when the connection ID contains the entire inst', () => {
+        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+        const [userId, sessionId, connectionId, inst, password] =
+            parseConnectionToken(result);
+        const token = formatV1ConnectionToken(
+            userId,
+            sessionId,
+            'connectionIdinst',
+            '',
+            password
+        );
+
+        expect(verifyConnectionToken(token, password)).toBe(false);
+    });
+
+    it('should return false when the inst contains the connection ID', () => {
+        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+        const [userId, sessionId, connectionId, inst, password] =
+            parseConnectionToken(result);
+        const token = formatV1ConnectionToken(
+            userId,
+            sessionId,
+            '',
+            'connectionIdinst',
+            password
+        );
+
+        expect(verifyConnectionToken(token, password)).toBe(false);
+    });
+
+    it('should return false when the inst and connection ID are shifted', () => {
+        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+        const [userId, sessionId, connectionId, inst, password] =
+            parseConnectionToken(result);
+        const token = formatV1ConnectionToken(
+            userId,
+            sessionId,
+            'connectionIdin',
+            'st',
+            password
+        );
+
+        expect(verifyConnectionToken(token, password)).toBe(false);
     });
 });

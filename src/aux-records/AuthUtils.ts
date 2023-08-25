@@ -2,7 +2,7 @@ import { padStart } from 'lodash';
 import { randomBytes } from 'tweetnacl';
 import { fromBase64String, toBase64String } from './Utils';
 import { sha256, hmac } from 'hash.js';
-import { fromByteArray } from 'base64-js';
+import { fromByteArray, toByteArray } from 'base64-js';
 
 /**
  * The number of characters that random codes should contain.
@@ -287,27 +287,37 @@ export function parseOpenAiKey(key: string): [key: string] {
  * @param userId The ID of the user.
  * @param sessionId The ID of the session.
  * @param connectionId The ID of the connection.
+ * @param inst The ID of the instance that the connection is for.
  * @param hash The hash that was generated.
  */
 export function formatV1ConnectionToken(
     userId: string,
     sessionId: string,
     connectionId: string,
+    inst: string,
     hash: string
 ): string {
     return `vCT1.${toBase64String(userId)}.${toBase64String(
         sessionId
-    )}.${toBase64String(connectionId)}.${toBase64String(hash)}`;
+    )}.${toBase64String(connectionId)}.${toBase64String(inst)}.${toBase64String(
+        hash
+    )}`;
 }
 
 /**
- * Parses the given connection token into a user ID, session ID, hash, connection ID, and device ID array.
+ * Parses the given connection token into a user ID, session ID, connection ID, inst, and hash array.
  * Returns null if the key cannot be parsed.
  * @param token The token to parse.
  */
 export function parseConnectionToken(
     token: string | null
-): [userId: string, sessionId: string, connectionId: string, hash: string] {
+): [
+    userId: string,
+    sessionId: string,
+    connectionId: string,
+    inst: string,
+    hash: string
+] {
     return parseV1ConnectionToken(token);
 }
 
@@ -318,7 +328,13 @@ export function parseConnectionToken(
  */
 export function parseV1ConnectionToken(
     token: string
-): [userId: string, sessionId: string, connectionId: string, hash: string] {
+): [
+    userId: string,
+    sessionId: string,
+    connectionId: string,
+    inst: string,
+    hash: string
+] {
     if (!token) {
         return null;
     }
@@ -334,22 +350,24 @@ export function parseV1ConnectionToken(
     }
 
     const userIdBase64 = withoutVersion.slice(0, periodAfterUserId);
-    const sessionIdPlusPassword = withoutVersion.slice(periodAfterUserId + 1);
+    const sessionIdPlusConnectionId = withoutVersion.slice(
+        periodAfterUserId + 1
+    );
 
-    if (userIdBase64.length <= 0 || sessionIdPlusPassword.length <= 0) {
+    if (userIdBase64.length <= 0 || sessionIdPlusConnectionId.length <= 0) {
         return null;
     }
 
-    const periodAfterSessionId = sessionIdPlusPassword.indexOf('.');
+    const periodAfterSessionId = sessionIdPlusConnectionId.indexOf('.');
     if (periodAfterSessionId < 0) {
         return null;
     }
 
-    const sessionIdBase64 = sessionIdPlusPassword.slice(
+    const sessionIdBase64 = sessionIdPlusConnectionId.slice(
         0,
         periodAfterSessionId
     );
-    const connectionIdPlusExtra = sessionIdPlusPassword.slice(
+    const connectionIdPlusExtra = sessionIdPlusConnectionId.slice(
         periodAfterSessionId + 1
     );
 
@@ -357,15 +375,33 @@ export function parseV1ConnectionToken(
         return null;
     }
 
-    const periodAfterHash = connectionIdPlusExtra.indexOf('.');
-    if (periodAfterHash < 0) {
+    const periodAfterConnectionId = connectionIdPlusExtra.indexOf('.');
+    if (periodAfterConnectionId < 0) {
         return null;
     }
 
-    const connectionIdBase64 = connectionIdPlusExtra.slice(0, periodAfterHash);
-    const hashBase64 = connectionIdPlusExtra.slice(periodAfterHash + 1);
+    const connectionIdBase64 = connectionIdPlusExtra.slice(
+        0,
+        periodAfterConnectionId
+    );
+    const instPlusHash = connectionIdPlusExtra.slice(
+        periodAfterConnectionId + 1
+    );
 
-    if (connectionIdBase64.length <= 0 || hashBase64.length <= 0) {
+    if (connectionIdBase64.length <= 0 || instPlusHash.length <= 0) {
+        return null;
+    }
+
+    const periodAfterInst = instPlusHash.indexOf('.');
+
+    if (periodAfterInst < 0) {
+        return null;
+    }
+
+    const instBase64 = instPlusHash.slice(0, periodAfterInst);
+    const hashBase64 = instPlusHash.slice(periodAfterInst + 1);
+
+    if (hashBase64.length <= 0 || instBase64.length <= 0) {
         return null;
     }
 
@@ -373,9 +409,10 @@ export function parseV1ConnectionToken(
         const userId = fromBase64String(userIdBase64);
         const sessionId = fromBase64String(sessionIdBase64);
         const connectionId = fromBase64String(connectionIdBase64);
+        const inst = fromBase64String(instBase64);
         const hash = fromBase64String(hashBase64);
 
-        return [userId, sessionId, connectionId, hash];
+        return [userId, sessionId, connectionId, inst, hash];
     } catch (err) {
         return null;
     }
@@ -388,10 +425,12 @@ export function parseV1ConnectionToken(
  * @param key The connection key that should be used to generate the token.
  * @param connectionId The connection ID.
  * @param deviceId The device ID.
+ * @param inst The ID of the instance that the connection is for.
  */
 export function generateV1ConnectionToken(
     key: string,
-    connectionId: string
+    connectionId: string,
+    inst: string
 ): string {
     const parsed = parseConnectionKey(key);
 
@@ -400,10 +439,57 @@ export function generateV1ConnectionToken(
     }
 
     const [userId, sessionId, connectionSecret, expireTimeMs] = parsed;
+    const hashHex = v1ConnectionTokenHmac(connectionSecret, connectionId, inst);
+    return formatV1ConnectionToken(
+        userId,
+        sessionId,
+        connectionId,
+        inst,
+        hashHex
+    );
+}
 
-    const hash = hmac(sha256 as any, connectionSecret, 'hex');
+/**
+ * Calculates the SHA-256 HMAC of the given connection ID and device ID using the given connection secret.
+ * @param connectionSecret The connection secret.
+ * @param connectionId The ID of the connection.
+ * @param inst The inst.
+ */
+export function v1ConnectionTokenHmac(
+    connectionSecret: string,
+    connectionId: string,
+    inst: string
+): string {
+    const hash = hmac(sha256 as any, toByteArray(connectionSecret), 'hex');
     hash.update(connectionId);
+    hash.update(inst);
     const hashHex = hash.digest('hex');
+    return hashHex;
+}
 
-    return formatV1ConnectionToken(userId, sessionId, connectionId, hashHex);
+/**
+ * Validates whether the given connection token is valid and was generated from the given connection key.
+ * @param connectionToken The connection token to validate.
+ * @param connectionSecret The secret for the connection.
+ */
+export function verifyConnectionToken(
+    connectionToken: string,
+    connectionSecret: string
+): boolean {
+    if (!connectionToken || !connectionSecret) {
+        return false;
+    }
+
+    const parsed = parseV1ConnectionToken(connectionToken);
+    if (parsed) {
+        const [userId, sessionId, connectionId, inst, hash] = parsed;
+        const expectedHash = v1ConnectionTokenHmac(
+            connectionSecret,
+            connectionId,
+            inst
+        );
+        return hash === expectedHash;
+    } else {
+        return false;
+    }
 }
