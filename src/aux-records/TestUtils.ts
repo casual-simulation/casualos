@@ -8,6 +8,7 @@ import {
     allowAllFeatures,
 } from './SubscriptionConfiguration';
 import { MemoryStore } from './MemoryStore';
+import { parseSessionKey } from './AuthUtils';
 
 export type TestServices = ReturnType<typeof createTestControllers>;
 
@@ -89,11 +90,16 @@ export async function createTestUser(
 
     const userId = loginResult.userId;
     const sessionKey = loginResult.sessionKey;
+    const connectionKey = loginResult.connectionKey;
+
+    const [_, sessionId] = parseSessionKey(sessionKey);
 
     return {
         emailAddress,
         userId,
         sessionKey,
+        connectionKey,
+        sessionId,
     };
 }
 

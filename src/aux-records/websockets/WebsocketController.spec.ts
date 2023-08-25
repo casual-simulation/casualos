@@ -34,6 +34,8 @@ import {
     remoteResult,
 } from '../common/RemoteActions';
 import { WebsocketEventTypes } from './WebsocketEvents';
+import { createTestControllers, createTestUser } from '../TestUtils';
+import { generateV1ConnectionToken } from '../AuthUtils';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -45,24 +47,28 @@ const device1Info: DeviceConnection = {
     userId: 'device1',
     serverConnectionId: 'device1',
     clientConnectionId: 'client-device1',
+    sessionId: 'test',
     token: 'device1',
 };
 const device2Info: DeviceConnection = {
     userId: 'device2',
     serverConnectionId: 'device2',
     clientConnectionId: 'client-device2',
+    sessionId: 'test2',
     token: 'device2',
 };
 const device3Info: DeviceConnection = {
     userId: 'device3',
     serverConnectionId: 'device3',
     clientConnectionId: 'client-device3',
+    sessionId: 'test3',
     token: 'device3',
 };
 const device4Info: DeviceConnection = {
     userId: 'device4',
     serverConnectionId: 'device4',
     clientConnectionId: 'client-device4',
+    sessionId: 'test4',
     token: 'device4',
 };
 
@@ -71,23 +77,18 @@ describe('WebsocketController', () => {
     let connectionStore: MemoryWebsocketConnectionStore;
     let messenger: MemoryWebsocketMessenger;
     let updateStore: MemoryUpdatesStore;
+    let services: ReturnType<typeof createTestControllers>;
 
     beforeEach(() => {
-        connectionStore.reset();
-        messenger.reset();
-        updateStore.reset();
-    });
-
-    // We initialize the server once for all the tests
-    // because it should only rely on the stores for cross-request data.
-    beforeAll(() => {
+        services = createTestControllers();
         connectionStore = new MemoryWebsocketConnectionStore();
         messenger = new MemoryWebsocketMessenger();
         updateStore = new MemoryUpdatesStore();
         server = new WebsocketController(
             connectionStore,
             messenger,
-            updateStore
+            updateStore,
+            services.auth
         );
     });
 
@@ -1726,6 +1727,7 @@ describe('WebsocketController', () => {
                     serverConnectionId: 'connection',
                     clientConnectionId: 'connectionId',
                     userId: deviceUserId,
+                    sessionId: 'test',
                     token: 'abc',
                 };
 
@@ -1754,6 +1756,7 @@ describe('WebsocketController', () => {
                     serverConnectionId: 'connection',
                     clientConnectionId: deviceConnectionId,
                     userId: 'username',
+                    sessionId: 'test',
                     token: 'abc',
                 };
 
@@ -1782,6 +1785,7 @@ describe('WebsocketController', () => {
                     serverConnectionId: 'connection',
                     clientConnectionId: 'sessionId',
                     userId: deviceId,
+                    sessionId: 'test',
                     token: 'abc',
                 };
 
@@ -1803,6 +1807,7 @@ describe('WebsocketController', () => {
                 serverConnectionId: 'connection',
                 clientConnectionId: 'sessionId',
                 userId: 'username',
+                sessionId: 'test',
                 token: 'abc',
             };
             expect(
@@ -1969,6 +1974,52 @@ describe('WebsocketController', () => {
             });
             const events = messenger.getEvents(device1Info.serverConnectionId);
             expect(events).toEqual([]);
+        });
+    });
+
+    describe.only('login()', () => {
+        let userId: string;
+        let sessionKey: string;
+        let sessionId: string;
+        let connectionKey: string;
+        let connectionToken: string;
+        const serverConnectionId = 'serverConnection';
+        const connectionId = 'connectionId';
+        const inst = 'inst';
+
+        beforeEach(async () => {
+            uuidMock.mockReturnValueOnce('userId');
+            const user = await createTestUser(services);
+
+            userId = user.userId;
+            sessionKey = user.sessionKey;
+            connectionKey = user.connectionKey;
+            sessionId = user.sessionId;
+
+            connectionToken = generateV1ConnectionToken(
+                connectionKey,
+                connectionId,
+                inst
+            );
+        });
+
+        it('should validate the token and update the connection info', async () => {
+            await server.login(serverConnectionId, 1, {
+                type: 'login',
+                connectionToken,
+            });
+
+            const connection = await connectionStore.getConnection(
+                serverConnectionId
+            );
+
+            expect(connection).toEqual({
+                serverConnectionId: serverConnectionId,
+                clientConnectionId: connectionId,
+                token: connectionToken,
+                userId: userId,
+                sessionId: sessionId,
+            });
         });
     });
 });

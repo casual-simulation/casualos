@@ -28,6 +28,7 @@ import {
 import { UpdatesStore } from '@casual-simulation/causal-trees/core2';
 import {
     AddUpdatesMessage,
+    LoginMessage,
     SendActionMessage,
     TimeSyncRequestMessage,
     WatchBranchMessage,
@@ -36,6 +37,7 @@ import {
     WebsocketEventTypes,
 } from './WebsocketEvents';
 import { ConnectionInfo } from '../common/ConnectionInfo';
+import { AuthController } from '../AuthController';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -44,6 +46,7 @@ export class WebsocketController {
     private _connectionStore: WebsocketConnectionStore;
     private _messenger: WebsocketMessenger;
     private _updatesStore: UpdatesStore;
+    private _auth: AuthController;
 
     /**
      * Gets or sets the default device selector that should be used
@@ -59,11 +62,13 @@ export class WebsocketController {
     constructor(
         connectionStore: WebsocketConnectionStore,
         messenger: WebsocketMessenger,
-        updatesStore: UpdatesStore
+        updatesStore: UpdatesStore,
+        auth: AuthController
     ) {
         this._connectionStore = connectionStore;
         this._messenger = messenger;
         this._updatesStore = updatesStore;
+        this._auth = auth;
     }
 
     async connect(connection: DeviceConnection): Promise<void> {
@@ -709,6 +714,49 @@ export class WebsocketController {
         }
     }
 
+    /**
+     * Attempts to log the given connection in.
+     * @param connectionId The ID of the connection.
+     * @param requestId The ID of the request.
+     * @param message The login message.
+     */
+    async login(
+        connectionId: string,
+        requestId: number,
+        message: LoginMessage
+    ): Promise<void> {
+        try {
+            const validationResult = await this._auth.validateConnectionToken(
+                message.connectionToken
+            );
+            if (validationResult.success == false) {
+                return;
+            }
+
+            await this._connectionStore.saveConnection({
+                serverConnectionId: connectionId,
+                userId: validationResult.userId,
+                sessionId: validationResult.sessionId,
+                clientConnectionId: validationResult.connectionId,
+                token: message.connectionToken,
+            });
+
+            await this._messenger.sendMessage([connectionId], {
+                type: 'login_result',
+            });
+        } catch (err) {
+            console.error(
+                '[WebsocketController] [login] Error while logging in.',
+                err
+            );
+            await this.sendError(connectionId, {
+                requestId: requestId,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred while logging in.',
+            });
+        }
+    }
+
     async sendError(connectionId: string, error: WebsocketControllerError) {
         await this.sendEvent(connectionId, [
             WebsocketEventTypes.Error,
@@ -726,7 +774,7 @@ export class WebsocketController {
 export function connectionInfo(device: DeviceConnection): ConnectionInfo {
     return {
         connectionId: device.clientConnectionId,
-        deviceId: device.userId,
+        sessionId: device.sessionId,
         userId: device.userId,
     };
 }

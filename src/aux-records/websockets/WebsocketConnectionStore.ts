@@ -122,6 +122,11 @@ export interface DeviceConnection {
     userId: string;
 
     /**
+     * The ID of the session that the user used to connect.
+     */
+    sessionId: string;
+
+    /**
      * The token that the device is using.
      */
     token: string;
