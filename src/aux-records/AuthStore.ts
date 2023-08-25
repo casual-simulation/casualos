@@ -358,6 +358,11 @@ export interface AuthSession {
     secretHash: string;
 
     /**
+     * The secret of the token that provides connection access to this session.
+     */
+    connectionSecret: string;
+
+    /**
      * The unix timestamp in miliseconds that the session was granted at.
      */
     grantedTimeMs: number;

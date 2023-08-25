@@ -8,6 +8,7 @@ import {
     SESSION_LIFETIME_MS,
 } from './AuthController';
 import {
+    formatV1ConnectionKey,
     formatV1OpenAiKey,
     formatV1SessionKey,
     parseSessionKey,
@@ -734,6 +735,7 @@ describe('AuthController', () => {
                 const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
+                const connectionSecret = new Uint8Array([11, 12, 13]);
 
                 await store.saveUser({
                     id: 'myid',
@@ -759,7 +761,8 @@ describe('AuthController', () => {
                 nowMock.mockReturnValue(150);
                 randomBytesMock
                     .mockReturnValueOnce(sessionId)
-                    .mockReturnValueOnce(sessionSecret);
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
 
                 const response = await controller.completeLogin({
                     userId: 'myid',
@@ -777,12 +780,19 @@ describe('AuthController', () => {
                         fromByteArray(sessionSecret),
                         150 + SESSION_LIFETIME_MS
                     ),
+                    connectionKey: formatV1ConnectionKey(
+                        'myid',
+                        fromByteArray(sessionId),
+                        fromByteArray(connectionSecret),
+                        150 + SESSION_LIFETIME_MS
+                    ),
                     expireTimeMs: 150 + SESSION_LIFETIME_MS,
                 });
 
-                expect(randomBytesMock).toHaveBeenCalledTimes(2);
+                expect(randomBytesMock).toHaveBeenCalledTimes(3);
                 expect(randomBytesMock).toHaveBeenNthCalledWith(1, 16); // Should request 16 bytes (128 bits) for the session ID
                 expect(randomBytesMock).toHaveBeenNthCalledWith(2, 16); // Should request 16 bytes (128 bits) for the session secret
+                expect(randomBytesMock).toHaveBeenNthCalledWith(3, 16); // Should request 16 bytes (128 bits) for the connection secret
 
                 expect(store.sessions).toEqual([
                     {
@@ -794,6 +804,7 @@ describe('AuthController', () => {
                             fromByteArray(sessionSecret),
                             fromByteArray(sessionId)
                         ),
+                        connectionSecret: fromByteArray(connectionSecret),
                         grantedTimeMs: 150,
                         expireTimeMs: 150 + SESSION_LIFETIME_MS,
                         revokeTimeMs: null,
@@ -847,6 +858,7 @@ describe('AuthController', () => {
                 const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
+                const connectionSecret = new Uint8Array([11, 12, 13]);
 
                 await store.saveUser({
                     id: 'myid',
@@ -872,7 +884,8 @@ describe('AuthController', () => {
                 nowMock.mockReturnValue(150);
                 randomBytesMock
                     .mockReturnValueOnce(sessionId)
-                    .mockReturnValueOnce(sessionSecret);
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
 
                 const response = await controller.completeLogin({
                     userId: 'myid',
@@ -896,6 +909,7 @@ describe('AuthController', () => {
                 const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
+                const connectionSecret = new Uint8Array([11, 12, 13]);
 
                 await store.saveUser({
                     id: 'myid',
@@ -921,7 +935,8 @@ describe('AuthController', () => {
                 nowMock.mockReturnValue(200);
                 randomBytesMock
                     .mockReturnValueOnce(sessionId)
-                    .mockReturnValueOnce(sessionSecret);
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
 
                 const response = await controller.completeLogin({
                     userId: 'myid',
@@ -942,6 +957,7 @@ describe('AuthController', () => {
                 const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
+                const connectionSecret = new Uint8Array([11, 12, 13]);
 
                 await store.saveUser({
                     id: 'myid',
@@ -967,7 +983,8 @@ describe('AuthController', () => {
                 nowMock.mockReturnValue(400);
                 randomBytesMock
                     .mockReturnValueOnce(sessionId)
-                    .mockReturnValueOnce(sessionSecret);
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
 
                 const response = await controller.completeLogin({
                     userId: 'myid',
@@ -988,6 +1005,7 @@ describe('AuthController', () => {
                 const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
+                const connectionSecret = new Uint8Array([11, 12, 13]);
 
                 await store.saveUser({
                     id: 'myid',
@@ -1013,7 +1031,8 @@ describe('AuthController', () => {
                 nowMock.mockReturnValue(400);
                 randomBytesMock
                     .mockReturnValueOnce(sessionId)
-                    .mockReturnValueOnce(sessionSecret);
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
 
                 const response = await controller.completeLogin({
                     userId: 'myid',
@@ -1034,6 +1053,7 @@ describe('AuthController', () => {
                 const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
+                const connectionSecret = new Uint8Array([11, 12, 13]);
 
                 await store.saveUser({
                     id: 'myid',
@@ -1059,7 +1079,8 @@ describe('AuthController', () => {
                 nowMock.mockReturnValue(400);
                 randomBytesMock
                     .mockReturnValueOnce(sessionId)
-                    .mockReturnValueOnce(sessionSecret);
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
 
                 const response = await controller.completeLogin({
                     userId: 'myid',
@@ -1080,6 +1101,7 @@ describe('AuthController', () => {
                 const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
                 const sessionId = new Uint8Array([7, 8, 9]);
                 const sessionSecret = new Uint8Array([10, 11, 12]);
+                const connectionSecret = new Uint8Array([11, 12, 13]);
 
                 await store.saveUser({
                     id: 'myid',
@@ -1105,7 +1127,8 @@ describe('AuthController', () => {
                 nowMock.mockReturnValue(400);
                 randomBytesMock
                     .mockReturnValueOnce(sessionId)
-                    .mockReturnValueOnce(sessionSecret);
+                    .mockReturnValueOnce(sessionSecret)
+                    .mockReturnValueOnce(connectionSecret);
 
                 const response = await controller.completeLogin({
                     userId: 'myid',
@@ -1245,6 +1268,7 @@ describe('AuthController', () => {
                         requestId,
                         sessionId,
                         secretHash: hashPasswordWithSalt(code, sessionId),
+                        connectionSecret: code,
                         expireTimeMs: 200,
                         grantedTimeMs: 100,
                         previousSessionId: null,
@@ -1282,6 +1306,7 @@ describe('AuthController', () => {
                         requestId,
                         sessionId,
                         secretHash: hashPasswordWithSalt(code, sessionId),
+                        connectionSecret: code,
                         expireTimeMs: 200,
                         grantedTimeMs: 100,
                         previousSessionId: null,
@@ -1329,6 +1354,7 @@ describe('AuthController', () => {
                         requestId,
                         sessionId,
                         secretHash: hashPasswordWithSalt(code, sessionId),
+                        connectionSecret: code,
                         expireTimeMs: 200,
                         grantedTimeMs: 100,
                         previousSessionId: null,
@@ -1373,6 +1399,7 @@ describe('AuthController', () => {
                             code,
                             sessionId
                         ),
+                        connectionSecret: code,
                         expireTimeMs: 200,
                         grantedTimeMs: 100,
                         previousSessionId: null,
@@ -1413,6 +1440,7 @@ describe('AuthController', () => {
                             code,
                             sessionId
                         ),
+                        connectionSecret: code,
                         expireTimeMs: 200,
                         grantedTimeMs: 100,
                         previousSessionId: null,
@@ -1463,6 +1491,7 @@ describe('AuthController', () => {
                             code,
                             sessionId
                         ),
+                        connectionSecret: code,
                         expireTimeMs: 200,
                         grantedTimeMs: 100,
                         previousSessionId: null,
@@ -1498,6 +1527,7 @@ describe('AuthController', () => {
                     requestId,
                     sessionId,
                     secretHash: hashPasswordWithSalt(code, sessionId),
+                    connectionSecret: code,
                     expireTimeMs: 200,
                     grantedTimeMs: 100,
                     previousSessionId: null,
@@ -1534,6 +1564,7 @@ describe('AuthController', () => {
                     requestId,
                     sessionId,
                     secretHash: hashPasswordWithSalt(code, sessionId),
+                    connectionSecret: code,
                     expireTimeMs: 200,
                     grantedTimeMs: 100,
                     previousSessionId: null,
@@ -1571,6 +1602,7 @@ describe('AuthController', () => {
                     requestId,
                     sessionId,
                     secretHash: hashPasswordWithSalt(code, sessionId),
+                    connectionSecret: code,
                     expireTimeMs: 1000,
                     grantedTimeMs: 100,
                     previousSessionId: null,
@@ -1616,6 +1648,7 @@ describe('AuthController', () => {
                     requestId,
                     sessionId,
                     secretHash: hashPasswordWithSalt(code, sessionId),
+                    connectionSecret: code,
                     expireTimeMs: 1000,
                     grantedTimeMs: 100,
                     previousSessionId: null,
@@ -1644,6 +1677,7 @@ describe('AuthController', () => {
             const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
             const sessionId = new Uint8Array([7, 8, 9]);
             const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([13, 14, 15]);
 
             await store.saveUser({
                 id: 'myid',
@@ -1669,7 +1703,8 @@ describe('AuthController', () => {
             nowMock.mockReturnValue(150);
             randomBytesMock
                 .mockReturnValueOnce(sessionId)
-                .mockReturnValueOnce(sessionSecret);
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
 
             const response = (await controller.completeLogin({
                 userId: 'myid',
@@ -1677,6 +1712,14 @@ describe('AuthController', () => {
                 code: code,
                 ipAddress: '127.0.0.1',
             })) as CompleteLoginSuccess;
+
+            expect(response).toEqual({
+                success: true,
+                userId: 'myid',
+                sessionKey: expect.any(String),
+                connectionKey: expect.any(String),
+                expireTimeMs: expect.any(Number),
+            });
 
             const validateResponse = await controller.validateSessionKey(
                 response.sessionKey
@@ -1696,6 +1739,7 @@ describe('AuthController', () => {
             const code = codeNumber(new Uint8Array([4, 5, 6, 7]));
             const sessionId = new Uint8Array([7, 8, 9]);
             const sessionSecret = new Uint8Array([10, 11, 12]);
+            const connectionSecret = new Uint8Array([13, 14, 15]);
 
             await store.saveUser({
                 id: 'myid',
@@ -1721,7 +1765,8 @@ describe('AuthController', () => {
             nowMock.mockReturnValue(150);
             randomBytesMock
                 .mockReturnValueOnce(sessionId)
-                .mockReturnValueOnce(sessionSecret);
+                .mockReturnValueOnce(sessionSecret)
+                .mockReturnValueOnce(connectionSecret);
 
             const response = (await controller.completeLogin({
                 userId: 'myid',
@@ -1801,6 +1846,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -1814,6 +1860,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId: 'otherSession',
                 secretHash: 'otherHash',
+                connectionSecret: 'connectionSecret',
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -1838,6 +1885,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId: 'otherSession',
                 secretHash: 'otherHash',
+                connectionSecret: 'connectionSecret',
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -1860,6 +1908,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -1896,6 +1945,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -1909,6 +1959,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId: 'otherSession',
                 secretHash: 'otherHash',
+                connectionSecret: 'connectionSecret',
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -1950,6 +2001,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -1963,6 +2015,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId: 'otherSession',
                 secretHash: 'otherHash',
+                connectionSecret: 'connectionSecret',
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -1997,6 +2050,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -2010,6 +2064,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId: 'otherSession',
                 secretHash: 'otherHash',
+                connectionSecret: 'connectinoSecret',
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -2052,6 +2107,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -2065,6 +2121,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId: 'otherSession',
                 secretHash: 'otherHash',
+                connectionSecret: 'connectionSecret',
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -2180,6 +2237,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -2261,6 +2319,12 @@ describe('AuthController', () => {
         const code = 'code';
         const userId = 'myid';
         const sessionKey = formatV1SessionKey(userId, sessionId, code, 200);
+        const connectionKey = formatV1ConnectionKey(
+            userId,
+            sessionId,
+            code,
+            200
+        );
 
         beforeEach(async () => {
             await store.saveUser({
@@ -2275,6 +2339,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -2288,11 +2353,13 @@ describe('AuthController', () => {
         it('should issue a new session and revoke the given session', async () => {
             const newSessionId = new Uint8Array([7, 8, 9]);
             const newSessionSecret = new Uint8Array([10, 11, 12]);
+            const newConnectionSecret = new Uint8Array([13, 14, 15]);
 
             nowMock.mockReturnValue(150);
             randomBytesMock
                 .mockReturnValueOnce(newSessionId)
-                .mockReturnValueOnce(newSessionSecret);
+                .mockReturnValueOnce(newSessionSecret)
+                .mockReturnValueOnce(newConnectionSecret);
 
             const result = await controller.replaceSession({
                 sessionKey: sessionKey,
@@ -2308,6 +2375,12 @@ describe('AuthController', () => {
                     fromByteArray(newSessionSecret),
                     150 + SESSION_LIFETIME_MS
                 ),
+                connectionKey: formatV1ConnectionKey(
+                    userId,
+                    fromByteArray(newSessionId),
+                    fromByteArray(newConnectionSecret),
+                    150 + SESSION_LIFETIME_MS
+                ),
                 expireTimeMs: 150 + SESSION_LIFETIME_MS,
             });
 
@@ -2315,6 +2388,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -2335,6 +2409,7 @@ describe('AuthController', () => {
                     fromByteArray(newSessionSecret),
                     fromByteArray(newSessionId)
                 ),
+                connectionSecret: fromByteArray(newConnectionSecret),
                 expireTimeMs: 150 + SESSION_LIFETIME_MS,
                 grantedTimeMs: 150,
                 revokeTimeMs: null,
@@ -2362,6 +2437,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 100,
                 previousSessionId: null,
@@ -2453,6 +2529,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 999,
                 previousSessionId: null,
@@ -2467,6 +2544,7 @@ describe('AuthController', () => {
                     requestId,
                     sessionId: 'session' + (i + 1),
                     secretHash: 'hash' + (i + 1),
+                    connectionSecret: 'connectionSecret' + (i + 1),
                     expireTimeMs: 1000 + (i + 1),
                     grantedTimeMs: 100 + (i + 1),
                     previousSessionId: null,
@@ -2533,6 +2611,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId: 'session20',
                 secretHash: 'hash20',
+                connectionSecret: 'connectionSecret20',
                 expireTimeMs: 1020,
                 grantedTimeMs: 120,
                 previousSessionId: null,
@@ -2652,6 +2731,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 999,
                 previousSessionId: null,
@@ -2836,6 +2916,7 @@ describe('AuthController', () => {
                 requestId,
                 sessionId,
                 secretHash: hashPasswordWithSalt(code, sessionId),
+                connectionSecret: code,
                 expireTimeMs: 1000,
                 grantedTimeMs: 999,
                 previousSessionId: null,

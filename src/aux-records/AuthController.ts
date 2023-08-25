@@ -25,6 +25,7 @@ import {
     toBase64String,
 } from './Utils';
 import {
+    formatV1ConnectionKey,
     formatV1OpenAiKey,
     formatV1SessionKey,
     parseSessionKey,
@@ -451,6 +452,9 @@ export class AuthController {
             const sessionSecret = fromByteArray(
                 randomBytes(SESSION_SECRET_BYTE_LENGTH)
             );
+            const connectionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
             const now = Date.now();
 
             const session: AuthSession = {
@@ -463,6 +467,7 @@ export class AuthController {
                     sessionSecret,
                     sessionId
                 ),
+                connectionSecret: connectionSecret,
                 grantedTimeMs: now,
                 revokeTimeMs: null,
                 expireTimeMs: now + SESSION_LIFETIME_MS,
@@ -484,6 +489,12 @@ export class AuthController {
                     loginRequest.userId,
                     sessionId,
                     sessionSecret,
+                    session.expireTimeMs
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    loginRequest.userId,
+                    sessionId,
+                    connectionSecret,
                     session.expireTimeMs
                 ),
                 expireTimeMs: session.expireTimeMs,
@@ -825,6 +836,9 @@ export class AuthController {
             const newSessionSecret = fromByteArray(
                 randomBytes(SESSION_SECRET_BYTE_LENGTH)
             );
+            const newConnectionSecret = fromByteArray(
+                randomBytes(SESSION_SECRET_BYTE_LENGTH)
+            );
 
             const newSession: AuthSession = {
                 userId: userId,
@@ -834,6 +848,7 @@ export class AuthController {
                     newSessionSecret,
                     newSessionId
                 ),
+                connectionSecret: newConnectionSecret,
                 grantedTimeMs: now,
                 revokeTimeMs: null,
                 expireTimeMs: now + SESSION_LIFETIME_MS,
@@ -867,6 +882,12 @@ export class AuthController {
                     userId,
                     newSessionId,
                     newSessionSecret,
+                    newSession.expireTimeMs
+                ),
+                connectionKey: formatV1ConnectionKey(
+                    userId,
+                    newSessionId,
+                    newConnectionSecret,
                     newSession.expireTimeMs
                 ),
                 expireTimeMs: newSession.expireTimeMs,
@@ -1345,6 +1366,11 @@ export interface CompleteLoginSuccess {
     sessionKey: string;
 
     /**
+     * The connection key that provides websocket access for the session.
+     */
+    connectionKey: string;
+
+    /**
      * The unix timestamp in miliseconds that the session will expire at.
      */
     expireTimeMs: number;
@@ -1590,6 +1616,11 @@ export interface ReplaceSessionSuccess {
      * The secret key that provides access for the session.
      */
     sessionKey: string;
+
+    /**
+     * The connection key that provides websocket access for the session.
+     */
+    connectionKey: string;
 
     /**
      * The unix timestamp in miliseconds that the session will expire at.
