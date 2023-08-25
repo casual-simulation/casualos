@@ -7,9 +7,9 @@ export interface ConnectionInfo {
     connectionId: string;
 
     /**
-     * The ID of the device.
+     * The ID of the session.
      */
-    deviceId: string;
+    sessionId: string;
 
     /**
      * The ID of the user that is associated with the connection.
@@ -18,7 +18,7 @@ export interface ConnectionInfo {
 }
 export const connectionInfoSchema = z.object({
     connectionId: z.string(),
-    deviceId: z.string(),
+    sessionId: z.string(),
     userId: z.string(),
 });
 type ZodConnectionInfo = z.infer<typeof connectionInfoSchema>;

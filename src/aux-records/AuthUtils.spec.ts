@@ -246,20 +246,18 @@ describe('formatV1ConnectionToken()', () => {
         const result = formatV1ConnectionToken(
             'userId',
             'sessionId',
-            'hmac',
             'connectionId',
-            'deviceId'
+            'hmac'
         );
 
-        const [version, userId, sessionId, hmac, connectionId, deviceId] =
+        const [version, userId, sessionId, connectionId, hmac] =
             result.split('.');
 
         expect(version).toBe('vCT1');
         expect(userId).toBe(toBase64String('userId'));
         expect(sessionId).toBe(toBase64String('sessionId'));
-        expect(hmac).toBe(toBase64String('hmac'));
         expect(connectionId).toBe(toBase64String('connectionId'));
-        expect(deviceId).toBe(toBase64String('deviceId'));
+        expect(hmac).toBe(toBase64String('hmac'));
     });
 });
 
@@ -269,18 +267,16 @@ describe('parseConnectionToken()', () => {
             const key = formatV1ConnectionToken(
                 'userId',
                 'sessionId',
-                'hash',
                 'connectionId',
-                'deviceId'
+                'hash'
             );
-            const [userId, sessionId, hash, connectionId, deviceId] =
+            const [userId, sessionId, connectionId, hash] =
                 parseConnectionToken(key);
 
             expect(userId).toBe('userId');
             expect(sessionId).toBe('sessionId');
-            expect(hash).toBe('hash');
             expect(connectionId).toBe('connectionId');
-            expect(deviceId).toBe('deviceId');
+            expect(hash).toBe('hash');
         });
 
         it('should return null if given an empty string', () => {
@@ -309,33 +305,21 @@ describe('parseConnectionToken()', () => {
             expect(result).toBe(null);
         });
 
-        it('should return null if given a string with no hash', () => {
-            const result = parseConnectionToken(
-                `vCT1.${toBase64String('userId')}.${toBase64String(
-                    'sessionId'
-                )}`
-            );
-
-            expect(result).toBe(null);
-        });
-
         it('should return null if given a string with no connection ID', () => {
             const result = parseConnectionToken(
                 `vCT1.${toBase64String('userId')}.${toBase64String(
                     'sessionId'
-                )}.${toBase64String('password')}`
+                )}`
             );
 
             expect(result).toBe(null);
         });
 
-        it('should return null if given a string with no device ID', () => {
+        it('should return null if given a string with no password', () => {
             const result = parseConnectionToken(
                 `vCT1.${toBase64String('userId')}.${toBase64String(
                     'sessionId'
-                )}.${toBase64String('password')}.${toBase64String(
-                    'connectionId'
-                )}`
+                )}.${toBase64String('connectionId')}`
             );
 
             expect(result).toBe(null);
@@ -358,19 +342,14 @@ describe('generateV1ConnectionToken()', () => {
             123
         );
 
-        const result = generateV1ConnectionToken(
-            key,
-            'connectionId',
-            'deviceId'
-        );
+        const result = generateV1ConnectionToken(key, 'connectionId');
 
-        const [version, userId, sessionId, password, connectionId, deviceId] =
+        const [version, userId, sessionId, connectionId, password] =
             result.split('.');
 
         expect(userId).toBe(toBase64String('userId'));
         expect(sessionId).toBe(toBase64String('sessionId'));
         expect(password).toEqual(expect.any(String));
         expect(connectionId).toBe(toBase64String('connectionId'));
-        expect(deviceId).toBe(toBase64String('deviceId'));
     });
 });

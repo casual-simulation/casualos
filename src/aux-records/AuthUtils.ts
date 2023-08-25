@@ -286,22 +286,18 @@ export function parseOpenAiKey(key: string): [key: string] {
  * Formats the given user ID, session ID, hash, connection ID, and device ID into a token.
  * @param userId The ID of the user.
  * @param sessionId The ID of the session.
- * @param hash The hash that was generated.
  * @param connectionId The ID of the connection.
- * @param deviceId The ID of the device.
+ * @param hash The hash that was generated.
  */
 export function formatV1ConnectionToken(
     userId: string,
     sessionId: string,
-    hash: string,
     connectionId: string,
-    deviceId: string
+    hash: string
 ): string {
     return `vCT1.${toBase64String(userId)}.${toBase64String(
         sessionId
-    )}.${toBase64String(hash)}.${toBase64String(connectionId)}.${toBase64String(
-        deviceId
-    )}`;
+    )}.${toBase64String(connectionId)}.${toBase64String(hash)}`;
 }
 
 /**
@@ -311,13 +307,7 @@ export function formatV1ConnectionToken(
  */
 export function parseConnectionToken(
     token: string | null
-): [
-    userId: string,
-    sessionId: string,
-    hash: string,
-    connectionId: string,
-    deviceId: string
-] {
+): [userId: string, sessionId: string, connectionId: string, hash: string] {
     return parseV1ConnectionToken(token);
 }
 
@@ -328,13 +318,7 @@ export function parseConnectionToken(
  */
 export function parseV1ConnectionToken(
     token: string
-): [
-    userId: string,
-    sessionId: string,
-    hash: string,
-    connectionId: string,
-    deviceId: string
-] {
+): [userId: string, sessionId: string, connectionId: string, hash: string] {
     if (!token) {
         return null;
     }
@@ -365,49 +349,33 @@ export function parseV1ConnectionToken(
         0,
         periodAfterSessionId
     );
-    const hashPlusExtra = sessionIdPlusPassword.slice(periodAfterSessionId + 1);
+    const connectionIdPlusExtra = sessionIdPlusPassword.slice(
+        periodAfterSessionId + 1
+    );
 
-    if (sessionIdBase64.length <= 0 || hashPlusExtra.length <= 0) {
+    if (sessionIdBase64.length <= 0 || connectionIdPlusExtra.length <= 0) {
         return null;
     }
 
-    const periodAfterHash = hashPlusExtra.indexOf('.');
+    const periodAfterHash = connectionIdPlusExtra.indexOf('.');
     if (periodAfterHash < 0) {
         return null;
     }
 
-    const hashBase64 = hashPlusExtra.slice(0, periodAfterHash);
-    const connectionIdPlusExtra = hashPlusExtra.slice(periodAfterHash + 1);
+    const connectionIdBase64 = connectionIdPlusExtra.slice(0, periodAfterHash);
+    const hashBase64 = connectionIdPlusExtra.slice(periodAfterHash + 1);
 
-    if (hashBase64.length <= 0 || connectionIdPlusExtra.length <= 0) {
-        return null;
-    }
-
-    const periodAfterConnectionId = connectionIdPlusExtra.indexOf('.');
-    if (periodAfterConnectionId < 0) {
-        return null;
-    }
-
-    const connectionIdBase64 = connectionIdPlusExtra.slice(
-        0,
-        periodAfterConnectionId
-    );
-    const deviceIdBase64 = connectionIdPlusExtra.slice(
-        periodAfterConnectionId + 1
-    );
-
-    if (connectionIdBase64.length <= 0 || deviceIdBase64.length <= 0) {
+    if (connectionIdBase64.length <= 0 || hashBase64.length <= 0) {
         return null;
     }
 
     try {
         const userId = fromBase64String(userIdBase64);
         const sessionId = fromBase64String(sessionIdBase64);
-        const hash = fromBase64String(hashBase64);
         const connectionId = fromBase64String(connectionIdBase64);
-        const deviceId = fromBase64String(deviceIdBase64);
+        const hash = fromBase64String(hashBase64);
 
-        return [userId, sessionId, hash, connectionId, deviceId];
+        return [userId, sessionId, connectionId, hash];
     } catch (err) {
         return null;
     }
@@ -423,8 +391,7 @@ export function parseV1ConnectionToken(
  */
 export function generateV1ConnectionToken(
     key: string,
-    connectionId: string,
-    deviceId: string
+    connectionId: string
 ): string {
     const parsed = parseConnectionKey(key);
 
@@ -436,14 +403,7 @@ export function generateV1ConnectionToken(
 
     const hash = hmac(sha256 as any, connectionSecret, 'hex');
     hash.update(connectionId);
-    hash.update(deviceId);
     const hashHex = hash.digest('hex');
 
-    return formatV1ConnectionToken(
-        userId,
-        sessionId,
-        hashHex,
-        connectionId,
-        deviceId
-    );
+    return formatV1ConnectionToken(userId, sessionId, connectionId, hashHex);
 }
