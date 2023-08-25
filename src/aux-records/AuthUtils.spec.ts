@@ -356,7 +356,7 @@ describe('generateV1ConnectionToken()', () => {
         expect(sessionId).toBe(toBase64String('sessionId'));
         expect(connectionId).toBe(toBase64String('connectionId'));
         expect(inst).toBe(toBase64String('inst'));
-        expect(password).toEqual(expect.any(String));
+        expect(password).toMatchSnapshot();
     });
 });
 
