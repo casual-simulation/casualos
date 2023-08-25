@@ -1,4 +1,4 @@
-import { Action } from '../common/Action';
+import { NotSupportedError, ServerError } from '../Errors';
 import { ConnectionInfo, connectionInfoSchema } from '../common/ConnectionInfo';
 import {
     RemoteAction,
@@ -27,22 +27,31 @@ export type WebsocketEvent =
     | WebsocketMessageEvent
     | WebsocketUploadRequestEvent
     | WebsocketUploadResponseEvent
-    | WebsocketDownloadRequestEvent;
-
-export const websocketEventSchema = z.array(z.any()).min(1);
+    | WebsocketDownloadRequestEvent
+    | WebsocketErrorEvent;
 
 export enum WebsocketEventTypes {
     Message = 1,
     UploadRequest = 2,
     UploadResponse = 3,
     DownloadRequest = 4,
+    Error = 5,
 }
+
+export const websocketEventSchema = z.tuple([
+    z.nativeEnum(WebsocketEventTypes),
+    z.number(),
+    z.any(),
+    z.string().optional(),
+    z.string().optional(),
+]);
 
 /**
  * Defines a websocket event that contains a message.
  */
 export type WebsocketMessageEvent = [
     type: WebsocketEventTypes.Message,
+    id: number,
     data: WebsocketMessage
 ];
 
@@ -51,11 +60,11 @@ export type WebsocketMessageEvent = [
  */
 export type WebsocketUploadRequestEvent = [
     type: WebsocketEventTypes.UploadRequest,
-    id: string
+    id: number
 ];
 export const websocketUploadRequestEventSchema = z.tuple([
     z.literal(WebsocketEventTypes.UploadRequest),
-    z.string(),
+    z.number(),
 ]);
 
 /**
@@ -63,11 +72,27 @@ export const websocketUploadRequestEventSchema = z.tuple([
  */
 export type WebsocketUploadResponseEvent = [
     type: WebsocketEventTypes.UploadResponse,
-    id: string,
+    id: number,
     uploadUrl: string
 ];
 export const websocketUploadResponseEventSchema = z.tuple([
     z.literal(WebsocketEventTypes.UploadResponse),
+    z.number(),
+    z.string(),
+]);
+
+/**
+ * Defines a websocket event that contains a response to an upload request.
+ */
+export type WebsocketErrorEvent = [
+    type: WebsocketEventTypes.Error,
+    id: number,
+    errorCode: ServerError | NotSupportedError | 'message_not_found',
+    errorMessage: string
+];
+export const websocketErrorEventSchema = z.tuple([
+    z.literal(WebsocketEventTypes.Error),
+    z.number(),
     z.string(),
     z.string(),
 ]);
@@ -462,12 +487,12 @@ export type BranchInfoMessage =
     | BranchDoesNotExistInfoMessage;
 
 export interface BranchExistsInfoMessage {
-    type: 'repo/branch_info';
+    type: 'repo/branch_info/exists';
     branch: string;
     exists: true;
 }
 export const branchExistsInfoMessageSchema = z.object({
-    type: z.literal('repo/branch_info'),
+    type: z.literal('repo/branch_info/exists'),
     exists: z.literal(true),
     branch: z.string(),
 });
@@ -478,12 +503,12 @@ type ZodBranchExistsInfoMessageAssertion = HasType<
 >;
 
 export interface BranchDoesNotExistInfoMessage {
-    type: 'repo/branch_info';
+    type: 'repo/branch_info/not_exists';
     branch: string;
     exists: false;
 }
 export const branchDoesNotExistInfoMessageSchema = z.object({
-    type: z.literal('repo/branch_info'),
+    type: z.literal('repo/branch_info/not_exists'),
     exists: z.literal(false),
     branch: z.string(),
 });
@@ -676,6 +701,7 @@ type ZodWebsocketMessageAssertion = HasType<
 
 export const websocketMessageEventSchema = z.tuple([
     z.literal(WebsocketEventTypes.Message),
+    z.number(),
     websocketMessageSchema,
 ]);
 type ZodWebsocketMessageEvent = z.infer<typeof websocketMessageEventSchema>;

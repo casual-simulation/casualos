@@ -22,7 +22,7 @@ export interface WebsocketMessenger {
      * @param connectionId The ID of the connection.
      * @param event The event that should be sent.
      */
-    sendEvent?(connectionId: string, event: WebsocketEvent): Promise<void>;
+    sendEvent(connectionId: string, event: WebsocketEvent): Promise<void>;
 
     /**
      * Sends the given raw data to the given connection ID.
@@ -32,23 +32,16 @@ export interface WebsocketMessenger {
     sendRaw?(connectionId: string, data: string): Promise<void>;
 
     /**
-     * Attempts to resolve the given event into a message.
-     * @param event The event.
+     * Gets a URL that messages can be uploaded to.
+     * Returns null/undefined if message uploads are not supported.
      */
-    resolveMessage(event: WebsocketEvent): Promise<ResolvedWebsocketMessage>;
-}
+    getMessageUploadUrl(): Promise<string>;
 
-export type ResolvedWebsocketMessage =
-    | WebsocketMessageSuccess
-    | WebsocketMessageFailure;
-
-export interface WebsocketMessageSuccess {
-    success: true;
-    message: WebsocketMessage;
-}
-
-export interface WebsocketMessageFailure {
-    success: false;
-    errorCode: ServerError | NotSupportedError;
-    errorMessage: string;
+    /**
+     * Tries to download the message that was uploaded to the given URL.
+     * Returns null if the message could not be found.
+     * Returns undefined if message downloads is not supported.
+     * @param url The URl that the message was uploaded to.
+     */
+    downloadMessage(url: string): Promise<string | null | undefined>;
 }

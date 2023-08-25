@@ -33,6 +33,7 @@ import {
     remoteError,
     remoteResult,
 } from '../common/RemoteActions';
+import { WebsocketEventTypes } from './WebsocketEvents';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -1583,115 +1584,132 @@ describe('WebsocketController', () => {
 
     describe('webhook()', () => {
         it('should return 200 if the webhook is handled', async () => {
-            const randomMock = (Math.random = jest.fn());
-            randomMock.mockReturnValueOnce(0);
+            const originalRandom = Math.random;
+            try {
+                const randomMock = (Math.random = jest.fn());
+                randomMock.mockReturnValueOnce(0);
 
-            await server.connect(device1Info);
+                await server.connect(device1Info);
 
-            await server.watchBranch(device1Info.serverConnectionId, {
-                type: 'repo/watch_branch',
-                branch: 'testBranch',
-            });
-
-            await updateStore.addUpdates(branchNamespace('testBranch'), [
-                'abc',
-            ]);
-
-            const result = await server.webhook(
-                'testBranch',
-                'method',
-                'url',
-                {
-                    'Content-Type': 'application/json',
-                },
-                {
-                    value: 'anything',
-                }
-            );
-
-            expect(result).toEqual(200);
-            expect(
-                messenger.getMessages(device1Info.serverConnectionId).slice(1)
-            ).toEqual([
-                {
-                    type: 'repo/receive_action',
+                await server.watchBranch(device1Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
                     branch: 'testBranch',
-                    action: action(ON_WEBHOOK_ACTION_NAME, null, null, {
-                        method: 'method',
-                        url: 'url',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        data: {
-                            value: 'anything',
-                        },
-                    }),
-                },
-            ]);
+                });
+
+                await updateStore.addUpdates(branchNamespace('testBranch'), [
+                    'abc',
+                ]);
+
+                const result = await server.webhook(
+                    'testBranch',
+                    'method',
+                    'url',
+                    {
+                        'Content-Type': 'application/json',
+                    },
+                    {
+                        value: 'anything',
+                    }
+                );
+
+                expect(result).toEqual(200);
+                expect(
+                    messenger
+                        .getMessages(device1Info.serverConnectionId)
+                        .slice(1)
+                ).toEqual([
+                    {
+                        type: 'repo/receive_action',
+                        branch: 'testBranch',
+                        action: action(ON_WEBHOOK_ACTION_NAME, null, null, {
+                            method: 'method',
+                            url: 'url',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            data: {
+                                value: 'anything',
+                            },
+                        }),
+                    },
+                ]);
+            } finally {
+                Math.random = originalRandom;
+            }
         });
 
         it('should return 404 if there are no updates in the branch', async () => {
-            const randomMock = (Math.random = jest.fn());
-            randomMock.mockReturnValueOnce(0);
+            const originalRandom = Math.random;
+            try {
+                const randomMock = (Math.random = jest.fn());
+                randomMock.mockReturnValueOnce(0);
 
-            await server.connect(device1Info);
+                await server.connect(device1Info);
 
-            await server.watchBranch(device1Info.serverConnectionId, {
-                type: 'repo/watch_branch',
-                branch: 'testBranch',
-            });
-
-            const result = await server.webhook(
-                'testBranch',
-                'method',
-                'url',
-                {
-                    'Content-Type': 'application/json',
-                },
-                {
-                    value: 'anything',
-                }
-            );
-
-            expect(result).toEqual(404);
-            expect(
-                messenger.getMessages(device1Info.serverConnectionId)
-            ).toEqual([
-                {
-                    type: 'repo/add_updates',
+                await server.watchBranch(device1Info.serverConnectionId, {
+                    type: 'repo/watch_branch',
                     branch: 'testBranch',
-                    updates: [],
-                    initial: true,
-                },
-            ]);
+                });
+
+                const result = await server.webhook(
+                    'testBranch',
+                    'method',
+                    'url',
+                    {
+                        'Content-Type': 'application/json',
+                    },
+                    {
+                        value: 'anything',
+                    }
+                );
+
+                expect(result).toEqual(404);
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([
+                    {
+                        type: 'repo/add_updates',
+                        branch: 'testBranch',
+                        updates: [],
+                        initial: true,
+                    },
+                ]);
+            } finally {
+                Math.random = originalRandom;
+            }
         });
 
         it('should return 503 if there are no connected devices', async () => {
-            const randomMock = (Math.random = jest.fn());
-            randomMock.mockReturnValueOnce(0);
+            const originalRandom = Math.random;
+            try {
+                const randomMock = (Math.random = jest.fn());
+                randomMock.mockReturnValueOnce(0);
 
-            await server.connect(device1Info);
+                await server.connect(device1Info);
 
-            await updateStore.addUpdates(branchNamespace('testBranch'), [
-                'abc',
-            ]);
+                await updateStore.addUpdates(branchNamespace('testBranch'), [
+                    'abc',
+                ]);
 
-            const result = await server.webhook(
-                'testBranch',
-                'method',
-                'url',
-                {
-                    'Content-Type': 'application/json',
-                },
-                {
-                    value: 'anything',
-                }
-            );
+                const result = await server.webhook(
+                    'testBranch',
+                    'method',
+                    'url',
+                    {
+                        'Content-Type': 'application/json',
+                    },
+                    {
+                        value: 'anything',
+                    }
+                );
 
-            expect(result).toEqual(503);
-            expect(
-                messenger.getMessages(device1Info.serverConnectionId)
-            ).toEqual([]);
+                expect(result).toEqual(503);
+                expect(
+                    messenger.getMessages(device1Info.serverConnectionId)
+                ).toEqual([]);
+            } finally {
+                Math.random = originalRandom;
+            }
         });
     });
 
@@ -1881,6 +1899,76 @@ describe('WebsocketController', () => {
                 );
 
             expect(time).toBe(2000);
+        });
+    });
+
+    describe('uploadRequest()', () => {
+        it('should get a message upload URL send an upload response to the connection', async () => {
+            messenger.messageUploadUrl = 'upload_url';
+
+            await server.uploadRequest(device1Info.serverConnectionId, 1);
+
+            const events = messenger.getEvents(device1Info.serverConnectionId);
+            expect(events).toEqual([
+                [WebsocketEventTypes.UploadResponse, 1, 'upload_url'],
+            ]);
+        });
+
+        it('should send a not_supported error if the upload URL is null', async () => {
+            messenger.messageUploadUrl = null as any;
+
+            await server.uploadRequest(device1Info.serverConnectionId, 1);
+
+            const events = messenger.getEvents(device1Info.serverConnectionId);
+            expect(events).toEqual([
+                [
+                    WebsocketEventTypes.Error,
+                    1,
+                    'not_supported',
+                    'Upload requests are not supported.',
+                ],
+            ]);
+        });
+    });
+
+    describe('downloadRequest()', () => {
+        it('should try to download the message and return it', async () => {
+            messenger.uploadedMessages = new Map([
+                ['download_url', 'my message'],
+            ]);
+
+            const response = await server.downloadRequest(
+                device1Info.serverConnectionId,
+                1,
+                'download_url'
+            );
+
+            expect(response).toEqual({
+                success: true,
+                requestId: 1,
+                message: 'my message',
+            });
+            const events = messenger.getEvents(device1Info.serverConnectionId);
+            expect(events).toEqual([]);
+        });
+
+        it('should return a not_supported error if the messenger does not support it', async () => {
+            messenger.uploadedMessages = null as any;
+
+            const response = await server.downloadRequest(
+                device1Info.serverConnectionId,
+                1,
+                'download_url'
+            );
+
+            expect(response).toEqual({
+                success: false,
+                requestId: 1,
+                errorCode: 'not_supported',
+                errorMessage: 'Download requests are not supported.',
+            });
+            const events = messenger.getEvents(device1Info.serverConnectionId);
+            expect(events).toEqual([]);
         });
     });
 });

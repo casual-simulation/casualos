@@ -31,6 +31,9 @@ import {
     SendActionMessage,
     TimeSyncRequestMessage,
     WatchBranchMessage,
+    WebsocketErrorEvent,
+    WebsocketEvent,
+    WebsocketEventTypes,
 } from './WebsocketEvents';
 import { ConnectionInfo } from '../common/ConnectionInfo';
 
@@ -619,6 +622,105 @@ export class WebsocketController {
             });
         }
     }
+
+    /**
+     * Processes the given upload request.
+     * @param connectionId The ID of the connection that is requesting the upload.
+     * @param requestId The ID of the request.
+     */
+    async uploadRequest(
+        connectionId: string,
+        requestId: number
+    ): Promise<void> {
+        try {
+            const url = await this._messenger.getMessageUploadUrl();
+            if (!url) {
+                console.log(
+                    `[WebsocketController] [uploadRequest] Upload requests are not supported!`
+                );
+                await this.sendError(connectionId, {
+                    requestId,
+                    errorCode: 'not_supported',
+                    errorMessage: 'Upload requests are not supported.',
+                });
+                return;
+            }
+
+            await this.sendEvent(connectionId, [
+                WebsocketEventTypes.UploadResponse,
+                requestId,
+                url,
+            ]);
+        } catch (err) {
+            console.error(
+                '[WebsocketController] [uploadRequest] Error while processing upload request.',
+                err
+            );
+            await this.sendError(connectionId, {
+                requestId,
+                errorCode: 'server_error',
+                errorMessage: 'Error while processing upload request.',
+            });
+        }
+    }
+
+    async downloadRequest(
+        connectionId: string,
+        requestId: number,
+        url: string
+    ): Promise<DownloadRequestResult> {
+        try {
+            const message = await this._messenger.downloadMessage(url);
+            if (message === undefined) {
+                console.log(
+                    `[WebsocketController] [downloadRequest] Download requests are not supported!`
+                );
+                return {
+                    success: false,
+                    requestId,
+                    errorCode: 'not_supported',
+                    errorMessage: 'Download requests are not supported.',
+                };
+            } else if (message === null) {
+                return {
+                    success: false,
+                    requestId,
+                    errorCode: 'message_not_found',
+                    errorMessage: 'Message not found.',
+                };
+            } else {
+                return {
+                    success: true,
+                    requestId,
+                    message,
+                };
+            }
+        } catch (err) {
+            console.error(
+                '[WebsocketController] [downloadRequest] Error while processing download request.',
+                err
+            );
+            return {
+                success: false,
+                requestId,
+                errorCode: 'server_error',
+                errorMessage: 'Error while processing download request.',
+            };
+        }
+    }
+
+    async sendError(connectionId: string, error: WebsocketControllerError) {
+        await this.sendEvent(connectionId, [
+            WebsocketEventTypes.Error,
+            error.requestId,
+            error.errorCode,
+            error.errorMessage,
+        ]);
+    }
+
+    async sendEvent(connectionId: string, event: WebsocketEvent) {
+        await this._messenger.sendEvent(connectionId, event);
+    }
 }
 
 export function connectionInfo(device: DeviceConnection): ConnectionInfo {
@@ -673,4 +775,24 @@ export function branchFromNamespace(namespace: string) {
 
 export function isBranchConnection(namespace: string) {
     return namespace.startsWith('/branch/');
+}
+
+export type DownloadRequestResult =
+    | DownloadRequestSuccess
+    | DownloadRequestFailure;
+
+export interface DownloadRequestSuccess {
+    success: true;
+    requestId: number;
+    message: string;
+}
+
+export interface DownloadRequestFailure extends WebsocketControllerError {
+    success: false;
+}
+
+export interface WebsocketControllerError {
+    requestId: number;
+    errorCode: WebsocketErrorEvent[2];
+    errorMessage: string;
 }
