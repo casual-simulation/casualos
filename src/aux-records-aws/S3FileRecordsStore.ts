@@ -24,7 +24,6 @@ import {
     AwsCredentialIdentity,
 } from '@aws-sdk/types';
 import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
-// import AWS from 'aws-sdk';
 
 export const EMPTY_STRING_SHA256_HASH_HEX =
     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
@@ -58,7 +57,6 @@ export class S3FileRecordsStore implements FileRecordsStore {
         this._s3 = s3;
         this._s3Host = s3Host;
         this._credentialProvider = credentialProvider;
-        this._s3Options = s3Options;
 
         if (this._lookup.listUploadedFiles) {
             this.listUploadedFiles = async (

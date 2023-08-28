@@ -37,7 +37,7 @@ import {
     subscriptionConfigSchema,
 } from '@casual-simulation/aux-records/SubscriptionConfiguration';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
-import { SESV2 } from 'aws-sdk';
+import { SESv2 } from '@aws-sdk/client-sesv2';
 import { createClient as createRedisClient } from 'redis';
 import RedisRateLimitStore from '@casual-simulation/rate-limit-redis';
 import z from 'zod';
@@ -291,8 +291,7 @@ export class ServerBuilder {
             filesLookup,
             s3.filesStorageClass,
             undefined,
-            s3.host,
-            s3.options
+            s3.host
         );
         this._eventsStore = new PrismaEventRecordsStore(this._prismaClient);
 
@@ -418,7 +417,7 @@ export class ServerBuilder {
             throw new Error('SES options must be provided.');
         }
         this._authMessenger = new SimpleEmailServiceAuthMessenger(
-            new SESV2(),
+            new SESv2(),
             options.ses as SimpleEmailServiceAuthMessengerOptions
         );
         return this;

@@ -39,6 +39,7 @@
     "dependencies": {
         "@casual-simulation/aux-records": "^3.2.5",
         "@aws-sdk/client-s3": "^3.359.0",
-        "@aws-sdk/client-dynamodb": "^3.359.0"
+        "@aws-sdk/client-dynamodb": "^3.359.0",
+        "@aws-sdk/client-sesv2": "^3.359.0"
     }
 }
