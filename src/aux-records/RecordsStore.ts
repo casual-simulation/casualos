@@ -260,6 +260,12 @@ export interface Studio {
     subscriptionPeriodEndMs?: number | null;
 }
 
+/**
+ * Defines the list of possible studio roles that a user can be assigned.
+ *
+ * @dochash types/records/studios
+ * @docname StudioAssignmentRole
+ */
 export type StudioAssignmentRole = 'admin' | 'member';
 
 /**
@@ -366,6 +372,12 @@ export interface ListedStudioAssignmentUser {
     phoneNumber: string;
 }
 
+/**
+ * Defines an interface that represents a studio that a user has access to.
+ *
+ * @dochash types/records/studios
+ * @docname ListedStudio
+ */
 export interface ListedStudio {
     /**
      * The ID of the studio.

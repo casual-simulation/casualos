@@ -29,11 +29,10 @@ const config = process.env.SERVER_CONFIG
     : null;
 
 export default defineConfig(({ command, mode }) => {
-    const apiEndpoint =
-        process.env.AUTH_API_ENDPOINT ??
-        (command === 'build'
-            ? 'https://api.casualos.me'
-            : 'http://localhost:3002');
+    let apiEndpoint: string | null = null;
+    if (process.env.AUTH_API_ENDPOINT) {
+        apiEndpoint = process.env.AUTH_API_ENDPOINT;
+    }
     return {
         build: {
             outDir: distDir,
@@ -87,6 +86,9 @@ export default defineConfig(({ command, mode }) => {
                         command !== 'build')
             ),
             ASSUME_SUBSCRIPTIONS_SUPPORTED: JSON.stringify(
+                command === 'serve' || (config && config.subscriptions)
+            ),
+            ASSUME_STUDIOS_SUPPORTED: JSON.stringify(
                 command === 'serve' || (config && config.subscriptions)
             ),
         },

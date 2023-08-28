@@ -1,5 +1,15 @@
 # CasualOS Changelog
 
+## V3.2.5
+
+#### Date: 8/28/2023
+
+### :rocket: Improvements
+
+-   Added the `os.listUserStudios()` function.
+    -   Gets the list of studios that the current user has access to.
+-   Disabled the ability to create studios when subscriptions are not supported.
+
 ## V3.2.4
 
 #### Date: 8/22/2023

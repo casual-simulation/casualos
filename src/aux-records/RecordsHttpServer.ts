@@ -723,7 +723,7 @@ export class RecordsHttpServer {
             return formatResponse(
                 request,
                 await this._listStudios(request),
-                this._allowedAccountOrigins
+                this._allowedApiOrigins
             );
         } else if (
             request.method === 'GET' &&
@@ -1919,12 +1919,8 @@ export class RecordsHttpServer {
     private async _listStudios(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
-        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
             return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (!this._aiController) {
-            return returnResult(AI_NOT_SUPPORTED_RESULT);
         }
 
         const schema = z.object({});
@@ -1956,10 +1952,6 @@ export class RecordsHttpServer {
     ): Promise<GenericHttpResponse> {
         if (!validateOrigin(request, this._allowedAccountOrigins)) {
             return returnResult(INVALID_ORIGIN_RESULT);
-        }
-
-        if (!this._aiController) {
-            return returnResult(AI_NOT_SUPPORTED_RESULT);
         }
 
         const schema = z.object({

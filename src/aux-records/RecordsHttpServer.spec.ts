@@ -9240,7 +9240,7 @@ describe('RecordsHttpServer', () => {
 
         it('should list the studios that the user has access to', async () => {
             const result = await server.handleRequest(
-                httpGet(`/api/v2/studios/list`, authenticatedHeaders)
+                httpGet(`/api/v2/studios/list`, apiHeaders)
             );
 
             expectResponseBodyToEqual(result, {
@@ -9262,17 +9262,13 @@ describe('RecordsHttpServer', () => {
                         },
                     ],
                 },
-                headers: accountCorsHeaders,
+                headers: apiCorsHeaders,
             });
         });
 
-        testAuthorization(() =>
-            httpGet('/api/v2/studios/list', authenticatedHeaders)
-        );
+        testAuthorization(() => httpGet('/api/v2/studios/list', apiHeaders));
         testOrigin('GET', '/api/v2/studios/list');
-        testRateLimit(() =>
-            httpGet('/api/v2/studios/list', authenticatedHeaders)
-        );
+        testRateLimit(() => httpGet('/api/v2/studios/list', apiHeaders));
     });
 
     describe('GET /api/v2/studios/members/list', () => {

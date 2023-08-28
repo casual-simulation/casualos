@@ -3394,6 +3394,11 @@ export type NotLoggedInError = 'not_logged_in';
 
 export type RecordNotFoundError = 'record_not_found';
 
+/**
+ * Defines an error that occurs when the user does not have the right permissions to perform an action.
+ */
+export type NotAuthorizedError = 'not_authorized';
+
 
 export type AuthorizeDeniedError = ServerError
 | CreatePublicRecordKeyFailure['errorCode']
@@ -3709,6 +3714,80 @@ export interface GetCountFailure {
     | ServerError
     | NotSupportedError;
     errorMessage: string;
+}
+
+/**
+ * Defines the list of possible results for the {@link os.listUserStudios} function.
+ *
+ * @dochash types/records/studios
+ * @doctitle Studio Types
+ * @docsidebar Studios
+ * @docdescription Types that are used for actions that manage studios.
+ * @docname ListStudiosResult
+ */
+export type ListStudiosResult = ListStudiosSuccess | ListStudiosFailure;
+
+/**
+ * Defines an interface that represents a successful "list studios" result.
+ * 
+ * @dochash types/records/studios
+ * @docname ListStudiosSuccess
+ */
+export interface ListStudiosSuccess {
+    success: true;
+
+    /**
+     * The list of studios that the user is a member of.
+     */
+    studios: ListedStudio[];
+}
+
+/**
+ * Defines an interface that represents a failed "list studios" result.
+ * 
+ * @dochash types/records/studios
+ * @docname ListStudiosFailure
+ */
+export interface ListStudiosFailure {
+    success: false;
+    
+    /**
+     * The error code.
+     */
+    errorCode: NotLoggedInError | NotAuthorizedError | ServerError;
+
+    /**
+     * The error message.
+     */
+    errorMessage: string;
+}
+
+/**
+ * Defines an interface that represents a studio that a user has access to.
+ * 
+ * @dochash types/records/studios
+ * @docname ListedStudio
+ */
+export interface ListedStudio {
+    /**
+     * The ID of the studio.
+     */
+    studioId: string;
+
+    /**
+     * The name of the studio.
+     */
+    displayName: string;
+
+    /**
+     * The role that the user has in the studio.
+     */
+    role: StudioAssignmentRole;
+
+    /**
+     * Whether the user is the primary contact for this studio.
+     */
+    isPrimaryContact: boolean;
 }
 
 
@@ -11691,6 +11770,28 @@ interface Os {
      * @param endpoint The records endpoint that should be queried. Optional.
      */
     countEvents(recordNameOrKey: string, eventName: string, endpoint?: string): Promise<GetCountResult>;
+
+    /**
+     * Gets the list of studios that the currently logged in user has access to.
+     * 
+     * Returns a promise that resolves with an object that contains the list of studios (if successful) or information about the error that occurred.
+     * 
+     * @param endpoint the HTTP Endpoint of the records website that the data should be retrieved from. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
+     * 
+     * @example Get the list of studios that the user has access to
+     * const result = await os.listUserStudios();
+     * 
+     * if (result.success) {
+     *      os.toast(result.studios.map(s => s.name).join(', '));
+     * } else {
+     *      os.toast('Failed to get studios ' + result.errorMessage);
+     * }
+     * 
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.listUserStudios
+     */
+    listUserStudios(endpoint?: string): Promise<ListStudiosResult>;
 
     /**
      * Converts the given geolocation to a what3words (https://what3words.com/) address.
