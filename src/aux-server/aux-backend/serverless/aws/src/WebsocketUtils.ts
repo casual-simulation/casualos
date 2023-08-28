@@ -1,8 +1,14 @@
-import AWS from 'aws-sdk';
 import { v4 as uuid } from 'uuid';
 import { AwsMessage } from './AwsMessages';
 import axios from 'axios';
 import { URL } from 'url';
+import {
+    S3,
+    S3ClientConfig,
+    PutObjectCommand,
+    GetObjectCommandInput,
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 export const MESSAGES_BUCKET_NAME = process.env.MESSAGES_BUCKET;
 
@@ -10,59 +16,29 @@ export function delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-let _documentClient: AWS.DynamoDB.DocumentClient;
-
-/**
- * Gets a new instance of a DynamoDB document client.
- * Can be used to interact with DynamoDB.
- */
-export function getDocumentClient() {
-    if (!_documentClient) {
-        _documentClient = createDocumentClient();
-    }
-    return _documentClient;
-}
-
-function createDocumentClient() {
-    if (isOffline()) {
-        return new AWS.DynamoDB.DocumentClient({
-            region: 'localhost',
-            endpoint: 'http://localhost:8000',
-        });
-    } else {
-        return new AWS.DynamoDB.DocumentClient();
-    }
-}
-
 export function getS3Client() {
     if (isOffline()) {
-        return new AWS.S3({
-            s3ForcePathStyle: true,
-            accessKeyId: 'S3RVER',
-            secretAccessKey: 'S3RVER',
-            endpoint: new AWS.Endpoint('http://localhost:4569'),
-            signatureVersion: 'v4',
+        return new S3({
+            forcePathStyle: true,
+            credentials: {
+                accessKeyId: 'S3RVER',
+                secretAccessKey: 'S3RVER',
+            },
+            endpoint: 'http://localhost:4569',
         });
     }
-    return new AWS.S3({
-        signatureVersion: 'v4',
-    });
+    return new S3();
 }
 
-export async function uploadMessage(
-    client: AWS.S3,
-    data: string
-): Promise<string> {
+export async function uploadMessage(client: S3, data: string): Promise<string> {
     const key = uuid();
-    const response = await client
-        .putObject({
-            Bucket: MESSAGES_BUCKET_NAME,
-            Key: key,
-            ContentType: 'application/json',
-            Body: data,
-            ACL: 'public-read',
-        })
-        .promise();
+    const response = await client.putObject({
+        Bucket: MESSAGES_BUCKET_NAME,
+        Key: key,
+        ContentType: 'application/json',
+        Body: data,
+        ACL: 'public-read',
+    });
 
     if (isOffline()) {
         return `http://localhost:4569/${MESSAGES_BUCKET_NAME}/${key}`;
@@ -74,25 +50,25 @@ export async function uploadMessage(
 export async function getMessageUploadUrl(): Promise<string> {
     const client = getS3Client();
     const key = uuid();
-    const params: AWS.S3.Types.PutObjectRequest = {
+    const params = new PutObjectCommand({
         Bucket: MESSAGES_BUCKET_NAME,
         Key: key,
         ContentType: 'application/json',
         ACL: 'bucket-owner-full-control',
-    };
-    const url = await client.getSignedUrlPromise('putObject', params);
+    });
+    const url = await getSignedUrl(client, params);
     return url;
 }
 
 export async function downloadObject(url: string): Promise<string> {
     const parsed = new URL(url);
     const client = getS3Client();
-    const params: AWS.S3.Types.GetObjectRequest = {
+    const params: GetObjectCommandInput = {
         Bucket: MESSAGES_BUCKET_NAME,
         Key: parsed.pathname.slice(1),
     };
-    const response = await client.getObject(params).promise();
-    return response.Body.toString('utf8');
+    const response = await client.getObject(params);
+    return response.Body.transformToString('utf8');
 }
 
 /**

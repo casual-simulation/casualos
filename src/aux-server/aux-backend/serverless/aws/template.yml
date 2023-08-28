@@ -55,7 +55,7 @@ Resources:
         Properties:
             Handler: Records.handleRecords
             CodeUri: dist/handlers
-            Runtime: nodejs14.x
+            Runtime: nodejs18.x
             MemorySize: 256
             Timeout: 100
             Description: A function that publishes and retreives records for the user.
@@ -285,7 +285,7 @@ Resources:
         Properties:
             Handler: websockets.connect
             CodeUri: dist/handlers
-            Runtime: nodejs14.x
+            Runtime: nodejs18.x
             MemorySize: 256
             Timeout: 100
             Description: A function handles websocket connections
@@ -317,7 +317,7 @@ Resources:
         Properties:
             Handler: websockets.disconnect
             CodeUri: dist/handlers
-            Runtime: nodejs14.x
+            Runtime: nodejs18.x
             MemorySize: 256
             Timeout: 100
             Description: A function that handles websocket disconnections.
@@ -349,7 +349,7 @@ Resources:
         Properties:
             Handler: websockets.message
             CodeUri: dist/handlers
-            Runtime: nodejs14.x
+            Runtime: nodejs18.x
             MemorySize: 256
             Timeout: 100
             Description: A function handle websocket messages.
@@ -381,7 +381,7 @@ Resources:
         Properties:
             Handler: websockets.webhook
             CodeUri: dist/handlers
-            Runtime: nodejs14.x
+            Runtime: nodejs18.x
             MemorySize: 256
             Timeout: 100
             Description: A function handle webhook requests.
@@ -411,7 +411,7 @@ Resources:
         Properties:
             Handler: websockets.instData
             CodeUri: dist/handlers
-            Runtime: nodejs14.x
+            Runtime: nodejs18.x
             MemorySize: 256
             Timeout: 100
             Description: A function handle inst data requests.
