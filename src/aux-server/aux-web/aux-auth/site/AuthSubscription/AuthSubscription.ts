@@ -4,7 +4,7 @@ import {
 } from '../../../../aux-backend/shared/AuthMetadata';
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { Provide, Watch } from 'vue-property-decorator';
+import { Prop, Provide, Watch } from 'vue-property-decorator';
 import { authManager } from '../../shared/index';
 import { Subscription } from 'rxjs';
 import { debounce, sortBy } from 'lodash';
@@ -24,8 +24,11 @@ declare const ASSUME_SUBSCRIPTIONS_SUPPORTED: boolean;
         'relative-time': RelativeTime,
     },
 })
-export default class AuthSecurity extends Vue {
+export default class AuthSubscription extends Vue {
     private _sub: Subscription;
+
+    @Prop({ required: false })
+    studioId: string;
 
     subscriptions: SubscriptionStatus[] = [];
     purchasableSubscriptions: PurchasableSubscription[] = [];
@@ -58,17 +61,31 @@ export default class AuthSecurity extends Vue {
     }
 
     async manageSubscription() {
-        await authManager.manageSubscriptions();
+        if (this.studioId) {
+            await authManager.manageSubscriptionsV2({
+                studioId: this.studioId,
+            });
+        } else {
+            await authManager.manageSubscriptions();
+        }
     }
 
     async subscribe(
         subscriptionId: string,
         expectedPrice: PurchasableSubscription['prices'][0]
     ) {
-        await authManager.manageSubscriptions({
-            subscriptionId,
-            expectedPrice,
-        });
+        if (this.studioId) {
+            await authManager.manageSubscriptionsV2({
+                studioId: this.studioId,
+                subscriptionId,
+                expectedPrice,
+            });
+        } else {
+            await authManager.manageSubscriptions({
+                subscriptionId,
+                expectedPrice,
+            });
+        }
     }
 
     getSubscriptionPrice(sub: SubscriptionStatus): string {
@@ -96,7 +113,9 @@ export default class AuthSecurity extends Vue {
     private async _loadSubscriptions() {
         this.loading = true;
         try {
-            const result = await authManager.listSubscriptions();
+            const result = await (this.studioId
+                ? authManager.listSubscriptionsV2({ studioId: this.studioId })
+                : authManager.listSubscriptions());
             if (!result) {
                 this.maybeSupported = false;
                 this.subscriptions = [];

@@ -1,5 +1,14 @@
 import { z } from 'zod';
 
+/**
+ * The possible types of permissions that can be added to policies.
+ *
+ * @dochash types/permissions
+ * @doctitle Permission Types
+ * @docsidebar Permissions
+ * @docdescription Defines the types of permissions that can be added to policies.
+ * @docname AvailablePermissions
+ */
 export type AvailablePermissions =
     | CreateDataPermission
     | ReadDataPermission
@@ -8,11 +17,13 @@ export type AvailablePermissions =
     | ListDataPermission
     | CreateFilePermission
     | ReadFilePermission
+    | ListFilePermission
     | UpdateFilePermission
     | DeleteFilePermission
     | IncrementEventPermission
     | CountEventPermission
     | UpdateEventPermission
+    | ListEventPermission
     | ReadPolicyPermission
     | GrantPermissionToPolicyPermission
     | RevokePermissionFromPolicyPermission
@@ -36,13 +47,15 @@ export type AvailableDataPermissions =
 export type AvailableFilePermissions =
     | CreateFilePermission
     | ReadFilePermission
+    | ListFilePermission
     | UpdateFilePermission
     | DeleteFilePermission;
 
 export type AvailableEventPermissions =
     | IncrementEventPermission
     | CountEventPermission
-    | UpdateEventPermission;
+    | UpdateEventPermission
+    | ListEventPermission;
 
 export type AvailablePolicyPermissions =
     | AssignPolicyPermission
@@ -106,6 +119,8 @@ type ZodDataPermissionAssertion = HasType<ZodDataPermission, DataPermission>;
 
 /**
  * Defines an interface that describes a permission to be able to create data for a record marker.
+ *
+ * @dochash types/permissions
  */
 export interface CreateDataPermission extends DataPermission {
     type: 'data.create';
@@ -122,6 +137,8 @@ type ZodCreateDataPermissionAssertion = HasType<
 
 /**
  * Defines an interface that describes a permission to be able to read data for a record marker.
+ *
+ * @dochash types/permissions
  */
 export interface ReadDataPermission extends DataPermission {
     type: 'data.read';
@@ -138,6 +155,8 @@ type ZodReadDataPermissionAssertion = HasType<
 
 /**
  * Defines an interface that describes a permission to be able to update data for a record marker.
+ *
+ * @dochash types/permissions
  */
 export interface UpdateDataPermission extends DataPermission {
     type: 'data.update';
@@ -154,6 +173,8 @@ type ZodUpdateDataPermissionAssertion = HasType<
 
 /**
  * Defines an interface that describes a permission to be able to delete data for a record marker.
+ *
+ * @dochash types/permissions
  */
 export interface DeleteDataPermission extends DataPermission {
     type: 'data.delete';
@@ -170,6 +191,8 @@ type ZodDeleteDataPermissionAssertion = HasType<
 
 /**
  * Defines an interface that describes a permission to be able to list data for a record marker.
+ *
+ * @dochash types/permissions
  */
 export interface ListDataPermission extends DataPermission {
     type: 'data.list';
@@ -213,6 +236,8 @@ type ZodFilePermissionAssertion = HasType<ZodFilePermission, FilePermission>;
 
 /**
  * Defines an interface that describes a permission to be able to create a file for a record marker.
+ *
+ * @dochash types/permissions
  */
 export interface CreateFilePermission extends FilePermission {
     type: 'file.create';
@@ -229,6 +254,8 @@ type ZodCreateFilePermissionAssertion = HasType<
 
 /**
  * Defines an interface that describes a permission to be able to read a file for a record marker.
+ *
+ * @dochash types/permissions
  */
 export interface ReadFilePermission extends FilePermission {
     type: 'file.read';
@@ -244,8 +271,26 @@ type ZodReadFilePermissionAssertion = HasType<
 >;
 
 /**
+ * Defines an interface that describes a permission to be able to list a file for a record marker.
+ */
+export interface ListFilePermission extends FilePermission {
+    type: 'file.list';
+}
+
+export const LIST_FILE_VALIDATION = FILE_PERMISSION_VALIDATION.extend({
+    type: z.literal('file.list'),
+});
+type ZodListFilePermission = z.infer<typeof LIST_FILE_VALIDATION>;
+type ZodListFilePermissionAssertion = HasType<
+    ZodListFilePermission,
+    ListFilePermission
+>;
+
+/**
  * Defines an interface that describes a permission to be able to update a file for a record marker.
  * Currently only used to update resource markers that are on a file.
+ *
+ * @dochash types/permissions
  */
 export interface UpdateFilePermission extends FilePermission {
     type: 'file.update';
@@ -262,6 +307,8 @@ type ZodUpdateFilePermissionAssertion = HasType<
 
 /**
  * Defines an interface that describes a permission to be able to delete a file for a record marker.
+ *
+ * @dochash types/permissions
  */
 export interface DeleteFilePermission extends FilePermission {
     type: 'file.delete';
@@ -297,6 +344,8 @@ type ZodEventPermissionAssertion = HasType<ZodEventPermission, EventPermission>;
 
 /**
  * Defines an interface that describes a permission to be able to increment an event record.
+ *
+ * @dochash types/permissions
  */
 export interface IncrementEventPermission extends EventPermission {
     type: 'event.increment';
@@ -313,6 +362,8 @@ type ZodIncrementEventPermissionAssertion = HasType<
 
 /**
  * Defines an interface that describes a permission to be able to count an event record.
+ *
+ * @dochash types/permissions
  */
 export interface CountEventPermission extends EventPermission {
     type: 'event.count';
@@ -330,6 +381,8 @@ type ZodCountEventPermissionAssertion = HasType<
 /**
  * Defines an interface that describes a permission to be able to update an event record.
  * Currently only used to update resource markers that are on an event.
+ *
+ * @dochash types/permissions
  */
 export interface UpdateEventPermission extends EventPermission {
     type: 'event.update';
@@ -342,6 +395,24 @@ type ZodUpdateEventPermission = z.infer<typeof UPDATE_EVENT_VALIDATION>;
 type ZodUpdateEventPermissionAssertion = HasType<
     ZodUpdateEventPermission,
     UpdateEventPermission
+>;
+
+/**
+ * Defines an interface that describes a permission to be able to list events in a record.
+ *
+ * @dochash types/permissions
+ */
+export interface ListEventPermission extends EventPermission {
+    type: 'event.list';
+}
+
+export const LIST_EVENT_VALIDATION = EVENT_PERMISSION_VALIDATION.extend({
+    type: z.literal('event.list'),
+});
+type ZodListEventPermission = z.infer<typeof LIST_EVENT_VALIDATION>;
+type ZodListEventPermissionAssertion = HasType<
+    ZodListEventPermission,
+    ListEventPermission
 >;
 
 /**
@@ -368,6 +439,8 @@ type ZodPolicyPermissionAssertion = HasType<
 
 /**
  * Defines an interface that describes a permission to be able to read a policy.
+ *
+ * @dochash types/permissions
  */
 export interface ReadPolicyPermission extends PolicyPermission {
     type: 'policy.read';
@@ -384,6 +457,8 @@ type ZodReadPolicyPermissionAssertion = HasType<
 
 /**
  * Defines an interface that describes a permission to be able to list policies.
+ *
+ * @dochash types/permissions
  */
 export interface ListPoliciesPermission extends PolicyPermission {
     type: 'policy.list';
@@ -400,6 +475,8 @@ type ZodListPoliciesPermissionAssertion = HasType<
 
 /**
  * Defines an interface that describes a permission to be able to grant a permission to a policy.
+ *
+ * @dochash types/permissions
  */
 export interface GrantPermissionToPolicyPermission extends PolicyPermission {
     type: 'policy.grantPermission';
@@ -419,6 +496,8 @@ type ZodGrantPermissionToPolicyPermissionAssertion = HasType<
 
 /**
  * Defines an interface that describes a permission to revoke a permission from a policy.
+ *
+ * @dochash types/permissions
  */
 export interface RevokePermissionFromPolicyPermission extends PolicyPermission {
     type: 'policy.revokePermission';
@@ -439,6 +518,8 @@ type ZodRevokePermissionFromPolicyPermissionAssertion = HasType<
 
 /**
  * Defines an interface that describes a permission to assign a policy to a particular resource.
+ *
+ * @dochash types/permissions
  */
 export interface AssignPolicyPermission extends PolicyPermission {
     type: 'policy.assign';
@@ -455,6 +536,8 @@ type ZodAssignPolicyPermissionAssertion = HasType<
 
 /**
  * Defines an interface that describes a permission to remove a policy from a particular resource.
+ *
+ * @dochash types/permissions
  */
 export interface UnassignPolicyPermission extends PolicyPermission {
     type: 'policy.unassign';
@@ -490,6 +573,8 @@ type ZodRolePermissionAssertion = HasType<ZodRolePermission, RolePermission>;
 
 /**
  * Defines an interface that describes a permission to grant a role.
+ *
+ * @dochash types/permissions
  */
 export interface GrantRolePermission extends RolePermission {
     type: 'role.grant';
@@ -519,6 +604,9 @@ export interface GrantRolePermission extends RolePermission {
 
 export const GRANT_ROLE_VALIDATION = ROLE_PERMISSION_VALIDATION.extend({
     type: z.literal('role.grant'),
+    userIds: z.union([z.boolean(), z.array(z.string())]),
+    instances: z.union([z.boolean(), z.string()]),
+    maxDurationMs: z.number().optional(),
 });
 type ZodGrantRolePermission = z.infer<typeof GRANT_ROLE_VALIDATION>;
 type ZodGrantRolePermissionAssertion = HasType<
@@ -528,6 +616,8 @@ type ZodGrantRolePermissionAssertion = HasType<
 
 /**
  * Defines an interface that describes a permission to revoke a role.
+ *
+ * @dochash types/permissions
  */
 export interface RevokeRolePermission extends RolePermission {
     type: 'role.revoke';
@@ -551,6 +641,8 @@ export interface RevokeRolePermission extends RolePermission {
 
 export const REVOKE_ROLE_VALIDATION = ROLE_PERMISSION_VALIDATION.extend({
     type: z.literal('role.revoke'),
+    userIds: z.union([z.boolean(), z.array(z.string())]),
+    instances: z.union([z.boolean(), z.string()]),
 });
 type ZodRevokeRolePermission = z.infer<typeof REVOKE_ROLE_VALIDATION>;
 type ZodRevokeRolePermissionAssertion = HasType<
@@ -560,6 +652,8 @@ type ZodRevokeRolePermissionAssertion = HasType<
 
 /**
  * Defines an interface that describes a permission to read a role.
+ *
+ * @dochash types/permissions
  */
 export interface ReadRolePermission extends RolePermission {
     type: 'role.read';
@@ -576,6 +670,8 @@ type ZodReadRolePermissionAssertion = HasType<
 
 /**
  * Defines an interface that describes a permission to update a role.
+ *
+ * @dochash types/permissions
  */
 export interface UpdateRolePermission extends RolePermission {
     type: 'role.update';
@@ -592,6 +688,8 @@ type ZodUpdateRolePermissionAssertion = HasType<
 
 /**
  * Defines an interface that describes a permission to list the available roles.
+ *
+ * @dochash types/permissions
  */
 export interface ListRolesPermission extends RolePermission {
     type: 'role.list';
@@ -614,6 +712,7 @@ export const AVAILABLE_PERMISSIONS_VALIDATION = z.discriminatedUnion('type', [
     LIST_DATA_VALIDATION,
     CREATE_FILE_VALIDATION,
     READ_FILE_VALIDATION,
+    LIST_FILE_VALIDATION,
     UPDATE_FILE_VALIDATION,
     DELETE_FILE_VALIDATION,
     INCREMENT_EVENT_VALIDATION,
@@ -750,6 +849,10 @@ export const DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT: PolicyDocument = {
             role: ADMIN_ROLE_NAME,
         },
         {
+            type: 'file.list',
+            role: ADMIN_ROLE_NAME,
+        },
+        {
             type: 'file.delete',
             role: ADMIN_ROLE_NAME,
         },
@@ -769,6 +872,11 @@ export const DEFAULT_ANY_RESOURCE_POLICY_DOCUMENT: PolicyDocument = {
         },
         {
             type: 'event.update',
+            role: ADMIN_ROLE_NAME,
+            events: true,
+        },
+        {
+            type: 'event.list',
             role: ADMIN_ROLE_NAME,
             events: true,
         },

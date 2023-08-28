@@ -325,7 +325,6 @@ export class AuthHandler implements AuxAuth {
             name: authManager.name,
             hasActiveSubscription: authManager.hasActiveSubscription,
             subscriptionTier: authManager.subscriptionTier,
-            openAiKey: authManager.openAiKey,
         };
 
         this._queueTokenRefresh(this._token);

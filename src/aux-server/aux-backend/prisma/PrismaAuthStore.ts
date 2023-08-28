@@ -1,12 +1,17 @@
 import { RegexRule, cleanupObject } from '@casual-simulation/aux-records';
 import {
     AddressType,
+    AuthInvoice,
     AuthLoginRequest,
     AuthSession,
     AuthStore,
+    AuthSubscription,
+    AuthSubscriptionPeriod,
     AuthUser,
     ListSessionsDataResult,
     SaveNewUserResult,
+    UpdateSubscriptionInfoRequest,
+    UpdateSubscriptionPeriodRequest,
 } from '@casual-simulation/aux-records/AuthStore';
 import {
     LoginRequest,
@@ -14,9 +19,12 @@ import {
     PrismaClient,
     User,
     AuthSession as PrismaSession,
+    Subscription as PrismaSubscription,
+    SubscriptionPeriod,
 } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 import { convertToDate, convertToMillis } from './Utils';
+import { v4 as uuid } from 'uuid';
 
 export class PrismaAuthStore implements AuthStore {
     private _client: PrismaClient;
@@ -120,7 +128,6 @@ export class PrismaAuthStore implements AuthStore {
             allSessionRevokeTime: convertToDate(user.allSessionRevokeTimeMs),
             currentLoginRequestId: user.currentLoginRequestId as string,
             stripeCustomerId: user.stripeCustomerId as string,
-            openAiKey: user.openAiKey as string,
             subscriptionStatus: user.subscriptionStatus as string,
             subscriptionId: user.subscriptionId as string,
             banTime: convertToDate(user.banTimeMs),
@@ -149,7 +156,6 @@ export class PrismaAuthStore implements AuthStore {
                     user.allSessionRevokeTimeMs
                 ),
                 stripeCustomerId: user.stripeCustomerId as string,
-                openAiKey: user.openAiKey as string,
                 subscriptionStatus: user.subscriptionStatus as string,
                 subscriptionId: user.subscriptionId as string,
                 banTime: convertToDate(user.banTimeMs),
@@ -308,6 +314,38 @@ export class PrismaAuthStore implements AuthStore {
         });
     }
 
+    async replaceSession(
+        session: AuthSession,
+        newSession: AuthSession,
+        revokeTimeMs: number
+    ): Promise<void> {
+        await this._client.authSession.update({
+            where: {
+                sessionId: session.sessionId,
+            },
+            data: {
+                revokeTime: convertToDate(revokeTimeMs),
+                nextSession: {
+                    create: {
+                        sessionId: newSession.sessionId,
+                        userId: newSession.userId,
+                        secretHash: newSession.secretHash,
+                        grantedTime: convertToDate(
+                            newSession.grantedTimeMs
+                        ) as Date,
+                        expireTime: convertToDate(
+                            newSession.expireTimeMs
+                        ) as Date,
+                        revokeTime: convertToDate(newSession.revokeTimeMs),
+                        requestId: newSession.requestId,
+                        ipAddress: newSession.ipAddress,
+                        previousSessionId: session.sessionId,
+                    },
+                },
+            },
+        });
+    }
+
     async listSessions(
         userId: string,
         expireTimeMs: number
@@ -333,6 +371,332 @@ export class PrismaAuthStore implements AuthStore {
         };
     }
 
+    async saveSubscription(subscription: AuthSubscription): Promise<void> {
+        const value = {
+            ...subscription,
+            currentPeriodEnd: convertToDate(subscription.currentPeriodEndMs),
+            currentPeriodStart: convertToDate(
+                subscription.currentPeriodStartMs
+            ),
+        };
+        await this._client.subscription.upsert({
+            where: {
+                id: subscription.id,
+            },
+            create: value,
+            update: value,
+        });
+    }
+    async getSubscriptionById(id: string): Promise<AuthSubscription> {
+        const sub = await this._client.subscription.findUnique({
+            where: {
+                id: id,
+            },
+        });
+        return this._convertToSubscription(sub);
+    }
+    async getSubscriptionByStripeSubscriptionId(
+        id: string
+    ): Promise<AuthSubscription> {
+        const sub = await this._client.subscription.findUnique({
+            where: {
+                stripeSubscriptionId: id,
+            },
+        });
+
+        return this._convertToSubscription(sub);
+    }
+    async saveSubscriptionPeriod(
+        period: AuthSubscriptionPeriod
+    ): Promise<void> {
+        const value = {
+            ...period,
+            periodEnd: convertToDate(period.periodEndMs),
+            periodStart: convertToDate(period.periodStartMs),
+        };
+
+        await this._client.subscriptionPeriod.upsert({
+            where: {
+                id: period.id,
+            },
+            create: value,
+            update: value,
+        });
+    }
+    async getSubscriptionPeriodById(
+        id: string
+    ): Promise<AuthSubscriptionPeriod> {
+        const period = await this._client.subscriptionPeriod.findUnique({
+            where: {
+                id: id,
+            },
+        });
+
+        return this._convertToSubscriptionPeriod(period);
+    }
+    async listSubscriptionPeriodsBySubscriptionId(
+        subscriptionId: string
+    ): Promise<AuthSubscriptionPeriod[]> {
+        const periods = await this._client.subscriptionPeriod.findMany({
+            where: {
+                subscriptionId,
+            },
+        });
+
+        return periods.map((p) => this._convertToSubscriptionPeriod(p));
+    }
+    async saveInvoice(invoice: AuthInvoice): Promise<void> {
+        const value = {
+            ...invoice,
+        };
+
+        await this._client.invoice.upsert({
+            where: {
+                id: invoice.id,
+            },
+            create: value,
+            update: value,
+        });
+    }
+
+    async getInvoiceById(id: string): Promise<AuthInvoice> {
+        return await this._client.invoice.findUnique({
+            where: {
+                id,
+            },
+        });
+    }
+    async updateSubscriptionInfo(
+        request: UpdateSubscriptionInfoRequest
+    ): Promise<void> {
+        const periodStart = convertToDate(request.currentPeriodStartMs);
+        const periodEnd = convertToDate(request.currentPeriodEndMs);
+        if (request.userId) {
+            await this._client.user.update({
+                where: {
+                    id: request.userId,
+                },
+                data: {
+                    subscriptionId: request.subscriptionId,
+                    subscriptionStatus: request.subscriptionStatus,
+                    stripeCustomerId: request.stripeCustomerId,
+                    subscriptionPeriodStart: periodStart,
+                    subscriptionPeriodEnd: periodEnd,
+                    subscriptionInfo: {
+                        upsert: {
+                            create: {
+                                id: uuid(),
+                                userId: request.userId,
+                                subscriptionId: request.subscriptionId,
+                                subscriptionStatus: request.subscriptionStatus,
+                                stripeCustomerId: request.stripeCustomerId,
+                                stripeSubscriptionId:
+                                    request.stripeSubscriptionId,
+                                currentPeriodStart: periodStart,
+                                currentPeriodEnd: periodEnd,
+                            },
+                            update: {
+                                subscriptionId: request.subscriptionId,
+                                subscriptionStatus: request.subscriptionStatus,
+                                stripeCustomerId: request.stripeCustomerId,
+                                stripeSubscriptionId:
+                                    request.stripeSubscriptionId,
+                                currentPeriodStart: periodStart,
+                                currentPeriodEnd: periodEnd,
+                            },
+                        },
+                    },
+                },
+            });
+        } else if (request.studioId) {
+            await this._client.studio.update({
+                where: {
+                    id: request.studioId,
+                },
+                data: {
+                    subscriptionId: request.subscriptionId,
+                    subscriptionStatus: request.subscriptionStatus,
+                    stripeCustomerId: request.stripeCustomerId,
+                    subscriptionPeriodStart: periodStart,
+                    subscriptionPeriodEnd: periodEnd,
+                    subscriptionInfo: {
+                        upsert: {
+                            create: {
+                                id: uuid(),
+                                studioId: request.studioId,
+                                subscriptionId: request.subscriptionId,
+                                subscriptionStatus: request.subscriptionStatus,
+                                stripeCustomerId: request.stripeCustomerId,
+                                stripeSubscriptionId:
+                                    request.stripeSubscriptionId,
+                                currentPeriodStart: periodStart,
+                                currentPeriodEnd: periodEnd,
+                            },
+                            update: {
+                                subscriptionId: request.subscriptionId,
+                                subscriptionStatus: request.subscriptionStatus,
+                                stripeCustomerId: request.stripeCustomerId,
+                                stripeSubscriptionId:
+                                    request.stripeSubscriptionId,
+                                currentPeriodStart: periodStart,
+                                currentPeriodEnd: periodEnd,
+                            },
+                        },
+                    },
+                },
+            });
+        }
+    }
+
+    async updateSubscriptionPeriod(
+        request: UpdateSubscriptionPeriodRequest
+    ): Promise<void> {
+        const periodId: string = uuid();
+        const invoiceId: string = uuid();
+        const periodStart = convertToDate(request.currentPeriodStartMs);
+        const periodEnd = convertToDate(request.currentPeriodEndMs);
+
+        if (request.userId) {
+            await this._client.user.update({
+                where: {
+                    id: request.userId,
+                },
+                data: {
+                    subscriptionPeriodStart: periodStart,
+                    subscriptionPeriodEnd: periodEnd,
+                    stripeCustomerId: request.stripeCustomerId,
+                    subscriptionStatus: request.subscriptionStatus,
+                    subscriptionId: request.subscriptionId,
+                    subscriptionInfo: {
+                        upsert: {
+                            create: {
+                                id: uuid(),
+                                userId: request.userId,
+                                subscriptionId: request.subscriptionId,
+                                subscriptionStatus: request.subscriptionStatus,
+                                stripeCustomerId: request.stripeCustomerId,
+                                stripeSubscriptionId:
+                                    request.stripeSubscriptionId,
+                                currentPeriodStart: periodStart,
+                                currentPeriodEnd: periodEnd,
+                                periods: {
+                                    create: {
+                                        id: periodId,
+                                        invoiceId: invoiceId,
+                                        invoice: {
+                                            create: {
+                                                id: invoiceId,
+                                                subscription: {
+                                                    connect: {
+                                                        userId: request.userId,
+                                                    },
+                                                },
+                                                ...request.invoice,
+                                            },
+                                        },
+                                        periodEnd: periodEnd,
+                                        periodStart: periodStart,
+                                    },
+                                },
+                            },
+                            update: {
+                                periods: {
+                                    create: {
+                                        id: periodId,
+                                        invoiceId: invoiceId,
+                                        invoice: {
+                                            create: {
+                                                id: invoiceId,
+                                                subscription: {
+                                                    connect: {
+                                                        userId: request.userId,
+                                                    },
+                                                },
+                                                ...request.invoice,
+                                            },
+                                        },
+                                        periodEnd: periodEnd,
+                                        periodStart: periodStart,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+        } else if (request.studioId) {
+            await this._client.studio.update({
+                where: {
+                    id: request.studioId,
+                },
+                data: {
+                    subscriptionPeriodStart: periodStart,
+                    subscriptionPeriodEnd: periodEnd,
+                    stripeCustomerId: request.stripeCustomerId,
+                    subscriptionStatus: request.subscriptionStatus,
+                    subscriptionId: request.subscriptionId,
+                    subscriptionInfo: {
+                        upsert: {
+                            create: {
+                                id: uuid(),
+                                studioId: request.studioId,
+                                subscriptionId: request.subscriptionId,
+                                subscriptionStatus: request.subscriptionStatus,
+                                stripeCustomerId: request.stripeCustomerId,
+                                stripeSubscriptionId:
+                                    request.stripeSubscriptionId,
+                                currentPeriodStart: periodStart,
+                                currentPeriodEnd: periodEnd,
+                                periods: {
+                                    create: {
+                                        id: periodId,
+                                        invoiceId: invoiceId,
+                                        invoice: {
+                                            create: {
+                                                id: invoiceId,
+                                                subscription: {
+                                                    connect: {
+                                                        studioId:
+                                                            request.studioId,
+                                                    },
+                                                },
+                                                ...request.invoice,
+                                            },
+                                        },
+                                        periodEnd: periodEnd,
+                                        periodStart: periodStart,
+                                    },
+                                },
+                            },
+                            update: {
+                                periods: {
+                                    create: {
+                                        id: periodId,
+                                        invoiceId: invoiceId,
+                                        invoice: {
+                                            create: {
+                                                id: invoiceId,
+                                                subscription: {
+                                                    connect: {
+                                                        studioId:
+                                                            request.studioId,
+                                                    },
+                                                },
+                                                ...request.invoice,
+                                            },
+                                        },
+                                        periodEnd: periodEnd,
+                                        periodStart: periodStart,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+        }
+    }
+
     private _convertToAuthUser(user: User | null): AuthUser | null {
         if (user) {
             return {
@@ -346,7 +710,6 @@ export class PrismaAuthStore implements AuthStore {
                 allSessionRevokeTimeMs: convertToMillis(
                     user.allSessionRevokeTime
                 ),
-                openAiKey: user.openAiKey,
                 currentLoginRequestId: user.currentLoginRequestId,
                 subscriptionStatus:
                     user.subscriptionStatus as AuthUser['subscriptionStatus'],
@@ -372,6 +735,32 @@ export class PrismaAuthStore implements AuthStore {
             nextSessionId: session.nextSessionId,
         };
     }
+
+    private _convertToSubscription(sub: PrismaSubscription): AuthSubscription {
+        if (sub) {
+            return {
+                ...sub,
+                currentPeriodEndMs: convertToMillis(sub.currentPeriodEnd),
+                currentPeriodStartMs: convertToMillis(sub.currentPeriodStart),
+            };
+        }
+
+        return null;
+    }
+
+    private _convertToSubscriptionPeriod(
+        period: SubscriptionPeriod
+    ): AuthSubscriptionPeriod {
+        if (period) {
+            return {
+                ...period,
+                periodEndMs: convertToMillis(period.periodEnd),
+                periodStartMs: convertToMillis(period.periodStart),
+            };
+        }
+
+        return null;
+    }
 }
 
 export interface MongoDBAuthUser {
@@ -386,7 +775,6 @@ export interface MongoDBAuthUser {
     stripeCustomerId?: string;
     subscriptionStatus?: string;
     subscriptionId?: string;
-    openAiKey?: string;
     banTimeMs?: number;
     banReason?: AuthUser['banReason'];
 }

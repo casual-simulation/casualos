@@ -16,22 +16,28 @@ import {
     RecordsStore,
     SubscriptionController,
     Record,
+    OpenAIChatInterface,
+    AIChatInterface,
+    BlockadeLabsGenerateSkyboxInterface,
+    OpenAIImageInterface,
+    StabilityAIImageInterface,
+    MetricsStore,
 } from '@casual-simulation/aux-records';
 import {
-    DynamoDBAuthStore,
-    DynamoDBDataStore,
-    DynamoDBEventStore,
-    DynamoDBFileStore,
-    DynamoDBPolicyStore,
-    DynamoDBRecordsStore,
     S3FileRecordsStore,
+    SimpleEmailServiceAuthMessenger,
+    SimpleEmailServiceAuthMessengerOptions,
     TextItAuthMessenger,
 } from '@casual-simulation/aux-records-aws';
 import { AuthMessenger } from '@casual-simulation/aux-records/AuthMessenger';
 import { ConsoleAuthMessenger } from '@casual-simulation/aux-records/ConsoleAuthMessenger';
 import { LivekitController } from '@casual-simulation/aux-records/LivekitController';
-import { SubscriptionConfiguration } from '@casual-simulation/aux-records/SubscriptionConfiguration';
+import {
+    SubscriptionConfiguration,
+    subscriptionConfigSchema,
+} from '@casual-simulation/aux-records/SubscriptionConfiguration';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { SESV2 } from 'aws-sdk';
 import { createClient as createRedisClient } from 'redis';
 import RedisRateLimitStore from '@casual-simulation/rate-limit-redis';
 import z from 'zod';
@@ -58,19 +64,36 @@ import {
     MongoDBEventRecordsStore,
     MongoDBDataRecordsStore,
     MongoDBPolicyStore,
-    MongoDBRecordsStore,
     MongoDBFileRecordsLookup,
+    MongoDBStudio,
+    MongoDBConfigurationStore,
+    MongoDBMetricsStore,
+    USERS_COLLECTION_NAME,
+    LOGIN_REQUESTS_COLLECTION_NAME,
+    SESSIONS_COLLECTION_NAME,
+    EMAIL_RULES_COLLECTION_NAME,
+    SMS_RULES_COLLECTION_NAME,
+    RECORDS_COLLECTION_NAME,
+    STUDIOS_COLLECTION_NAME,
 } from '../mongo';
 import { sortBy } from 'lodash';
 import { PrismaClient } from '@prisma/client';
 import {
     PrismaAuthStore,
+    PrismaConfigurationStore,
     PrismaDataRecordsStore,
     PrismaEventRecordsStore,
     PrismaFileRecordsLookup,
     PrismaPolicyStore,
     PrismaRecordsStore,
 } from '../prisma';
+import {
+    AIConfiguration,
+    AIController,
+    AIGenerateImageConfiguration,
+} from '@casual-simulation/aux-records/AIController';
+import { ConfigurationStore } from '@casual-simulation/aux-records/ConfigurationStore';
+import { PrismaMetricsStore } from 'aux-backend/prisma/PrismaMetricsStore';
 
 export class ServerBuilder {
     private _docClient: DocumentClient;
@@ -78,6 +101,8 @@ export class ServerBuilder {
     private _prismaClient: PrismaClient;
     private _mongoDb: Db;
 
+    private _configStore: ConfigurationStore;
+    private _metricsStore: MetricsStore;
     private _authStore: AuthStore;
     private _authMessenger: AuthMessenger;
     private _authController: AuthController;
@@ -106,6 +131,10 @@ export class ServerBuilder {
     private _subscriptionController: SubscriptionController;
     private _stripe: StripeIntegration;
 
+    private _chatInterface: AIChatInterface = null;
+    private _aiConfiguration: AIConfiguration = null;
+    private _aiController: AIController;
+
     private _rateLimitController: RateLimitController;
 
     private _allowedAccountOrigins: Set<string> = new Set([
@@ -126,6 +155,8 @@ export class ServerBuilder {
         priority: number;
         action: () => Promise<void>;
     }[] = [];
+    private _generateSkyboxInterface: BlockadeLabsGenerateSkyboxInterface;
+    private _imagesInterfaces: AIGenerateImageConfiguration['interfaces'];
 
     private get _forceAllowAllSubscriptionFeatures() {
         return !this._stripe;
@@ -135,73 +166,10 @@ export class ServerBuilder {
         this._options = options ?? {};
     }
 
-    useDynamoDB(
-        options: Pick<BuilderOptions, 'dynamodb' | 's3'> = this._options
+    useMongoDB(
+        options: Pick<BuilderOptions, 'mongodb' | 'subscriptions'> = this
+            ._options
     ): this {
-        console.log('[ServerBuilder] Using DynamoDB.');
-
-        if (!options.dynamodb) {
-            throw new Error('DynamoDB options must be provided.');
-        }
-        if (!options.s3) {
-            throw new Error('S3 options must be provided.');
-        }
-
-        const dynamodb = options.dynamodb;
-        const s3 = options.s3;
-
-        this._docClient = new DocumentClient({
-            endpoint: dynamodb.endpoint,
-        });
-        this._authStore = new DynamoDBAuthStore(
-            this._docClient,
-            dynamodb.usersTable,
-            dynamodb.userAddressesTable,
-            dynamodb.loginRequestsTable,
-            dynamodb.sessionsTable,
-            'ExpireTimeIndex',
-            dynamodb.emailTable,
-            dynamodb.smsTable,
-            dynamodb.stripeCustomerIdsIndexName
-        );
-        this._recordsStore = new DynamoDBRecordsStore(
-            this._docClient,
-            dynamodb.publicRecordsTable,
-            dynamodb.publicRecordsKeysTable
-        );
-        this._policyStore = new DynamoDBPolicyStore(
-            this._docClient,
-            dynamodb.policiesTable,
-            dynamodb.subjectRolesTable,
-            dynamodb.roleSubjectsTable,
-            dynamodb.rolesTable
-        );
-        this._dataStore = new DynamoDBDataStore(
-            this._docClient,
-            dynamodb.dataTable
-        );
-        this._manualDataStore = new DynamoDBDataStore(
-            this._docClient,
-            dynamodb.manualDataTable
-        );
-        this._filesStore = new DynamoDBFileStore(
-            s3.region,
-            s3.filesBucket,
-            this._docClient,
-            dynamodb.filesTable,
-            s3.filesStorageClass,
-            undefined,
-            s3.host,
-            s3.options
-        );
-        this._eventsStore = new DynamoDBEventStore(
-            this._docClient,
-            dynamodb.eventsTable
-        );
-        return this;
-    }
-
-    useMongoDB(options: Pick<BuilderOptions, 'mongodb'> = this._options): this {
         console.log('[ServerBuilder] Using MongoDB.');
 
         if (!options.mongodb) {
@@ -220,13 +188,15 @@ export class ServerBuilder {
                 const db = mongo.db(mongodb.database);
 
                 this._mongoDb = db;
-                const users = db.collection<MongoDBAuthUser>('users');
-                const loginRequests =
-                    db.collection<MongoDBLoginRequest>('loginRequests');
-                const sessions = db.collection<MongoDBAuthSession>('sessions');
-                const recordsCollection = db.collection<Record>('records');
-                const recordsKeysCollection =
-                    db.collection<RecordKey>('recordsKeys');
+                const users = db.collection<MongoDBAuthUser>(
+                    USERS_COLLECTION_NAME
+                );
+                const studios = db.collection<MongoDBStudio>(
+                    STUDIOS_COLLECTION_NAME
+                );
+                const recordsCollection = db.collection<Record>(
+                    RECORDS_COLLECTION_NAME
+                );
                 const recordsDataCollection =
                     db.collection<DataRecord>('recordsData');
                 const manualRecordsDataCollection =
@@ -235,24 +205,31 @@ export class ServerBuilder {
                     db.collection<any>('recordsFilesInfo');
                 const recordsEventsCollection =
                     db.collection<any>('recordsEvents');
-                const emailRules = db.collection<any>('emailRules');
-                const smsRules = db.collection<any>('smsRules');
+                const configuration = db.collection<any>('configuration');
 
                 const policies = db.collection<any>('policies');
                 const roles = db.collection<any>('roles');
 
-                this._authStore = new MongoDBAuthStore(
-                    users,
-                    loginRequests,
-                    sessions,
-                    emailRules,
-                    smsRules
+                this._configStore = new MongoDBConfigurationStore(
+                    {
+                        subscriptions:
+                            options.subscriptions as SubscriptionConfiguration,
+                    },
+                    configuration
                 );
-
-                this._recordsStore = new MongoDBRecordsStore(
+                this._metricsStore = new MongoDBMetricsStore(
+                    recordsDataCollection,
+                    recordsFilesCollection,
+                    recordsEventsCollection,
+                    studios,
                     recordsCollection,
-                    recordsKeysCollection
+                    users,
+                    db,
+                    this._configStore
                 );
+                const authStore = new MongoDBAuthStore(db);
+                this._authStore = authStore;
+                this._recordsStore = authStore;
                 this._policyStore = new MongoDBPolicyStore(policies, roles);
                 this._dataStore = new MongoDBDataRecordsStore(
                     recordsDataCollection
@@ -276,7 +253,8 @@ export class ServerBuilder {
     }
 
     usePrismaWithS3(
-        options: Pick<BuilderOptions, 'prisma' | 's3'> = this._options
+        options: Pick<BuilderOptions, 'prisma' | 's3' | 'subscriptions'> = this
+            ._options
     ): this {
         console.log('[ServerBuilder] Using Prisma with S3.');
         if (!options.prisma) {
@@ -291,6 +269,13 @@ export class ServerBuilder {
         const s3 = options.s3;
 
         this._prismaClient = new PrismaClient(prisma.options as any);
+        this._configStore = new PrismaConfigurationStore(this._prismaClient, {
+            subscriptions: options.subscriptions as SubscriptionConfiguration,
+        });
+        this._metricsStore = new PrismaMetricsStore(
+            this._prismaClient,
+            this._configStore
+        );
         this._authStore = new PrismaAuthStore(this._prismaClient);
         this._recordsStore = new PrismaRecordsStore(this._prismaClient);
         this._policyStore = new PrismaPolicyStore(this._prismaClient);
@@ -315,7 +300,10 @@ export class ServerBuilder {
     }
 
     usePrismaWithMongoDBFileStore(
-        options: Pick<BuilderOptions, 'prisma' | 'mongodb'> = this._options
+        options: Pick<
+            BuilderOptions,
+            'prisma' | 'mongodb' | 'subscriptions'
+        > = this._options
     ): this {
         console.log('[ServerBuilder] Using Prisma with MongoDB File Store.');
         if (!options.prisma) {
@@ -341,6 +329,17 @@ export class ServerBuilder {
                 const db = mongo.db(mongodb.database);
                 this._mongoDb = db;
 
+                this._configStore = new PrismaConfigurationStore(
+                    this._prismaClient,
+                    {
+                        subscriptions:
+                            options.subscriptions as SubscriptionConfiguration,
+                    }
+                );
+                this._metricsStore = new PrismaMetricsStore(
+                    this._prismaClient,
+                    this._configStore
+                );
                 this._authStore = new PrismaAuthStore(this._prismaClient);
                 this._recordsStore = new PrismaRecordsStore(this._prismaClient);
                 this._policyStore = new PrismaPolicyStore(this._prismaClient);
@@ -407,6 +406,20 @@ export class ServerBuilder {
         this._authMessenger = new TextItAuthMessenger(
             options.textIt.apiKey,
             options.textIt.flowId
+        );
+        return this;
+    }
+
+    useSesAuthMessenger(
+        options: Pick<BuilderOptions, 'ses'> = this._options
+    ): this {
+        console.log('[ServerBuilder] Using SES Auth Messenger.');
+        if (!options.ses) {
+            throw new Error('SES options must be provided.');
+        }
+        this._authMessenger = new SimpleEmailServiceAuthMessenger(
+            new SESV2(),
+            options.ses as SimpleEmailServiceAuthMessengerOptions
         );
         return this;
     }
@@ -517,13 +530,126 @@ export class ServerBuilder {
         if (!options.subscriptions) {
             throw new Error('Subscription options must be provided.');
         }
+        if (options.stripe.testClock) {
+            console.log(
+                '[ServerBuilder] Using test clock: ',
+                options.stripe.testClock
+            );
+        }
         this._stripe = new StripeIntegration(
             new Stripe(options.stripe.secretKey, {
                 apiVersion: '2022-11-15',
             }),
-            options.stripe.publishableKey
+            options.stripe.publishableKey,
+            options.stripe.testClock
         );
         this._subscriptionConfig = options.subscriptions as any;
+        return this;
+    }
+
+    useAI(
+        options: Pick<
+            BuilderOptions,
+            'openai' | 'ai' | 'blockadeLabs' | 'stabilityai'
+        > = this._options
+    ): this {
+        console.log('[ServerBuilder] Using AI.');
+        if (!options.ai) {
+            throw new Error('AI options must be provided.');
+        }
+
+        if (options.openai && options.ai.chat?.provider === 'openai') {
+            console.log('[ServerBuilder] Using OpenAI Chat.');
+            this._chatInterface = new OpenAIChatInterface({
+                apiKey: options.openai.apiKey,
+                maxTokens: options.openai.maxTokens,
+            });
+        }
+
+        if (
+            options.blockadeLabs &&
+            options.ai.generateSkybox?.provider === 'blockadeLabs'
+        ) {
+            console.log(
+                '[ServerBuilder] Using Blockade Labs Skybox Generation.'
+            );
+            this._generateSkyboxInterface =
+                new BlockadeLabsGenerateSkyboxInterface({
+                    apiKey: options.blockadeLabs.apiKey,
+                });
+        }
+
+        if (options.ai.images) {
+            this._imagesInterfaces = {};
+            if (options.ai.images?.allowedModels?.openai && options.openai) {
+                console.log('[ServerBuilder] Using OpenAI Images.');
+                this._imagesInterfaces.openai = new OpenAIImageInterface({
+                    apiKey: options.openai.apiKey,
+                    defaultWidth: options.ai.images.defaultWidth,
+                    defaultHeight: options.ai.images.defaultHeight,
+                });
+            }
+
+            if (
+                options.ai.images?.allowedModels?.stabilityai &&
+                options.stabilityai
+            ) {
+                console.log('[ServerBuilder] Using StabilityAI Images.');
+
+                this._imagesInterfaces.stabilityai =
+                    new StabilityAIImageInterface({
+                        apiKey: options.stabilityai.apiKey,
+                        defaultWidth: options.ai.images.defaultWidth,
+                        defaultHeight: options.ai.images.defaultHeight,
+                    });
+            }
+        }
+
+        this._aiConfiguration = {
+            chat: null,
+            generateSkybox: null,
+            images: null,
+            config: this._configStore,
+            metrics: this._metricsStore,
+        };
+
+        if (this._chatInterface && options.ai.chat) {
+            this._aiConfiguration.chat = {
+                interface: this._chatInterface,
+                options: {
+                    defaultModel: options.ai.chat.defaultModel,
+                    allowedChatModels: options.ai.chat.allowedModels,
+                    allowedChatSubscriptionTiers:
+                        options.ai.chat.allowedSubscriptionTiers,
+                },
+            };
+        }
+        if (this._generateSkyboxInterface && options.ai.generateSkybox) {
+            this._aiConfiguration.generateSkybox = {
+                interface: this._generateSkyboxInterface,
+                options: {
+                    allowedSubscriptionTiers:
+                        options.ai.generateSkybox.allowedSubscriptionTiers,
+                },
+            };
+        }
+        if (this._imagesInterfaces && options.ai.images) {
+            const images = options.ai.images;
+            this._aiConfiguration.images = {
+                interfaces: this._imagesInterfaces,
+                options: {
+                    allowedModels: images.allowedModels,
+                    allowedSubscriptionTiers: images.allowedSubscriptionTiers,
+                    defaultHeight: images.defaultHeight,
+                    defaultWidth: images.defaultWidth,
+                    maxHeight: images.maxHeight,
+                    maxWidth: images.maxWidth,
+                    defaultModel: images.defaultModel,
+                    maxImages: images.maxImages,
+                    maxSteps: images.maxSteps,
+                },
+            };
+        }
         return this;
     }
 
@@ -568,6 +694,12 @@ export class ServerBuilder {
         if (!this._eventsStore) {
             throw new Error('An events store must be configured!');
         }
+        if (!this._metricsStore) {
+            throw new Error('A metrics store must be configured!');
+        }
+        if (!this._configStore) {
+            throw new Error('A config store must be configured!');
+        }
 
         if (!this._rateLimitController) {
             console.log('[ServerBuilder] Not using rate limiting.');
@@ -586,39 +718,57 @@ export class ServerBuilder {
         this._authController = new AuthController(
             this._authStore,
             this._authMessenger,
-            this._subscriptionConfig,
+            this._configStore,
             this._forceAllowAllSubscriptionFeatures
         );
-        this._recordsController = new RecordsController(this._recordsStore);
+        this._recordsController = new RecordsController({
+            store: this._recordsStore,
+            auth: this._authStore,
+            config: this._configStore,
+            metrics: this._metricsStore,
+        });
         this._policyController = new PolicyController(
             this._authController,
             this._recordsController,
             this._policyStore
         );
-        this._dataController = new DataRecordsController(
-            this._policyController,
-            this._dataStore
-        );
-        this._manualDataController = new DataRecordsController(
-            this._policyController,
-            this._manualDataStore
-        );
-        this._filesController = new FileRecordsController(
-            this._policyController,
-            this._filesStore
-        );
-        this._eventsController = new EventRecordsController(
-            this._policyController,
-            this._eventsStore
-        );
+        this._dataController = new DataRecordsController({
+            store: this._dataStore,
+            config: this._configStore,
+            policies: this._policyController,
+            metrics: this._metricsStore,
+        });
+        this._manualDataController = new DataRecordsController({
+            store: this._manualDataStore,
+            config: this._configStore,
+            policies: this._policyController,
+            metrics: this._metricsStore,
+        });
+        this._filesController = new FileRecordsController({
+            store: this._filesStore,
+            config: this._configStore,
+            policies: this._policyController,
+            metrics: this._metricsStore,
+        });
+        this._eventsController = new EventRecordsController({
+            store: this._eventsStore,
+            config: this._configStore,
+            policies: this._policyController,
+            metrics: this._metricsStore,
+        });
 
         if (this._stripe && this._subscriptionConfig) {
             this._subscriptionController = new SubscriptionController(
                 this._stripe,
                 this._authController,
                 this._authStore,
-                this._subscriptionConfig
+                this._recordsStore,
+                this._configStore
             );
+        }
+
+        if (this._aiConfiguration) {
+            this._aiController = new AIController(this._aiConfiguration);
         }
 
         const server = new RecordsHttpServer(
@@ -633,7 +783,8 @@ export class ServerBuilder {
             this._filesController,
             this._subscriptionController,
             this._rateLimitController,
-            this._policyController
+            this._policyController,
+            this._aiController
         );
 
         return {
@@ -708,6 +859,23 @@ const textItSchema = z.object({
     flowId: z.string().nonempty().nullable(),
 });
 
+const sesContentSchema = z.discriminatedUnion('type', [
+    z.object({
+        type: z.literal('template'),
+        templateArn: z.string().nonempty(),
+    }),
+    z.object({
+        type: z.literal('plain'),
+        subject: z.string().nonempty(),
+        body: z.string().nonempty(),
+    }),
+]);
+
+const sesSchema = z.object({
+    fromAddress: z.string().nonempty(),
+    content: sesContentSchema,
+});
+
 const redisSchema = z.object({
     host: z.string().nonempty(),
     port: z.number(),
@@ -729,28 +897,7 @@ const rateLimitSchema = z.object({
 const stripeSchema = z.object({
     secretKey: z.string().nonempty(),
     publishableKey: z.string().nonempty(),
-});
-
-const subscriptionConfigSchema = z.object({
-    webhookSecret: z.string().nonempty(),
-    successUrl: z.string().nonempty(),
-    cancelUrl: z.string().nonempty(),
-    returnUrl: z.string().nonempty(),
-
-    portalConfig: z.object({}).passthrough().optional().nullable(),
-    checkoutConfig: z.object({}).passthrough().optional().nullable(),
-
-    subscriptions: z.array(
-        z.object({
-            id: z.string().nonempty(),
-            product: z.string().nonempty(),
-            featureList: z.array(z.string().nonempty()),
-            eligibleProducts: z.array(z.string().nonempty()),
-            defaultSubscription: z.boolean().optional(),
-            purchasable: z.boolean().optional(),
-            tier: z.string().nonempty().optional(),
-        })
-    ),
+    testClock: z.string().nonempty().optional(),
 });
 
 const mongodbSchema = z.object({
@@ -764,6 +911,61 @@ const prismaSchema = z.object({
     options: z.object({}).passthrough().optional(),
 });
 
+const openAiSchema = z.object({
+    apiKey: z.string().nonempty(),
+    maxTokens: z.number().positive().optional(),
+});
+
+const blockadeLabsSchema = z.object({
+    apiKey: z.string().nonempty(),
+});
+
+const stabilityAiSchema = z.object({
+    apiKey: z.string().nonempty(),
+});
+
+const aiSchema = z.object({
+    chat: z
+        .object({
+            provider: z.literal('openai'),
+            defaultModel: z.string().nonempty(),
+            allowedModels: z.array(z.string().nonempty()),
+            allowedSubscriptionTiers: z.union([
+                z.literal(true),
+                z.array(z.string().nonempty()),
+            ]),
+        })
+        .optional(),
+    generateSkybox: z
+        .object({
+            provider: z.literal('blockadeLabs'),
+            allowedSubscriptionTiers: z.union([
+                z.literal(true),
+                z.array(z.string().nonempty()),
+            ]),
+        })
+        .optional(),
+    images: z
+        .object({
+            defaultModel: z.string(),
+            defaultWidth: z.number().int().positive(),
+            defaultHeight: z.number().int().positive(),
+            maxWidth: z.number().int().positive().optional(),
+            maxHeight: z.number().int().positive().optional(),
+            maxSteps: z.number().int().positive().optional(),
+            maxImages: z.number().int().positive().optional(),
+            allowedModels: z.object({
+                openai: z.array(z.string().nonempty()).optional(),
+                stabilityai: z.array(z.string().nonempty()).optional(),
+            }),
+            allowedSubscriptionTiers: z.union([
+                z.literal(true),
+                z.array(z.string().nonempty()),
+            ]),
+        })
+        .optional(),
+});
+
 export const optionsSchema = z.object({
     dynamodb: dynamoDbSchema.optional(),
     s3: s3Schema.optional(),
@@ -771,8 +973,13 @@ export const optionsSchema = z.object({
     prisma: prismaSchema.optional(),
     livekit: livekitSchema.optional(),
     textIt: textItSchema.optional(),
+    ses: sesSchema.optional(),
     redis: redisSchema.optional(),
     rateLimit: rateLimitSchema.optional(),
+    openai: openAiSchema.optional(),
+    blockadeLabs: blockadeLabsSchema.optional(),
+    stabilityai: stabilityAiSchema.optional(),
+    ai: aiSchema.optional(),
 
     subscriptions: subscriptionConfigSchema.optional(),
     stripe: stripeSchema.optional(),

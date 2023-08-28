@@ -29,18 +29,83 @@ module.exports = {
             items: [
                 'tags',
                 'listen-tags',
-                'variables',
-                'actions',
-                'glossary',
-                'ab-1',
                 {
                     type: 'category',
-                    label: 'Math',
+                    label: 'Actions',
                     items: [
-                        'math/vectors',
-                        'math/rotations'
+                        'actions/ai',
+                        'actions/animations',
+                        'actions/app',
+                        'actions/audio',
+                        'actions/barcodes',
+                        'actions/bot-filters',
+                        'actions/bytes',
+                        'actions/camera',
+                        'actions/crypto',
+                        'actions/data',
+                        'actions/debuggers',
+                        'actions/event',
+                        'actions/experimental',
+                        'actions/files',
+                        'actions/math',
+                        'actions/mods',
+                        'actions/os',
+                        'actions/portals',
+                        'actions/records',
+                        'actions/rooms',
+                        'actions/time',
+                        'actions/utility',
+                        'actions/web',
                     ]
-                }
+                },
+                {
+                    type: 'category',
+                    label: 'Types',
+                    items: [
+                        'types/ai',
+                        'types/animation',
+                        'types/camera',
+                        'types/core',
+                        {
+                            type: 'category',
+                            label: 'Debuggers',
+                            items: [
+                                'types/debuggers/common',
+                                'types/debuggers/debugger',
+                                'types/debuggers/pausable-debugger',
+                            ]
+                        },
+                        'types/error',
+                        'types/experimental',
+                        {
+                            type: 'category',
+                            label: 'Math',
+                            items: [
+                                'types/math/vectors',
+                                'types/math/rotations'
+                            ]
+                        },
+                        'types/os',
+                        'types/permissions',
+                        {
+                            type: 'category',
+                            label: 'Records',
+                            items: [
+                                'types/records/key',
+                                'types/records/data',
+                                'types/records/files',
+                                'types/records/events',
+                                'types/records/roles',
+                                'types/records/policies',
+                                'types/records/extra'
+                            ]
+                        },
+                        'types/web',
+                    ]
+                },
+                'variables',
+                'glossary',
+                'ab-1',
             ]
         },
     ],

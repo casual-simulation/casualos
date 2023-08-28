@@ -25,6 +25,13 @@ Parameters:
     ServerConfigParameter:
         Type: String
         Description: The JSON configuration that should be used.
+    SESIdentityNameParameter:
+        Type: String
+        Description: The Simple Email Service (SES) Identity that the lambda function should be allowed to send emails from.
+        Default: ''
+
+Conditions:
+    UseSESCrud: !Not [!Equals [!Ref SESIdentityNameParameter, '']]
 
 Globals:
     Api:
@@ -56,6 +63,11 @@ Resources:
                 # Give Create/Read/Update/Delete Permissions to the Bucket
                 - S3CrudPolicy:
                       BucketName: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
+                - !If [
+                      UseSESCrud,
+                      !Ref SESIdentityNameParameter,
+                      !Ref 'AWS::NoValue',
+                  ]
             Environment:
                 Variables:
                     SERVER_CONFIG: !Ref ServerConfigParameter
@@ -65,166 +77,16 @@ Resources:
                     ALLOWED_ORIGINS: !Ref AllowedOriginsParameter
                     ALLOWED_API_ORIGINS: !Ref AllowedApiOriginsParameter
             Events:
-                CreateRecordKey:
+                HandleApiV2:
                     Type: Api
                     Properties:
-                        Path: /api/v2/records/key
-                        Method: POST
-                RecordData:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/data
-                        Method: POST
-                EraseData:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/data
-                        Method: DELETE
-                GetData:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/data
-                        Method: GET
-                ListData:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/data/list
-                        Method: GET
-                RecordManualData:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/manual/data
-                        Method: POST
-                EraseManualData:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/manual/data
-                        Method: DELETE
-                GetManualData:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/manual/data
-                        Method: GET
-                RecordFile:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/file
-                        Method: POST
-                EraseFile:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/file
-                        Method: DELETE
-                ReadFile:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/file
-                        Method: GET
-                UpdateFile:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/file
-                        Method: PUT
-                AddEventCount:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/events/count
-                        Method: POST
-                GetEventCount:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/events/count
-                        Method: GET
-                UpdateEvent:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/events
-                        Method: POST
+                        Path: /api/v2/{extra+}
+                        Method: Any
                 MarkFileUploaded:
                     Type: S3
                     Properties:
                         Bucket: !Ref FilesBucket
                         Events: s3:ObjectCreated:Put
-                ReadPolicy:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/policy
-                        Method: GET
-                ListPolicies:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/policy/list
-                        Method: GET
-                GrantPermission:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/policy/grantPermission
-                        Method: POST
-                RevokePermission:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/policy/revokePermission
-                        Method: POST
-                ListUserRoles:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/role/user/list
-                        Method: GET
-                ListInstRoles:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/role/inst/list
-                        Method: GET
-                ListRolesAssignments:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/role/assignments/list
-                        Method: GET
-                GrantRole:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/role/grant
-                        Method: POST
-                RevokeRole:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/records/role/revoke
-                        Method: POST
-                GetMeetToken:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/meet/token
-                        Method: POST
-                Login:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/login
-                        Method: POST
-                CompleteLogin:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/completeLogin
-                        Method: POST
-                RevokeSession:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/revokeSession
-                        Method: POST
-                ListSessions:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/sessions
-                        Method: GET
-                RevokeAllSessions:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/revokeAllSessions
-                        Method: POST
-                ReplaceSession:
-                    Type: Api
-                    Properties:
-                        Path: /api/v2/replaceSession
-                        Method: POST
                 GetMetadata:
                     Type: Api
                     Properties:
@@ -250,11 +112,6 @@ Resources:
                     Properties:
                         Path: /api/stripeWebhook
                         Method: POST
-                KeepWarm:
-                    Type: Schedule
-                    Properties:
-                        Schedule: 'rate(5 minutes)'
-                        Description: Event to keep the function always warm
     HandleRecordsLogGroup:
         Type: AWS::Logs::LogGroup
         Properties:

@@ -1,8 +1,143 @@
 # CasualOS Changelog
 
+## V3.2.5
+
+#### Date: 8/28/2023
+
+### :rocket: Improvements
+
+-   Added the `os.listUserStudios()` function.
+    -   Gets the list of studios that the current user has access to.
+-   Disabled the ability to create studios when subscriptions are not supported.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where setting `portalBackgroundAddress` to a `null` value and then back to its original value would not restore the background image.
+
+## V3.2.4
+
+#### Date: 8/22/2023
+
+### :rocket: Improvements
+
+-   Added `formDepthWrite` tag.
+-   Added `formDepthTest` tag.
+-   Added the ability to use `Ctrl+B` to automatically focus the last visisted tag.
+-   Added a "Done" button to the `os.showInput()` modal.
+-   Added the ability to create Studios.
+    -   Studios are a way to manage records under a different subscription than a personal account.
+    -   Studios have their own subscriptions and can have multiple members.
+    -   Members can have two roles: `admin` and `member`.
+        -   `admin` members can manage the Studio subscription and can add/remove members and create records.
+        -   `member` members can read/write data in records, but cannot manage permissions in records.
+    -   Like users, studios have an automatically created record that matches their ID.
+
+### :rocket: Bug Fixes
+
+-   Fixed an issue where bots in the miniGridPortal were somehow pointable by controllers while in AR/VR.
+
+## V3.2.3
+
+#### Date: 7/31/2023
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where incorrect subscription features would be shown after a user subscribed.
+
+## V3.2.2
+
+#### Date: 7/31/2023
+
+### :rocket: Improvements
+
+-   Added the `ai.chat()` and `ai.generateSkybox()` functions as an easy way to interface with [OpenAI's Chat API](https://platform.openai.com/docs/guides/gpt/chat-completions-api) and [Blockade Lab's API](https://api-documentation.blockadelabs.com/api).
+    -   When configured on the server, users will have the ability to interface with an OpenAI GPT model without having to manage or store their own OpenAI API Key.
+    -   They will also be able to interface with Blockade Lab's API without having to manage their own API key.
+    -   `ai.chat()` accepts two parameters:
+        -   `message` - This is the message (string or object) or list of messages (objects) that the AI model should respond to.
+        -   `options` - Is optional and are the options that should be used for the operation.
+        -   Returns a promise that resolves when the AI has responded to the message(s). The resolved value will be a string if `message` was a string. Otherwise, it will be an object.
+        -   See the documentation for more info.
+    -   `ai.generateSkybox()` accepts three parameters:
+        -   `prompt` - This is the prompt that tells the AI what the generated skybox should look like.
+        -   `negativePrompt` - Is optional and tells the AI what the generated skybox should not look like.
+        -   `options` - Is optional and are the options that should be used for the operation.
+        -   Returns a promise that resolves when the AI has generated the skybox. The resolved value will be a string containing the URL that the generated image is stored at.
+        -   See the documentation for more info.
+    -   (DevOps Only) To configure AI Chat features, use the following `SERVER_CONFIG` properties:
+        -   `openai` - This should be an object with the following properties:
+            -   `apiKey` - The OpenAI API Key that should be used for requests.
+            -   `maxTokens` - The maximum number of tokens that can be used in a request. If omitted, then there is no limit.
+        -   `blockadeLabs` - This should be an object with the following properties:
+            -   `apiKey` - The Blockade Labs API Key that should be used for requests.
+        -   `ai` - This should be an object with the following properties:
+            -   `chat` - Optional. If omitted, then AI Chat features will be disabled. It should be an object with the following properties:
+                -   `provider` - Set this to `"openai"`. This tells the server to use OpenAI for `ai.chat()`.
+                -   `defaultModel` - Set this to the model that should be used by default. For OpenAI, see this [list of supported models](https://platform.openai.com/docs/models/model-endpoint-compatibility).
+                -   `allowedModels` - The array of model names that are allowed to be used by `ai.chat()`.
+                -   `allowedSubscriptionTiers` - The array of subscription tiers that enable `ai.chat()` for a user. If a user is not subscribed to one of the listed tiers, then they will not be allowed to use `ai.chat()`. Set this to `true` to allow all users (even ones that are not subscribed).
+            -   `generateSkybox` - Optional. If omitted, then AI Skybox features will be disabled. It should be an object with the following properties:
+                -   `provider` - Set this to `"blockadeLabs"`. This tells the server to use Blockade Labs for `ai.generateSkybox()`.
+                -   `allowedSubscriptionTiers` - The array of subscription tiers that enable `ai.generateSkybox()` for a user. If a user is not subscribed to one of the listed tiers, then they will not be allowed to use `ai.generateSkybox()`. Set this to `true` to allow all users (even ones that are not subscribed).
+-   Added the `bytes.toBase64Url(data, mimeType?)` and `bytes.fromBase64Url(url)` functions.
+    -   These functions are useful working with [Data URLs](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) from binary data or a Base 64 string.
+    -   `bytes.toBase64Url(data, mimeType?)` - Creates a Data URL using the given binary data or Base 64 string, and includes the given MIME Type in the output.
+        -   `data` - Is a `Uint8Array` or `string` and is the data that should be included in the URL.
+        -   `mimeType` - Is optional, and is the MIME Type that the data represents.
+    -   `bytes.fromBase64Url(url)` - Creates a `Blob` from the given data URL. The resulting blob will have a `type` matching the MIME Type stored in the Data URL, and binary data equal to the decoded base 64.
+        -   `url` - The string representing the data URL.
+
+## V3.2.1
+
+#### Date: 7/26/2023
+
+### :rocket: Improvements
+
+-   Added a "repeated error limit" for individual tags that prevents `@onError` from being called if a tag emits a large number errors.
+-   Added the `os.openPhotoCamera()`, `os.closePhotoCamera()`, and `os.capturePhoto()` functions.
+    -   When called, they open/close the photo camera modal that makes it easy for the user to take photos.
+    -   The `@onPhotoCaptured` shout is sent for every photo that the user captures.
+    -   See the documentation for more info.
+-   Added a basic admin panel to the auth site.
+    -   This lets you see the records you own and browse the information contained in them.
+    -   It is very limited, but right now it is useful for very basic administration.
+    -   It can list data items, files, events, policies, and roles.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where setting a portal to `null` in `@onPortalChanged` would cause an infinite loop.
+
+## V3.2.0
+
+#### Date: 7/17/2023
+
+### :rocket: Improvements
+
+-   Improved the API reference documentation to be generated from documentation comments in the source code.
+-   Added personal records.
+    -   Personal records are records that have the same name as your `authBot` ID (User ID).
+    -   By default, they are only able to be accessed by your user.
+    -   Additionally, they do not require the creation of a record key to use. It will be automatically created for you once you go to use it.
+
+## V3.1.36
+
+#### Date: 7/7/2023
+
+### :rocket: Improvements
+
+-   Added `os.getPublicFile()` and `os.getPrivateFile()` functions as a way to tell CasualOS whether the file is expected to be public or private.
+    -   Using `os.getPrivateFile()` is quicker than using `os.getFile()` for private files, but it is slower than using `os.getFile()` for public files.
+    -   `os.getFile()` is optimized for retrieving public files, but will fallback to trying to retrieve private files if the first fails.
+    -   `os.getPublicFile()` is optimized for retrieving public files and will fail if the file is not public.
+
+### :bug: Bug Fixes
+
+-   Fixed an issue where it was not possible to retrieve private data and file records using `os.getData()` and `os.getFile()`.
+-   Fixed an issue where it was impossible to manage an existing subscription.
+
 ## V3.1.35
 
-#### Date: TBD
+#### Date: 6/30/2023
 
 ### :rocket: Improvements
 
@@ -10,10 +145,12 @@
     -   This means that we now ship one docker image for both the aux server and auth server instead of two.
     -   The aux server still runs on port 3000, while the auth server runs on port 3002 (by default).
     -   The auth serverless backend has also been merged with the serverless apiary backends, so only one AWS CloudFormation deployment is needed to have a fully functioning deployment.
+-   Added the `skybox` form.
 
 ### :bug: Bug Fixes
 
 -   Fixed an issue where roles could not be granted because of a database configuration issue.
+-   Fixed an issue where auth sessions could not be renewed because of a database configuration issue.
 
 ## V3.1.34
 

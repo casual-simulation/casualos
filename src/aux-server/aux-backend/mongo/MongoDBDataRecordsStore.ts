@@ -92,6 +92,9 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
         if (!!address) {
             query.address = { $gt: address };
         }
+        const count = await this._collection.count({
+            recordName: recordName,
+        });
         const records = await this._collection
             .find(query)
             .map((r) => ({
@@ -104,6 +107,7 @@ export class MongoDBDataRecordsStore implements DataRecordsStore {
         return {
             success: true,
             items: records,
+            totalCount: count,
         };
     }
 

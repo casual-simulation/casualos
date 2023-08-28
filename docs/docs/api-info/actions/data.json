@@ -1,0 +1,4552 @@
+{
+    "hash": "actions/data",
+    "pageTitle": "Data Actions",
+    "pageDescription": "The Data Actions are used to get and set data on bots.",
+    "pageSidebarLabel": "Data",
+    "contents": [
+        {
+            "id": 83,
+            "order": 9999,
+            "name": "applyDiffToSnapshot",
+            "reflection": {
+                "id": 83,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Applies the given difference to the given snapshot and returns a new snapshot that represents the result.",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "applyDiffToSnapshot\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 84,
+                        "name": "snapshot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the snapshot that the delta should be applied to. This is also called the baseline snapshot.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2919,
+                            "name": "BotState"
+                        }
+                    },
+                    {
+                        "id": 85,
+                        "name": "diff",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the delta that should be applied to the snapshot. You can create a delta from two snapshots by using the [`diffSnapshots(first, second)`](ref:diffSnapshots) function.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2922,
+                            "name": "PartialBotState"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "id": 2919,
+                    "name": "BotState"
+                }
+            },
+            "comment": {
+                "shortText": "Applies the given difference to the given snapshot and returns a new snapshot that represents the result.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "applyDiffToSnapshot\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 177,
+            "order": 9999,
+            "name": "changeState",
+            "reflection": {
+                "id": 177,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Changes the state that the given bot occupies in the given group. If the state was changed, then the [`@[groupName][stateName]OnExit`](tags:@[groupName][stateName]OnExit) and [`@[groupName][stateName]OnEnter`](tags:@[groupName][stateName]OnExit) whispers are sent to the bot.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Change the #state of the bot to \"Running\"\n// Triggers @stateRunningOnEnter\nchangeState(bot, \"Running\");\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Change the #playbackState of the bot to \"Playing\"\n// Triggers @playbackStatePlayingOnEnter\nchangeState(bot, \"Playing\", \"playbackState\");\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "changeState\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 178,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the bot whose state should be changed.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2773,
+                            "name": "Bot"
+                        }
+                    },
+                    {
+                        "id": 179,
+                        "name": "stateName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the value that should be set on the bot.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 180,
+                        "name": "groupName",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the name of the tag that should be changed on the bot. If not specified, then the `#state` tag will be used.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "void"
+                }
+            },
+            "comment": {
+                "shortText": "Changes the state that the given bot occupies in the given group. If the state was changed, then the [`@[groupName][stateName]OnExit`](tags:@[groupName][stateName]OnExit) and [`@[groupName][stateName]OnEnter`](tags:@[groupName][stateName]OnExit) whispers are sent to the bot.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Change the #state of the bot to \"Running\"\n// Triggers @stateRunningOnEnter\nchangeState(bot, \"Running\");\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Change the #playbackState of the bot to \"Playing\"\n// Triggers @playbackStatePlayingOnEnter\nchangeState(bot, \"Playing\", \"playbackState\");\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "changeState\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 162,
+            "order": 9999,
+            "name": "create",
+            "reflection": {
+                "id": 162,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Creates a new bot or combination of bots with the given mods. Also triggers [`@onCreate`](tags:@onCreate) on all the created bots.\nBy default, bots are created with a unique [`#id`](tags:id), [`#creator`](tags:creator) set to the current `bot.id`, and [`#space`](tags:space) set to `shared`.\nBots must be created with at least one tag. If `create()` tries to make a bot with zero tags then an error will be thrown.",
+                    "text": "If [`#creator`](tags:creator) references a non-existent bot or a bot with a different [`#space`](tags:space) than the created bot, then [`#creator`](tags:creator) will be set to `null`.\n",
+                    "returns": "The bot(s) that were created.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Create a red bot\nlet redBot = create({\n    color: \"red\"\n});\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Create a parent and a child bot\nlet myParentBot = create({\n  creator: null,\n   label: \"Parent\"\n});\nlet myChildBot = create({\n   creator: getID(myParentBot),\n   label: \"Child\"\n});\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Create a red bot in the tempLocal  space\nlet myBot = create({ space: \"tempLocal\", color: \"red\" });\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Create a bot from multiple mods\n// myBot is placed in the \"myDimension\" dimension and is colored green\nlet myBot = create({ myDimension: true }, {\n    color: \"green\"\n});\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Create a red bot and a blue bot\nlet [myRedBot, myBlueBot] = create({ creator: null}, [\n    {\n       color: \"red\"\n    },\n    {\n      color: \"blue\"\n    }\n});\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "create\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 163,
+                        "name": "mods",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isRest": true
+                        },
+                        "comment": {
+                            "shortText": "the mods that should be applied to the new bot(s).\nIf no parameters are specified, then the new bot will have its [`#creator`](tags:creator) set to `bot.id` and [`#space`](tags:space) set to `shared`.\nIf an array of mods is used for a parameter, then one bot will be created for _each unique combination of mods_.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "reference",
+                                "id": 2159,
+                                "name": "Mod"
+                            }
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "union",
+                    "types": [
+                        {
+                            "type": "reference",
+                            "id": 2773,
+                            "name": "Bot"
+                        },
+                        {
+                            "type": "array",
+                            "elementType": {
+                                "type": "reference",
+                                "id": 2773,
+                                "name": "Bot"
+                            }
+                        }
+                    ]
+                }
+            },
+            "comment": {
+                "shortText": "Creates a new bot or combination of bots with the given mods. Also triggers [`@onCreate`](tags:@onCreate) on all the created bots.\nBy default, bots are created with a unique {@tag id}, {@tag creator} set to the current `bot.id`, and {@tag space} set to `shared`.\nBots must be created with at least one tag. If `create()` tries to make a bot with zero tags then an error will be thrown.",
+                "text": "If {@tag creator} references a non-existent bot or a bot with a different {@tag space} than the created bot, then {@tag creator} will be set to `null`.\n",
+                "returns": "The bot(s) that were created.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Create a red bot\nlet redBot = create({\n    color: \"red\"\n});\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Create a parent and a child bot\nlet myParentBot = create({\n  creator: null,\n   label: \"Parent\"\n});\nlet myChildBot = create({\n   creator: getID(myParentBot),\n   label: \"Child\"\n});\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Create a red bot in the tempLocal  space\nlet myBot = create({ space: \"tempLocal\", color: \"red\" });\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Create a bot from multiple mods\n// myBot is placed in the \"myDimension\" dimension and is colored green\nlet myBot = create({ myDimension: true }, {\n    color: \"green\"\n});\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Create a red bot and a blue bot\nlet [myRedBot, myBlueBot] = create({ creator: null}, [\n    {\n       color: \"red\"\n    },\n    {\n      color: \"blue\"\n    }\n});\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "create\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 166,
+            "order": 9999,
+            "name": "destroy",
+            "reflection": {
+                "id": 166,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Removes the given bot, list of bots, or bot by #id and triggers @onDestroy for each of the destroyed bots.",
+                    "text": "Note that only destroyable bots will be destroyed. Bots that have [`#destroyable`](tags:destroyable) set to `false` will not be destroyed.\n\nAlso note that all bots that have [`#creator`](tags:creator) set to the [`#id`](tags:id) of a destroyed bot will also be destroyed (unless they are not destroyable). This happens recursively until there are no more bots to destroy.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Destroy a the bot with the name \"bob\"\ndestroy(getBot(\"#name\", \"bob\"));\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Destroy all bots that are colored red\ndestroy(getBots(\"#color\", \"red\"));\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Destroy a bot by its ID\n// Destroy the bot with the #id: \"config\"\ndestroy(\"config\");\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "destroy\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 167,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The bot, bot ID, or list of bots to destroy.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "reference",
+                                    "id": 2773,
+                                    "name": "Bot"
+                                },
+                                {
+                                    "type": "array",
+                                    "elementType": {
+                                        "type": "intrinsic",
+                                        "name": "string"
+                                    }
+                                },
+                                {
+                                    "type": "array",
+                                    "elementType": {
+                                        "type": "reference",
+                                        "id": 2773,
+                                        "name": "Bot"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "void"
+                }
+            },
+            "comment": {
+                "shortText": "Removes the given bot, list of bots, or bot by #id and triggers @onDestroy for each of the destroyed bots.",
+                "text": "Note that only destroyable bots will be destroyed. Bots that have {@tag destroyable} set to `false` will not be destroyed.\n\nAlso note that all bots that have {@tag creator} set to the {@tag id} of a destroyed bot will also be destroyed (unless they are not destroyable). This happens recursively until there are no more bots to destroy.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Destroy a the bot with the name \"bob\"\ndestroy(getBot(\"#name\", \"bob\"));\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Destroy all bots that are colored red\ndestroy(getBots(\"#color\", \"red\"));\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Destroy a bot by its ID\n// Destroy the bot with the #id: \"config\"\ndestroy(\"config\");\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "destroy\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 78,
+            "order": 9999,
+            "name": "diffSnapshots",
+            "reflection": {
+                "id": 78,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Calculates the difference between the two given snapshots.\nThe returned value is such that if you were to apply the changes (using [`applyDiffToSnapshot(snapshot, diff)`](ref:applyDiffToSnapshot)) it represents to the first snapshot you would end up with the second snapshot.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Calculate the diff between two snapshots\nconst first = getSnapshot([thisBot]);\nthisBot.tags.color = 'red';\nconst second = getSnapshot([thisBot]);\nconst diff = diffSnapshots(first, second);\n\nconsole.log(diff);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "diffSnapshots\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 79,
+                        "name": "first",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the snapshot that should be used as the baseline for the diff.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2919,
+                            "name": "BotState"
+                        }
+                    },
+                    {
+                        "id": 80,
+                        "name": "second",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the snapshot that should be used as the target for the diff.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2919,
+                            "name": "BotState"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "id": 2922,
+                    "name": "PartialBotState"
+                }
+            },
+            "comment": {
+                "shortText": "Calculates the difference between the two given snapshots.\nThe returned value is such that if you were to apply the changes (using {@link applyDiffToSnapshot}) it represents to the first snapshot you would end up with the second snapshot.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Calculate the diff between two snapshots\nconst first = getSnapshot([thisBot]);\nthisBot.tags.color = 'red';\nconst second = getSnapshot([thisBot]);\nconst diff = diffSnapshots(first, second);\n\nconsole.log(diff);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "diffSnapshots\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 194,
+            "order": 9999,
+            "name": "getBotLinks",
+            "reflection": {
+                "id": 194,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets the list of bot links that are stored in tags on the specified bot.",
+                    "text": "This function can be useful if you want to discover what tags are linking to bots and get those bot IDs.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Get the list of bot links on this bot\nlet botLinks = getBotLinks(thisBot);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "getBotLinks\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 195,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The bot to get the links for.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2773,
+                            "name": "Bot"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "array",
+                    "elementType": {
+                        "type": "reference",
+                        "id": 2925,
+                        "name": "ParsedBotLink"
+                    }
+                }
+            },
+            "comment": {
+                "shortText": "Gets the list of bot links that are stored in tags on the specified bot.",
+                "text": "This function can be useful if you want to discover what tags are linking to bots and get those bot IDs.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Get the list of bot links on this bot\nlet botLinks = getBotLinks(thisBot);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "getBotLinks\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 52,
+            "order": 9999,
+            "name": "getBotPosition",
+            "reflection": {
+                "id": 52,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets the 3D position of the given bot in the given dimension.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Get the position of this bot in the #home dimension\nlet position = getBotPosition(thisBot, \"home\");\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "getBotPosition\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 53,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the bot or bot ID whose position should be retrieved.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "reference",
+                                    "id": 2773,
+                                    "name": "Bot"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 54,
+                        "name": "dimension",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the dimension that the position should be retrieved for.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "id": 3262,
+                    "name": "Vector3"
+                }
+            },
+            "comment": {
+                "shortText": "Gets the 3D position of the given bot in the given dimension.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Get the position of this bot in the #home dimension\nlet position = getBotPosition(thisBot, \"home\");\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "getBotPosition\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 57,
+            "order": 9999,
+            "name": "getBotRotation",
+            "reflection": {
+                "id": 57,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets the 3D rotation of the given bot in the given dimension.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Get the rotation of this bot in the #home dimension\nlet rotation = getBotRotation(thisBot, \"home\");\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "getBotRotation\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 58,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the bot or bot ID whose rotation should be retrieved.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "reference",
+                                    "id": 2773,
+                                    "name": "Bot"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 59,
+                        "name": "dimension",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the dimension that the rotation should be retrieved for.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "id": 3371,
+                    "name": "Rotation"
+                }
+            },
+            "comment": {
+                "shortText": "Gets the 3D rotation of the given bot in the given dimension.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Get the rotation of this bot in the #home dimension\nlet rotation = getBotRotation(thisBot, \"home\");\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "getBotRotation\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 42,
+            "order": 9999,
+            "name": "getBotTagValues",
+            "reflection": {
+                "id": 42,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets a list of all the values in the inst for the given tag. Optionally accepts a filter for the tag values.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Find the number of bots named bob and print it\nconst numberOfBobs = getBotTagValues(\"#name\", \"bob\").length;\nos.toast(numberOfBobs);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Find all the bot ages above 10\nconst agesOver10 = getBotTagValues(\"#age\", age => age > 10);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "getBotTagValues"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 43,
+                        "name": "tag",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the name of the tag to search for.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 44,
+                        "name": "filter",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the filter that the tag values should match. If not specified, then all the tag values are included. If it is a function, then it will be used to match values. Otherwise, only tags that match the value will be included.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2160,
+                            "name": "TagFilter"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "array",
+                    "elementType": {
+                        "type": "intrinsic",
+                        "name": "any"
+                    }
+                }
+            },
+            "comment": {
+                "shortText": "Gets a list of all the values in the inst for the given tag. Optionally accepts a filter for the tag values.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Find the number of bots named bob and print it\nconst numberOfBobs = getBotTagValues(\"#name\", \"bob\").length;\nos.toast(numberOfBobs);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Find all the bot ages above 10\nconst agesOver10 = getBotTagValues(\"#age\", age => age > 10);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "getBotTagValues"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 70,
+            "order": 9999,
+            "name": "getFormattedJSON",
+            "reflection": {
+                "id": 70,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets the [JSON](https://en.wikipedia.org/wiki/JSON) representation of the given data formatted in a human-readable manner.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Sort a nicely formatted copy of a bot in a tag\nlet bob = getBot(\"#name\", \"bob\");\ntags.savedBot = getFormattedJSON(bob);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "getFormattedJSON\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 71,
+                        "name": "data",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the data that should be [cloned](https://en.wikipedia.org/wiki/Serialization) into the JSON format. If given a bot, then the returned JSON will be able to be able to be converted back into a mod via [`getMod(bot, ...tags)`](ref:getMod).\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "Gets the [JSON](https://en.wikipedia.org/wiki/JSON) representation of the given data formatted in a human-readable manner.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Sort a nicely formatted copy of a bot in a tag\nlet bob = getBot(\"#name\", \"bob\");\ntags.savedBot = getFormattedJSON(bob);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "getFormattedJSON\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 62,
+            "order": 9999,
+            "name": "getID",
+            "reflection": {
+                "id": 62,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets the [`#id`](tags:id) of the given bot.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Get the ID of the current bot\nlet id = getID(thisBot);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Get the ID of a bot with #name set to \"bob\"\nlet id = getID(getBot(\"#name\", \"bob\"));\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "getID\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 63,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the bot whose ID should be retrieved. If given a bot ID, then it will be returned. If given null or something that is not a bot, then null will be returned.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "reference",
+                                    "id": 2773,
+                                    "name": "Bot"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "Gets the {@tag id} of the given bot.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Get the ID of the current bot\nlet id = getID(thisBot);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Get the ID of a bot with #name set to \"bob\"\nlet id = getID(getBot(\"#name\", \"bob\"));\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "getID\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 66,
+            "order": 9999,
+            "name": "getJSON",
+            "reflection": {
+                "id": 66,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets the [JSON](https://en.wikipedia.org/wiki/JSON) representation of the given data.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Store a copy of a bot in a tag\nlet bob = getBot(\"#name\", \"bob\");\ntags.savedBot = getJSON(bob);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "getJSON\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 67,
+                        "name": "data",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the data that should be [cloned](https://en.wikipedia.org/wiki/Serialization) into the JSON format. If given a bot, then the returned JSON will be able to be able to be converted back into a mod via [`getMod(bot, ...tags)`](ref:getMod).\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "Gets the [JSON](https://en.wikipedia.org/wiki/JSON) representation of the given data.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Store a copy of a bot in a tag\nlet bob = getBot(\"#name\", \"bob\");\ntags.savedBot = getJSON(bob);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "getJSON\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 190,
+            "order": 9999,
+            "name": "getLink",
+            "reflection": {
+                "id": 190,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Creates and returns a bot link that references the given bots. The link can then be stored in a tag to save it. Useful for creating bot links for an arbitrary number of bots.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Create a link to this bot\nlet link = getLink(thisBot);\n"
+                        },
+                        {
+                            "tag": "examples",
+                            "paramName": "",
+                            "text": "Toast a link to this bot\ntoast(getLink(thisBot));\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "getLink\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 191,
+                        "name": "bots",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isRest": true
+                        },
+                        "comment": {
+                            "shortText": "The bots that the link should point to.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "union",
+                                "types": [
+                                    {
+                                        "type": "intrinsic",
+                                        "name": "string"
+                                    },
+                                    {
+                                        "type": "reference",
+                                        "id": 2773,
+                                        "name": "Bot"
+                                    },
+                                    {
+                                        "type": "array",
+                                        "elementType": {
+                                            "type": "union",
+                                            "types": [
+                                                {
+                                                    "type": "intrinsic",
+                                                    "name": "string"
+                                                },
+                                                {
+                                                    "type": "reference",
+                                                    "id": 2773,
+                                                    "name": "Bot"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "Creates and returns a bot link that references the given bots. The link can then be stored in a tag to save it. Useful for creating bot links for an arbitrary number of bots.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Create a link to this bot\nlet link = getLink(thisBot);\n"
+                    },
+                    {
+                        "tagName": "examples",
+                        "paramName": "",
+                        "text": "Toast a link to this bot\ntoast(getLink(thisBot));\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "getLink\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 74,
+            "order": 9999,
+            "name": "getSnapshot",
+            "reflection": {
+                "id": 74,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets a snapshot of the given bots. Snapshots are like mods (see [`getMod(bot, ...tags)`](ref:getMod)) except they contain multiple bots and include the ID, space, tags, and tag masks of the bots.",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "getSnapshot\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 75,
+                        "name": "bots",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the bot or list of bots that a snapshot should be created out of.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "reference",
+                                    "id": 2773,
+                                    "name": "Bot"
+                                },
+                                {
+                                    "type": "array",
+                                    "elementType": {
+                                        "type": "reference",
+                                        "id": 2773,
+                                        "name": "Bot"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "id": 2919,
+                    "name": "BotState"
+                }
+            },
+            "comment": {
+                "shortText": "Gets a snapshot of the given bots. Snapshots are like mods (see {@link getMod}) except they contain multiple bots and include the ID, space, tags, and tag masks of the bots.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "getSnapshot\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 26,
+            "order": 9999,
+            "name": "getbot-filters",
+            "reflection": {
+                "id": 26,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Get the first bot that matches all of the given filter(s).\nIf multiple bots match the given filter(s), then bots are sorted alphabetically by the [#id](tags:id) tag and the first one is returned.\nIf no bots match the given filter(s), then `undefined` is returned.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Find a bot with the #test tag\nlet foundBot = getBot(byTag(\"#test\"));\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Find a bot with #name set to \"bob\" and in the #people dimension\nlet foundBot = getBot(byTag(\"#name\", \"bob\"), inDimension(\"people\"));\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docid",
+                            "paramName": "",
+                            "text": "getbot-filters"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "getBot\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 27,
+                        "name": "filters",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isRest": true
+                        },
+                        "comment": {
+                            "shortText": "If no filters are specified, then all bots in the inst are returned. If multiple filters are specified, then only the bots that match all of the filters are returned.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "reflection",
+                                "declaration": {
+                                    "id": 28,
+                                    "name": "__type",
+                                    "kind": 65536,
+                                    "kindString": "Type literal",
+                                    "flags": {},
+                                    "signatures": [
+                                        {
+                                            "id": 29,
+                                            "name": "__type",
+                                            "kind": 4096,
+                                            "kindString": "Call signature",
+                                            "flags": {},
+                                            "parameters": [
+                                                {
+                                                    "id": 30,
+                                                    "name": "bot",
+                                                    "kind": 32768,
+                                                    "kindString": "Parameter",
+                                                    "flags": {},
+                                                    "type": {
+                                                        "type": "reference",
+                                                        "id": 2773,
+                                                        "name": "Bot"
+                                                    }
+                                                }
+                                            ],
+                                            "type": {
+                                                "type": "intrinsic",
+                                                "name": "boolean"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "id": 2773,
+                    "name": "Bot"
+                }
+            },
+            "comment": {
+                "shortText": "Get the first bot that matches all of the given filter(s).\nIf multiple bots match the given filter(s), then bots are sorted alphabetically by the [#id](tags:id) tag and the first one is returned.\nIf no bots match the given filter(s), then `undefined` is returned.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Find a bot with the #test tag\nlet foundBot = getBot(byTag(\"#test\"));\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Find a bot with #name set to \"bob\" and in the #people dimension\nlet foundBot = getBot(byTag(\"#name\", \"bob\"), inDimension(\"people\"));\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docid",
+                        "paramName": "",
+                        "text": "getbot-filters"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "getBot\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 33,
+            "order": 9999,
+            "name": "getbot-tag",
+            "reflection": {
+                "id": 33,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets the first bot that matches the given tag and value.\nIf multiple bots match the given tag and value, then bots are sorted alphabetically by the [#id](tags:id) tag and the first one is returned.\nIf no bots match the given tag and value, then `undefined` is returned.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Find the first bot with #name set to \"bob\"\nlet foundBot = getBot(\"#name\", \"bob\");\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Find the first bot with a #height larger than 2\nlet foundBot = getBot(\"#height\", height => height > 2);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Find the first bot with the #test tag\nlet foundBot = getBot(\"#test\");\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docid",
+                            "paramName": "",
+                            "text": "getbot-tag"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "getBot\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 34,
+                        "name": "tag",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the name of the tag to search for.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 35,
+                        "name": "value",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the value the tag should match. If not specified, then the first bot with the tag will be returned. If specified, then the first bot that has the same tag and value will be returned. If you specify a function as the value, then it will be used to match tag values.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "reference",
+                    "id": 2773,
+                    "name": "Bot"
+                }
+            },
+            "comment": {
+                "shortText": "Gets the first bot that matches the given tag and value.\nIf multiple bots match the given tag and value, then bots are sorted alphabetically by the [#id](tags:id) tag and the first one is returned.\nIf no bots match the given tag and value, then `undefined` is returned.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Find the first bot with #name set to \"bob\"\nlet foundBot = getBot(\"#name\", \"bob\");\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Find the first bot with a #height larger than 2\nlet foundBot = getBot(\"#height\", height => height > 2);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Find the first bot with the #test tag\nlet foundBot = getBot(\"#test\");\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docid",
+                        "paramName": "",
+                        "text": "getbot-tag"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "getBot\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 10,
+            "order": 9999,
+            "name": "getbots-filters",
+            "reflection": {
+                "id": 10,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets an array of bots that match all of the given filter(s). The returned array is sorted alphabetically by the [`#id`](tags:id) tag.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Gets all the bots in the inst.\nlet bots = getBots();\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Find all bots with the \"test\" tag\nlet bots = getBots(byTag(\"#test\"));\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Find all bots with #name set to \"bob\" and in the #people dimension\nlet bots = getBots(byTag(\"#name\", \"bob\"), inDimension(\"people\"));\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "getBots"
+                        },
+                        {
+                            "tag": "docid",
+                            "paramName": "",
+                            "text": "getbots-filters\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 11,
+                        "name": "filters",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isRest": true
+                        },
+                        "comment": {
+                            "shortText": "If no filters are specified, then all bots in the inst are returned. If multiple filters are specified, then only the bots that match all of the filters are returned.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "reflection",
+                                "declaration": {
+                                    "id": 12,
+                                    "name": "__type",
+                                    "kind": 65536,
+                                    "kindString": "Type literal",
+                                    "flags": {},
+                                    "signatures": [
+                                        {
+                                            "id": 13,
+                                            "name": "__type",
+                                            "kind": 4096,
+                                            "kindString": "Call signature",
+                                            "flags": {},
+                                            "parameters": [
+                                                {
+                                                    "id": 14,
+                                                    "name": "bot",
+                                                    "kind": 32768,
+                                                    "kindString": "Parameter",
+                                                    "flags": {},
+                                                    "type": {
+                                                        "type": "reference",
+                                                        "id": 2773,
+                                                        "name": "Bot"
+                                                    }
+                                                }
+                                            ],
+                                            "type": {
+                                                "type": "intrinsic",
+                                                "name": "boolean"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "array",
+                    "elementType": {
+                        "type": "reference",
+                        "id": 2773,
+                        "name": "Bot"
+                    }
+                }
+            },
+            "comment": {
+                "shortText": "Gets an array of bots that match all of the given filter(s). The returned array is sorted alphabetically by the {@tag id} tag.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Gets all the bots in the inst.\nlet bots = getBots();\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Find all bots with the \"test\" tag\nlet bots = getBots(byTag(\"#test\"));\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Find all bots with #name set to \"bob\" and in the #people dimension\nlet bots = getBots(byTag(\"#name\", \"bob\"), inDimension(\"people\"));\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "getBots"
+                    },
+                    {
+                        "tagName": "docid",
+                        "paramName": "",
+                        "text": "getbots-filters\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 17,
+            "order": 9999,
+            "name": "getbots-tag",
+            "reflection": {
+                "id": 17,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets an array of bots that match the given tag and value. The returned array is sorted alphabetically by the [`#id`](tags:id) tag.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Find all the bots with #name set to \"bob\"\nlet bots = getBots(\"#name\", \"bob\");\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Find all bots with a #height larger than 2\nlet bots = getBots(\"#height\", height => height > 2);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Find all bots with the #test tag\nlet bots = getBots(\"#test\");\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "doctitle",
+                            "paramName": "",
+                            "text": "Data Actions"
+                        },
+                        {
+                            "tag": "docsidebar",
+                            "paramName": "",
+                            "text": "Data"
+                        },
+                        {
+                            "tag": "docdescription",
+                            "paramName": "",
+                            "text": "The Data Actions are used to get and set data on bots."
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docgrouptitle",
+                            "paramName": "",
+                            "text": "Data Actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "getBots"
+                        },
+                        {
+                            "tag": "docid",
+                            "paramName": "",
+                            "text": "getbots-tag\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 18,
+                        "name": "tag",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the name of the tag. Bots that have this tag will be included as long as they also match the second parameter.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 19,
+                        "name": "value",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the value the tag should match. If not specified, then all bots with the tag will be included. If specified, then only bots that have the same tag and value will be included. If you specify a function as the value, then it will be used to match tag values.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "array",
+                    "elementType": {
+                        "type": "reference",
+                        "id": 2773,
+                        "name": "Bot"
+                    }
+                }
+            },
+            "comment": {
+                "shortText": "Gets an array of bots that match the given tag and value. The returned array is sorted alphabetically by the {@tag id} tag.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Find all the bots with #name set to \"bob\"\nlet bots = getBots(\"#name\", \"bob\");\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Find all bots with a #height larger than 2\nlet bots = getBots(\"#height\", height => height > 2);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Find all bots with the #test tag\nlet bots = getBots(\"#test\");\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "doctitle",
+                        "paramName": "",
+                        "text": "Data Actions"
+                    },
+                    {
+                        "tagName": "docsidebar",
+                        "paramName": "",
+                        "text": "Data"
+                    },
+                    {
+                        "tagName": "docdescription",
+                        "paramName": "",
+                        "text": "The Data Actions are used to get and set data on bots."
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docgrouptitle",
+                        "paramName": "",
+                        "text": "Data Actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "getBots"
+                    },
+                    {
+                        "tagName": "docid",
+                        "paramName": "",
+                        "text": "getbots-tag\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 141,
+            "order": 9999,
+            "name": "removeTags",
+            "reflection": {
+                "id": 141,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Removes all the tags from the given bot that match the given tag section.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Remove tags named starting with \"abc\" from this bot.\nremoveTags(thisBot, \"abc\");\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Remove tags named \"hello\" using a case-insensitive regex from this bot.\nremoveTags(thisBot, /^hello$/gi);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "removeTags\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 142,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the bot or list of bots that should have the tags removed.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "reference",
+                                    "id": 2773,
+                                    "name": "Bot"
+                                },
+                                {
+                                    "type": "array",
+                                    "elementType": {
+                                        "type": "reference",
+                                        "id": 2773,
+                                        "name": "Bot"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 143,
+                        "name": "tagSection",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the string or regex that specifies which tags to remove. If given a string, then all the tags that start with the given string will be removed. If given a regex, then all the tags which match the regex will be removed.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "intrinsic",
+                                    "name": "string"
+                                },
+                                {
+                                    "type": "reference",
+                                    "qualifiedName": "RegExp",
+                                    "package": "typescript",
+                                    "name": "RegExp"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "void"
+                }
+            },
+            "comment": {
+                "shortText": "Removes all the tags from the given bot that match the given tag section.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Remove tags named starting with \"abc\" from this bot.\nremoveTags(thisBot, \"abc\");\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Remove tags named \"hello\" using a case-insensitive regex from this bot.\nremoveTags(thisBot, /^hello$/gi);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "removeTags\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 146,
+            "order": 9999,
+            "name": "renameTag",
+            "reflection": {
+                "id": 146,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Renames the given original tag on the given bot or list of bots to the given new tag. If the original tag does not exist on the bot, then no changes will take place. If the new tag already exists on the bot, then it will be overwritten with the contents of the original tag.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Rename the \"auxColor\" tag to \"color\"\nrenameTag(thisBot, \"auxColor\", \"color\");\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "renameTag\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 147,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the bot or list of bots that should have the tag renamed.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "reference",
+                                    "id": 2773,
+                                    "name": "Bot"
+                                },
+                                {
+                                    "type": "array",
+                                    "elementType": {
+                                        "type": "reference",
+                                        "id": 2773,
+                                        "name": "Bot"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 148,
+                        "name": "originalTag",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the name of the tag that should be renamed.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 149,
+                        "name": "newTag",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the new name that the tag should have.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "void"
+                }
+            },
+            "comment": {
+                "shortText": "Renames the given original tag on the given bot or list of bots to the given new tag. If the original tag does not exist on the bot, then no changes will take place. If the new tag already exists on the bot, then it will be overwritten with the contents of the original tag.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Rename the \"auxColor\" tag to \"color\"\nrenameTag(thisBot, \"auxColor\", \"color\");\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "renameTag\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 198,
+            "order": 9999,
+            "name": "updateBotLinks",
+            "reflection": {
+                "id": 198,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Updates the links in the given bot to point to the new Bot IDs specified in the given ID map.",
+                    "text": "This function is useful if you know that the links in the given bot are outdated and you know which IDs map to the new IDs.\n\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Change all references to \"botA\" to \"botB\" on this bot\nupdateBotLinks(thisBot, {\n   \"botA\": \"botB\"\n});\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "updateBotLinks\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 199,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The bot whose links should be updated.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2773,
+                            "name": "Bot"
+                        }
+                    },
+                    {
+                        "id": 200,
+                        "name": "idMap",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the map of old bot IDs to the new IDs that should replace them. Each property should be an old ID and each value should be a new ID.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "object"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "void"
+                }
+            },
+            "comment": {
+                "shortText": "Updates the links in the given bot to point to the new Bot IDs specified in the given ID map.",
+                "text": "This function is useful if you know that the links in the given bot are outdated and you know which IDs map to the new IDs.\n\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Change all references to \"botA\" to \"botB\" on this bot\nupdateBotLinks(thisBot, {\n   \"botA\": \"botB\"\n});\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "updateBotLinks\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 355,
+            "order": 9999,
+            "name": "uuid",
+            "reflection": {
+                "id": 355,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Creates a [Universally Unique IDentifier (UUID)](https://en.wikipedia.org/wiki/Universally_unique_identifier).\nUseful for generating a random identifier that is guaranteed to be unique",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Generate a new UUID and toast it\nconst id = uuid();\nos.toast(id);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "01-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "uuid\n"
+                        }
+                    ]
+                },
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "Creates a [Universally Unique IDentifier (UUID)](https://en.wikipedia.org/wiki/Universally_unique_identifier).\nUseful for generating a random identifier that is guaranteed to be unique",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Generate a new UUID and toast it\nconst id = uuid();\nos.toast(id);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "01-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "uuid\n"
+                    }
+                ]
+            },
+            "group": "01-data-actions"
+        },
+        {
+            "id": 106,
+            "order": 9999,
+            "name": "clearTagMasks",
+            "reflection": {
+                "id": 106,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Clears the tag masks on the given bot or list of bots. If a space is specified, then only the tag masks in that space will be deleted.",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "02-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "clearTagMasks\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 107,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the bot or list of bots that the tag mask should be set on.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "reference",
+                                    "id": 2773,
+                                    "name": "Bot"
+                                },
+                                {
+                                    "type": "array",
+                                    "elementType": {
+                                        "type": "reference",
+                                        "id": 2773,
+                                        "name": "Bot"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 108,
+                        "name": "space",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the space that the tag mask should exist in. If omitted, then the tag masks in all spaces will be deleted.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "void"
+                }
+            },
+            "comment": {
+                "shortText": "Clears the tag masks on the given bot or list of bots. If a space is specified, then only the tag masks in that space will be deleted.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "02-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "clearTagMasks\n"
+                    }
+                ]
+            },
+            "group": "02-data-actions"
+        },
+        {
+            "id": 133,
+            "order": 9999,
+            "name": "deleteTagMaskText",
+            "reflection": {
+                "id": 133,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Deletes the specified number of characters from the given tag mask at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\nIf a space is specified, then only the tag mask in that space will be changed.",
+                    "text": "Returns the resulting raw tag value.\n",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Delete the last two characters from a tag mask.\ndeleteTagMaskText(bot, \"myTag\", tags.myTag.length - 2, 2);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Delete the first 3 characters from a tag mask in the local space.\ndeleteTagMaskText(bot, \"myTag\", 0, 3, \"local\");\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "02-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "deleteTagMaskText\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 134,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The bot that should be edited.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2773,
+                            "name": "Bot"
+                        }
+                    },
+                    {
+                        "id": 135,
+                        "name": "tag",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The tag that should be edited.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 136,
+                        "name": "index",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the zero-based index that the text should start to be deleted at.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    },
+                    {
+                        "id": 137,
+                        "name": "count",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the number of characters that should be deleted.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    },
+                    {
+                        "id": 138,
+                        "name": "space",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the space that the tag mask is in. If omitted, then the `tempLocal` space will be used.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "Deletes the specified number of characters from the given tag mask at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\nIf a space is specified, then only the tag mask in that space will be changed.",
+                "text": "Returns the resulting raw tag value.\n",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Delete the last two characters from a tag mask.\ndeleteTagMaskText(bot, \"myTag\", tags.myTag.length - 2, 2);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Delete the first 3 characters from a tag mask in the local space.\ndeleteTagMaskText(bot, \"myTag\", 0, 3, \"local\");\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "02-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "deleteTagMaskText\n"
+                    }
+                ]
+            },
+            "group": "02-data-actions"
+        },
+        {
+            "id": 126,
+            "order": 9999,
+            "name": "deleteTagText",
+            "reflection": {
+                "id": 126,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Deletes the specified number of characters from the given tag at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\nReturns the resulting raw tag value.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Delete the last two characters from a tag.\ndeleteTagText(bot, \"myTag\", tags.myTag.length - 2, 2);\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Delete the first 3 characters from a tag.\ndeleteTagText(bot, \"myTag\", 0, 3);\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "02-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "deleteTagText\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 127,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The bot that should be edited.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2773,
+                            "name": "Bot"
+                        }
+                    },
+                    {
+                        "id": 128,
+                        "name": "tag",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The tag that should be edited.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 129,
+                        "name": "index",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the zero-based index that the text should start to be deleted at.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    },
+                    {
+                        "id": 130,
+                        "name": "count",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the number of characters that should be deleted.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "Deletes the specified number of characters from the given tag at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\nReturns the resulting raw tag value.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Delete the last two characters from a tag.\ndeleteTagText(bot, \"myTag\", tags.myTag.length - 2, 2);\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Delete the first 3 characters from a tag.\ndeleteTagText(bot, \"myTag\", 0, 3);\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "02-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "deleteTagText\n"
+                    }
+                ]
+            },
+            "group": "02-data-actions"
+        },
+        {
+            "id": 88,
+            "order": 9999,
+            "name": "getTag",
+            "reflection": {
+                "id": 88,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Gets the given tag value from the given bot.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Get the \"color\" tag from this bot.\nlet color = getTag(thisBot, \"color\");\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "02-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "getTag\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 89,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the bot that the tag should be retrieved from.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2773,
+                            "name": "Bot"
+                        }
+                    },
+                    {
+                        "id": 90,
+                        "name": "tags",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isRest": true
+                        },
+                        "type": {
+                            "type": "array",
+                            "elementType": {
+                                "type": "intrinsic",
+                                "name": "string"
+                            }
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "any"
+                }
+            },
+            "comment": {
+                "shortText": "Gets the given tag value from the given bot.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Get the \"color\" tag from this bot.\nlet color = getTag(thisBot, \"color\");\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "02-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "getTag\n"
+                    }
+                ]
+            },
+            "group": "02-data-actions"
+        },
+        {
+            "id": 118,
+            "order": 9999,
+            "name": "insertTagMaskText",
+            "reflection": {
+                "id": 118,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Inserts the given text into the tag mask at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\nIf a space is specified, then only the tag mask in that space will be changed.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Add some text to the end of a tag mask.\ninsertTagMaskText(thisBot, \"myTag\", tags.myTag.length, \"xyz\");\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Add some text to the beginning of a tag mask that is in the local space.\ninsertTagMaskText(thisBot, \"myTag\", 0, \"abc\", \"local\");\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "02-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "insertTagMaskText\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 119,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The bot that should be edited.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2773,
+                            "name": "Bot"
+                        }
+                    },
+                    {
+                        "id": 120,
+                        "name": "tag",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The tag that should be edited.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 121,
+                        "name": "index",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the zero-based index that the text should be inserted at.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    },
+                    {
+                        "id": 122,
+                        "name": "text",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the string of text that should be inserted.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 123,
+                        "name": "space",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the space that the tag mask is in. If omitted, then the tempLocal space will be used.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2896,
+                            "name": "Space"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "Inserts the given text into the tag mask at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\nIf a space is specified, then only the tag mask in that space will be changed.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Add some text to the end of a tag mask.\ninsertTagMaskText(thisBot, \"myTag\", tags.myTag.length, \"xyz\");\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Add some text to the beginning of a tag mask that is in the local space.\ninsertTagMaskText(thisBot, \"myTag\", 0, \"abc\", \"local\");\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "02-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "insertTagMaskText\n"
+                    }
+                ]
+            },
+            "group": "02-data-actions"
+        },
+        {
+            "id": 111,
+            "order": 9999,
+            "name": "insertTagText",
+            "reflection": {
+                "id": 111,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Inserts the given text into the tag at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\nReturns the resulting raw tag value.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Add some text to the end of a tag.\ninsertTagText(thisBot, \"myTag\", tags.myTag.length, \"xyz\");\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Add some text to the beginning of a tag.\ninsertTagText(thisBot, \"myTag\", 0, \"abc\");\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "02-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "insertTagText\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 112,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the bot that should be edited.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "reference",
+                            "id": 2773,
+                            "name": "Bot"
+                        }
+                    },
+                    {
+                        "id": 113,
+                        "name": "tag",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "The tag that should be edited.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 114,
+                        "name": "index",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the zero-based index that the text should be inserted at.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "number"
+                        }
+                    },
+                    {
+                        "id": 115,
+                        "name": "text",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the string of text that should be inserted.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "string"
+                }
+            },
+            "comment": {
+                "shortText": "Inserts the given text into the tag at the given index. Useful for editing the text in a tag without interrupting other players that are editing the same tag.\nReturns the resulting raw tag value.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Add some text to the end of a tag.\ninsertTagText(thisBot, \"myTag\", tags.myTag.length, \"xyz\");\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Add some text to the beginning of a tag.\ninsertTagText(thisBot, \"myTag\", 0, \"abc\");\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "02-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "insertTagText\n"
+                    }
+                ]
+            },
+            "group": "02-data-actions"
+        },
+        {
+            "id": 93,
+            "order": 9999,
+            "name": "setTag",
+            "reflection": {
+                "id": 93,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Sets the given tag to the given value on the given bot, list of bots, or mod.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Set a bot's color to \"green\".\nsetTag(this, \"color\", \"green\");\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "02-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "setTag\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 94,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the bot, list of bots, or mod that the tag should be set on.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "reference",
+                                    "id": 2773,
+                                    "name": "Bot"
+                                },
+                                {
+                                    "type": "reference",
+                                    "id": 2821,
+                                    "name": "Tags"
+                                },
+                                {
+                                    "type": "array",
+                                    "elementType": {
+                                        "type": "reference",
+                                        "id": 2773,
+                                        "name": "Bot"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 95,
+                        "name": "tag",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the tag that should be changed.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 96,
+                        "name": "value",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the value that should be placed into the tag(s).\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "any"
+                }
+            },
+            "comment": {
+                "shortText": "Sets the given tag to the given value on the given bot, list of bots, or mod.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Set a bot's color to \"green\".\nsetTag(this, \"color\", \"green\");\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "02-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "setTag\n"
+                    }
+                ]
+            },
+            "group": "02-data-actions"
+        },
+        {
+            "id": 99,
+            "order": 9999,
+            "name": "setTagMask",
+            "reflection": {
+                "id": 99,
+                "name": "__type",
+                "kind": 4096,
+                "kindString": "Call signature",
+                "flags": {},
+                "comment": {
+                    "shortText": "Sets the given tag mask to the given value on the given bot or list of bots. If a space is specified, then the tag mask will be set inside that space.",
+                    "tags": [
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Set a bot's color to \"green\".\nsetTagMask(this, \"color\", \"green\")\n"
+                        },
+                        {
+                            "tag": "example",
+                            "paramName": "",
+                            "text": "Set a bot's #color to green in the local space.\nsetTagMask(this, \"#color\", \"green\", \"local\");\n"
+                        },
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "actions/data"
+                        },
+                        {
+                            "tag": "docgroup",
+                            "paramName": "",
+                            "text": "02-data-actions"
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "setTagMask\n"
+                        }
+                    ]
+                },
+                "parameters": [
+                    {
+                        "id": 100,
+                        "name": "bot",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the bot or list of bots that the tag mask should be set on.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "union",
+                            "types": [
+                                {
+                                    "type": "reference",
+                                    "id": 2773,
+                                    "name": "Bot"
+                                },
+                                {
+                                    "type": "array",
+                                    "elementType": {
+                                        "type": "reference",
+                                        "id": 2773,
+                                        "name": "Bot"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": 101,
+                        "name": "tag",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the tag that should be changed.",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    },
+                    {
+                        "id": 102,
+                        "name": "value",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {},
+                        "comment": {
+                            "shortText": "the value that should be placed into the tag(s).",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "any"
+                        }
+                    },
+                    {
+                        "id": 103,
+                        "name": "space",
+                        "kind": 32768,
+                        "kindString": "Parameter",
+                        "flags": {
+                            "isOptional": true
+                        },
+                        "comment": {
+                            "shortText": "the space that the tag mask should exist in. If omitted, then the tag mask will be created in the `tempLocal` space.\n",
+                            "tags": []
+                        },
+                        "type": {
+                            "type": "intrinsic",
+                            "name": "string"
+                        }
+                    }
+                ],
+                "type": {
+                    "type": "intrinsic",
+                    "name": "any"
+                }
+            },
+            "comment": {
+                "shortText": "Sets the given tag mask to the given value on the given bot or list of bots. If a space is specified, then the tag mask will be set inside that space.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Set a bot's color to \"green\".\nsetTagMask(this, \"color\", \"green\")\n"
+                    },
+                    {
+                        "tagName": "example",
+                        "paramName": "",
+                        "text": "Set a bot's #color to green in the local space.\nsetTagMask(this, \"#color\", \"green\", \"local\");\n"
+                    },
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "actions/data"
+                    },
+                    {
+                        "tagName": "docgroup",
+                        "paramName": "",
+                        "text": "02-data-actions"
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "setTagMask\n"
+                    }
+                ]
+            },
+            "group": "02-data-actions"
+        }
+    ],
+    "references": {
+        "CasualOSError": "types/error",
+        "id-2949": "CasualOSError",
+        "Quaternion": "types/math/rotations",
+        "id-3339": "Quaternion",
+        "Rotation": "types/math/rotations",
+        "id-3371": "Rotation",
+        "Vector2": "types/math/vectors",
+        "id-3205": "Vector2",
+        "Vector3": "types/math/vectors",
+        "id-3262": "Vector3",
+        "AIChatMessage": "types/ai",
+        "id-2968": "AIChatMessage",
+        "AIChatOptions": "types/ai",
+        "id-2746": "AIChatOptions",
+        "AIGenerateImageSuccess": "types/ai",
+        "id-2551": "AIGenerateImageSuccess",
+        "AIGenerateImageOptions": "types/ai",
+        "id-2760": "AIGenerateImageOptions",
+        "AIGenerateSkyboxOptions": "types/ai",
+        "id-2756": "AIGenerateSkyboxOptions",
+        "AIGenerateSkyboxRequest": "types/ai",
+        "id-2544": "AIGenerateSkyboxRequest",
+        "AIGenerateSkyboxResult": "types/ai",
+        "id-2548": "AIGenerateSkyboxResult",
+        "AIGeneratedImage": "types/ai",
+        "id-2554": "AIGeneratedImage",
+        "AddCountFailure": "types/records/events",
+        "id-3152": "AddCountFailure",
+        "AddCountSuccess": "types/records/events",
+        "id-3147": "AddCountSuccess",
+        "AnimateTagOptions": "types/animation",
+        "id-2149": "AnimateTagOptions",
+        "AttachDebuggerOptions": "types/debuggers/common",
+        "id-2524": "AttachDebuggerOptions",
+        "CasualOSDevice": "types/os",
+        "id-2937": "CasualOSDevice",
+        "CasualOSVersion": "types/os",
+        "id-2929": "CasualOSVersion",
+        "AxisAndAngle": "types/math/rotations",
+        "id-3417": "AxisAndAngle",
+        "BotTagMasks": "types/core",
+        "id-2906": "BotTagMasks",
+        "BotTags": "types/core",
+        "id-2821": "BotTags",
+        "BotState": "types/core",
+        "id-2919": "BotState",
+        "CompiledBotListeners": "types/core",
+        "id-2900": "CompiledBotListeners",
+        "ConvertGeolocationToWhat3WordsOptions": "types/os",
+        "id-2581": "ConvertGeolocationToWhat3WordsOptions",
+        "CreatePublicRecordKeyFailure": "types/records/key",
+        "id-2979": "CreatePublicRecordKeyFailure",
+        "CreatePublicRecordKeySuccess": "types/records/key",
+        "id-2975": "CreatePublicRecordKeySuccess",
+        "DebuggerCallFrame": "types/debuggers/common",
+        "id-2477": "DebuggerCallFrame",
+        "DebuggerFunctionLocation": "types/debuggers/common",
+        "id-2512": "DebuggerFunctionLocation",
+        "DebuggerPause": "types/debuggers/common",
+        "id-2506": "DebuggerPause",
+        "DebuggerTagMaskUpdate": "types/debuggers/common",
+        "id-2485": "DebuggerTagMaskUpdate",
+        "DebuggerTagUpdate": "types/debuggers/common",
+        "id-2491": "DebuggerTagUpdate",
+        "DebuggerVariable": "types/debuggers/common",
+        "id-2518": "DebuggerVariable",
+        "Easing": "types/animation",
+        "id-2561": "Easing",
+        "EnableXROptions": "types/os",
+        "id-2655": "EnableXROptions",
+        "EraseDataFailure": "types/records/data",
+        "id-3123": "EraseDataFailure",
+        "EraseDataSuccess": "types/records/data",
+        "id-3119": "EraseDataSuccess",
+        "EraseFileFailure": "types/records/files",
+        "id-3142": "EraseFileFailure",
+        "EraseFileSuccess": "types/records/files",
+        "id-3138": "EraseFileSuccess",
+        "EulerAnglesRotation": "types/math/rotations",
+        "id-3420": "EulerAnglesRotation",
+        "FocusOnOptions": "types/os",
+        "id-2615": "FocusOnOptions",
+        "FocusOnRotation": "types/os",
+        "id-2627": "FocusOnRotation",
+        "FormAnimationData": "types/os",
+        "id-2673": "FormAnimationData",
+        "FromToRotation": "types/math/rotations",
+        "id-3414": "FromToRotation",
+        "GenericError": "types/error",
+        "id-2946": "GenericError",
+        "GetCountFailure": "types/records/events",
+        "id-3163": "GetCountFailure",
+        "GetCountSuccess": "types/records/events",
+        "id-3157": "GetCountSuccess",
+        "GetDataFailure": "types/records/data",
+        "id-3114": "GetDataFailure",
+        "GetDataSuccess": "types/records/data",
+        "id-3105": "GetDataSuccess",
+        "GetRoomOptionsFailure": "types/os",
+        "id-2239": "GetRoomOptionsFailure",
+        "GetRoomOptionsSuccess": "types/os",
+        "id-2235": "GetRoomOptionsSuccess",
+        "GetRoomRemoteOptionsFailure": "types/os",
+        "id-2282": "GetRoomRemoteOptionsFailure",
+        "GetRoomRemoteOptionsSuccess": "types/os",
+        "id-2277": "GetRoomRemoteOptionsSuccess",
+        "GetRoomTrackOptionsFailure": "types/os",
+        "id-2258": "GetRoomTrackOptionsFailure",
+        "GetRoomTrackOptionsSuccess": "types/os",
+        "id-2253": "GetRoomTrackOptionsSuccess",
+        "GrantMarkerPermissionFailure": "types/records/policies",
+        "id-3191": "GrantMarkerPermissionFailure",
+        "GrantMarkerPermissionSuccess": "types/records/policies",
+        "id-3189": "GrantMarkerPermissionSuccess",
+        "GrantRoleFailure": "types/records/roles",
+        "id-3177": "GrantRoleFailure",
+        "GrantRoleSuccess": "types/records/roles",
+        "id-3175": "GrantRoleSuccess",
+        "ImageClassifierOptions": "types/os",
+        "id-2633": "ImageClassifierOptions",
+        "InstUpdate": "types/os",
+        "id-2942": "InstUpdate",
+        "JoinRoomFailure": "types/os",
+        "id-2220": "JoinRoomFailure",
+        "JoinRoomSuccess": "types/os",
+        "id-2217": "JoinRoomSuccess",
+        "LeaveRoomFailure": "types/os",
+        "id-2229": "LeaveRoomFailure",
+        "LeaveRoomSuccess": "types/os",
+        "id-2226": "LeaveRoomSuccess",
+        "ListDataFailure": "types/records/data",
+        "id-3133": "ListDataFailure",
+        "ListDataSuccess": "types/records/data",
+        "id-3128": "ListDataSuccess",
+        "LookRotation": "types/math/rotations",
+        "id-3437": "LookRotation",
+        "MediaPermissionOptions": "types/os",
+        "id-2652": "MediaPermissionOptions",
+        "Debugger": "types/debuggers/debugger",
+        "id-2289": "Debugger",
+        "NormalDebuggerOptions": "types/debuggers/common",
+        "id-2496": "NormalDebuggerOptions",
+        "PhotoCameraOptions": "types/camera",
+        "id-2730": "PhotoCameraOptions",
+        "ParsedBotLink": "types/core",
+        "id-2925": "ParsedBotLink",
+        "PartialBotState": "types/core",
+        "id-2922": "PartialBotState",
+        "PausableDebugger": "types/debuggers/pausable-debugger",
+        "id-2345": "PausableDebugger",
+        "PausableDebuggerOptions": "types/debuggers/common",
+        "id-2501": "PausableDebuggerOptions",
+        "PauseTrigger": "types/debuggers/common",
+        "id-2464": "PauseTrigger",
+        "PauseTriggerOptions": "types/debuggers/common",
+        "id-2472": "PauseTriggerOptions",
+        "Photo": "types/camera",
+        "id-2742": "Photo",
+        "PossiblePauseTriggerLocation": "types/debuggers/common",
+        "id-2459": "PossiblePauseTriggerLocation",
+        "PseudoRandomNumberGenerator": "types/core",
+        "id-2533": "PseudoRandomNumberGenerator",
+        "QuaternionRotation": "types/math/rotations",
+        "id-3430": "QuaternionRotation",
+        "RaycastRay": "types/os",
+        "id-2213": "RaycastRay",
+        "RaycastResult": "types/os",
+        "id-2210": "RaycastResult",
+        "RecordActionOptions": "types/records/extra",
+        "id-2564": "RecordActionOptions",
+        "RecordDataFailure": "types/records/data",
+        "id-3100": "RecordDataFailure",
+        "RecordDataSuccess": "types/records/data",
+        "id-3096": "RecordDataSuccess",
+        "RecordFileFailure": "types/records/files",
+        "id-2180": "RecordFileFailure",
+        "RecordFileSuccess": "types/records/files",
+        "id-2176": "RecordFileSuccess",
+        "RecordedFile": "types/experimental",
+        "id-2717": "RecordedFile",
+        "Recording": "types/experimental",
+        "id-2715": "Recording",
+        "RecordingOptions": "types/experimental",
+        "id-2722": "RecordingOptions",
+        "RegisterPrefixOptions": "types/core",
+        "id-2712": "RegisterPrefixOptions",
+        "RevokeMarkerPermissionFailure": "types/records/policies",
+        "id-3198": "RevokeMarkerPermissionFailure",
+        "RevokeMarkerPermissionSuccess": "types/records/policies",
+        "id-3196": "RevokeMarkerPermissionSuccess",
+        "RevokeRoleFailure": "types/records/roles",
+        "id-3184": "RevokeRoleFailure",
+        "RevokeRoleSuccess": "types/records/roles",
+        "id-3182": "RevokeRoleSuccess",
+        "RoomJoinOptions": "types/os",
+        "id-2678": "RoomJoinOptions",
+        "RoomOptions": "types/os",
+        "id-2687": "RoomOptions",
+        "RoomRemoteOptions": "types/os",
+        "id-2703": "RoomRemoteOptions",
+        "RoomTrackOptions": "types/os",
+        "id-2691": "RoomTrackOptions",
+        "RuntimeBot": "types/core",
+        "id-2773": "RuntimeBot",
+        "RuntimeBotLinks": "types/core",
+        "id-2912": "RuntimeBotLinks",
+        "RuntimeBotVars": "types/core",
+        "id-2909": "RuntimeBotVars",
+        "SequenceRotation": "types/math/rotations",
+        "id-3428": "SequenceRotation",
+        "SetRoomOptionsSuccess": "types/os",
+        "id-2244": "SetRoomOptionsSuccess",
+        "SetRoomTrackOptions": "types/os",
+        "id-2709": "SetRoomTrackOptions",
+        "SetRoomTrackOptionsFailure": "types/os",
+        "id-2270": "SetRoomTrackOptionsFailure",
+        "SetRoomTrackOptionsSuccess": "types/os",
+        "id-2265": "SetRoomTrackOptionsSuccess",
+        "ShareOptions": "types/os",
+        "id-2611": "ShareOptions",
+        "ShowChatOptions": "types/os",
+        "id-2605": "ShowChatOptions",
+        "ShowConfirmOptions": "types/os",
+        "id-2647": "ShowConfirmOptions",
+        "ShowInputOptions": "types/os",
+        "id-2638": "ShowInputOptions",
+        "SnapAxis": "types/os",
+        "id-2585": "SnapAxis",
+        "SnapGridTarget": "types/os",
+        "id-2185": "SnapGridTarget",
+        "SnapPoint": "types/os",
+        "id-2597": "SnapPoint",
+        "SpeakTextOptions": "types/experimental",
+        "id-2529": "SpeakTextOptions",
+        "StartFormAnimationOptions": "types/os",
+        "id-2657": "StartFormAnimationOptions",
+        "StopFormAnimationOptions": "types/os",
+        "id-2670": "StopFormAnimationOptions",
+        "SuccessfulGeolocation": "types/os",
+        "id-2567": "SuccessfulGeolocation",
+        "SyntheticVoice": "types/experimental",
+        "id-2726": "SyntheticVoice",
+        "TweenOptions": "types/experimental",
+        "id-2526": "TweenOptions",
+        "UnsuccessfulGeolocation": "types/os",
+        "id-2577": "UnsuccessfulGeolocation",
+        "UpdateEventRecordFailure": "types/records/events",
+        "id-3170": "UpdateEventRecordFailure",
+        "UpdateEventRecordSuccess": "types/records/events",
+        "id-3168": "UpdateEventRecordSuccess",
+        "UploadedFile": "types/os",
+        "id-2206": "UploadedFile",
+        "WebhookOptions": "types/web",
+        "id-2130": "WebhookOptions",
+        "WebhookResult": "types/web",
+        "id-2142": "WebhookResult",
+        "AddCountResult": "types/records/events",
+        "id-3146": "AddCountResult",
+        "AvailablePermissions": "types/permissions",
+        "id-2984": "AvailablePermissions",
+        "BarcodeFormat": "types/os",
+        "id-2632": "BarcodeFormat",
+        "BotFilter": "types/core",
+        "id-2164": "BotFilter",
+        "BotSpace": "types/core",
+        "id-2896": "BotSpace",
+        "CameraType": "types/os",
+        "id-2631": "CameraType",
+        "CreatePublicRecordKeyResult": "types/records/key",
+        "id-2974": "CreatePublicRecordKeyResult",
+        "EaseMode": "types/animation",
+        "id-2560": "EaseMode",
+        "EaseType": "types/animation",
+        "id-2559": "EaseType",
+        "EraseDataResult": "types/records/data",
+        "id-3118": "EraseDataResult",
+        "EraseFileResult": "types/records/files",
+        "id-3137": "EraseFileResult",
+        "Geolocation": "types/os",
+        "id-2566": "Geolocation",
+        "GetCountResult": "types/records/events",
+        "id-3156": "GetCountResult",
+        "GetDataResult": "types/records/data",
+        "id-3104": "GetDataResult",
+        "GetRoomOptionsResult": "types/os",
+        "id-2234": "GetRoomOptionsResult",
+        "GetRoomRemoteOptionsResult": "types/os",
+        "id-2276": "GetRoomRemoteOptionsResult",
+        "GetRoomTrackOptionsResult": "types/os",
+        "id-2252": "GetRoomTrackOptionsResult",
+        "GrantMarkerPermissionResult": "types/records/policies",
+        "id-3188": "GrantMarkerPermissionResult",
+        "GrantRoleResult": "types/records/roles",
+        "id-3174": "GrantRoleResult",
+        "JoinRoomResult": "types/os",
+        "id-2216": "JoinRoomResult",
+        "LeaveRoomResult": "types/os",
+        "id-2225": "LeaveRoomResult",
+        "ListDataResult": "types/records/data",
+        "id-3127": "ListDataResult",
+        "Mod": "types/core",
+        "id-2159": "Mod",
+        "PortalType": "types/core",
+        "id-2928": "PortalType",
+        "PossiblePauseTriggerStates": "types/debuggers/common",
+        "id-2463": "PossiblePauseTriggerStates",
+        "RecordDataResult": "types/records/data",
+        "id-3095": "RecordDataResult",
+        "RecordFileResult": "types/records/files",
+        "id-2175": "RecordFileResult",
+        "RevokeMarkerPermissionResult": "types/records/policies",
+        "id-3195": "RevokeMarkerPermissionResult",
+        "RevokeRoleResult": "types/records/roles",
+        "id-3181": "RevokeRoleResult",
+        "SetRoomOptionsResult": "types/os",
+        "id-2243": "SetRoomOptionsResult",
+        "SetRoomTrackOptionsResult": "types/os",
+        "id-2264": "SetRoomTrackOptionsResult",
+        "SnapTarget": "types/os",
+        "id-2604": "SnapTarget",
+        "TagFilter": "types/core",
+        "id-2160": "TagFilter",
+        "UpdateEventRecordResult": "types/records/events",
+        "id-3167": "UpdateEventRecordResult",
+        "animateTag-byOptions": "actions/utility",
+        "id-364": "animateTag-byOptions",
+        "getbot-tag": "actions/data",
+        "id-33": "getbot-tag",
+        "getbots-tag": "actions/data",
+        "id-17": "getbots-tag",
+        "animateTag-byTag": "actions/utility",
+        "id-358": "animateTag-byTag",
+        "changeState": "actions/data",
+        "id-177": "changeState",
+        "create": "actions/data",
+        "id-162": "create",
+        "destroy": "actions/data",
+        "id-166": "destroy",
+        "getbot-filters": "actions/data",
+        "id-26": "getbot-filters",
+        "getbots-filters": "actions/data",
+        "id-10": "getbots-filters",
+        "priorityShout": "actions/event",
+        "id-225": "priorityShout",
+        "shout": "actions/event",
+        "id-237": "shout",
+        "updateBotLinks": "actions/data",
+        "id-198": "updateBotLinks",
+        "whisper": "actions/event",
+        "id-263": "whisper",
+        "action.perform": "actions/event",
+        "id-1630": "action.perform",
+        "action.reject": "actions/event",
+        "id-1634": "action.reject",
+        "ai.chat-string": "actions/ai",
+        "id-423": "ai.chat-string",
+        "ai.chat-message": "actions/ai",
+        "id-426": "ai.chat-message",
+        "ai.chat-messages": "actions/ai",
+        "id-429": "ai.chat-messages",
+        "ai.generateImage-string": "actions/ai",
+        "id-442": "ai.generateImage-string",
+        "ai.generateImage-request": "actions/ai",
+        "id-446": "ai.generateImage-request",
+        "ai.generateSkybox-string": "actions/ai",
+        "id-434": "ai.generateSkybox-string",
+        "ai.generateSkybox-request": "actions/ai",
+        "id-438": "ai.generateSkybox-request",
+        "applyDiffToSnapshot": "actions/data",
+        "id-83": "applyDiffToSnapshot",
+        "applyMod": "actions/mods",
+        "id-152": "applyMod",
+        "assert": "actions/debuggers",
+        "id-407": "assert",
+        "assertEqual": "actions/debuggers",
+        "id-412": "assertEqual",
+        "atPosition": "actions/bot-filters",
+        "id-293": "atPosition",
+        "byCreator": "actions/bot-filters",
+        "id-314": "byCreator",
+        "byID": "actions/bot-filters",
+        "id-281": "byID",
+        "byMod": "actions/bot-filters",
+        "id-285": "byMod",
+        "bySpace": "actions/bot-filters",
+        "id-310": "bySpace",
+        "byTag": "actions/bot-filters",
+        "id-276": "byTag",
+        "bytes.fromBase64String": "actions/bytes",
+        "id-1854": "bytes.fromBase64String",
+        "bytes.fromBase64Url": "actions/bytes",
+        "id-1871": "bytes.fromBase64Url",
+        "bytes.fromHexString": "actions/bytes",
+        "id-1862": "bytes.fromHexString",
+        "bytes.toBase64String": "actions/bytes",
+        "id-1850": "bytes.toBase64String",
+        "bytes.toBase64Url": "actions/bytes",
+        "id-1866": "bytes.toBase64Url",
+        "bytes.toHexString": "actions/bytes",
+        "id-1858": "bytes.toHexString",
+        "clearAnimations": "actions/utility",
+        "id-378": "clearAnimations",
+        "clearTagMasks": "actions/data",
+        "id-106": "clearTagMasks",
+        "crypto.hash-raw": "actions/crypto",
+        "id-1877": "crypto.hash-raw",
+        "crypto.hash-string": "actions/crypto",
+        "id-1883": "crypto.hash-string",
+        "crypto.hmac-raw": "actions/crypto",
+        "id-1914": "crypto.hmac-raw",
+        "crypto.hmac-string": "actions/crypto",
+        "id-1907": "crypto.hmac-string",
+        "crypto.asymmetric.decrypt": "actions/crypto",
+        "id-1972": "crypto.asymmetric.decrypt",
+        "crypto.asymmetric.encrypt": "actions/crypto",
+        "id-1967": "crypto.asymmetric.encrypt",
+        "crypto.asymmetric.isEncrypted": "actions/crypto",
+        "id-1978": "crypto.asymmetric.isEncrypted",
+        "crypto.asymmetric.isKeypair": "actions/crypto",
+        "id-1963": "crypto.asymmetric.isKeypair",
+        "crypto.asymmetric.keypair": "actions/crypto",
+        "id-1959": "crypto.asymmetric.keypair",
+        "crypto.encrypt": "actions/crypto",
+        "id-1943": "crypto.encrypt",
+        "crypto.hmacSha256": "actions/crypto",
+        "id-1933": "crypto.hmacSha256",
+        "crypto.hmacSha512": "actions/crypto",
+        "id-1938": "crypto.hmacSha512",
+        "crypto.isEncrypted": "actions/crypto",
+        "id-1953": "crypto.isEncrypted",
+        "crypto.keypair": "actions/crypto",
+        "id-1982": "crypto.keypair",
+        "crypto.sha256": "actions/crypto",
+        "id-1899": "crypto.sha256",
+        "crypto.sha512": "actions/crypto",
+        "id-1903": "crypto.sha512",
+        "crypto.sign": "actions/crypto",
+        "id-1986": "crypto.sign",
+        "deleteTagMaskText": "actions/data",
+        "id-133": "deleteTagMaskText",
+        "deleteTagText": "actions/data",
+        "id-126": "deleteTagText",
+        "diffSnapshots": "actions/data",
+        "id-78": "diffSnapshots",
+        "either": "actions/bot-filters",
+        "id-318": "either",
+        "os.beginAudioRecording": "actions/audio",
+        "id-1688": "os.beginAudioRecording",
+        "experiment.beginRecording": "actions/experimental",
+        "id-1695": "experiment.beginRecording",
+        "os.endAudioRecording": "actions/audio",
+        "id-1692": "os.endAudioRecording",
+        "experiment.endRecording": "actions/experimental",
+        "id-1699": "experiment.endRecording",
+        "experiment.getAnchorPointPosition": "actions/experimental",
+        "id-1678": "experiment.getAnchorPointPosition",
+        "experiment.getVoices": "actions/experimental",
+        "id-1707": "experiment.getVoices",
+        "experiment.localFormAnimation": "actions/experimental",
+        "id-1651": "experiment.localFormAnimation",
+        "experiment.localPositionTween": "actions/experimental",
+        "id-1656": "experiment.localPositionTween",
+        "experiment.localRotationTween": "actions/experimental",
+        "id-1667": "experiment.localRotationTween",
+        "experiment.speakText": "actions/experimental",
+        "id-1702": "experiment.speakText",
+        "getBotLinks": "actions/data",
+        "id-194": "getBotLinks",
+        "getBotPosition": "actions/data",
+        "id-52": "getBotPosition",
+        "getBotRotation": "actions/data",
+        "id-57": "getBotRotation",
+        "getBotTagValues": "actions/data",
+        "id-42": "getBotTagValues",
+        "getFormattedJSON": "actions/data",
+        "id-70": "getFormattedJSON",
+        "getID": "actions/data",
+        "id-62": "getID",
+        "getJSON": "actions/data",
+        "id-66": "getJSON",
+        "getLink": "actions/data",
+        "id-190": "getLink",
+        "getMod": "actions/mods",
+        "id-47": "getMod",
+        "getSnapshot": "actions/data",
+        "id-74": "getSnapshot",
+        "getTag": "actions/data",
+        "id-88": "getTag",
+        "inDimension": "actions/bot-filters",
+        "id-289": "inDimension",
+        "inStack": "actions/bot-filters",
+        "id-299": "inStack",
+        "insertTagMaskText": "actions/data",
+        "id-118": "insertTagMaskText",
+        "insertTagText": "actions/data",
+        "id-111": "insertTagText",
+        "math.abs": "actions/math",
+        "id-1724": "math.abs",
+        "math.addVectors": "actions/math",
+        "id-1794": "math.addVectors",
+        "math.areClose": "actions/math",
+        "id-1825": "math.areClose",
+        "math.avg": "actions/math",
+        "id-1716": "math.avg",
+        "math.degreesToRadians": "actions/math",
+        "id-1750": "math.degreesToRadians",
+        "math.getAnchorPointOffset": "actions/math",
+        "id-1790": "math.getAnchorPointOffset",
+        "math.getForwardDirection": "actions/math",
+        "id-1758": "math.getForwardDirection",
+        "math.getSeededRandomNumberGenerator": "actions/math",
+        "id-1732": "math.getSeededRandomNumberGenerator",
+        "math.intersectPlane": "actions/math",
+        "id-1767": "math.intersectPlane",
+        "math.negateVector": "actions/math",
+        "id-1804": "math.negateVector",
+        "math.normalizeVector": "actions/math",
+        "id-1809": "math.normalizeVector",
+        "math.radiansToDegrees": "actions/math",
+        "id-1754": "math.radiansToDegrees",
+        "math.random": "actions/math",
+        "id-1745": "math.random",
+        "math.randomInt": "actions/math",
+        "id-1740": "math.randomInt",
+        "math.scaleVector": "actions/math",
+        "id-1819": "math.scaleVector",
+        "math.setRandomSeed": "actions/math",
+        "id-1736": "math.setRandomSeed",
+        "math.sqrt": "actions/math",
+        "id-1720": "math.sqrt",
+        "math.stdDev": "actions/math",
+        "id-1728": "math.stdDev",
+        "math.subtractVectors": "actions/math",
+        "id-1799": "math.subtractVectors",
+        "math.sum": "actions/math",
+        "id-1712": "math.sum",
+        "math.vectorLength": "actions/math",
+        "id-1814": "math.vectorLength",
+        "neighboring": "actions/bot-filters",
+        "id-304": "neighboring",
+        "not": "actions/bot-filters",
+        "id-325": "not",
+        "os.attachDebugger": "actions/debuggers",
+        "id-1328": "os.attachDebugger",
+        "os.createDebugger-normal": "actions/debuggers",
+        "id-1317": "os.createDebugger-normal",
+        "os.createDebugger-pausable": "actions/debuggers",
+        "id-1321": "os.createDebugger-pausable",
+        "os.focusOn-bot": "actions/portals",
+        "id-510": "os.focusOn-bot",
+        "os.focusOn-position": "actions/portals",
+        "id-515": "os.focusOn-position",
+        "os.getExecutingDebugger": "actions/debuggers",
+        "id-1325": "os.getExecutingDebugger",
+        "showChat-options": "actions/os",
+        "id-537": "showChat-options",
+        "showChat-placeholder": "actions/os",
+        "id-533": "showChat-placeholder",
+        "os.showInput": "actions/portals",
+        "id-753": "os.showInput",
+        "os.addBotDropGrid": "actions/portals",
+        "id-827": "os.addBotDropGrid",
+        "os.addBotDropSnap": "actions/portals",
+        "id-818": "os.addBotDropSnap",
+        "os.addDropGrid": "actions/portals",
+        "id-823": "os.addDropGrid",
+        "os.addDropSnap": "actions/portals",
+        "id-814": "os.addDropSnap",
+        "os.applyUpdatesToInst": "actions/os",
+        "id-1271": "os.applyUpdatesToInst",
+        "os.arSupported": "actions/xr",
+        "id-578": "os.arSupported",
+        "os.bufferFormAddressGLTF": "actions/animations",
+        "id-1224": "os.bufferFormAddressGLTF",
+        "os.bufferSound": "actions/audio",
+        "id-790": "os.bufferSound",
+        "os.calculateRayFromCamera": "actions/portals",
+        "id-1219": "os.calculateRayFromCamera",
+        "os.cancelSound": "actions/audio",
+        "id-794": "os.cancelSound",
+        "os.capturePhoto": "actions/camera",
+        "id-673": "os.capturePhoto",
+        "os.closeBarcodeScanner": "actions/barcodes",
+        "id-651": "os.closeBarcodeScanner",
+        "os.closeCircleWipe": "actions/portals",
+        "id-806": "os.closeCircleWipe",
+        "os.closeImageClassifier": "actions/image-classification",
+        "id-666": "os.closeImageClassifier",
+        "os.closePhotoCamera": "actions/camera",
+        "id-677": "os.closePhotoCamera",
+        "os.closeQRCodeScanner": "actions/barcodes",
+        "id-637": "os.closeQRCodeScanner",
+        "os.compileApp": "actions/app",
+        "id-941": "os.compileApp",
+        "os.convertGeolocationToWhat3Words": "actions/os",
+        "id-1204": "os.convertGeolocationToWhat3Words",
+        "os.countEvents": "actions/records",
+        "id-1198": "os.countEvents",
+        "os.createInitializationUpdate": "actions/os",
+        "id-1267": "os.createInitializationUpdate",
+        "os.device": "actions/os",
+        "id-555": "os.device",
+        "os.disableAR": "actions/xr",
+        "id-568": "os.disableAR",
+        "os.disablePointOfView": "actions/portals",
+        "id-593": "os.disablePointOfView",
+        "os.disableVR": "actions/xr",
+        "id-575": "os.disableVR",
+        "os.disableWakeLock": "actions/os",
+        "id-599": "os.disableWakeLock",
+        "os.download": "actions/files",
+        "id-605": "os.download",
+        "os.downloadBots": "actions/files",
+        "id-611": "os.downloadBots",
+        "os.downloadBotsAsInitialzationUpdate": "actions/files",
+        "id-616": "os.downloadBotsAsInitialzationUpdate",
+        "os.downloadInst": "actions/files",
+        "id-624": "os.downloadInst",
+        "os.enableAR": "actions/xr",
+        "id-564": "os.enableAR",
+        "os.enableCustomDragging": "actions/portals",
+        "id-832": "os.enableCustomDragging",
+        "os.enablePointOfView": "actions/portals",
+        "id-584": "os.enablePointOfView",
+        "os.enableVR": "actions/xr",
+        "id-571": "os.enableVR",
+        "os.eraseData": "actions/records",
+        "id-1141": "os.eraseData",
+        "os.eraseManualApprovalData": "actions/records",
+        "id-1147": "os.eraseManualApprovalData",
+        "os.exitFullscreenMode": "actions/portals",
+        "id-481": "os.exitFullscreenMode",
+        "os.getAverageFrameRate": "actions/os",
+        "id-889": "os.getAverageFrameRate",
+        "os.getCameraPosition": "actions/portals",
+        "id-845": "os.getCameraPosition",
+        "os.getCameraRotation": "actions/portals",
+        "id-849": "os.getCameraRotation",
+        "os.getCurrentDimension": "actions/portals",
+        "id-724": "os.getCurrentDimension",
+        "os.getCurrentInst": "actions/portals",
+        "id-730": "os.getCurrentInst",
+        "os.getCurrentInstUpdate": "actions/os",
+        "id-1275": "os.getCurrentInstUpdate",
+        "os.getData": "actions/records",
+        "id-1123": "os.getData",
+        "os.getDimensionalDepth": "actions/portals",
+        "id-743": "os.getDimensionalDepth",
+        "os.getFocusPoint": "actions/portals",
+        "id-857": "os.getFocusPoint",
+        "os.getGeolocation": "actions/os",
+        "id-839": "os.getGeolocation",
+        "os.getInputList": "actions/portals",
+        "id-882": "os.getInputList",
+        "os.getInputState": "actions/portals",
+        "id-877": "os.getInputState",
+        "os.getInstStateFromUpdates": "actions/os",
+        "id-1263": "os.getInstStateFromUpdates",
+        "os.getManualApprovalData": "actions/records",
+        "id-1129": "os.getManualApprovalData",
+        "os.getMediaPermission": "actions/os",
+        "id-885": "os.getMediaPermission",
+        "os.getMenuDimension": "actions/portals",
+        "id-733": "os.getMenuDimension",
+        "os.getMiniPortalDimension": "actions/portals",
+        "id-736": "os.getMiniPortalDimension",
+        "os.getPointerDirection": "actions/portals",
+        "id-873": "os.getPointerDirection",
+        "os.getPointerPosition": "actions/portals",
+        "id-861": "os.getPointerPosition",
+        "os.getPointerRotation": "actions/portals",
+        "id-865": "os.getPointerRotation",
+        "os.getPortalDimension": "actions/portals",
+        "id-739": "os.getPortalDimension",
+        "os.getPublicRecordKey": "actions/records",
+        "id-1048": "os.getPublicRecordKey",
+        "os.getRoomOptions": "actions/rooms",
+        "id-907": "os.getRoomOptions",
+        "os.getRoomRemoteOptions": "actions/rooms",
+        "id-922": "os.getRoomRemoteOptions",
+        "os.getRoomTrackOptions": "actions/rooms",
+        "id-911": "os.getRoomTrackOptions",
+        "os.getSubjectlessPublicRecordKey": "actions/records",
+        "id-1052": "os.getSubjectlessPublicRecordKey",
+        "os.getWakeLockConfiguration": "actions/os",
+        "id-602": "os.getWakeLockConfiguration",
+        "os.goToDimension": "actions/portals",
+        "id-767": "os.goToDimension",
+        "os.goToURL": "actions/portals",
+        "id-771": "os.goToURL",
+        "os.grantInstAdminPermission": "actions/records",
+        "id-1070": "os.grantInstAdminPermission",
+        "os.grantInstRole": "actions/records",
+        "id-1090": "os.grantInstRole",
+        "os.grantRecordMarkerPermission": "actions/records",
+        "id-1056": "os.grantRecordMarkerPermission",
+        "os.grantUserRole": "actions/records",
+        "id-1075": "os.grantUserRole",
+        "os.hasBotInMiniPortal": "actions/portals",
+        "id-798": "os.hasBotInMiniPortal",
+        "os.hideBarcode": "actions/barcodes",
+        "id-659": "os.hideBarcode",
+        "os.hideChat": "actions/os",
+        "id-545": "os.hideChat",
+        "os.hideHtml": "actions/os",
+        "id-488": "os.hideHtml",
+        "os.hideQRCode": "actions/barcodes",
+        "id-644": "os.hideQRCode",
+        "os.hideTips": "actions/portals",
+        "id-469": "os.hideTips",
+        "os.importAUX": "actions/files",
+        "id-708": "os.importAUX",
+        "os.inSheet": "actions/portals",
+        "id-842": "os.inSheet",
+        "os.instStatuses": "actions/os",
+        "id-1292": "os.instStatuses",
+        "os.instances": "actions/os",
+        "id-1282": "os.instances",
+        "os.isCollaborative": "actions/os",
+        "id-558": "os.isCollaborative",
+        "os.isInDimension": "actions/portals",
+        "id-720": "os.isInDimension",
+        "os.isRecordKey": "actions/records",
+        "id-1105": "os.isRecordKey",
+        "os.joinRoom": "actions/rooms",
+        "id-892": "os.joinRoom",
+        "os.leaveRoom": "actions/rooms",
+        "id-897": "os.leaveRoom",
+        "os.listBuiltinTags": "actions/app",
+        "id-1042": "os.listBuiltinTags",
+        "os.listData": "actions/records",
+        "id-1135": "os.listData",
+        "os.listFormAnimations": "actions/animations",
+        "id-1239": "os.listFormAnimations",
+        "os.listInstUpdates": "actions/os",
+        "id-1260": "os.listInstUpdates",
+        "os.loadInst": "actions/os",
+        "id-700": "os.loadInst",
+        "os.log": "actions/os",
+        "id-835": "os.log",
+        "os.meetCommand": "actions/os",
+        "id-1305": "os.meetCommand",
+        "os.meetFunction": "actions/os",
+        "id-1310": "os.meetFunction",
+        "os.openBarcodeScanner": "actions/barcodes",
+        "id-647": "os.openBarcodeScanner",
+        "os.openCircleWipe": "actions/portals",
+        "id-810": "os.openCircleWipe",
+        "os.openDevConsole": "actions/os",
+        "id-779": "os.openDevConsole",
+        "os.openImageClassifier": "actions/image-classification",
+        "id-662": "os.openImageClassifier",
+        "os.openPhotoCamera": "actions/camera",
+        "id-669": "os.openPhotoCamera",
+        "os.openQRCodeScanner": "actions/barcodes",
+        "id-633": "os.openQRCodeScanner",
+        "os.openURL": "actions/portals",
+        "id-775": "os.openURL",
+        "os.parseBotsFromData": "actions/files",
+        "id-712": "os.parseBotsFromData",
+        "os.playSound": "actions/audio",
+        "id-786": "os.playSound",
+        "os.raycast": "actions/portals",
+        "id-1213": "os.raycast",
+        "os.raycastFromCamera": "actions/portals",
+        "id-1208": "os.raycastFromCamera",
+        "os.recordData": "actions/records",
+        "id-1109": "os.recordData",
+        "os.recordEvent": "actions/records",
+        "id-1192": "os.recordEvent",
+        "os.recordFile": "actions/records",
+        "id-1153": "os.recordFile",
+        "os.recordManualApprovalData": "actions/records",
+        "id-1116": "os.recordManualApprovalData",
+        "os.registerApp": "actions/app",
+        "id-932": "os.registerApp",
+        "os.registerTagPrefix": "actions/app",
+        "id-927": "os.registerTagPrefix",
+        "os.remoteCount": "actions/os",
+        "id-1285": "os.remoteCount",
+        "os.remotes": "actions/os",
+        "id-1257": "os.remotes",
+        "os.replaceDragBot": "actions/portals",
+        "id-716": "os.replaceDragBot",
+        "os.requestAuthBot": "actions/records",
+        "id-1045": "os.requestAuthBot",
+        "os.requestFullscreenMode": "actions/portals",
+        "id-478": "os.requestFullscreenMode",
+        "os.requestWakeLock": "actions/os",
+        "id-596": "os.requestWakeLock",
+        "os.revokeInstRole": "actions/records",
+        "id-1098": "os.revokeInstRole",
+        "os.revokeRecordMarkerPermission": "actions/records",
+        "id-1063": "os.revokeRecordMarkerPermission",
+        "os.revokeUserRole": "actions/records",
+        "id-1083": "os.revokeUserRole",
+        "os.run": "actions/os",
+        "id-548": "os.run",
+        "os.setClipboard": "actions/os",
+        "id-491": "os.setClipboard",
+        "os.setRoomOptions": "actions/rooms",
+        "id-902": "os.setRoomOptions",
+        "os.setRoomTrackOptions": "actions/rooms",
+        "id-916": "os.setRoomTrackOptions",
+        "os.share": "actions/os",
+        "id-802": "os.share",
+        "os.showBarcode": "actions/barcodes",
+        "id-654": "os.showBarcode",
+        "os.showConfirm": "actions/portals",
+        "id-763": "os.showConfirm",
+        "os.showHtml": "actions/os",
+        "id-484": "os.showHtml",
+        "os.showInputForTag": "actions/portals",
+        "id-747": "os.showInputForTag",
+        "os.showJoinCode": "actions/barcodes",
+        "id-473": "os.showJoinCode",
+        "os.showQRCode": "actions/barcodes",
+        "id-640": "os.showQRCode",
+        "os.showUploadAuxFile": "actions/files",
+        "id-627": "os.showUploadAuxFile",
+        "os.showUploadFiles": "actions/files",
+        "id-630": "os.showUploadFiles",
+        "os.sleep": "actions/os",
+        "id-453": "os.sleep",
+        "os.startFormAnimation": "actions/animations",
+        "id-1228": "os.startFormAnimation",
+        "os.stopFormAnimation": "actions/animations",
+        "id-1234": "os.stopFormAnimation",
+        "os.tip": "actions/portals",
+        "id-462": "os.tip",
+        "os.toast": "actions/os",
+        "id-457": "os.toast",
+        "os.totalRemoteCount": "actions/os",
+        "id-1289": "os.totalRemoteCount",
+        "os.unloadInst": "actions/os",
+        "id-704": "os.unloadInst",
+        "os.unregisterApp": "actions/app",
+        "id-937": "os.unregisterApp",
+        "os.version": "actions/os",
+        "id-552": "os.version",
+        "os.vrSupported": "actions/xr",
+        "id-581": "os.vrSupported",
+        "os.agreedUponTime": "actions/time",
+        "id-681": "os.agreedUponTime",
+        "os.deadReckoningTime": "actions/time",
+        "id-689": "os.deadReckoningTime",
+        "os.instLatency": "actions/time",
+        "id-683": "os.instLatency",
+        "os.instTimeOffset": "actions/time",
+        "id-685": "os.instTimeOffset",
+        "os.instTimeOffsetSpread": "actions/time",
+        "id-687": "os.instTimeOffsetSpread",
+        "os.localTime": "actions/time",
+        "id-679": "os.localTime",
+        "removeTags": "actions/data",
+        "id-141": "removeTags",
+        "renameTag": "actions/data",
+        "id-146": "renameTag",
+        "setTag": "actions/data",
+        "id-93": "setTag",
+        "setTagMask": "actions/data",
+        "id-99": "setTagMask",
+        "subtractMods": "actions/mods",
+        "id-157": "subtractMods",
+        "superShout": "actions/event",
+        "id-220": "superShout",
+        "uuid": "actions/data",
+        "id-355": "uuid",
+        "web.get": "actions/web",
+        "id-2029": "web.get",
+        "web.hook": "actions/web",
+        "id-2040": "web.hook",
+        "web.post": "actions/web",
+        "id-2034": "web.post",
+        "configBot": "actions/os",
+        "id-418": "configBot"
+    }
+}

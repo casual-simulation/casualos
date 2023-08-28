@@ -34,6 +34,7 @@ import {
   TagPortalBadge,
   Example,
   AnyCursorValues,
+  TypeLink,
 } from './components.mdx';
 
 import { GlossaryRef } from './glossary/index';
@@ -42,7 +43,7 @@ CasualOS has many tags.
 
 ## Tag types
 
-Tags are peices of data that are contained in bots. They are used to describe all sorts of properties about a bot, including how the bot looks, where it is visible, and what it does.
+Tags are pieces of data that are contained in bots. They are used to describe all sorts of properties about a bot, including how the bot looks, where it is visible, and what it does.
 
 Each tag is made up of two parts: a name and a value.
 
@@ -135,7 +136,7 @@ See the documentation on <ActionLink action='DateTime'/> for information and exa
 
 Vector tags are tags whose value is prefixed with the `➡️` emoji and represents a 2D or 3D point or direction.
 In math, a vector simply a list of numbers, but in CasualOS a vector specifically refers either to a pair of numbers (representing a 2D vector) or a trio of numbers (representing a 3D vector).
-When CasualOS runs across a vector tag, it parses the numbers and converts it into a [`Vector2`](/math/vectors#vector2) or [`Vector3`](/math/vectors#vector3) object depending on if it contains 2 or 3 numbers.
+When CasualOS runs across a vector tag, it parses the numbers and converts it into a <TypeLink type='Vector2'/> or <TypeLink type='Vector3'/> object depending on if it contains 2 or 3 numbers.
 
 Vector tags are useful for easily setting the X, Y, and Z components of supported tags like <TagLink tag='[dimension]Position'/>.
 
@@ -146,7 +147,7 @@ CasualOS currently supports the following vector formats:
 -   3D vectors
     -   `➡️1,2,3`, `➡️-1,-2,-3`, `➡️1.23,4.56,7.89`
 
-See the documentation on [Vectors](/math/vectors) for more information and examples for scripting.
+See the documentation on [Vectors](./types/math/vectors) for more information and examples for scripting.
 
 ### Rotation tags
 
@@ -155,7 +156,7 @@ In math, a rotation represents a change in orientation. This rotation can then b
 
 For an interactive explanation of rotations and quaternions, see [this video](https://youtu.be/zjMuIxRvygQ).
 
-When CasualOS runs across a rotation tag, it parses the numbers and converts it into a [`Rotation`](/math/rotations#rotation) object.
+When CasualOS runs across a rotation tag, it parses the numbers and converts it into a <TypeLink type='Rotation'/> object.
 
 Rotation tags are useful for easily setting the X, Y, and Z components of supported tags like <TagLink tag='[dimension]Rotation'/>.
 
@@ -166,7 +167,7 @@ CasualOS currently supports the following rotation format:
     -    `🔁0.7071068,0,0,0.7071068`: 90 Degree rotation around the X axis
     -    `🔁0,0,0.7071068,0.7071068`: 90 Degree rotation around the Z axis
 
-See the documentation on [Rotations](/math/rotations) for more information and examples for scripting.
+See the documentation on [Rotations](./types/math/rotations) for more information and examples for scripting.
 
 ### Script tags
 
@@ -289,7 +290,7 @@ These tags affect how CasualOS allows the users to interact with bots.
 Whether the bot is able to be moved by the built-in CasualOS system.
 
 Note that this value only controls whether CasualOS can move bots automatically as the result of user interaction.
-If set to `false`, then CasualOS will not change any tags, but it will still send events for the bot (e.g. <ActionLink action='@onDrag'/>, <ActionLink action='@onAnyBotDrag'/>, <ActionLink action='@onDrop'/>, <ActionLink action='@onAnyBotDrop'/>, etc.).
+If set to `false`, then CasualOS will not change any tags, but it will still send events for the bot (e.g. <TagLink tag='@onDrag'/>, <TagLink tag='@onAnyBotDrag'/>, <TagLink tag='@onDrop'/>, <TagLink tag='@onAnyBotDrop'/>, etc.).
 
 #### Possible values are:
 
@@ -812,6 +813,9 @@ The shape that the bot should be displayed as.
   <PossibleValueCode value='cube'>
     Cube mesh (default)
   </PossibleValueCode>
+  <PossibleValueCode value='skybox'>
+    A Sphere mesh optimal for "skybox" implementation.
+  </PossibleValueCode>
   <PossibleValueCode value='sphere'>
     Sphere mesh
   </PossibleValueCode>
@@ -914,7 +918,7 @@ The subtype that the form should use. Useful for specifying how a mesh should be
 
 The address that the bot should represent data from.
 
-When <TagLink tag='form'/> is set to `cube`, `sphere`, or `sprite`, the address should be the URL of the image that the bot should display.
+When <TagLink tag='form'/> is set to `cube`, `skybox`, `sphere`, or `sprite`, the address should be the URL of the image that the bot should display.
 
 When <TagLink tag='form'/> is set to `mesh` and <TagLink tag='formSubtype'/> is set to `gltf`, the address should be the URL of the GLTF file that should be displayed.
 
@@ -1022,6 +1026,36 @@ Higher values mean the bot will be rendered first, and lower values means the bo
   <PossibleValue value='Any Number'>
     Use the given render ordering. Bots are rendered from the highest value to the lowest value.
   </PossibleValue>
+</PossibleValuesTable>
+
+### `formDepthTest`
+
+Whether depth testing is enabled for this bot in the grid portals.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    Disable depth testing.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `formDepthWrite`
+
+Whether depth writing is enabled for this bot in the grid portals.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    Disable depth writing.
+  </PossibleValueCode>
 </PossibleValuesTable>
 
 ### `gltfVersion`
@@ -3504,16 +3538,6 @@ On deployments that do not support subscriptions, this is always `true`.
 ### `subscriptionTier`
 
 The subscription tier that is currently active for the user. It is a string containing the feature level that should be active for the user.
-
-### `openAiKey`
-
-The OpenAI API Key that the user has configured in their profile.
-
-It has the following format:
-
-```
-vAI1.{base64OfKey}
-```
 
 ## Hidden Tags
 

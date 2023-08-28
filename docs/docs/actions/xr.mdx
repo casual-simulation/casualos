@@ -1,0 +1,29 @@
+---
+id: xr
+title: XR Actions
+sidebar_label: XR
+description: Actions for enabling and disabling XR (AR &amp; VR) features.
+---
+
+import Doc from '@site/docs/api-info/actions/xr.json'
+import { 
+    objectTableOfContents,
+    ObjectMembers,
+    classTableOfContents,
+    setLinkMap,
+    DebugObject,
+    getReturnType,
+    getProperty,
+    RenderTree,
+    getTypeReferences,
+    ApiContents,
+    apiTableOfContents
+} from '@site/util/doc.jsx'
+import Heading from '@theme/Heading'
+import Link from '@docusaurus/Link'
+
+export const toc = [
+    ...apiTableOfContents(Doc),
+];
+
+<ApiContents doc={Doc} />

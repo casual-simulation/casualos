@@ -10,6 +10,7 @@ import {
     StripePortalResponse,
     StripePrice,
     StripeProduct,
+    StripeSubscription,
     StripeSubscriptionItem,
 } from '@casual-simulation/aux-records';
 import Stripe from 'stripe';
@@ -20,14 +21,16 @@ import Stripe from 'stripe';
 export class StripeIntegration implements StripeInterface {
     private _stripe: Stripe;
     private _publishableKey: string;
+    private _testClock: string;
 
     get publishableKey() {
         return this._publishableKey;
     }
 
-    constructor(stripe: Stripe, publishableKey: string) {
+    constructor(stripe: Stripe, publishableKey: string, testClock?: string) {
         this._stripe = stripe;
         this._publishableKey = publishableKey;
+        this._testClock = testClock;
     }
 
     async listPricesForProduct(product: string): Promise<StripePrice[]> {
@@ -76,6 +79,7 @@ export class StripeIntegration implements StripeInterface {
     ): Promise<StripeCreateCustomerResponse> {
         const response = await this._stripe.customers.create({
             ...request,
+            test_clock: this._testClock,
         });
 
         return response;
@@ -143,5 +147,11 @@ export class StripeIntegration implements StripeInterface {
         secret: string
     ): StripeEvent {
         return this._stripe.webhooks.constructEvent(payload, signature, secret);
+    }
+
+    async getSubscriptionById(
+        id: string
+    ): Promise<Omit<StripeSubscription, 'items'>> {
+        return await this._stripe.subscriptions.retrieve(id);
     }
 }

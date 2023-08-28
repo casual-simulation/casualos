@@ -866,6 +866,101 @@ declare interface OpenBarcodeScannerAction extends Action {
     cameraType: CameraType;
 }
 
+
+/**
+ * Defines a photo that was taken.
+ * 
+ * @dochash types/camera
+ * @docname Photo
+ */
+export interface Photo {
+    /**
+     * The photo data.
+     */
+    data: Blob;
+
+    /**
+     * The width of the photo in pixels.
+     */
+    width: number;
+
+    /**
+     * The height of the photo in pixels.
+     */
+    height: number;
+}
+
+/**
+ * Options for {@link os.openPhotoCamera}.
+ * 
+ * @dochash types/camera
+ * @doctitle Camera Types
+ * @docsidebar Camera
+ * @docdescription Types that are used in camera actions.
+ * @docname PhotoCameraOptions
+ */
+export interface OpenPhotoCameraOptions {
+    /**
+     * The camera that should be used.
+     */
+    cameraType?: CameraType;
+
+    /**
+     * The image format that should be used.
+     * 
+     * Defaults to "png".
+     */
+    imageFormat?: 'png' | 'jpeg';
+
+    /**
+     * A number between 0 and 1 indicating the image quality to be used.
+     * 
+     * If not specified, then the browser will use its own default.
+     */
+    imageQuality?: number;
+
+    /**
+     * Whether to skip allowing the user to confirm their photo.
+     *
+     * Defaults to false.
+     */
+    skipConfirm?: boolean;
+
+    /**
+     * Whether to automatically take a photo after a number of seconds.
+     *
+     * If null, then there is no timer and the user is allowed to take the photo manually.
+     * If positive, then the timer will start counting down from the given number of seconds.
+     * The user can always cancel the operation manually.
+     */
+    takePhotoAfterSeconds?: number;
+
+    /**
+     * The ideal resolution for the photo to be taken at.
+     * 
+     * If specified, then the web browser will be told to prefer this resolution, but will use a lower resolution if
+     * it is not possible to use the ideal resolution.
+     */
+    idealResolution?: {
+        /**
+         * The width of the photo in pixels.
+         */
+        width: number;
+
+        /**
+         * The height of the photo in pixels.
+         */
+        height: number;
+    }
+
+    /**
+     * Whether to mirror the photo after it is taken.
+     * 
+     * Defaults to false.
+     */
+    mirrorPhoto?: boolean;
+}
+
 /**
  * An event that is used to toggle whether the console is open.
  */
@@ -3299,6 +3394,11 @@ export type NotLoggedInError = 'not_logged_in';
 
 export type RecordNotFoundError = 'record_not_found';
 
+/**
+ * Defines an error that occurs when the user does not have the right permissions to perform an action.
+ */
+export type NotAuthorizedError = 'not_authorized';
+
 
 export type AuthorizeDeniedError = ServerError
 | CreatePublicRecordKeyFailure['errorCode']
@@ -3329,7 +3429,7 @@ export interface RecordActionOptions {
     endpoint?: string;
 }
 
-export type GrantMarkerPermissionResponse =
+export type GrantMarkerPermissionResult =
     | GrantMarkerPermissionSuccess
     | GrantMarkerPermissionFailure;
 
@@ -3614,6 +3714,80 @@ export interface GetCountFailure {
     | ServerError
     | NotSupportedError;
     errorMessage: string;
+}
+
+/**
+ * Defines the list of possible results for the {@link os.listUserStudios} function.
+ *
+ * @dochash types/records/studios
+ * @doctitle Studio Types
+ * @docsidebar Studios
+ * @docdescription Types that are used for actions that manage studios.
+ * @docname ListStudiosResult
+ */
+export type ListStudiosResult = ListStudiosSuccess | ListStudiosFailure;
+
+/**
+ * Defines an interface that represents a successful "list studios" result.
+ * 
+ * @dochash types/records/studios
+ * @docname ListStudiosSuccess
+ */
+export interface ListStudiosSuccess {
+    success: true;
+
+    /**
+     * The list of studios that the user is a member of.
+     */
+    studios: ListedStudio[];
+}
+
+/**
+ * Defines an interface that represents a failed "list studios" result.
+ * 
+ * @dochash types/records/studios
+ * @docname ListStudiosFailure
+ */
+export interface ListStudiosFailure {
+    success: false;
+    
+    /**
+     * The error code.
+     */
+    errorCode: NotLoggedInError | NotAuthorizedError | ServerError;
+
+    /**
+     * The error message.
+     */
+    errorMessage: string;
+}
+
+/**
+ * Defines an interface that represents a studio that a user has access to.
+ * 
+ * @dochash types/records/studios
+ * @docname ListedStudio
+ */
+export interface ListedStudio {
+    /**
+     * The ID of the studio.
+     */
+    studioId: string;
+
+    /**
+     * The name of the studio.
+     */
+    displayName: string;
+
+    /**
+     * The role that the user has in the studio.
+     */
+    role: StudioAssignmentRole;
+
+    /**
+     * Whether the user is the primary contact for this studio.
+     */
+    isPrimaryContact: boolean;
 }
 
 
@@ -7453,7 +7627,7 @@ export interface PauseTrigger extends PauseTriggerOptions {
 /**
  * Defines an interface for a possible pause trigger location.
  */
-export interface PossibleTriggerLocation {
+export interface PossiblePauseTriggerLocation {
     /**
      * The line number that the trigger would pause the debugger at.
      */
@@ -8475,6 +8649,11 @@ declare global {
     const os: Os;
 
     /**
+     * Defines a set of functions that relate to AI operations.
+     */
+    const ai: Ai;
+
+    /**
      * Defines a set of functions that relate to common server operations.
      * Typically, these operations are instance-independent.
      */
@@ -8671,7 +8850,7 @@ interface DebuggerBase {
      * @param botOrId The bot or bot ID.
      * @param tag The name of the tag that the trigger locations should be listed for.
      */
-    listCommonPauseTriggers(botOrId: Bot | string, tag: string): PossibleTriggerLocation[];
+    listCommonPauseTriggers(botOrId: Bot | string, tag: string): PossiblePauseTriggerLocation[];
 
     /**
      * Resumes the debugger execution from the given pause.
@@ -9305,6 +9484,11 @@ interface DebuggerBase {
     os: Os;
 
     /**
+     * Defines a set of functions that relate to AI operations.
+     */
+    ai: Ai;
+
+    /**
      * Defines a set of functions that relate to common server operations.
      * Typically, these operations are instance-independent.
      */
@@ -9663,6 +9847,575 @@ export interface StopFormAnimationOptions {
      * The duration of the animation in miliseconds.
      */
     duration: number;
+}
+
+/**
+ * Defines an interface that represents a single chat message in a conversation with an AI.
+ *
+ * @dochash types/ai
+ * @docname AIChatMessage
+ */
+export interface AIChatMessage {
+    /**
+     * The role of the message.
+     *
+     * - `system` means that the message was generated by the system. Useful for telling the AI how to behave while.
+     * - `user` means that the message was generated by the user.
+     * - `assistant` means that the message was generated by the AI assistant.
+     * - `function` means that the message contains the results of a function call.
+     */
+    role: 'system' | 'user' | 'assistant' | 'function';
+
+    /**
+     * The contents of the message.
+     */
+    content: string;
+
+    /**
+     * The name of the author of the message.
+     *
+     * This is required if the role is `function`.
+     */
+    author?: string;
+
+    /**
+     * The reason why the message was finished.
+     */
+    finishReason?: string;
+}
+
+
+/**
+ * Defines an interface that represents options for {@link ai.chat}.
+ *
+ * @dochash types/ai
+ * @docname AIChatOptions
+ */
+export interface AIChatOptions extends RecordActionOptions {
+    /**
+     * The model that should be used.
+     *
+     * If not specified, then a default will be used.
+     *
+     * Currently, the following models are supported:
+     *
+     * - `gpt-4`
+     * - `gpt-3.5-turbo`
+     */
+    preferredModel?: 'gpt-4' | 'gpt-3.5-turbo';
+
+    /**
+     * The temperature that should be used.
+     *
+     * If not specified, then a default will be used.
+     */
+    temperature?: number;
+
+    /**
+     * The nucleus sampling probability.
+     */
+    topP?: number;
+
+    /**
+     * The presence penalty.
+     *
+     * Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.
+     */
+    presencePenalty?: number;
+
+    /**
+     * The frequency penalty.
+     *
+     * Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+     */
+    frequencyPenalty?: number;
+
+    /**
+     * The list of stop words that should be used.
+     * 
+     * If the AI generates a sequence of tokens that match one of the given words, then it will stop generating tokens.
+     */
+    stopWords?: string[];
+}
+
+/**
+ * Defines an interface that represents options for {@link ai.generateSkybox-string}.
+ *
+ * @dochash types/ai
+ * @docname AIGenerateSkyboxOptions
+ */
+export interface AIGenerateSkyboxOptions extends RecordActionOptions {
+    /**
+     * Options that are specific to blockade-labs.
+     */
+    blockadeLabs?: AIGenerateSkyboxBlockadeLabsOptions;
+}
+
+/**
+ * Options that are specific to Blockade Labs implementations for {@link ai.generateSkybox-string}.
+ *
+ * @dochash types/ai
+ * @docname AIGenerateSkyboxOptions
+ */
+export interface AIGenerateSkyboxBlockadeLabsOptions {
+    /**
+     * The pre-defined style ID for the skybox.
+     */
+    skyboxStyleId?: number;
+
+    /**
+     * The ID of a previously generated skybox.
+     */
+    remixImagineId?: number;
+
+    /**
+     * The random seed to use for generating the skybox.
+     */
+    seed?: number;
+}
+
+/**
+ * Defines an interface that represents a request for {@link ai.generateSkybox-request}.
+ * 
+ * @dochash types/ai
+ * @docname AIGenerateSkyboxRequest
+ */
+export interface AIGenerateSkyboxRequest {
+    /**
+     * The prompt that describes what the generated skybox should look like.
+     */
+    prompt: string;
+
+    /**
+     * The prompt that that describes what the generated skybox should avoid looking like.
+     */
+    negativePrompt?: string;
+
+    /**
+     * The options that should be included in the request.
+     */
+    options: AIGenerateSkyboxOptions;
+}
+
+/**
+ * Defines an interface that represents the result from {@link ai.generateSkybox-request}.
+ * 
+ * @dochash types/ai
+ * @docname AIGenerateSkyboxResult
+ */
+export interface AIGenerateSkyboxResult {
+    /**
+     * The URL that the generated skybox is located at.
+     */
+    fileUrl: string;
+
+    /**
+     * The URL that the thumbnail for the generated skybox is located at.
+     */
+    thumbnailUrl?: string;
+}
+
+
+/**
+ * Defines an interface that represents options for {@link ai.generateImage-string}.
+ * 
+ * @dochash types/ai
+ * @docname AIGenerateImageOptions
+ */
+export interface AIGenerateImageOptions {
+    /**
+     * The description of what the generated image(s) should look like.
+     */
+    prompt: string;
+
+    /**
+     * The description of what the generated image(s) should not look like.
+     */
+    negativePrompt?: string;
+
+    /**
+     * The model that should be used to generate the image(s).
+     */
+    model?: string;
+
+    /**
+     * The desired width of the image(s) in pixels.
+     */
+    width?: number;
+
+    /**
+     * The desired height of the image(s) in pixels.
+     */
+    height?: number;
+
+    /**
+     * The number of images that should be generated.
+     */
+    numberOfImages?: number;
+
+    /**
+     * The random noise seed that should be used.
+     */
+    seed?: number;
+
+    /**
+     * The number of diffusion steps to run.
+     */
+    steps?: number;
+
+    /**
+     * How strictly the diffusion process adheres to the prompt text.
+     * Higher values keep the image closer to the prompt.
+     */
+    cfgScale?: number;
+
+    /**
+     * The sampler to use for the diffusion process.
+     */
+    sampler?: string;
+
+    /**
+     * The clip guidance preset.
+     */
+    clipGuidancePreset?: string;
+
+    /**
+     * The style preset that should be used to guide the image model torwards a specific style.
+     */
+    stylePreset?: string;
+}
+
+/**
+ * Defines an interface that represents a result from {@link ai.generateImage-request}.
+ * @dochash types/ai
+ * @docname AIGenerateImageSuccess
+ */
+export interface AIGenerateImageSuccess {
+    success: true;
+
+    /**
+     * The list of images that were generated.
+     */
+    images: AIGeneratedImage[];
+}
+
+
+/**
+ * Defines an interface that represents an AI generated image.
+ * 
+ * @dochash types/ai
+ * @docname AIGeneratedImage
+ */
+export interface AIGeneratedImage {
+    /**
+     * The base64 encoded image.
+     */
+    base64: string;
+
+    /**
+     * The URL that can be used to display the image.
+     */
+    url: string;
+
+    /**
+     * The seed of the generated image.
+     */
+    seed?: number;
+}
+
+interface Ai {
+    /**
+     * Sends a chat message to the AI.
+     * Returns a promise that contains the response from the AI.
+     * Throws a {@link CasualOSError} if an error occurs while sending the message.
+     *
+     * This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.
+     *
+     * @param message The message that should be sent to the AI.
+     * @param options The options that should be used.
+     *
+     * @example Send a message to the AI and log the response.
+     * const response = await ai.chat("Hello!");
+     * console.log(response);
+     *
+     * @dochash actions/ai
+     * @doctitle AI Actions
+     * @docsidebar AI
+     * @docdescription AI actions are functions that make it easier to work with the AI.
+     * @docname ai.chat
+     * @docid ai.chat-string
+     */
+    chat(message: string, options?: AIChatOptions): Promise<string>;
+
+    /**
+     * Sends a chat message to the AI.
+     * Returns a promise that contains the response from the AI.
+     * Throws a {@link CasualOSError} if an error occurs while sending the message.
+     *
+     * This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.
+     *
+     * @param message The message that should be sent to the AI.
+     * @param options The options that should be used.
+     *
+     * @example Send a message to the AI and log the response.
+     * const response = await ai.chat({
+     *     role: "user",
+     *     content: "Hello!"
+     * });
+     * console.log(`${response.role}: ${response.content}`);
+     *
+     * @dochash actions/ai
+     * @docname ai.chat
+     * @docid ai.chat-message
+     */
+    chat(
+        message: AIChatMessage,
+        options?: AIChatOptions
+    ): Promise<AIChatMessage>;
+
+    /**
+     * Sends a chat message to the AI.
+     * Returns a promise that contains the response from the AI.
+     * Throws a {@link CasualOSError} if an error occurs while sending the message.
+     *
+     * This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.
+     *
+     * @param message The message that should be sent to the AI.
+     * @param options The options that should be used.
+     *
+     * @example Send a message to the AI and log the response.
+     * const response = await ai.chat([
+     *      {
+     *          role: "system",
+     *          content: "You are a helpful assistant."
+     *      },
+     *     {
+     *          role: "user",
+     *          content: "Hello!"
+     *     }
+     * ]);
+     * console.log(`${response.role}: ${response.content}`);
+     *
+     * @example Build a basic chat bot.
+     * const messages = [
+     *      {
+     *          role: "system",
+     *          content: "You are a helpful assistant."
+     *      },
+     * ];
+     *
+     * while(true) {
+     *      const userInput = await os.showInput();
+     *      if (!userInput) {
+     *          break;
+     *      }
+     *      messages.push({
+     *          role: "user",
+     *          content: userInput
+     *      });
+     *
+     *      const response = await ai.chat(messages);
+     *      messages.push(response);
+     *      os.toast(response.content);
+     * }
+     *
+     * os.toast("Goodbye!");
+     *
+     * @dochash actions/ai
+     * @docname ai.chat
+     * @docid ai.chat-messages
+     */
+    chat(
+        messages: AIChatMessage[],
+        options?: AIChatOptions
+    ): Promise<AIChatMessage>;
+
+    /**
+     * Sends a chat message to the AI.
+     * Returns a promise that contains the response from the AI.
+     * Throws a {@link CasualOSError} if an error occurs while sending the message.
+     *
+     * This function can be useful for creating chat bots, or for using an Artificial Intelligence (AI) to process a message.
+     *
+     * @param message The message that should be sent to the AI.
+     * @param options The options that should be used.
+     *
+     * @example Send a message to the AI and log the response.
+     * const response = await ai.chat([
+     *      {
+     *          role: "system",
+     *          content: "You are a helpful assistant."
+     *      },
+     *     {
+     *          role: "user",
+     *          content: "Hello!"
+     *     }
+     * ]);
+     * console.log(`${response.role}: ${response.content}`);
+     *
+     * @example Build a basic chat bot.
+     * const messages = [
+     *      {
+     *          role: "system",
+     *          content: "You are a helpful assistant."
+     *      },
+     * ];
+     *
+     * while(true) {
+     *      const userInput = await os.showInput();
+     *      if (!userInput) {
+     *          break;
+     *      }
+     *      messages.push({
+     *          role: "user",
+     *          content: userInput
+     *      });
+     *
+     *      const response = await ai.chat(messages);
+     *      messages.push(response);
+     *      os.toast(response.content);
+     * }
+     *
+     * os.toast("Goodbye!");
+     *
+     * @dochash actions/ai
+     * @docname ai.chat
+     * @docid ai.chat-messages
+     */
+    chat(
+        messages: string | AIChatMessage | AIChatMessage[],
+        options?: AIChatOptions
+    ): Promise<AIChatMessage | string>;
+
+    /**
+     * Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given prompt.
+     * 
+     * Returns a promise that resolves with a URL to the generated image that can be used as the {@tag formAddress} of a bot that has {@tag form} set to `skybox`.
+     * 
+     * @param prompt the string that describes what the skybox should look like.
+     * @param negativePrompt the string that describes what the skybox should avoid looking like.
+     * @param options the additional options that should be used.
+     * 
+     * @example Generate a skybox from a prompt.
+     * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.");
+     * masks.formAddress = skybox;
+     * 
+     * @example Generate a skybox from a prompt and a negative prompt
+     * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.", "A skybox with a red sky and brown grass.");
+     * masks.formAddress = skybox;
+     * 
+     * @dochash actions/ai
+     * @docname ai.generateSkybox
+     * @docid ai.generateSkybox-string
+     */
+    generateSkybox(prompt: string, negativePrompt?: string, options?: AIGenerateSkyboxOptions): Promise<string>;
+
+    /**
+     * Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given request object.
+     * 
+     * Returns a promise that resolves with an object that contains a URL to the generated image that can be used as the {@tag formAddress} of a bot that has {@tag form} set to `skybox`.
+     * 
+     * @param request the request object that describes what the skybox should look like.
+     * 
+     * @example Generate a skybox from a prompt.
+     * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.");
+     * masks.formAddress = skybox;
+     * 
+     * @example Generate a skybox from a prompt and a negative prompt
+     * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.", "A skybox with a red sky and brown grass.");
+     * masks.formAddress = skybox;
+     * 
+     * @dochash actions/ai
+     * @docname ai.generateSkybox
+     * @docid ai.generateSkybox-request
+     */
+    generateSkybox(request: AIGenerateSkyboxRequest): Promise<AIGenerateSkyboxResult>;
+
+    /**
+     * Generates a [skybox image](https://en.wikipedia.org/wiki/Skybox_%28video_games%29) from the given request object.
+     * 
+     * Returns a promise that resolves with an object that contains a URL to the generated image that can be used as the {@tag formAddress} of a bot that has {@tag form} set to `skybox`.
+     * 
+     * @param request the request object that describes what the skybox should look like.
+     * @param negativePrompt the string that describes what the skybox should avoid looking like.
+     * @param options the additional options that should be used.
+     * 
+     * @example Generate a skybox from a prompt.
+     * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.");
+     * masks.formAddress = skybox;
+     * 
+     * @example Generate a skybox from a prompt and a negative prompt
+     * const skybox = await ai.generateSkybox("A skybox with a blue sky and green grass.", "A skybox with a red sky and brown grass.");
+     * masks.formAddress = skybox;
+     * 
+     * @dochash actions/ai
+     * @docname ai.generateSkybox
+     * @docid ai.generateSkybox-request
+     */
+    generateSkybox(prompt: string | AIGenerateSkyboxRequest, negativePrompt?: string, options?: AIGenerateSkyboxOptions): Promise<string | AIGenerateSkyboxResult>
+
+    /**
+     * Generates an image from the given prompt.
+     *
+     * Returns a promise that resolves with the Base64 data of the generated image that can be used as the {@tag formAddress} of a bot.
+     *
+     * @param prompt the string that describes what the image should look like.
+     * @param negativePrompt the string that describes what the image should avoid looking like.
+     * @param options the additional options that should be used.
+     *
+     * @example Generate an image from a prompt.
+     * const image = await ai.generateImage("An oil painting of a grassy field.");
+     * masks.formAddress = image;
+     *
+     * @example Generate a image from a prompt and a negative prompt
+     * const image = await ai.generateSkybox("An oil painting of a grassy field.", "realistic");
+     * masks.formAddress = image;
+     *
+     * @dochash actions/ai
+     * @docname ai.generateImage
+     * @docid ai.generateImage-string
+     */
+    generateImage(
+        prompt: string,
+        negativePrompt?: string,
+        options?: AIGenerateSkyboxOptions & RecordActionOptions
+    ): Promise<string>;
+
+    /**
+     * Generates an image from the given prompt.
+     *
+     * Returns a promise that resolves with the Base64 data of the generated image that can be used as the {@tag formAddress} of a bot.
+     *
+     * @param request the request object that describes what the image should look like.
+     * @param options the options for the request.
+     *
+     * @example Generate an image from a prompt.
+     * const image = await ai.generateImage({
+     *     prompt: "An oil painting of a grassy field.",
+     * });
+     * masks.formAddress = image;
+     *
+     * @example Generate a image from a prompt and a negative prompt
+     * const image = await ai.generateSkybox({
+     *     prompt: "An oil painting of a grassy field.",
+     *     negativePrompt: "realistic"
+     * });
+     * masks.formAddress = image;
+     *
+     * @dochash actions/ai
+     * @docname ai.generateImage
+     * @docid ai.generateImage-request
+     */
+    generateImage(
+        request: AIGenerateImageOptions,
+        options?: RecordActionOptions
+    ): Promise<AIGenerateImageSuccess>;
+
+    generateImage(
+        prompt: string | AIGenerateImageOptions,
+        negativePrompt?: string | RecordActionOptions,
+        options?: RecordActionOptions
+    ): Promise<string | AIGenerateImageSuccess>;
 }
 
 interface Os {
@@ -10159,6 +10912,63 @@ interface Os {
      * Closes the barcode scanner.
      */
     closeBarcodeScanner(): OpenBarcodeScannerAction;
+
+    /**
+     * Opens the photo camera. Returns a promise that resolves once the camera has been opened. Triggers the {@tag onPhotoCameraOpened} shout once opened.
+     *
+     * While open, each time the user takes a photo the system will send a {@tag @onPhotoCaptured} shout. Optionally accepts which camera to use for scanning. (front/back)
+     *
+     * @param options the options that should be used for the photo camera.
+     *
+     * @example Open the photo camera.
+     * await os.openPhotoCamera();
+     *
+     * @example Open the photo camera, defaulting to the front-facing camera.
+     * await os.openPhotoCamera({
+     *     cameraType: "front"
+     * });
+     *
+     * @dochash actions/camera
+     * @doctitle Camera Actions
+     * @docsidebar Camera
+     * @docdescription Actions for taking photos.
+     * @docname os.openPhotoCamera
+     */
+    openPhotoCamera(options?: OpenPhotoCameraOptions): Promise<void>;
+
+    /**
+     * Closes the photo camera. Returns a promise that resolves once the camera has been closed. Triggers the {@tag onPhotoCameraClosed} shout once closed.
+     *
+     * @example Close the photo camera
+     * await os.closePhotoCamera();
+     * 
+     * @dochash actions/camera
+     * @docname os.closePhotoCamera
+     */
+    closePhotoCamera(): Promise<void>;
+
+    /**
+     * Opens the photo camera for the user to take a single photo. Returns a promise that resolves with the taken photo. Triggers the {@tag onPhotoCameraOpened} shout once opened.
+     *
+     * While open, each time the user takes a photo the system will send a {@tag @onPhotoCaptured} shout. Optionally accepts which camera to use for scanning. (front/back)
+     *
+     * @param options the options that should be used for the photo camera.
+     *
+     * @example Prompt the user to take a single photo.
+     * const photo = await os.capturePhoto();
+     *
+     * @example Take a single photo, defaulting to the front-facing camera.
+     * await os.capturePhoto({
+     *     cameraType: "front"
+     * });
+     *
+     * @dochash actions/camera
+     * @doctitle Camera Actions
+     * @docsidebar Camera
+     * @docdescription Actions for taking photos.
+     * @docname os.capturePhoto
+     */
+    capturePhoto(options?: OpenPhotoCameraOptions): Promise<Photo>;
 
     /**
      * Shows the given barcode.
@@ -10664,7 +11474,7 @@ interface Os {
         marker: string,
         permission: object,
         options?: RecordActionOptions
-    ): Promise<GrantMarkerPermissionResponse>;
+    ): Promise<GrantMarkerPermissionResult>;
 
     /**
      * Revokes the given permission from the given marker in the given record.
@@ -10870,6 +11680,60 @@ interface Os {
     getFile(urlOrRecordFileResult: string | RecordFileSuccess): Promise<any>;
 
     /**
+     * Gets the data stored in the given public file.
+     * Only works for files that have the `publicRead` marker.
+     * If the file is not public, then this operation will fail.
+     * @param result The successful result of a os.recordFile() call.
+     * @param endpoint The endpoint that should be queried. Optional.
+     */
+    getPublicFile(result: RecordFileSuccess): Promise<any>;
+
+    /**
+     * Gets the data stored in the given public file.
+     * Only works for files that have the `publicRead` marker.
+     * If the file is not public, then this operation will fail.
+     * @param url The URL that the public file is stored at.
+     */
+    getPublicFile(url: string): Promise<any>;
+
+    /**
+     * Gets the data stored in the given public file.
+     * Only works for files that have the `publicRead` marker.
+     * If the file is not public, then this operation will fail.
+     * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     */
+    getPublicFile(
+        urlOrRecordFileResult: string | RecordFileSuccess
+    ): Promise<string>;
+
+    /**
+     * Gets the data stored in the given private file.
+     * @param result The successful result of a os.recordFile() call.
+     * @param endpoint The endpoint that should be queried. Optional.
+     */
+    getPrivateFile(
+        result: RecordFileSuccess,
+        endpoint?: string
+    ): Promise<any>;
+
+    /**
+     * Gets the data stored in the given private file.
+     * @param url The URL that the public file is stored at.
+     * @param endpoint The endpoint that should be queried. Optional.
+     */
+    getPrivateFile(url: string, endpoint?: string): Promise<any>;
+
+    /**
+     * Gets the data stored in the given private file.
+     * @param urlOrRecordFileResult The URL or the successful result of the record file operation.
+     * @param endpoint The endpoint that should be queried. Optional.
+     */
+    getPrivateFile(
+        urlOrRecordFileResult: string | RecordFileSuccess,
+        endpoint?: string
+    ): Promise<string>;
+
+    /**
      * Deletes the specified file using the given record key.
      * @param recordKey The key that should be used to delete the file.
      * @param result The successful result of a os.recordFile() call.
@@ -10906,6 +11770,28 @@ interface Os {
      * @param endpoint The records endpoint that should be queried. Optional.
      */
     countEvents(recordNameOrKey: string, eventName: string, endpoint?: string): Promise<GetCountResult>;
+
+    /**
+     * Gets the list of studios that the currently logged in user has access to.
+     * 
+     * Returns a promise that resolves with an object that contains the list of studios (if successful) or information about the error that occurred.
+     * 
+     * @param endpoint the HTTP Endpoint of the records website that the data should be retrieved from. If omitted, then the preconfigured records endpoint will be used. Note that when using a custom endpoint, the record key must be a valid record key for that endpoint.
+     * 
+     * @example Get the list of studios that the user has access to
+     * const result = await os.listUserStudios();
+     * 
+     * if (result.success) {
+     *      os.toast(result.studios.map(s => s.name).join(', '));
+     * } else {
+     *      os.toast('Failed to get studios ' + result.errorMessage);
+     * }
+     * 
+     * @dochash actions/records
+     * @docgroup 01-records
+     * @docname os.listUserStudios
+     */
+    listUserStudios(endpoint?: string): Promise<ListStudiosResult>;
 
     /**
      * Converts the given geolocation to a what3words (https://what3words.com/) address.
@@ -11819,6 +12705,38 @@ interface Bytes {
      * @param hex The hexadecimal string.
      */
     fromHexString(hex: string): Uint8Array;
+
+    /**
+     * Converts the given bytes into a string that contains the [Base64](https://en.wikipedia.org/wiki/Base64) [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) representation of the given data.
+     * @param bytes The data that should be converted to a Base64 Data URL. If given a string, then it should be valid Base 64 data.
+     * @param mimeType The [MIME Type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) of the data.
+     * If omitted, then `image/png` will be used.
+     * 
+     * @example Convert some bytes to a base 64 image/png data URL
+     * const data = bytes.toBase64Url(new Uint8Array([ 255, 254, 253 ]));
+     * 
+     * @example Convert a base 64 string to a text/plain base 64 data URL
+     * const data = bytes.toBase64Url('aGVsbG8=', 'text/plain'); // "hello" encoded in Base64
+     * 
+     * @dochash actions/bytes
+     * @docname bytes.toBase64Url
+     */
+    toBase64Url(bytes: Uint8Array | string, mimeType?: string): string;
+
+    /**
+     * Converts the given [Data URL](https://developer.mozilla.org/en-US/docs/web/http/basics_of_http/data_urls) into a blob object.
+     * 
+     * Returns a blob that contains the binary data. Returns null if the URL is not a valid Data URL.
+     * 
+     * @param url The URL.
+     * 
+     * @example Convert a data URL to a blob
+     * const blob = bytes.fromBase64Url('data:image/png;base64,aGVsbG8='); // "hello" encoded in Base64
+     * 
+     * @dochash actions/bytes
+     * @docname bytes.fromBase64Url
+     */
+    fromBase64Url(url: string): Blob;
 }
 
 interface Crypto {

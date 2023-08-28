@@ -23,7 +23,7 @@ export interface PolicyStore {
     listUserPolicies(
         recordName: string,
         startingMarker: string | null
-    ): Promise<ListedUserPolicy[]>;
+    ): Promise<ListUserPoliciesStoreResult>;
 
     /**
      * Lists the roles that are assigned to the user.
@@ -50,6 +50,16 @@ export interface PolicyStore {
     listAssignmentsForRole(
         recordName: string,
         role: string
+    ): Promise<ListedRoleAssignments>;
+
+    /**
+     * Lists the role assignments in the given record.
+     * @param recordName The name of the record.
+     * @param role The name of the role that the assignments should be listed after. If null, then the list starts with the first role assignment.
+     */
+    listAssignments?(
+        recordName: string,
+        startingRole: string | null
     ): Promise<ListedRoleAssignments>;
 
     /**
@@ -191,8 +201,25 @@ export interface UpdateUserRolesFailure {
     errorMessage: string;
 }
 
+export type ListUserPoliciesStoreResult =
+    | ListUserPoliciesStoreSuccess
+    | ListUserPoliciesStoreFailure;
+
+export interface ListUserPoliciesStoreSuccess {
+    success: true;
+    policies: ListedUserPolicy[];
+    totalCount: number;
+}
+
+export interface ListUserPoliciesStoreFailure {
+    success: false;
+    errorCode: ServerError;
+    errorMessage: string;
+}
+
 export interface ListedRoleAssignments {
     assignments: RoleAssignment[];
+    totalCount: number;
 }
 
 export type RoleAssignment = UserRoleAssignment | InstRoleAssignment;

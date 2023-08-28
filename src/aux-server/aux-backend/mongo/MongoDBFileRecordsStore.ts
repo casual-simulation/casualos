@@ -12,8 +12,11 @@ import {
     PresignFileReadResult,
     FileRecordsLookup,
     FileRecord,
+    ListFilesLookupResult,
+    ListFilesStoreResult,
+    ListFilesStoreFailure,
 } from '@casual-simulation/aux-records';
-import { Collection } from 'mongodb';
+import { Collection, FilterQuery } from 'mongodb';
 
 /**
  * Defines a file records store that can store data in MongoDB.
@@ -25,6 +28,30 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
     constructor(lookup: FileRecordsLookup, fileUploadUrl: string) {
         this._lookup = lookup;
         this._fileUploadUrl = fileUploadUrl;
+
+        if (this._lookup.listUploadedFiles) {
+            this.listUploadedFiles = async (
+                recordName: string,
+                fileName: string
+            ) => {
+                const result = await this._lookup.listUploadedFiles(
+                    recordName,
+                    fileName
+                );
+
+                if (!result.success) {
+                    return result as ListFilesStoreFailure;
+                }
+                return {
+                    success: true,
+                    files: result.files.map((f) => ({
+                        ...f,
+                        url: this._fileUrl(recordName, f.fileName),
+                    })),
+                    totalCount: result.totalCount,
+                };
+            };
+        }
     }
 
     getAllowedUploadHeaders(): string[] {
@@ -35,11 +62,13 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
         fileUrl: string
     ): Promise<GetFileNameFromUrlResult> {
         if (fileUrl.startsWith(this._fileUploadUrl)) {
-            let fileName = fileUrl.slice(this._fileUploadUrl.length + 1);
-            if (fileName) {
+            let [recordName, fileName] = fileUrl
+                .slice(this._fileUploadUrl.length + 1)
+                .split('/');
+            if (recordName && fileName) {
                 return {
                     success: true,
-                    recordName: null,
+                    recordName,
                     fileName,
                 };
             }
@@ -57,6 +86,11 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
         };
     }
 
+    listUploadedFiles?(
+        recordName: string,
+        fileName: string
+    ): Promise<ListFilesStoreResult>;
+
     async presignFileUpload(
         request: PresignFileUploadRequest
     ): Promise<PresignFileUploadResult> {
@@ -68,7 +102,7 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
                 'content-type': request.fileMimeType,
             },
             uploadMethod: 'POST',
-            uploadUrl: `${this._fileUploadUrl}/${request.fileName}`,
+            uploadUrl: this._fileUrl(request.recordName, request.fileName),
         };
     }
 
@@ -81,8 +115,8 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
                 ...request.headers,
                 'record-name': request.recordName,
             },
-            requestMethod: 'POST',
-            requestUrl: `${this._fileUploadUrl}/${request.fileName}`,
+            requestMethod: 'GET',
+            requestUrl: this._fileUrl(request.recordName, request.fileName),
         };
     }
 
@@ -104,7 +138,7 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
             success: true,
             fileName: record.fileName,
             recordName: record.recordName,
-            url: `${this._fileUploadUrl}/${record.fileName}`,
+            url: this._fileUrl(recordName, record.fileName),
             description: record.description,
             publisherId: record.publisherId,
             subjectId: record.subjectId,
@@ -172,6 +206,12 @@ export class MongoDBFileRecordsStore implements FileRecordsStore {
             };
         }
     }
+
+    private _fileUrl(recordName: string, fileName: string): string {
+        return `${this._fileUploadUrl}/${encodeURIComponent(
+            recordName
+        )}/${encodeURIComponent(fileName)}`;
+    }
 }
 
 export class MongoDBFileRecordsLookup implements FileRecordsLookup {
@@ -203,6 +243,42 @@ export class MongoDBFileRecordsLookup implements FileRecordsLookup {
             sizeInBytes: record.sizeInBytes,
             uploaded: record.uploaded,
             markers: record.markers,
+        };
+    }
+
+    async listUploadedFiles(
+        recordName: string,
+        fileName: string
+    ): Promise<ListFilesLookupResult> {
+        let query = {
+            recordName: recordName,
+            uploaded: true,
+        } as FilterQuery<MongoFileRecord>;
+        if (!!fileName) {
+            query.fileName = { $gt: fileName };
+        }
+
+        const count = await this._collection.count({
+            recordName: recordName,
+            uploaded: true,
+        });
+
+        const files = await this._collection
+            .find(query)
+            .sort({ fileName: 1 })
+            .limit(10)
+            .toArray();
+
+        return {
+            success: true,
+            files: files.map((f) => ({
+                fileName: f.fileName,
+                description: f.description,
+                sizeInBytes: f.sizeInBytes,
+                markers: f.markers,
+                uploaded: f.uploaded,
+            })),
+            totalCount: count,
         };
     }
 

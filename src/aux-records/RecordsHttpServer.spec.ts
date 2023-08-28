@@ -10,7 +10,6 @@ import {
     GenericHttpResponse,
 } from './RecordsHttpServer';
 import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
-import { MemoryAuthStore } from './MemoryAuthStore';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import {
     formatV1OpenAiKey,
@@ -20,23 +19,21 @@ import {
 import { AuthSession, AuthUser } from './AuthStore';
 import { LivekitController } from './LivekitController';
 import { isRecordKey, RecordsController } from './RecordsController';
-import { RecordsStore } from './RecordsStore';
-import { MemoryRecordsStore } from './MemoryRecordsStore';
+import { RecordsStore, Studio } from './RecordsStore';
 import { EventRecordsController } from './EventRecordsController';
 import { EventRecordsStore } from './EventRecordsStore';
-import { MemoryEventRecordsStore } from './MemoryEventRecordsStore';
 import { DataRecordsController } from './DataRecordsController';
 import { DataRecordsStore } from './DataRecordsStore';
-import { MemoryDataRecordsStore } from './MemoryDataRecordsStore';
 import { FileRecordsController } from './FileRecordsController';
 import { FileRecordsStore } from './FileRecordsStore';
-import { MemoryFileRecordsStore } from './MemoryFileRecordsStore';
 import { getHash } from '@casual-simulation/crypto';
 import { SubscriptionController } from './SubscriptionController';
 import { StripeInterface, StripeProduct } from './StripeInterface';
-import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import {
+    SubscriptionConfiguration,
+    allowAllFeatures,
+} from './SubscriptionConfiguration';
 import { PolicyController } from './PolicyController';
-import { MemoryPolicyStore } from './MemoryPolicyStore';
 import {
     ACCOUNT_MARKER,
     ADMIN_ROLE_NAME,
@@ -46,11 +43,27 @@ import { RateLimitController } from './RateLimitController';
 import { MemoryRateLimiter } from './MemoryRateLimiter';
 import { RateLimiter } from '@casual-simulation/rate-limit-redis';
 import { createTestUser } from './TestUtils';
+import { AIController } from './AIController';
+import {
+    AIChatInterfaceRequest,
+    AIChatInterfaceResponse,
+} from './AIChatInterface';
+import {
+    AIGenerateSkyboxInterfaceRequest,
+    AIGenerateSkyboxInterfaceResponse,
+    AIGetSkyboxInterfaceResponse,
+} from './AIGenerateSkyboxInterface';
+import {
+    AIGenerateImageInterfaceRequest,
+    AIGenerateImageInterfaceResponse,
+} from './AIImageInterface';
+import { sortBy } from 'lodash';
+import { MemoryStore } from './MemoryStore';
 
 console.log = jest.fn();
 
 describe('RecordsHttpServer', () => {
-    let authStore: MemoryAuthStore;
+    let store: MemoryStore;
     let authMessenger: MemoryAuthMessenger;
     let authController: AuthController;
     let server: RecordsHttpServer;
@@ -59,21 +72,16 @@ describe('RecordsHttpServer', () => {
     let apiHeaders: GenericHttpHeaders;
     let livekitController: LivekitController;
     let recordsController: RecordsController;
-    let recordsStore: RecordsStore;
     let eventsController: EventRecordsController;
-    let eventsStore: EventRecordsStore;
     let dataController: DataRecordsController;
-    let dataStore: DataRecordsStore;
     let manualDataController: DataRecordsController;
     let manualDataStore: DataRecordsStore;
 
     let policyController: PolicyController;
-    let policyStore: MemoryPolicyStore;
 
     let rateLimiter: RateLimiter;
     let rateLimitController: RateLimitController;
 
-    let filesStore: FileRecordsStore;
     let filesController: FileRecordsController;
 
     let stripeMock: {
@@ -85,6 +93,28 @@ describe('RecordsHttpServer', () => {
         createCustomer: jest.Mock<any>;
         listActiveSubscriptionsForCustomer: jest.Mock<any>;
         constructWebhookEvent: jest.Mock<any>;
+        getSubscriptionById: jest.Mock<any>;
+    };
+
+    let aiController: AIController;
+    let chatInterface: {
+        chat: jest.Mock<
+            Promise<AIChatInterfaceResponse>,
+            [AIChatInterfaceRequest]
+        >;
+    };
+    let skyboxInterface: {
+        generateSkybox: jest.Mock<
+            Promise<AIGenerateSkyboxInterfaceResponse>,
+            [AIGenerateSkyboxInterfaceRequest]
+        >;
+        getSkybox: jest.Mock<Promise<AIGetSkyboxInterfaceResponse>, [string]>;
+    };
+    let imageInterface: {
+        generateImage: jest.Mock<
+            Promise<AIGenerateImageInterfaceResponse>,
+            [AIGenerateImageInterfaceRequest]
+        >;
     };
 
     let stripe: StripeInterface;
@@ -117,72 +147,88 @@ describe('RecordsHttpServer', () => {
     const apiOrigin = 'https://api-origin.com';
     const recordName = 'testRecord';
 
-    let subscriptionConfig: SubscriptionConfiguration;
-
     beforeEach(async () => {
         allowedAccountOrigins = new Set([accountOrigin]);
 
         allowedApiOrigins = new Set([apiOrigin]);
 
-        subscriptionConfig = {
-            subscriptions: [
-                {
-                    id: 'sub_id',
-                    eligibleProducts: ['product_id'],
-                    featureList: ['Feature 1', 'Feature 2'],
-                    product: 'product_id',
-                    defaultSubscription: true,
+        store = new MemoryStore({
+            subscriptions: {
+                subscriptions: [
+                    {
+                        id: 'sub_id',
+                        eligibleProducts: ['product_id'],
+                        featureList: ['Feature 1', 'Feature 2'],
+                        product: 'product_id',
+                        defaultSubscription: true,
+                    },
+                ],
+                webhookSecret: 'webhook_secret',
+                cancelUrl: 'http://cancel_url',
+                successUrl: 'http://success_url',
+                returnUrl: 'http://return_url',
+                tiers: {},
+                defaultFeatures: {
+                    user: allowAllFeatures(),
+                    studio: allowAllFeatures(),
                 },
-            ],
-            webhookSecret: 'webhook_secret',
-            cancelUrl: 'cancel_url',
-            successUrl: 'success_url',
-            returnUrl: 'return_url',
-        };
+            },
+        });
+        manualDataStore = new MemoryStore({
+            subscriptions: null,
+        });
 
-        authStore = new MemoryAuthStore();
         authMessenger = new MemoryAuthMessenger();
-        authController = new AuthController(
-            authStore,
-            authMessenger,
-            subscriptionConfig
-        );
+        authController = new AuthController(store, authMessenger, store);
         livekitController = new LivekitController(
             livekitApiKey,
             livekitSecretKey,
             livekitEndpoint
         );
 
-        const memRecordsStore = (recordsStore = new MemoryRecordsStore());
-        recordsController = new RecordsController(recordsStore);
+        // const memRecordsStore = (store = new MemoryRecordsStore(
+        //     store
+        // ));
+        recordsController = new RecordsController({
+            auth: store,
+            store,
+            config: store,
+            metrics: store,
+        });
 
-        policyStore = new MemoryPolicyStore();
         policyController = new PolicyController(
             authController,
             recordsController,
-            policyStore
+            store
         );
 
-        eventsStore = new MemoryEventRecordsStore();
-        eventsController = new EventRecordsController(
-            policyController,
-            eventsStore
-        );
+        eventsController = new EventRecordsController({
+            config: store,
+            metrics: store,
+            policies: policyController,
+            store,
+        });
 
-        dataStore = new MemoryDataRecordsStore();
-        dataController = new DataRecordsController(policyController, dataStore);
+        dataController = new DataRecordsController({
+            config: store,
+            metrics: store,
+            policies: policyController,
+            store,
+        });
 
-        manualDataStore = new MemoryDataRecordsStore();
-        manualDataController = new DataRecordsController(
-            policyController,
-            manualDataStore
-        );
+        manualDataController = new DataRecordsController({
+            config: store,
+            metrics: store,
+            policies: policyController,
+            store: manualDataStore,
+        });
 
-        filesStore = new MemoryFileRecordsStore();
-        filesController = new FileRecordsController(
-            policyController,
-            filesStore
-        );
+        filesController = new FileRecordsController({
+            config: store,
+            metrics: store,
+            policies: policyController,
+            store,
+        });
 
         rateLimiter = new MemoryRateLimiter();
         rateLimitController = new RateLimitController(rateLimiter, {
@@ -199,6 +245,7 @@ describe('RecordsHttpServer', () => {
             createCustomer: jest.fn(),
             listActiveSubscriptionsForCustomer: jest.fn(),
             constructWebhookEvent: jest.fn(),
+            getSubscriptionById: jest.fn(),
         };
 
         stripeMock.getProductAndPriceInfo.mockImplementation(async (id) => {
@@ -224,9 +271,57 @@ describe('RecordsHttpServer', () => {
         subscriptionController = new SubscriptionController(
             stripe,
             authController,
-            authStore,
-            subscriptionConfig
+            store,
+            store,
+            store
         );
+
+        chatInterface = {
+            chat: jest.fn(),
+        };
+        skyboxInterface = {
+            generateSkybox: jest.fn(),
+            getSkybox: jest.fn(),
+        };
+        imageInterface = {
+            generateImage: jest.fn(),
+        };
+        aiController = new AIController({
+            chat: {
+                interface: chatInterface,
+                options: {
+                    defaultModel: 'default-model',
+                    allowedChatModels: ['model-1', 'model-2'],
+                    allowedChatSubscriptionTiers: ['beta'],
+                },
+            },
+            generateSkybox: {
+                interface: skyboxInterface,
+                options: {
+                    allowedSubscriptionTiers: ['beta'],
+                },
+            },
+            images: {
+                interfaces: {
+                    openai: imageInterface,
+                },
+                options: {
+                    allowedModels: {
+                        openai: ['model-1', 'model-2'],
+                    },
+                    allowedSubscriptionTiers: ['beta'],
+                    defaultHeight: 512,
+                    defaultWidth: 512,
+                    maxHeight: 1024,
+                    maxWidth: 1024,
+                    defaultModel: 'model-1',
+                    maxImages: 3,
+                    maxSteps: 50,
+                },
+            },
+            config: store,
+            metrics: store,
+        });
 
         server = new RecordsHttpServer(
             allowedAccountOrigins,
@@ -240,7 +335,8 @@ describe('RecordsHttpServer', () => {
             filesController,
             subscriptionController,
             rateLimitController,
-            policyController
+            policyController,
+            aiController
         );
         defaultHeaders = {
             origin: 'test.com',
@@ -287,13 +383,15 @@ describe('RecordsHttpServer', () => {
         userId = loginResult.userId;
 
         const services = {
-            authStore: authStore,
+            authStore: store,
             auth: authController,
             authMessenger: authMessenger,
             policies: policyController,
-            policyStore: policyStore,
             records: recordsController,
-            recordsStore: memRecordsStore,
+            store,
+            recordsStore: store,
+            policyStore: store,
+            configStore: store,
         };
         const owner = await createTestUser(services, 'owner@example.com');
 
@@ -319,10 +417,11 @@ describe('RecordsHttpServer', () => {
 
         recordKey = recordKeyResult.recordKey;
 
-        const record = await services.recordsStore.getRecordByName(recordName);
-        await services.recordsStore.updateRecord({
+        const record = await services.store.getRecordByName(recordName);
+        await services.store.updateRecord({
             name: recordName,
             ownerId: ownerId,
+            studioId: null,
             secretHashes: record.secretHashes,
             secretSalt: record.secretSalt,
         });
@@ -348,36 +447,7 @@ describe('RecordsHttpServer', () => {
                     email: 'test@example.com',
                     phoneNumber: null,
                     hasActiveSubscription: false,
-                    openAiKey: null,
                     subscriptionTier: null,
-                },
-                headers: accountCorsHeaders,
-            });
-        });
-
-        it('should return the openAiKey for active subscriptions', async () => {
-            const user = await authStore.findUser(userId);
-            await authStore.saveUser({
-                ...user,
-                subscriptionStatus: 'active',
-                openAiKey: 'api key',
-            });
-            const result = await server.handleRequest(
-                httpGet(
-                    `/api/{userId:${userId}}/metadata`,
-                    authenticatedHeaders
-                )
-            );
-
-            expectResponseBodyToEqual(result, {
-                statusCode: 200,
-                body: {
-                    success: true,
-                    email: 'test@example.com',
-                    phoneNumber: null,
-                    hasActiveSubscription: true,
-                    openAiKey: 'api key',
-                    subscriptionTier: 'beta',
                 },
                 headers: accountCorsHeaders,
             });
@@ -386,7 +456,7 @@ describe('RecordsHttpServer', () => {
         it('should be able to decode URI components for the userId', async () => {
             const userId =
                 'did:ethr:0xA31b9288725d2B99137f4af10CaFdaA67B80C769';
-            await authStore.saveNewUser({
+            await store.saveNewUser({
                 id: userId,
                 email: 'other@example.com',
                 phoneNumber: null,
@@ -442,7 +512,6 @@ describe('RecordsHttpServer', () => {
                     email: 'other@example.com',
                     phoneNumber: null,
                     hasActiveSubscription: false,
-                    openAiKey: null,
                     subscriptionTier: null,
                 },
                 headers: accountCorsHeaders,
@@ -590,7 +659,7 @@ describe('RecordsHttpServer', () => {
                 headers: accountCorsHeaders,
             });
 
-            const user = await authStore.findUser(userId);
+            const user = await store.findUser(userId);
             expect(user).toMatchObject({
                 id: userId,
                 name: 'Kal',
@@ -599,42 +668,10 @@ describe('RecordsHttpServer', () => {
             });
         });
 
-        it('should be able to update the openAiKey when the user has an active subscription', async () => {
-            let user = await authStore.findUser(userId);
-            await authStore.saveUser({
-                ...user,
-                subscriptionStatus: 'active',
-            });
-            const result = await server.handleRequest(
-                httpPut(
-                    `/api/{userId:${userId}}/metadata`,
-                    JSON.stringify({
-                        openAiKey: 'api key',
-                    }),
-                    authenticatedHeaders
-                )
-            );
-
-            expect(result).toEqual({
-                statusCode: 200,
-                body: JSON.stringify({
-                    success: true,
-                    userId,
-                }),
-                headers: accountCorsHeaders,
-            });
-
-            user = await authStore.findUser(userId);
-            expect(user).toMatchObject({
-                id: userId,
-                openAiKey: formatV1OpenAiKey('api key'),
-            });
-        });
-
         it('should be able to decode URI components for the userId', async () => {
             const userId =
                 'did:ethr:0xA31b9288725d2B99137f4af10CaFdaA67B80C769';
-            await authStore.saveNewUser({
+            await store.saveNewUser({
                 id: userId,
                 email: 'other@example.com',
                 phoneNumber: null,
@@ -753,12 +790,12 @@ describe('RecordsHttpServer', () => {
     describe('GET /api/{userId}/subscription', () => {
         let user: AuthUser;
         beforeEach(async () => {
-            user = await authStore.findUser(userId);
-            await authStore.saveUser({
+            user = await store.findUser(userId);
+            await store.saveUser({
                 ...user,
                 stripeCustomerId: 'customerId',
             });
-            user = await authStore.findUser(userId);
+            user = await store.findUser(userId);
         });
 
         it('should return a list of subscriptions for the user', async () => {
@@ -823,6 +860,7 @@ describe('RecordsHttpServer', () => {
                             intervalLength: 1,
                             intervalCost: 123,
                             currency: 'usd',
+                            featureList: ['Feature 1', 'Feature 2'],
                         },
                     ],
                     purchasableSubscriptions: [],
@@ -993,12 +1031,12 @@ describe('RecordsHttpServer', () => {
     describe('POST /api/{userId}/subscription/manage', () => {
         let user: AuthUser;
         beforeEach(async () => {
-            user = await authStore.findUser(userId);
-            await authStore.saveUser({
+            user = await store.findUser(userId);
+            await store.saveUser({
                 ...user,
                 stripeCustomerId: 'customerId',
             });
-            user = await authStore.findUser(userId);
+            user = await store.findUser(userId);
         });
 
         it('should return the URL that the user should be redirected to', async () => {
@@ -1037,7 +1075,7 @@ describe('RecordsHttpServer', () => {
             );
 
             stripeMock.createPortalSession.mockResolvedValueOnce({
-                url: 'portal_url',
+                url: 'http://portal_url',
             });
 
             const result = await server.handleRequest(
@@ -1052,7 +1090,7 @@ describe('RecordsHttpServer', () => {
                 statusCode: 200,
                 body: JSON.stringify({
                     success: true,
-                    url: 'portal_url',
+                    url: 'http://portal_url',
                 }),
                 headers: accountCorsHeaders,
             });
@@ -1065,11 +1103,11 @@ describe('RecordsHttpServer', () => {
                 }
             );
             stripeMock.createCheckoutSession.mockResolvedValueOnce({
-                url: 'create_url',
+                url: 'http://create_url',
             });
 
             stripeMock.createPortalSession.mockResolvedValueOnce({
-                url: 'portal_url',
+                url: 'http://portal_url',
             });
 
             const result = await server.handleRequest(
@@ -1092,7 +1130,7 @@ describe('RecordsHttpServer', () => {
                 statusCode: 200,
                 body: JSON.stringify({
                     success: true,
-                    url: 'create_url',
+                    url: 'http://create_url',
                 }),
                 headers: accountCorsHeaders,
             });
@@ -1108,11 +1146,11 @@ describe('RecordsHttpServer', () => {
                 }
             );
             stripeMock.createCheckoutSession.mockResolvedValueOnce({
-                url: 'create_url',
+                url: 'http://create_url',
             });
 
             stripeMock.createPortalSession.mockResolvedValueOnce({
-                url: 'portal_url',
+                url: 'http://portal_url',
             });
 
             const result = await server.handleRequest(
@@ -1273,12 +1311,12 @@ describe('RecordsHttpServer', () => {
     describe('POST /api/stripeWebhook', () => {
         let user: AuthUser;
         beforeEach(async () => {
-            user = await authStore.findUser(userId);
-            await authStore.saveUser({
+            user = await store.findUser(userId);
+            await store.saveUser({
                 ...user,
                 stripeCustomerId: 'customer_id',
             });
-            user = await authStore.findUser(userId);
+            user = await store.findUser(userId);
         });
 
         const eventTypes = [
@@ -1347,7 +1385,7 @@ describe('RecordsHttpServer', () => {
                         headers: {},
                     });
 
-                    const user = await authStore.findUser(userId);
+                    const user = await store.findUser(userId);
                     expect(user.subscriptionStatus).toBe(status);
                 }
             );
@@ -1356,7 +1394,7 @@ describe('RecordsHttpServer', () => {
 
     describe('GET /api/emailRules', () => {
         it('should return a 404', async () => {
-            authStore.emailRules.push(
+            store.emailRules.push(
                 {
                     type: 'allow',
                     pattern: 'hello',
@@ -1390,7 +1428,7 @@ describe('RecordsHttpServer', () => {
 
     describe('GET /api/smsRules', () => {
         it('should return a 404', async () => {
-            authStore.smsRules.push(
+            store.smsRules.push(
                 {
                     type: 'allow',
                     pattern: 'hello',
@@ -1510,11 +1548,11 @@ describe('RecordsHttpServer', () => {
 
             const [uid, sid] = parsed;
 
-            const session = await authStore.findSession(uid, sid);
+            const session = await store.findSession(uid, sid);
 
             expect(session.ipAddress).toBe('999.999.999.999');
 
-            const old = await authStore.findSession(userId, sessionId);
+            const old = await store.findSession(userId, sessionId);
             expect(old.revokeTimeMs).toBeGreaterThanOrEqual(old.grantedTimeMs);
         });
 
@@ -1545,7 +1583,7 @@ describe('RecordsHttpServer', () => {
                 headers: accountCorsHeaders,
             });
 
-            const user = await authStore.findUser(userId);
+            const user = await store.findUser(userId);
             expect(user.allSessionRevokeTimeMs).toBeGreaterThan(0);
         });
 
@@ -1563,7 +1601,7 @@ describe('RecordsHttpServer', () => {
 
     describe('POST /api/v2/revokeSession', () => {
         it('should revoke the given session ID for the given user', async () => {
-            let session: AuthSession = await authStore.findSession(
+            let session: AuthSession = await store.findSession(
                 userId,
                 sessionId
             );
@@ -1588,12 +1626,12 @@ describe('RecordsHttpServer', () => {
                 headers: accountCorsHeaders,
             });
 
-            session = await authStore.findSession(userId, sessionId);
+            session = await store.findSession(userId, sessionId);
             expect(session.revokeTimeMs).toBeGreaterThan(0);
         });
 
         it('should revoke the given session key', async () => {
-            let session: AuthSession = await authStore.findSession(
+            let session: AuthSession = await store.findSession(
                 userId,
                 sessionId
             );
@@ -1617,7 +1655,7 @@ describe('RecordsHttpServer', () => {
                 headers: accountCorsHeaders,
             });
 
-            session = await authStore.findSession(userId, sessionId);
+            session = await store.findSession(userId, sessionId);
             expect(session.revokeTimeMs).toBeGreaterThan(0);
         });
 
@@ -1878,6 +1916,121 @@ describe('RecordsHttpServer', () => {
             JSON.stringify({
                 roomName,
                 userName,
+            })
+        );
+    });
+
+    describe('POST /api/v2/records', () => {
+        it('should create a new record', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/records',
+                    JSON.stringify({
+                        recordName: 'myRecord',
+                        ownerId: userId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should be able to create a record for a studio', async () => {
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'myStudio',
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/records',
+                    JSON.stringify({
+                        recordName: 'myRecord',
+                        studioId: 'studioId',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 403 status code if the user does not have admin permissions for the studio', async () => {
+            await store.addStudio({
+                id: 'studioId',
+                displayName: 'myStudio',
+            });
+
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/records',
+                    JSON.stringify({
+                        recordName: 'myRecord',
+                        studioId: 'studioId',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'You are not authorized to create a record for this studio.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        it('should return a 403 status code when the record already exists', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/records',
+                    JSON.stringify({
+                        recordName,
+                        ownerId: userId,
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 403,
+                body: {
+                    success: false,
+                    errorCode: 'record_already_exists',
+                    errorMessage: 'A record with that name already exists.',
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testUrl('POST', '/api/v2/records', () =>
+            JSON.stringify({
+                recordName: 'myRecord',
+                ownerId: userId,
             })
         );
     });
@@ -2190,6 +2343,150 @@ describe('RecordsHttpServer', () => {
         testRateLimit('GET', `/api/v2/records/events/count`);
     });
 
+    describe('GET /api/v2/records/events/list', () => {
+        let events: any[];
+        beforeEach(async () => {
+            events = [];
+            for (let i = 0; i < 20; i++) {
+                const name = `test${i.toString().padStart(2, '0')}`;
+                await eventsController.addCount(recordKey, name, i, userId);
+                events.push({
+                    eventName: name,
+                    count: i,
+                    markers: [PUBLIC_READ_MARKER],
+                });
+            }
+        });
+
+        it('should get a list of events', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    events: events.slice(0, 10),
+                    totalCount: 20,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return the events that are listed after the given event name', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/list?recordName=${recordName}&eventName=${'test05'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    events: events.slice(6, 16),
+                    totalCount: 20,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an empty list if the inst doesnt have permission', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/list?recordName=${recordName}&instances=inst`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    events: [],
+                    totalCount: 20,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should get a list of events if the inst and user have permission', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+                ['inst']: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/list?recordName=${recordName}&instances=inst`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    events: events.slice(0, 10),
+                    totalCount: 20,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result if recordName is omitted', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/events/list?eventName=${'testEvent'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName is required.',
+                            path: ['recordName'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testRateLimit('GET', `/api/v2/records/events/list`);
+    });
+
     describe('POST /api/v2/records/events', () => {
         beforeEach(async () => {
             await eventsController.updateEvent({
@@ -2222,9 +2519,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            expect(
-                await eventsStore.getEventCount(recordName, 'testEvent')
-            ).toEqual({
+            expect(await store.getEventCount(recordName, 'testEvent')).toEqual({
                 success: true,
                 count: 5,
                 markers: ['secret'],
@@ -2252,9 +2547,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            expect(
-                await eventsStore.getEventCount(recordName, 'testEvent')
-            ).toEqual({
+            expect(await store.getEventCount(recordName, 'testEvent')).toEqual({
                 success: true,
                 count: 15,
                 markers: [PUBLIC_READ_MARKER],
@@ -2295,9 +2588,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            expect(
-                await eventsStore.getEventCount(recordName, 'testEvent')
-            ).toEqual({
+            expect(await store.getEventCount(recordName, 'testEvent')).toEqual({
                 success: true,
                 count: 10,
                 markers: ['secret'],
@@ -2449,7 +2740,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should delete the data if the user has permission', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -2554,7 +2845,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should return not_authorized if the inst does not have permission', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -2815,7 +3106,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should return a 403 when the inst is not authorized', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -3060,7 +3351,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
             expect(data).toEqual({
                 success: false,
                 errorCode: 'data_not_found',
@@ -3069,7 +3360,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should reject the request if the inst is not authorized', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -3105,7 +3396,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
             expect(data).toEqual({
                 success: false,
                 errorCode: 'data_not_found',
@@ -3281,7 +3572,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await filesStore.getFileRecord(recordName, fileName);
+            const data = await store.getFileRecord(recordName, fileName);
             expect(data).toEqual({
                 success: false,
                 errorCode: 'file_not_found',
@@ -3321,7 +3612,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await filesStore.getFileRecord(recordName, fileName);
+            const data = await store.getFileRecord(recordName, fileName);
             expect(data).toEqual({
                 success: false,
                 errorCode: 'file_not_found',
@@ -3330,7 +3621,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should support instances', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -3365,7 +3656,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await filesStore.getFileRecord(recordName, fileName);
+            const data = await store.getFileRecord(recordName, fileName);
             expect(data).toMatchObject({
                 success: true,
             });
@@ -3500,10 +3791,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await filesStore.getFileRecord(
-                recordName,
-                `${hash}.json`
-            );
+            const data = await store.getFileRecord(recordName, `${hash}.json`);
             expect(data).toEqual({
                 success: true,
                 recordName: 'testRecord',
@@ -3512,7 +3800,7 @@ describe('RecordsHttpServer', () => {
                 subjectId: userId,
                 sizeInBytes: 10,
                 description: 'description',
-                url: `${recordName}/${hash}.json`,
+                url: `http://localhost:9191/${recordName}/${hash}.json`,
                 uploaded: false,
                 markers: [PUBLIC_READ_MARKER],
             });
@@ -3560,10 +3848,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await filesStore.getFileRecord(
-                recordName,
-                `${hash}.json`
-            );
+            const data = await store.getFileRecord(recordName, `${hash}.json`);
             expect(data).toEqual({
                 success: true,
                 recordName: 'testRecord',
@@ -3572,14 +3857,14 @@ describe('RecordsHttpServer', () => {
                 subjectId: null,
                 sizeInBytes: 10,
                 description: 'description',
-                url: `${recordName}/${hash}.json`,
+                url: `http://localhost:9191/${recordName}/${hash}.json`,
                 uploaded: false,
                 markers: [PUBLIC_READ_MARKER],
             });
         });
 
         it('should support markers', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -3615,10 +3900,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await filesStore.getFileRecord(
-                recordName,
-                `${hash}.json`
-            );
+            const data = await store.getFileRecord(recordName, `${hash}.json`);
             expect(data).toEqual({
                 success: true,
                 recordName: 'testRecord',
@@ -3627,14 +3909,14 @@ describe('RecordsHttpServer', () => {
                 subjectId: userId,
                 sizeInBytes: 10,
                 description: 'description',
-                url: `${recordName}/${hash}.json`,
+                url: `http://localhost:9191/${recordName}/${hash}.json`,
                 uploaded: false,
                 markers: ['secret'],
             });
         });
 
         it('should support instances', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -3673,10 +3955,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await filesStore.getFileRecord(
-                recordName,
-                `${hash}.json`
-            );
+            const data = await store.getFileRecord(recordName, `${hash}.json`);
             expect(data).toMatchObject({
                 success: false,
             });
@@ -3934,7 +4213,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should get a link to the file with the given name', async () => {
-            policyStore.policies[recordName] = {
+            store.policies[recordName] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -3948,7 +4227,7 @@ describe('RecordsHttpServer', () => {
                 },
             };
 
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set(['developer']),
             };
 
@@ -3974,7 +4253,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should get a link to the file at the given URL', async () => {
-            policyStore.policies[recordName] = {
+            store.policies[recordName] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -3988,7 +4267,7 @@ describe('RecordsHttpServer', () => {
                 },
             };
 
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set(['developer']),
             };
 
@@ -4115,6 +4394,283 @@ describe('RecordsHttpServer', () => {
         testRateLimit('GET', `/api/v2/records/file`);
     });
 
+    describe('GET /api/v2/records/file/list', () => {
+        beforeEach(async () => {
+            await store.addFileRecord(
+                recordName,
+                'test1.txt',
+                userId,
+                userId,
+                10,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+            await store.addFileRecord(
+                recordName,
+                'test2.txt',
+                userId,
+                userId,
+                10,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+            await store.addFileRecord(
+                recordName,
+                'test3.txt',
+                userId,
+                userId,
+                10,
+                'description',
+                [PUBLIC_READ_MARKER]
+            );
+            await store.setFileRecordAsUploaded(recordName, 'test1.txt');
+            await store.setFileRecordAsUploaded(recordName, 'test2.txt');
+            await store.setFileRecordAsUploaded(recordName, 'test3.txt');
+        });
+
+        it('should return a list of files', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    files: [
+                        {
+                            fileName: 'test1.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test1.txt',
+                            uploaded: true,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'test2.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test2.txt',
+                            uploaded: true,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'test3.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test3.txt',
+                            uploaded: true,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                    totalCount: 3,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should be able to list files by name', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+            };
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file/list?recordName=${recordName}&fileName=test2`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    files: [
+                        {
+                            fileName: 'test2.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test2.txt',
+                            uploaded: true,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                        {
+                            fileName: 'test3.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test3.txt',
+                            uploaded: true,
+                            markers: [PUBLIC_READ_MARKER],
+                        },
+                    ],
+                    totalCount: 3,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should list what the user can access', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set(['developer']),
+            };
+
+            store.policies[recordName] = {
+                ['secret']: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'file.list',
+                                role: 'developer',
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+
+            await store.updateFileRecord(recordName, 'test1.txt', ['secret']);
+            await store.updateFileRecord(recordName, 'test3.txt', ['secret']);
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file/list?recordName=${recordName}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    files: [
+                        {
+                            fileName: 'test1.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test1.txt',
+                            uploaded: true,
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'test3.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test3.txt',
+                            uploaded: true,
+                            markers: ['secret'],
+                        },
+                    ],
+                    totalCount: 3,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should list what the inst can access', async () => {
+            store.roles[recordName] = {
+                [userId]: new Set([ADMIN_ROLE_NAME]),
+                ['inst']: new Set(['developer']),
+            };
+
+            store.policies[recordName] = {
+                ['secret']: {
+                    document: {
+                        permissions: [
+                            {
+                                type: 'file.list',
+                                role: 'developer',
+                            },
+                        ],
+                    },
+                    markers: [ACCOUNT_MARKER],
+                },
+            };
+            await store.updateFileRecord(recordName, 'test1.txt', ['secret']);
+            await store.updateFileRecord(recordName, 'test3.txt', ['secret']);
+
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file/list?recordName=${recordName}&instances=${'inst'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    recordName,
+                    files: [
+                        {
+                            fileName: 'test1.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test1.txt',
+                            uploaded: true,
+                            markers: ['secret'],
+                        },
+                        {
+                            fileName: 'test3.txt',
+                            sizeInBytes: 10,
+                            description: 'description',
+                            url: 'http://localhost:9191/testRecord/test3.txt',
+                            uploaded: true,
+                            markers: ['secret'],
+                        },
+                    ],
+                    totalCount: 3,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should return an unacceptable_request result when not given a recordName', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/file/list?fileName=testAddress`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 400,
+                body: {
+                    success: false,
+                    errorCode: 'unacceptable_request',
+                    errorMessage:
+                        'The request was invalid. One or more fields were invalid.',
+                    issues: [
+                        {
+                            code: 'invalid_type',
+                            expected: 'string',
+                            message: 'recordName is required.',
+                            path: ['recordName'],
+                            received: 'undefined',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testRateLimit(() =>
+            httpGet(
+                `/api/v2/records/file/list?recordName=${recordName}`,
+                apiHeaders
+            )
+        );
+    });
+
     describe('PUT /api/v2/records/file', () => {
         let fileName: string;
         let fileUrl: string;
@@ -4138,7 +4694,7 @@ describe('RecordsHttpServer', () => {
             fileName = fileResult.fileName;
             fileUrl = fileResult.uploadUrl;
 
-            policyStore.policies[recordName] = {
+            store.policies[recordName] = {
                 ['secret']: {
                     document: {
                         permissions: [
@@ -4173,7 +4729,7 @@ describe('RecordsHttpServer', () => {
                 },
             };
 
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set(['developer']),
             };
         });
@@ -4199,7 +4755,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await filesStore.getFileRecord(recordName, fileName);
+            const data = await store.getFileRecord(recordName, fileName);
             expect(data).toEqual({
                 success: true,
                 recordName: 'testRecord',
@@ -4208,7 +4764,7 @@ describe('RecordsHttpServer', () => {
                 subjectId: userId,
                 sizeInBytes: 10,
                 description: 'desc',
-                url: `${recordName}/${fileName}`,
+                url: `http://localhost:9191/${recordName}/${fileName}`,
                 uploaded: false,
                 markers: ['other'],
             });
@@ -4245,7 +4801,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await filesStore.getFileRecord(recordName, fileName);
+            const data = await store.getFileRecord(recordName, fileName);
             expect(data).toEqual({
                 success: true,
                 recordName: 'testRecord',
@@ -4254,7 +4810,7 @@ describe('RecordsHttpServer', () => {
                 subjectId: userId,
                 sizeInBytes: 10,
                 description: 'desc',
-                url: `${recordName}/${fileName}`,
+                url: `http://localhost:9191/${recordName}/${fileName}`,
                 uploaded: false,
                 markers: ['other'],
             });
@@ -4453,7 +5009,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
 
             expect(data).toEqual({
                 success: false,
@@ -4494,7 +5050,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
 
             expect(data).toEqual({
                 success: false,
@@ -4504,7 +5060,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should delete the data if the user has permission', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -4539,7 +5095,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
 
             expect(data).toEqual({
                 success: false,
@@ -4589,7 +5145,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
 
             expect(data).toEqual({
                 success: true,
@@ -4603,7 +5159,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should return not_authorized if the inst does not have permission', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -4648,7 +5204,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
 
             expect(data).toEqual({
                 success: true,
@@ -4864,7 +5420,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should return a 403 when the inst is not authorized', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -5048,6 +5604,7 @@ describe('RecordsHttpServer', () => {
                             markers: [PUBLIC_READ_MARKER],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: corsHeaders(defaultHeaders['origin']),
             });
@@ -5078,13 +5635,14 @@ describe('RecordsHttpServer', () => {
                             markers: [PUBLIC_READ_MARKER],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: corsHeaders(defaultHeaders['origin']),
             });
         });
 
         it('should list what the user can access', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -5145,13 +5703,14 @@ describe('RecordsHttpServer', () => {
                             markers: ['secret'],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: corsHeaders(apiHeaders['origin']),
             });
         });
 
         it('should list what the inst can access', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -5201,6 +5760,7 @@ describe('RecordsHttpServer', () => {
                             markers: [PUBLIC_READ_MARKER],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: corsHeaders(apiHeaders['origin']),
             });
@@ -5267,7 +5827,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
             expect(data).toEqual({
                 success: true,
                 data: 'hello, world',
@@ -5313,7 +5873,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
             expect(data).toEqual({
                 success: true,
                 data: 'hello, world',
@@ -5357,7 +5917,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
             expect(data).toEqual({
                 success: false,
                 errorCode: 'data_not_found',
@@ -5366,7 +5926,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should reject the request if the inst is not authorized', async () => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
@@ -5402,7 +5962,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await dataStore.getData(recordName, 'testAddress');
+            const data = await store.getData(recordName, 'testAddress');
             expect(data).toEqual({
                 success: false,
                 errorCode: 'data_not_found',
@@ -5681,6 +6241,171 @@ describe('RecordsHttpServer', () => {
         );
     });
 
+    describe('GET /api/v2/records/list', () => {
+        beforeEach(async () => {
+            await store.addRecord({
+                name: 'test0',
+                ownerId: 'otherUserId',
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+            await store.addRecord({
+                name: 'test1',
+                ownerId: userId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+            await store.addRecord({
+                name: 'test2',
+                ownerId: userId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+            await store.addRecord({
+                name: 'test3',
+                ownerId: userId,
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+            await store.addRecord({
+                name: 'test4',
+                ownerId: 'otherUserId',
+                studioId: null,
+                secretHashes: [],
+                secretSalt: '',
+            });
+        });
+
+        it('should return the list of records for the user', async () => {
+            const result = await server.handleRequest(
+                httpGet('/api/v2/records/list', apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    records: [
+                        {
+                            name: 'test1',
+                            ownerId: userId,
+                            studioId: null,
+                        },
+                        {
+                            name: 'test2',
+                            ownerId: userId,
+                            studioId: null,
+                        },
+                        {
+                            name: 'test3',
+                            ownerId: userId,
+                            studioId: null,
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        describe('?studioId', () => {
+            let studioId: string;
+            beforeEach(async () => {
+                studioId = 'studioId';
+                await store.addStudio({
+                    id: studioId,
+                    displayName: 'my studio',
+                });
+                await store.addStudioAssignment({
+                    studioId,
+                    userId,
+                    isPrimaryContact: true,
+                    role: 'admin',
+                });
+
+                await store.addRecord({
+                    name: 'test5',
+                    ownerId: null,
+                    studioId: studioId,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+                await store.addRecord({
+                    name: 'test6',
+                    ownerId: null,
+                    studioId: studioId,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+                await store.addRecord({
+                    name: 'test7',
+                    ownerId: null,
+                    studioId: studioId,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+                await store.addRecord({
+                    name: 'test8',
+                    ownerId: null,
+                    studioId: 'otherStudio',
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+                await store.addRecord({
+                    name: 'test9',
+                    ownerId: null,
+                    studioId: studioId,
+                    secretHashes: [],
+                    secretSalt: '',
+                });
+            });
+
+            it('should return the list of records for the studio', async () => {
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/records/list?studioId=${studioId}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        records: [
+                            {
+                                name: 'test5',
+                                ownerId: null,
+                                studioId: studioId,
+                            },
+                            {
+                                name: 'test6',
+                                ownerId: null,
+                                studioId: studioId,
+                            },
+                            {
+                                name: 'test7',
+                                ownerId: null,
+                                studioId: studioId,
+                            },
+                            {
+                                name: 'test9',
+                                ownerId: null,
+                                studioId: studioId,
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+        });
+
+        testAuthorization(() => httpGet('/api/v2/records/list', apiHeaders));
+    });
+
     describe('OPTIONS /api/v2/records', () => {
         it('should return a 204 response', async () => {
             const result = await server.handleRequest(
@@ -5704,7 +6429,7 @@ describe('RecordsHttpServer', () => {
 
     describe('POST /api/v2/records/policy/grantPermission', () => {
         beforeEach(() => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
         });
@@ -5734,7 +6459,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await policyStore.getUserPolicy(recordName, 'test');
+            const data = await store.getUserPolicy(recordName, 'test');
             expect(data).toEqual({
                 success: true,
                 document: {
@@ -5751,7 +6476,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should deny the request if the user is not authorized', async () => {
-            delete policyStore.roles[recordName][userId];
+            delete store.roles[recordName][userId];
 
             const result = await server.handleRequest(
                 httpPost(
@@ -5788,7 +6513,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const policy = await policyStore.getUserPolicy(recordName, 'test');
+            const policy = await store.getUserPolicy(recordName, 'test');
 
             expect(policy).toEqual({
                 success: false,
@@ -5834,7 +6559,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const policy = await policyStore.getUserPolicy(recordName, 'test');
+            const policy = await store.getUserPolicy(recordName, 'test');
 
             expect(policy).toEqual({
                 success: false,
@@ -6003,10 +6728,10 @@ describe('RecordsHttpServer', () => {
 
     describe('POST /api/v2/records/policy/revokePermission', () => {
         beforeEach(() => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
-            policyStore.policies[recordName] = {
+            store.policies[recordName] = {
                 test: {
                     document: {
                         permissions: [
@@ -6047,7 +6772,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const data = await policyStore.getUserPolicy(recordName, 'test');
+            const data = await store.getUserPolicy(recordName, 'test');
             expect(data).toEqual({
                 success: true,
                 document: {
@@ -6058,7 +6783,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should deny the request if the user is not authorized', async () => {
-            delete policyStore.roles[recordName][userId];
+            delete store.roles[recordName][userId];
 
             const result = await server.handleRequest(
                 httpPost(
@@ -6095,7 +6820,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const policy = await policyStore.getUserPolicy(recordName, 'test');
+            const policy = await store.getUserPolicy(recordName, 'test');
 
             expect(policy).toEqual({
                 success: true,
@@ -6149,7 +6874,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const policy = await policyStore.getUserPolicy(recordName, 'test');
+            const policy = await store.getUserPolicy(recordName, 'test');
 
             expect(policy).toEqual({
                 success: true,
@@ -6330,10 +7055,10 @@ describe('RecordsHttpServer', () => {
 
     describe('GET /api/v2/records/policy', () => {
         beforeEach(() => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
-            policyStore.policies[recordName] = {
+            store.policies[recordName] = {
                 test: {
                     document: {
                         permissions: [
@@ -6453,10 +7178,10 @@ describe('RecordsHttpServer', () => {
 
     describe('GET /api/v2/records/policy/list', () => {
         beforeEach(() => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
-            policyStore.policies[recordName] = {
+            store.policies[recordName] = {
                 test: {
                     document: {
                         permissions: [
@@ -6547,6 +7272,7 @@ describe('RecordsHttpServer', () => {
                             markers: [ACCOUNT_MARKER],
                         },
                     ],
+                    totalCount: 3,
                 },
                 headers: apiCorsHeaders,
             });
@@ -6592,6 +7318,7 @@ describe('RecordsHttpServer', () => {
                             markers: [ACCOUNT_MARKER],
                         },
                     ],
+                    totalCount: 2,
                 },
                 headers: apiCorsHeaders,
             });
@@ -6645,10 +7372,10 @@ describe('RecordsHttpServer', () => {
 
     describe('GET /api/v2/records/role/user/list', () => {
         beforeEach(() => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
-            policyStore.roleAssignments[recordName] = {
+            store.roleAssignments[recordName] = {
                 ['testId']: [
                     {
                         role: 'role1',
@@ -6690,7 +7417,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should deny the request if the user is not authorized', async () => {
-            delete policyStore.roles[recordName][userId];
+            delete store.roles[recordName][userId];
 
             const result = await server.handleRequest(
                 httpGet(
@@ -6827,10 +7554,10 @@ describe('RecordsHttpServer', () => {
 
     describe('GET /api/v2/records/role/inst/list', () => {
         beforeEach(() => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
-            policyStore.roleAssignments[recordName] = {
+            store.roleAssignments[recordName] = {
                 ['testId']: [
                     {
                         role: 'role1',
@@ -6872,7 +7599,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should deny the request if the user is not authorized', async () => {
-            delete policyStore.roles[recordName][userId];
+            delete store.roles[recordName][userId];
 
             const result = await server.handleRequest(
                 httpGet(
@@ -7009,10 +7736,10 @@ describe('RecordsHttpServer', () => {
 
     describe('GET /api/v2/records/role/assignments/list', () => {
         beforeEach(() => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
-            policyStore.roleAssignments[recordName] = {
+            store.roleAssignments[recordName] = {
                 ['testId']: [
                     {
                         role: 'role1',
@@ -7036,10 +7763,10 @@ describe('RecordsHttpServer', () => {
             };
         });
 
-        it('should list the roles for the given inst', async () => {
+        it('should list the role assignments in the record', async () => {
             const result = await server.handleRequest(
                 httpGet(
-                    `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}`,
                     apiHeaders
                 )
             );
@@ -7049,6 +7776,22 @@ describe('RecordsHttpServer', () => {
                 body: {
                     success: true,
                     assignments: [
+                        {
+                            type: 'user',
+                            userId: 'testId',
+                            role: {
+                                role: 'abc',
+                                expireTimeMs: null,
+                            },
+                        },
+                        {
+                            type: 'user',
+                            userId: userId,
+                            role: {
+                                role: ADMIN_ROLE_NAME,
+                                expireTimeMs: null,
+                            },
+                        },
                         {
                             type: 'user',
                             userId: 'testId',
@@ -7065,18 +7808,55 @@ describe('RecordsHttpServer', () => {
                                 expireTimeMs: null,
                             },
                         },
+                        {
+                            type: 'user',
+                            userId: 'testId2',
+                            role: {
+                                role: 'role2',
+                                expireTimeMs: null,
+                            },
+                        },
                     ],
+                    totalCount: 5,
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should list the role assignments after the given startingRole', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}&startingRole=${'role1'}`,
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    assignments: [
+                        {
+                            type: 'user',
+                            userId: 'testId2',
+                            role: {
+                                role: 'role2',
+                                expireTimeMs: null,
+                            },
+                        },
+                    ],
+                    totalCount: 5,
                 },
                 headers: apiCorsHeaders,
             });
         });
 
         it('should deny the request if the user is not authorized', async () => {
-            delete policyStore.roles[recordName][userId];
+            delete store.roles[recordName][userId];
 
             const result = await server.handleRequest(
                 httpGet(
-                    `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}`,
                     apiHeaders
                 )
             );
@@ -7104,7 +7884,7 @@ describe('RecordsHttpServer', () => {
         it('should deny the request if the inst is not authorized', async () => {
             const result = await server.handleRequest(
                 httpGet(
-                    `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}&instances=${'inst'}`,
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}&instances=${'inst'}`,
                     apiHeaders
                 )
             );
@@ -7131,10 +7911,7 @@ describe('RecordsHttpServer', () => {
 
         it('should return an unacceptable_request result when not given a recordName', async () => {
             const result = await server.handleRequest(
-                httpGet(
-                    `/api/v2/records/role/assignments/list?role=${'role1'}`,
-                    apiHeaders
-                )
+                httpGet(`/api/v2/records/role/assignments/list`, apiHeaders)
             );
 
             expectResponseBodyToEqual(result, {
@@ -7158,58 +7935,172 @@ describe('RecordsHttpServer', () => {
             });
         });
 
-        it('should return an unacceptable_request result when not given a role', async () => {
-            const result = await server.handleRequest(
-                httpGet(
-                    `/api/v2/records/role/assignments/list?recordName=${recordName}`,
-                    apiHeaders
-                )
-            );
-
-            expectResponseBodyToEqual(result, {
-                statusCode: 400,
-                body: {
-                    success: false,
-                    errorCode: 'unacceptable_request',
-                    errorMessage:
-                        'The request was invalid. One or more fields were invalid.',
-                    issues: [
-                        {
-                            code: 'invalid_type',
-                            expected: 'string',
-                            message: 'role is required.',
-                            path: ['role'],
-                            received: 'undefined',
-                        },
-                    ],
-                },
-                headers: apiCorsHeaders,
-            });
-        });
-
         testOrigin(
             'GET',
-            `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`
+            `/api/v2/records/role/assignments/list?recordName=${recordName}`
         );
         testAuthorization(
             () =>
                 httpGet(
-                    `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}`,
                     apiHeaders
                 ),
             'The user is not logged in. A session key must be provided for this operation.'
         );
         testRateLimit(() =>
             httpGet(
-                `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                `/api/v2/records/role/assignments/list?recordName=${recordName}`,
                 defaultHeaders
             )
         );
+
+        describe('?role', () => {
+            it('should list the roles for the given inst', async () => {
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        assignments: [
+                            {
+                                type: 'user',
+                                userId: 'testId',
+                                role: {
+                                    role: 'role1',
+                                    expireTimeMs: null,
+                                },
+                            },
+                            {
+                                type: 'user',
+                                userId: 'testId2',
+                                role: {
+                                    role: 'role1',
+                                    expireTimeMs: null,
+                                },
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+
+            it('should deny the request if the user is not authorized', async () => {
+                delete store.roles[recordName][userId];
+
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            id: userId,
+                            kind: 'user',
+                            marker: 'account',
+                            permission: 'role.list',
+                            role: null,
+                            type: 'missing_permission',
+                        },
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+
+            it('should deny the request if the inst is not authorized', async () => {
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}&instances=${'inst'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 403,
+                    body: {
+                        success: false,
+                        errorCode: 'not_authorized',
+                        errorMessage:
+                            'You are not authorized to perform this action.',
+                        reason: {
+                            id: 'inst',
+                            kind: 'inst',
+                            marker: 'account',
+                            permission: 'role.list',
+                            role: null,
+                            type: 'missing_permission',
+                        },
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+
+            it('should return an unacceptable_request result when not given a recordName', async () => {
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/records/role/assignments/list?role=${'role1'}`,
+                        apiHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 400,
+                    body: {
+                        success: false,
+                        errorCode: 'unacceptable_request',
+                        errorMessage:
+                            'The request was invalid. One or more fields were invalid.',
+                        issues: [
+                            {
+                                code: 'invalid_type',
+                                expected: 'string',
+                                message: 'recordName is required.',
+                                path: ['recordName'],
+                                received: 'undefined',
+                            },
+                        ],
+                    },
+                    headers: apiCorsHeaders,
+                });
+            });
+
+            testOrigin(
+                'GET',
+                `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`
+            );
+            testAuthorization(
+                () =>
+                    httpGet(
+                        `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                        apiHeaders
+                    ),
+                'The user is not logged in. A session key must be provided for this operation.'
+            );
+            testRateLimit(() =>
+                httpGet(
+                    `/api/v2/records/role/assignments/list?recordName=${recordName}&role=${'role1'}`,
+                    defaultHeaders
+                )
+            );
+        });
     });
 
     describe('POST /api/v2/records/role/grant', () => {
         beforeEach(() => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
         });
@@ -7235,10 +8126,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const roles = await policyStore.listRolesForUser(
-                recordName,
-                'testId'
-            );
+            const roles = await store.listRolesForUser(recordName, 'testId');
 
             expect(roles).toEqual([
                 {
@@ -7269,10 +8157,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const roles = await policyStore.listRolesForInst(
-                recordName,
-                'testId'
-            );
+            const roles = await store.listRolesForInst(recordName, 'testId');
 
             expect(roles).toEqual([
                 {
@@ -7283,7 +8168,7 @@ describe('RecordsHttpServer', () => {
         });
 
         it('should deny the request if the user is not authorized', async () => {
-            delete policyStore.roles[recordName][userId];
+            delete store.roles[recordName][userId];
 
             const result = await server.handleRequest(
                 httpPost(
@@ -7316,10 +8201,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const roles = await policyStore.listRolesForUser(
-                recordName,
-                'testId'
-            );
+            const roles = await store.listRolesForUser(recordName, 'testId');
 
             expect(roles).toEqual([]);
         });
@@ -7357,10 +8239,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const roles = await policyStore.listRolesForUser(
-                recordName,
-                'testId'
-            );
+            const roles = await store.listRolesForUser(recordName, 'testId');
 
             expect(roles).toEqual([]);
         });
@@ -7388,10 +8267,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const roles = await policyStore.listRolesForUser(
-                recordName,
-                'testId'
-            );
+            const roles = await store.listRolesForUser(recordName, 'testId');
 
             expect(roles).toEqual([
                 {
@@ -7533,11 +8409,11 @@ describe('RecordsHttpServer', () => {
 
     describe('POST /api/v2/records/role/revoke', () => {
         beforeEach(() => {
-            policyStore.roles[recordName] = {
+            store.roles[recordName] = {
                 [userId]: new Set([ADMIN_ROLE_NAME]),
             };
 
-            policyStore.roleAssignments[recordName] = {
+            store.roleAssignments[recordName] = {
                 ['testId']: [
                     {
                         role: 'role1',
@@ -7568,16 +8444,13 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const roles = await policyStore.listRolesForUser(
-                recordName,
-                'testId'
-            );
+            const roles = await store.listRolesForUser(recordName, 'testId');
 
             expect(roles).toEqual([]);
         });
 
         it('should reject the request if the user is not authorized', async () => {
-            delete policyStore.roles[recordName][userId];
+            delete store.roles[recordName][userId];
 
             const result = await server.handleRequest(
                 httpPost(
@@ -7610,10 +8483,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const roles = await policyStore.listRolesForInst(
-                recordName,
-                'testId'
-            );
+            const roles = await store.listRolesForInst(recordName, 'testId');
 
             expect(roles).toEqual([
                 {
@@ -7656,10 +8526,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const roles = await policyStore.listRolesForInst(
-                recordName,
-                'testId'
-            );
+            const roles = await store.listRolesForInst(recordName, 'testId');
 
             expect(roles).toEqual([
                 {
@@ -7690,10 +8557,7 @@ describe('RecordsHttpServer', () => {
                 headers: apiCorsHeaders,
             });
 
-            const roles = await policyStore.listRolesForInst(
-                recordName,
-                'testId'
-            );
+            const roles = await store.listRolesForInst(recordName, 'testId');
 
             expect(roles).toEqual([]);
         });
@@ -7791,6 +8655,1985 @@ describe('RecordsHttpServer', () => {
                 defaultHeaders
             )
         );
+    });
+
+    describe('POST /api/v2/ai/chat', () => {
+        beforeEach(async () => {
+            const u = await store.findUser(userId);
+            await store.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+
+            chatInterface.chat.mockResolvedValueOnce({
+                choices: [
+                    {
+                        role: 'assistant',
+                        content: 'hi!',
+                    },
+                ],
+                totalTokens: 0,
+            });
+        });
+
+        it('should return a not_supported result if the server has a null AI controller', async () => {
+            server = new RecordsHttpServer(
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                null as any,
+                policyController,
+                null
+            );
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/chat`,
+                    JSON.stringify({
+                        model: 'model-1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'AI features are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should call the AI chat interface', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/chat`,
+                    JSON.stringify({
+                        model: 'model-1',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    choices: [
+                        {
+                            role: 'assistant',
+                            content: 'hi!',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should support using a default model', async () => {
+            chatInterface.chat.mockResolvedValueOnce({
+                choices: [
+                    {
+                        role: 'assistant',
+                        content: 'hi!',
+                    },
+                ],
+                totalTokens: 0,
+            });
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/chat`,
+                    JSON.stringify({
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'hello',
+                            },
+                        ],
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    choices: [
+                        {
+                            role: 'assistant',
+                            content: 'hi!',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+            expect(chatInterface.chat).toHaveBeenCalledWith({
+                model: 'default-model',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'hello',
+                    },
+                ],
+                userId,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/ai/chat`, () =>
+            JSON.stringify({
+                model: 'model-1',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'hello',
+                    },
+                ],
+            })
+        );
+        testAuthorization(() =>
+            httpPost(
+                `/api/v2/ai/chat`,
+                JSON.stringify({
+                    model: 'model-1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'hello',
+                        },
+                    ],
+                }),
+                apiHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/ai/chat`,
+                JSON.stringify({
+                    model: 'model-1',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: 'hello',
+                        },
+                    ],
+                }),
+                apiHeaders
+            )
+        );
+    });
+
+    describe('POST /api/v2/ai/skybox', () => {
+        beforeEach(async () => {
+            const u = await store.findUser(userId);
+            await store.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+
+            skyboxInterface.generateSkybox.mockResolvedValueOnce({
+                success: true,
+                skyboxId: 'skybox-id',
+            });
+        });
+
+        it('should return a not_supported result if the server has a null AI controller', async () => {
+            server = new RecordsHttpServer(
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                null as any,
+                policyController,
+                null
+            );
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/skybox`,
+                    JSON.stringify({
+                        prompt: 'a blue sky',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'AI features are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should call the AI skybox interface', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/skybox`,
+                    JSON.stringify({
+                        prompt: 'a blue sky',
+                        negativePrompt: 'a red sky',
+                        blockadeLabs: {
+                            skyboxStyleId: 1,
+                            remixImagineId: 2,
+                            seed: 3,
+                        },
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    skyboxId: 'skybox-id',
+                },
+                headers: apiCorsHeaders,
+            });
+            expect(skyboxInterface.generateSkybox).toHaveBeenCalledWith({
+                prompt: 'a blue sky',
+                negativePrompt: 'a red sky',
+                blockadeLabs: {
+                    skyboxStyleId: 1,
+                    remixImagineId: 2,
+                    seed: 3,
+                },
+            });
+        });
+
+        testOrigin('POST', `/api/v2/ai/skybox`, () =>
+            JSON.stringify({
+                prompt: 'test',
+            })
+        );
+        testAuthorization(() =>
+            httpPost(
+                `/api/v2/ai/skybox`,
+                JSON.stringify({
+                    prompt: 'test',
+                }),
+                apiHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/ai/skybox`,
+                JSON.stringify({
+                    prompt: 'test',
+                }),
+                apiHeaders
+            )
+        );
+    });
+
+    describe('GET /api/v2/ai/skybox', () => {
+        beforeEach(async () => {
+            const u = await store.findUser(userId);
+            await store.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+
+            skyboxInterface.getSkybox.mockResolvedValueOnce({
+                success: true,
+                status: 'generated',
+                fileUrl: 'file-url',
+                thumbnailUrl: 'thumbnail-url',
+            });
+        });
+
+        it('should return a not_supported result if the server has a null AI controller', async () => {
+            server = new RecordsHttpServer(
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                null as any,
+                policyController,
+                null
+            );
+
+            const result = await server.handleRequest(
+                httpGet(`/api/v2/ai/skybox`, apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'AI features are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should call the AI skybox interface', async () => {
+            const result = await server.handleRequest(
+                httpGet(`/api/v2/ai/skybox?skyboxId=${'skybox-id'}`, apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    status: 'generated',
+                    fileUrl: 'file-url',
+                    thumbnailUrl: 'thumbnail-url',
+                },
+                headers: apiCorsHeaders,
+            });
+            expect(skyboxInterface.getSkybox).toHaveBeenCalledWith('skybox-id');
+        });
+
+        testOrigin('GET', `/api/v2/ai/skybox?skyboxId=test-skybox`);
+        testAuthorization(() =>
+            httpGet(`/api/v2/ai/skybox?skyboxId=test-skybox`, apiHeaders)
+        );
+        testRateLimit(() =>
+            httpGet(`/api/v2/ai/skybox?skyboxId=test-skybox`, apiHeaders)
+        );
+    });
+
+    describe('POST /api/v2/ai/image', () => {
+        beforeEach(async () => {
+            const u = await store.findUser(userId);
+            await store.saveUser({
+                ...u,
+                subscriptionId: 'sub_id',
+                subscriptionStatus: 'active',
+            });
+
+            imageInterface.generateImage.mockResolvedValueOnce({
+                images: [
+                    {
+                        base64: 'base64',
+                        mimeType: 'image/png',
+                    },
+                ],
+            });
+        });
+
+        it('should return a not_supported result if the server has a null AI controller', async () => {
+            server = new RecordsHttpServer(
+                allowedAccountOrigins,
+                allowedApiOrigins,
+                authController,
+                livekitController,
+                recordsController,
+                eventsController,
+                dataController,
+                manualDataController,
+                filesController,
+                subscriptionController,
+                null as any,
+                policyController,
+                null
+            );
+
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/image`,
+                    JSON.stringify({
+                        prompt: 'a blue sky',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 501,
+                body: {
+                    success: false,
+                    errorCode: 'not_supported',
+                    errorMessage:
+                        'AI features are not supported by this server.',
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        it('should call the AI image interface', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    `/api/v2/ai/image`,
+                    JSON.stringify({
+                        prompt: 'a rabbit riding a bycicle',
+                        negativePrompt: 'ugly, incorrect, wrong',
+                    }),
+                    apiHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                            mimeType: 'image/png',
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+            expect(imageInterface.generateImage).toHaveBeenCalledWith({
+                model: 'model-1',
+                prompt: 'a rabbit riding a bycicle',
+                negativePrompt: 'ugly, incorrect, wrong',
+                width: 512,
+                height: 512,
+                steps: 30,
+                numberOfImages: 1,
+                userId,
+            });
+        });
+
+        testOrigin('POST', `/api/v2/ai/image`, () =>
+            JSON.stringify({
+                prompt: 'test',
+            })
+        );
+        testAuthorization(() =>
+            httpPost(
+                `/api/v2/ai/image`,
+                JSON.stringify({
+                    prompt: 'test',
+                }),
+                apiHeaders
+            )
+        );
+        testRateLimit(() =>
+            httpPost(
+                `/api/v2/ai/image`,
+                JSON.stringify({
+                    prompt: 'test',
+                }),
+                apiHeaders
+            )
+        );
+    });
+
+    describe('POST /api/v2/studios', () => {
+        it('should create a studio and return the ID', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/studios',
+                    JSON.stringify({
+                        displayName: 'my studio',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    studioId: expect.any(String),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testAuthorization(() =>
+            httpPost(
+                '/api/v2/studios',
+                JSON.stringify({
+                    displayName: 'my studio',
+                }),
+                authenticatedHeaders
+            )
+        );
+        testOrigin('POST', '/api/v2/studios', () =>
+            JSON.stringify({
+                displayName: 'my studio',
+            })
+        );
+        testRateLimit(() =>
+            httpPost(
+                '/api/v2/studios',
+                JSON.stringify({
+                    displayName: 'my studio',
+                }),
+                authenticatedHeaders
+            )
+        );
+    });
+
+    describe('GET /api/v2/studios/list', () => {
+        beforeEach(async () => {
+            await store.addStudio({
+                id: 'studioId1',
+                displayName: 'studio 1',
+            });
+
+            await store.addStudio({
+                id: 'studioId2',
+                displayName: 'studio 2',
+            });
+
+            await store.addStudio({
+                id: 'studioId3',
+                displayName: 'studio 3',
+            });
+
+            await store.addStudioAssignment({
+                studioId: 'studioId2',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+            await store.addStudioAssignment({
+                studioId: 'studioId3',
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'member',
+            });
+        });
+
+        it('should list the studios that the user has access to', async () => {
+            const result = await server.handleRequest(
+                httpGet(`/api/v2/studios/list`, apiHeaders)
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    studios: [
+                        {
+                            studioId: 'studioId2',
+                            displayName: 'studio 2',
+                            role: 'admin',
+                            isPrimaryContact: true,
+                        },
+                        {
+                            studioId: 'studioId3',
+                            displayName: 'studio 3',
+                            role: 'member',
+                            isPrimaryContact: true,
+                        },
+                    ],
+                },
+                headers: apiCorsHeaders,
+            });
+        });
+
+        testAuthorization(() => httpGet('/api/v2/studios/list', apiHeaders));
+        testOrigin('GET', '/api/v2/studios/list');
+        testRateLimit(() => httpGet('/api/v2/studios/list', apiHeaders));
+    });
+
+    describe('GET /api/v2/studios/members/list', () => {
+        let studioId: string;
+        beforeEach(async () => {
+            studioId = 'studioId1';
+            await store.saveUser({
+                id: 'userId2',
+                email: 'test2@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: studioId,
+                displayName: 'studio 1',
+            });
+
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: 'userId2',
+                isPrimaryContact: false,
+                role: 'member',
+            });
+        });
+
+        it('should list the members of the studio', async () => {
+            const result = await server.handleRequest(
+                httpGet(
+                    `/api/v2/studios/members/list?studioId=${studioId}`,
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                    members: sortBy(
+                        [
+                            {
+                                studioId,
+                                userId: userId,
+                                isPrimaryContact: true,
+                                role: 'admin',
+                                user: {
+                                    id: userId,
+                                    email: 'test@example.com',
+                                    phoneNumber: null,
+                                },
+                            },
+                            {
+                                studioId,
+                                userId: 'userId2',
+                                isPrimaryContact: false,
+                                role: 'member',
+                                user: {
+                                    id: 'userId2',
+                                    email: 'test2@example.com',
+                                    phoneNumber: null,
+                                },
+                            },
+                        ],
+                        (u) => u.userId
+                    ),
+                },
+                headers: accountCorsHeaders,
+            });
+        });
+
+        testAuthorization(() =>
+            httpGet(
+                '/api/v2/studios/members/list?studioId=studioId1',
+                authenticatedHeaders
+            )
+        );
+        testOrigin('GET', '/api/v2/studios/members/list?studioId=studioId1');
+        testRateLimit(() =>
+            httpGet(
+                '/api/v2/studios/members/list?studioId=studioId1',
+                authenticatedHeaders
+            )
+        );
+    });
+
+    describe('POST /api/v2/studios/members', () => {
+        let studioId: string;
+        beforeEach(async () => {
+            studioId = 'studioId1';
+            await store.saveUser({
+                id: 'userId2',
+                email: 'test2@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.saveUser({
+                id: 'userId3',
+                email: null,
+                phoneNumber: '555',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: studioId,
+                displayName: 'studio 1',
+            });
+
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+        });
+
+        it('should add a member to the studio', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/studios/members',
+                    JSON.stringify({
+                        studioId,
+                        addedUserId: 'userId2',
+                        role: 'member',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const list = await store.listStudioAssignments(studioId, {
+                userId: 'userId2',
+            });
+
+            expect(list).toEqual([
+                {
+                    studioId,
+                    userId: 'userId2',
+                    role: 'member',
+                    isPrimaryContact: false,
+                    user: {
+                        id: 'userId2',
+                        email: 'test2@example.com',
+                        phoneNumber: null,
+                    },
+                },
+            ]);
+        });
+
+        it('should be able to add members by email address', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/studios/members',
+                    JSON.stringify({
+                        studioId,
+                        addedEmail: 'test2@example.com',
+                        role: 'member',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const list = await store.listStudioAssignments(studioId, {
+                userId: 'userId2',
+            });
+
+            expect(list).toEqual([
+                {
+                    studioId,
+                    userId: 'userId2',
+                    role: 'member',
+                    isPrimaryContact: false,
+                    user: {
+                        id: 'userId2',
+                        email: 'test2@example.com',
+                        phoneNumber: null,
+                    },
+                },
+            ]);
+        });
+
+        it('should be able to add members by phone number', async () => {
+            const result = await server.handleRequest(
+                httpPost(
+                    '/api/v2/studios/members',
+                    JSON.stringify({
+                        studioId,
+                        addedPhoneNumber: '555',
+                        role: 'member',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const list = await store.listStudioAssignments(studioId, {
+                userId: 'userId3',
+            });
+
+            expect(list).toEqual([
+                {
+                    studioId,
+                    userId: 'userId3',
+                    role: 'member',
+                    isPrimaryContact: false,
+                    user: {
+                        id: 'userId3',
+                        email: null,
+                        phoneNumber: '555',
+                    },
+                },
+            ]);
+        });
+
+        testUrl('POST', '/api/v2/studios/members', () =>
+            JSON.stringify({
+                studioId,
+                addedUserId: 'userId2',
+                role: 'member',
+            })
+        );
+    });
+
+    describe('DELETE /api/v2/studios/members', () => {
+        let studioId: string;
+        beforeEach(async () => {
+            studioId = 'studioId1';
+            await store.saveUser({
+                id: 'userId2',
+                email: 'test2@example.com',
+                phoneNumber: null,
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.saveUser({
+                id: 'userId3',
+                email: null,
+                phoneNumber: '555',
+                allSessionRevokeTimeMs: null,
+                currentLoginRequestId: null,
+            });
+
+            await store.addStudio({
+                id: studioId,
+                displayName: 'studio 1',
+            });
+
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: userId,
+                isPrimaryContact: true,
+                role: 'admin',
+            });
+
+            await store.addStudioAssignment({
+                studioId: studioId,
+                userId: 'userId2',
+                isPrimaryContact: false,
+                role: 'member',
+            });
+        });
+
+        it('should remove the member from the studio', async () => {
+            const result = await server.handleRequest(
+                httpDelete(
+                    '/api/v2/studios/members',
+                    JSON.stringify({
+                        studioId,
+                        removedUserId: 'userId2',
+                    }),
+                    authenticatedHeaders
+                )
+            );
+
+            expectResponseBodyToEqual(result, {
+                statusCode: 200,
+                body: {
+                    success: true,
+                },
+                headers: accountCorsHeaders,
+            });
+
+            const list = await store.listStudioAssignments(studioId, {
+                userId: 'userId2',
+            });
+
+            expect(list).toEqual([]);
+        });
+
+        testUrl('DELETE', '/api/v2/studios/members', () =>
+            JSON.stringify({
+                studioId,
+                removedUserId: 'userId2',
+            })
+        );
+    });
+
+    describe('GET /api/v2/subscriptions', () => {
+        describe('?userId', () => {
+            let user: AuthUser;
+            beforeEach(async () => {
+                user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    stripeCustomerId: 'customerId',
+                });
+                user = await store.findUser(userId);
+            });
+
+            it('should return a list of subscriptions for the user', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [
+                            {
+                                id: 'subscription_id',
+                                status: 'active',
+                                start_date: 123,
+                                ended_at: null,
+                                cancel_at: null,
+                                canceled_at: null,
+                                current_period_start: 456,
+                                current_period_end: 999,
+                                items: [
+                                    {
+                                        id: 'item_id',
+                                        price: {
+                                            id: 'price_id',
+                                            interval: 'month',
+                                            interval_count: 1,
+                                            currency: 'usd',
+                                            unit_amount: 123,
+
+                                            product: {
+                                                id: 'product_id',
+                                                name: 'Product Name',
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                );
+
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?userId=${userId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        publishableKey: 'publishable_key',
+                        subscriptions: [
+                            {
+                                active: true,
+                                statusCode: 'active',
+                                productName: 'Product Name',
+                                startDate: 123,
+                                endedDate: null,
+                                cancelDate: null,
+                                canceledDate: null,
+                                currentPeriodStart: 456,
+                                currentPeriodEnd: 999,
+                                renewalInterval: 'month',
+                                intervalLength: 1,
+                                intervalCost: 123,
+                                currency: 'usd',
+                                featureList: ['Feature 1', 'Feature 2'],
+                            },
+                        ],
+                        purchasableSubscriptions: [],
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a list of purchasable subscriptions for the user', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [],
+                    }
+                );
+
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?userId=${userId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        publishableKey: 'publishable_key',
+                        subscriptions: [],
+                        purchasableSubscriptions: [
+                            {
+                                id: 'sub_id',
+                                name: 'Product Name',
+                                description: 'Product Description',
+                                featureList: ['Feature 1', 'Feature 2'],
+                                prices: [
+                                    {
+                                        id: 'default',
+                                        cost: 100,
+                                        currency: 'usd',
+                                        interval: 'month',
+                                        intervalLength: 1,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 403 status code if the origin is invalid', async () => {
+                authenticatedHeaders['origin'] = 'https://wrong.origin.com';
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?userId=${userId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 403,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'invalid_origin',
+                        errorMessage:
+                            'The request must be made from an authorized origin.',
+                    }),
+                    headers: {},
+                });
+            });
+
+            it('should return a 403 status code if the session key is invalid', async () => {
+                authenticatedHeaders[
+                    'authorization'
+                ] = `Bearer ${formatV1SessionKey(
+                    'wrong user',
+                    'wrong session',
+                    'wrong secret',
+                    1000
+                )}`;
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?userId=${userId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 403,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'invalid_key',
+                        errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 401 status code if no session key is provided', async () => {
+                delete authenticatedHeaders['authorization'];
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?userId=${userId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 401,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage:
+                            'The user is not logged in. A session key must be provided for this operation.',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 400 status code if the session key is wrongly formatted', async () => {
+                authenticatedHeaders['authorization'] = `Bearer wrong`;
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?userId=${userId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 400,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'unacceptable_session_key',
+                        errorMessage:
+                            'The given session key is invalid. It must be a correctly formatted string.',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+        });
+
+        describe('?studioId', () => {
+            let studio: Studio;
+            let studioId: string;
+            beforeEach(async () => {
+                studioId = 'studioId';
+                studio = {
+                    id: studioId,
+                    displayName: 'my studio',
+                    stripeCustomerId: 'customerId',
+                };
+
+                await store.addStudio(studio);
+                await store.addStudioAssignment({
+                    studioId,
+                    userId,
+                    isPrimaryContact: true,
+                    role: 'admin',
+                });
+                studio = await store.getStudioById(studioId);
+            });
+
+            it('should return a list of subscriptions for the studio', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [
+                            {
+                                id: 'subscription_id',
+                                status: 'active',
+                                start_date: 123,
+                                ended_at: null,
+                                cancel_at: null,
+                                canceled_at: null,
+                                current_period_start: 456,
+                                current_period_end: 999,
+                                items: [
+                                    {
+                                        id: 'item_id',
+                                        price: {
+                                            id: 'price_id',
+                                            interval: 'month',
+                                            interval_count: 1,
+                                            currency: 'usd',
+                                            unit_amount: 123,
+
+                                            product: {
+                                                id: 'product_id',
+                                                name: 'Product Name',
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                );
+
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?studioId=${studioId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        publishableKey: 'publishable_key',
+                        subscriptions: [
+                            {
+                                active: true,
+                                statusCode: 'active',
+                                productName: 'Product Name',
+                                startDate: 123,
+                                endedDate: null,
+                                cancelDate: null,
+                                canceledDate: null,
+                                currentPeriodStart: 456,
+                                currentPeriodEnd: 999,
+                                renewalInterval: 'month',
+                                intervalLength: 1,
+                                intervalCost: 123,
+                                currency: 'usd',
+                                featureList: ['Feature 1', 'Feature 2'],
+                            },
+                        ],
+                        purchasableSubscriptions: [],
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a list of purchasable subscriptions for the studio', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [],
+                    }
+                );
+
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?studioId=${studioId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 200,
+                    body: {
+                        success: true,
+                        publishableKey: 'publishable_key',
+                        subscriptions: [],
+                        purchasableSubscriptions: [
+                            {
+                                id: 'sub_id',
+                                name: 'Product Name',
+                                description: 'Product Description',
+                                featureList: ['Feature 1', 'Feature 2'],
+                                prices: [
+                                    {
+                                        id: 'default',
+                                        cost: 100,
+                                        currency: 'usd',
+                                        interval: 'month',
+                                        intervalLength: 1,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 403 status code if the origin is invalid', async () => {
+                authenticatedHeaders['origin'] = 'https://wrong.origin.com';
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?studioId=${studioId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 403,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'invalid_origin',
+                        errorMessage:
+                            'The request must be made from an authorized origin.',
+                    }),
+                    headers: {},
+                });
+            });
+
+            it('should return a 403 status code if the session key is invalid', async () => {
+                authenticatedHeaders[
+                    'authorization'
+                ] = `Bearer ${formatV1SessionKey(
+                    'wrong user',
+                    'wrong session',
+                    'wrong secret',
+                    1000
+                )}`;
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?studioId=${studioId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 403,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'invalid_key',
+                        errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 401 status code if no session key is provided', async () => {
+                delete authenticatedHeaders['authorization'];
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?studioId=${studioId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 401,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage:
+                            'The user is not logged in. A session key must be provided for this operation.',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 400 status code if the session key is wrongly formatted', async () => {
+                authenticatedHeaders['authorization'] = `Bearer wrong`;
+                const result = await server.handleRequest(
+                    httpGet(
+                        `/api/v2/subscriptions?studioId=${studioId}`,
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 400,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'unacceptable_session_key',
+                        errorMessage:
+                            'The given session key is invalid. It must be a correctly formatted string.',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+        });
+
+        testRateLimit('GET', `/api/v3/subscriptions`);
+    });
+
+    describe('POST /api/v2/subscriptions/manage', () => {
+        describe('userId', () => {
+            let user: AuthUser;
+            beforeEach(async () => {
+                user = await store.findUser(userId);
+                await store.saveUser({
+                    ...user,
+                    stripeCustomerId: 'customerId',
+                });
+                user = await store.findUser(userId);
+            });
+
+            it('should return the URL that the user should be redirected to', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [
+                            {
+                                id: 'subscription_id',
+                                status: 'active',
+                                start_date: 123,
+                                ended_at: null,
+                                cancel_at: null,
+                                canceled_at: null,
+                                current_period_start: 456,
+                                current_period_end: 999,
+                                items: [
+                                    {
+                                        id: 'item_id',
+                                        price: {
+                                            id: 'price_id',
+                                            interval: 'month',
+                                            interval_count: 1,
+                                            currency: 'usd',
+                                            unit_amount: 123,
+
+                                            product: {
+                                                id: 'product_id',
+                                                name: 'Product Name',
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                );
+
+                stripeMock.createPortalSession.mockResolvedValueOnce({
+                    url: 'http://portal_url',
+                });
+
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            userId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        success: true,
+                        url: 'http://portal_url',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should include the given Subscription ID and expected price info', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [],
+                    }
+                );
+                stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                    url: 'http://create_url',
+                });
+
+                stripeMock.createPortalSession.mockResolvedValueOnce({
+                    url: 'http://portal_url',
+                });
+
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            userId,
+                            subscriptionId: 'sub-1',
+                            expectedPrice: {
+                                currency: 'usd',
+                                cost: 100,
+                                interval: 'month',
+                                intervalLength: 1,
+                            },
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        success: true,
+                        url: 'http://create_url',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+                expect(stripeMock.getProductAndPriceInfo).toHaveBeenCalledWith(
+                    'product_id'
+                );
+            });
+
+            it('should return a price_does_not_match error if the expected price does not match', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [],
+                    }
+                );
+                stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                    url: 'http://create_url',
+                });
+
+                stripeMock.createPortalSession.mockResolvedValueOnce({
+                    url: 'http://portal_url',
+                });
+
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            userId,
+                            subscriptionId: 'sub-1',
+                            expectedPrice: {
+                                currency: 'usd',
+                                cost: 1000,
+                                interval: 'month',
+                                intervalLength: 1,
+                            },
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 412,
+                    body: {
+                        success: false,
+                        errorCode: 'price_does_not_match',
+                        errorMessage: expect.any(String),
+                    },
+                    headers: accountCorsHeaders,
+                });
+                expect(stripeMock.getProductAndPriceInfo).toHaveBeenCalledWith(
+                    'product_id'
+                );
+            });
+
+            it('should return a 400 status code if given an invalid encoded user ID', async () => {
+                const result = await server.handleRequest({
+                    method: 'POST',
+                    body: '',
+                    headers: authenticatedHeaders,
+                    pathParams: {
+                        userId: 'invali%d',
+                    },
+                    path: '/api/invali%d/subscription/manage',
+                    ipAddress: '123.456.789',
+                    query: {},
+                });
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 400,
+                    body: {
+                        success: false,
+                        errorCode: 'unacceptable_user_id',
+                        errorMessage: expect.any(String),
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 403 status code if the origin is invalid', async () => {
+                authenticatedHeaders['origin'] = 'https://wrong.origin.com';
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            userId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 403,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'invalid_origin',
+                        errorMessage:
+                            'The request must be made from an authorized origin.',
+                    }),
+                    headers: {},
+                });
+            });
+
+            it('should return a 403 status code if the session key is invalid', async () => {
+                authenticatedHeaders[
+                    'authorization'
+                ] = `Bearer ${formatV1SessionKey(
+                    'wrong user',
+                    'wrong session',
+                    'wrong secret',
+                    1000
+                )}`;
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            userId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 403,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'invalid_key',
+                        errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 401 status code if no session key is provided', async () => {
+                delete authenticatedHeaders['authorization'];
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            userId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 401,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage:
+                            'The user is not logged in. A session key must be provided for this operation.',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 400 status code if the session key is wrongly formatted', async () => {
+                authenticatedHeaders['authorization'] = `Bearer wrong`;
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            userId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 400,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'unacceptable_session_key',
+                        errorMessage:
+                            'The given session key is invalid. It must be a correctly formatted string.',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            testUrl('POST', '/api/v2/subscriptions/manage', () =>
+                JSON.stringify({
+                    userId,
+                })
+            );
+        });
+
+        describe('studioId', () => {
+            let studio: Studio;
+            let studioId: string;
+            beforeEach(async () => {
+                studioId = 'studioId';
+                studio = {
+                    id: studioId,
+                    displayName: 'my studio',
+                    stripeCustomerId: 'customerId',
+                };
+                await store.addStudio(studio);
+                await store.addStudioAssignment({
+                    userId,
+                    studioId,
+                    isPrimaryContact: true,
+                    role: 'admin',
+                });
+            });
+
+            it('should return the URL that the user should be redirected to', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [
+                            {
+                                id: 'subscription_id',
+                                status: 'active',
+                                start_date: 123,
+                                ended_at: null,
+                                cancel_at: null,
+                                canceled_at: null,
+                                current_period_start: 456,
+                                current_period_end: 999,
+                                items: [
+                                    {
+                                        id: 'item_id',
+                                        price: {
+                                            id: 'price_id',
+                                            interval: 'month',
+                                            interval_count: 1,
+                                            currency: 'usd',
+                                            unit_amount: 123,
+
+                                            product: {
+                                                id: 'product_id',
+                                                name: 'Product Name',
+                                            },
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                );
+
+                stripeMock.createPortalSession.mockResolvedValueOnce({
+                    url: 'http://portal_url',
+                });
+
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            studioId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        success: true,
+                        url: 'http://portal_url',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should include the given Subscription ID and expected price info', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [],
+                    }
+                );
+                stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                    url: 'http://create_url',
+                });
+
+                stripeMock.createPortalSession.mockResolvedValueOnce({
+                    url: 'http://portal_url',
+                });
+
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            studioId,
+                            subscriptionId: 'sub-1',
+                            expectedPrice: {
+                                currency: 'usd',
+                                cost: 100,
+                                interval: 'month',
+                                intervalLength: 1,
+                            },
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        success: true,
+                        url: 'http://create_url',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+                expect(stripeMock.getProductAndPriceInfo).toHaveBeenCalledWith(
+                    'product_id'
+                );
+            });
+
+            it('should return a price_does_not_match error if the expected price does not match', async () => {
+                stripeMock.listActiveSubscriptionsForCustomer.mockResolvedValueOnce(
+                    {
+                        subscriptions: [],
+                    }
+                );
+                stripeMock.createCheckoutSession.mockResolvedValueOnce({
+                    url: 'http://create_url',
+                });
+
+                stripeMock.createPortalSession.mockResolvedValueOnce({
+                    url: 'http://portal_url',
+                });
+
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            studioId,
+                            subscriptionId: 'sub-1',
+                            expectedPrice: {
+                                currency: 'usd',
+                                cost: 1000,
+                                interval: 'month',
+                                intervalLength: 1,
+                            },
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 412,
+                    body: {
+                        success: false,
+                        errorCode: 'price_does_not_match',
+                        errorMessage: expect.any(String),
+                    },
+                    headers: accountCorsHeaders,
+                });
+                expect(stripeMock.getProductAndPriceInfo).toHaveBeenCalledWith(
+                    'product_id'
+                );
+            });
+
+            it('should return a 400 status code if given an invalid encoded user ID', async () => {
+                const result = await server.handleRequest({
+                    method: 'POST',
+                    body: '',
+                    headers: authenticatedHeaders,
+                    pathParams: {
+                        userId: 'invali%d',
+                    },
+                    path: '/api/invali%d/subscription/manage',
+                    ipAddress: '123.456.789',
+                    query: {},
+                });
+
+                expectResponseBodyToEqual(result, {
+                    statusCode: 400,
+                    body: {
+                        success: false,
+                        errorCode: 'unacceptable_user_id',
+                        errorMessage: expect.any(String),
+                    },
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 403 status code if the origin is invalid', async () => {
+                authenticatedHeaders['origin'] = 'https://wrong.origin.com';
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            studioId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 403,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'invalid_origin',
+                        errorMessage:
+                            'The request must be made from an authorized origin.',
+                    }),
+                    headers: {},
+                });
+            });
+
+            it('should return a 403 status code if the session key is invalid', async () => {
+                authenticatedHeaders[
+                    'authorization'
+                ] = `Bearer ${formatV1SessionKey(
+                    'wrong user',
+                    'wrong session',
+                    'wrong secret',
+                    1000
+                )}`;
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            studioId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 403,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'invalid_key',
+                        errorMessage: INVALID_KEY_ERROR_MESSAGE,
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 401 status code if no session key is provided', async () => {
+                delete authenticatedHeaders['authorization'];
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            studioId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 401,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage:
+                            'The user is not logged in. A session key must be provided for this operation.',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            it('should return a 400 status code if the session key is wrongly formatted', async () => {
+                authenticatedHeaders['authorization'] = `Bearer wrong`;
+                const result = await server.handleRequest(
+                    httpPost(
+                        `/api/v2/subscriptions/manage`,
+                        JSON.stringify({
+                            studioId,
+                        }),
+                        authenticatedHeaders
+                    )
+                );
+
+                expect(result).toEqual({
+                    statusCode: 400,
+                    body: JSON.stringify({
+                        success: false,
+                        errorCode: 'unacceptable_session_key',
+                        errorMessage:
+                            'The given session key is invalid. It must be a correctly formatted string.',
+                    }),
+                    headers: accountCorsHeaders,
+                });
+            });
+
+            testUrl('POST', '/api/v2/subscriptions/manage', () =>
+                JSON.stringify({
+                    studioId,
+                })
+            );
+        });
     });
 
     it('should return a 404 status code when accessing an endpoint that doesnt exist', async () => {
@@ -7906,6 +10749,28 @@ describe('RecordsHttpServer', () => {
                     errorCode: 'unacceptable_session_key',
                     errorMessage:
                         'The given session key is invalid. It must be a correctly formatted string.',
+                }),
+                headers: {
+                    'Access-Control-Allow-Origin': request.headers.origin,
+                    'Access-Control-Allow-Headers':
+                        'Content-Type, Authorization',
+                },
+            });
+        });
+
+        it('should return a 403 status code when the session key is invalid', async () => {
+            let request = getRequest();
+            request.headers['authorization'] =
+                'Bearer ' +
+                formatV1SessionKey(userId, 'sessionId', 'wrong', 9999999999);
+            const result = await server.handleRequest(request);
+
+            expect(result).toEqual({
+                statusCode: 403,
+                body: JSON.stringify({
+                    success: false,
+                    errorCode: 'invalid_key',
+                    errorMessage: 'The session key is invalid.',
                 }),
                 headers: {
                     'Access-Control-Allow-Origin': request.headers.origin,
@@ -8034,7 +10899,8 @@ describe('RecordsHttpServer', () => {
                 filesController,
                 subscriptionController,
                 null as any,
-                policyController
+                policyController,
+                aiController
             );
 
             await rateLimiter.increment(ip, 100);

@@ -63,6 +63,15 @@ export interface CompiledBot extends PrecalculatedBot {
      * The list of breakpoints that are registered on this bot.
      */
     breakpoints: RuntimeBreakpoint[];
+
+    /**
+     * The number of errors that have occurred on each tag in this bot.
+     */
+    errorCounts: TagErrorCounts;
+}
+
+interface TagErrorCounts {
+    [tag: string]: number;
 }
 
 export type RuntimeGenerator = Generator<
@@ -167,6 +176,7 @@ export function createCompiledBot(
             originalTagEditValues: {},
             originalTagMaskEditValues: {},
             breakpoints: [],
+            errorCounts: {},
         };
     }
     return {
@@ -180,5 +190,6 @@ export function createCompiledBot(
         originalTagEditValues: {},
         originalTagMaskEditValues: {},
         breakpoints: [],
+        errorCounts: {},
     };
 }

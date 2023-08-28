@@ -6,6 +6,7 @@ import copy from 'rollup-plugin-copy';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 import { VitePWA } from 'vite-plugin-pwa';
 import { injectHtml } from 'vite-plugin-html';
+import { loadConfig } from '../../aux-backend/shared/ConfigUtils';
 
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats';
@@ -17,18 +18,21 @@ const publicDir = path.resolve(__dirname, 'shared', 'static');
 const casualOsPackages = fs
     .readdirSync(
         // src folder
-        path.resolve(__dirname, '..', '..')
+        path.resolve(__dirname, '..', '..', '..')
     )
     .map((folder) => `@casual-simulation/${folder}`);
 
 const allowedChildOrigins = `http://localhost:3000 https://casualos.com https://static.casualos.com https://alpha.casualos.com https://stable.casualos.com https://auxplayer.org https://static.auxplayer.org`;
 
+const config = process.env.SERVER_CONFIG
+    ? JSON.parse(process.env.SERVER_CONFIG)
+    : null;
+
 export default defineConfig(({ command, mode }) => {
-    const apiEndpoint =
-        process.env.AUTH_API_ENDPOINT ??
-        (command === 'build'
-            ? 'https://api.casualos.me'
-            : 'http://localhost:3002');
+    let apiEndpoint: string | null = null;
+    if (process.env.AUTH_API_ENDPOINT) {
+        apiEndpoint = process.env.AUTH_API_ENDPOINT;
+    }
     return {
         build: {
             outDir: distDir,
@@ -75,9 +79,6 @@ export default defineConfig(({ command, mode }) => {
             ),
             PRODUCTION: JSON.stringify(command === 'build'),
             API_ENDPOINT: JSON.stringify(apiEndpoint),
-            MAGIC_API_KEY: JSON.stringify(
-                process.env.MAGIC_API_KEY ?? 'pk_live_3CE2D56694071EC1'
-            ),
             ENABLE_SMS_AUTHENTICATION: JSON.stringify(
                 process.env.ENABLE_SMS_AUTHENTICATION === 'true' ||
                     (typeof process.env.ENABLE_SMS_AUTHENTICATION ===
@@ -85,7 +86,10 @@ export default defineConfig(({ command, mode }) => {
                         command !== 'build')
             ),
             ASSUME_SUBSCRIPTIONS_SUPPORTED: JSON.stringify(
-                command === 'serve' || !!process.env.SUBSCRIPTION_CONFIG
+                command === 'serve' || (config && config.subscriptions)
+            ),
+            ASSUME_STUDIOS_SUPPORTED: JSON.stringify(
+                command === 'serve' || (config && config.subscriptions)
             ),
         },
         publicDir,

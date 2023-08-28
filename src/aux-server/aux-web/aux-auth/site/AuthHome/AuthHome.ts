@@ -30,7 +30,6 @@ export default class AuthHome extends Vue {
     originalPhone: string = null;
     originalAvatarUrl: string = null;
     originalAvatarPortraitUrl: string = null;
-    originalOpenAiKey: string = null;
     hasActiveSubscription: boolean = false;
 
     updating: boolean = false;
@@ -60,20 +59,12 @@ export default class AuthHome extends Vue {
             this.subscriptionsSupported = authManager.subscriptionsSupported;
             this.hasActiveSubscription = authManager.hasActiveSubscription;
 
-            const key = authManager.openAiKey;
-
-            if (isOpenAiKey(key)) {
-                this.originalOpenAiKey = parseOpenAiKey(key)?.[0] ?? key;
-            } else {
-                this.originalOpenAiKey = key;
-            }
             this.metadata = {
                 email: authManager.email,
                 avatarUrl: authManager.avatarUrl,
                 avatarPortraitUrl: authManager.avatarPortraitUrl,
                 name: authManager.name,
                 phone: authManager.phone,
-                openAiKey: this.originalOpenAiKey,
             };
         });
     }
@@ -82,24 +73,9 @@ export default class AuthHome extends Vue {
         this._sub?.unsubscribe();
     }
 
-    saveEmail() {
-        // TODO: Handle errors
-        authManager.changeEmail(this.metadata.email);
-    }
-
     @Watch('metadata.name')
     updateName() {
         if (this.originalName === this.metadata.name) {
-            return;
-        }
-        this.updating = true;
-        this.updated = false;
-        this._updateMetadata();
-    }
-
-    @Watch('metadata.openAiKey')
-    updateOpenAiKey() {
-        if (this.originalOpenAiKey === this.metadata.openAiKey) {
             return;
         }
         this.updating = true;
@@ -126,11 +102,6 @@ export default class AuthHome extends Vue {
         let hasChange = false;
         if (this.originalName !== this.metadata.name) {
             newMetadata.name = this.metadata.name;
-            hasChange = true;
-        }
-
-        if (this.originalOpenAiKey !== this.metadata.openAiKey) {
-            newMetadata.openAiKey = this.metadata.openAiKey;
             hasChange = true;
         }
 

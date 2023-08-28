@@ -9,3 +9,15 @@
     text-decoration: none !important;
     color: inherit !important;
 }
+
+.md-app {
+    height: 100%;
+}
+
+#app {
+    height: 100%;
+}
+
+.record-item .md-list-item-content {
+    justify-content: flex-start;
+}

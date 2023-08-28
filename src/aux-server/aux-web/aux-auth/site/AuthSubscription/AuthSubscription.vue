@@ -101,14 +101,17 @@
                             </div>
                         </div>
                         <div
-                            v-if="subscription.productName.indexOf('Beta') > 0"
+                            v-if="subscription.featureList && subscription.featureList.length > 0"
                             class="subscribe-features"
                         >
                             <div>This includes:</div>
                             <ul>
-                                <li>Access to casualos.com</li>
-                                <li>Use GPT-3 to Build (OpenAI API key not included)</li>
-                                <li>Unlimited ABs</li>
+                                <li
+                                    v-for="(feature, index) of subscription.featureList"
+                                    :key="index"
+                                >
+                                    {{ feature }}
+                                </li>
                             </ul>
                         </div>
                         <md-card-actions>

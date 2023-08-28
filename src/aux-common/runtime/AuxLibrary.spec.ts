@@ -224,6 +224,12 @@ import {
     revokeInstRole,
     InstUpdate,
     getCurrentInstUpdate,
+    getFile,
+    openPhotoCamera,
+    aiChat,
+    aiGenerateSkybox,
+    aiGenerateImage,
+    listUserStudios,
 } from '../bots';
 import { types } from 'util';
 import {
@@ -298,6 +304,7 @@ import {
 } from '../partitions/PartitionUtils';
 import { YjsPartitionImpl } from '../partitions';
 import { applyUpdate } from 'yjs';
+import { CasualOSError } from './CasualOSError';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -1039,8 +1046,8 @@ describe('AuxLibrary', () => {
                 bot1.tags.redY = 2;
                 bot1.tags.redSortOrder = 100;
 
-                expect(typeof filter.sort).toBe('function');
-                expect(filter.sort(bot1)).toBe(100);
+                expect(typeof (filter as any).sort).toBe('function');
+                expect((filter as any).sort(bot1)).toBe(100);
             });
 
             it('should support sorting when the dimension tag starts with a hashtag', () => {
@@ -1051,8 +1058,8 @@ describe('AuxLibrary', () => {
                 bot1.tags.redY = 2;
                 bot1.tags.redSortOrder = 100;
 
-                expect(typeof filter.sort).toBe('function');
-                expect(filter.sort(bot1)).toBe(100);
+                expect(typeof (filter as any).sort).toBe('function');
+                expect((filter as any).sort(bot1)).toBe(100);
             });
 
             it('should return true for bots that are close to the target position', () => {
@@ -1128,8 +1135,8 @@ describe('AuxLibrary', () => {
                 bot2.tags.redY = 2;
                 bot2.tags.redSortOrder = 100;
 
-                expect(typeof filter.sort).toBe('function');
-                expect(filter.sort(bot2)).toEqual(100);
+                expect(typeof (filter as any).sort).toBe('function');
+                expect((filter as any).sort(bot2)).toEqual(100);
             });
 
             it('should support sorting when the dimension tag starts with a hashtag', () => {
@@ -1143,8 +1150,8 @@ describe('AuxLibrary', () => {
                 bot2.tags.redY = 2;
                 bot2.tags.redSortOrder = 100;
 
-                expect(typeof filter.sort).toBe('function');
-                expect(filter.sort(bot2)).toEqual(100);
+                expect(typeof (filter as any).sort).toBe('function');
+                expect((filter as any).sort(bot2)).toEqual(100);
             });
 
             it('should return true for bots that are close to each other', () => {
@@ -1230,8 +1237,8 @@ describe('AuxLibrary', () => {
                     bot2.tags.redY = y;
                     bot2.tags.redSortOrder = 100;
 
-                    expect(typeof filter.sort).toEqual('function');
-                    expect(filter.sort(bot2)).toEqual(100);
+                    expect(typeof (filter as any).sort).toEqual('function');
+                    expect((filter as any).sort(bot2)).toEqual(100);
                 });
             });
 
@@ -1329,7 +1336,7 @@ describe('AuxLibrary', () => {
                 it('should return a function without a sort function', () => {
                     const filter = library.api.neighboring(bot1, 'red');
 
-                    expect(typeof filter.sort).toEqual('undefined');
+                    expect(typeof (filter as any).sort).toEqual('undefined');
                 });
             });
         });
@@ -1423,7 +1430,7 @@ describe('AuxLibrary', () => {
                     (b) => false,
                     (b) => true
                 );
-                expect(typeof filter.sort).toEqual('undefined');
+                expect(typeof (filter as any).sort).toEqual('undefined');
             });
         });
 
@@ -2374,6 +2381,509 @@ describe('AuxLibrary', () => {
             bot2 = createDummyRuntimeBot('test2');
 
             addToContext(context, bot1, bot2);
+        });
+
+        describe('ai.chat()', () => {
+            it('should emit a AIChatAction', () => {
+                const promise: any = library.api.ai.chat('hello, world!');
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support message objects', () => {
+                const promise: any = library.api.ai.chat({
+                    role: 'user',
+                    content: 'hello, world!',
+                });
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support message arrays', () => {
+                const promise: any = library.api.ai.chat([
+                    {
+                        role: 'system',
+                        content: 'You are a helpful assistant.',
+                    },
+                    {
+                        role: 'user',
+                        content: 'hello, world!',
+                    },
+                ]);
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'system',
+                            content: 'You are a helpful assistant.',
+                        },
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom options', () => {
+                const promise: any = library.api.ai.chat(
+                    [
+                        {
+                            role: 'system',
+                            content: 'You are a helpful assistant.',
+                        },
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    {
+                        preferredModel: 'gpt-3.5-turbo',
+                        temperature: 0.5,
+                    }
+                );
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'system',
+                            content: 'You are a helpful assistant.',
+                        },
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    {
+                        preferredModel: 'gpt-3.5-turbo',
+                        temperature: 0.5,
+                    },
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return the first chat choice', async () => {
+                let result: any;
+                const promise: any = library.api.ai.chat({
+                    role: 'user',
+                    content: 'hello, world!',
+                });
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello to you!',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual({
+                    role: 'assistant',
+                    content: 'Hello to you!',
+                    finishReason: 'stop',
+                });
+            });
+
+            it('should return a string when a string was given', async () => {
+                let result: any;
+                const promise: any = library.api.ai.chat('hello, world!');
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        choices: [
+                            {
+                                role: 'assistant',
+                                content: 'Hello to you!',
+                                finishReason: 'stop',
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual('Hello to you!');
+            });
+
+            it('should throw a CasualOSError when not successful', async () => {
+                let result: any;
+                let error: any;
+                const promise: any = library.api.ai.chat('hello, world!');
+
+                promise.then(
+                    (r: any) => (result = r),
+                    (err: any) => (error = err)
+                );
+
+                const expected = aiChat(
+                    [
+                        {
+                            role: 'user',
+                            content: 'hello, world!',
+                        },
+                    ],
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: false,
+                        errorCode: 'not_supported',
+                        errorMessage: 'This operation is not supported.',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toBeUndefined();
+                expect(error).toEqual(
+                    new CasualOSError({
+                        errorCode: 'not_supported',
+                        errorMessage: 'This operation is not supported.',
+                    })
+                );
+            });
+        });
+
+        describe('ai.generateSkybox()', () => {
+            it('should emit a AIGenerateSkyboxAction', () => {
+                const promise: any =
+                    library.api.ai.generateSkybox('cartoon clouds');
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    undefined,
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support negative prompts', () => {
+                const promise: any = library.api.ai.generateSkybox(
+                    'cartoon clouds',
+                    'realistic'
+                );
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    'realistic',
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support request objects', () => {
+                const promise: any = library.api.ai.generateSkybox({
+                    prompt: 'cartoon clouds',
+                    negativePrompt: 'realistic',
+                });
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    'realistic',
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should resolve with the address that was generated', async () => {
+                let result: string | null = null;
+                const promise: any =
+                    library.api.ai.generateSkybox('cartoon clouds');
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    undefined,
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        fileUrl: 'file_url',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toBe('file_url');
+            });
+
+            it('should resolve with the resulting object', async () => {
+                let result: any = null;
+                const promise: any = library.api.ai.generateSkybox({
+                    prompt: 'cartoon clouds',
+                });
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiGenerateSkybox(
+                    'cartoon clouds',
+                    undefined,
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        fileUrl: 'file_url',
+                        thumbnailUrl: 'thumbnail_url',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual({
+                    success: true,
+                    fileUrl: 'file_url',
+                    thumbnailUrl: 'thumbnail_url',
+                });
+            });
+        });
+
+        describe('ai.generateImage()', () => {
+            it('should emit a AIGenerateImageAction', () => {
+                const promise: any =
+                    library.api.ai.generateImage('cartoon clouds');
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support negative prompts', () => {
+                const promise: any = library.api.ai.generateImage(
+                    'cartoon clouds',
+                    'realistic'
+                );
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                        negativePrompt: 'realistic',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support request objects', () => {
+                const promise: any = library.api.ai.generateImage({
+                    prompt: 'cartoon clouds',
+                    negativePrompt: 'realistic',
+                });
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                        negativePrompt: 'realistic',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should resolve with the data that was generated', async () => {
+                let result: string | null = null;
+                const promise: any =
+                    library.api.ai.generateImage('cartoon clouds');
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'base64',
+                                mimeType: 'image/png',
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toBe('data:image/png;base64,base64');
+            });
+
+            it('should resolve with the resulting object', async () => {
+                let result: any = null;
+                const promise: any = library.api.ai.generateImage({
+                    prompt: 'cartoon clouds',
+                });
+
+                promise.then((r: any) => (result = r));
+
+                const expected = aiGenerateImage(
+                    {
+                        prompt: 'cartoon clouds',
+                    },
+                    undefined,
+                    context.tasks.size
+                );
+
+                expect(promise[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+
+                context.resolveTask(
+                    expected.taskId,
+                    {
+                        success: true,
+                        images: [
+                            {
+                                base64: 'base64',
+                                mimeType: 'image/jpeg',
+                            },
+                        ],
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual({
+                    success: true,
+                    images: [
+                        {
+                            base64: 'base64',
+                            url: 'data:image/jpeg;base64,base64',
+                            mimeType: 'image/jpeg',
+                        },
+                    ],
+                });
+            });
         });
 
         describe('os.toast()', () => {
@@ -3589,6 +4099,81 @@ describe('AuxLibrary', () => {
                 const expected = openImageClassifier(
                     false,
                     {},
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.openPhotoCamera()', () => {
+            it('should emit a OpenPhotoCameraAction', () => {
+                const action: any = library.api.os.openPhotoCamera();
+                const expected = openPhotoCamera(
+                    true,
+                    false,
+                    undefined,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given camera type', () => {
+                const action: any = library.api.os.openPhotoCamera({
+                    cameraType: 'front',
+                });
+                const expected = openPhotoCamera(
+                    true,
+                    false,
+                    {
+                        cameraType: 'front',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.capturePhoto()', () => {
+            it('should emit a OpenPhotoCameraAction', () => {
+                const action: any = library.api.os.capturePhoto();
+                const expected = openPhotoCamera(
+                    true,
+                    true,
+                    undefined,
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should use the given camera type', () => {
+                const action: any = library.api.os.capturePhoto({
+                    cameraType: 'front',
+                });
+                const expected = openPhotoCamera(
+                    true,
+                    true,
+                    {
+                        cameraType: 'front',
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+        });
+
+        describe('os.closePhotoCamera()', () => {
+            it('should emit a OpenPhotoCameraAction', () => {
+                const action: any = library.api.os.closePhotoCamera();
+
+                const expected = openPhotoCamera(
+                    false,
+                    false,
+                    undefined,
                     context.tasks.size
                 );
                 expect(action[ORIGINAL_OBJECT]).toEqual(expected);
@@ -4933,7 +5518,6 @@ describe('AuxLibrary', () => {
                         avatarUrl: 'myAvatarUrl',
                         avatarPortraitUrl: 'portraitUrl',
                         name: 'name',
-                        openAiKey: 'api key',
                         hasActiveSubscription: true,
                     } as AuthData,
                     false
@@ -4952,7 +5536,6 @@ describe('AuxLibrary', () => {
                     'portraitUrl'
                 );
                 expect(resultBot.tags.name).toEqual('name');
-                expect(resultBot.tags.openAiKey).toEqual('api key');
                 expect(resultBot.tags.hasActiveSubscription).toEqual(true);
             });
 
@@ -5824,7 +6407,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if no key is provided', async () => {
                 expect(() => {
                     library.api.os.eraseData(null, 'address');
-                }).toThrow('A recordKey must be provided.');
+                }).toThrow('recordKeyOrName must be provided.');
             });
 
             it('should throw an error if no address is provided', async () => {
@@ -5836,7 +6419,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if recordKey is not a string', async () => {
                 expect(() => {
                     library.api.os.eraseData({} as string, 'address');
-                }).toThrow('recordKey must be a string.');
+                }).toThrow('recordKeyOrName must be a string.');
             });
 
             it('should throw an error if address is not a string', async () => {
@@ -5883,7 +6466,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if no key is provided', async () => {
                 expect(() => {
                     library.api.os.eraseManualApprovalData(null, 'address');
-                }).toThrow('A recordKey must be provided.');
+                }).toThrow('recordKeyOrName must be provided.');
             });
 
             it('should throw an error if no address is provided', async () => {
@@ -5898,7 +6481,7 @@ describe('AuxLibrary', () => {
                         {} as string,
                         'address'
                     );
-                }).toThrow('recordKey must be a string.');
+                }).toThrow('recordKeyOrName must be a string.');
             });
 
             it('should throw an error if address is not a string', async () => {
@@ -6038,13 +6621,13 @@ describe('AuxLibrary', () => {
             it('should throw an error if no recordKey is provided', async () => {
                 expect(() => {
                     library.api.os.recordFile(null, 'data');
-                }).toThrow('A recordKey must be provided.');
+                }).toThrow('recordKeyOrName must be provided.');
             });
 
             it('should throw an error if recordKey is not a string', async () => {
                 expect(() => {
                     library.api.os.recordFile({} as string, 'data');
-                }).toThrow('recordKey must be a string.');
+                }).toThrow('recordKeyOrName must be a string.');
             });
 
             it('should convert bots to copiable values', async () => {
@@ -6129,6 +6712,145 @@ describe('AuxLibrary', () => {
 
                 expect(result).toEqual('data');
             });
+
+            it('should emit a get_file event if the webhook fails', async () => {
+                let result: any;
+                const action = library.api.os.getFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                action.then((data) => (result = data));
+
+                context.rejectTask(
+                    context.tasks.size,
+                    {
+                        response: {
+                            status: 403,
+                        },
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                const expected = getFile('fileUrl', {}, 2);
+
+                expect(context.actions.slice(1)).toEqual([expected]);
+
+                context.resolveTask(2, 'Hello, world!', false);
+
+                await waitAsync();
+
+                expect(result).toEqual('Hello, world!');
+            });
+        });
+
+        describe('os.getPublicFile()', () => {
+            it('should emit a Webhook', () => {
+                const action: any = library.api.os.getPublicFile('fileUrl');
+                const expected = webhook(
+                    {
+                        method: 'GET',
+                        url: 'fileUrl',
+                        responseShout: undefined,
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if given a null url', () => {
+                expect(() => {
+                    library.api.os.getPublicFile(null);
+                }).toThrow();
+            });
+
+            it('should support record file results', () => {
+                const action: any = library.api.os.getPublicFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                const expected = webhook(
+                    {
+                        method: 'GET',
+                        url: 'fileUrl',
+                        responseShout: undefined,
+                    },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return the webhook result data', async () => {
+                let result: any;
+                const action = library.api.os.getPublicFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                action.then((data) => (result = data));
+
+                context.resolveTask(
+                    context.tasks.size,
+                    {
+                        data: 'data',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual('data');
+            });
+        });
+
+        describe('os.getPrivateFile()', () => {
+            it('should emit a get_file event', () => {
+                const action: any = library.api.os.getPrivateFile('fileUrl');
+                const expected = getFile('fileUrl', {}, context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should throw an error if given a null url', () => {
+                expect(() => {
+                    library.api.os.getPrivateFile(null);
+                }).toThrow();
+            });
+
+            it('should support record file results', () => {
+                const action: any = library.api.os.getPrivateFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                const expected = getFile('fileUrl', {}, context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should return the result', async () => {
+                let result: any;
+                const action = library.api.os.getPrivateFile({
+                    success: true,
+                    url: 'fileUrl',
+                } as RecordFileApiSuccess);
+                action.then((data) => (result = data));
+
+                context.resolveTask(
+                    context.tasks.size,
+                    {
+                        data: 'data',
+                    },
+                    false
+                );
+
+                await waitAsync();
+
+                expect(result).toEqual({
+                    data: 'data',
+                });
+            });
         });
 
         describe('os.eraseFile()', () => {
@@ -6166,7 +6888,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if no key is provided', async () => {
                 expect(() => {
                     library.api.os.eraseFile(null, 'address');
-                }).toThrow('A recordKey must be provided.');
+                }).toThrow('recordKeyOrName must be provided.');
             });
 
             it('should throw an error if no file URL is provided', async () => {
@@ -6180,7 +6902,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if recordKey is not a string', async () => {
                 expect(() => {
                     library.api.os.eraseData({} as string, 'address');
-                }).toThrow('recordKey must be a string.');
+                }).toThrow('recordKeyOrName must be a string.');
             });
         });
 
@@ -6221,7 +6943,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if no key is provided', async () => {
                 expect(() => {
                     library.api.os.recordEvent(null, 'address');
-                }).toThrow('A recordKey must be provided.');
+                }).toThrow('recordKeyOrName must be provided.');
             });
 
             it('should throw an error if no event name is provided', async () => {
@@ -6233,7 +6955,7 @@ describe('AuxLibrary', () => {
             it('should throw an error if key is not a string', async () => {
                 expect(() => {
                     library.api.os.recordEvent({} as string, 'address');
-                }).toThrow('recordKey must be a string.');
+                }).toThrow('recordKeyOrName must be a string.');
             });
 
             it('should throw an error if event name is not a string', async () => {
@@ -6327,6 +7049,27 @@ describe('AuxLibrary', () => {
                 expect(() => {
                     library.api.os.countEvents('key', {} as string);
                 }).toThrow('eventName must be a string.');
+            });
+        });
+
+        describe('os.listUserStudios()', () => {
+            it('should emit a GetEventCountAction', async () => {
+                const action: any = library.api.os.listUserStudios();
+                const expected = listUserStudios({}, context.tasks.size);
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
+            });
+
+            it('should support custom endpoints', async () => {
+                const action: any = library.api.os.listUserStudios(
+                    'http://localhost:5000'
+                );
+                const expected = listUserStudios(
+                    { endpoint: 'http://localhost:5000' },
+                    context.tasks.size
+                );
+                expect(action[ORIGINAL_OBJECT]).toEqual(expected);
+                expect(context.actions).toEqual([expected]);
             });
         });
 
@@ -17588,6 +18331,55 @@ describe('AuxLibrary', () => {
         it('should convert the given hex to bytes', () => {
             expect(library.api.bytes.fromHexString('0102030405')).toEqual(
                 new Uint8Array([1, 2, 3, 4, 5])
+            );
+        });
+    });
+
+    describe('bytes.toBase64Url()', () => {
+        it('should convert the given value to a base64 data string', () => {
+            expect(
+                library.api.bytes.toBase64Url(new Uint8Array([1, 2, 3, 4, 5]))
+            ).toBe('data:image/png;base64,AQIDBAU=');
+        });
+
+        it('should support base64 strings', () => {
+            expect(library.api.bytes.toBase64Url('AQIDBAU=')).toBe(
+                'data:image/png;base64,AQIDBAU='
+            );
+        });
+
+        it('should use the given MIME Type', () => {
+            expect(
+                library.api.bytes.toBase64Url(
+                    new Uint8Array([1, 2, 3, 4, 5]),
+                    'image/jpeg'
+                )
+            ).toBe('data:image/jpeg;base64,AQIDBAU=');
+        });
+    });
+
+    describe('bytes.fromBase64Url()', () => {
+        it('should convert the given base64 data string into a blob', () => {
+            expect(
+                library.api.bytes.fromBase64Url(
+                    'data:image/png;base64,AQIDBAU='
+                )
+            ).toEqual(
+                new Blob([new Uint8Array([1, 2, 3, 4, 5])], {
+                    type: 'image/png',
+                })
+            );
+        });
+
+        it('should use the given MIME Type', () => {
+            expect(
+                library.api.bytes.fromBase64Url(
+                    'data:image/jpeg;base64,AQIDBAU='
+                )
+            ).toEqual(
+                new Blob([new Uint8Array([1, 2, 3, 4, 5])], {
+                    type: 'image/jpeg',
+                })
             );
         });
     });

@@ -16,6 +16,7 @@ import {
 import {
     FileRecord,
     FileRecordsLookup,
+    ListFilesLookupResult,
     UpdateFileResult,
 } from '@casual-simulation/aux-records/FileRecordsStore';
 import { PUBLIC_READ_MARKER } from '@casual-simulation/aux-records/PolicyPermissions';
@@ -61,6 +62,53 @@ export class PrismaFileRecordsLookup implements FileRecordsLookup {
         } else {
             return null;
         }
+    }
+
+    async listUploadedFiles(
+        recordName: string,
+        fileName: string
+    ): Promise<ListFilesLookupResult> {
+        let query: Prisma.FileRecordWhereInput = {
+            recordName: recordName,
+            uploadedAt: { not: null },
+        };
+        if (!!fileName) {
+            query.fileName = { gt: fileName };
+        }
+        const result = await this._client.fileRecord.findMany({
+            where: query,
+            orderBy: {
+                fileName: 'asc',
+            },
+            select: {
+                fileName: true,
+                sizeInBytes: true,
+                markers: true,
+                description: true,
+                uploadedAt: true,
+            },
+            take: 10,
+        });
+
+        const count = await this._client.fileRecord.count({
+            where: {
+                recordName: recordName,
+                uploadedAt: { not: null },
+            },
+        });
+
+        const now = new Date();
+        return {
+            success: true,
+            files: result.map((r) => ({
+                fileName: r.fileName,
+                sizeInBytes: Number(r.sizeInBytes),
+                markers: convertMarkers(r.markers),
+                description: r.description,
+                uploaded: r.uploadedAt < now,
+            })),
+            totalCount: count,
+        };
     }
 
     async addFileRecord(

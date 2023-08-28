@@ -1,0 +1,1958 @@
+{
+    "hash": "types/debuggers/debugger",
+    "pageTitle": "Debugger",
+    "pageDescription": "Defines an interface that represents a debugger.",
+    "pageSidebarLabel": "Debugger",
+    "contents": [
+        {
+            "id": 2289,
+            "order": 9999,
+            "name": "Debugger",
+            "reflection": {
+                "id": 2289,
+                "name": "NormalDebugger",
+                "kind": 256,
+                "kindString": "Interface",
+                "flags": [],
+                "comment": {
+                    "shortText": "Defines an interface that represents a debugger.",
+                    "tags": [
+                        {
+                            "tag": "dochash",
+                            "paramName": "",
+                            "text": "types/debuggers/debugger"
+                        },
+                        {
+                            "tag": "doctitle",
+                            "paramName": "",
+                            "text": "Debugger"
+                        },
+                        {
+                            "tag": "docsidebar",
+                            "paramName": "",
+                            "text": "Debugger"
+                        },
+                        {
+                            "tag": "docdescription",
+                            "paramName": "",
+                            "text": "Defines an interface that represents a debugger."
+                        },
+                        {
+                            "tag": "docname",
+                            "paramName": "",
+                            "text": "Debugger"
+                        },
+                        {
+                            "tag": "docreferenceactions",
+                            "paramName": "",
+                            "text": "^\\w+$\n"
+                        }
+                    ]
+                },
+                "children": [
+                    {
+                        "id": 2343,
+                        "name": "action",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": [],
+                        "comment": {
+                            "shortText": "The action-related actions that are available in this debugger.",
+                            "tags": [
+                                {
+                                    "tag": "docreferenceactions",
+                                    "paramName": "",
+                                    "text": "^action\\."
+                                },
+                                {
+                                    "tag": "docsource",
+                                    "paramName": "",
+                                    "text": "ActionActions\n"
+                                }
+                            ]
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                "line": 1336,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "reflection",
+                            "declaration": {
+                                "id": 2344,
+                                "name": "__type",
+                                "kind": 65536,
+                                "kindString": "Type literal",
+                                "flags": {}
+                            }
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "DebuggerBase.action"
+                        },
+                        "typeText": "interface ActionActions {\n}",
+                        "typeReference": "ActionActions",
+                        "references": "- [`action.perform(action)`](ref:action.perform)\n- [`action.reject(action)`](ref:action.reject)\n"
+                    },
+                    {
+                        "id": 2341,
+                        "name": "os",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": [],
+                        "comment": {
+                            "shortText": "The OS actions that are available in this debugger.",
+                            "tags": [
+                                {
+                                    "tag": "docreferenceactions",
+                                    "paramName": "",
+                                    "text": "^os\\."
+                                },
+                                {
+                                    "tag": "docsource",
+                                    "paramName": "",
+                                    "text": "OSActions\n"
+                                }
+                            ]
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                "line": 1322,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "reflection",
+                            "declaration": {
+                                "id": 2342,
+                                "name": "__type",
+                                "kind": 65536,
+                                "kindString": "Type literal",
+                                "flags": {}
+                            }
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "DebuggerBase.os"
+                        },
+                        "typeText": "interface OSActions {\n}",
+                        "typeReference": "OSActions",
+                        "references": "- [`os.beginAudioRecording(options)`](ref:os.beginAudioRecording)\n- [`os.endAudioRecording()`](ref:os.endAudioRecording)\n- [`os.attachDebugger(debug, options)`](ref:os.attachDebugger)\n- [`os.createDebugger(options)`](ref:os.createDebugger-normal)\n- [`os.createDebugger(options)`](ref:os.createDebugger-pausable)\n- [`os.focusOn(bot, options)`](ref:os.focusOn-bot)\n- [`os.focusOn(position, options)`](ref:os.focusOn-position)\n- [`os.getExecutingDebugger()`](ref:os.getExecutingDebugger)\n- [`os.showInput(currentValue, options)`](ref:os.showInput)\n- [`os.addBotDropGrid(bot, ...targets)`](ref:os.addBotDropGrid)\n- [`os.addBotDropSnap(bot, ...targets)`](ref:os.addBotDropSnap)\n- [`os.addDropGrid(...targets)`](ref:os.addDropGrid)\n- [`os.addDropSnap(...targets)`](ref:os.addDropSnap)\n- [`os.applyUpdatesToInst(updates)`](ref:os.applyUpdatesToInst)\n- [`os.arSupported()`](ref:os.arSupported)\n- [`os.beginAudioRecording(options)`](ref:os.beginAudioRecording)\n- [`os.bufferFormAddressGLTF(address)`](ref:os.bufferFormAddressGLTF)\n- [`os.bufferSound(url)`](ref:os.bufferSound)\n- [`os.calculateRayFromCamera(portal, viewportCoordinates)`](ref:os.calculateRayFromCamera)\n- [`os.cancelSound(soundId)`](ref:os.cancelSound)\n- [`os.capturePhoto(options)`](ref:os.capturePhoto)\n- [`os.closeBarcodeScanner()`](ref:os.closeBarcodeScanner)\n- [`os.closeCircleWipe(options)`](ref:os.closeCircleWipe)\n- [`os.closeImageClassifier()`](ref:os.closeImageClassifier)\n- [`os.closePhotoCamera()`](ref:os.closePhotoCamera)\n- [`os.closeQRCodeScanner()`](ref:os.closeQRCodeScanner)\n- [`os.compileApp(appId, content)`](ref:os.compileApp)\n- [`os.convertGeolocationToWhat3Words(location)`](ref:os.convertGeolocationToWhat3Words)\n- [`os.countEvents(recordNameOrKey, eventName, endpoint)`](ref:os.countEvents)\n- [`os.createInitializationUpdate(bots)`](ref:os.createInitializationUpdate)\n- [`os.device()`](ref:os.device)\n- [`os.disableAR()`](ref:os.disableAR)\n- [`os.disablePointOfView()`](ref:os.disablePointOfView)\n- [`os.disableVR()`](ref:os.disableVR)\n- [`os.disableWakeLock()`](ref:os.disableWakeLock)\n- [`os.download(data, filename, mimeType)`](ref:os.download)\n- [`os.downloadBots(bots, filename)`](ref:os.downloadBots)\n- [`os.downloadBotsAsInitialzationUpdate(bots, filename)`](ref:os.downloadBotsAsInitialzationUpdate)\n- [`os.downloadInst()`](ref:os.downloadInst)\n- [`os.downloadInst()`](ref:os.downloadInst)\n- [`os.enableAR(options)`](ref:os.enableAR)\n- [`os.enableCustomDragging()`](ref:os.enableCustomDragging)\n- [`os.enablePointOfView(center, imu)`](ref:os.enablePointOfView)\n- [`os.enableVR(options)`](ref:os.enableVR)\n- [`os.endAudioRecording()`](ref:os.endAudioRecording)\n- [`os.eraseData(recordKeyOrName, address, endpoint)`](ref:os.eraseData)\n- [`os.eraseManualApprovalData(recordKeyOrName, address, endpoint)`](ref:os.eraseManualApprovalData)\n- [`os.exitFullscreenMode()`](ref:os.exitFullscreenMode)\n- [`os.getAverageFrameRate()`](ref:os.getAverageFrameRate)\n- [`os.getCameraPosition(portal)`](ref:os.getCameraPosition)\n- [`os.getCameraRotation(portal)`](ref:os.getCameraRotation)\n- [`os.getCurrentDimension()`](ref:os.getCurrentDimension)\n- [`os.getCurrentInst()`](ref:os.getCurrentInst)\n- [`os.getCurrentInstUpdate()`](ref:os.getCurrentInstUpdate)\n- [`os.getCurrentInst()`](ref:os.getCurrentInst)\n- [`os.getData(recordKeyOrName, address, endpoint)`](ref:os.getData)\n- [`os.getDimensionalDepth(dimension)`](ref:os.getDimensionalDepth)\n- [`os.getFocusPoint(portal)`](ref:os.getFocusPoint)\n- [`os.getGeolocation()`](ref:os.getGeolocation)\n- [`os.getInputList()`](ref:os.getInputList)\n- [`os.getInputState(controller, button)`](ref:os.getInputState)\n- [`os.getInstStateFromUpdates(updates)`](ref:os.getInstStateFromUpdates)\n- [`os.getManualApprovalData(recordKeyOrName, address, endpoint)`](ref:os.getManualApprovalData)\n- [`os.getMediaPermission(options)`](ref:os.getMediaPermission)\n- [`os.getMenuDimension()`](ref:os.getMenuDimension)\n- [`os.getMiniPortalDimension()`](ref:os.getMiniPortalDimension)\n- [`os.getPointerDirection(pointer)`](ref:os.getPointerDirection)\n- [`os.getPointerPosition(pointer)`](ref:os.getPointerPosition)\n- [`os.getPointerRotation(pointer)`](ref:os.getPointerRotation)\n- [`os.getPortalDimension(portal)`](ref:os.getPortalDimension)\n- [`os.getPublicRecordKey(name)`](ref:os.getPublicRecordKey)\n- [`os.getRoomOptions(roomName)`](ref:os.getRoomOptions)\n- [`os.getRoomRemoteOptions(roomName, remoteId)`](ref:os.getRoomRemoteOptions)\n- [`os.getRoomTrackOptions(roomName, address)`](ref:os.getRoomTrackOptions)\n- [`os.getSubjectlessPublicRecordKey(name)`](ref:os.getSubjectlessPublicRecordKey)\n- [`os.getWakeLockConfiguration()`](ref:os.getWakeLockConfiguration)\n- [`os.goToDimension(dimension)`](ref:os.goToDimension)\n- [`os.goToURL(url)`](ref:os.goToURL)\n- [`os.grantInstAdminPermission(recordName, options)`](ref:os.grantInstAdminPermission)\n- [`os.grantInstRole(recordName, role, inst, expireTimeMs, options)`](ref:os.grantInstRole)\n- [`os.grantRecordMarkerPermission(recordName, marker, permission, options)`](ref:os.grantRecordMarkerPermission)\n- [`os.grantUserRole(recordName, role, userId, expireTimeMs, options)`](ref:os.grantUserRole)\n- [`os.hasBotInMiniPortal(bots)`](ref:os.hasBotInMiniPortal)\n- [`os.hideBarcode()`](ref:os.hideBarcode)\n- [`os.hideChat()`](ref:os.hideChat)\n- [`os.hideHtml()`](ref:os.hideHtml)\n- [`os.hideQRCode()`](ref:os.hideQRCode)\n- [`os.hideTips(tipIds)`](ref:os.hideTips)\n- [`os.importAUX(urlOrJSON)`](ref:os.importAUX)\n- [`os.inSheet()`](ref:os.inSheet)\n- [`os.instStatuses()`](ref:os.instStatuses)\n- [`os.instances()`](ref:os.instances)\n- [`os.isCollaborative()`](ref:os.isCollaborative)\n- [`os.isInDimension(dimension)`](ref:os.isInDimension)\n- [`os.isRecordKey(key)`](ref:os.isRecordKey)\n- [`os.joinRoom(roomName, options)`](ref:os.joinRoom)\n- [`os.leaveRoom(roomName, options)`](ref:os.leaveRoom)\n- [`os.listBuiltinTags()`](ref:os.listBuiltinTags)\n- [`os.listData(recordKeyOrName, startingAddress, endpoint)`](ref:os.listData)\n- [`os.listFormAnimations(botOrAddress)`](ref:os.listFormAnimations)\n- [`os.listInstUpdates()`](ref:os.listInstUpdates)\n- [`os.loadInst(id)`](ref:os.loadInst)\n- [`os.loadInst(id)`](ref:os.loadInst)\n- [`os.log(...args)`](ref:os.log)\n- [`os.meetCommand(command, ...args)`](ref:os.meetCommand)\n- [`os.meetFunction(functionName, ...args)`](ref:os.meetFunction)\n- [`os.openBarcodeScanner(camera)`](ref:os.openBarcodeScanner)\n- [`os.openCircleWipe(options)`](ref:os.openCircleWipe)\n- [`os.openDevConsole()`](ref:os.openDevConsole)\n- [`os.openImageClassifier(options)`](ref:os.openImageClassifier)\n- [`os.openPhotoCamera(options)`](ref:os.openPhotoCamera)\n- [`os.openQRCodeScanner(camera)`](ref:os.openQRCodeScanner)\n- [`os.openURL(url)`](ref:os.openURL)\n- [`os.parseBotsFromData(jsonOrPdf)`](ref:os.parseBotsFromData)\n- [`os.playSound(url)`](ref:os.playSound)\n- [`os.raycast(portal, origin, direction)`](ref:os.raycast)\n- [`os.raycastFromCamera(portal, viewportCoordinates)`](ref:os.raycastFromCamera)\n- [`os.recordData(recordKeyOrRecordName, address, data, endpointOrOptions)`](ref:os.recordData)\n- [`os.recordEvent(recordKeyOrName, eventName, endpoint)`](ref:os.recordEvent)\n- [`os.recordFile(recordKeyOrName, data, options, endpoint)`](ref:os.recordFile)\n- [`os.recordManualApprovalData(recordKeyOrRecordName, address, data, endpointOrOptions)`](ref:os.recordManualApprovalData)\n- [`os.registerApp(portalId, bot)`](ref:os.registerApp)\n- [`os.registerTagPrefix(prefix, options)`](ref:os.registerTagPrefix)\n- [`os.remoteCount(inst)`](ref:os.remoteCount)\n- [`os.remotes()`](ref:os.remotes)\n- [`os.replaceDragBot(bot)`](ref:os.replaceDragBot)\n- [`os.requestAuthBot()`](ref:os.requestAuthBot)\n- [`os.requestFullscreenMode()`](ref:os.requestFullscreenMode)\n- [`os.requestWakeLock()`](ref:os.requestWakeLock)\n- [`os.revokeInstRole(recordName, role, inst, options)`](ref:os.revokeInstRole)\n- [`os.revokeRecordMarkerPermission(recordName, marker, permission, options)`](ref:os.revokeRecordMarkerPermission)\n- [`os.revokeUserRole(recordName, role, userId, options)`](ref:os.revokeUserRole)\n- [`os.run(script)`](ref:os.run)\n- [`os.setClipboard(text)`](ref:os.setClipboard)\n- [`os.setRoomOptions(roomName, options)`](ref:os.setRoomOptions)\n- [`os.setRoomTrackOptions(roomName, address, options)`](ref:os.setRoomTrackOptions)\n- [`os.share(options)`](ref:os.share)\n- [`os.showBarcode(code, format)`](ref:os.showBarcode)\n- [`os.showConfirm(options)`](ref:os.showConfirm)\n- [`os.showHtml(html)`](ref:os.showHtml)\n- [`os.showInputForTag(bot, tag, options)`](ref:os.showInputForTag)\n- [`os.showJoinCode(inst, dimension)`](ref:os.showJoinCode)\n- [`os.showQRCode(code)`](ref:os.showQRCode)\n- [`os.showUploadAuxFile()`](ref:os.showUploadAuxFile)\n- [`os.showUploadFiles()`](ref:os.showUploadFiles)\n- [`os.sleep(time)`](ref:os.sleep)\n- [`os.startFormAnimation(botOrBots, nameOrIndex, options)`](ref:os.startFormAnimation)\n- [`os.stopFormAnimation(botOrBots, options)`](ref:os.stopFormAnimation)\n- [`os.tip(message, pixelX, pixelY, duration)`](ref:os.tip)\n- [`os.toast(message, duration)`](ref:os.toast)\n- [`os.totalRemoteCount()`](ref:os.totalRemoteCount)\n- [`os.unloadInst(id)`](ref:os.unloadInst)\n- [`os.unloadInst(id)`](ref:os.unloadInst)\n- [`os.unregisterApp(appId)`](ref:os.unregisterApp)\n- [`os.version()`](ref:os.version)\n- [`os.vrSupported()`](ref:os.vrSupported)\n- [`os.agreedUponTime`](ref:os.agreedUponTime)\n- [`os.deadReckoningTime`](ref:os.deadReckoningTime)\n- [`os.instLatency`](ref:os.instLatency)\n- [`os.instTimeOffset`](ref:os.instTimeOffset)\n- [`os.instTimeOffsetSpread`](ref:os.instTimeOffsetSpread)\n- [`os.localTime`](ref:os.localTime)\n- [`os.registerTagPrefix(prefix, options)`](ref:os.registerTagPrefix)\n- [`os.remotes()`](ref:os.remotes)\n- [`os.remotes()`](ref:os.remotes)\n- [`os.remoteCount(inst)`](ref:os.remoteCount)\n- [`os.remoteCount(inst)`](ref:os.remoteCount)\n- [`os.instStatuses()`](ref:os.instStatuses)\n- [`os.instances()`](ref:os.instances)\n- [`os.instances()`](ref:os.instances)\n- [`os.totalRemoteCount()`](ref:os.totalRemoteCount)\n- [`os.totalRemoteCount()`](ref:os.totalRemoteCount)\n- [`os.sleep(time)`](ref:os.sleep)\n"
+                    },
+                    {
+                        "id": 2339,
+                        "name": "web",
+                        "kind": 1024,
+                        "kindString": "Property",
+                        "flags": [],
+                        "comment": {
+                            "shortText": "The web actions that are available in this debugger.",
+                            "tags": [
+                                {
+                                    "tag": "docreferenceactions",
+                                    "paramName": "",
+                                    "text": "^web\\."
+                                },
+                                {
+                                    "tag": "docsource",
+                                    "paramName": "",
+                                    "text": "WebActions\n"
+                                }
+                            ]
+                        },
+                        "sources": [
+                            {
+                                "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                                "line": 1314,
+                                "character": 4
+                            }
+                        ],
+                        "type": {
+                            "type": "reflection",
+                            "declaration": {
+                                "id": 2340,
+                                "name": "__type",
+                                "kind": 65536,
+                                "kindString": "Type literal",
+                                "flags": {}
+                            }
+                        },
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "DebuggerBase.web"
+                        },
+                        "typeText": "interface WebActions {\n}",
+                        "typeReference": "WebActions",
+                        "references": "- [`web.get(url, options)`](ref:web.get)\n- [`web.hook(options)`](ref:web.hook)\n- [`web.post(url, data, options)`](ref:web.post)\n"
+                    },
+                    {
+                        "id": 2292,
+                        "name": "getAllActions",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "signatures": [
+                            {
+                                "id": 2293,
+                                "name": "getAllActions",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Gets the list of action objects that have been performed by bots in the current debugger.\nAction objects are used by CasualOS to represent changes to bots or external effects that should be performed.\nExamples of this are [`create(...mods)`](ref:create), [`os.toast(message, duration)`](ref:os.toast) and [`os.enableVR(options)`](ref:os.enableVR).",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Get the list of bot changes and actions that have been performed in a debugger\nconst debug = await os.createDebugger();\ndebug.create({\n    test: '@os.toast(\"Hello\")'\n});\ndebug.shout(\"test\");\n\nconst actions = debug.getAllActions();\n\nassertEqual(actions, [\n    {\n        type: 'add_bot',\n        id: 'uuid-1',\n        bot: {\n            id: 'uuid-1',\n            tags: {\n                test: '@os.toast(\"Hello\")'\n            }\n        }\n    },\n    {\n        type: 'show_toast',\n        message: 'Hello',\n        duration: 2000\n    }\n]);\n"
+                                        }
+                                    ]
+                                },
+                                "type": {
+                                    "type": "array",
+                                    "elementType": {
+                                        "type": "reference",
+                                        "name": "BotAction"
+                                    }
+                                },
+                                "inheritedFrom": {
+                                    "type": "reference",
+                                    "name": "DebuggerBase.getAllActions"
+                                }
+                            }
+                        ],
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "DebuggerBase.getAllActions"
+                        }
+                    },
+                    {
+                        "id": 2296,
+                        "name": "getBotActions",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "signatures": [
+                            {
+                                "id": 2297,
+                                "name": "getBotActions",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Gets the list of bot actions that have been performed by bots in the current debugger.\nAction objects are used by CasualOS to represent changes to bots or external effects that should be performed.\nBot actions are actions that immediately change bots or bot tags or masks.",
+                                    "text": "Examples of bot actions are [`create(...mods)`](ref:create), [`destroy(bot)`](ref:destroy) or [`setTagMask(bot, tag, value, space)`](ref:setTagMask).\n",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Get the list of bot changes that have been performed in a debugger\nconst debug = await os.createDebugger();\ndebug.create({\n    test: '@os.toast(\"Hello\")'\n});\ndebug.shout(\"test\");\n\nconst actions = debug.getBotActions();\n\nassertEqual(actions, [\n    {\n        type: 'add_bot',\n        id: 'uuid-1',\n        bot: {\n            id: 'uuid-1',\n            tags: {\n                test: '@os.toast(\"Hello\")'\n            }\n        }\n    },\n]);\n"
+                                        }
+                                    ]
+                                },
+                                "type": {
+                                    "type": "array",
+                                    "elementType": {
+                                        "type": "reference",
+                                        "name": "BotAction"
+                                    }
+                                },
+                                "inheritedFrom": {
+                                    "type": "reference",
+                                    "name": "DebuggerBase.getBotActions"
+                                }
+                            }
+                        ],
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "DebuggerBase.getBotActions"
+                        }
+                    },
+                    {
+                        "id": 2294,
+                        "name": "getCommonActions",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "signatures": [
+                            {
+                                "id": 2295,
+                                "name": "getCommonActions",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Gets the list of common action objects that have been performed by bots in the current debugger. Action objects are used by CasualOS to represent changes to bots or external effects that should be performed.\nCommon actions are actions that do not immediately change bots or bot tags or masks.",
+                                    "text": "Examples of common actions are [`os.toast(message, duration)`](ref:os.toast) and [`os.enableVR(options)`](ref:os.enableVR).\n",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Get the list of actions that have been performed in a debugger\nconst debug = await os.createDebugger();\ndebug.create({\n    test: '@os.toast(\"Hello\")'\n});\ndebug.shout(\"test\");\n\nconst actions = debug.getCommonActions();\n\nassertEqual(actions, [\n    {\n        type: 'show_toast',\n        message: 'Hello',\n        duration: 2000\n    }\n]);\n"
+                                        }
+                                    ]
+                                },
+                                "type": {
+                                    "type": "array",
+                                    "elementType": {
+                                        "type": "reference",
+                                        "name": "BotAction"
+                                    }
+                                },
+                                "inheritedFrom": {
+                                    "type": "reference",
+                                    "name": "DebuggerBase.getCommonActions"
+                                }
+                            }
+                        ],
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "DebuggerBase.getCommonActions"
+                        }
+                    },
+                    {
+                        "id": 2298,
+                        "name": "getErrors",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "signatures": [
+                            {
+                                "id": 2299,
+                                "name": "getErrors",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Gets the list of errors that have occurred in the current debugger. Errors occur when an exceptional event happens in a script and prevents the rest of the script from executing.",
+                                    "text": "Debuggers capture these errors and let you inspect them afterwards.\n",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Get the list of errors that have happened in a debugger\nconst debug = await os.createDebugger();\ndebug.create({\n    test: '@throw new Error(\"My Error\")'\n});\ndebug.shout(\"test\");\n\nconst errors = debug.getErrors();\n\nassertEqual(errors.length, 1);\nassertEqual(errors[0].error, new Error(\"My Error\"));\nassertEqual(errors[0].tag, \"test\");\n"
+                                        }
+                                    ]
+                                },
+                                "type": {
+                                    "type": "array",
+                                    "elementType": {
+                                        "type": "intrinsic",
+                                        "name": "any"
+                                    }
+                                },
+                                "inheritedFrom": {
+                                    "type": "reference",
+                                    "name": "DebuggerBase.getErrors"
+                                }
+                            }
+                        ],
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "DebuggerBase.getErrors"
+                        }
+                    },
+                    {
+                        "id": 2290,
+                        "name": "getPortalBots",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "signatures": [
+                            {
+                                "id": 2291,
+                                "name": "getPortalBots",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Gets the list of portal bots in the debugger.",
+                                    "tags": []
+                                },
+                                "type": {
+                                    "type": "reference",
+                                    "typeArguments": [
+                                        {
+                                            "type": "intrinsic",
+                                            "name": "string"
+                                        },
+                                        {
+                                            "type": "reference",
+                                            "id": 2773,
+                                            "name": "Bot"
+                                        }
+                                    ],
+                                    "qualifiedName": "Map",
+                                    "package": "typescript",
+                                    "name": "Map"
+                                },
+                                "inheritedFrom": {
+                                    "type": "reference",
+                                    "name": "DebuggerBase.getPortalBots"
+                                }
+                            }
+                        ],
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "DebuggerBase.getPortalBots"
+                        }
+                    },
+                    {
+                        "id": 2306,
+                        "name": "onAfterAction",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "signatures": [
+                            {
+                                "id": 2307,
+                                "name": "onAfterAction",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Registers the given handler to be called after a bot action is executed in this debugger.",
+                                    "tags": []
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 2308,
+                                        "name": "handler",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The handler that should be called.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reflection",
+                                            "declaration": {
+                                                "id": 2309,
+                                                "name": "__type",
+                                                "kind": 65536,
+                                                "kindString": "Type literal",
+                                                "flags": {},
+                                                "signatures": [
+                                                    {
+                                                        "id": 2310,
+                                                        "name": "__type",
+                                                        "kind": 4096,
+                                                        "kindString": "Call signature",
+                                                        "flags": {},
+                                                        "parameters": [
+                                                            {
+                                                                "id": 2311,
+                                                                "name": "action",
+                                                                "kind": 32768,
+                                                                "kindString": "Parameter",
+                                                                "flags": {},
+                                                                "type": {
+                                                                    "type": "reference",
+                                                                    "name": "BotAction"
+                                                                }
+                                                            }
+                                                        ],
+                                                        "type": {
+                                                            "type": "intrinsic",
+                                                            "name": "void"
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "void"
+                                },
+                                "inheritedFrom": {
+                                    "type": "reference",
+                                    "name": "DebuggerBase.onAfterAction"
+                                }
+                            }
+                        ],
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "DebuggerBase.onAfterAction"
+                        }
+                    },
+                    {
+                        "id": 2324,
+                        "name": "onAfterScriptUpdatedTag",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "signatures": [
+                            {
+                                "id": 2325,
+                                "name": "onAfterScriptUpdatedTag",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Registers the given handler function to be called after any tag is updated in the debugger.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Listen for tag updates in a debugger\nconst debug = await os.createDebugger({\n    pausable: true\n});\n\n// Register a listener that gets called whenever a tag is updated.\ndebug.onAfterScriptUpdatedTag(update => {\n    console.log('tag updated', update);\n});\n\n// Because the debugger is pausable, the create() function returns a promise\n// because it calls @onCreate which could cause a pause trigger to be hit.\nconst debuggerBot = await debug.create({\n    test: '@tags.message = \"hello, world\";'\n});\n\n// Send a shout. Just like the create() function above, we recieve a promise that we can await.\nawait debug.shout('test');\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 2326,
+                                        "name": "listener",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "the function that should be called when a tag is updated.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reflection",
+                                            "declaration": {
+                                                "id": 2327,
+                                                "name": "__type",
+                                                "kind": 65536,
+                                                "kindString": "Type literal",
+                                                "flags": {},
+                                                "signatures": [
+                                                    {
+                                                        "id": 2328,
+                                                        "name": "__type",
+                                                        "kind": 4096,
+                                                        "kindString": "Call signature",
+                                                        "flags": {},
+                                                        "parameters": [
+                                                            {
+                                                                "id": 2329,
+                                                                "name": "update",
+                                                                "kind": 32768,
+                                                                "kindString": "Parameter",
+                                                                "flags": {},
+                                                                "type": {
+                                                                    "type": "reference",
+                                                                    "id": 2491,
+                                                                    "name": "DebuggerTagUpdate"
+                                                                }
+                                                            }
+                                                        ],
+                                                        "type": {
+                                                            "type": "intrinsic",
+                                                            "name": "void"
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "void"
+                                },
+                                "inheritedFrom": {
+                                    "type": "reference",
+                                    "name": "DebuggerBase.onAfterScriptUpdatedTag"
+                                }
+                            }
+                        ],
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "DebuggerBase.onAfterScriptUpdatedTag"
+                        }
+                    },
+                    {
+                        "id": 2330,
+                        "name": "onAfterScriptUpdatedTagMask",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "signatures": [
+                            {
+                                "id": 2331,
+                                "name": "onAfterScriptUpdatedTagMask",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Registers the given handler function to be called after any tag mask is updated in the debugger.",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Listen for tag mask updates in a debugger\nconst debug = await os.createDebugger({\n    pausable: true\n});\n\n// Register a listener that gets called whenever a tag mask is updated.\ndebug.onAfterScriptUpdatedTagMask(update => {\n    console.log('tag mask updated', update);\n});\n\n// Because the debugger is pausable, the create() function returns a promise\n// because it calls @onCreate which could cause a pause trigger to be hit.\nconst debuggerBot = await debug.create({\n    test: '@masks.message = \"hello, world\";'\n});\n\n// Send a shout. Just like the create() function above, we recieve a promise that we can await.\nawait debug.shout('test');\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 2332,
+                                        "name": "listener",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "the function that should be called when a tag mask is updated.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reflection",
+                                            "declaration": {
+                                                "id": 2333,
+                                                "name": "__type",
+                                                "kind": 65536,
+                                                "kindString": "Type literal",
+                                                "flags": {},
+                                                "signatures": [
+                                                    {
+                                                        "id": 2334,
+                                                        "name": "__type",
+                                                        "kind": 4096,
+                                                        "kindString": "Call signature",
+                                                        "flags": {},
+                                                        "parameters": [
+                                                            {
+                                                                "id": 2335,
+                                                                "name": "update",
+                                                                "kind": 32768,
+                                                                "kindString": "Parameter",
+                                                                "flags": {},
+                                                                "type": {
+                                                                    "type": "reference",
+                                                                    "id": 2485,
+                                                                    "name": "DebuggerTagMaskUpdate"
+                                                                }
+                                                            }
+                                                        ],
+                                                        "type": {
+                                                            "type": "intrinsic",
+                                                            "name": "void"
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "void"
+                                },
+                                "inheritedFrom": {
+                                    "type": "reference",
+                                    "name": "DebuggerBase.onAfterScriptUpdatedTagMask"
+                                }
+                            }
+                        ],
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "DebuggerBase.onAfterScriptUpdatedTagMask"
+                        }
+                    },
+                    {
+                        "id": 2300,
+                        "name": "onBeforeAction",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "signatures": [
+                            {
+                                "id": 2301,
+                                "name": "onBeforeAction",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Registers the given handler to be called before a bot action is executed in this debugger.",
+                                    "tags": []
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 2302,
+                                        "name": "handler",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "The handler that should be called.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reflection",
+                                            "declaration": {
+                                                "id": 2303,
+                                                "name": "__type",
+                                                "kind": 65536,
+                                                "kindString": "Type literal",
+                                                "flags": {},
+                                                "signatures": [
+                                                    {
+                                                        "id": 2304,
+                                                        "name": "__type",
+                                                        "kind": 4096,
+                                                        "kindString": "Call signature",
+                                                        "flags": {},
+                                                        "parameters": [
+                                                            {
+                                                                "id": 2305,
+                                                                "name": "action",
+                                                                "kind": 32768,
+                                                                "kindString": "Parameter",
+                                                                "flags": {},
+                                                                "type": {
+                                                                    "type": "reference",
+                                                                    "name": "BotAction"
+                                                                }
+                                                            }
+                                                        ],
+                                                        "type": {
+                                                            "type": "intrinsic",
+                                                            "name": "void"
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "void"
+                                },
+                                "inheritedFrom": {
+                                    "type": "reference",
+                                    "name": "DebuggerBase.onBeforeAction"
+                                }
+                            }
+                        ],
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "DebuggerBase.onBeforeAction"
+                        }
+                    },
+                    {
+                        "id": 2312,
+                        "name": "onBeforeUserAction",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "signatures": [
+                            {
+                                "id": 2313,
+                                "name": "onBeforeUserAction",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Registers the given handler function to be called before a user action is performed in the debugger.",
+                                    "text": "User actions are like normal actions, except they are generated by the CasualOS frontend.\nGenerally, this only happens for built-in shouts and whispers.\nAdditionally, these actions can only be automatically created for debuggers that are attached using [`os.attachDebugger(debug, options)`](ref:os.attachDebugger).\n",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Listen for tag updates in a debugger\nconst debug = await os.createDebugger({\n    pausable: true\n});\n\n// Register a listener that gets called whenever a user action is about to be performed.\ndebug.onBeforeUserAction(update => {\n    console.log('user action', update);\n});\n\n// Because the debugger is pausable, the create() function returns a promise\n// because it calls @onCreate which could cause a pause trigger to be hit.\nconst debuggerBot = await debug.create({\n    home: true,\n});\n\n// Attach the debugger to the front end\nawait os.attachDebugger(debug);\n"
+                                        },
+                                        {
+                                            "tag": "docname",
+                                            "paramName": "",
+                                            "text": "onBeforeUserAction"
+                                        },
+                                        {
+                                            "tag": "docid",
+                                            "paramName": "",
+                                            "text": "debug.onBeforeUserAction\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 2314,
+                                        "name": "listener",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "the function that should be called before a user action is performed.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reflection",
+                                            "declaration": {
+                                                "id": 2315,
+                                                "name": "__type",
+                                                "kind": 65536,
+                                                "kindString": "Type literal",
+                                                "flags": {},
+                                                "signatures": [
+                                                    {
+                                                        "id": 2316,
+                                                        "name": "__type",
+                                                        "kind": 4096,
+                                                        "kindString": "Call signature",
+                                                        "flags": {},
+                                                        "parameters": [
+                                                            {
+                                                                "id": 2317,
+                                                                "name": "action",
+                                                                "kind": 32768,
+                                                                "kindString": "Parameter",
+                                                                "flags": {},
+                                                                "type": {
+                                                                    "type": "reference",
+                                                                    "name": "BotAction"
+                                                                }
+                                                            }
+                                                        ],
+                                                        "type": {
+                                                            "type": "intrinsic",
+                                                            "name": "void"
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "void"
+                                },
+                                "inheritedFrom": {
+                                    "type": "reference",
+                                    "name": "DebuggerBase.onBeforeUserAction"
+                                }
+                            }
+                        ],
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "DebuggerBase.onBeforeUserAction"
+                        }
+                    },
+                    {
+                        "id": 2318,
+                        "name": "onScriptActionEnqueued",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "signatures": [
+                            {
+                                "id": 2319,
+                                "name": "onScriptActionEnqueued",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Registers the given handler function to be called by the debugger whenever a script enqueues an action.\nThis occurrs for common actions like [`os.toast(message, duration)`](ref:os.toast) and [`os.showInput(currentValue, options)`](ref:os.showInput).",
+                                    "text": "Every action that is enqueued ends up being performed.\n",
+                                    "tags": [
+                                        {
+                                            "tag": "example",
+                                            "paramName": "",
+                                            "text": "Listen for actions to be enqueued in a debugger\nconst debug = await os.createDebugger({\n    pausable: true\n});\n\n// Register a listener that gets called whenever an action is scheduled to be performed.\ndebug.onScriptActionEnqueued(action => {\n    console.log('action enqueued', action);\n});\n\n// Because the debugger is pausable, the create() function returns a promise\n// because it calls @onCreate which could cause a pause trigger to be hit.\nconst debuggerBot = await debug.create({\n    test: '@let abc = 123; os.toast(abc);'\n});\n\n// Send a shout. Just like the create() function above, we recieve a promise that we can await.\nawait debug.shout('test');\n"
+                                        }
+                                    ]
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 2320,
+                                        "name": "listener",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {},
+                                        "comment": {
+                                            "shortText": "the function that should be called whenever an action is scheduled to be performed.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "reflection",
+                                            "declaration": {
+                                                "id": 2321,
+                                                "name": "__type",
+                                                "kind": 65536,
+                                                "kindString": "Type literal",
+                                                "flags": {},
+                                                "signatures": [
+                                                    {
+                                                        "id": 2322,
+                                                        "name": "__type",
+                                                        "kind": 4096,
+                                                        "kindString": "Call signature",
+                                                        "flags": {},
+                                                        "parameters": [
+                                                            {
+                                                                "id": 2323,
+                                                                "name": "action",
+                                                                "kind": 32768,
+                                                                "kindString": "Parameter",
+                                                                "flags": {},
+                                                                "type": {
+                                                                    "type": "reference",
+                                                                    "name": "BotAction"
+                                                                }
+                                                            }
+                                                        ],
+                                                        "type": {
+                                                            "type": "intrinsic",
+                                                            "name": "void"
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "intrinsic",
+                                    "name": "void"
+                                },
+                                "inheritedFrom": {
+                                    "type": "reference",
+                                    "name": "DebuggerBase.onScriptActionEnqueued"
+                                }
+                            }
+                        ],
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "DebuggerBase.onScriptActionEnqueued"
+                        }
+                    },
+                    {
+                        "id": 2336,
+                        "name": "performUserAction",
+                        "kind": 2048,
+                        "kindString": "Method",
+                        "flags": {},
+                        "signatures": [
+                            {
+                                "id": 2337,
+                                "name": "performUserAction",
+                                "kind": 4096,
+                                "kindString": "Call signature",
+                                "flags": {},
+                                "comment": {
+                                    "shortText": "Performs the given actions in order as if they were user actions.",
+                                    "text": "This function works similarly to [`action.perform(action)`](ref:action.perform) except that actions performed with it will also call handlers registered with debug.onBeforeUserAction.",
+                                    "tags": []
+                                },
+                                "parameters": [
+                                    {
+                                        "id": 2338,
+                                        "name": "actions",
+                                        "kind": 32768,
+                                        "kindString": "Parameter",
+                                        "flags": {
+                                            "isRest": true
+                                        },
+                                        "comment": {
+                                            "shortText": "the actions that should be performed.\n",
+                                            "tags": []
+                                        },
+                                        "type": {
+                                            "type": "array",
+                                            "elementType": {
+                                                "type": "reference",
+                                                "name": "BotAction"
+                                            }
+                                        }
+                                    }
+                                ],
+                                "type": {
+                                    "type": "reference",
+                                    "typeArguments": [
+                                        {
+                                            "type": "array",
+                                            "elementType": {
+                                                "type": "array",
+                                                "elementType": {
+                                                    "type": "intrinsic",
+                                                    "name": "any"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "qualifiedName": "Promise",
+                                    "package": "typescript",
+                                    "name": "Promise"
+                                },
+                                "inheritedFrom": {
+                                    "type": "reference",
+                                    "name": "DebuggerBase.performUserAction"
+                                }
+                            }
+                        ],
+                        "inheritedFrom": {
+                            "type": "reference",
+                            "name": "DebuggerBase.performUserAction"
+                        }
+                    }
+                ],
+                "groups": [
+                    {
+                        "title": "Properties",
+                        "kind": 1024,
+                        "children": [
+                            2343,
+                            2341,
+                            2339
+                        ]
+                    },
+                    {
+                        "title": "Methods",
+                        "kind": 2048,
+                        "children": [
+                            2292,
+                            2296,
+                            2294,
+                            2298,
+                            2290,
+                            2306,
+                            2324,
+                            2330,
+                            2300,
+                            2312,
+                            2318,
+                            2336
+                        ]
+                    }
+                ],
+                "sources": [
+                    {
+                        "fileName": "src/aux-common/runtime/AuxLibrary.ts",
+                        "line": 1395,
+                        "character": 17
+                    }
+                ],
+                "extendedTypes": [
+                    {
+                        "type": "reference",
+                        "name": "DebuggerBase"
+                    }
+                ],
+                "references": "- [`changeState(bot, stateName, groupName)`](ref:changeState)\n- [`create(...mods)`](ref:create)\n- [`destroy(bot)`](ref:destroy)\n- [`priorityShout(eventNames, arg)`](ref:priorityShout)\n- [`shout(name, arg)`](ref:shout)\n- [`updateBotLinks(bot, idMap)`](ref:updateBotLinks)\n- [`whisper(bot, eventName, arg)`](ref:whisper)\n- [`applyDiffToSnapshot(snapshot, diff)`](ref:applyDiffToSnapshot)\n- [`applyMod(bot, ...mods)`](ref:applyMod)\n- [`assert(condition, message)`](ref:assert)\n- [`assertEqual(first, second)`](ref:assertEqual)\n- [`atPosition(dimension, x, y)`](ref:atPosition)\n- [`byCreator(bot)`](ref:byCreator)\n- [`byID(id)`](ref:byID)\n- [`byMod(mod)`](ref:byMod)\n- [`bySpace(space)`](ref:bySpace)\n- [`byTag(tag, filter)`](ref:byTag)\n- [`clearAnimations(bot, tag)`](ref:clearAnimations)\n- [`clearTagMasks(bot, space)`](ref:clearTagMasks)\n- [`deleteTagMaskText(bot, tag, index, count, space)`](ref:deleteTagMaskText)\n- [`deleteTagText(bot, tag, index, count)`](ref:deleteTagText)\n- [`diffSnapshots(first, second)`](ref:diffSnapshots)\n- [`either(...filters)`](ref:either)\n- [`getBotLinks(bot)`](ref:getBotLinks)\n- [`getBotPosition(bot, dimension)`](ref:getBotPosition)\n- [`getBotRotation(bot, dimension)`](ref:getBotRotation)\n- [`getBotTagValues(tag, filter)`](ref:getBotTagValues)\n- [`getFormattedJSON(data)`](ref:getFormattedJSON)\n- [`getID(bot)`](ref:getID)\n- [`getJSON(data)`](ref:getJSON)\n- [`getLink(...bots)`](ref:getLink)\n- [`getMod(bot, ...tags)`](ref:getMod)\n- [`getSnapshot(bots)`](ref:getSnapshot)\n- [`getTag(bot, ...tags)`](ref:getTag)\n- [`inDimension(dimension)`](ref:inDimension)\n- [`inStack(bot, dimension)`](ref:inStack)\n- [`insertTagMaskText(bot, tag, index, text, space)`](ref:insertTagMaskText)\n- [`insertTagText(bot, tag, index, text)`](ref:insertTagText)\n- [`neighboring(bot, dimension, direction)`](ref:neighboring)\n- [`not(filter)`](ref:not)\n- [`removeTags(bot, tagSection)`](ref:removeTags)\n- [`renameTag(bot, originalTag, newTag)`](ref:renameTag)\n- [`setTag(bot, tag, value)`](ref:setTag)\n- [`setTagMask(bot, tag, value, space)`](ref:setTagMask)\n- [`subtractMods(bot, ...mods)`](ref:subtractMods)\n- [`superShout(eventName, arg)`](ref:superShout)\n- [`uuid()`](ref:uuid)\n"
+            },
+            "comment": {
+                "shortText": "Defines an interface that represents a debugger.",
+                "text": "",
+                "tags": [
+                    {
+                        "tagName": "dochash",
+                        "paramName": "",
+                        "text": "types/debuggers/debugger"
+                    },
+                    {
+                        "tagName": "doctitle",
+                        "paramName": "",
+                        "text": "Debugger"
+                    },
+                    {
+                        "tagName": "docsidebar",
+                        "paramName": "",
+                        "text": "Debugger"
+                    },
+                    {
+                        "tagName": "docdescription",
+                        "paramName": "",
+                        "text": "Defines an interface that represents a debugger."
+                    },
+                    {
+                        "tagName": "docname",
+                        "paramName": "",
+                        "text": "Debugger"
+                    },
+                    {
+                        "tagName": "docreferenceactions",
+                        "paramName": "",
+                        "text": "^\\w+$\n"
+                    }
+                ]
+            },
+            "group": null
+        }
+    ],
+    "references": {
+        "CasualOSError": "types/error",
+        "id-2949": "CasualOSError",
+        "Quaternion": "types/math/rotations",
+        "id-3339": "Quaternion",
+        "Rotation": "types/math/rotations",
+        "id-3371": "Rotation",
+        "Vector2": "types/math/vectors",
+        "id-3205": "Vector2",
+        "Vector3": "types/math/vectors",
+        "id-3262": "Vector3",
+        "AIChatMessage": "types/ai",
+        "id-2968": "AIChatMessage",
+        "AIChatOptions": "types/ai",
+        "id-2746": "AIChatOptions",
+        "AIGenerateImageSuccess": "types/ai",
+        "id-2551": "AIGenerateImageSuccess",
+        "AIGenerateImageOptions": "types/ai",
+        "id-2760": "AIGenerateImageOptions",
+        "AIGenerateSkyboxOptions": "types/ai",
+        "id-2756": "AIGenerateSkyboxOptions",
+        "AIGenerateSkyboxRequest": "types/ai",
+        "id-2544": "AIGenerateSkyboxRequest",
+        "AIGenerateSkyboxResult": "types/ai",
+        "id-2548": "AIGenerateSkyboxResult",
+        "AIGeneratedImage": "types/ai",
+        "id-2554": "AIGeneratedImage",
+        "AddCountFailure": "types/records/events",
+        "id-3152": "AddCountFailure",
+        "AddCountSuccess": "types/records/events",
+        "id-3147": "AddCountSuccess",
+        "AnimateTagOptions": "types/animation",
+        "id-2149": "AnimateTagOptions",
+        "AttachDebuggerOptions": "types/debuggers/common",
+        "id-2524": "AttachDebuggerOptions",
+        "CasualOSDevice": "types/os",
+        "id-2937": "CasualOSDevice",
+        "CasualOSVersion": "types/os",
+        "id-2929": "CasualOSVersion",
+        "AxisAndAngle": "types/math/rotations",
+        "id-3417": "AxisAndAngle",
+        "BotTagMasks": "types/core",
+        "id-2906": "BotTagMasks",
+        "BotTags": "types/core",
+        "id-2821": "BotTags",
+        "BotState": "types/core",
+        "id-2919": "BotState",
+        "CompiledBotListeners": "types/core",
+        "id-2900": "CompiledBotListeners",
+        "ConvertGeolocationToWhat3WordsOptions": "types/os",
+        "id-2581": "ConvertGeolocationToWhat3WordsOptions",
+        "CreatePublicRecordKeyFailure": "types/records/key",
+        "id-2979": "CreatePublicRecordKeyFailure",
+        "CreatePublicRecordKeySuccess": "types/records/key",
+        "id-2975": "CreatePublicRecordKeySuccess",
+        "DebuggerCallFrame": "types/debuggers/common",
+        "id-2477": "DebuggerCallFrame",
+        "DebuggerFunctionLocation": "types/debuggers/common",
+        "id-2512": "DebuggerFunctionLocation",
+        "DebuggerPause": "types/debuggers/common",
+        "id-2506": "DebuggerPause",
+        "DebuggerTagMaskUpdate": "types/debuggers/common",
+        "id-2485": "DebuggerTagMaskUpdate",
+        "DebuggerTagUpdate": "types/debuggers/common",
+        "id-2491": "DebuggerTagUpdate",
+        "DebuggerVariable": "types/debuggers/common",
+        "id-2518": "DebuggerVariable",
+        "Easing": "types/animation",
+        "id-2561": "Easing",
+        "EnableXROptions": "types/os",
+        "id-2655": "EnableXROptions",
+        "EraseDataFailure": "types/records/data",
+        "id-3123": "EraseDataFailure",
+        "EraseDataSuccess": "types/records/data",
+        "id-3119": "EraseDataSuccess",
+        "EraseFileFailure": "types/records/files",
+        "id-3142": "EraseFileFailure",
+        "EraseFileSuccess": "types/records/files",
+        "id-3138": "EraseFileSuccess",
+        "EulerAnglesRotation": "types/math/rotations",
+        "id-3420": "EulerAnglesRotation",
+        "FocusOnOptions": "types/os",
+        "id-2615": "FocusOnOptions",
+        "FocusOnRotation": "types/os",
+        "id-2627": "FocusOnRotation",
+        "FormAnimationData": "types/os",
+        "id-2673": "FormAnimationData",
+        "FromToRotation": "types/math/rotations",
+        "id-3414": "FromToRotation",
+        "GenericError": "types/error",
+        "id-2946": "GenericError",
+        "GetCountFailure": "types/records/events",
+        "id-3163": "GetCountFailure",
+        "GetCountSuccess": "types/records/events",
+        "id-3157": "GetCountSuccess",
+        "GetDataFailure": "types/records/data",
+        "id-3114": "GetDataFailure",
+        "GetDataSuccess": "types/records/data",
+        "id-3105": "GetDataSuccess",
+        "GetRoomOptionsFailure": "types/os",
+        "id-2239": "GetRoomOptionsFailure",
+        "GetRoomOptionsSuccess": "types/os",
+        "id-2235": "GetRoomOptionsSuccess",
+        "GetRoomRemoteOptionsFailure": "types/os",
+        "id-2282": "GetRoomRemoteOptionsFailure",
+        "GetRoomRemoteOptionsSuccess": "types/os",
+        "id-2277": "GetRoomRemoteOptionsSuccess",
+        "GetRoomTrackOptionsFailure": "types/os",
+        "id-2258": "GetRoomTrackOptionsFailure",
+        "GetRoomTrackOptionsSuccess": "types/os",
+        "id-2253": "GetRoomTrackOptionsSuccess",
+        "GrantMarkerPermissionFailure": "types/records/policies",
+        "id-3191": "GrantMarkerPermissionFailure",
+        "GrantMarkerPermissionSuccess": "types/records/policies",
+        "id-3189": "GrantMarkerPermissionSuccess",
+        "GrantRoleFailure": "types/records/roles",
+        "id-3177": "GrantRoleFailure",
+        "GrantRoleSuccess": "types/records/roles",
+        "id-3175": "GrantRoleSuccess",
+        "ImageClassifierOptions": "types/os",
+        "id-2633": "ImageClassifierOptions",
+        "InstUpdate": "types/os",
+        "id-2942": "InstUpdate",
+        "JoinRoomFailure": "types/os",
+        "id-2220": "JoinRoomFailure",
+        "JoinRoomSuccess": "types/os",
+        "id-2217": "JoinRoomSuccess",
+        "LeaveRoomFailure": "types/os",
+        "id-2229": "LeaveRoomFailure",
+        "LeaveRoomSuccess": "types/os",
+        "id-2226": "LeaveRoomSuccess",
+        "ListDataFailure": "types/records/data",
+        "id-3133": "ListDataFailure",
+        "ListDataSuccess": "types/records/data",
+        "id-3128": "ListDataSuccess",
+        "LookRotation": "types/math/rotations",
+        "id-3437": "LookRotation",
+        "MediaPermissionOptions": "types/os",
+        "id-2652": "MediaPermissionOptions",
+        "Debugger": "types/debuggers/debugger",
+        "id-2289": "Debugger",
+        "NormalDebuggerOptions": "types/debuggers/common",
+        "id-2496": "NormalDebuggerOptions",
+        "PhotoCameraOptions": "types/camera",
+        "id-2730": "PhotoCameraOptions",
+        "ParsedBotLink": "types/core",
+        "id-2925": "ParsedBotLink",
+        "PartialBotState": "types/core",
+        "id-2922": "PartialBotState",
+        "PausableDebugger": "types/debuggers/pausable-debugger",
+        "id-2345": "PausableDebugger",
+        "PausableDebuggerOptions": "types/debuggers/common",
+        "id-2501": "PausableDebuggerOptions",
+        "PauseTrigger": "types/debuggers/common",
+        "id-2464": "PauseTrigger",
+        "PauseTriggerOptions": "types/debuggers/common",
+        "id-2472": "PauseTriggerOptions",
+        "Photo": "types/camera",
+        "id-2742": "Photo",
+        "PossiblePauseTriggerLocation": "types/debuggers/common",
+        "id-2459": "PossiblePauseTriggerLocation",
+        "PseudoRandomNumberGenerator": "types/core",
+        "id-2533": "PseudoRandomNumberGenerator",
+        "QuaternionRotation": "types/math/rotations",
+        "id-3430": "QuaternionRotation",
+        "RaycastRay": "types/os",
+        "id-2213": "RaycastRay",
+        "RaycastResult": "types/os",
+        "id-2210": "RaycastResult",
+        "RecordActionOptions": "types/records/extra",
+        "id-2564": "RecordActionOptions",
+        "RecordDataFailure": "types/records/data",
+        "id-3100": "RecordDataFailure",
+        "RecordDataSuccess": "types/records/data",
+        "id-3096": "RecordDataSuccess",
+        "RecordFileFailure": "types/records/files",
+        "id-2180": "RecordFileFailure",
+        "RecordFileSuccess": "types/records/files",
+        "id-2176": "RecordFileSuccess",
+        "RecordedFile": "types/experimental",
+        "id-2717": "RecordedFile",
+        "Recording": "types/experimental",
+        "id-2715": "Recording",
+        "RecordingOptions": "types/experimental",
+        "id-2722": "RecordingOptions",
+        "RegisterPrefixOptions": "types/core",
+        "id-2712": "RegisterPrefixOptions",
+        "RevokeMarkerPermissionFailure": "types/records/policies",
+        "id-3198": "RevokeMarkerPermissionFailure",
+        "RevokeMarkerPermissionSuccess": "types/records/policies",
+        "id-3196": "RevokeMarkerPermissionSuccess",
+        "RevokeRoleFailure": "types/records/roles",
+        "id-3184": "RevokeRoleFailure",
+        "RevokeRoleSuccess": "types/records/roles",
+        "id-3182": "RevokeRoleSuccess",
+        "RoomJoinOptions": "types/os",
+        "id-2678": "RoomJoinOptions",
+        "RoomOptions": "types/os",
+        "id-2687": "RoomOptions",
+        "RoomRemoteOptions": "types/os",
+        "id-2703": "RoomRemoteOptions",
+        "RoomTrackOptions": "types/os",
+        "id-2691": "RoomTrackOptions",
+        "RuntimeBot": "types/core",
+        "id-2773": "RuntimeBot",
+        "RuntimeBotLinks": "types/core",
+        "id-2912": "RuntimeBotLinks",
+        "RuntimeBotVars": "types/core",
+        "id-2909": "RuntimeBotVars",
+        "SequenceRotation": "types/math/rotations",
+        "id-3428": "SequenceRotation",
+        "SetRoomOptionsSuccess": "types/os",
+        "id-2244": "SetRoomOptionsSuccess",
+        "SetRoomTrackOptions": "types/os",
+        "id-2709": "SetRoomTrackOptions",
+        "SetRoomTrackOptionsFailure": "types/os",
+        "id-2270": "SetRoomTrackOptionsFailure",
+        "SetRoomTrackOptionsSuccess": "types/os",
+        "id-2265": "SetRoomTrackOptionsSuccess",
+        "ShareOptions": "types/os",
+        "id-2611": "ShareOptions",
+        "ShowChatOptions": "types/os",
+        "id-2605": "ShowChatOptions",
+        "ShowConfirmOptions": "types/os",
+        "id-2647": "ShowConfirmOptions",
+        "ShowInputOptions": "types/os",
+        "id-2638": "ShowInputOptions",
+        "SnapAxis": "types/os",
+        "id-2585": "SnapAxis",
+        "SnapGridTarget": "types/os",
+        "id-2185": "SnapGridTarget",
+        "SnapPoint": "types/os",
+        "id-2597": "SnapPoint",
+        "SpeakTextOptions": "types/experimental",
+        "id-2529": "SpeakTextOptions",
+        "StartFormAnimationOptions": "types/os",
+        "id-2657": "StartFormAnimationOptions",
+        "StopFormAnimationOptions": "types/os",
+        "id-2670": "StopFormAnimationOptions",
+        "SuccessfulGeolocation": "types/os",
+        "id-2567": "SuccessfulGeolocation",
+        "SyntheticVoice": "types/experimental",
+        "id-2726": "SyntheticVoice",
+        "TweenOptions": "types/experimental",
+        "id-2526": "TweenOptions",
+        "UnsuccessfulGeolocation": "types/os",
+        "id-2577": "UnsuccessfulGeolocation",
+        "UpdateEventRecordFailure": "types/records/events",
+        "id-3170": "UpdateEventRecordFailure",
+        "UpdateEventRecordSuccess": "types/records/events",
+        "id-3168": "UpdateEventRecordSuccess",
+        "UploadedFile": "types/os",
+        "id-2206": "UploadedFile",
+        "WebhookOptions": "types/web",
+        "id-2130": "WebhookOptions",
+        "WebhookResult": "types/web",
+        "id-2142": "WebhookResult",
+        "AddCountResult": "types/records/events",
+        "id-3146": "AddCountResult",
+        "AvailablePermissions": "types/permissions",
+        "id-2984": "AvailablePermissions",
+        "BarcodeFormat": "types/os",
+        "id-2632": "BarcodeFormat",
+        "BotFilter": "types/core",
+        "id-2164": "BotFilter",
+        "BotSpace": "types/core",
+        "id-2896": "BotSpace",
+        "CameraType": "types/os",
+        "id-2631": "CameraType",
+        "CreatePublicRecordKeyResult": "types/records/key",
+        "id-2974": "CreatePublicRecordKeyResult",
+        "EaseMode": "types/animation",
+        "id-2560": "EaseMode",
+        "EaseType": "types/animation",
+        "id-2559": "EaseType",
+        "EraseDataResult": "types/records/data",
+        "id-3118": "EraseDataResult",
+        "EraseFileResult": "types/records/files",
+        "id-3137": "EraseFileResult",
+        "Geolocation": "types/os",
+        "id-2566": "Geolocation",
+        "GetCountResult": "types/records/events",
+        "id-3156": "GetCountResult",
+        "GetDataResult": "types/records/data",
+        "id-3104": "GetDataResult",
+        "GetRoomOptionsResult": "types/os",
+        "id-2234": "GetRoomOptionsResult",
+        "GetRoomRemoteOptionsResult": "types/os",
+        "id-2276": "GetRoomRemoteOptionsResult",
+        "GetRoomTrackOptionsResult": "types/os",
+        "id-2252": "GetRoomTrackOptionsResult",
+        "GrantMarkerPermissionResult": "types/records/policies",
+        "id-3188": "GrantMarkerPermissionResult",
+        "GrantRoleResult": "types/records/roles",
+        "id-3174": "GrantRoleResult",
+        "JoinRoomResult": "types/os",
+        "id-2216": "JoinRoomResult",
+        "LeaveRoomResult": "types/os",
+        "id-2225": "LeaveRoomResult",
+        "ListDataResult": "types/records/data",
+        "id-3127": "ListDataResult",
+        "Mod": "types/core",
+        "id-2159": "Mod",
+        "PortalType": "types/core",
+        "id-2928": "PortalType",
+        "PossiblePauseTriggerStates": "types/debuggers/common",
+        "id-2463": "PossiblePauseTriggerStates",
+        "RecordDataResult": "types/records/data",
+        "id-3095": "RecordDataResult",
+        "RecordFileResult": "types/records/files",
+        "id-2175": "RecordFileResult",
+        "RevokeMarkerPermissionResult": "types/records/policies",
+        "id-3195": "RevokeMarkerPermissionResult",
+        "RevokeRoleResult": "types/records/roles",
+        "id-3181": "RevokeRoleResult",
+        "SetRoomOptionsResult": "types/os",
+        "id-2243": "SetRoomOptionsResult",
+        "SetRoomTrackOptionsResult": "types/os",
+        "id-2264": "SetRoomTrackOptionsResult",
+        "SnapTarget": "types/os",
+        "id-2604": "SnapTarget",
+        "TagFilter": "types/core",
+        "id-2160": "TagFilter",
+        "UpdateEventRecordResult": "types/records/events",
+        "id-3167": "UpdateEventRecordResult",
+        "animateTag-byOptions": "actions/utility",
+        "id-364": "animateTag-byOptions",
+        "getbot-tag": "actions/data",
+        "id-33": "getbot-tag",
+        "getbots-tag": "actions/data",
+        "id-17": "getbots-tag",
+        "animateTag-byTag": "actions/utility",
+        "id-358": "animateTag-byTag",
+        "changeState": "actions/data",
+        "id-177": "changeState",
+        "create": "actions/data",
+        "id-162": "create",
+        "destroy": "actions/data",
+        "id-166": "destroy",
+        "getbot-filters": "actions/data",
+        "id-26": "getbot-filters",
+        "getbots-filters": "actions/data",
+        "id-10": "getbots-filters",
+        "priorityShout": "actions/event",
+        "id-225": "priorityShout",
+        "shout": "actions/event",
+        "id-237": "shout",
+        "updateBotLinks": "actions/data",
+        "id-198": "updateBotLinks",
+        "whisper": "actions/event",
+        "id-263": "whisper",
+        "action.perform": "actions/event",
+        "id-1630": "action.perform",
+        "action.reject": "actions/event",
+        "id-1634": "action.reject",
+        "ai.chat-string": "actions/ai",
+        "id-423": "ai.chat-string",
+        "ai.chat-message": "actions/ai",
+        "id-426": "ai.chat-message",
+        "ai.chat-messages": "actions/ai",
+        "id-429": "ai.chat-messages",
+        "ai.generateImage-string": "actions/ai",
+        "id-442": "ai.generateImage-string",
+        "ai.generateImage-request": "actions/ai",
+        "id-446": "ai.generateImage-request",
+        "ai.generateSkybox-string": "actions/ai",
+        "id-434": "ai.generateSkybox-string",
+        "ai.generateSkybox-request": "actions/ai",
+        "id-438": "ai.generateSkybox-request",
+        "applyDiffToSnapshot": "actions/data",
+        "id-83": "applyDiffToSnapshot",
+        "applyMod": "actions/mods",
+        "id-152": "applyMod",
+        "assert": "actions/debuggers",
+        "id-407": "assert",
+        "assertEqual": "actions/debuggers",
+        "id-412": "assertEqual",
+        "atPosition": "actions/bot-filters",
+        "id-293": "atPosition",
+        "byCreator": "actions/bot-filters",
+        "id-314": "byCreator",
+        "byID": "actions/bot-filters",
+        "id-281": "byID",
+        "byMod": "actions/bot-filters",
+        "id-285": "byMod",
+        "bySpace": "actions/bot-filters",
+        "id-310": "bySpace",
+        "byTag": "actions/bot-filters",
+        "id-276": "byTag",
+        "bytes.fromBase64String": "actions/bytes",
+        "id-1854": "bytes.fromBase64String",
+        "bytes.fromBase64Url": "actions/bytes",
+        "id-1871": "bytes.fromBase64Url",
+        "bytes.fromHexString": "actions/bytes",
+        "id-1862": "bytes.fromHexString",
+        "bytes.toBase64String": "actions/bytes",
+        "id-1850": "bytes.toBase64String",
+        "bytes.toBase64Url": "actions/bytes",
+        "id-1866": "bytes.toBase64Url",
+        "bytes.toHexString": "actions/bytes",
+        "id-1858": "bytes.toHexString",
+        "clearAnimations": "actions/utility",
+        "id-378": "clearAnimations",
+        "clearTagMasks": "actions/data",
+        "id-106": "clearTagMasks",
+        "crypto.hash-raw": "actions/crypto",
+        "id-1877": "crypto.hash-raw",
+        "crypto.hash-string": "actions/crypto",
+        "id-1883": "crypto.hash-string",
+        "crypto.hmac-raw": "actions/crypto",
+        "id-1914": "crypto.hmac-raw",
+        "crypto.hmac-string": "actions/crypto",
+        "id-1907": "crypto.hmac-string",
+        "crypto.asymmetric.decrypt": "actions/crypto",
+        "id-1972": "crypto.asymmetric.decrypt",
+        "crypto.asymmetric.encrypt": "actions/crypto",
+        "id-1967": "crypto.asymmetric.encrypt",
+        "crypto.asymmetric.isEncrypted": "actions/crypto",
+        "id-1978": "crypto.asymmetric.isEncrypted",
+        "crypto.asymmetric.isKeypair": "actions/crypto",
+        "id-1963": "crypto.asymmetric.isKeypair",
+        "crypto.asymmetric.keypair": "actions/crypto",
+        "id-1959": "crypto.asymmetric.keypair",
+        "crypto.encrypt": "actions/crypto",
+        "id-1943": "crypto.encrypt",
+        "crypto.hmacSha256": "actions/crypto",
+        "id-1933": "crypto.hmacSha256",
+        "crypto.hmacSha512": "actions/crypto",
+        "id-1938": "crypto.hmacSha512",
+        "crypto.isEncrypted": "actions/crypto",
+        "id-1953": "crypto.isEncrypted",
+        "crypto.keypair": "actions/crypto",
+        "id-1982": "crypto.keypair",
+        "crypto.sha256": "actions/crypto",
+        "id-1899": "crypto.sha256",
+        "crypto.sha512": "actions/crypto",
+        "id-1903": "crypto.sha512",
+        "crypto.sign": "actions/crypto",
+        "id-1986": "crypto.sign",
+        "deleteTagMaskText": "actions/data",
+        "id-133": "deleteTagMaskText",
+        "deleteTagText": "actions/data",
+        "id-126": "deleteTagText",
+        "diffSnapshots": "actions/data",
+        "id-78": "diffSnapshots",
+        "either": "actions/bot-filters",
+        "id-318": "either",
+        "os.beginAudioRecording": "actions/audio",
+        "id-1688": "os.beginAudioRecording",
+        "experiment.beginRecording": "actions/experimental",
+        "id-1695": "experiment.beginRecording",
+        "os.endAudioRecording": "actions/audio",
+        "id-1692": "os.endAudioRecording",
+        "experiment.endRecording": "actions/experimental",
+        "id-1699": "experiment.endRecording",
+        "experiment.getAnchorPointPosition": "actions/experimental",
+        "id-1678": "experiment.getAnchorPointPosition",
+        "experiment.getVoices": "actions/experimental",
+        "id-1707": "experiment.getVoices",
+        "experiment.localFormAnimation": "actions/experimental",
+        "id-1651": "experiment.localFormAnimation",
+        "experiment.localPositionTween": "actions/experimental",
+        "id-1656": "experiment.localPositionTween",
+        "experiment.localRotationTween": "actions/experimental",
+        "id-1667": "experiment.localRotationTween",
+        "experiment.speakText": "actions/experimental",
+        "id-1702": "experiment.speakText",
+        "getBotLinks": "actions/data",
+        "id-194": "getBotLinks",
+        "getBotPosition": "actions/data",
+        "id-52": "getBotPosition",
+        "getBotRotation": "actions/data",
+        "id-57": "getBotRotation",
+        "getBotTagValues": "actions/data",
+        "id-42": "getBotTagValues",
+        "getFormattedJSON": "actions/data",
+        "id-70": "getFormattedJSON",
+        "getID": "actions/data",
+        "id-62": "getID",
+        "getJSON": "actions/data",
+        "id-66": "getJSON",
+        "getLink": "actions/data",
+        "id-190": "getLink",
+        "getMod": "actions/mods",
+        "id-47": "getMod",
+        "getSnapshot": "actions/data",
+        "id-74": "getSnapshot",
+        "getTag": "actions/data",
+        "id-88": "getTag",
+        "inDimension": "actions/bot-filters",
+        "id-289": "inDimension",
+        "inStack": "actions/bot-filters",
+        "id-299": "inStack",
+        "insertTagMaskText": "actions/data",
+        "id-118": "insertTagMaskText",
+        "insertTagText": "actions/data",
+        "id-111": "insertTagText",
+        "math.abs": "actions/math",
+        "id-1724": "math.abs",
+        "math.addVectors": "actions/math",
+        "id-1794": "math.addVectors",
+        "math.areClose": "actions/math",
+        "id-1825": "math.areClose",
+        "math.avg": "actions/math",
+        "id-1716": "math.avg",
+        "math.degreesToRadians": "actions/math",
+        "id-1750": "math.degreesToRadians",
+        "math.getAnchorPointOffset": "actions/math",
+        "id-1790": "math.getAnchorPointOffset",
+        "math.getForwardDirection": "actions/math",
+        "id-1758": "math.getForwardDirection",
+        "math.getSeededRandomNumberGenerator": "actions/math",
+        "id-1732": "math.getSeededRandomNumberGenerator",
+        "math.intersectPlane": "actions/math",
+        "id-1767": "math.intersectPlane",
+        "math.negateVector": "actions/math",
+        "id-1804": "math.negateVector",
+        "math.normalizeVector": "actions/math",
+        "id-1809": "math.normalizeVector",
+        "math.radiansToDegrees": "actions/math",
+        "id-1754": "math.radiansToDegrees",
+        "math.random": "actions/math",
+        "id-1745": "math.random",
+        "math.randomInt": "actions/math",
+        "id-1740": "math.randomInt",
+        "math.scaleVector": "actions/math",
+        "id-1819": "math.scaleVector",
+        "math.setRandomSeed": "actions/math",
+        "id-1736": "math.setRandomSeed",
+        "math.sqrt": "actions/math",
+        "id-1720": "math.sqrt",
+        "math.stdDev": "actions/math",
+        "id-1728": "math.stdDev",
+        "math.subtractVectors": "actions/math",
+        "id-1799": "math.subtractVectors",
+        "math.sum": "actions/math",
+        "id-1712": "math.sum",
+        "math.vectorLength": "actions/math",
+        "id-1814": "math.vectorLength",
+        "neighboring": "actions/bot-filters",
+        "id-304": "neighboring",
+        "not": "actions/bot-filters",
+        "id-325": "not",
+        "os.attachDebugger": "actions/debuggers",
+        "id-1328": "os.attachDebugger",
+        "os.createDebugger-normal": "actions/debuggers",
+        "id-1317": "os.createDebugger-normal",
+        "os.createDebugger-pausable": "actions/debuggers",
+        "id-1321": "os.createDebugger-pausable",
+        "os.focusOn-bot": "actions/portals",
+        "id-510": "os.focusOn-bot",
+        "os.focusOn-position": "actions/portals",
+        "id-515": "os.focusOn-position",
+        "os.getExecutingDebugger": "actions/debuggers",
+        "id-1325": "os.getExecutingDebugger",
+        "showChat-options": "actions/os",
+        "id-537": "showChat-options",
+        "showChat-placeholder": "actions/os",
+        "id-533": "showChat-placeholder",
+        "os.showInput": "actions/portals",
+        "id-753": "os.showInput",
+        "os.addBotDropGrid": "actions/portals",
+        "id-827": "os.addBotDropGrid",
+        "os.addBotDropSnap": "actions/portals",
+        "id-818": "os.addBotDropSnap",
+        "os.addDropGrid": "actions/portals",
+        "id-823": "os.addDropGrid",
+        "os.addDropSnap": "actions/portals",
+        "id-814": "os.addDropSnap",
+        "os.applyUpdatesToInst": "actions/os",
+        "id-1271": "os.applyUpdatesToInst",
+        "os.arSupported": "actions/xr",
+        "id-578": "os.arSupported",
+        "os.bufferFormAddressGLTF": "actions/animations",
+        "id-1224": "os.bufferFormAddressGLTF",
+        "os.bufferSound": "actions/audio",
+        "id-790": "os.bufferSound",
+        "os.calculateRayFromCamera": "actions/portals",
+        "id-1219": "os.calculateRayFromCamera",
+        "os.cancelSound": "actions/audio",
+        "id-794": "os.cancelSound",
+        "os.capturePhoto": "actions/camera",
+        "id-673": "os.capturePhoto",
+        "os.closeBarcodeScanner": "actions/barcodes",
+        "id-651": "os.closeBarcodeScanner",
+        "os.closeCircleWipe": "actions/portals",
+        "id-806": "os.closeCircleWipe",
+        "os.closeImageClassifier": "actions/image-classification",
+        "id-666": "os.closeImageClassifier",
+        "os.closePhotoCamera": "actions/camera",
+        "id-677": "os.closePhotoCamera",
+        "os.closeQRCodeScanner": "actions/barcodes",
+        "id-637": "os.closeQRCodeScanner",
+        "os.compileApp": "actions/app",
+        "id-941": "os.compileApp",
+        "os.convertGeolocationToWhat3Words": "actions/os",
+        "id-1204": "os.convertGeolocationToWhat3Words",
+        "os.countEvents": "actions/records",
+        "id-1198": "os.countEvents",
+        "os.createInitializationUpdate": "actions/os",
+        "id-1267": "os.createInitializationUpdate",
+        "os.device": "actions/os",
+        "id-555": "os.device",
+        "os.disableAR": "actions/xr",
+        "id-568": "os.disableAR",
+        "os.disablePointOfView": "actions/portals",
+        "id-593": "os.disablePointOfView",
+        "os.disableVR": "actions/xr",
+        "id-575": "os.disableVR",
+        "os.disableWakeLock": "actions/os",
+        "id-599": "os.disableWakeLock",
+        "os.download": "actions/files",
+        "id-605": "os.download",
+        "os.downloadBots": "actions/files",
+        "id-611": "os.downloadBots",
+        "os.downloadBotsAsInitialzationUpdate": "actions/files",
+        "id-616": "os.downloadBotsAsInitialzationUpdate",
+        "os.downloadInst": "actions/files",
+        "id-624": "os.downloadInst",
+        "os.enableAR": "actions/xr",
+        "id-564": "os.enableAR",
+        "os.enableCustomDragging": "actions/portals",
+        "id-832": "os.enableCustomDragging",
+        "os.enablePointOfView": "actions/portals",
+        "id-584": "os.enablePointOfView",
+        "os.enableVR": "actions/xr",
+        "id-571": "os.enableVR",
+        "os.eraseData": "actions/records",
+        "id-1141": "os.eraseData",
+        "os.eraseManualApprovalData": "actions/records",
+        "id-1147": "os.eraseManualApprovalData",
+        "os.exitFullscreenMode": "actions/portals",
+        "id-481": "os.exitFullscreenMode",
+        "os.getAverageFrameRate": "actions/os",
+        "id-889": "os.getAverageFrameRate",
+        "os.getCameraPosition": "actions/portals",
+        "id-845": "os.getCameraPosition",
+        "os.getCameraRotation": "actions/portals",
+        "id-849": "os.getCameraRotation",
+        "os.getCurrentDimension": "actions/portals",
+        "id-724": "os.getCurrentDimension",
+        "os.getCurrentInst": "actions/portals",
+        "id-730": "os.getCurrentInst",
+        "os.getCurrentInstUpdate": "actions/os",
+        "id-1275": "os.getCurrentInstUpdate",
+        "os.getData": "actions/records",
+        "id-1123": "os.getData",
+        "os.getDimensionalDepth": "actions/portals",
+        "id-743": "os.getDimensionalDepth",
+        "os.getFocusPoint": "actions/portals",
+        "id-857": "os.getFocusPoint",
+        "os.getGeolocation": "actions/os",
+        "id-839": "os.getGeolocation",
+        "os.getInputList": "actions/portals",
+        "id-882": "os.getInputList",
+        "os.getInputState": "actions/portals",
+        "id-877": "os.getInputState",
+        "os.getInstStateFromUpdates": "actions/os",
+        "id-1263": "os.getInstStateFromUpdates",
+        "os.getManualApprovalData": "actions/records",
+        "id-1129": "os.getManualApprovalData",
+        "os.getMediaPermission": "actions/os",
+        "id-885": "os.getMediaPermission",
+        "os.getMenuDimension": "actions/portals",
+        "id-733": "os.getMenuDimension",
+        "os.getMiniPortalDimension": "actions/portals",
+        "id-736": "os.getMiniPortalDimension",
+        "os.getPointerDirection": "actions/portals",
+        "id-873": "os.getPointerDirection",
+        "os.getPointerPosition": "actions/portals",
+        "id-861": "os.getPointerPosition",
+        "os.getPointerRotation": "actions/portals",
+        "id-865": "os.getPointerRotation",
+        "os.getPortalDimension": "actions/portals",
+        "id-739": "os.getPortalDimension",
+        "os.getPublicRecordKey": "actions/records",
+        "id-1048": "os.getPublicRecordKey",
+        "os.getRoomOptions": "actions/rooms",
+        "id-907": "os.getRoomOptions",
+        "os.getRoomRemoteOptions": "actions/rooms",
+        "id-922": "os.getRoomRemoteOptions",
+        "os.getRoomTrackOptions": "actions/rooms",
+        "id-911": "os.getRoomTrackOptions",
+        "os.getSubjectlessPublicRecordKey": "actions/records",
+        "id-1052": "os.getSubjectlessPublicRecordKey",
+        "os.getWakeLockConfiguration": "actions/os",
+        "id-602": "os.getWakeLockConfiguration",
+        "os.goToDimension": "actions/portals",
+        "id-767": "os.goToDimension",
+        "os.goToURL": "actions/portals",
+        "id-771": "os.goToURL",
+        "os.grantInstAdminPermission": "actions/records",
+        "id-1070": "os.grantInstAdminPermission",
+        "os.grantInstRole": "actions/records",
+        "id-1090": "os.grantInstRole",
+        "os.grantRecordMarkerPermission": "actions/records",
+        "id-1056": "os.grantRecordMarkerPermission",
+        "os.grantUserRole": "actions/records",
+        "id-1075": "os.grantUserRole",
+        "os.hasBotInMiniPortal": "actions/portals",
+        "id-798": "os.hasBotInMiniPortal",
+        "os.hideBarcode": "actions/barcodes",
+        "id-659": "os.hideBarcode",
+        "os.hideChat": "actions/os",
+        "id-545": "os.hideChat",
+        "os.hideHtml": "actions/os",
+        "id-488": "os.hideHtml",
+        "os.hideQRCode": "actions/barcodes",
+        "id-644": "os.hideQRCode",
+        "os.hideTips": "actions/portals",
+        "id-469": "os.hideTips",
+        "os.importAUX": "actions/files",
+        "id-708": "os.importAUX",
+        "os.inSheet": "actions/portals",
+        "id-842": "os.inSheet",
+        "os.instStatuses": "actions/os",
+        "id-1292": "os.instStatuses",
+        "os.instances": "actions/os",
+        "id-1282": "os.instances",
+        "os.isCollaborative": "actions/os",
+        "id-558": "os.isCollaborative",
+        "os.isInDimension": "actions/portals",
+        "id-720": "os.isInDimension",
+        "os.isRecordKey": "actions/records",
+        "id-1105": "os.isRecordKey",
+        "os.joinRoom": "actions/rooms",
+        "id-892": "os.joinRoom",
+        "os.leaveRoom": "actions/rooms",
+        "id-897": "os.leaveRoom",
+        "os.listBuiltinTags": "actions/app",
+        "id-1042": "os.listBuiltinTags",
+        "os.listData": "actions/records",
+        "id-1135": "os.listData",
+        "os.listFormAnimations": "actions/animations",
+        "id-1239": "os.listFormAnimations",
+        "os.listInstUpdates": "actions/os",
+        "id-1260": "os.listInstUpdates",
+        "os.loadInst": "actions/os",
+        "id-700": "os.loadInst",
+        "os.log": "actions/os",
+        "id-835": "os.log",
+        "os.meetCommand": "actions/os",
+        "id-1305": "os.meetCommand",
+        "os.meetFunction": "actions/os",
+        "id-1310": "os.meetFunction",
+        "os.openBarcodeScanner": "actions/barcodes",
+        "id-647": "os.openBarcodeScanner",
+        "os.openCircleWipe": "actions/portals",
+        "id-810": "os.openCircleWipe",
+        "os.openDevConsole": "actions/os",
+        "id-779": "os.openDevConsole",
+        "os.openImageClassifier": "actions/image-classification",
+        "id-662": "os.openImageClassifier",
+        "os.openPhotoCamera": "actions/camera",
+        "id-669": "os.openPhotoCamera",
+        "os.openQRCodeScanner": "actions/barcodes",
+        "id-633": "os.openQRCodeScanner",
+        "os.openURL": "actions/portals",
+        "id-775": "os.openURL",
+        "os.parseBotsFromData": "actions/files",
+        "id-712": "os.parseBotsFromData",
+        "os.playSound": "actions/audio",
+        "id-786": "os.playSound",
+        "os.raycast": "actions/portals",
+        "id-1213": "os.raycast",
+        "os.raycastFromCamera": "actions/portals",
+        "id-1208": "os.raycastFromCamera",
+        "os.recordData": "actions/records",
+        "id-1109": "os.recordData",
+        "os.recordEvent": "actions/records",
+        "id-1192": "os.recordEvent",
+        "os.recordFile": "actions/records",
+        "id-1153": "os.recordFile",
+        "os.recordManualApprovalData": "actions/records",
+        "id-1116": "os.recordManualApprovalData",
+        "os.registerApp": "actions/app",
+        "id-932": "os.registerApp",
+        "os.registerTagPrefix": "actions/app",
+        "id-927": "os.registerTagPrefix",
+        "os.remoteCount": "actions/os",
+        "id-1285": "os.remoteCount",
+        "os.remotes": "actions/os",
+        "id-1257": "os.remotes",
+        "os.replaceDragBot": "actions/portals",
+        "id-716": "os.replaceDragBot",
+        "os.requestAuthBot": "actions/records",
+        "id-1045": "os.requestAuthBot",
+        "os.requestFullscreenMode": "actions/portals",
+        "id-478": "os.requestFullscreenMode",
+        "os.requestWakeLock": "actions/os",
+        "id-596": "os.requestWakeLock",
+        "os.revokeInstRole": "actions/records",
+        "id-1098": "os.revokeInstRole",
+        "os.revokeRecordMarkerPermission": "actions/records",
+        "id-1063": "os.revokeRecordMarkerPermission",
+        "os.revokeUserRole": "actions/records",
+        "id-1083": "os.revokeUserRole",
+        "os.run": "actions/os",
+        "id-548": "os.run",
+        "os.setClipboard": "actions/os",
+        "id-491": "os.setClipboard",
+        "os.setRoomOptions": "actions/rooms",
+        "id-902": "os.setRoomOptions",
+        "os.setRoomTrackOptions": "actions/rooms",
+        "id-916": "os.setRoomTrackOptions",
+        "os.share": "actions/os",
+        "id-802": "os.share",
+        "os.showBarcode": "actions/barcodes",
+        "id-654": "os.showBarcode",
+        "os.showConfirm": "actions/portals",
+        "id-763": "os.showConfirm",
+        "os.showHtml": "actions/os",
+        "id-484": "os.showHtml",
+        "os.showInputForTag": "actions/portals",
+        "id-747": "os.showInputForTag",
+        "os.showJoinCode": "actions/barcodes",
+        "id-473": "os.showJoinCode",
+        "os.showQRCode": "actions/barcodes",
+        "id-640": "os.showQRCode",
+        "os.showUploadAuxFile": "actions/files",
+        "id-627": "os.showUploadAuxFile",
+        "os.showUploadFiles": "actions/files",
+        "id-630": "os.showUploadFiles",
+        "os.sleep": "actions/os",
+        "id-453": "os.sleep",
+        "os.startFormAnimation": "actions/animations",
+        "id-1228": "os.startFormAnimation",
+        "os.stopFormAnimation": "actions/animations",
+        "id-1234": "os.stopFormAnimation",
+        "os.tip": "actions/portals",
+        "id-462": "os.tip",
+        "os.toast": "actions/os",
+        "id-457": "os.toast",
+        "os.totalRemoteCount": "actions/os",
+        "id-1289": "os.totalRemoteCount",
+        "os.unloadInst": "actions/os",
+        "id-704": "os.unloadInst",
+        "os.unregisterApp": "actions/app",
+        "id-937": "os.unregisterApp",
+        "os.version": "actions/os",
+        "id-552": "os.version",
+        "os.vrSupported": "actions/xr",
+        "id-581": "os.vrSupported",
+        "os.agreedUponTime": "actions/time",
+        "id-681": "os.agreedUponTime",
+        "os.deadReckoningTime": "actions/time",
+        "id-689": "os.deadReckoningTime",
+        "os.instLatency": "actions/time",
+        "id-683": "os.instLatency",
+        "os.instTimeOffset": "actions/time",
+        "id-685": "os.instTimeOffset",
+        "os.instTimeOffsetSpread": "actions/time",
+        "id-687": "os.instTimeOffsetSpread",
+        "os.localTime": "actions/time",
+        "id-679": "os.localTime",
+        "removeTags": "actions/data",
+        "id-141": "removeTags",
+        "renameTag": "actions/data",
+        "id-146": "renameTag",
+        "setTag": "actions/data",
+        "id-93": "setTag",
+        "setTagMask": "actions/data",
+        "id-99": "setTagMask",
+        "subtractMods": "actions/mods",
+        "id-157": "subtractMods",
+        "superShout": "actions/event",
+        "id-220": "superShout",
+        "uuid": "actions/data",
+        "id-355": "uuid",
+        "web.get": "actions/web",
+        "id-2029": "web.get",
+        "web.hook": "actions/web",
+        "id-2040": "web.hook",
+        "web.post": "actions/web",
+        "id-2034": "web.post",
+        "configBot": "actions/os",
+        "id-418": "configBot"
+    }
+}

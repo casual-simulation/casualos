@@ -347,6 +347,10 @@ export function getStatusCode(
             return 404;
         } else if (response.errorCode === 'operation_not_found') {
             return 404;
+        } else if (response.errorCode === 'studio_not_found') {
+            return 404;
+        } else if (response.errorCode === 'user_not_found') {
+            return 404;
         } else if (response.errorCode === 'session_already_revoked') {
             return 200;
         } else if (response.errorCode === 'invalid_code') {
@@ -392,6 +396,12 @@ export function getStatusCode(
         } else if (response.errorCode === 'rate_limit_exceeded') {
             return 429;
         } else if (response.errorCode === 'not_authorized') {
+            return 403;
+        } else if (response.errorCode === 'not_subscribed') {
+            return 403;
+        } else if (response.errorCode === 'invalid_subscription_tier') {
+            return 403;
+        } else if (response.errorCode === 'record_already_exists') {
             return 403;
         } else {
             return 400;

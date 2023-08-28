@@ -614,6 +614,8 @@ export class Server {
 
         if (options.textIt && options.textIt.apiKey && options.textIt.flowId) {
             builder.useTextItAuthMessenger();
+        } else if (options.ses) {
+            builder.useSesAuthMessenger();
         } else {
             builder.useConsoleAuthMessenger();
         }
@@ -636,6 +638,10 @@ export class Server {
             } else {
                 builder.useMongoDBRateLimit();
             }
+        }
+
+        if (options.ai) {
+            builder.useAI();
         }
 
         const { server, filesController, mongoDatabase } =
@@ -695,6 +701,16 @@ export class Server {
 
         app.use(express.static(dist));
 
+        app.get(
+            '/api/v2/records/file/list',
+            express.text({
+                type: 'application/json',
+            }),
+            asyncMiddleware(async (req, res) => {
+                await handleRequest(req, res);
+            })
+        );
+
         app.use(
             '/api/v2/records/file/*',
             express.raw({
@@ -705,15 +721,19 @@ export class Server {
         app.post(
             '/api/v2/records/file/*',
             asyncMiddleware(async (req, res) => {
+                // TODO: Secure this endpoint
                 handleRecordsCorsHeaders(req, res);
-                const recordName = req.headers['record-name'] as string;
+                // const recordName = req.headers['record-name'] as string;
+                const recordNameAndFileName = req.path.slice(
+                    '/api/v2/records/file/'.length
+                );
+                const [recordName, fileName] = recordNameAndFileName.split('/');
 
-                if (!recordName) {
+                if (!recordName || !fileName) {
                     res.status(400).send();
                     return;
                 }
 
-                const fileName = req.path.slice('/api/v2/records/file/'.length);
                 const mimeType = req.headers['content-type'] as string;
 
                 await filesCollection.insertOne({
@@ -733,8 +753,37 @@ export class Server {
         );
 
         app.get(
+            '/api/v2/records/file/:recordName/*',
+            asyncMiddleware(async (req, res) => {
+                // TODO: Secure this endpoint
+                handleRecordsCorsHeaders(req, res);
+                const recordNameAndFileName = req.path.slice(
+                    '/api/v2/records/file/'.length
+                );
+                const [recordName, fileName] = recordNameAndFileName.split('/');
+
+                const file = await filesCollection.findOne({
+                    recordName,
+                    fileName,
+                });
+
+                if (!file) {
+                    res.status(404).send();
+                    return;
+                }
+
+                if (file.body instanceof Binary) {
+                    res.status(200).send(file.body.buffer);
+                } else {
+                    res.status(200).send(file.body);
+                }
+            })
+        );
+
+        app.get(
             '/api/v2/records/file/*',
             asyncMiddleware(async (req, res) => {
+                // TODO: Secure this endpoint
                 handleRecordsCorsHeaders(req, res);
                 const fileName = req.path.slice('/api/v2/records/file/'.length);
 

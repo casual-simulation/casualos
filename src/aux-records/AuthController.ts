@@ -31,6 +31,7 @@ import {
     randomCode,
 } from './AuthUtils';
 import { SubscriptionConfiguration } from './SubscriptionConfiguration';
+import { ConfigurationStore } from './ConfigurationStore';
 
 /**
  * The number of miliseconds that a login request should be valid for before expiration.
@@ -94,17 +95,18 @@ export class AuthController {
     private _store: AuthStore;
     private _messenger: AuthMessenger;
     private _forceAllowSubscriptionFeatures: boolean;
-    private _subscriptionConfig: SubscriptionConfiguration | null;
+    private _config: ConfigurationStore;
+    // private _subscriptionConfig: SubscriptionConfiguration | null;
 
     constructor(
         authStore: AuthStore,
         messenger: AuthMessenger,
-        subscriptionConfig: SubscriptionConfiguration | null,
+        configStore: ConfigurationStore,
         forceAllowSubscriptionFeatures: boolean = false
     ) {
         this._store = authStore;
         this._messenger = messenger;
-        this._subscriptionConfig = subscriptionConfig;
+        this._config = configStore;
         this._forceAllowSubscriptionFeatures = forceAllowSubscriptionFeatures;
     }
 
@@ -608,11 +610,17 @@ export class AuthController {
                 }
             }
 
+            const { subscriptionId, subscriptionTier } =
+                await this._getSubscriptionInfo(userInfo);
+
             return {
                 success: true,
                 userId: session.userId,
                 sessionId: session.sessionId,
                 allSessionsRevokedTimeMs: userInfo.allSessionRevokeTimeMs,
+
+                subscriptionId: subscriptionId ?? undefined,
+                subscriptionTier: subscriptionTier ?? undefined,
             };
         } catch (err) {
             console.error(
@@ -850,13 +858,7 @@ export class AuthController {
                 };
             }
 
-            await this._store.saveSession({
-                ...session,
-                nextSessionId: newSessionId,
-                revokeTimeMs: now,
-            });
-
-            await this._store.saveSession(newSession);
+            await this._store.replaceSession(session, newSession, now);
 
             return {
                 success: true,
@@ -1018,40 +1020,8 @@ export class AuthController {
                 );
             }
 
-            const hasActiveSubscription =
-                this._forceAllowSubscriptionFeatures ||
-                isActiveSubscription(result.subscriptionStatus);
-
-            let sub: SubscriptionConfiguration['subscriptions'][0];
-            if (result.subscriptionId) {
-                sub = this._subscriptionConfig?.subscriptions.find(
-                    (s) => s.id === result.subscriptionId
-                );
-            }
-            if (!sub) {
-                sub = this._subscriptionConfig?.subscriptions.find(
-                    (s) => s.defaultSubscription
-                );
-                if (sub) {
-                    console.log(
-                        '[AuthController] [getUserInfo] Using default subscription for user.'
-                    );
-                }
-            }
-
-            if (!sub) {
-                sub = this._subscriptionConfig?.subscriptions[0];
-                if (sub) {
-                    console.log(
-                        '[AuthController] [getUserInfo] Using first subscription for user.'
-                    );
-                }
-            }
-
-            let tier = 'beta';
-            if (sub && sub.tier) {
-                tier = sub.tier;
-            }
+            const { hasActiveSubscription, subscriptionTier: tier } =
+                await this._getSubscriptionInfo(result);
 
             return {
                 success: true,
@@ -1061,9 +1031,8 @@ export class AuthController {
                 phoneNumber: result.phoneNumber,
                 avatarPortraitUrl: result.avatarPortraitUrl,
                 avatarUrl: result.avatarUrl,
-                hasActiveSubscription,
+                hasActiveSubscription: hasActiveSubscription,
                 subscriptionTier: hasActiveSubscription ? tier : null,
-                openAiKey: hasActiveSubscription ? result.openAiKey : null,
             };
         } catch (err) {
             console.error(
@@ -1076,6 +1045,54 @@ export class AuthController {
                 errorMessage: 'A server error occurred.',
             };
         }
+    }
+
+    private async _getSubscriptionInfo(user: AuthUser) {
+        const hasActiveSubscription =
+            this._forceAllowSubscriptionFeatures ||
+            isActiveSubscription(user.subscriptionStatus);
+
+        let tier: string = null;
+        let sub: SubscriptionConfiguration['subscriptions'][0] = null;
+        if (hasActiveSubscription) {
+            const subscriptionConfig =
+                await this._config.getSubscriptionConfiguration();
+            if (user.subscriptionId) {
+                sub = subscriptionConfig?.subscriptions.find(
+                    (s) => s.id === user.subscriptionId
+                );
+            }
+            if (!sub) {
+                sub = subscriptionConfig?.subscriptions.find(
+                    (s) => s.defaultSubscription
+                );
+                if (sub) {
+                    console.log(
+                        '[AuthController] [getUserInfo] Using default subscription for user.'
+                    );
+                }
+            }
+
+            if (!sub) {
+                sub = subscriptionConfig?.subscriptions[0];
+                if (sub) {
+                    console.log(
+                        '[AuthController] [getUserInfo] Using first subscription for user.'
+                    );
+                }
+            }
+
+            tier = 'beta';
+            if (sub && sub.tier) {
+                tier = sub.tier;
+            }
+        }
+
+        return {
+            hasActiveSubscription,
+            subscriptionId: sub?.id,
+            subscriptionTier: tier,
+        };
     }
 
     /**
@@ -1138,24 +1155,13 @@ export class AuthController {
                 );
             }
 
-            const hasActiveSubscription =
-                this._forceAllowSubscriptionFeatures ||
-                isActiveSubscription(user.subscriptionStatus);
-
             const cleaned = cleanupObject({
                 name: request.update.name,
                 avatarUrl: request.update.avatarUrl,
                 avatarPortraitUrl: request.update.avatarPortraitUrl,
                 email: request.update.email,
                 phoneNumber: request.update.phoneNumber,
-                openAiKey: hasActiveSubscription
-                    ? request.update.openAiKey
-                    : undefined,
             });
-
-            if (cleaned.openAiKey) {
-                cleaned.openAiKey = formatV1OpenAiKey(cleaned.openAiKey);
-            }
 
             await this._store.saveUser({
                 ...user,
@@ -1375,6 +1381,16 @@ export interface ValidateSessionKeySuccess {
     sessionId: string;
 
     allSessionsRevokedTimeMs?: number;
+
+    /**
+     * The subscription ID for the user.
+     */
+    subscriptionTier?: string;
+
+    /**
+     * The ID of the subscription that the user is subscribed to.
+     */
+    subscriptionId?: string;
 }
 
 export interface ValidateSessionKeyFailure {
@@ -1649,11 +1665,6 @@ export interface GetUserInfoSuccess {
      * The subscription tier that the user is subscribed to.
      */
     subscriptionTier: string;
-
-    /**
-     * The OpenAI API Key that the user has configured in their account.
-     */
-    openAiKey: string | null;
 }
 
 export interface GetUserInfoFailure {
@@ -1685,12 +1696,7 @@ export interface UpdateUserInfoRequest {
     update: Partial<
         Pick<
             AuthUser,
-            | 'name'
-            | 'email'
-            | 'phoneNumber'
-            | 'avatarUrl'
-            | 'avatarPortraitUrl'
-            | 'openAiKey'
+            'name' | 'email' | 'phoneNumber' | 'avatarUrl' | 'avatarPortraitUrl'
         >
     >;
 }

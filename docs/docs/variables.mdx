@@ -9,43 +9,10 @@ description: Learn about variables in CasualOS
 <!-- breaks the build for some reason -->
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import { GlossaryRef } from './glossary/index';
-
-export const Alert = ({type, children}) => (
-    <div className={`alert alert--${type}`} role='alert'>
-        {children}
-    </div>
-);
-
-export const NormalCode = ({children}) => (
-  React.createElement('code', {}, ...children)
-);
-
-export const ActionLink = ({action, children}) => (
-  <a href={useBaseUrl('actions') + '#' + action.replace(/[\.\(\)\,\?]/g, '').replace(/\s/g, '-').toLowerCase()}>
-  {children ? children : (
-      <NormalCode>{action}</NormalCode>
-  )}
-  </a>
-);
-
-export const DataTagLink = ({tag}) => (
-  <a href={useBaseUrl('tags') + '#' + tag.replace(/\./g, '').toLowerCase()}>
-    <NormalCode>#{tag}</NormalCode>
-  </a>
-);
-
-export const ListenTagLink = ({tag}) => (
-  <a href={useBaseUrl('listen-tags') + '#' + tag.replace(/[\.\(\)\@\[\]]/g, '').toLowerCase()}>
-    <NormalCode>{tag}</NormalCode>
-  </a>
-);
-
-export const TagLink = ({tag}) => tag.startsWith('@') ? 
-  (<ListenTagLink tag={tag}/>) : 
-  (<DataTagLink tag={tag}/>);
+import { Alert, NormalCode, DataTagLink, TagLink } from './components.mdx'
 
 CasualOS defines some variables for each listen tag that you create.
-Unlike [actions](./actions.mdx), variables exist to make it easy to access common data.
+Unlike actions, variables exist to make it easy to access common data.
 
 ### `thisBot`
 

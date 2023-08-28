@@ -310,6 +310,11 @@ export class AuxRuntime
     private _libraryFactory: (context: AuxGlobalContext) => AuxLibrary;
     private _interpreter: InterpreterType;
 
+    /**
+     * The number of times that the runtime can call onError for an error from the same script.
+     */
+    repeatedErrorLimit: number = 1000;
+
     get forceSignedScripts() {
         return this._forceSignedScripts;
     }
@@ -2340,15 +2345,42 @@ export class AuxRuntime
             this._processingErrors = true;
 
             if (errors.length > 0) {
-                let actions = errors
-                    .filter((e) => e.tag !== ON_ERROR)
-                    .map((e) =>
+                const actions: BotAction[] = [];
+
+                for (let e of errors) {
+                    if (e.tag === ON_ERROR) {
+                        continue;
+                    }
+
+                    if (e.bot && e.tag) {
+                        const b = this._compiledState[e.bot.id];
+
+                        if (b) {
+                            let currentCount = b.errorCounts[e.tag] || 0;
+                            if (currentCount === this.repeatedErrorLimit) {
+                                console.warn(
+                                    `[AuxRuntime] Repeated error limit reached for tag on bot: ${e.bot.id}.${e.tag}`
+                                );
+                                console.warn(
+                                    `[AuxRuntime] If this happens, then there is likely a bug in your inst that causes @onError and @${e.tag} to call each other infinitely.`
+                                );
+                            }
+                            currentCount = b.errorCounts[e.tag] =
+                                currentCount + 1;
+                            if (currentCount > this.repeatedErrorLimit) {
+                                continue;
+                            }
+                        }
+                    }
+
+                    actions.push(
                         action(ON_ERROR, undefined, undefined, {
                             bot: e.bot,
                             tag: e.tag,
                             error: e.error,
                         })
                     );
+                }
 
                 this.process(actions);
             }
@@ -2521,6 +2553,7 @@ export class AuxRuntime
             originalTagEditValues: {},
             originalTagMaskEditValues: {},
             breakpoints: [],
+            errorCounts: {},
         };
         if (BOT_SPACE_TAG in bot) {
             compiledBot.space = bot.space;

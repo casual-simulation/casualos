@@ -69,8 +69,6 @@ const builder = new ServerBuilder(config)
 
 if (config.prisma && config.s3) {
     builder.usePrismaWithS3();
-} else if (config.dynamodb) {
-    builder.useDynamoDB();
 }
 
 if (config.livekit) {
@@ -79,6 +77,8 @@ if (config.livekit) {
 
 if (config.textIt && config.textIt.apiKey && config.textIt.flowId) {
     builder.useTextItAuthMessenger();
+} else if (config.ses) {
+    builder.useSesAuthMessenger();
 } else {
     builder.useConsoleAuthMessenger();
 }
@@ -94,6 +94,10 @@ if (
 
 if (config.rateLimit && config.rateLimit.windowMs && config.rateLimit.maxHits) {
     builder.useRedisRateLimit();
+}
+
+if (config.ai) {
+    builder.useAI();
 }
 
 const { server, filesStore } = builder.build();

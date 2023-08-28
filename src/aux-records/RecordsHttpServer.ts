@@ -28,6 +28,8 @@ import { PublicRecordKeyPolicy } from './RecordsStore';
 import { RateLimitController } from './RateLimitController';
 import { AVAILABLE_PERMISSIONS_VALIDATION } from './PolicyPermissions';
 import { PolicyController } from './PolicyController';
+import { AIController } from './AIController';
+import { AIChatMessage, AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
 
 /**
  * Defines an interface for a generic HTTP request.
@@ -147,6 +149,18 @@ const UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON = {
         'The request body was not properly formatted. It should be valid JSON.',
 };
 
+const SUBSCRIPTIONS_NOT_SUPPORTED_RESULT = {
+    success: false,
+    errorCode: 'not_supported',
+    errorMessage: 'Subscriptions are not supported by this server.',
+};
+
+const AI_NOT_SUPPORTED_RESULT = {
+    success: false,
+    errorCode: 'not_supported',
+    errorMessage: 'AI features are not supported by this server.',
+};
+
 /**
  * The Zod validation for record keys.
  */
@@ -206,7 +220,8 @@ export class RecordsHttpServer {
     private _data: DataRecordsController;
     private _manualData: DataRecordsController;
     private _files: FileRecordsController;
-    private _subscriptions: SubscriptionController;
+    private _subscriptions: SubscriptionController | null;
+    private _aiController: AIController | null;
 
     /**
      * The set of origins that are allowed for API requests.
@@ -230,9 +245,10 @@ export class RecordsHttpServer {
         dataController: DataRecordsController,
         manualDataController: DataRecordsController,
         filesController: FileRecordsController,
-        subscriptionController: SubscriptionController,
+        subscriptionController: SubscriptionController | null,
         rateLimitController: RateLimitController,
-        policyController: PolicyController
+        policyController: PolicyController,
+        aiController: AIController | null
     ) {
         this._allowedAccountOrigins = allowedAccountOrigins;
         this._allowedApiOrigins = allowedApiOrigins;
@@ -246,6 +262,7 @@ export class RecordsHttpServer {
         this._subscriptions = subscriptionController;
         this._rateLimit = rateLimitController;
         this._policyController = policyController;
+        this._aiController = aiController;
     }
 
     /**
@@ -403,6 +420,15 @@ export class RecordsHttpServer {
             );
         } else if (
             request.method === 'POST' &&
+            request.path === '/api/v2/records'
+        ) {
+            return formatResponse(
+                request,
+                await this._createRecord(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
             request.path === '/api/v2/records/events/count'
         ) {
             return formatResponse(
@@ -417,6 +443,15 @@ export class RecordsHttpServer {
             return formatResponse(
                 request,
                 await this._getRecordsEventsCount(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/events/list'
+        ) {
+            return formatResponse(
+                request,
+                await this._listEvents(request),
                 this._allowedApiOrigins
             );
         } else if (
@@ -462,6 +497,15 @@ export class RecordsHttpServer {
             return formatResponse(
                 request,
                 await this._readFile(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/file/list'
+        ) {
+            return formatResponse(
+                request,
+                await this._listFiles(request),
                 this._allowedApiOrigins
             );
         } else if (
@@ -526,6 +570,15 @@ export class RecordsHttpServer {
             return formatResponse(
                 request,
                 await this._recordData(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/records/list'
+        ) {
+            return formatResponse(
+                request,
+                await this._listRecords(request),
                 this._allowedApiOrigins
             );
         } else if (
@@ -618,6 +671,105 @@ export class RecordsHttpServer {
                 await this._roleRevoke(request),
                 this._allowedApiOrigins
             );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/ai/chat'
+        ) {
+            return formatResponse(
+                request,
+                await this._aiChat(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/ai/skybox'
+        ) {
+            return formatResponse(
+                request,
+                await this._aiSkybox(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/ai/skybox'
+        ) {
+            return formatResponse(
+                request,
+                await this._aiGetSkybox(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/ai/image'
+        ) {
+            return formatResponse(
+                request,
+                await this._aiGenerateImage(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/studios'
+        ) {
+            return formatResponse(
+                request,
+                await this._postStudio(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/studios/list'
+        ) {
+            return formatResponse(
+                request,
+                await this._listStudios(request),
+                this._allowedApiOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/studios/members/list'
+        ) {
+            return formatResponse(
+                request,
+                await this._listStudioMembers(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/studios/members'
+        ) {
+            return formatResponse(
+                request,
+                await this._addStudioMember(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'DELETE' &&
+            request.path === '/api/v2/studios/members'
+        ) {
+            return formatResponse(
+                request,
+                await this._removeStudioMember(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'GET' &&
+            request.path === '/api/v2/subscriptions'
+        ) {
+            return formatResponse(
+                request,
+                await this._getSubscriptionInfoV2(request),
+                this._allowedAccountOrigins
+            );
+        } else if (
+            request.method === 'POST' &&
+            request.path === '/api/v2/subscriptions/manage'
+        ) {
+            return formatResponse(
+                request,
+                await this._manageSubscriptionV2(request),
+                this._allowedAccountOrigins
+            );
         } else if (request.method === 'OPTIONS') {
             return formatResponse(
                 request,
@@ -636,6 +788,10 @@ export class RecordsHttpServer {
     private async _stripeWebhook(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
+        if (!this._subscriptions) {
+            return returnResult(SUBSCRIPTIONS_NOT_SUPPORTED_RESULT);
+        }
+
         let body: string = null;
         if (typeof request.body === 'string') {
             body = request.body;
@@ -680,6 +836,119 @@ export class RecordsHttpServer {
                 'Access-Control-Allow-Headers': 'Content-Type, Authorization',
             },
         };
+    }
+
+    private async _listRecords(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const validation = await this._validateSessionKey(request);
+        if (validation.success === false) {
+            if (validation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(validation);
+        }
+
+        const schema = z.object({
+            studioId: z.string().nonempty().optional(),
+        });
+
+        const parseResult = schema.safeParse(request.query);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { studioId } = parseResult.data;
+
+        if (studioId) {
+            const result = await this._records.listStudioRecords(
+                studioId,
+                validation.userId
+            );
+            return returnResult(result);
+        } else {
+            const result = await this._records.listRecords(validation.userId);
+            return returnResult(result);
+        }
+    }
+
+    private async _createRecord(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must not be empty.'),
+            ownerId: z
+                .string({
+                    invalid_type_error: 'ownerId must be a string.',
+                    required_error: 'ownerId is required.',
+                })
+                .nonempty('ownerId must not be empty.')
+                .optional(),
+            studioId: z
+                .string({
+                    invalid_type_error: 'studioId must be a string.',
+                    required_error: 'studioId is required.',
+                })
+                .nonempty('studioId must not be empty.')
+                .optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { recordName, ownerId, studioId } = parseResult.data;
+
+        if (!recordName || typeof recordName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'recordName is required and must be a string.',
+            });
+        }
+
+        const validation = await this._validateSessionKey(request);
+        if (validation.success === false) {
+            if (validation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(validation);
+        }
+
+        const result = await this._records.createRecord({
+            recordName,
+            ownerId,
+            studioId,
+            userId: validation.userId,
+        });
+
+        return returnResult(result);
     }
 
     private async _createRecordKey(
@@ -1102,12 +1371,20 @@ export class RecordsHttpServer {
                     required_error: 'recordName is required.',
                 })
                 .nonempty('recordName must not be empty'),
+            startingRole: z
+                .string({
+                    invalid_type_error: 'startingRole must be a string.',
+                    required_error: 'startingRole is required.',
+                })
+                .nonempty('startingRole must not be empty')
+                .optional(),
             role: z
                 .string({
                     invalid_type_error: 'role must be a string.',
                     required_error: 'role is required.',
                 })
-                .nonempty('role must not be empty'),
+                .nonempty('role must not be empty')
+                .optional(),
             instances: z
                 .string({
                     invalid_type_error: 'instances must be a string.',
@@ -1124,7 +1401,7 @@ export class RecordsHttpServer {
             return returnZodError(parseResult.error);
         }
 
-        const { recordName, role, instances } = parseResult.data;
+        const { recordName, role, startingRole, instances } = parseResult.data;
 
         const sessionKeyValidation = await this._validateSessionKey(request);
         if (sessionKeyValidation.success === false) {
@@ -1134,14 +1411,25 @@ export class RecordsHttpServer {
             return returnResult(sessionKeyValidation);
         }
 
-        const result = await this._policyController.listRoleAssignments(
-            recordName,
-            sessionKeyValidation.userId,
-            role,
-            instances
-        );
+        if (role) {
+            const result = await this._policyController.listAssignedRoles(
+                recordName,
+                sessionKeyValidation.userId,
+                role,
+                instances
+            );
 
-        return returnResult(result);
+            return returnResult(result);
+        } else {
+            const result = await this._policyController.listRoleAssignments(
+                recordName,
+                sessionKeyValidation.userId,
+                startingRole,
+                instances
+            );
+
+            return returnResult(result);
+        }
     }
 
     private async _roleGrant(
@@ -1304,6 +1592,530 @@ export class RecordsHttpServer {
             instances
         );
 
+        return returnResult(result);
+    }
+
+    private async _aiChat(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (!this._aiController) {
+            return returnResult(AI_NOT_SUPPORTED_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            model: z.string().nonempty().optional(),
+            messages: z.array(AI_CHAT_MESSAGE_SCHEMA).nonempty(),
+            instances: z.array(z.string()).nonempty().optional(),
+            temperature: z.number().min(0).max(2).optional(),
+            topP: z.number().optional(),
+            presencePenalty: z.number().min(-2).max(2).optional(),
+            frequencyPenalty: z.number().min(-2).max(2).optional(),
+            stopWords: z.array(z.string()).max(4).optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { model, messages, instances, ...options } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._aiController.chat({
+            ...options,
+            model,
+            messages: messages as AIChatMessage[],
+            userId: sessionKeyValidation.userId,
+            userSubscriptionTier: sessionKeyValidation.subscriptionTier,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _aiSkybox(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (!this._aiController) {
+            return returnResult(AI_NOT_SUPPORTED_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            prompt: z.string().nonempty(),
+            negativePrompt: z.string().nonempty().optional(),
+            blockadeLabs: z
+                .object({
+                    skyboxStyleId: z.number().optional(),
+                    remixImagineId: z.number().optional(),
+                    seed: z.number().optional(),
+                })
+                .optional(),
+            instances: z.array(z.string()).nonempty().optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { prompt, negativePrompt, instances, blockadeLabs } =
+            parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._aiController.generateSkybox({
+            prompt,
+            negativePrompt,
+            blockadeLabs,
+            userId: sessionKeyValidation.userId,
+            userSubscriptionTier: sessionKeyValidation.subscriptionTier,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _aiGetSkybox(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (!this._aiController) {
+            return returnResult(AI_NOT_SUPPORTED_RESULT);
+        }
+
+        const schema = z.object({
+            skyboxId: z
+                .string({
+                    invalid_type_error: 'skyboxId must be a string.',
+                    required_error: 'skyboxId is required.',
+                })
+                .nonempty('skyboxId must not be empty'),
+            instances: z
+                .string({
+                    invalid_type_error: 'instances must be a string.',
+                    required_error: 'instances is required.',
+                })
+                .nonempty('instances must not be empty')
+                .optional()
+                .transform((value) => parseInstancesList(value)),
+        });
+
+        const parseResult = schema.safeParse(request.query);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { skyboxId, instances } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._aiController.getSkybox({
+            skyboxId,
+            userId: sessionKeyValidation.userId,
+            userSubscriptionTier: sessionKeyValidation.subscriptionTier,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _aiGenerateImage(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (!this._aiController) {
+            return returnResult(AI_NOT_SUPPORTED_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            prompt: z
+                .string({
+                    invalid_type_error: 'prompt must be a string.',
+                    required_error: 'prompt is required.',
+                })
+                .nonempty('prompt must not be empty'),
+            model: z
+                .string({
+                    invalid_type_error: 'model must be a string.',
+                    required_error: 'model is required.',
+                })
+                .nonempty('model must not be empty')
+                .optional(),
+            negativePrompt: z.string().nonempty().optional(),
+            width: z.number().positive().int().optional(),
+            height: z.number().positive().int().optional(),
+            seed: z.number().positive().int().optional(),
+            numberOfImages: z.number().positive().int().optional(),
+            steps: z.number().positive().int().optional(),
+            sampler: z.string().nonempty().optional(),
+            cfgScale: z.number().min(0).int().optional(),
+            clipGuidancePreset: z.string().nonempty().optional(),
+            stylePreset: z.string().nonempty().optional(),
+            instances: z.array(z.string().nonempty()).optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const {
+            prompt,
+            model,
+            negativePrompt,
+            width,
+            height,
+            seed,
+            numberOfImages,
+            steps,
+            sampler,
+            cfgScale,
+            clipGuidancePreset,
+            stylePreset,
+            instances,
+        } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._aiController.generateImage({
+            model,
+            prompt,
+            negativePrompt,
+            width,
+            height,
+            seed,
+            numberOfImages,
+            steps,
+            sampler,
+            cfgScale,
+            clipGuidancePreset,
+            stylePreset,
+            userId: sessionKeyValidation.userId,
+            userSubscriptionTier: sessionKeyValidation.subscriptionTier,
+        });
+
+        return returnResult(result);
+    }
+
+    private async _postStudio(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            displayName: z
+                .string({
+                    invalid_type_error: 'displayName must be a string.',
+                    required_error: 'displayName is required.',
+                })
+                .nonempty('displayName must not be empty'),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { displayName } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._records.createStudio(
+            displayName,
+            sessionKeyValidation.userId
+        );
+        return returnResult(result);
+    }
+
+    private async _listStudios(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedApiOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const schema = z.object({});
+
+        const parseResult = schema.safeParse(request.query);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const {} = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._records.listStudios(
+            sessionKeyValidation.userId
+        );
+        return returnResult(result);
+    }
+
+    private async _listStudioMembers(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const schema = z.object({
+            studioId: z
+                .string({
+                    invalid_type_error: 'studioId must be a string.',
+                    required_error: 'studioId is required.',
+                })
+                .nonempty('studioId must not be empty'),
+        });
+
+        const parseResult = schema.safeParse(request.query);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { studioId } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._records.listStudioMembers(
+            studioId,
+            sessionKeyValidation.userId
+        );
+        return returnResult(result);
+    }
+
+    private async _addStudioMember(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            studioId: z
+                .string({
+                    invalid_type_error: 'studioId must be a string.',
+                    required_error: 'studioId is required.',
+                })
+                .nonempty('studioId must not be empty'),
+            addedUserId: z
+                .string({
+                    invalid_type_error: 'addedUserId must be a string.',
+                    required_error: 'addedUserId is required.',
+                })
+                .nonempty('addedUserId must not be empty')
+                .optional(),
+            addedEmail: z
+                .string({
+                    invalid_type_error: 'addedEmail must be a string.',
+                    required_error: 'addedEmail is required.',
+                })
+                .nonempty('addedEmail must not be empty')
+                .optional(),
+            addedPhoneNumber: z
+                .string({
+                    invalid_type_error: 'addedPhoneNumber must be a string.',
+                    required_error: 'addedPhoneNumber is required.',
+                })
+                .nonempty('addedPhoneNumber must not be empty')
+                .optional(),
+            role: z.union([z.literal('admin'), z.literal('member')]),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { studioId, addedUserId, addedEmail, addedPhoneNumber, role } =
+            parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._records.addStudioMember({
+            studioId,
+            userId: sessionKeyValidation.userId,
+            role,
+            addedUserId,
+            addedEmail,
+            addedPhoneNumber,
+        });
+        return returnResult(result);
+    }
+
+    private async _removeStudioMember(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            studioId: z
+                .string({
+                    invalid_type_error: 'studioId must be a string.',
+                    required_error: 'studioId is required.',
+                })
+                .nonempty('studioId must not be empty'),
+            removedUserId: z
+                .string({
+                    invalid_type_error: 'removedUserId must be a string.',
+                    required_error: 'removedUserId is required.',
+                })
+                .nonempty('removedUserId must not be empty')
+                .optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { studioId, removedUserId } = parseResult.data;
+
+        const sessionKeyValidation = await this._validateSessionKey(request);
+        if (sessionKeyValidation.success === false) {
+            if (sessionKeyValidation.errorCode === 'no_session_key') {
+                return returnResult(NOT_LOGGED_IN_RESULT);
+            }
+            return returnResult(sessionKeyValidation);
+        }
+
+        const result = await this._records.removeStudioMember({
+            studioId,
+            userId: sessionKeyValidation.userId,
+            removedUserId,
+        });
         return returnResult(result);
     }
 
@@ -1696,6 +2508,71 @@ export class RecordsHttpServer {
         }
 
         const result = await this._files.readFile(
+            recordName,
+            fileName,
+            userId,
+            instances
+        );
+        return returnResult(result);
+    }
+
+    private async _listFiles(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must be non-empty.'),
+            fileName: z
+                .string({
+                    invalid_type_error: 'fileName must be a string.',
+                    required_error: 'fileName is required.',
+                })
+                .nonempty('fileName must be non-empty.')
+                .optional(),
+            instances: z
+                .string()
+                .nonempty()
+                .optional()
+                .transform((value) => parseInstancesList(value)),
+        });
+
+        const parseResult = schema.safeParse(request.query || {});
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        let { recordName, fileName, instances } = parseResult.data;
+
+        if (!!recordName && typeof recordName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'recordName must be a string.',
+            });
+        }
+        if (!!fileName && typeof fileName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'fileName must be a string.',
+            });
+        }
+
+        const validation = await this._validateSessionKey(request);
+        if (
+            validation.success === false &&
+            validation.errorCode !== 'no_session_key'
+        ) {
+            return returnResult(validation);
+        }
+        const userId = validation.userId;
+
+        const result = await this._files.listFiles(
             recordName,
             fileName,
             userId,
@@ -2192,6 +3069,71 @@ export class RecordsHttpServer {
         return returnResult(result);
     }
 
+    private async _listEvents(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        const schema = z.object({
+            recordName: z
+                .string({
+                    invalid_type_error: 'recordName must be a string.',
+                    required_error: 'recordName is required.',
+                })
+                .nonempty('recordName must be non-empty.'),
+            eventName: z
+                .string({
+                    invalid_type_error: 'eventName must be a string.',
+                    required_error: 'eventName is required.',
+                })
+                .nonempty('eventName must be non-empty.')
+                .optional(),
+            instances: z
+                .string()
+                .nonempty()
+                .optional()
+                .transform((value) => parseInstancesList(value)),
+        });
+
+        const parseResult = schema.safeParse(request.query || {});
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        let { recordName, eventName, instances } = parseResult.data;
+
+        if (!!recordName && typeof recordName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'recordName must be a string.',
+            });
+        }
+        if (!!eventName && typeof eventName !== 'string') {
+            return returnResult({
+                success: false,
+                errorCode: 'unacceptable_request',
+                errorMessage: 'fileName must be a string.',
+            });
+        }
+
+        const validation = await this._validateSessionKey(request);
+        if (
+            validation.success === false &&
+            validation.errorCode !== 'no_session_key'
+        ) {
+            return returnResult(validation);
+        }
+        const userId = validation.userId;
+
+        const result = await this._events.listEvents(
+            recordName,
+            eventName,
+            userId,
+            instances
+        );
+        return returnResult(result);
+    }
+
     private async _postRecordsEvents(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
@@ -2534,6 +3476,10 @@ export class RecordsHttpServer {
     private async _getSubscriptionInfo(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
+        if (!this._subscriptions) {
+            return returnResult(SUBSCRIPTIONS_NOT_SUPPORTED_RESULT);
+        }
+
         if (!validateOrigin(request, this._allowedAccountOrigins)) {
             return returnResult(INVALID_ORIGIN_RESULT);
         }
@@ -2576,6 +3522,90 @@ export class RecordsHttpServer {
                 intervalLength: s.intervalLength,
                 intervalCost: s.intervalCost,
                 currency: s.currency,
+                featureList: s.featureList,
+            })),
+            purchasableSubscriptions: result.purchasableSubscriptions.map(
+                (s) => ({
+                    id: s.id,
+                    name: s.name,
+                    description: s.description,
+                    featureList: s.featureList,
+                    prices: s.prices,
+                })
+            ),
+        });
+    }
+
+    private async _getSubscriptionInfoV2(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!this._subscriptions) {
+            return returnResult(SUBSCRIPTIONS_NOT_SUPPORTED_RESULT);
+        }
+
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const sessionKey = getSessionKey(request);
+
+        if (!sessionKey) {
+            return returnResult(NOT_LOGGED_IN_RESULT);
+        }
+
+        const schema = z.object({
+            studioId: z
+                .string({
+                    invalid_type_error: 'studioId must be a string.',
+                    required_error: 'studioId is required.',
+                })
+                .nonempty('studioId must be non-empty.')
+                .optional(),
+            userId: z
+                .string({
+                    invalid_type_error: 'userId must be a string.',
+                    required_error: 'userId is required.',
+                })
+                .nonempty('userId must be non-empty.')
+                .optional(),
+        });
+
+        const parseResult = schema.safeParse(request.query || {});
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { studioId, userId } = parseResult.data;
+
+        const result = await this._subscriptions.getSubscriptionStatus({
+            sessionKey,
+            userId,
+            studioId,
+        });
+
+        if (!result.success) {
+            return returnResult(result);
+        }
+
+        return returnResult({
+            success: true,
+            publishableKey: result.publishableKey,
+            subscriptions: result.subscriptions.map((s) => ({
+                active: s.active,
+                statusCode: s.statusCode,
+                productName: s.productName,
+                startDate: s.startDate,
+                endedDate: s.endedDate,
+                cancelDate: s.cancelDate,
+                canceledDate: s.canceledDate,
+                currentPeriodStart: s.currentPeriodStart,
+                currentPeriodEnd: s.currentPeriodEnd,
+                renewalInterval: s.renewalInterval,
+                intervalLength: s.intervalLength,
+                intervalCost: s.intervalCost,
+                currency: s.currency,
+                featureList: s.featureList,
             })),
             purchasableSubscriptions: result.purchasableSubscriptions.map(
                 (s) => ({
@@ -2592,6 +3622,10 @@ export class RecordsHttpServer {
     private async _manageSubscription(
         request: GenericHttpRequest
     ): Promise<GenericHttpResponse> {
+        if (!this._subscriptions) {
+            return returnResult(SUBSCRIPTIONS_NOT_SUPPORTED_RESULT);
+        }
+
         if (!validateOrigin(request, this._allowedAccountOrigins)) {
             return returnResult(INVALID_ORIGIN_RESULT);
         }
@@ -2615,7 +3649,7 @@ export class RecordsHttpServer {
             let body = tryParseJson(request.body);
             if (body.success) {
                 const schema = z.object({
-                    subscriptionId: z.string(),
+                    subscriptionId: z.string().optional(),
                     expectedPrice: z
                         .object({
                             currency: z.string(),
@@ -2623,7 +3657,7 @@ export class RecordsHttpServer {
                             interval: z.enum(['month', 'year', 'week', 'day']),
                             intervalLength: z.number(),
                         })
-                        .required(),
+                        .optional(),
                 });
 
                 const parseResult = schema.safeParse(body.value);
@@ -2647,6 +3681,87 @@ export class RecordsHttpServer {
             userId,
             subscriptionId,
             expectedPrice,
+        });
+
+        if (!result.success) {
+            return returnResult(result);
+        }
+
+        return returnResult({
+            success: true,
+            url: result.url,
+        });
+    }
+
+    private async _manageSubscriptionV2(
+        request: GenericHttpRequest
+    ): Promise<GenericHttpResponse> {
+        if (!this._subscriptions) {
+            return returnResult(SUBSCRIPTIONS_NOT_SUPPORTED_RESULT);
+        }
+
+        if (!validateOrigin(request, this._allowedAccountOrigins)) {
+            return returnResult(INVALID_ORIGIN_RESULT);
+        }
+
+        const sessionKey = getSessionKey(request);
+
+        if (!sessionKey) {
+            return returnResult(NOT_LOGGED_IN_RESULT);
+        }
+
+        if (typeof request.body !== 'string') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const jsonResult = tryParseJson(request.body);
+
+        if (!jsonResult.success || typeof jsonResult.value !== 'object') {
+            return returnResult(UNACCEPTABLE_REQUEST_RESULT_MUST_BE_JSON);
+        }
+
+        const schema = z.object({
+            userId: z
+                .string({
+                    invalid_type_error: 'userId must be a string.',
+                    required_error: 'userId is required.',
+                })
+                .nonempty('userId must not be empty.')
+                .optional(),
+            studioId: z
+                .string({
+                    invalid_type_error: 'studioId must be a string.',
+                    required_error: 'studioId is required.',
+                })
+                .nonempty('studioId must not be empty.')
+                .optional(),
+            subscriptionId: z.string().optional(),
+            expectedPrice: z
+                .object({
+                    currency: z.string(),
+                    cost: z.number(),
+                    interval: z.enum(['month', 'year', 'week', 'day']),
+                    intervalLength: z.number(),
+                })
+                .optional(),
+        });
+
+        const parseResult = schema.safeParse(jsonResult.value);
+
+        if (parseResult.success === false) {
+            return returnZodError(parseResult.error);
+        }
+
+        const { userId, studioId, subscriptionId, expectedPrice } =
+            parseResult.data;
+
+        const result = await this._subscriptions.createManageSubscriptionLink({
+            sessionKey,
+            userId,
+            studioId,
+            subscriptionId,
+            expectedPrice:
+                expectedPrice as CreateManageSubscriptionRequest['expectedPrice'],
         });
 
         if (!result.success) {
@@ -2706,7 +3821,6 @@ export class RecordsHttpServer {
             phoneNumber: result.phoneNumber,
             hasActiveSubscription: result.hasActiveSubscription,
             subscriptionTier: result.subscriptionTier,
-            openAiKey: result.openAiKey,
         });
     }
 
@@ -2760,11 +3874,6 @@ export class RecordsHttpServer {
                 .nullable(),
             avatarUrl: z.string().url().optional().nullable(),
             avatarPortraitUrl: z.string().url().optional().nullable(),
-            openAiKey: z
-                .string()
-                .max(MAX_OPEN_AI_API_KEY_LENGTH)
-                .optional()
-                .nullable(),
         });
 
         const parseResult = schema.safeParse(jsonResult.value);

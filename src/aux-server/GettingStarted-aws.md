@@ -19,6 +19,7 @@ To deploy this project to AWS Lambda, follow these steps:
     - For "Origin domain", choose the S3 buckets that you created above. (One per distribution)
     - Configure "Origin access" so that CloudFront has access to the bucket. (Choose an option - it's not particularly important for the bucket to be private, but it may be nice to have to prevent abuse)
     - Configure the default cache behavior to "Redirect HTTP to HTTPS" and use the "CachingOptimized" policy.
+    - Configure each distrubution to return `/index.html` when a HTTP `403` error code occurs.
     - Remember the IDs of the distributions.
 3. Setup a CockroachDB database.
     - You can do this either through the [AWS Marketplace](https://aws.amazon.com/marketplace/pp/prodview-3zbkzekdohwly?ref_=unifiedsearch) or the [Cockroach Labs website](https://www.cockroachlabs.com/).
@@ -42,6 +43,7 @@ To deploy this project to AWS Lambda, follow these steps:
         - `SERVER_CONFIG` - The config that should be used for the server. Provides the ability to configure TextIt, Livekit, Subscriptions, and more. See ServerBuilder.ts for the schema (BuilderOptions) that the SERVER_CONFIG uses.
         - `CAUSAL_REPO_CONNECTION_PROTOCOL` - Set this to `apiary-aws`.
         - `SHARED_PARTITIONS_VERSION` - Set this to `v2`.
+        - `SES_IDENTITY_NAME` - The Simple Email Service identity that emails should be allowed to be sent from. Only used for granting permissions to send emails to the lambda function. Use `SERVER_CONFIG` to actually configure the server to use SES. (Optional)
         - Configure any other optional environment variables listed below.
 5. Run a build.
 6. After the build, go to CloudFormation and find the stack update.
@@ -70,7 +72,7 @@ Use the following environment variables to configure the inst collaboration feat
 -   `DISABLE_COLLABORATION`: Set this to true to disable networking in the shared space. When true, the `shared` space will actually use a `tempLocal` partition. Defaults to `false`.
 -   `CAUSAL_REPO_CONNECTION_PROTOCOL`: The connection protocol that should be used for causal repos. Controls which backends the causal repos can connect to. Possible options are `websocket` and `apiary-aws`. The `websocket` protocol works with Raspberry PIs and self-hosted servers (like in development). The `apiary-aws` protocol works with [CasualOS apiaries hosted on AWS](https://github.com/casual-simulation/casualos). Defaults to `websocket`.
 -   `CAUSAL_REPO_CONNECTION_URL`: The URL that causal repos should connect to. If not specified, then the URL that the site is hosted from will be used. Useful in development to connect to a different causal repo host than the local websocket based one.
--   `SHARED_PARTITIONS_VERSION`: The version of the shared partitions that should be used. The "shared partitions" are the services used to implement the shared spaces (`shared`, `tempShared`, and `remoteTempShared`). Possible options are `v1` and `v2`. `v1` indicates using the causal repo system which uses atoms to synchronize changes. `v2` indicates using a system that uses [yjs](https://github.com/yjs/yjs) and the communication system built for causal repos to synchronize changes. Protocol versions are not backwards compatible and while causal repo servers support concurrent usage, they only support a single protocol version per server branch. Newer protocols are likely to perform better and be more reliable. Defaults to `v1`.
+-   `SHARED_PARTITIONS_VERSION`: The version of the shared partitions that should be used. The "shared partitions" are the services used to implement the shared spaces (`shared`, `tempShared`, and `remoteTempShared`). Possible options are `v1` and `v2`. `v1` indicates using the causal repo system which uses atoms to synchronize changes. `v2` indicates using a system that uses [yjs](https://github.com/yjs/yjs) and the communication system built for causal repos to synchronize changes. Protocol versions are not backwards compatible and while causal repo servers support concurrent usage, they only support a single protocol version per server branch. Newer protocols are likely to perform better and be more reliable. Defaults to `v2`.
 
 #### mapPortal
 

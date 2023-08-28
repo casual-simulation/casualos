@@ -1,4 +1,9 @@
-import { NotAuthorizedError, NotLoggedInError, ServerError } from './Errors';
+import {
+    NotAuthorizedError,
+    NotLoggedInError,
+    ServerError,
+    SubscriptionLimitReached,
+} from './Errors';
 import {
     DataRecordsStore,
     EraseDataStoreResult,
@@ -8,6 +13,7 @@ import {
     UserPolicy,
     doesSubjectMatchPolicy,
     isValidUserPolicy,
+    ListDataStoreFailure,
 } from './DataRecordsStore';
 import {
     RecordsController,
@@ -25,23 +31,35 @@ import {
 } from './PolicyController';
 import { PUBLIC_READ_MARKER } from './PolicyPermissions';
 import { without } from 'lodash';
+import { MetricsStore } from './MetricsStore';
+import { ConfigurationStore } from './ConfigurationStore';
+import { getSubscriptionFeatures } from './SubscriptionConfiguration';
+
+export interface DataRecordsConfiguration {
+    store: DataRecordsStore;
+    policies: PolicyController;
+    metrics: MetricsStore;
+    config: ConfigurationStore;
+}
 
 /**
  * Defines a class that is able to manage data (key/value) records.
  */
 export class DataRecordsController {
-    private _manager: RecordsController;
     private _store: DataRecordsStore;
     private _policies: PolicyController;
+    private _metrics: MetricsStore;
+    private _config: ConfigurationStore;
 
     /**
      * Creates a DataRecordsController.
-     * @param manager The records manager that should be used to validate record keys.
-     * @param store The store that should be used to save data.
+     * @param config The configuration that should be used for the data records controller.
      */
-    constructor(policies: PolicyController, store: DataRecordsStore) {
-        this._store = store;
-        this._policies = policies;
+    constructor(config: DataRecordsConfiguration) {
+        this._store = config.store;
+        this._policies = config.policies;
+        this._metrics = config.metrics;
+        this._config = config.config;
     }
 
     /**
@@ -209,6 +227,43 @@ export class DataRecordsController {
 
             if (authorization.allowed === false) {
                 return returnAuthorizationResult(authorization);
+            }
+
+            const metricsResult =
+                await this._metrics.getSubscriptionDataMetricsByRecordName(
+                    recordName
+                );
+            const config = await this._config.getSubscriptionConfiguration();
+            const features = getSubscriptionFeatures(
+                config,
+                metricsResult.subscriptionStatus,
+                metricsResult.subscriptionId,
+                metricsResult.ownerId ? 'user' : 'studio'
+            );
+
+            if (!features.data.allowed) {
+                return {
+                    success: false,
+                    errorCode: 'not_authorized',
+                    errorMessage:
+                        'The subscription does not permit the recording of data.',
+                    errorReason: 'data_not_allowed',
+                };
+            }
+
+            if (request.action === 'data.create') {
+                // Check metrics
+                if (features.data.maxItems > 0) {
+                    if (metricsResult.totalItems >= features.data.maxItems) {
+                        return {
+                            success: false,
+                            errorCode: 'subscription_limit_reached',
+                            errorMessage:
+                                'The maximum number of items has been reached for your subscription.',
+                            errorReason: 'too_many_items',
+                        };
+                    }
+                }
             }
 
             const result2 = await this._store.setData(
@@ -386,7 +441,8 @@ export class DataRecordsController {
             return {
                 success: true,
                 recordName: context.context.recordName,
-                items: authorizeResult.allowedDataItems as ListDataSuccess['items'],
+                items: authorizeResult.allowedDataItems as ListedData[],
+                totalCount: result2.totalCount,
             };
         } catch (err) {
             console.error(
@@ -497,6 +553,7 @@ export class DataRecordsController {
                 const existingDeletePolicy =
                     existingRecord.deletePolicy ?? true;
                 if (
+                    subjectId !== context.context.recordOwnerId &&
                     subjectId !== authorization.recordKeyOwnerId &&
                     !doesSubjectMatchPolicy(existingDeletePolicy, subjectId)
                 ) {
@@ -534,33 +591,94 @@ export class DataRecordsController {
     }
 }
 
+/**
+ * The possible results of a record data request.
+ *
+ * @dochash types/records/data
+ * @doctitle Data Types
+ * @docsidebar Data
+ * @docdescription Data records are used to store key/value pairs of data.
+ * @docgroup 01-create
+ * @order 0
+ * @docname RecordDataResult
+ */
 export type RecordDataResult = RecordDataSuccess | RecordDataFailure;
 
+/**
+ * Defines an interface that represents a successful "record data" result.
+ *
+ * @dochash types/records/data
+ * @docgroup 01-create
+ * @order 1
+ * @docname RecordDataSuccess
+ */
 export interface RecordDataSuccess {
     success: true;
+    /**
+     * The name of the record that the data was recorded to.
+     */
     recordName: string;
+
+    /**
+     * The address that the data is stored at.
+     */
     address: string;
 }
 
+/**
+ * Defines an interface that represents a failed "record data" result.
+ *
+ * @dochash types/records/data
+ * @docgroup 01-create
+ * @order 2
+ * @docname RecordDataFailure
+ */
 export interface RecordDataFailure {
     success: false;
+
+    /**
+     * The error code for the failure.
+     */
     errorCode:
         | ServerError
         | NotLoggedInError
         | NotAuthorizedError
         | ValidatePublicRecordKeyFailure['errorCode']
         | SetDataResult['errorCode']
+        | SubscriptionLimitReached
         | 'unacceptable_request'
         | 'not_supported'
         | 'invalid_update_policy'
         | 'invalid_delete_policy';
+
+    /**
+     * The error message for the failure.
+     */
     errorMessage: string;
+
+    /**
+     * The reason for the error.
+     */
+    errorReason?: 'data_not_allowed' | 'too_many_items';
 }
 
+/**
+ * The possible results of a get data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 02-get
+ * @order 0
+ * @docname GetDataResult
+ */
 export type GetDataResult = GetDataSuccess | GetDataFailure;
 
 /**
  * Defines an interface that represents a successful "get data" result.
+ *
+ * @dochash types/records/data
+ * @docgroup 02-get
+ * @order 1
+ * @docname GetDataSuccess
  */
 export interface GetDataSuccess {
     success: true;
@@ -601,26 +719,77 @@ export interface GetDataSuccess {
     markers: string[];
 }
 
+/**
+ * Defines an interface that repeesents a failed "get data" result.
+ *
+ * @dochash types/records/data
+ * @docgroup 02-get
+ * @order 3
+ * @docname GetDataFailure
+ */
 export interface GetDataFailure {
     success: false;
+    /**
+     * The error code for the failure.
+     */
     errorCode:
         | ServerError
         | GetDataStoreResult['errorCode']
         | AuthorizeDenied['errorCode']
         | 'not_supported';
+
+    /**
+     * The error message for the failure.
+     */
     errorMessage: string;
 }
 
+/**
+ * The possible results of an erase data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 03-erase
+ * @order 0
+ * @docname EraseDataResult
+ */
 export type EraseDataResult = EraseDataSuccess | EraseDataFailure;
 
+/**
+ * Defines an interface that represents a successful result for an erase data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 03-erase
+ * @order 1
+ * @docname EraseDataSuccess
+ */
 export interface EraseDataSuccess {
     success: true;
+
+    /**
+     * The name of the record that the data was erased from.
+     */
     recordName: string;
+
+    /**
+     * The address of the data that was erased.
+     */
     address: string;
 }
 
+/**
+ * Defines an interface that represents a failed result for an erase data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 03-erase
+ * @order 2
+ * @docname EraseDataFailure
+ */
 export interface EraseDataFailure {
     success: false;
+
+    /**
+     * The error code for the failure.
+     */
     errorCode:
         | ServerError
         | NotLoggedInError
@@ -628,26 +797,69 @@ export interface EraseDataFailure {
         | EraseDataStoreResult['errorCode']
         | ValidatePublicRecordKeyFailure['errorCode']
         | AuthorizeDenied['errorCode'];
+
+    /**
+     * The error message for the failure.
+     */
     errorMessage: string;
 }
 
+/**
+ * The possible results of a list data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 04-list
+ * @order 0
+ * @docname ListDataResult
+ */
 export type ListDataResult = ListDataSuccess | ListDataFailure;
 
+/**
+ * Defines an interface that represents a successful result for a list data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 04-list
+ * @order 1
+ * @docname ListDataSuccess
+ */
 export interface ListDataSuccess {
     success: true;
+
+    /**
+     * The name of the record that the data was listed from.
+     */
     recordName: string;
-    items: {
-        data: any;
-        address: string;
-        markers: string[];
-    }[];
+
+    /**
+     * The items that were listed.
+     */
+    items: ListedData[];
+
+    /**
+     * The total number of items in the record.
+     */
+    totalCount: number;
 }
 
+export interface ListedData {
+    data: any;
+    address: string;
+    markers: string[];
+}
+
+/**
+ * Defines an interface that represents a failed result for a list data request.
+ *
+ * @dochash types/records/data
+ * @docgroup 04-list
+ * @order 2
+ * @docname ListDataFailure
+ */
 export interface ListDataFailure {
     success: false;
     errorCode:
         | ServerError
-        | ListDataStoreResult['errorCode']
+        | ListDataStoreFailure['errorCode']
         | AuthorizeDenied['errorCode']
         | 'not_supported';
     errorMessage: string;
