@@ -16,7 +16,6 @@ import {
 } from '@casual-simulation/causal-trees';
 import {
     downloadObject,
-    getDocumentClient,
     getMessageUploadUrl,
     parseMessage,
     setSpan,

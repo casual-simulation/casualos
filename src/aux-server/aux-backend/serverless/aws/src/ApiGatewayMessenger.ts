@@ -1,4 +1,4 @@
-import { ApiGatewayManagementApi } from '@aws-sdk/client-api-gateway';
+import { ApiGatewayManagementApi } from '@aws-sdk/client-apigatewaymanagementapi';
 import {
     Packet,
     ApiaryConnectionStore,
@@ -11,6 +11,7 @@ import {
     AwsMessageTypes,
 } from './AwsMessages';
 import { getS3Client, uploadMessage } from './WebsocketUtils';
+import { S3 } from '@aws-sdk/client-s3';
 
 export const MAX_MESSAGE_SIZE = 32_000;
 
@@ -19,7 +20,7 @@ export const MAX_MESSAGE_SIZE = 32_000;
  */
 export class ApiGatewayMessenger implements ApiaryMessenger {
     private _api: ApiGatewayManagementApi;
-    private _s3: AWS.S3;
+    private _s3: S3;
     private _connections: ApiaryConnectionStore;
 
     constructor(endpoint: string, connectionStore: ApiaryConnectionStore) {
@@ -56,12 +57,10 @@ export class ApiGatewayMessenger implements ApiaryMessenger {
     }
 
     async sendRaw(connectionId: string, data: string) {
-        await this._api
-            .postToConnection({
-                ConnectionId: connectionId,
-                Data: data,
-            })
-            .promise();
+        await this._api.postToConnection({
+            ConnectionId: connectionId,
+            Data: data,
+        });
     }
 
     private async _sendData(
@@ -84,12 +83,10 @@ export class ApiGatewayMessenger implements ApiaryMessenger {
             const promises = connectionIds.map(async (id) => {
                 if (id !== excludeConnection) {
                     try {
-                        await this._api
-                            .postToConnection({
-                                ConnectionId: id,
-                                Data: downloadRequestJson,
-                            })
-                            .promise();
+                        await this._api.postToConnection({
+                            ConnectionId: id,
+                            Data: downloadRequestJson,
+                        });
                     } catch (err) {
                         if (err.code === 'GoneException') {
                             // The connection no longer exists. We should remove it.
@@ -111,12 +108,10 @@ export class ApiGatewayMessenger implements ApiaryMessenger {
             const promises = connectionIds.map(async (id) => {
                 if (id !== excludeConnection) {
                     try {
-                        await this._api
-                            .postToConnection({
-                                ConnectionId: id,
-                                Data: messageJson,
-                            })
-                            .promise();
+                        await this._api.postToConnection({
+                            ConnectionId: id,
+                            Data: messageJson,
+                        });
                     } catch (err) {
                         if (err.code === 'GoneException') {
                             // The connection no longer exists. We should remove it.

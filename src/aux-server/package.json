@@ -149,7 +149,8 @@
         "@aws-sdk/client-api-gateway": "^3.359.0",
         "@aws-sdk/credential-providers": "^3.359.0",
         "@aws-sdk/client-sesv2": "^3.359.0",
-        "@aws-sdk/s3-request-presigner": "^3.359.0"
+        "@aws-sdk/s3-request-presigner": "^3.359.0",
+        "@aws-sdk/client-apigatewaymanagementapi": "^3.359.0"
     },
     "devDependencies": {
         "@casual-simulation/aux-components": "^3.2.5",
