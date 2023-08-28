@@ -35,10 +35,13 @@ $ aws ecr get-login-password --region us-east-1
     1. Go to Elastic Container Registry.
     2. Select the `codebuild-node` repository.
     3. Select "View Push Commands"
-    4. Copy the command from step 3.
-    5. Run the command on the EC2 insatnce (make sure to use the correct tag instead of the `latest` tag).
-    6. Copy the command from step 4.
-    7. Run the command on the EC2 instance (make sure to use the correct tag instead of the `latest` tag)
+    4. Copy the second part of the command from step 1.
+    5. Run the command by piping in the password from above.
+        - `echo "{password}" | {command from step 1}`.
+    6. Copy the command from step 3.
+    7. Run the command on the EC2 insatnce (make sure to use the correct tag instead of the `latest` tag).
+    8. Copy the command from step 4.
+    9. Run the command on the EC2 instance (make sure to use the correct tag instead of the `latest` tag)
 9. Go to CodeBuild and configure the `publish-casualos-docker-arm64` and `publish-casualos-docker-arm32` pipelines to use the new image.
     - Edit the "Environment" of the pipeline.
     - It should have the following properties:
