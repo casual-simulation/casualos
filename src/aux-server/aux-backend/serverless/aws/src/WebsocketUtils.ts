@@ -56,8 +56,10 @@ export async function getMessageUploadUrl(): Promise<string> {
         ContentType: 'application/json',
         ACL: 'bucket-owner-full-control',
     });
+
     const url = await getSignedUrl(client, params, {
         expiresIn: 3600,
+        unhoistableHeaders: new Set(['x-amz-acl']),
     });
     return url;
 }
