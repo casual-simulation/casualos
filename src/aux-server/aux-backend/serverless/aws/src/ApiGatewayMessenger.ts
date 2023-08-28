@@ -1,4 +1,4 @@
-import { ApiGatewayManagementApi } from 'aws-sdk';
+import { ApiGatewayManagementApi } from '@aws-sdk/client-api-gateway';
 import {
     Packet,
     ApiaryConnectionStore,
