@@ -1,5 +1,13 @@
 # CasualOS Changelog
 
+## V3.2.6
+
+#### Date: TBD
+
+### :rocket: Improvements
+
+-   Updated to support Node.js 18.x.
+
 ## V3.2.5
 
 #### Date: 8/28/2023
