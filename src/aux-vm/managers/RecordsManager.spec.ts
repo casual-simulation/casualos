@@ -34,6 +34,7 @@ import {
     aiChat,
     aiGenerateSkybox,
     aiGenerateImage,
+    listUserStudios,
 } from '@casual-simulation/aux-common';
 import { Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -51,7 +52,10 @@ import { BotHelper } from './BotHelper';
 import stringify from '@casual-simulation/fast-json-stable-stringify';
 import 'aux-jest-matchers';
 import { DateTime } from 'luxon';
-import { formatV2RecordKey } from '@casual-simulation/aux-records';
+import {
+    ListedStudio,
+    formatV2RecordKey,
+} from '@casual-simulation/aux-records';
 
 jest.mock('axios');
 
@@ -6426,6 +6430,233 @@ describe('RecordsManager', () => {
                 expect(authMock.isAuthenticated).toBeCalled();
                 expect(authMock.authenticate).toBeCalled();
                 expect(authMock.getAuthToken).toBeCalled();
+            });
+        });
+
+        describe('list_user_studios', () => {
+            beforeEach(() => {
+                require('axios').__reset();
+            });
+
+            it('should make a GET request to /api/v2/studios/list', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        studios: [
+                            {
+                                studioId: 'studio-id',
+                                displayName: 'Studio',
+                                role: 'member',
+                                isPrimaryContact: false,
+                            } as ListedStudio,
+                        ],
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([listUserStudios({}, 1)]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/studios/list',
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        studios: [
+                            {
+                                studioId: 'studio-id',
+                                displayName: 'Studio',
+                                role: 'member',
+                                isPrimaryContact: false,
+                            } as ListedStudio,
+                        ],
+                    }),
+                ]);
+            });
+
+            it('should attempt to login if not authenticated', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        studios: [
+                            {
+                                studioId: 'studio-id',
+                                displayName: 'Studio',
+                                role: 'member',
+                                isPrimaryContact: false,
+                            } as ListedStudio,
+                        ],
+                    },
+                });
+
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([listUserStudios({}, 1)]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/studios/list',
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        studios: [
+                            {
+                                studioId: 'studio-id',
+                                displayName: 'Studio',
+                                role: 'member',
+                                isPrimaryContact: false,
+                            } as ListedStudio,
+                        ],
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should return a not_logged_in error if there is no token', async () => {
+                authMock.isAuthenticated.mockResolvedValueOnce(false);
+                authMock.authenticate.mockResolvedValueOnce({});
+                authMock.getAuthToken.mockResolvedValueOnce(null);
+
+                records.handleEvents([listUserStudios({}, 1)]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: false,
+                        errorCode: 'not_logged_in',
+                        errorMessage: 'The user is not logged in.',
+                    }),
+                ]);
+                expect(authMock.isAuthenticated).toBeCalled();
+                expect(authMock.authenticate).toBeCalled();
+                expect(authMock.getAuthToken).toBeCalled();
+            });
+
+            it('should not include the inst', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        studios: [
+                            {
+                                studioId: 'studio-id',
+                                displayName: 'Studio',
+                                role: 'member',
+                                isPrimaryContact: false,
+                            } as ListedStudio,
+                        ],
+                    },
+                });
+
+                authMock.getAuthToken.mockResolvedValueOnce('authToken');
+                vm.id = 'myInst';
+
+                records.handleEvents([listUserStudios({}, 1)]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:3002/api/v2/studios/list',
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        studios: [
+                            {
+                                studioId: 'studio-id',
+                                displayName: 'Studio',
+                                role: 'member',
+                                isPrimaryContact: false,
+                            } as ListedStudio,
+                        ],
+                    }),
+                ]);
+            });
+
+            it('should support custom endpoints', async () => {
+                setResponse({
+                    data: {
+                        success: true,
+                        studios: [
+                            {
+                                studioId: 'studio-id',
+                                displayName: 'Studio',
+                                role: 'member',
+                                isPrimaryContact: false,
+                            } as ListedStudio,
+                        ],
+                    },
+                });
+
+                customAuthMock.getAuthToken.mockResolvedValueOnce('authToken');
+
+                records.handleEvents([
+                    listUserStudios({ endpoint: 'http://localhost:9999' }, 1),
+                ]);
+
+                await waitAsync();
+
+                expect(getLastGet()).toEqual([
+                    'http://localhost:9999/api/v2/studios/list',
+                    {
+                        validateStatus: expect.any(Function),
+                        headers: {
+                            Authorization: 'Bearer authToken',
+                        },
+                    },
+                ]);
+
+                await waitAsync();
+
+                expect(vm.events).toEqual([
+                    asyncResult(1, {
+                        success: true,
+                        studios: [
+                            {
+                                studioId: 'studio-id',
+                                displayName: 'Studio',
+                                role: 'member',
+                                isPrimaryContact: false,
+                            } as ListedStudio,
+                        ],
+                    }),
+                ]);
             });
         });
 

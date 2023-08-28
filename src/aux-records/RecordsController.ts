@@ -1399,16 +1399,49 @@ export interface CreateStudioFailure {
     errorMessage: string;
 }
 
+/**
+ * Defines the list of possible results for the {@link os.listUserStudios} function.
+ *
+ * @dochash types/records/studios
+ * @doctitle Studio Types
+ * @docsidebar Studios
+ * @docdescription Types that are used for actions that manage studios.
+ * @docname ListStudiosResult
+ */
 export type ListStudiosResult = ListStudiosSuccess | ListStudiosFailure;
 
+/**
+ * Defines an interface that represents a successful "list studios" result.
+ *
+ * @dochash types/records/studios
+ * @docname ListStudiosSuccess
+ */
 export interface ListStudiosSuccess {
     success: true;
+
+    /**
+     * The list of studios that the user is a member of.
+     */
     studios: ListedStudio[];
 }
 
+/**
+ * Defines an interface that represents a failed "list studios" result.
+ *
+ * @dochash types/records/studios
+ * @docname ListStudiosFailure
+ */
 export interface ListStudiosFailure {
     success: false;
+
+    /**
+     * The error code.
+     */
     errorCode: NotLoggedInError | NotAuthorizedError | ServerError;
+
+    /**
+     * The error message.
+     */
     errorMessage: string;
 }
 
