@@ -3,8 +3,11 @@
 1. Follow the instructions in `ami/README.md` to create an arm64 AMI that has docker installed.
     - Make sure to set the correct Node.js version in packer.json
 2. Create an EC2 instance from the AMI that was just created.
+    - AWS should make sure that the instance type is ARM64 automatically.
+    - Try to get at least 4 GiB of RAM.
 3. SSH into the EC2 instance.
-4. Clone CasualOS
+    - `$ ssh ubuntu@{ip-address}`
+4. Clone CasualOS. Make sure that all the changes you needed to make have been commited to CasualOS.
 
 ```
 $ git clone https://github.com/casual-simulation/casualos.git
@@ -19,7 +22,7 @@ $ cd casualos/.aws/docker
 6. Build the docker image. Make sure to set the tag version to match the node version.
 
 ```
-$ docker build . -t codebuild-node:16
+$ docker build . -t codebuild-node:18
 ```
 
 7. Get the ECR Upload Password. Run this on your dev machine and not in the EC2 Instace. Remember this for later.

@@ -7,9 +7,9 @@
 
 Make sure you have all the prerequisite tools installed:
 
--   [Node.js](https://nodejs.org/en/download/) v16.18.1 or later.
+-   [Node.js](https://nodejs.org/en/download/) v18.17.1 or later.
     -   If installing for the first time, it is reccommended that you install it via Node Version Manager. ([Mac][nvm-mac], [Windows][nvm-windows])
-    -   Once NVM is installed, you can install the correct version of Node by running `nvm install v16.18.1` in your favorite terminal.
+    -   Once NVM is installed, you can install the correct version of Node by running `nvm install v18.17.1` in your favorite terminal.
 -   [Deno](https://deno.land/).
 -   [Rancher Desktop](https://rancherdesktop.io/)
     -   Used to make development with extra services (MongoDB, Redis, etc.) easy.
