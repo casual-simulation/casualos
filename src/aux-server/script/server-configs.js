@@ -35,6 +35,11 @@ const serverlessHandlers = path.resolve(serverlessSrc, 'handlers');
 
 const schema = path.resolve(auxBackend, 'schemas', 'auth.prisma');
 
+let SERVER_CONFIG = null;
+if (process.env.SERVER_CONFIG) {
+    SERVER_CONFIG = JSON.parse(process.env.SERVER_CONFIG);
+}
+
 module.exports = {
     createConfigs,
     cleanDirectories,
@@ -52,6 +57,9 @@ function createConfigs(dev, version) {
         GIT_HASH: JSON.stringify(GIT_HASH),
         GIT_TAG: JSON.stringify(version ?? GIT_TAG),
     };
+    const configVariables = {
+        SERVER_CONFIG: JSON.stringify(SERVER_CONFIG),
+    };
     const developmentVariables = {
         DEVELOPMENT: dev ?? JSON.stringify(true),
     };
@@ -67,6 +75,7 @@ function createConfigs(dev, version) {
                 define: {
                     ...versionVariables,
                     ...developmentVariables,
+                    ...configVariables,
                 },
                 minify: !dev,
                 plugins: [replaceThreePlugin()],
@@ -82,6 +91,7 @@ function createConfigs(dev, version) {
                 define: {
                     ...versionVariables,
                     ...developmentVariables,
+                    ...configVariables,
                     S3_ENDPOINT: dev
                         ? JSON.stringify('http://s3:4566')
                         : JSON.stringify(undefined),
@@ -124,6 +134,7 @@ function createConfigs(dev, version) {
                 define: {
                     ...versionVariables,
                     ...developmentVariables,
+                    ...configVariables,
                     S3_ENDPOINT: dev
                         ? JSON.stringify('http://s3:4566')
                         : JSON.stringify(undefined),
