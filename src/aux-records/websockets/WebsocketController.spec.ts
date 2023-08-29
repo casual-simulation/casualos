@@ -79,7 +79,18 @@ describe('WebsocketController', () => {
     let updateStore: MemoryUpdatesStore;
     let services: ReturnType<typeof createTestControllers>;
 
-    beforeEach(() => {
+    let userId: string;
+    let sessionKey: string;
+    let sessionId: string;
+    let connectionKey: string;
+    let connectionToken: string;
+    const serverConnectionId = 'serverConnection';
+    const connectionId = 'connectionId';
+    const inst = 'inst';
+
+    let user1Info: DeviceConnection;
+
+    beforeEach(async () => {
         services = createTestControllers();
         connectionStore = new MemoryWebsocketConnectionStore();
         messenger = new MemoryWebsocketMessenger();
@@ -90,22 +101,97 @@ describe('WebsocketController', () => {
             updateStore,
             services.auth
         );
+
+        uuidMock.mockReturnValueOnce('userId');
+        const user = await createTestUser(services);
+
+        userId = user.userId;
+        sessionKey = user.sessionKey;
+        connectionKey = user.connectionKey;
+        sessionId = user.sessionId;
+
+        connectionToken = generateV1ConnectionToken(
+            connectionKey,
+            connectionId,
+            inst
+        );
+
+        user1Info = {
+            serverConnectionId,
+            clientConnectionId: connectionId,
+            userId,
+            sessionId,
+            token: connectionToken,
+        };
     });
 
-    describe('connect()', () => {
-        it('should save the given connection', async () => {
-            await server.connect(device1Info);
+    describe.only('login()', () => {
+        it('should validate the token and update the connection info', async () => {
+            await server.login(serverConnectionId, 1, {
+                type: 'login',
+                connectionToken,
+            });
 
             const connection = await connectionStore.getConnection(
-                device1Info.serverConnectionId
+                serverConnectionId
             );
-            expect(connection).toEqual(device1Info);
+
+            expect(connection).toEqual({
+                serverConnectionId: serverConnectionId,
+                clientConnectionId: connectionId,
+                token: connectionToken,
+                userId: userId,
+                sessionId: sessionId,
+            });
+        });
+
+        it('should allow the connection when no token is specified', async () => {
+            await server.login(serverConnectionId, 1, {
+                type: 'login',
+                connectionToken: null as any,
+                clientConnectionId: connectionId,
+            });
+
+            const connection = await connectionStore.getConnection(
+                serverConnectionId
+            );
+
+            expect(connection).toEqual({
+                serverConnectionId: serverConnectionId,
+                clientConnectionId: connectionId,
+                token: null,
+                userId: null,
+                sessionId: null,
+            });
+        });
+
+        it('should send a unacceptable_connection_token error if the token is wrong', async () => {
+            await server.login(serverConnectionId, 1, {
+                type: 'login',
+                connectionToken: 'wrong token',
+            });
+
+            const events = messenger.getEvents(serverConnectionId);
+            expect(events).toEqual([
+                [
+                    WebsocketEventTypes.Error,
+                    1,
+                    'unacceptable_connection_token',
+                    'The given connection token is invalid. It must be a correctly formatted string.',
+                ],
+            ]);
+
+            const connection = await connectionStore.getConnection(
+                serverConnectionId
+            );
+
+            expect(connection).toBeFalsy();
         });
     });
 
     describe('disconnect()', () => {
         it('should remove the given connection', async () => {
-            await server.connect(device1Info);
+            await connectionStore.saveConnection(user1Info);
 
             await server.disconnect('connectionId');
 
@@ -116,8 +202,8 @@ describe('WebsocketController', () => {
         });
 
         it('should delete temporary updates when all devices have left the branch', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
+            await connectionStore.saveConnection(device1Info);
+            await connectionStore.saveConnection(device2Info);
 
             await server.watchBranch(device1Info.serverConnectionId, {
                 type: 'repo/watch_branch',
@@ -165,7 +251,7 @@ describe('WebsocketController', () => {
     describe('repo/watch_branch', () => {
         describe('updates', () => {
             it('should load the given branch and send the current updates', async () => {
-                await server.connect(device1Info);
+                await connectionStore.saveConnection(device1Info);
 
                 await updateStore.addUpdates(branchNamespace('testBranch'), [
                     '123',
@@ -191,7 +277,7 @@ describe('WebsocketController', () => {
             });
 
             it('should create a new orphan branch if the branch name does not exist', async () => {
-                await server.connect(device1Info);
+                await connectionStore.saveConnection(device1Info);
 
                 await server.watchBranch(device1Info.serverConnectionId, {
                     type: 'repo/watch_branch',
@@ -213,7 +299,7 @@ describe('WebsocketController', () => {
 
             describe('temp', () => {
                 it('should load the branch like normal if the branch is temporary', async () => {
-                    await server.connect(device1Info);
+                    await connectionStore.saveConnection(device1Info);
 
                     await updateStore.addUpdates(
                         branchNamespace('testBranch'),
@@ -240,9 +326,9 @@ describe('WebsocketController', () => {
                 });
 
                 it('should load the updates that were added to the branch by another device', async () => {
-                    await server.connect(device1Info);
-                    await server.connect(device2Info);
-                    await server.connect(device3Info);
+                    await connectionStore.saveConnection(device1Info);
+                    await connectionStore.saveConnection(device2Info);
+                    await connectionStore.saveConnection(device3Info);
 
                     await server.watchBranch(device1Info.serverConnectionId, {
                         type: 'repo/watch_branch',
@@ -282,8 +368,8 @@ describe('WebsocketController', () => {
     describe('repo/unwatch_branch', () => {
         describe('updates', () => {
             it('should stop sending new atoms to devices that have left a branch', async () => {
-                await server.connect(device1Info);
-                await server.connect(device2Info);
+                await connectionStore.saveConnection(device1Info);
+                await connectionStore.saveConnection(device2Info);
 
                 await server.watchBranch(device1Info.serverConnectionId, {
                     type: 'repo/watch_branch',
@@ -326,8 +412,8 @@ describe('WebsocketController', () => {
             });
 
             it('should delete temporary updates when all devices have left the branch', async () => {
-                await server.connect(device1Info);
-                await server.connect(device2Info);
+                await connectionStore.saveConnection(device1Info);
+                await connectionStore.saveConnection(device2Info);
 
                 await server.watchBranch(device1Info.serverConnectionId, {
                     type: 'repo/watch_branch',
@@ -390,7 +476,7 @@ describe('WebsocketController', () => {
         });
 
         it('should load the given branch and send the current updates', async () => {
-            await server.connect(device1Info);
+            await connectionStore.saveConnection(device1Info);
 
             mockedNow.mockReturnValue(100);
             await server.addUpdates(device1Info.serverConnectionId, {
@@ -426,7 +512,7 @@ describe('WebsocketController', () => {
         });
 
         it('should not send additional atoms that were added after the GET_UPDATES call', async () => {
-            await server.connect(device1Info);
+            await connectionStore.saveConnection(device1Info);
 
             mockedNow.mockReturnValue(100);
             await server.addUpdates(device1Info.serverConnectionId, {
@@ -479,7 +565,7 @@ describe('WebsocketController', () => {
 
     describe('repo/add_updates', () => {
         it('should add the given updates to the given branch', async () => {
-            await server.connect(device1Info);
+            await connectionStore.saveConnection(device1Info);
 
             await server.addUpdates(device1Info.serverConnectionId, {
                 type: 'repo/add_updates',
@@ -519,9 +605,9 @@ describe('WebsocketController', () => {
         });
 
         it('should notify all other devices connected to the branch', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
-            await server.connect(device3Info);
+            await connectionStore.saveConnection(device1Info);
+            await connectionStore.saveConnection(device2Info);
+            await connectionStore.saveConnection(device3Info);
 
             await updateStore.addUpdates(branchNamespace('testBranch'), [
                 '111',
@@ -580,7 +666,7 @@ describe('WebsocketController', () => {
         });
 
         it('should not notify the device that sent the new atoms', async () => {
-            await server.connect(device1Info);
+            await connectionStore.saveConnection(device1Info);
 
             await updateStore.addUpdates(branchNamespace('testBranch'), [
                 '111',
@@ -621,7 +707,7 @@ describe('WebsocketController', () => {
         });
 
         it('should immediately store the added atoms', async () => {
-            await server.connect(device1Info);
+            await connectionStore.saveConnection(device1Info);
 
             await server.addUpdates(device1Info.serverConnectionId, {
                 type: 'repo/add_updates',
@@ -641,7 +727,7 @@ describe('WebsocketController', () => {
         });
 
         it('should ignore when given an event with a null branch', async () => {
-            await server.connect(device1Info);
+            await connectionStore.saveConnection(device1Info);
 
             await server.addUpdates(device1Info.serverConnectionId, {
                 type: 'repo/add_updates',
@@ -651,7 +737,7 @@ describe('WebsocketController', () => {
         });
 
         it('should not crash if adding atoms to a branch that does not exist', async () => {
-            await server.connect(device1Info);
+            await connectionStore.saveConnection(device1Info);
 
             await server.addUpdates(device1Info.serverConnectionId, {
                 type: 'repo/add_updates',
@@ -670,7 +756,7 @@ describe('WebsocketController', () => {
         it('should notify the sender if the updates were rejected because of a max inst size', async () => {
             updateStore.maxAllowedInstSize = 5;
 
-            await server.connect(device1Info);
+            await connectionStore.saveConnection(device1Info);
 
             await server.addUpdates(device1Info.serverConnectionId, {
                 type: 'repo/add_updates',
@@ -738,7 +824,7 @@ describe('WebsocketController', () => {
 
             console.warn(update.length);
 
-            await server.connect(device1Info);
+            await connectionStore.saveConnection(device1Info);
 
             await server.addUpdates(device1Info.serverConnectionId, {
                 type: 'repo/add_updates',
@@ -841,9 +927,9 @@ describe('WebsocketController', () => {
 
     describe('repo/send_event', () => {
         it('should notify the device that the event was sent to', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
-            await server.connect(device3Info);
+            await connectionStore.saveConnection(device1Info);
+            await connectionStore.saveConnection(device2Info);
+            await connectionStore.saveConnection(device3Info);
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
@@ -900,9 +986,9 @@ describe('WebsocketController', () => {
         it('should send remote events to a random device if none is specified', async () => {
             const originalRandom = Math.random;
             try {
-                await server.connect(device1Info);
-                await server.connect(device2Info);
-                await server.connect(device3Info);
+                await connectionStore.saveConnection(device1Info);
+                await connectionStore.saveConnection(device2Info);
+                await connectionStore.saveConnection(device3Info);
 
                 const randomMock = (Math.random = jest.fn());
                 randomMock.mockReturnValueOnce(1 / 2);
@@ -958,9 +1044,9 @@ describe('WebsocketController', () => {
         });
 
         it('should broadcast to all devices if broadcast is true', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
-            await server.connect(device3Info);
+            await connectionStore.saveConnection(device1Info);
+            await connectionStore.saveConnection(device2Info);
+            await connectionStore.saveConnection(device3Info);
 
             await server.watchBranch(device1Info.serverConnectionId, {
                 type: 'repo/watch_branch',
@@ -1025,9 +1111,9 @@ describe('WebsocketController', () => {
         });
 
         it('should relay the task ID from the remote action to the device action', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
-            await server.connect(device3Info);
+            await connectionStore.saveConnection(device1Info);
+            await connectionStore.saveConnection(device2Info);
+            await connectionStore.saveConnection(device3Info);
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
@@ -1089,9 +1175,9 @@ describe('WebsocketController', () => {
         });
 
         it('should convert a remote action result to a device action result', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
-            await server.connect(device3Info);
+            await connectionStore.saveConnection(device1Info);
+            await connectionStore.saveConnection(device2Info);
+            await connectionStore.saveConnection(device3Info);
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
@@ -1147,9 +1233,9 @@ describe('WebsocketController', () => {
         });
 
         it('should convert a remote action error to a device action error', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
-            await server.connect(device3Info);
+            await connectionStore.saveConnection(device1Info);
+            await connectionStore.saveConnection(device2Info);
+            await connectionStore.saveConnection(device3Info);
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
@@ -1207,8 +1293,8 @@ describe('WebsocketController', () => {
 
     describe('repo/watch_branch_connections', () => {
         it('should send an event when a device connects to a branch', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
+            await connectionStore.saveConnection(device1Info);
+            await connectionStore.saveConnection(device2Info);
 
             await server.watchBranchDevices(
                 device1Info.serverConnectionId,
@@ -1236,8 +1322,8 @@ describe('WebsocketController', () => {
         });
 
         it('should send an event when a device unwatches a branch', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
+            await connectionStore.saveConnection(device1Info);
+            await connectionStore.saveConnection(device2Info);
 
             await server.watchBranchDevices(
                 device1Info.serverConnectionId,
@@ -1276,8 +1362,8 @@ describe('WebsocketController', () => {
         });
 
         it('should send an event when a device disconnects', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
+            await connectionStore.saveConnection(device1Info);
+            await connectionStore.saveConnection(device2Info);
 
             await server.watchBranchDevices(
                 device1Info.serverConnectionId,
@@ -1313,10 +1399,10 @@ describe('WebsocketController', () => {
         });
 
         it('should send events for all the currently connected devices only for the specified branch', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
-            await server.connect(device3Info);
-            await server.connect(device4Info);
+            await connectionStore.saveConnection(device1Info);
+            await connectionStore.saveConnection(device2Info);
+            await connectionStore.saveConnection(device3Info);
+            await connectionStore.saveConnection(device4Info);
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
@@ -1365,8 +1451,8 @@ describe('WebsocketController', () => {
         });
 
         it('should include whether the branch is temporary when a device connects', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
+            await connectionStore.saveConnection(device1Info);
+            await connectionStore.saveConnection(device2Info);
 
             await server.watchBranchDevices(
                 device1Info.serverConnectionId,
@@ -1398,8 +1484,8 @@ describe('WebsocketController', () => {
 
     describe('repo/unwatch_branch_connections', () => {
         it('should not send an event when stopped watching', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
+            await connectionStore.saveConnection(device1Info);
+            await connectionStore.saveConnection(device2Info);
 
             await server.watchBranchDevices(
                 device1Info.serverConnectionId,
@@ -1421,8 +1507,8 @@ describe('WebsocketController', () => {
         });
 
         it('should stop watching when the device disconnects', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
+            await connectionStore.saveConnection(device1Info);
+            await connectionStore.saveConnection(device2Info);
 
             await server.watchBranchDevices(
                 device1Info.serverConnectionId,
@@ -1431,7 +1517,7 @@ describe('WebsocketController', () => {
 
             await server.disconnect(device1Info.serverConnectionId);
 
-            await server.connect(device1Info);
+            await connectionStore.saveConnection(device1Info);
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
@@ -1446,8 +1532,8 @@ describe('WebsocketController', () => {
 
     describe('repo/connection_count', () => {
         it('should send a response with the number of devices', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
+            await connectionStore.saveConnection(device1Info);
+            await connectionStore.saveConnection(device2Info);
 
             await server.deviceCount(device1Info.serverConnectionId, null);
 
@@ -1463,9 +1549,9 @@ describe('WebsocketController', () => {
         });
 
         it('should send a response with the number of devices that are connected to the given branch', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
-            await server.connect(device3Info);
+            await connectionStore.saveConnection(device1Info);
+            await connectionStore.saveConnection(device2Info);
+            await connectionStore.saveConnection(device3Info);
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
@@ -1507,8 +1593,8 @@ describe('WebsocketController', () => {
         });
 
         it('should send a response with current time', async () => {
-            await server.connect(device1Info);
-            await server.connect(device2Info);
+            await connectionStore.saveConnection(device1Info);
+            await connectionStore.saveConnection(device2Info);
 
             now.mockReturnValueOnce(1000).mockReturnValueOnce(2000);
 
@@ -1590,7 +1676,7 @@ describe('WebsocketController', () => {
                 const randomMock = (Math.random = jest.fn());
                 randomMock.mockReturnValueOnce(0);
 
-                await server.connect(device1Info);
+                await connectionStore.saveConnection(device1Info);
 
                 await server.watchBranch(device1Info.serverConnectionId, {
                     type: 'repo/watch_branch',
@@ -1645,7 +1731,7 @@ describe('WebsocketController', () => {
                 const randomMock = (Math.random = jest.fn());
                 randomMock.mockReturnValueOnce(0);
 
-                await server.connect(device1Info);
+                await connectionStore.saveConnection(device1Info);
 
                 await server.watchBranch(device1Info.serverConnectionId, {
                     type: 'repo/watch_branch',
@@ -1686,7 +1772,7 @@ describe('WebsocketController', () => {
                 const randomMock = (Math.random = jest.fn());
                 randomMock.mockReturnValueOnce(0);
 
-                await server.connect(device1Info);
+                await connectionStore.saveConnection(device1Info);
 
                 await updateStore.addUpdates(branchNamespace('testBranch'), [
                     'abc',
@@ -1984,75 +2070,6 @@ describe('WebsocketController', () => {
             });
             const events = messenger.getEvents(device1Info.serverConnectionId);
             expect(events).toEqual([]);
-        });
-    });
-
-    describe.only('login()', () => {
-        let userId: string;
-        let sessionKey: string;
-        let sessionId: string;
-        let connectionKey: string;
-        let connectionToken: string;
-        const serverConnectionId = 'serverConnection';
-        const connectionId = 'connectionId';
-        const inst = 'inst';
-
-        beforeEach(async () => {
-            uuidMock.mockReturnValueOnce('userId');
-            const user = await createTestUser(services);
-
-            userId = user.userId;
-            sessionKey = user.sessionKey;
-            connectionKey = user.connectionKey;
-            sessionId = user.sessionId;
-
-            connectionToken = generateV1ConnectionToken(
-                connectionKey,
-                connectionId,
-                inst
-            );
-        });
-
-        it('should validate the token and update the connection info', async () => {
-            await server.login(serverConnectionId, 1, {
-                type: 'login',
-                connectionToken,
-            });
-
-            const connection = await connectionStore.getConnection(
-                serverConnectionId
-            );
-
-            expect(connection).toEqual({
-                serverConnectionId: serverConnectionId,
-                clientConnectionId: connectionId,
-                token: connectionToken,
-                userId: userId,
-                sessionId: sessionId,
-            });
-        });
-
-        it('should send a unacceptable_connection_token error if the token is wrong', async () => {
-            await server.login(serverConnectionId, 1, {
-                type: 'login',
-                connectionToken: 'wrong token',
-            });
-
-            const events = messenger.getEvents(serverConnectionId);
-            expect(events).toEqual([
-                [
-                    WebsocketEventTypes.Error,
-                    1,
-                    'unacceptable_connection_token',
-                    'The given connection token is invalid. It must be a correctly formatted string.',
-                ],
-            ]);
-
-            const connection = await connectionStore.getConnection(
-                serverConnectionId
-            );
-
-            expect(connection).toBeFalsy();
         });
     });
 });

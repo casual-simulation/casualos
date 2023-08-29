@@ -100,6 +100,7 @@ export type WebsocketErrorEvent = [
         | ServerError
         | NotSupportedError
         | ValidateConnectionTokenFailure['errorCode']
+        | 'unacceptable_connection_id'
         | 'message_not_found',
     errorMessage: string
 ];
@@ -159,6 +160,12 @@ export interface LoginMessage {
      * The token that should be used to authenticate the connection.
      */
     connectionToken: string;
+
+    /**
+     * The ID that the client wants to use for the connection.
+     * Must be unique.
+     */
+    clientConnectionId?: string;
 }
 export const loginMessageSchema = z.object({
     type: z.literal('login'),

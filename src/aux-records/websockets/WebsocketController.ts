@@ -72,8 +72,74 @@ export class WebsocketController {
         this._auth = auth;
     }
 
-    async connect(connection: DeviceConnection): Promise<void> {
-        await this._connectionStore.saveConnection(connection);
+    /**
+     * Attempts to log the given connection in.
+     * @param connectionId The ID of the connection.
+     * @param requestId The ID of the request.
+     * @param message The login message.
+     */
+    async login(
+        connectionId: string,
+        requestId: number,
+        message: LoginMessage
+    ): Promise<void> {
+        try {
+            if (!message.connectionToken) {
+                if (!message.clientConnectionId) {
+                    await this._messenger.sendEvent(connectionId, [
+                        WebsocketEventTypes.Error,
+                        requestId,
+                        'unacceptable_connection_id',
+                        'A connection ID must be specified when logging in without a connection token.',
+                    ]);
+                    return;
+                }
+
+                await this._connectionStore.saveConnection({
+                    serverConnectionId: connectionId,
+                    clientConnectionId: message.clientConnectionId,
+                    userId: null,
+                    sessionId: null,
+                    token: null,
+                });
+            } else {
+                const validationResult =
+                    await this._auth.validateConnectionToken(
+                        message.connectionToken
+                    );
+                if (validationResult.success === false) {
+                    await this._messenger.sendEvent(connectionId, [
+                        WebsocketEventTypes.Error,
+                        requestId,
+                        validationResult.errorCode,
+                        validationResult.errorMessage,
+                    ]);
+                    return;
+                }
+
+                await this._connectionStore.saveConnection({
+                    serverConnectionId: connectionId,
+                    userId: validationResult.userId,
+                    sessionId: validationResult.sessionId,
+                    clientConnectionId: validationResult.connectionId,
+                    token: message.connectionToken,
+                });
+            }
+
+            await this._messenger.sendMessage([connectionId], {
+                type: 'login_result',
+            });
+        } catch (err) {
+            console.error(
+                '[WebsocketController] [login] Error while logging in.',
+                err
+            );
+            await this.sendError(connectionId, {
+                requestId: requestId,
+                errorCode: 'server_error',
+                errorMessage: 'A server error occurred while logging in.',
+            });
+        }
     }
 
     async disconnect(connectionId: string) {
@@ -720,55 +786,6 @@ export class WebsocketController {
                 errorCode: 'server_error',
                 errorMessage: 'Error while processing download request.',
             };
-        }
-    }
-
-    /**
-     * Attempts to log the given connection in.
-     * @param connectionId The ID of the connection.
-     * @param requestId The ID of the request.
-     * @param message The login message.
-     */
-    async login(
-        connectionId: string,
-        requestId: number,
-        message: LoginMessage
-    ): Promise<void> {
-        try {
-            const validationResult = await this._auth.validateConnectionToken(
-                message.connectionToken
-            );
-            if (validationResult.success === false) {
-                await this._messenger.sendEvent(connectionId, [
-                    WebsocketEventTypes.Error,
-                    requestId,
-                    validationResult.errorCode,
-                    validationResult.errorMessage,
-                ]);
-                return;
-            }
-
-            await this._connectionStore.saveConnection({
-                serverConnectionId: connectionId,
-                userId: validationResult.userId,
-                sessionId: validationResult.sessionId,
-                clientConnectionId: validationResult.connectionId,
-                token: message.connectionToken,
-            });
-
-            await this._messenger.sendMessage([connectionId], {
-                type: 'login_result',
-            });
-        } catch (err) {
-            console.error(
-                '[WebsocketController] [login] Error while logging in.',
-                err
-            );
-            await this.sendError(connectionId, {
-                requestId: requestId,
-                errorCode: 'server_error',
-                errorMessage: 'A server error occurred while logging in.',
-            });
         }
     }
 
