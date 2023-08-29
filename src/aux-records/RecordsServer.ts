@@ -31,6 +31,12 @@ import { PolicyController } from './PolicyController';
 import { AIController } from './AIController';
 import { AIChatMessage, AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
 import { WebsocketController } from './websockets/WebsocketController';
+import {
+    WebsocketEventTypes,
+    WebsocketMessage,
+    websocketEventSchema,
+    websocketMessageSchema,
+} from './websockets/WebsocketEvents';
 
 /**
  * Defines an interface for a generic HTTP request.
@@ -854,22 +860,59 @@ export class RecordsServer {
         } else if (request.type === 'disconnect') {
             await this._websocketController.disconnect(request.connectionId);
         } else if (request.type === 'message') {
+            if (typeof request.body !== 'string') {
+                // Bad request
+                return;
+            }
+
             const jsonResult = tryParseJson(request.body);
 
             if (!jsonResult.success || typeof jsonResult.value !== 'object') {
                 return;
             }
 
-            const event = jsonResult.value;
-
-            const message = this._websocketController.resolveMessage(json);
-
-            await this._websocketController.message(
-                request.connectionId,
-                request.body
+            const parseResult = websocketEventSchema.safeParse(
+                jsonResult.value
             );
+
+            if (parseResult.success === false) {
+                return;
+            }
+
+            let [type, ...rest] = parseResult.data;
+
+            if (type === WebsocketEventTypes.Message) {
+                const [message] = rest;
+                return await this._processWebsocketMessage(request, message);
+            } else if (type === WebsocketEventTypes.UploadRequest) {
+                const [id] = rest;
+                return await this._processWebsocketUploadRequest(request, id);
+            } else if (type === WebsocketEventTypes.DownloadRequest) {
+                const [url] = rest;
+                return await this._processWebsocketDownload(request, url);
+            } else {
+                // not supported
+                return;
+            }
         }
     }
+
+    private async _processWebsocketMessage(
+        request: GenericWebsocketRequest,
+        message: WebsocketMessage
+    ) {
+        const messageResult = websocketMessageSchema.safeParse(message);
+    }
+
+    private async _processWebsocketDownload(
+        request: GenericWebsocketRequest,
+        url: string
+    ) {}
+
+    private async _processWebsocketUploadRequest(
+        request: GenericWebsocketRequest,
+        id: string
+    ) {}
 
     private async _stripeWebhook(
         request: GenericHttpRequest

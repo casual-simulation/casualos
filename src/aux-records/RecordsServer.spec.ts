@@ -8,6 +8,7 @@ import {
     validateOrigin,
     getSessionKey,
     GenericHttpResponse,
+    GenericWebsocketRequest,
 } from './RecordsServer';
 import { AuthController, INVALID_KEY_ERROR_MESSAGE } from './AuthController';
 import { MemoryAuthMessenger } from './MemoryAuthMessenger';
@@ -10674,6 +10675,28 @@ describe('RecordsServer', () => {
         });
     });
 
+    describe('handleWebsocketRequest()', () => {
+        const connectionId = 'connectionId';
+
+        describe('connect', () => {
+            it('should do nothing', async () => {
+                await server.handleWebsocketRequest(wsConnect(connectionId));
+
+                const connection = await websocketConnectionStore.getConnection(
+                    connectionId
+                );
+
+                expect(connection).toEqual(null);
+            });
+        });
+
+        // describe('login', () => {
+        //     it('should create a new connection', async () => {
+
+        //     });
+        // });
+    });
+
     function expectResponseBodyToEqual(
         response: GenericHttpResponse,
         expected: any
@@ -10918,7 +10941,8 @@ describe('RecordsServer', () => {
                 subscriptionController,
                 null as any,
                 policyController,
-                aiController
+                aiController,
+                websocketController
             );
 
             await rateLimiter.increment(ip, 100);
@@ -10981,6 +11005,43 @@ describe('RecordsServer', () => {
             pathParams,
             method,
             query,
+            ipAddress,
+        };
+    }
+
+    function wsMessage(
+        connectionId: string,
+        body: string,
+        ipAddress: string = '123.456.789'
+    ): GenericWebsocketRequest {
+        return {
+            type: 'message',
+            connectionId,
+            body,
+            ipAddress,
+        };
+    }
+
+    function wsConnect(
+        connectionId: string,
+        ipAddress: string = '123.456.789'
+    ): GenericWebsocketRequest {
+        return {
+            type: 'connect',
+            connectionId,
+            body: null,
+            ipAddress,
+        };
+    }
+
+    function wsDisconnect(
+        connectionId: string,
+        ipAddress: string = '123.456.789'
+    ): GenericWebsocketRequest {
+        return {
+            type: 'disconnect',
+            connectionId,
+            body: null,
             ipAddress,
         };
     }
