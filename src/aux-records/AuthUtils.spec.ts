@@ -248,17 +248,26 @@ describe('formatV1ConnectionToken()', () => {
             'userId',
             'sessionId',
             'connectionId',
+            'record',
             'inst',
             'hmac'
         );
 
-        const [version, userId, sessionId, connectionId, inst, hmac] =
-            result.split('.');
+        const [
+            version,
+            userId,
+            sessionId,
+            connectionId,
+            recordName,
+            inst,
+            hmac,
+        ] = result.split('.');
 
         expect(version).toBe('vCT1');
         expect(userId).toBe(toBase64String('userId'));
         expect(sessionId).toBe(toBase64String('sessionId'));
         expect(connectionId).toBe(toBase64String('connectionId'));
+        expect(recordName).toBe(toBase64String('record'));
         expect(inst).toBe(toBase64String('inst'));
         expect(hmac).toBe(toBase64String('hmac'));
     });
@@ -271,15 +280,17 @@ describe('parseConnectionToken()', () => {
                 'userId',
                 'sessionId',
                 'connectionId',
+                'recordName',
                 'inst',
                 'hash'
             );
-            const [userId, sessionId, connectionId, inst, hash] =
+            const [userId, sessionId, connectionId, recordName, inst, hash] =
                 parseConnectionToken(token);
 
             expect(userId).toBe('userId');
             expect(sessionId).toBe('sessionId');
             expect(connectionId).toBe('connectionId');
+            expect(recordName).toBe('recordName');
             expect(inst).toBe('inst');
             expect(hash).toBe('hash');
         });
@@ -320,11 +331,35 @@ describe('parseConnectionToken()', () => {
             expect(result).toBe(null);
         });
 
-        it('should return null if given a string with no password', () => {
+        it('should return null if given a string with no record name', () => {
             const result = parseConnectionToken(
                 `vCT1.${toBase64String('userId')}.${toBase64String(
                     'sessionId'
                 )}.${toBase64String('connectionId')}`
+            );
+
+            expect(result).toBe(null);
+        });
+
+        it('should return null if given a string with no inst', () => {
+            const result = parseConnectionToken(
+                `vCT1.${toBase64String('userId')}.${toBase64String(
+                    'sessionId'
+                )}.${toBase64String('connectionId')}.${toBase64String(
+                    'recordName'
+                )}`
+            );
+
+            expect(result).toBe(null);
+        });
+
+        it('should return null if given a string with no hash', () => {
+            const result = parseConnectionToken(
+                `vCT1.${toBase64String('userId')}.${toBase64String(
+                    'sessionId'
+                )}.${toBase64String('connectionId')}.${toBase64String(
+                    'recordName'
+                )}.${toBase64String('inst')}`
             );
 
             expect(result).toBe(null);
@@ -347,14 +382,27 @@ describe('generateV1ConnectionToken()', () => {
             123
         );
 
-        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+        const result = generateV1ConnectionToken(
+            key,
+            'connectionId',
+            'recordName',
+            'inst'
+        );
 
-        const [version, userId, sessionId, connectionId, inst, password] =
-            result.split('.');
+        const [
+            version,
+            userId,
+            sessionId,
+            connectionId,
+            recordName,
+            inst,
+            password,
+        ] = result.split('.');
 
         expect(userId).toBe(toBase64String('userId'));
         expect(sessionId).toBe(toBase64String('sessionId'));
         expect(connectionId).toBe(toBase64String('connectionId'));
+        expect(recordName).toBe(toBase64String('recordName'));
         expect(inst).toBe(toBase64String('inst'));
         expect(password).toMatchSnapshot();
     });
@@ -366,7 +414,12 @@ describe('verifyConnectionToken()', () => {
     const key = formatV1ConnectionKey('userId', 'sessionId', password, 123);
 
     it('should return true when the given token is valid', () => {
-        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+        const result = generateV1ConnectionToken(
+            key,
+            'connectionId',
+            'recordName',
+            'inst'
+        );
         expect(verifyConnectionToken(result, password)).toBe(true);
     });
 
@@ -375,23 +428,39 @@ describe('verifyConnectionToken()', () => {
     });
 
     it('should return false when given a null secret', () => {
-        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+        const result = generateV1ConnectionToken(
+            key,
+            'connectionId',
+            'recordName',
+            'inst'
+        );
         expect(verifyConnectionToken(result, null)).toBe(false);
     });
 
     it('should return false when the given token is invalid', () => {
-        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+        const result = generateV1ConnectionToken(
+            key,
+            'connectionId',
+            'recordName',
+            'inst'
+        );
         expect(verifyConnectionToken(result, wrongPassword)).toBe(false);
     });
 
     it('should return false when the given token hash doesnt match the connection ID', () => {
-        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+        const result = generateV1ConnectionToken(
+            key,
+            'connectionId',
+            'recordName',
+            'inst'
+        );
         const [userId, sessionId, connectionId, inst, password] =
             parseConnectionToken(result);
         const token = formatV1ConnectionToken(
             userId,
             sessionId,
             'wrong connection id',
+            'recordName',
             inst,
             password
         );
@@ -400,13 +469,19 @@ describe('verifyConnectionToken()', () => {
     });
 
     it('should return false when the given token hash doesnt match the inst', () => {
-        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+        const result = generateV1ConnectionToken(
+            key,
+            'connectionId',
+            'recordName',
+            'inst'
+        );
         const [userId, sessionId, connectionId, inst, password] =
             parseConnectionToken(result);
         const token = formatV1ConnectionToken(
             userId,
             sessionId,
             connectionId,
+            'recordName',
             'wrong inst',
             password
         );
@@ -414,14 +489,20 @@ describe('verifyConnectionToken()', () => {
         expect(verifyConnectionToken(token, password)).toBe(false);
     });
 
-    it('should return false when the connection ID contains the entire inst', () => {
-        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+    it('should return false when the record name contains the entire inst', () => {
+        const result = generateV1ConnectionToken(
+            key,
+            'connectionId',
+            'recordName',
+            'inst'
+        );
         const [userId, sessionId, connectionId, inst, password] =
             parseConnectionToken(result);
         const token = formatV1ConnectionToken(
             userId,
             sessionId,
-            'connectionIdinst',
+            'connectionId',
+            'recordNameinst',
             '',
             password
         );
@@ -429,30 +510,42 @@ describe('verifyConnectionToken()', () => {
         expect(verifyConnectionToken(token, password)).toBe(false);
     });
 
-    it('should return false when the inst contains the connection ID', () => {
-        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+    it('should return false when the record name contains the connection ID', () => {
+        const result = generateV1ConnectionToken(
+            key,
+            'connectionId',
+            'recordName',
+            'inst'
+        );
         const [userId, sessionId, connectionId, inst, password] =
             parseConnectionToken(result);
         const token = formatV1ConnectionToken(
             userId,
             sessionId,
             '',
-            'connectionIdinst',
+            'connectionIdrecordName',
+            'inst',
             password
         );
 
         expect(verifyConnectionToken(token, password)).toBe(false);
     });
 
-    it('should return false when the inst and connection ID are shifted', () => {
-        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+    it('should return false when the record name and connection ID are shifted', () => {
+        const result = generateV1ConnectionToken(
+            key,
+            'connectionId',
+            'recordName',
+            'inst'
+        );
         const [userId, sessionId, connectionId, inst, password] =
             parseConnectionToken(result);
         const token = formatV1ConnectionToken(
             userId,
             sessionId,
-            'connectionIdin',
-            'st',
+            'connectionIdrecord',
+            'name',
+            'inst',
             password
         );
 
@@ -460,14 +553,20 @@ describe('verifyConnectionToken()', () => {
     });
 
     it('should return false if given invalid base 64', () => {
-        const result = generateV1ConnectionToken(key, 'connectionId', 'inst');
+        const result = generateV1ConnectionToken(
+            key,
+            'connectionId',
+            'recordName',
+            'inst'
+        );
         const [userId, sessionId, connectionId, inst, password] =
             parseConnectionToken(result);
         const token = formatV1ConnectionToken(
             userId,
             sessionId,
-            'connectionIdin',
-            'st',
+            'connectionId',
+            'recordName',
+            'inst',
             password
         );
 

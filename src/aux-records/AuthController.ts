@@ -1579,9 +1579,29 @@ export type ValidateConnectionTokenResult =
 
 export interface ValidateConnectionTokenSuccess {
     success: true;
+    /**
+     * The ID of the user that owns the connection token.
+     */
     userId: string;
+
+    /**
+     * The ID of the session that the connection token is for.
+     */
     sessionId: string;
+
+    /**
+     * The ID that the client wants for the connection.
+     */
     connectionId: string;
+
+    /**
+     * The name of the record that the connection token was generated for.
+     */
+    recordName: string;
+
+    /**
+     * The instance that the connection token was generated for.
+     */
     inst: string;
 
     allSessionsRevokedTimeMs?: number;

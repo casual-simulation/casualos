@@ -283,10 +283,11 @@ export function parseOpenAiKey(key: string): [key: string] {
 }
 
 /**
- * Formats the given user ID, session ID, hash, connection ID, and device ID into a token.
+ * Formats the given user ID, session ID, connection ID, record name, inst, and hash into a token.
  * @param userId The ID of the user.
  * @param sessionId The ID of the session.
  * @param connectionId The ID of the connection.
+ * @param recordName The name of the record that the connection is for.
  * @param inst The ID of the instance that the connection is for.
  * @param hash The hash that was generated.
  */
@@ -294,14 +295,15 @@ export function formatV1ConnectionToken(
     userId: string,
     sessionId: string,
     connectionId: string,
+    recordName: string,
     inst: string,
     hash: string
 ): string {
     return `vCT1.${toBase64String(userId)}.${toBase64String(
         sessionId
-    )}.${toBase64String(connectionId)}.${toBase64String(inst)}.${toBase64String(
-        hash
-    )}`;
+    )}.${toBase64String(connectionId)}.${toBase64String(
+        recordName
+    )}.${toBase64String(inst)}.${toBase64String(hash)}`;
 }
 
 /**
@@ -315,6 +317,7 @@ export function parseConnectionToken(
     userId: string,
     sessionId: string,
     connectionId: string,
+    recordName: string,
     inst: string,
     hash: string
 ] {
@@ -332,6 +335,7 @@ export function parseV1ConnectionToken(
     userId: string,
     sessionId: string,
     connectionId: string,
+    recordName: string,
     inst: string,
     hash: string
 ] {
@@ -384,11 +388,25 @@ export function parseV1ConnectionToken(
         0,
         periodAfterConnectionId
     );
-    const instPlusHash = connectionIdPlusExtra.slice(
+    const recordNamePlusExtra = connectionIdPlusExtra.slice(
         periodAfterConnectionId + 1
     );
 
-    if (connectionIdBase64.length <= 0 || instPlusHash.length <= 0) {
+    if (connectionIdBase64.length <= 0 || recordNamePlusExtra.length <= 0) {
+        return null;
+    }
+
+    const periodAfterRecordName = recordNamePlusExtra.indexOf('.');
+    if (periodAfterRecordName < 0) {
+        return null;
+    }
+    const recordNameBase64 = recordNamePlusExtra.slice(
+        0,
+        periodAfterRecordName
+    );
+    const instPlusHash = recordNamePlusExtra.slice(periodAfterRecordName + 1);
+
+    if (recordNameBase64.length <= 0 || instPlusHash.length <= 0) {
         return null;
     }
 
@@ -409,10 +427,11 @@ export function parseV1ConnectionToken(
         const userId = fromBase64String(userIdBase64);
         const sessionId = fromBase64String(sessionIdBase64);
         const connectionId = fromBase64String(connectionIdBase64);
+        const recordName = fromBase64String(recordNameBase64);
         const inst = fromBase64String(instBase64);
         const hash = fromBase64String(hashBase64);
 
-        return [userId, sessionId, connectionId, inst, hash];
+        return [userId, sessionId, connectionId, recordName, inst, hash];
     } catch (err) {
         return null;
     }
@@ -430,6 +449,7 @@ export function parseV1ConnectionToken(
 export function generateV1ConnectionToken(
     key: string,
     connectionId: string,
+    recordName: string,
     inst: string
 ): string {
     const parsed = parseConnectionKey(key);
@@ -439,29 +459,38 @@ export function generateV1ConnectionToken(
     }
 
     const [userId, sessionId, connectionSecret, expireTimeMs] = parsed;
-    const hashHex = v1ConnectionTokenHmac(connectionSecret, connectionId, inst);
+    const hashHex = v1ConnectionTokenHmac(
+        connectionSecret,
+        connectionId,
+        recordName,
+        inst
+    );
     return formatV1ConnectionToken(
         userId,
         sessionId,
         connectionId,
+        recordName,
         inst,
         hashHex
     );
 }
 
 /**
- * Calculates the SHA-256 HMAC of the given connection ID and device ID using the given connection secret.
+ * Calculates the SHA-256 HMAC of the given connection ID, record name, and inst using the given connection secret.
  * @param connectionSecret The connection secret.
  * @param connectionId The ID of the connection.
+ * @param recordName The name of the record.
  * @param inst The inst.
  */
 export function v1ConnectionTokenHmac(
     connectionSecret: string,
     connectionId: string,
+    recordName: string,
     inst: string
 ): string {
     const hash = hmac(sha256 as any, toByteArray(connectionSecret), 'hex');
     hash.update(connectionId);
+    hash.update(recordName);
     hash.update(inst);
     const hashHex = hash.digest('hex');
     return hashHex;
@@ -482,10 +511,12 @@ export function verifyConnectionToken(
     try {
         const parsed = parseV1ConnectionToken(connectionToken);
         if (parsed) {
-            const [userId, sessionId, connectionId, inst, hash] = parsed;
+            const [userId, sessionId, connectionId, recordName, inst, hash] =
+                parsed;
             const expectedHash = v1ConnectionTokenHmac(
                 connectionSecret,
                 connectionId,
+                recordName,
                 inst
             );
             return hash === expectedHash;
