@@ -1,4 +1,4 @@
-import { ServerError } from './Errors';
+import { NotSupportedError, ServerError } from './Errors';
 
 /**
  * Defines an interface for systems that are able to store info about file records.
@@ -398,7 +398,7 @@ export interface PresignFileUploadSuccess {
 
 export interface PresignFileUploadFailure {
     success: false;
-    errorCode: ServerError;
+    errorCode: ServerError | NotSupportedError;
     errorMessage: string;
 }
 

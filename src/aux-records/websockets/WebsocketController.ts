@@ -31,6 +31,7 @@ import {
     LoginMessage,
     SendActionMessage,
     TimeSyncRequestMessage,
+    UploadHttpHeaders,
     WatchBranchMessage,
     WebsocketErrorEvent,
     WebsocketEvent,
@@ -638,8 +639,8 @@ export class WebsocketController {
         requestId: number
     ): Promise<void> {
         try {
-            const url = await this._messenger.getMessageUploadUrl();
-            if (!url) {
+            const result = await this._messenger.presignMessageUpload();
+            if (result.success === false) {
                 console.log(
                     `[WebsocketController] [uploadRequest] Upload requests are not supported!`
                 );
@@ -654,7 +655,9 @@ export class WebsocketController {
             await this.sendEvent(connectionId, [
                 WebsocketEventTypes.UploadResponse,
                 requestId,
-                url,
+                result.uploadUrl,
+                result.uploadMethod,
+                result.uploadHeaders,
             ]);
         } catch (err) {
             console.error(
@@ -672,10 +675,16 @@ export class WebsocketController {
     async downloadRequest(
         connectionId: string,
         requestId: number,
-        url: string
+        url: string,
+        method: string,
+        headers: UploadHttpHeaders
     ): Promise<DownloadRequestResult> {
         try {
-            const message = await this._messenger.downloadMessage(url);
+            const message = await this._messenger.downloadMessage(
+                url,
+                method,
+                headers
+            );
             if (message === undefined) {
                 console.log(
                     `[WebsocketController] [downloadRequest] Download requests are not supported!`
@@ -729,7 +738,13 @@ export class WebsocketController {
             const validationResult = await this._auth.validateConnectionToken(
                 message.connectionToken
             );
-            if (validationResult.success == false) {
+            if (validationResult.success === false) {
+                await this._messenger.sendEvent(connectionId, [
+                    WebsocketEventTypes.Error,
+                    requestId,
+                    validationResult.errorCode,
+                    validationResult.errorMessage,
+                ]);
                 return;
             }
 

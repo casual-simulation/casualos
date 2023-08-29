@@ -1,5 +1,10 @@
-import { WebsocketEvent, WebsocketMessage } from './WebsocketEvents';
+import {
+    UploadHttpHeaders,
+    WebsocketEvent,
+    WebsocketMessage,
+} from './WebsocketEvents';
 import { ServerError, NotSupportedError } from '../Errors';
+import { PresignFileUploadResult } from '../FileRecordsStore';
 
 /**
  * Defines an interface that is capable of sending messages to connections.
@@ -8,6 +13,7 @@ export interface WebsocketMessenger {
     /**
      * Sends the given data to the given connection IDs.
      * @param connectionIds The IDs of the connections.
+     * @param id The ID of the request that is being sent.
      * @param data The data that should be sent.
      * @param excludeConnection The connection ID that should be skipped.
      */
@@ -35,13 +41,19 @@ export interface WebsocketMessenger {
      * Gets a URL that messages can be uploaded to.
      * Returns null/undefined if message uploads are not supported.
      */
-    getMessageUploadUrl(): Promise<string>;
+    presignMessageUpload(): Promise<PresignFileUploadResult>;
 
     /**
      * Tries to download the message that was uploaded to the given URL.
      * Returns null if the message could not be found.
      * Returns undefined if message downloads is not supported.
      * @param url The URl that the message was uploaded to.
+     * @param method The HTTP method that should be used to download the message. Might be ignored if the messenger recognizes the URL.
+     * @param headers The headers that should be used to download the message. Might be ignored if the messenger recognizes the URL.
      */
-    downloadMessage(url: string): Promise<string | null | undefined>;
+    downloadMessage(
+        url: string,
+        method: string,
+        headers: UploadHttpHeaders
+    ): Promise<string | null | undefined>;
 }

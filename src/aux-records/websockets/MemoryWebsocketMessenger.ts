@@ -1,3 +1,4 @@
+import { PresignFileUploadResult } from '../FileRecordsStore';
 import { WebsocketEvent, WebsocketEventTypes } from './WebsocketEvents';
 import { WebsocketMessenger } from './WebsocketMessenger';
 
@@ -52,8 +53,20 @@ export class MemoryWebsocketMessenger implements WebsocketMessenger {
         events.push(event);
     }
 
-    async getMessageUploadUrl(): Promise<string> {
-        return this._messageUploadUrl;
+    async presignMessageUpload(): Promise<PresignFileUploadResult> {
+        if (!this._messageUploadUrl) {
+            return {
+                success: false,
+                errorCode: 'not_supported',
+                errorMessage: 'Message uploads are not supported.',
+            };
+        }
+        return {
+            success: true,
+            uploadMethod: 'POST',
+            uploadUrl: this._messageUploadUrl,
+            uploadHeaders: {},
+        };
     }
 
     async downloadMessage(url: string): Promise<string | null | undefined> {

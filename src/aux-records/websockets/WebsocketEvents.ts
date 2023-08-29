@@ -1,3 +1,4 @@
+import { ValidateConnectionTokenFailure } from '../AuthController';
 import { NotSupportedError, ServerError } from '../Errors';
 import { ConnectionInfo, connectionInfoSchema } from '../common/ConnectionInfo';
 import {
@@ -43,7 +44,7 @@ export const websocketEventSchema = z.tuple([
     z.number(),
     z.any(),
     z.string().optional(),
-    z.string().optional(),
+    z.any().optional(),
 ]);
 
 /**
@@ -67,18 +68,26 @@ export const websocketUploadRequestEventSchema = z.tuple([
     z.number(),
 ]);
 
+export interface UploadHttpHeaders {
+    [key: string]: string;
+}
+
 /**
  * Defines a websocket event that contains a response to an upload request.
  */
 export type WebsocketUploadResponseEvent = [
     type: WebsocketEventTypes.UploadResponse,
     id: number,
-    uploadUrl: string
+    uploadUrl: string,
+    uploadMethod: string,
+    uploadHeaders: UploadHttpHeaders
 ];
 export const websocketUploadResponseEventSchema = z.tuple([
     z.literal(WebsocketEventTypes.UploadResponse),
     z.number(),
     z.string(),
+    z.string(),
+    z.record(z.string()),
 ]);
 
 /**
@@ -87,7 +96,11 @@ export const websocketUploadResponseEventSchema = z.tuple([
 export type WebsocketErrorEvent = [
     type: WebsocketEventTypes.Error,
     id: number,
-    errorCode: ServerError | NotSupportedError | 'message_not_found',
+    errorCode:
+        | ServerError
+        | NotSupportedError
+        | ValidateConnectionTokenFailure['errorCode']
+        | 'message_not_found',
     errorMessage: string
 ];
 export const websocketErrorEventSchema = z.tuple([
@@ -102,11 +115,17 @@ export const websocketErrorEventSchema = z.tuple([
  */
 export type WebsocketDownloadRequestEvent = [
     type: WebsocketEventTypes.DownloadRequest,
-    url: string
+    id: number,
+    downloadUrl: string,
+    downloadMethod: string,
+    downloadHeaders: UploadHttpHeaders
 ];
 export const websocketDownloadRequestEventSchema = z.tuple([
     z.literal(WebsocketEventTypes.DownloadRequest),
+    z.number(),
     z.string(),
+    z.string(),
+    z.record(z.string()),
 ]);
 
 export type WebsocketMessage =

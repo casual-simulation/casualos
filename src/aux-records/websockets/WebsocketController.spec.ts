@@ -1915,7 +1915,13 @@ describe('WebsocketController', () => {
 
             const events = messenger.getEvents(device1Info.serverConnectionId);
             expect(events).toEqual([
-                [WebsocketEventTypes.UploadResponse, 1, 'upload_url'],
+                [
+                    WebsocketEventTypes.UploadResponse,
+                    1,
+                    'upload_url',
+                    'POST',
+                    {},
+                ],
             ]);
         });
 
@@ -1945,7 +1951,9 @@ describe('WebsocketController', () => {
             const response = await server.downloadRequest(
                 device1Info.serverConnectionId,
                 1,
-                'download_url'
+                'download_url',
+                'GET',
+                {}
             );
 
             expect(response).toEqual({
@@ -1963,7 +1971,9 @@ describe('WebsocketController', () => {
             const response = await server.downloadRequest(
                 device1Info.serverConnectionId,
                 1,
-                'download_url'
+                'download_url',
+                'GET',
+                {}
             );
 
             expect(response).toEqual({
@@ -2020,6 +2030,29 @@ describe('WebsocketController', () => {
                 userId: userId,
                 sessionId: sessionId,
             });
+        });
+
+        it('should send a unacceptable_connection_token error if the token is wrong', async () => {
+            await server.login(serverConnectionId, 1, {
+                type: 'login',
+                connectionToken: 'wrong token',
+            });
+
+            const events = messenger.getEvents(serverConnectionId);
+            expect(events).toEqual([
+                [
+                    WebsocketEventTypes.Error,
+                    1,
+                    'unacceptable_connection_token',
+                    'The given connection token is invalid. It must be a correctly formatted string.',
+                ],
+            ]);
+
+            const connection = await connectionStore.getConnection(
+                serverConnectionId
+            );
+
+            expect(connection).toBeFalsy();
         });
     });
 });
