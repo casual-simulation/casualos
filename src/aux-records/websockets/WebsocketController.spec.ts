@@ -87,6 +87,7 @@ describe('WebsocketController', () => {
     const serverConnectionId = 'serverConnection';
     const connectionId = 'connectionId';
     const inst = 'inst';
+    const recordName = 'record';
 
     let user1Info: DeviceConnection;
 
@@ -113,6 +114,7 @@ describe('WebsocketController', () => {
         connectionToken = generateV1ConnectionToken(
             connectionKey,
             connectionId,
+            recordName,
             inst
         );
 
@@ -125,7 +127,7 @@ describe('WebsocketController', () => {
         };
     });
 
-    describe.only('login()', () => {
+    describe('login()', () => {
         it('should validate the token and update the connection info', async () => {
             await server.login(serverConnectionId, 1, {
                 type: 'login',

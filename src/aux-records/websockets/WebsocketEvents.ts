@@ -201,9 +201,10 @@ export interface WatchBranchMessage {
     branch: string;
 
     /**
-     * The ID of the site that is watching the branch.
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
      */
-    siteId?: string;
+    recordName: string | null;
 
     /**
      * Whether the branch should be temporary.
@@ -212,31 +213,12 @@ export interface WatchBranchMessage {
      * Defaults to false.
      */
     temporary?: boolean;
-
-    /**
-     * Whether this branch is the primary branch.
-     * Useful for indicating to branch watchers whether they should enable specialized functionality
-     * on this branch. Defaults to true.
-     */
-    primary?: boolean;
-
-    /**
-     * The protocol that this connection is using.
-     * "repo" indicates that atoms (add_atoms events) are being used and there is support for commits and history.
-     * "updates" indicates that update strings (add_updates events) are being used.
-     *
-     * Both protocols support tracking device connection and disconnection events.
-     *
-     * The default is "repo".
-     */
-    protocol?: 'repo' | 'updates';
 }
 export const watchBranchMessageSchema = z.object({
     type: z.literal('repo/watch_branch'),
     branch: z.string(),
-    siteId: z.string().optional(),
+    recordName: z.string().nonempty().nullable(),
     temporary: z.boolean().optional(),
-    primary: z.boolean().optional(),
 });
 type ZodWatchBranchMessage = z.infer<typeof watchBranchMessageSchema>;
 type ZodWatchBranchMessageAssertion = HasType<

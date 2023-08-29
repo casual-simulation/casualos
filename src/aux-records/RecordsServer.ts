@@ -30,7 +30,7 @@ import { AVAILABLE_PERMISSIONS_VALIDATION } from './PolicyPermissions';
 import { PolicyController } from './PolicyController';
 import { AIController } from './AIController';
 import { AIChatMessage, AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
-import { WebsocketController } from 'websockets/WebsocketController';
+import { WebsocketController } from './websockets/WebsocketController';
 
 /**
  * Defines an interface for a generic HTTP request.

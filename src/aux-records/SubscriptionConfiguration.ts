@@ -2,6 +2,12 @@ import { z } from 'zod';
 import { isActiveSubscription } from './Utils';
 
 export const subscriptionFeaturesSchema = z.object({
+    records: z
+        .object({
+            allowed: z.boolean(),
+            maxRecords: z.number().int().positive().optional(),
+        })
+        .optional(),
     data: z.object({
         allowed: z.boolean(),
         maxItems: z.number({}).int().positive().optional(),
@@ -34,9 +40,17 @@ export const subscriptionFeaturesSchema = z.object({
         }),
         skyboxes: z.object({
             allowed: z.boolean(),
-            maxSquarePixelsPerPeriod: z.number().int().positive().optional(),
+            maxSkyboxesPerPeriod: z.number().int().positive().optional(),
         }),
     }),
+    insts: z
+        .object({
+            allowed: z.boolean(),
+            maxInsts: z.number().int().positive().optional(),
+            maxBytesPerInst: z.number().int().positive().optional(),
+            maxActiveConnectionsPerInst: z.number().int().positive().optional(),
+        })
+        .optional(),
 });
 
 export const subscriptionConfigSchema = z.object({
@@ -84,6 +98,17 @@ export const subscriptionConfigSchema = z.object({
                     days: 0,
                     months: 1,
                 }),
+            tempInsts: z
+                .object({
+                    allowed: z.boolean(),
+                    maxBytesPerInst: z.number().int().positive().optional(),
+                    maxActiveConnectionsPerInst: z
+                        .number()
+                        .int()
+                        .positive()
+                        .optional(),
+                })
+                .optional(),
         })
         .optional(),
 });
@@ -250,6 +275,26 @@ export interface DefaultFeaturesConfiguration {
          */
         months?: number;
     };
+
+    /**
+     * The configuration for temporary insts.
+     */
+    tempInsts?: {
+        /**
+         * Whether they are allowed to be created.
+         */
+        allowed: boolean;
+
+        /**
+         * The maximum number of bytes that each inst can store.
+         */
+        maxBytesPerInst?: number;
+
+        /**
+         * The maximum number of active connections that each inst can have.
+         */
+        maxActiveConnectionsPerInst?: number;
+    };
 }
 
 /**
@@ -277,6 +322,11 @@ export interface FeaturesConfiguration {
      * The configuration for AI features.
      */
     ai: AIFeaturesConfiguration;
+
+    /**
+     * The configuration for inst features.
+     */
+    insts: InstsFeaturesConfiguration;
 }
 
 export interface RecordFeaturesConfiguration {
@@ -421,6 +471,28 @@ export interface AISkyboxFeaturesConfiguration {
     maxSkyboxesPerPeriod?: number;
 }
 
+export interface InstsFeaturesConfiguration {
+    /**
+     * Whether inst features are allowed.
+     */
+    allowed: boolean;
+
+    /**
+     * The maximum number of insts that a subscription can have.
+     */
+    maxInsts?: number;
+
+    /**
+     * The maximum number of bytes that an inst can store.
+     */
+    maxBytesPerInst?: number;
+
+    /**
+     * The maximum number of concurrent connections allowed per inst.
+     */
+    maxActiveConnectionsPerInst?: number;
+}
+
 export function allowAllFeatures(): FeaturesConfiguration {
     return {
         records: {
@@ -444,6 +516,9 @@ export function allowAllFeatures(): FeaturesConfiguration {
             allowed: true,
         },
         files: {
+            allowed: true,
+        },
+        insts: {
             allowed: true,
         },
     };
