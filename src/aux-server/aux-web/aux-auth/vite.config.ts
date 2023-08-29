@@ -6,7 +6,6 @@ import copy from 'rollup-plugin-copy';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 import { VitePWA } from 'vite-plugin-pwa';
 import { injectHtml } from 'vite-plugin-html';
-import { loadConfig } from '../../aux-backend/shared/ConfigUtils';
 
 // @ts-ignore
 import { GIT_HASH, GIT_TAG } from '../../../../script/git-stats';
@@ -29,11 +28,10 @@ const config = process.env.SERVER_CONFIG
     : null;
 
 export default defineConfig(({ command, mode }) => {
-    const apiEndpoint =
-        process.env.AUTH_API_ENDPOINT ??
-        (command === 'build'
-            ? 'https://api.casualos.me'
-            : 'http://localhost:3002');
+    let apiEndpoint: string | null = null;
+    if (process.env.AUTH_API_ENDPOINT) {
+        apiEndpoint = process.env.AUTH_API_ENDPOINT;
+    }
     return {
         build: {
             outDir: distDir,
@@ -87,6 +85,9 @@ export default defineConfig(({ command, mode }) => {
                         command !== 'build')
             ),
             ASSUME_SUBSCRIPTIONS_SUPPORTED: JSON.stringify(
+                command === 'serve' || (config && config.subscriptions)
+            ),
+            ASSUME_STUDIOS_SUPPORTED: JSON.stringify(
                 command === 'serve' || (config && config.subscriptions)
             ),
         },

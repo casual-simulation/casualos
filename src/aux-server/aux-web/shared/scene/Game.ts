@@ -649,6 +649,7 @@ export abstract class Game {
         if (address && !this.xrSession) {
             this._setBackgroundAddress(address);
         } else {
+            this._currentBackgroundAddress = null;
             if (this._backgroundVideoSubscription) {
                 this._backgroundVideoSubscription.unsubscribe();
                 this._backgroundVideoSubscription = null;

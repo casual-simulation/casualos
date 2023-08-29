@@ -113,7 +113,10 @@
                         </md-list>
                     </md-list-item>
                     <md-list-item>
-                        <md-button class="md-raised md-primary" @click="startCreateStudio()"
+                        <md-button
+                            v-if="allowCreateStudio"
+                            class="md-raised md-primary"
+                            @click="startCreateStudio()"
                             >Create Studio</md-button
                         >
                     </md-list-item>

@@ -32,6 +32,8 @@ export default class AuthApp extends Vue {
     userId: string = '';
     createRecordStudioId: string = null;
 
+    allowCreateStudio: boolean = false;
+
     get title() {
         return location.hostname;
     }
@@ -71,6 +73,7 @@ export default class AuthApp extends Vue {
         this.recordName = '';
         this.userId = '';
         this.createRecordStudioId = null;
+        this.allowCreateStudio = authManager.studiosSupported;
         authManager.loginState.subscribe((state) => {
             this.userId = authManager.userId;
             this.showLogout = authManager.isLoggedIn();

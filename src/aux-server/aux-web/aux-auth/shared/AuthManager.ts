@@ -57,11 +57,18 @@ if (typeof (globalThis as any).ASSUME_SUBSCRIPTIONS_SUPPORTED === 'undefined') {
     (globalThis as any).ASSUME_SUBSCRIPTIONS_SUPPORTED = false;
 }
 
+declare const ASSUME_STUDIOS_SUPPORTED: boolean;
+
+if (typeof (globalThis as any).ASSUME_STUDIOS_SUPPORTED === 'undefined') {
+    (globalThis as any).ASSUME_STUDIOS_SUPPORTED = false;
+}
+
 export class AuthManager {
     private _userId: string;
     private _sessionId: string;
     private _appMetadata: AppMetadata;
     private _subscriptionsSupported: boolean;
+    private _studiosSupported: boolean;
 
     private _loginState: Subject<boolean>;
     private _apiEndpoint: string;
@@ -72,6 +79,7 @@ export class AuthManager {
         this._gitTag = gitTag;
         this._loginState = new BehaviorSubject<boolean>(false);
         this._subscriptionsSupported = ASSUME_SUBSCRIPTIONS_SUPPORTED;
+        this._studiosSupported = ASSUME_STUDIOS_SUPPORTED;
     }
 
     get userId() {
@@ -112,6 +120,10 @@ export class AuthManager {
 
     get subscriptionTier() {
         return this._appMetadata?.subscriptionTier;
+    }
+
+    get studiosSupported() {
+        return this._studiosSupported;
     }
 
     get userInfoLoaded() {
@@ -918,7 +930,7 @@ export class AuthManager {
     }
 
     get apiEndpoint(): string {
-        return this._apiEndpoint;
+        return this._apiEndpoint ?? location.origin;
     }
 }
 

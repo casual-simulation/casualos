@@ -55,7 +55,7 @@ Resources:
         Properties:
             Handler: Records.handleRecords
             CodeUri: dist/handlers
-            Runtime: nodejs14.x
+            Runtime: nodejs18.x
             MemorySize: 256
             Timeout: 100
             Description: A function that publishes and retreives records for the user.
@@ -70,7 +70,6 @@ Resources:
                   ]
             Environment:
                 Variables:
-                    SERVER_CONFIG: !Ref ServerConfigParameter
                     REGION: !Ref 'AWS::Region'
                     FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
                     FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
@@ -285,7 +284,7 @@ Resources:
         Properties:
             Handler: websockets.connect
             CodeUri: dist/handlers
-            Runtime: nodejs14.x
+            Runtime: nodejs18.x
             MemorySize: 256
             Timeout: 100
             Description: A function handles websocket connections
@@ -294,7 +293,6 @@ Resources:
                 - Arn
             Environment:
                 Variables:
-                    SERVER_CONFIG: !Ref ServerConfigParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
     HandleConnectPermission:
@@ -317,7 +315,7 @@ Resources:
         Properties:
             Handler: websockets.disconnect
             CodeUri: dist/handlers
-            Runtime: nodejs14.x
+            Runtime: nodejs18.x
             MemorySize: 256
             Timeout: 100
             Description: A function that handles websocket disconnections.
@@ -326,7 +324,6 @@ Resources:
                 - Arn
             Environment:
                 Variables:
-                    SERVER_CONFIG: !Ref ServerConfigParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
     HandleDisconnectPermission:
@@ -349,7 +346,7 @@ Resources:
         Properties:
             Handler: websockets.message
             CodeUri: dist/handlers
-            Runtime: nodejs14.x
+            Runtime: nodejs18.x
             MemorySize: 256
             Timeout: 100
             Description: A function handle websocket messages.
@@ -358,7 +355,6 @@ Resources:
                 - Arn
             Environment:
                 Variables:
-                    SERVER_CONFIG: !Ref ServerConfigParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
     HandleMessagePermission:
@@ -381,7 +377,7 @@ Resources:
         Properties:
             Handler: websockets.webhook
             CodeUri: dist/handlers
-            Runtime: nodejs14.x
+            Runtime: nodejs18.x
             MemorySize: 256
             Timeout: 100
             Description: A function handle webhook requests.
@@ -390,7 +386,6 @@ Resources:
                 - Arn
             Environment:
                 Variables:
-                    SERVER_CONFIG: !Ref ServerConfigParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
             Events:
@@ -411,7 +406,7 @@ Resources:
         Properties:
             Handler: websockets.instData
             CodeUri: dist/handlers
-            Runtime: nodejs14.x
+            Runtime: nodejs18.x
             MemorySize: 256
             Timeout: 100
             Description: A function handle inst data requests.
@@ -420,7 +415,6 @@ Resources:
                 - Arn
             Environment:
                 Variables:
-                    SERVER_CONFIG: !Ref ServerConfigParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
             Events:

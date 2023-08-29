@@ -243,6 +243,10 @@ export {
     RevokeMarkerPermissionSuccess,
     RevokeMarkerPermissionFailure,
 
+    ListStudiosResult,
+    ListStudiosSuccess,
+    ListStudiosFailure,
+
 } from '../../../src/aux-records';
 
 export {
