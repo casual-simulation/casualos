@@ -70,7 +70,6 @@ Resources:
                   ]
             Environment:
                 Variables:
-                    SERVER_CONFIG: !Ref ServerConfigParameter
                     REGION: !Ref 'AWS::Region'
                     FILES_BUCKET: !Sub '${AWS::StackName}-filesbucket-${AWS::AccountId}'
                     FILES_STORAGE_CLASS: !Ref FileRecordsS3StorageClassParameter
@@ -294,7 +293,6 @@ Resources:
                 - Arn
             Environment:
                 Variables:
-                    SERVER_CONFIG: !Ref ServerConfigParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
     HandleConnectPermission:
@@ -326,7 +324,6 @@ Resources:
                 - Arn
             Environment:
                 Variables:
-                    SERVER_CONFIG: !Ref ServerConfigParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
     HandleDisconnectPermission:
@@ -358,7 +355,6 @@ Resources:
                 - Arn
             Environment:
                 Variables:
-                    SERVER_CONFIG: !Ref ServerConfigParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
     HandleMessagePermission:
@@ -390,7 +386,6 @@ Resources:
                 - Arn
             Environment:
                 Variables:
-                    SERVER_CONFIG: !Ref ServerConfigParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
             Events:
@@ -420,7 +415,6 @@ Resources:
                 - Arn
             Environment:
                 Variables:
-                    SERVER_CONFIG: !Ref ServerConfigParameter
                     MESSAGES_BUCKET: !Ref MessagesBucket
                     WEBSOCKET_URL: !Sub 'https://${WebsocketsApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
             Events:
