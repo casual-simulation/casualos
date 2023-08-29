@@ -7,6 +7,7 @@
 ### :rocket: Improvements
 
 -   Updated to support Node.js 18.x.
+-   Improved the build process to inject the `SERVER_CONFIG` environment variable into the resulting JS bundle instead of requiring the CloudFormation inject it into the Lambda functions itself.
 
 ## V3.2.5
 
