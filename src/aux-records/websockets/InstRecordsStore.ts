@@ -39,11 +39,25 @@ export interface InstRecordsStore {
 
     /**
      * Gets the list of updates for the given branch in the given inst and record.
+     * This will only include updates that are currently being worked on.
      * @param recordName The name of the record. If null, then the updates for a tempPublic inst will be returned.
      * @param inst The name of the inst.
      * @param branch The branch in the inst.
      */
-    getUpdates(
+    getCurrentUpdates(
+        recordName: string | null,
+        inst: string,
+        branch: string
+    ): Promise<StoredUpdates>;
+
+    /**
+     * Gets the entire list of updates for the given branch in the given inst and record.
+     * This should include historical updates.
+     * @param recordName The name of the record. If null, then the updates for a tempPublic inst will be returned.
+     * @param inst The name of the inst.
+     * @param branch The branch in the inst.
+     */
+    getAllUpdates(
         recordName: string | null,
         inst: string,
         branch: string
