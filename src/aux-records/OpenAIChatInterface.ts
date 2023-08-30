@@ -1,3 +1,4 @@
+import { handleAxiosErrors } from './Utils';
 import {
     AIChatInterface,
     AIChatInterfaceRequest,
@@ -31,49 +32,53 @@ export class OpenAIChatInterface implements AIChatInterface {
     async chat(
         request: AIChatInterfaceRequest
     ): Promise<AIChatInterfaceResponse> {
-        const result = await axios.post(
-            'https://api.openai.com/v1/chat/completions',
-            {
-                model: request.model,
-                messages: request.messages.map((m) => ({
-                    role: m.role,
-                    content: m.content,
-                    name: m.author,
-                    function_call: m.functionCall,
-                })),
-                temperature: request.temperature,
-                top_p: request.topP,
-                presence_penalty: request.presencePenalty,
-                frequency_penalty: request.frequencyPenalty,
-                max_tokens: this._options.maxTokens,
-                stop: request.stopWords,
-                user: request.userId,
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${this._options.apiKey}`,
+        try {
+            const result = await axios.post(
+                'https://api.openai.com/v1/chat/completions',
+                {
+                    model: request.model,
+                    messages: request.messages.map((m) => ({
+                        role: m.role,
+                        content: m.content,
+                        name: m.author,
+                        function_call: m.functionCall,
+                    })),
+                    temperature: request.temperature,
+                    top_p: request.topP,
+                    presence_penalty: request.presencePenalty,
+                    frequency_penalty: request.frequencyPenalty,
+                    max_tokens: this._options.maxTokens,
+                    stop: request.stopWords,
+                    user: request.userId,
                 },
-            }
-        );
+                {
+                    headers: {
+                        Authorization: `Bearer ${this._options.apiKey}`,
+                    },
+                }
+            );
 
-        console.log(
-            `[OpenAIChatInterface] [${request.userId}] [chat]: Total tokens: ${result.data.usage.total_tokens}`
-        );
+            console.log(
+                `[OpenAIChatInterface] [${request.userId}] [chat]: Total tokens: ${result.data.usage.total_tokens}`
+            );
 
-        let choices: AIChatMessage[] = result.data.choices.map(
-            (c: ChatChoice) => ({
-                role: c.message.role,
-                content: c.message.content,
-                author: c.message.name,
-                functionCall: c.message.function_call,
-                finishReason: c.finishReason,
-            })
-        );
+            let choices: AIChatMessage[] = result.data.choices.map(
+                (c: ChatChoice) => ({
+                    role: c.message.role,
+                    content: c.message.content,
+                    author: c.message.name,
+                    functionCall: c.message.function_call,
+                    finishReason: c.finishReason,
+                })
+            );
 
-        return {
-            choices: choices,
-            totalTokens: result.data.usage.total_tokens,
-        };
+            return {
+                choices: choices,
+                totalTokens: result.data.usage.total_tokens,
+            };
+        } catch (err) {
+            handleAxiosErrors(err);
+        }
     }
 }
 
