@@ -561,7 +561,6 @@ export class ServerBuilder {
             console.log('[ServerBuilder] Using OpenAI Chat.');
             this._chatInterface = new OpenAIChatInterface({
                 apiKey: options.openai.apiKey,
-                maxTokens: options.openai.maxTokens,
             });
         }
 
@@ -912,7 +911,6 @@ const prismaSchema = z.object({
 
 const openAiSchema = z.object({
     apiKey: z.string().nonempty(),
-    maxTokens: z.number().positive().optional(),
 });
 
 const blockadeLabsSchema = z.object({
