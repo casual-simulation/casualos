@@ -11,6 +11,7 @@ import {
     AIGeneratedImage,
     AIImageInterface,
 } from './AIImageInterface';
+import { handleAxiosErrors } from './Utils';
 
 export interface OpenAIImageOptions {
     /**
@@ -42,41 +43,47 @@ export class OpenAIImageInterface implements AIImageInterface {
     async generateImage(
         request: AIGenerateImageInterfaceRequest
     ): Promise<AIGenerateImageInterfaceResponse> {
-        const size = `${request.width ?? this._options.defaultWidth ?? 1024}x${
-            request.height ?? this._options.defaultHeight ?? 1024
-        }`;
+        try {
+            const size = `${
+                request.width ?? this._options.defaultWidth ?? 1024
+            }x${request.height ?? this._options.defaultHeight ?? 1024}`;
 
-        console.log(
-            `[OpenAIImageInterface] [${request.userId}] [generateImage]: Generating image...`
-        );
+            console.log(
+                `[OpenAIImageInterface] [${request.userId}] [generateImage]: Generating image...`
+            );
 
-        const result = await axios.post(
-            'https://api.openai.com/v1/images/generations',
-            {
-                prompt: request.prompt,
-                n: request.numberOfImages ?? 1,
-                size,
-                response_format: 'b64_json',
-                user: request.userId,
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${this._options.apiKey}`,
+            const result = await axios.post(
+                'https://api.openai.com/v1/images/generations',
+                {
+                    prompt: request.prompt,
+                    n: request.numberOfImages ?? 1,
+                    size,
+                    response_format: 'b64_json',
+                    user: request.userId,
                 },
-            }
-        );
+                {
+                    headers: {
+                        Authorization: `Bearer ${this._options.apiKey}`,
+                    },
+                }
+            );
 
-        console.log(
-            `[OpenAIImageInterface] [${request.userId}] [generateImage]: Done!`
-        );
+            console.log(
+                `[OpenAIImageInterface] [${request.userId}] [generateImage]: Done!`
+            );
 
-        const images: AIGeneratedImage[] = result.data.data.map((d: any) => ({
-            base64: d.b64_json,
-            mimeType: 'image/png',
-        }));
+            const images: AIGeneratedImage[] = result.data.data.map(
+                (d: any) => ({
+                    base64: d.b64_json,
+                    mimeType: 'image/png',
+                })
+            );
 
-        return {
-            images,
-        };
+            return {
+                images,
+            };
+        } catch (err) {
+            handleAxiosErrors(err);
+        }
     }
 }

@@ -2,6 +2,7 @@ import { fromByteArray, toByteArray } from 'base64-js';
 import _, { omitBy, padStart, sortBy, StringChain } from 'lodash';
 import { sha256, hmac } from 'hash.js';
 import { PUBLIC_READ_MARKER } from './PolicyPermissions';
+import axios from 'axios';
 
 /**
  * Converts the given string into a base64 string.
@@ -521,4 +522,27 @@ export function getMarkersOrDefault(markers: string[] | null): string[] {
     }
 
     return markers;
+}
+
+/**
+ * Handles axios errors and ensures they get logged properly.
+ * @param err The error.
+ */
+export function handleAxiosErrors(err: any) {
+    if (axios.isAxiosError(err)) {
+        console.error(
+            'An axios error occcurred:',
+            '\nStatus:',
+            err.response.status,
+            '\nHeaders:',
+            err.response.headers,
+            '\nData:',
+            err.response.data,
+            '\nRequest:',
+            err.request
+        );
+        throw new Error('An axios error occurred: ' + err.message);
+    } else {
+        throw err;
+    }
 }
