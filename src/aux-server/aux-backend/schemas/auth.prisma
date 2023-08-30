@@ -178,6 +178,9 @@ model Record {
     manualDataRecords ManualDataRecord[]
     fileRecords FileRecord[]
     eventRecords EventRecord[]
+    instRecords InstRecord[]
+    instBranches InstBranch[]
+    branchUpdates BranchUpdate[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -331,6 +334,59 @@ model EventRecord {
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+}
+
+model InstRecord {
+    @@id([recordName, name])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name])
+
+    name String
+
+    markers String[]
+
+    branches InstBranch[]
+    updates BranchUpdate[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model InstBranch {
+    @@id([recordName, instName, name])
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name])
+
+    instName String
+    inst InstRecord @relation(fields: [recordName, instName], references: [recordName, name])
+
+    name String
+
+    updates BranchUpdate[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model BranchUpdate {
+    id String @id @db.Uuid()
+
+    recordName String
+    record Record @relation(fields: [recordName], references: [name])
+
+    instName String
+    inst InstRecord @relation(fields: [recordName, instName], references: [recordName, name])
+
+    branchName String
+    branch InstBranch @relation(fields: [recordName, instName, branchName], references: [recordName, instName, name])
+
+    sizeInBytes Int
+    updateData String
+
+    createdAt DateTime @default(now())
+    updated DateTime @updatedAt
 }
 
 model Configuration {
