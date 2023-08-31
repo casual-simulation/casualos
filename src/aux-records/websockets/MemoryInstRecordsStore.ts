@@ -128,21 +128,13 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
         const i = this._getInst(recordName, inst);
 
         if (!i) {
-            return {
-                updates: [],
-                timestamps: [],
-                instSizeInBytes: 0,
-            };
+            return null;
         }
 
         const b = i.branches.find((b) => b.branch === branch);
 
         if (!b) {
-            return {
-                updates: [],
-                timestamps: [],
-                instSizeInBytes: i.instSizeInBytes,
-            };
+            return null;
         }
 
         return {
@@ -242,8 +234,8 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
                 success: false,
                 errorCode: 'max_size_reached',
                 branch,
-                maxBranchSizeInBytes: this.maxAllowedInstSize,
-                neededBranchSizeInBytes: newSize,
+                maxInstSizeInBytes: this.maxAllowedInstSize,
+                neededInstSizeInBytes: newSize,
             };
         }
         i.instSizeInBytes = newSize;

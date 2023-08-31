@@ -39,6 +39,7 @@ export interface InstRecordsStore {
 
     /**
      * Gets the list of updates for the given branch in the given inst and record.
+     * Returns null if the branch does not exist.
      * This will only include updates that are currently being worked on.
      * @param recordName The name of the record. If null, then the updates for a tempPublic inst will be returned.
      * @param inst The name of the inst.
@@ -48,7 +49,7 @@ export interface InstRecordsStore {
         recordName: string | null,
         inst: string,
         branch: string
-    ): Promise<CurrentUpdates>;
+    ): Promise<CurrentUpdates | null>;
 
     /**
      * Gets the size of the inst.
@@ -65,6 +66,7 @@ export interface InstRecordsStore {
     /**
      * Gets the entire list of updates for the given branch in the given inst and record.
      * This should include historical updates.
+     * Returns null if the branch does not exist.
      * @param recordName The name of the record. If null, then the updates for a tempPublic inst will be returned.
      * @param inst The name of the inst.
      * @param branch The branch in the inst.
@@ -149,7 +151,7 @@ export interface AddUpdatesSuccess {
     /**
      * The current size of the branch.
      */
-    branchSizeInBytes?: number;
+    instSizeInBytes?: number;
 }
 
 export interface AddUpdatesFailure {
@@ -162,14 +164,14 @@ export interface AddUpdatesFailure {
     branch: string;
 
     /**
-     * The maximum allowed size for the branch.
+     * The maximum allowed size for the inst.
      */
-    maxBranchSizeInBytes?: number;
+    maxInstSizeInBytes?: number;
 
     /**
-     * The size that the branch would be at if the updates were added.
+     * The size that the inst would be at if the updates were added.
      */
-    neededBranchSizeInBytes?: number;
+    neededInstSizeInBytes?: number;
 }
 
 export type ReplaceUpdatesResult =

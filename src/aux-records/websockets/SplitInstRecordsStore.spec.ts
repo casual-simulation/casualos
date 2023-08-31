@@ -51,8 +51,11 @@ describe('SplitInstRecordsStore', () => {
                 },
             });
 
-            const key = temp.getBranchKey(recordName, instName, branchName);
-            const tempResult = await temp.getBranchByName(key);
+            const tempResult = await temp.getBranchByName(
+                recordName,
+                instName,
+                branchName
+            );
 
             expect(tempResult).toEqual({
                 recordName,
@@ -178,8 +181,11 @@ describe('SplitInstRecordsStore', () => {
                 markers: [PUBLIC_READ_MARKER],
             });
 
-            const key = temp.getBranchKey(recordName, instName, 'branch1');
-            const result = await temp.getBranchByName(key);
+            const result = await temp.getBranchByName(
+                recordName,
+                instName,
+                'branch1'
+            );
             expect(result).toBeNull();
         });
 
@@ -265,12 +271,11 @@ describe('SplitInstRecordsStore', () => {
                 },
             });
 
-            const branchKey = temp.getBranchKey(
+            const tempResult = await temp.getBranchByName(
                 recordName,
                 instName,
                 branchName
             );
-            const tempResult = await temp.getBranchByName(branchKey);
 
             expect(tempResult).toEqual({
                 recordName,
@@ -340,7 +345,9 @@ describe('SplitInstRecordsStore', () => {
             });
 
             const tempResult = await temp.getUpdates(
-                temp.getBranchKey(recordName, instName, branchName)
+                recordName,
+                instName,
+                branchName
             );
             expect(tempResult).toEqual({
                 updates: ['test'],
@@ -350,8 +357,14 @@ describe('SplitInstRecordsStore', () => {
         });
 
         it('should return the updates from the temp store', async () => {
-            const key = temp.getBranchKey(recordName, instName, branchName);
-            await temp.addUpdates(key, ['test', 'abc'], 7);
+            // const key = temp.getBranchKey(recordName, instName, branchName);
+            await temp.addUpdates(
+                recordName,
+                instName,
+                branchName,
+                ['test', 'abc'],
+                7
+            );
 
             const result = await store.getCurrentUpdates(
                 recordName,
@@ -365,7 +378,11 @@ describe('SplitInstRecordsStore', () => {
                 instSizeInBytes: 7,
             });
 
-            const tempResult = await temp.getUpdates(key);
+            const tempResult = await temp.getUpdates(
+                recordName,
+                instName,
+                branchName
+            );
             expect(tempResult).toEqual({
                 updates: ['test', 'abc'],
                 timestamps: [expect.any(Number), expect.any(Number)],
@@ -391,9 +408,15 @@ describe('SplitInstRecordsStore', () => {
         });
 
         it('should return the updates from the temp store', async () => {
-            const key = temp.getBranchKey(recordName, instName, branchName);
-            await temp.addUpdates(key, ['test', 'abc'], 7);
-            await temp.addUpdates(key, ['def'], 3);
+            // const key = temp.getBranchKey(recordName, instName, branchName);
+            await temp.addUpdates(
+                recordName,
+                instName,
+                branchName,
+                ['test', 'abc'],
+                7
+            );
+            await temp.addUpdates(recordName, instName, branchName, ['def'], 3);
 
             const result = await store.getAllUpdates(
                 recordName,
@@ -410,7 +433,11 @@ describe('SplitInstRecordsStore', () => {
                 ],
             });
 
-            const tempResult = await temp.getUpdates(key);
+            const tempResult = await temp.getUpdates(
+                recordName,
+                instName,
+                branchName
+            );
             expect(tempResult).toEqual({
                 updates: ['test', 'abc', 'def'],
                 timestamps: [
@@ -423,11 +450,17 @@ describe('SplitInstRecordsStore', () => {
         });
 
         it('should merge the updates from the temp store and the permanent store', async () => {
-            const key = temp.getBranchKey(recordName, instName, branchName);
+            // const key = temp.getBranchKey(recordName, instName, branchName);
             await perm.addUpdate(recordName, instName, branchName, 'test', 4);
             await perm.addUpdate(recordName, instName, branchName, 'abc', 3);
-            await temp.addUpdates(key, ['test1', 'test2'], 10);
-            await temp.addUpdates(key, ['abc'], 3);
+            await temp.addUpdates(
+                recordName,
+                instName,
+                branchName,
+                ['test1', 'test2'],
+                10
+            );
+            await temp.addUpdates(recordName, instName, branchName, ['abc'], 3);
 
             const result = await store.getAllUpdates(
                 recordName,
@@ -446,7 +479,10 @@ describe('SplitInstRecordsStore', () => {
             });
 
             const tempResult = await temp.getUpdates(
-                temp.getBranchKey(recordName, instName, branchName)
+                recordName,
+                instName,
+                branchName
+                // temp.getBranchKey(recordName, instName, branchName)
             );
             expect(tempResult).toEqual({
                 updates: ['test1', 'test2', 'abc'],
@@ -477,12 +513,10 @@ describe('SplitInstRecordsStore', () => {
         });
 
         it('should return the size from the temp store first', async () => {
-            const key = temp.getBranchKey(recordName, instName, branchName);
             await perm.addUpdate(recordName, instName, branchName, 'test', 4);
-            await temp.setUpdatesSize(key, 10);
+            await temp.setInstSize(recordName, instName, 10);
 
             const result = await store.getInstSize(recordName, instName);
-
             expect(result).toEqual(10);
         });
 
@@ -490,8 +524,64 @@ describe('SplitInstRecordsStore', () => {
             await perm.addUpdate(recordName, instName, branchName, 'test', 4);
 
             const result = await store.getInstSize(recordName, instName);
-
             expect(result).toEqual(4);
+        });
+    });
+
+    describe('addUpdate()', () => {
+        beforeEach(async () => {
+            await perm.saveInst({
+                recordName,
+                inst: instName,
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await perm.saveBranch({
+                branch: branchName,
+                inst: instName,
+                recordName,
+                temporary: false,
+            });
+        });
+
+        it('should add the update to the temp store', async () => {
+            const result = await store.addUpdate(
+                recordName,
+                instName,
+                branchName,
+                'test',
+                4
+            );
+
+            expect(result).toEqual({
+                success: true,
+                instSizeInBytes: 4,
+            });
+
+            const updates = await temp.getUpdates(
+                recordName,
+                instName,
+                branchName
+            );
+            expect(updates).toEqual({
+                updates: ['test'],
+                timestamps: [expect.any(Number)],
+                instSizeInBytes: 4,
+            });
+
+            const size = await temp.getInstSize(recordName, instName);
+            expect(size).toEqual(4);
+
+            const permResult = await perm.getCurrentUpdates(
+                recordName,
+                instName,
+                branchName
+            );
+            expect(permResult).toEqual({
+                updates: [],
+                timestamps: [],
+                instSizeInBytes: 0,
+            });
         });
     });
 });

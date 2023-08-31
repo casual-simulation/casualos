@@ -16,7 +16,16 @@ export class MemoryTempInstRecordsStore implements TemporaryInstRecordsStore {
         return `/${recordName}/${inst}/${branch}`;
     }
 
-    async getBranchByName(key: string): Promise<TempBranchInfo> {
+    getInstKey(recordName: string, inst: string): string {
+        return `/${recordName}/${inst}`;
+    }
+
+    async getBranchByName(
+        recordName: string,
+        inst: string,
+        branch: string
+    ): Promise<TempBranchInfo> {
+        const key = this.getBranchKey(recordName, inst, branch);
         return this._branches.get(key) ?? null;
     }
 
@@ -40,13 +49,19 @@ export class MemoryTempInstRecordsStore implements TemporaryInstRecordsStore {
         }
     }
 
-    async getUpdates(key: string): Promise<CurrentUpdates> {
+    async getUpdates(
+        recordName: string,
+        inst: string,
+        branch: string
+    ): Promise<CurrentUpdates> {
+        const key = this.getBranchKey(recordName, inst, branch);
+        const instKey = this.getInstKey(recordName, inst);
         const updates = this._updates.get(key);
 
         if (!updates) {
             return null;
         }
-        const size = this._sizes.get(key) ?? 0;
+        const size = this._sizes.get(instKey) ?? 0;
         return {
             ...updates,
             instSizeInBytes: size,
@@ -54,10 +69,14 @@ export class MemoryTempInstRecordsStore implements TemporaryInstRecordsStore {
     }
 
     async addUpdates(
-        key: string,
+        recordName: string,
+        inst: string,
+        branch: string,
         updates: string[],
         sizeInBytes: number
     ): Promise<void> {
+        const key = this.getBranchKey(recordName, inst, branch);
+        const instKey = this.getInstKey(recordName, inst);
         let currentUpdates = this._updates.get(key) ?? {
             updates: [],
             timestamps: [],
@@ -70,30 +89,44 @@ export class MemoryTempInstRecordsStore implements TemporaryInstRecordsStore {
 
         this._updates.set(key, currentUpdates);
 
-        const currentSize = this._sizes.get(key) ?? 0;
-        this._sizes.set(key, currentSize + sizeInBytes);
+        const currentSize = this._sizes.get(instKey) ?? 0;
+        this._sizes.set(instKey, currentSize + sizeInBytes);
     }
 
-    async getUpdatesSize(key: string): Promise<number> {
-        return this._sizes.get(key) ?? 0;
+    async getInstSize(
+        recordName: string,
+        inst: string
+    ): Promise<number | null> {
+        const key = this.getInstKey(recordName, inst);
+        return this._sizes.get(key) ?? null;
     }
 
-    async setUpdatesSize(
-        branchKey: string,
+    async setInstSize(
+        recordName: string,
+        inst: string,
         sizeInBytes: number
     ): Promise<void> {
-        this._sizes.set(branchKey, sizeInBytes);
+        const instKey = this.getInstKey(recordName, inst);
+        this._sizes.set(instKey, sizeInBytes);
     }
 
-    async addUpdatesSize(
-        branchKey: string,
+    async addInstSize(
+        recordName: string,
+        inst: string,
         sizeInBytes: number
     ): Promise<void> {
-        const currentSize = this._sizes.get(branchKey) ?? 0;
-        this._sizes.set(branchKey, currentSize + sizeInBytes);
+        const instKey = this.getInstKey(recordName, inst);
+        const currentSize = this._sizes.get(instKey) ?? 0;
+        this._sizes.set(instKey, currentSize + sizeInBytes);
     }
 
-    async trimUpdates(key: string, numToDelete: number): Promise<void> {
+    async trimUpdates(
+        recordName: string,
+        inst: string,
+        branch: string,
+        numToDelete: number
+    ): Promise<void> {
+        const key = this.getBranchKey(recordName, inst, branch);
         const updates = this._updates.get(key);
         if (updates) {
             updates.updates.splice(0, numToDelete);

@@ -36,8 +36,11 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         inst: string,
         branch: string
     ): Promise<BranchRecordWithInst> {
-        const key = this._temp.getBranchKey(recordName, inst, branch);
-        const tempResult = await this._temp.getBranchByName(key);
+        const tempResult = await this._temp.getBranchByName(
+            recordName,
+            inst,
+            branch
+        );
 
         if (tempResult) {
             return tempResult;
@@ -75,8 +78,11 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         inst: string,
         branch: string
     ): Promise<CurrentUpdates> {
-        const key = this._temp.getBranchKey(recordName, inst, branch);
-        const tempUpdates = await this._temp.getUpdates(key);
+        const tempUpdates = await this._temp.getUpdates(
+            recordName,
+            inst,
+            branch
+        );
 
         if (tempUpdates) {
             return tempUpdates;
@@ -89,7 +95,9 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         );
         if (updates.updates.length > 0) {
             await this._temp.addUpdates(
-                key,
+                recordName,
+                inst,
+                branch,
                 updates.updates,
                 updates.instSizeInBytes
             );
@@ -103,8 +111,11 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         inst: string,
         branch: string
     ): Promise<StoredUpdates> {
-        const key = this._temp.getBranchKey(recordName, inst, branch);
-        const tempUpdates = await this._temp.getUpdates(key);
+        const tempUpdates = await this._temp.getUpdates(
+            recordName,
+            inst,
+            branch
+        );
         const permUpdates = await this._permanent.getAllUpdates(
             recordName,
             inst,
@@ -157,7 +168,10 @@ export class SplitInstRecordsStore implements InstRecordsStore {
     }
 
     async getInstSize(recordName: string, inst: string): Promise<number> {
-        return this._permanent.getInstSize(recordName, inst);
+        return (
+            (await this._temp.getInstSize(recordName, inst)) ??
+            (await this._permanent.getInstSize(recordName, inst))
+        );
     }
 
     async addUpdate(
@@ -167,18 +181,18 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         update: string,
         sizeInBytes: number
     ): Promise<AddUpdatesResult> {
-        const key = this._temp.getBranchKey(recordName, inst, branch);
-        const branchInfo = await this._temp.getBranchByName(key);
-
-        // if (!branchInfo) {
-        //     await this._permanent.
-        // }
-
-        // const aa = await this._temp.addUpdates(recordName, inst, branch, updates);
+        await this._temp.addUpdates(
+            recordName,
+            inst,
+            branch,
+            [update],
+            sizeInBytes
+        );
+        const size = await this._temp.getInstSize(recordName, inst);
 
         return {
             success: true,
-            branchSizeInBytes: 0,
+            instSizeInBytes: size,
         };
     }
 

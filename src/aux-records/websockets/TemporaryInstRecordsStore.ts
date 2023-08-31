@@ -9,25 +9,14 @@ import { BranchRecordWithInst, CurrentUpdates } from './InstRecordsStore';
  */
 export interface TemporaryInstRecordsStore {
     /**
-     * Gets the key that should be used for the given branch.
-     * @param recordName The name of the record.
-     * @param inst The name of the inst.
-     * @param branch The name of the branch.
-     */
-    getBranchKey(recordName: string, inst: string, branch: string): string;
-
-    /**
-     * Gets the key that should be used for the given inst/
-     * @param recordName The name of the record.
-     * @param inst The name of the inst.
-     */
-    getInstKey(recordName: string, inst: string): string;
-
-    /**
      * Gets info for the given branch.
      * @param branchKey The key for the branch.
      */
-    getBranchByName(branchKey: string): Promise<TempBranchInfo | null>;
+    getBranchByName(
+        recordName: string,
+        inst: string,
+        branch: string
+    ): Promise<TempBranchInfo | null>;
 
     /**
      * Saves the branch info to the temporary store.
@@ -47,47 +36,74 @@ export interface TemporaryInstRecordsStore {
      * Returns null if no updates are stored.
      * @param branchKey The key for the branch.
      */
-    getUpdates(branchKey: string): Promise<CurrentUpdates | null>;
+    getUpdates(
+        recordName: string,
+        inst: string,
+        branch: string
+    ): Promise<CurrentUpdates | null>;
 
     /**
      * Adds the given updates to this temporary store.
-     * @param branchKey The branch key.
+     * @param recordName The name of the record.
+     * @param inst The name of the inst.
+     * @param branch The name of the branch.
      * @param updates The updates that should be added.
      * @param sizeInBytes The size of the updates in bytes.
      */
     addUpdates(
-        branchKey: string,
+        recordName: string,
+        inst: string,
+        branch: string,
         updates: string[],
         sizeInBytes: number
     ): Promise<void>;
 
     /**
      * Gets the size of the inst in bytes.
+     * Returns null if no size is stored.
      *
-     * @param instKey The inst key.
+     * @param recordName The name of the record.
+     * @param inst The name of the inst.
      */
-    getInstSize(instKey: string): Promise<number | null>;
+    getInstSize(recordName: string, inst: string): Promise<number | null>;
 
     /**
      * Sets the size of the inst in bytes.
-     * @param instKey The inst key.
+     * @param recordName The name of the record.
+     * @param inst The name of the inst.
      * @param sizeInBytes The size of the inst in bytes.
      */
-    setInstSize(instKey: string, sizeInBytes: number): Promise<void>;
+    setInstSize(
+        recordName: string,
+        inst: string,
+        sizeInBytes: number
+    ): Promise<void>;
 
     /**
      * Adds the given amount to the size of the inst.
-     * @param instKey The inst key.
+     * @param recordName The name of the record.
+     * @param inst The name of the inst.
      * @param sizeInBytes The size.
      */
-    addInstSize(instKey: string, sizeInBytes: number): Promise<void>;
+    addInstSize(
+        recordName: string,
+        inst: string,
+        sizeInBytes: number
+    ): Promise<void>;
 
     /**
      * Deletes the given number of updates from the beginning of the updates list.
-     * @param branchKey The branch key.
+     * @param recordName The name of the record.
+     * @param inst The name of the inst.
+     * @param branch The name of the branch.
      * @param numToDelete The number of updates that should be deleted from the beginning of the list.
      */
-    trimUpdates(branchKey: string, numToDelete: number): Promise<void>;
+    trimUpdates(
+        recordName: string,
+        inst: string,
+        branch: string,
+        numToDelete: number
+    ): Promise<void>;
 }
 
 export interface TempBranchInfo extends BranchRecordWithInst {}
