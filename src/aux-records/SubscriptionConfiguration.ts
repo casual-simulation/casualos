@@ -2,6 +2,12 @@ import { z } from 'zod';
 import { isActiveSubscription } from './Utils';
 
 export const subscriptionFeaturesSchema = z.object({
+    records: z
+        .object({
+            allowed: z.boolean(),
+            maxRecords: z.number().int().positive().optional(),
+        })
+        .optional(),
     data: z.object({
         allowed: z.boolean(),
         maxItems: z.number({}).int().positive().optional(),
@@ -256,7 +262,7 @@ export interface DefaultFeaturesConfiguration {
  * Defines an interface that contains the configuration for features.
  */
 export interface FeaturesConfiguration {
-    records: RecordFeaturesConfiguration;
+    records?: RecordFeaturesConfiguration;
 
     /**
      * The configuration for data features.
