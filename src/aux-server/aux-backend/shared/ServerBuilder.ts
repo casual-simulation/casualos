@@ -94,6 +94,7 @@ import {
 } from '@casual-simulation/aux-records/AIController';
 import { ConfigurationStore } from '@casual-simulation/aux-records/ConfigurationStore';
 import { PrismaMetricsStore } from 'aux-backend/prisma/PrismaMetricsStore';
+import { S3 } from '@aws-sdk/client-s3';
 
 export class ServerBuilder {
     private _docClient: DocumentClient;
@@ -290,8 +291,9 @@ export class ServerBuilder {
             s3.filesBucket,
             filesLookup,
             s3.filesStorageClass,
-            undefined,
-            s3.host
+            new S3(),
+            s3.host,
+            undefined
         );
         this._eventsStore = new PrismaEventRecordsStore(this._prismaClient);
 
