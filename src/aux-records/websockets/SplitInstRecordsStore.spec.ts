@@ -67,6 +67,7 @@ describe('SplitInstRecordsStore', () => {
                     inst: instName,
                     markers: [PUBLIC_READ_MARKER],
                 },
+                branchSizeInBytes: 0,
             });
         });
 
@@ -287,6 +288,7 @@ describe('SplitInstRecordsStore', () => {
                     inst: instName,
                     markers: ['test'],
                 },
+                branchSizeInBytes: 0,
             });
         });
     });
@@ -353,6 +355,7 @@ describe('SplitInstRecordsStore', () => {
                 updates: ['test'],
                 timestamps: [expect.any(Number)],
                 instSizeInBytes: 4,
+                branchSizeInBytes: 4,
             });
         });
 
@@ -387,6 +390,7 @@ describe('SplitInstRecordsStore', () => {
                 updates: ['test', 'abc'],
                 timestamps: [expect.any(Number), expect.any(Number)],
                 instSizeInBytes: 7,
+                branchSizeInBytes: 7,
             });
         });
     });
@@ -446,6 +450,7 @@ describe('SplitInstRecordsStore', () => {
                     expect.any(Number),
                 ],
                 instSizeInBytes: 10,
+                branchSizeInBytes: 10,
             });
         });
 
@@ -492,6 +497,7 @@ describe('SplitInstRecordsStore', () => {
                     expect.any(Number),
                 ],
                 instSizeInBytes: 13,
+                branchSizeInBytes: 13,
             });
         });
     });
@@ -567,6 +573,7 @@ describe('SplitInstRecordsStore', () => {
                 updates: ['test'],
                 timestamps: [expect.any(Number)],
                 instSizeInBytes: 4,
+                branchSizeInBytes: 4,
             });
 
             const size = await temp.getInstSize(recordName, instName);
@@ -581,6 +588,206 @@ describe('SplitInstRecordsStore', () => {
                 updates: [],
                 timestamps: [],
                 instSizeInBytes: 0,
+            });
+        });
+    });
+
+    describe('deleteBranch()', () => {
+        beforeEach(async () => {
+            await perm.saveInst({
+                recordName,
+                inst: instName,
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await perm.saveBranch({
+                branch: branchName,
+                inst: instName,
+                recordName,
+                temporary: false,
+            });
+
+            await perm.saveBranch({
+                branch: 'otherBranch',
+                inst: instName,
+                recordName,
+                temporary: false,
+            });
+        });
+
+        it('should remove the branch from the temp store', async () => {
+            await temp.addUpdates(recordName, instName, branchName, ['abc'], 3);
+
+            await store.deleteBranch(recordName, instName, branchName);
+
+            const result = await temp.getUpdates(
+                recordName,
+                instName,
+                branchName
+            );
+            expect(result).toBe(null);
+
+            const size = await store.getInstSize(recordName, instName);
+            expect(size).toBe(0);
+        });
+
+        it('should remove the branch from the permanent store', async () => {
+            await perm.addUpdate(recordName, instName, branchName, 'abc', 3);
+
+            await store.deleteBranch(recordName, instName, branchName);
+
+            const result = await perm.getAllUpdates(
+                recordName,
+                instName,
+                branchName
+            );
+            expect(result).toBe(null);
+
+            const branch = await perm.getBranchByName(
+                recordName,
+                instName,
+                branchName
+            );
+            expect(branch).toBe(null);
+
+            const size = await store.getInstSize(recordName, instName);
+            expect(size).toBe(0);
+        });
+
+        it('should remove only the branch data', async () => {
+            await perm.addUpdate(recordName, instName, branchName, 'abc', 3);
+            await temp.addUpdates(recordName, instName, branchName, ['abc'], 3);
+            await perm.addUpdate(recordName, instName, 'otherBranch', 'def', 3);
+            await temp.addUpdates(
+                recordName,
+                instName,
+                'otherBranch',
+                ['def'],
+                3
+            );
+
+            await store.deleteBranch(recordName, instName, branchName);
+
+            const result = await perm.getAllUpdates(
+                recordName,
+                instName,
+                branchName
+            );
+            expect(result).toBe(null);
+
+            const branch = await perm.getBranchByName(
+                recordName,
+                instName,
+                branchName
+            );
+            expect(branch).toBe(null);
+
+            const size = await store.getInstSize(recordName, instName);
+            expect(size).toBe(3);
+
+            const data = await perm.getAllUpdates(
+                recordName,
+                instName,
+                'otherBranch'
+            );
+            expect(data).toEqual({
+                updates: ['def'],
+                timestamps: [expect.any(Number)],
+                instSizeInBytes: 3,
+            });
+
+            const tempData = await temp.getUpdates(
+                recordName,
+                instName,
+                'otherBranch'
+            );
+            expect(tempData).toEqual({
+                updates: ['def'],
+                timestamps: [expect.any(Number)],
+                instSizeInBytes: 3,
+                branchSizeInBytes: 3,
+            });
+        });
+    });
+
+    describe('replaceCurrentUpdates()', () => {
+        beforeEach(async () => {
+            await perm.saveInst({
+                recordName,
+                inst: instName,
+                markers: [PUBLIC_READ_MARKER],
+            });
+
+            await perm.saveBranch({
+                branch: branchName,
+                inst: instName,
+                recordName,
+                temporary: false,
+            });
+        });
+
+        it('should replace the updates in the temp store with the given update', async () => {
+            await temp.addUpdates(
+                recordName,
+                instName,
+                branchName,
+                ['abc', 'def'],
+                6
+            );
+            await perm.addUpdate(recordName, instName, branchName, 'abc', 3);
+            await perm.addUpdate(recordName, instName, branchName, 'def', 3);
+
+            await store.replaceCurrentUpdates(
+                recordName,
+                instName,
+                branchName,
+                'test',
+                4
+            );
+
+            const result = await perm.getCurrentUpdates(
+                recordName,
+                instName,
+                branchName
+            );
+            expect(result).toEqual({
+                updates: ['test'],
+                timestamps: [expect.any(Number)],
+                instSizeInBytes: 10,
+            });
+
+            const tempResult = await temp.getUpdates(
+                recordName,
+                instName,
+                branchName
+            );
+            expect(tempResult).toEqual({
+                updates: ['test'],
+                timestamps: [expect.any(Number)],
+                instSizeInBytes: 10,
+                branchSizeInBytes: 10,
+            });
+
+            const count = await temp.countBranchUpdates(
+                recordName,
+                instName,
+                branchName
+            );
+            expect(count).toBe(1);
+
+            const allUpdates = await perm.getAllUpdates(
+                recordName,
+                instName,
+                branchName
+            );
+            expect(allUpdates).toEqual({
+                updates: ['abc', 'def', 'test'],
+                timestamps: [
+                    expect.any(Number),
+                    expect.any(Number),
+                    expect.any(Number),
+                ],
+                instSizeInBytes: 10,
             });
         });
     });

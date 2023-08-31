@@ -43,7 +43,8 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         );
 
         if (tempResult) {
-            return tempResult;
+            const { branchSizeInBytes, ...result } = tempResult;
+            return result;
         }
 
         const info = await this._permanent.getBranchByName(
@@ -85,7 +86,8 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         );
 
         if (tempUpdates) {
-            return tempUpdates;
+            const { branchSizeInBytes, ...result } = tempUpdates;
+            return result;
         }
 
         const updates = await this._permanent.getCurrentUpdates(
@@ -196,30 +198,50 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         };
     }
 
-    deleteBranch(
+    async deleteBranch(
         recordName: string,
         inst: string,
         branch: string
     ): Promise<void> {
-        throw new Error('Method not implemented.');
+        await Promise.all([
+            this._temp.deleteBranch(recordName, inst, branch),
+            this._permanent.deleteBranch(recordName, inst, branch),
+        ]);
     }
 
-    replaceUpdates(
+    async replaceCurrentUpdates(
         recordName: string,
         inst: string,
         branch: string,
-        updatesToRemove: StoredUpdates,
         updateToAdd: string,
         sizeInBytes: number
     ): Promise<ReplaceUpdatesResult> {
-        throw new Error('Method not implemented.');
-    }
-
-    countUpdates(
-        recordName: string,
-        inst: string,
-        branch: string
-    ): Promise<number> {
-        throw new Error('Method not implemented.');
+        const updateCount = await this._temp.countBranchUpdates(
+            recordName,
+            inst,
+            branch
+        );
+        const permanentReplaceResult =
+            await this._permanent.replaceCurrentUpdates(
+                recordName,
+                inst,
+                branch,
+                updateToAdd,
+                sizeInBytes
+            );
+        if (permanentReplaceResult.success === false) {
+            return permanentReplaceResult;
+        }
+        await this._temp.addUpdates(
+            recordName,
+            inst,
+            branch,
+            [updateToAdd],
+            sizeInBytes
+        );
+        await this._temp.trimUpdates(recordName, inst, branch, updateCount);
+        return {
+            success: true,
+        };
     }
 }

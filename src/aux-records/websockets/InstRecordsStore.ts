@@ -106,8 +106,8 @@ export interface InstRecordsStore {
     ): Promise<void>;
 
     /**
-     * Replaces the given set of updates with a new update.
-     * Useful for when updates have been merged and the old ones should be replaced by the new one(s).
+     * Replaces the current set of updates with a new update.
+     * Useful for when updates have been merged and the old ones should be replaced by the new one.
      *
      * @param recordName The name of the record. If null, then the updates will be added to a tempPublic inst.
      * @param inst The name of the inst.
@@ -116,26 +116,13 @@ export interface InstRecordsStore {
      * @param updateToAdd The update that should be added.
      * @param sizeInBytes The size of the new update in bytes.
      */
-    replaceUpdates(
+    replaceCurrentUpdates(
         recordName: string | null,
         inst: string,
         branch: string,
-        updatesToRemove: StoredUpdates,
         updateToAdd: string,
         sizeInBytes: number
     ): Promise<ReplaceUpdatesResult>;
-
-    /**
-     * Gets the number of updates for the given branch.
-     * @param recordName The name of the record. If null, then the updates will be added to a tempPublic inst.
-     * @param inst The name of the inst.
-     * @param branch The branch.
-     */
-    countUpdates(
-        recordName: string | null,
-        inst: string,
-        branch: string
-    ): Promise<number>;
 }
 
 export interface StoredUpdates {

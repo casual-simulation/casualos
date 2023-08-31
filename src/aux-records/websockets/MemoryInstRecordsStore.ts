@@ -88,6 +88,10 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
                         updates: [],
                         timestamps: [],
                     },
+                    archived: {
+                        updates: [],
+                        timestamps: [],
+                    },
                 };
             });
         } else if (!update.branches) {
@@ -110,6 +114,10 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
             i.branches.push({
                 ...branch,
                 updates: {
+                    updates: [],
+                    timestamps: [],
+                },
+                archived: {
                     updates: [],
                     timestamps: [],
                 },
@@ -138,18 +146,34 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
         }
 
         return {
-            updates: b.updates.updates.slice(),
-            timestamps: b.updates.timestamps.slice(),
+            updates: b.archived.updates.slice(),
+            timestamps: b.archived.timestamps.slice(),
             instSizeInBytes: i.instSizeInBytes,
         };
     }
 
-    getCurrentUpdates(
+    async getCurrentUpdates(
         recordName: string,
         inst: string,
         branch: string
     ): Promise<CurrentUpdates> {
-        return this.getAllUpdates(recordName, inst, branch);
+        const i = this._getInst(recordName, inst);
+
+        if (!i) {
+            return null;
+        }
+
+        const b = i.branches.find((b) => b.branch === branch);
+
+        if (!b) {
+            return null;
+        }
+
+        return {
+            updates: b.updates.updates.slice(),
+            timestamps: b.updates.timestamps.slice(),
+            instSizeInBytes: i.instSizeInBytes,
+        };
     }
 
     async getInstSize(recordName: string, inst: string): Promise<number> {
@@ -221,6 +245,10 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
                     updates: [],
                     timestamps: [],
                 },
+                archived: {
+                    updates: [],
+                    timestamps: [],
+                },
             };
             i.branches.push(b);
         }
@@ -243,16 +271,19 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
         storedUpdates.updates.push(update);
         storedUpdates.timestamps.push(Date.now());
 
+        const archivedUpdates = b.archived;
+        archivedUpdates.updates.push(update);
+        archivedUpdates.timestamps.push(Date.now());
+
         return {
             success: true,
         };
     }
 
-    async replaceUpdates(
+    async replaceCurrentUpdates(
         recordName: string,
         inst: string,
         branch: string,
-        updatesToRemove: StoredUpdates,
         updateToAdd: string,
         sizeInBytes: number
     ): Promise<ReplaceUpdatesResult> {
@@ -288,21 +319,17 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
                     updates: [],
                     timestamps: [],
                 },
+                archived: {
+                    updates: [],
+                    timestamps: [],
+                },
             };
             i.branches.push(b);
         }
 
         const storedUpdates = b.updates;
-
-        for (let u of updatesToRemove.updates) {
-            let index = storedUpdates.updates.indexOf(u);
-            if (index === -1) {
-                continue;
-            }
-            storedUpdates.updates.splice(index, 1);
-            storedUpdates.timestamps.splice(index, 1);
-            i.instSizeInBytes -= u.length;
-        }
+        storedUpdates.updates = [];
+        storedUpdates.timestamps = [];
 
         return this.addUpdate(
             recordName,
@@ -367,4 +394,5 @@ export interface InstWithUpdates extends InstRecord {
 
 export interface BranchWithUpdates extends BranchRecord {
     updates: StoredUpdates;
+    archived: StoredUpdates;
 }
