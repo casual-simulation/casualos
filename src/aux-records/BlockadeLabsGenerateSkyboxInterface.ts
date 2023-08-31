@@ -1,3 +1,4 @@
+import { handleAxiosErrors } from './Utils';
 import {
     AIGenerateSkyboxInterface,
     AIGenerateSkyboxInterfaceRequest,
@@ -21,111 +22,77 @@ export class BlockadeLabsGenerateSkyboxInterface
     async generateSkybox(
         request: AIGenerateSkyboxInterfaceRequest
     ): Promise<AIGenerateSkyboxInterfaceResponse> {
-        const params = new URLSearchParams({
-            api_key: this._options.apiKey,
-            prompt: request.prompt,
-        });
+        try {
+            const params = new URLSearchParams({
+                api_key: this._options.apiKey,
+                prompt: request.prompt,
+            });
 
-        if (request.negativePrompt) {
-            params.set('negative_text', request.negativePrompt);
+            if (request.negativePrompt) {
+                params.set('negative_text', request.negativePrompt);
+            }
+
+            if (request.blockadeLabs) {
+                if ('seed' in request.blockadeLabs) {
+                    params.set('seed', String(request.blockadeLabs.seed));
+                }
+                if ('skyboxStyleId' in request.blockadeLabs) {
+                    params.set(
+                        'skybox_style_id',
+                        String(request.blockadeLabs.skyboxStyleId)
+                    );
+                }
+                if ('remixImagineId' in request.blockadeLabs) {
+                    params.set(
+                        'skybox_style_id',
+                        String(request.blockadeLabs.remixImagineId)
+                    );
+                }
+            }
+
+            console.log(
+                `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox]: Generating skybox...`
+            );
+            const response = await axios.post(
+                'https://backend.blockadelabs.com/api/v1/skybox',
+                params,
+                {}
+            );
+
+            const id: number = response.data.id;
+            console.log(
+                `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}]: ID recieved.`
+            );
+            return {
+                success: true,
+                skyboxId: String(id),
+            };
+        } catch (err) {
+            handleAxiosErrors(err);
         }
-
-        if (request.blockadeLabs) {
-            if ('seed' in request.blockadeLabs) {
-                params.set('seed', String(request.blockadeLabs.seed));
-            }
-            if ('skyboxStyleId' in request.blockadeLabs) {
-                params.set(
-                    'skybox_style_id',
-                    String(request.blockadeLabs.skyboxStyleId)
-                );
-            }
-            if ('remixImagineId' in request.blockadeLabs) {
-                params.set(
-                    'skybox_style_id',
-                    String(request.blockadeLabs.remixImagineId)
-                );
-            }
-        }
-
-        console.log(
-            `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox]: Generating skybox...`
-        );
-        const response = await axios.post(
-            'https://backend.blockadelabs.com/api/v1/skybox',
-            params,
-            {}
-        );
-
-        const id: number = response.data.id;
-        console.log(
-            `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}]: ID recieved.`
-        );
-        return {
-            success: true,
-            skyboxId: String(id),
-        };
-
-        // for (let i = 0; i < 4; i++) {
-        //     const seconds = i === 0 ? 10 : i === 1 ? 20 : i === 2 ? 40 : 60;
-
-        //     console.log(
-        //         `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}]: Waiting ${seconds} seconds...`
-        //     );
-        //     await wait(seconds);
-        //     const status = await this._downloadStatus(id);
-
-        //     console.log(
-        //         `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}]: Status: ${status.status}`
-        //     );
-        //     if (isFinished(status)) {
-        //         if (isError(status)) {
-        //             return {
-        //                 success: false,
-        //                 errorCode: 'server_error',
-        //                 errorMessage: status.error_message,
-        //             };
-        //         } else {
-        //             console.log(
-        //                 `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}]: Skybox Generated.`
-        //             );
-        //             return {
-        //                 success: true,
-        //                 fileUrl: status.file_url,
-        //                 thumbnailUrl: status.thumb_url,
-        //             };
-        //         }
-        //     }
-        // }
-
-        // console.error(
-        //     `[BlockadeLabsGenerateSkyboxInterface] [generateSkybox] [${id}] Timed out.`
-        // );
-
-        // return {
-        //     success: false,
-        //     errorCode: 'server_error',
-        //     errorMessage: 'The request timed out.',
-        // };
     }
 
     async getSkybox(skyboxId: string): Promise<AIGetSkyboxInterfaceResponse> {
-        console.log(
-            `[BlockadeLabsGenerateSkyboxInterface] [getSkybox]: Getting skybox status...`
-        );
-        const id: number = parseInt(skyboxId);
-        const status = await this._downloadStatus(id);
+        try {
+            console.log(
+                `[BlockadeLabsGenerateSkyboxInterface] [getSkybox]: Getting skybox status...`
+            );
+            const id: number = parseInt(skyboxId);
+            const status = await this._downloadStatus(id);
 
-        console.log(
-            `[BlockadeLabsGenerateSkyboxInterface] [getSkybox] [${id}]: Status recieved:`,
-            status
-        );
-        return {
-            success: true,
-            status: isFinished(status) ? 'generated' : 'pending',
-            fileUrl: status.file_url,
-            thumbnailUrl: status.thumb_url,
-        };
+            console.log(
+                `[BlockadeLabsGenerateSkyboxInterface] [getSkybox] [${id}]: Status recieved:`,
+                status
+            );
+            return {
+                success: true,
+                status: isFinished(status) ? 'generated' : 'pending',
+                fileUrl: status.file_url,
+                thumbnailUrl: status.thumb_url,
+            };
+        } catch (err) {
+            handleAxiosErrors(err);
+        }
     }
 
     private async _downloadStatus(

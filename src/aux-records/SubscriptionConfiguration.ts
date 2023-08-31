@@ -301,7 +301,7 @@ export interface DefaultFeaturesConfiguration {
  * Defines an interface that contains the configuration for features.
  */
 export interface FeaturesConfiguration {
-    records: RecordFeaturesConfiguration;
+    records?: RecordFeaturesConfiguration;
 
     /**
      * The configuration for data features.

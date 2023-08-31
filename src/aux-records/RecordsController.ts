@@ -743,13 +743,13 @@ export class RecordsController {
             filter
         );
 
-        if (!features.records.allowed) {
+        if (!features.records?.allowed) {
             return {
                 success: false,
                 errorCode: 'not_authorized',
                 errorMessage: 'Records are not allowed for this subscription.',
             } as const;
-        } else if (features.records.maxRecords >= 0) {
+        } else if (features.records?.maxRecords >= 0) {
             if (features.records.maxRecords <= metrics.totalRecords + 1) {
                 return {
                     success: false,

@@ -94,6 +94,7 @@ import {
 } from '@casual-simulation/aux-records/AIController';
 import { ConfigurationStore } from '@casual-simulation/aux-records/ConfigurationStore';
 import { PrismaMetricsStore } from 'aux-backend/prisma/PrismaMetricsStore';
+import { S3 } from '@aws-sdk/client-s3';
 
 export class ServerBuilder {
     private _docClient: DocumentClient;
@@ -290,8 +291,9 @@ export class ServerBuilder {
             s3.filesBucket,
             filesLookup,
             s3.filesStorageClass,
-            undefined,
-            s3.host
+            new S3(),
+            s3.host,
+            undefined
         );
         this._eventsStore = new PrismaEventRecordsStore(this._prismaClient);
 
@@ -561,7 +563,6 @@ export class ServerBuilder {
             console.log('[ServerBuilder] Using OpenAI Chat.');
             this._chatInterface = new OpenAIChatInterface({
                 apiKey: options.openai.apiKey,
-                maxTokens: options.openai.maxTokens,
             });
         }
 
@@ -912,7 +913,6 @@ const prismaSchema = z.object({
 
 const openAiSchema = z.object({
     apiKey: z.string().nonempty(),
-    maxTokens: z.number().positive().optional(),
 });
 
 const blockadeLabsSchema = z.object({
