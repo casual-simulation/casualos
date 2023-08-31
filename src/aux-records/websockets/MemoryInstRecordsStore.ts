@@ -8,6 +8,7 @@ import {
     InstRecord,
     BranchRecord,
     BranchRecordWithInst,
+    CurrentUpdates,
 } from './InstRecordsStore';
 
 /**
@@ -68,8 +69,11 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
 
         const { branches, ...rest } = inst;
 
-        let update = {
-            ...(i ?? {}),
+        let update: InstWithUpdates = {
+            branches: null,
+            ...(i ?? {
+                instSizeInBytes: 0,
+            }),
             ...rest,
         };
 
@@ -90,7 +94,7 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
             update.branches = [];
         }
 
-        r.set(inst.inst, update as any);
+        r.set(inst.inst, update);
     }
 
     async saveBranch(branch: BranchRecord): Promise<void> {
@@ -116,17 +120,18 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
         b.temporary = branch.temporary;
     }
 
-    async getUpdates(
+    async getAllUpdates(
         recordName: string,
         inst: string,
         branch: string
-    ): Promise<StoredUpdates> {
+    ): Promise<CurrentUpdates> {
         const i = this._getInst(recordName, inst);
 
         if (!i) {
             return {
                 updates: [],
                 timestamps: [],
+                instSizeInBytes: 0,
             };
         }
 
@@ -136,13 +141,33 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
             return {
                 updates: [],
                 timestamps: [],
+                instSizeInBytes: i.instSizeInBytes,
             };
         }
 
         return {
             updates: b.updates.updates.slice(),
             timestamps: b.updates.timestamps.slice(),
+            instSizeInBytes: i.instSizeInBytes,
         };
+    }
+
+    getCurrentUpdates(
+        recordName: string,
+        inst: string,
+        branch: string
+    ): Promise<CurrentUpdates> {
+        return this.getAllUpdates(recordName, inst, branch);
+    }
+
+    async getInstSize(recordName: string, inst: string): Promise<number> {
+        const i = this._getInst(recordName, inst);
+
+        if (!i) {
+            return null;
+        }
+
+        return i.instSizeInBytes;
     }
 
     async countUpdates(
@@ -165,11 +190,12 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
         return b.updates.updates.length;
     }
 
-    async addUpdates(
+    async addUpdate(
         recordName: string,
         inst: string,
         branch: string,
-        updates: string[]
+        update: string,
+        sizeInBytes: number
     ): Promise<AddUpdatesResult> {
         const r = this._records.get(recordName);
 
@@ -209,26 +235,21 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
 
         let storedUpdates = b.updates;
 
-        let newSize = i.instSizeInBytes;
-        for (let update of updates) {
-            newSize += update.length;
+        const newSize = i.instSizeInBytes + sizeInBytes;
 
-            if (newSize > this.maxAllowedInstSize) {
-                return {
-                    success: false,
-                    errorCode: 'max_size_reached',
-                    branch,
-                    maxBranchSizeInBytes: this.maxAllowedInstSize,
-                    neededBranchSizeInBytes: newSize,
-                };
-            }
+        if (newSize > this.maxAllowedInstSize) {
+            return {
+                success: false,
+                errorCode: 'max_size_reached',
+                branch,
+                maxBranchSizeInBytes: this.maxAllowedInstSize,
+                neededBranchSizeInBytes: newSize,
+            };
         }
         i.instSizeInBytes = newSize;
 
-        for (let update of updates) {
-            storedUpdates.updates.push(update);
-            storedUpdates.timestamps.push(Date.now());
-        }
+        storedUpdates.updates.push(update);
+        storedUpdates.timestamps.push(Date.now());
 
         return {
             success: true,
@@ -240,7 +261,8 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
         inst: string,
         branch: string,
         updatesToRemove: StoredUpdates,
-        updatesToAdd: string[]
+        updateToAdd: string,
+        sizeInBytes: number
     ): Promise<ReplaceUpdatesResult> {
         const r = this._records.get(recordName);
 
@@ -290,7 +312,13 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
             i.instSizeInBytes -= u.length;
         }
 
-        return this.addUpdates(recordName, inst, branch, updatesToAdd);
+        return this.addUpdate(
+            recordName,
+            inst,
+            branch,
+            updateToAdd,
+            sizeInBytes
+        );
     }
 
     async deleteBranch(

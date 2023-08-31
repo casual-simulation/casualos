@@ -8,10 +8,10 @@ describe('MemoryInstRecordsStore', () => {
         subject = new MemoryInstRecordsStore();
     });
 
-    describe('getUpdates()', () => {
+    describe('getAllUpdates()', () => {
         it('should return an empty array by default', async () => {
             expect(
-                await subject.getUpdates('recordName', 'inst', 'test')
+                await subject.getAllUpdates('recordName', 'inst', 'test')
             ).toEqual({
                 updates: [],
                 timestamps: [],
@@ -24,12 +24,9 @@ describe('MemoryInstRecordsStore', () => {
                 inst: 'inst',
                 markers: [PUBLIC_READ_MARKER],
             });
-            await subject.addUpdates('recordName', 'inst', 'test', [
-                'abc',
-                'def',
-            ]);
+            await subject.addUpdate('recordName', 'inst', 'test', 'def', 3);
             expect(
-                await subject.getUpdates('recordName', 'inst', 'test')
+                await subject.getAllUpdates('recordName', 'inst', 'test')
             ).toEqual({
                 updates: ['abc', 'def'],
                 timestamps: [expect.any(Number), expect.any(Number)],
@@ -44,13 +41,10 @@ describe('MemoryInstRecordsStore', () => {
                 inst: 'inst',
                 markers: [PUBLIC_READ_MARKER],
             });
-            await subject.addUpdates('recordName', 'inst', 'test', [
-                'abc',
-                'def',
-            ]);
+            await subject.addUpdate('recordName', 'inst', 'test', 'abc', 3);
             await subject.deleteBranch('recordName', 'inst', 'test');
             expect(
-                await subject.getUpdates('recordName', 'inst', 'test')
+                await subject.getAllUpdates('recordName', 'inst', 'test')
             ).toEqual({
                 updates: [],
                 timestamps: [],

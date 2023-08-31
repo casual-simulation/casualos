@@ -48,7 +48,19 @@ export interface InstRecordsStore {
         recordName: string | null,
         inst: string,
         branch: string
-    ): Promise<StoredUpdates>;
+    ): Promise<CurrentUpdates>;
+
+    /**
+     * Gets the size of the inst.
+     * Returns null if the inst does not exist.
+     * @param recordName The name of the record. If null, then the updates for a tempPublic inst will be returned.
+     * @param inst The name of the inst.
+     * @param branch The branch in the inst.
+     */
+    getInstSize(
+        recordName: string | null,
+        inst: string
+    ): Promise<number | null>;
 
     /**
      * Gets the entire list of updates for the given branch in the given inst and record.
@@ -68,13 +80,15 @@ export interface InstRecordsStore {
      * @param recordName The name of the record that the updates should be added to. If null, then the updates will be added to a tempPublic inst.
      * @param inst The name of the inst.
      * @param branch The branch that the updates should be added to.
-     * @param updates The updates that should be added.
+     * @param update The update that should be added.
+     * @param sizeInBytes The size of the updates in bytes.
      */
-    addUpdates(
+    addUpdate(
         recordName: string | null,
         inst: string,
         branch: string,
-        updates: string[]
+        update: string,
+        sizeInBytes: number
     ): Promise<AddUpdatesResult>;
 
     /**
@@ -90,21 +104,23 @@ export interface InstRecordsStore {
     ): Promise<void>;
 
     /**
-     * Replaces the given set of updates with a new set of updates.
+     * Replaces the given set of updates with a new update.
      * Useful for when updates have been merged and the old ones should be replaced by the new one(s).
      *
      * @param recordName The name of the record. If null, then the updates will be added to a tempPublic inst.
      * @param inst The name of the inst.
      * @param branch The branch in the inst.
      * @param updatesToRemove The updates that should be moved. Only valid if the result from getUpdates() is used.
-     * @param updatesToAdd The updates that should be added.
+     * @param updateToAdd The update that should be added.
+     * @param sizeInBytes The size of the new update in bytes.
      */
     replaceUpdates(
         recordName: string | null,
         inst: string,
         branch: string,
         updatesToRemove: StoredUpdates,
-        updatesToAdd: string[]
+        updateToAdd: string,
+        sizeInBytes: number
     ): Promise<ReplaceUpdatesResult>;
 
     /**
@@ -235,4 +251,8 @@ export interface InstWithBranches extends InstRecord {
      * The list of branches that are in the inst.
      */
     branches?: BranchRecord[];
+}
+
+export interface CurrentUpdates extends StoredUpdates {
+    instSizeInBytes: number;
 }

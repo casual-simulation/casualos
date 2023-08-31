@@ -1,13 +1,16 @@
+import { sortBy } from 'lodash';
 import {
     AddUpdatesResult,
     BranchRecord,
     BranchRecordWithInst,
+    CurrentUpdates,
     InstRecord,
     InstRecordsStore,
     InstWithBranches,
     ReplaceUpdatesResult,
     StoredUpdates,
 } from './InstRecordsStore';
+import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
 
 /**
  * Defines a class that implements the InstRecordsStore interface by first storing updates in a temporary store and then sending them to a permanent store.
@@ -33,11 +36,8 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         inst: string,
         branch: string
     ): Promise<BranchRecordWithInst> {
-        const tempResult = await this._temp.getBranchByName(
-            recordName,
-            inst,
-            branch
-        );
+        const key = this._temp.getBranchKey(recordName, inst, branch);
+        const tempResult = await this._temp.getBranchByName(key);
 
         if (tempResult) {
             return tempResult;
@@ -57,6 +57,7 @@ export class SplitInstRecordsStore implements InstRecordsStore {
 
     async saveInst(inst: InstWithBranches): Promise<void> {
         await this._permanent.saveInst(inst);
+        await this._temp.deleteAllInstBranchInfo(inst.recordName, inst.inst);
     }
 
     async saveBranch(branch: BranchRecord): Promise<void> {
@@ -73,12 +74,9 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         recordName: string,
         inst: string,
         branch: string
-    ): Promise<StoredUpdates> {
-        const tempUpdates = await this._temp.getUpdates(
-            recordName,
-            inst,
-            branch
-        );
+    ): Promise<CurrentUpdates> {
+        const key = this._temp.getBranchKey(recordName, inst, branch);
+        const tempUpdates = await this._temp.getUpdates(key);
 
         if (tempUpdates) {
             return tempUpdates;
@@ -91,31 +89,97 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         );
         if (updates.updates.length > 0) {
             await this._temp.addUpdates(
-                recordName,
-                inst,
-                branch,
-                updates.updates
+                key,
+                updates.updates,
+                updates.instSizeInBytes
             );
         }
 
         return updates;
     }
 
-    getAllUpdates(
+    async getAllUpdates(
         recordName: string,
         inst: string,
         branch: string
     ): Promise<StoredUpdates> {
-        throw new Error('Method not implemented.');
+        const key = this._temp.getBranchKey(recordName, inst, branch);
+        const tempUpdates = await this._temp.getUpdates(key);
+        const permUpdates = await this._permanent.getAllUpdates(
+            recordName,
+            inst,
+            branch
+        );
+
+        if (!tempUpdates) {
+            return permUpdates;
+        }
+
+        let allUpdates = new Set<string>();
+
+        let merged = [];
+        for (let i = 0; i < permUpdates.updates.length; i++) {
+            let u = permUpdates.updates[i];
+            let t = permUpdates.timestamps[i];
+
+            allUpdates.add(u);
+            merged.push({
+                u,
+                t,
+            });
+        }
+
+        for (let i = 0; i < tempUpdates.updates.length; i++) {
+            let u = tempUpdates.updates[i];
+            let t = tempUpdates.timestamps[i];
+            if (allUpdates.has(u)) {
+                continue;
+            }
+            allUpdates.add(u);
+            merged.push({
+                u,
+                t,
+            });
+        }
+
+        const sorted = sortBy(merged, (m) => m.t);
+        let updates: string[] = [];
+        let timestamps: number[] = [];
+        for (let i = 0; i < sorted.length; i++) {
+            let m = sorted[i];
+            updates.push(m.u);
+            timestamps.push(m.t);
+        }
+        return {
+            updates,
+            timestamps,
+        };
     }
 
-    addUpdates(
+    async getInstSize(recordName: string, inst: string): Promise<number> {
+        return this._permanent.getInstSize(recordName, inst);
+    }
+
+    async addUpdate(
         recordName: string,
         inst: string,
         branch: string,
-        updates: string[]
+        update: string,
+        sizeInBytes: number
     ): Promise<AddUpdatesResult> {
-        throw new Error('Method not implemented.');
+        const key = this._temp.getBranchKey(recordName, inst, branch);
+        const branchInfo = await this._temp.getBranchByName(key);
+
+        // if (!branchInfo) {
+        //     await this._permanent.
+        // }
+
+        // const aa = await this._temp.addUpdates(recordName, inst, branch, updates);
+
+        return {
+            success: true,
+            branchSizeInBytes: 0,
+        };
     }
 
     deleteBranch(
@@ -131,7 +195,8 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         inst: string,
         branch: string,
         updatesToRemove: StoredUpdates,
-        updatesToAdd: string[]
+        updateToAdd: string,
+        sizeInBytes: number
     ): Promise<ReplaceUpdatesResult> {
         throw new Error('Method not implemented.');
     }
@@ -143,85 +208,4 @@ export class SplitInstRecordsStore implements InstRecordsStore {
     ): Promise<number> {
         throw new Error('Method not implemented.');
     }
-}
-
-/**
- * Defines an interface for a store that keeps track of temporary inst records.
- *
- * A key feature of temporary records stores is that they act like a cache.
- * As a result, it may evict data based on configuration or other factors (like memory pressure).
- */
-export interface TemporaryInstRecordsStore {
-    /**
-     * Gets info for the given branch.
-     * @param recordName The name of the record.
-     * @param inst The name of the inst.
-     * @param branch The name of the branch.
-     */
-    getBranchByName(
-        recordName: string,
-        inst: string,
-        branch: string
-    ): Promise<BranchRecordWithInst | null>;
-
-    /**
-     * Saves the branch info to the temporary store.
-     * @param branch
-     */
-    saveBranchInfo(branch: BranchRecordWithInst): Promise<void>;
-
-    /**
-     * Gets the updates that are stored in this temporary store.
-     * Returns null if no updates are stored.
-     * @param recordName The name of the record.
-     * @param inst The name of the inst.
-     * @param branch The name of the branch.
-     */
-    getUpdates(
-        recordName: string,
-        inst: string,
-        branch: string
-    ): Promise<StoredUpdates | null>;
-
-    /**
-     * Adds the given updates to this temporary store.
-     * @param recordName The name of the record.
-     * @param inst The name of the inst.
-     * @param branch The name of the branch.
-     * @param updates The updates that should be added.
-     */
-    addUpdates(
-        recordName: string,
-        inst: string,
-        branch: string,
-        updates: string[]
-    ): Promise<void>;
-
-    /**
-     * Sets the given updates in this temporary store.
-     * @param recordName The name of the record.
-     * @param inst The name of the inst.
-     * @param branch The name of the branch.
-     * @param updates The updates that should be set.
-     */
-    setUpdates(
-        recordName: string,
-        inst: string,
-        branch: string,
-        updates: string[]
-    ): Promise<void>;
-
-    /**
-     * Deletes the given number of updates from the beginning of the updates list.
-     * @param recordName The name of the record.
-     * @param inst The inst.
-     * @param branch The branch.
-     * @param numToDelete The number of updates that should be deleted from the beginning of the list.
-     */
-    trimUpdates(
-        recordName: string,
-        inst: string,
-        branch: string,
-        numToDelete: number
-    ): Promise<void>;
 }
