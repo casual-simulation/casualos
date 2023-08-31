@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-records-aws",
-    "version": "3.2.6-alpha.6029052991",
+    "version": "3.2.6-alpha.6040163542",
     "description": "AWS Store implementations for the CasualOS Records System.",
     "keywords": [],
     "author": "Casual Simulation, Inc.",
@@ -40,6 +40,6 @@
         "@aws-sdk/client-dynamodb": "^3.359.0",
         "@aws-sdk/client-s3": "^3.359.0",
         "@aws-sdk/client-sesv2": "^3.359.0",
-        "@casual-simulation/aux-records": "^3.2.6-alpha.6029052991"
+        "@casual-simulation/aux-records": "^3.2.6-alpha.6040163542"
     }
 }
