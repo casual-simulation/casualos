@@ -3,7 +3,7 @@ import {
     SendCodeResult,
 } from '@casual-simulation/aux-records/AuthMessenger';
 import { AddressType } from '@casual-simulation/aux-records/AuthStore';
-import { SESV2 } from 'aws-sdk';
+import { SESv2, EmailContent as SESEmailContent } from '@aws-sdk/client-sesv2';
 
 export interface SimpleEmailServiceAuthMessengerOptions {
     /**
@@ -31,10 +31,10 @@ export interface EmailPlainContent {
 }
 
 export class SimpleEmailServiceAuthMessenger implements AuthMessenger {
-    private _ses: SESV2;
+    private _ses: SESv2;
     private _options: SimpleEmailServiceAuthMessengerOptions;
 
-    constructor(ses: SESV2, options: SimpleEmailServiceAuthMessengerOptions) {
+    constructor(ses: SESv2, options: SimpleEmailServiceAuthMessengerOptions) {
         this._ses = ses;
         this._options = options;
     }
@@ -54,7 +54,7 @@ export class SimpleEmailServiceAuthMessenger implements AuthMessenger {
                 address: address,
                 addressType: addressType,
             };
-            let content: SESV2.EmailContent;
+            let content: SESEmailContent;
             if (this._options.content.type === 'template') {
                 content = {
                     Template: {
@@ -90,15 +90,13 @@ export class SimpleEmailServiceAuthMessenger implements AuthMessenger {
                 );
             }
 
-            await this._ses
-                .sendEmail({
-                    Destination: {
-                        ToAddresses: [address],
-                    },
-                    FromEmailAddress: this._options.fromAddress,
-                    Content: content,
-                })
-                .promise();
+            await this._ses.sendEmail({
+                Destination: {
+                    ToAddresses: [address],
+                },
+                FromEmailAddress: this._options.fromAddress,
+                Content: content,
+            });
 
             return {
                 success: true,

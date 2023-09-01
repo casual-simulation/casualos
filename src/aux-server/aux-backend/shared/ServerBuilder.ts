@@ -37,7 +37,7 @@ import {
     subscriptionConfigSchema,
 } from '@casual-simulation/aux-records/SubscriptionConfiguration';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
-import { SESV2 } from 'aws-sdk';
+import { SESv2 } from '@aws-sdk/client-sesv2';
 import { createClient as createRedisClient } from 'redis';
 import RedisRateLimitStore from '@casual-simulation/rate-limit-redis';
 import z from 'zod';
@@ -94,6 +94,7 @@ import {
 } from '@casual-simulation/aux-records/AIController';
 import { ConfigurationStore } from '@casual-simulation/aux-records/ConfigurationStore';
 import { PrismaMetricsStore } from 'aux-backend/prisma/PrismaMetricsStore';
+import { S3 } from '@aws-sdk/client-s3';
 
 export class ServerBuilder {
     private _docClient: DocumentClient;
@@ -290,9 +291,9 @@ export class ServerBuilder {
             s3.filesBucket,
             filesLookup,
             s3.filesStorageClass,
-            undefined,
+            new S3(),
             s3.host,
-            s3.options
+            undefined
         );
         this._eventsStore = new PrismaEventRecordsStore(this._prismaClient);
 
@@ -418,7 +419,7 @@ export class ServerBuilder {
             throw new Error('SES options must be provided.');
         }
         this._authMessenger = new SimpleEmailServiceAuthMessenger(
-            new SESV2(),
+            new SESv2(),
             options.ses as SimpleEmailServiceAuthMessengerOptions
         );
         return this;
@@ -562,7 +563,6 @@ export class ServerBuilder {
             console.log('[ServerBuilder] Using OpenAI Chat.');
             this._chatInterface = new OpenAIChatInterface({
                 apiKey: options.openai.apiKey,
-                maxTokens: options.openai.maxTokens,
             });
         }
 
@@ -913,7 +913,6 @@ const prismaSchema = z.object({
 
 const openAiSchema = z.object({
     apiKey: z.string().nonempty(),
-    maxTokens: z.number().positive().optional(),
 });
 
 const blockadeLabsSchema = z.object({

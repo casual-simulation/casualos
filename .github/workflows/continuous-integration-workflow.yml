@@ -20,7 +20,7 @@ jobs:
         strategy:
             matrix:
                 os: [ubuntu-latest, macOS-latest, windows-latest]
-                node-version: [16.x]
+                node-version: [18.x]
         runs-on: ${{ matrix.os }}
         steps:
             - uses: actions/checkout@v1
@@ -46,7 +46,7 @@ jobs:
         strategy:
             matrix:
                 os: [ubuntu-latest, macOS-latest, windows-latest]
-                node-version: [16.x]
+                node-version: [18.x]
         runs-on: ${{ matrix.os }}
         steps:
             - uses: actions/checkout@v1
@@ -72,7 +72,7 @@ jobs:
         strategy:
             matrix:
                 os: [ubuntu-latest, macOS-latest, windows-latest]
-                node-version: [16.x]
+                node-version: [18.x]
         runs-on: ${{ matrix.os }}
         steps:
             - uses: actions/checkout@v1
