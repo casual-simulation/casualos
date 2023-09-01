@@ -10,7 +10,10 @@ export interface InstRecordsStore {
      * @param recordName The name of the record that the inst is in.
      * @param inst The name of the inst.
      */
-    getInstByName(recordName: string, inst: string): Promise<InstRecord | null>;
+    getInstByName(
+        recordName: string | null,
+        inst: string
+    ): Promise<InstRecord | null>;
 
     /**
      * Gets the info for the given branch. Returns null if the branch does not exist.
@@ -19,7 +22,7 @@ export interface InstRecordsStore {
      * @param branch The name of the branch.
      */
     getBranchByName(
-        recordName: string,
+        recordName: string | null,
         inst: string,
         branch: string
     ): Promise<BranchRecordWithInst | null>;
@@ -193,7 +196,7 @@ export interface InstRecord {
     /**
      * The name of the record.
      */
-    recordName: string;
+    recordName: string | null;
 
     /**
      * The name of the inst.
@@ -210,14 +213,14 @@ export interface BranchRecordWithInst extends BranchRecord {
     /**
      * The inst that this branch belongs to.
      */
-    linkedInst: InstRecord;
+    linkedInst: InstRecord | null;
 }
 
 export interface BranchRecord {
     /**
      * The name of the record.
      */
-    recordName: string;
+    recordName: string | null;
 
     /**
      * The name of the inst.

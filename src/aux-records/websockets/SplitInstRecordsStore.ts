@@ -11,6 +11,7 @@ import {
     StoredUpdates,
 } from './InstRecordsStore';
 import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
+import WebTileLayer from 'esri/layers/WebTileLayer';
 
 /**
  * Defines a class that implements the InstRecordsStore interface by first storing updates in a temporary store and then sending them to a permanent store.
@@ -27,12 +28,15 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         this._permanent = permanent;
     }
 
-    async getInstByName(recordName: string, inst: string): Promise<InstRecord> {
+    async getInstByName(
+        recordName: string | null,
+        inst: string
+    ): Promise<InstRecord> {
         return await this._permanent.getInstByName(recordName, inst);
     }
 
     async getBranchByName(
-        recordName: string,
+        recordName: string | null,
         inst: string,
         branch: string
     ): Promise<BranchRecordWithInst> {
@@ -65,17 +69,29 @@ export class SplitInstRecordsStore implements InstRecordsStore {
     }
 
     async saveBranch(branch: BranchRecord): Promise<void> {
-        await this._permanent.saveBranch(branch);
-        const info = await this._permanent.getBranchByName(
-            branch.recordName,
-            branch.inst,
-            branch.branch
-        );
-        await this._temp.saveBranchInfo(info);
+        if (branch.recordName) {
+            await this._permanent.saveBranch(branch);
+            const info = await this._permanent.getBranchByName(
+                branch.recordName,
+                branch.inst,
+                branch.branch
+            );
+            if (info) {
+                await this._temp.saveBranchInfo(info);
+            }
+        } else {
+            await this._temp.saveBranchInfo({
+                recordName: null,
+                inst: branch.inst,
+                branch: branch.branch,
+                linkedInst: null,
+                temporary: branch.temporary,
+            });
+        }
     }
 
     async getCurrentUpdates(
-        recordName: string,
+        recordName: string | null,
         inst: string,
         branch: string
     ): Promise<CurrentUpdates> {
@@ -88,6 +104,8 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         if (tempUpdates) {
             const { branchSizeInBytes, ...result } = tempUpdates;
             return result;
+        } else if (!recordName) {
+            return null;
         }
 
         const updates = await this._permanent.getCurrentUpdates(

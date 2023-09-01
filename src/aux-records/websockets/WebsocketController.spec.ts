@@ -209,15 +209,17 @@ describe('WebsocketController', () => {
 
             await server.watchBranch(device1Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
-                protocol: 'updates',
                 temporary: true,
             });
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
-                protocol: 'updates',
                 temporary: true,
             });
 
@@ -262,8 +264,9 @@ describe('WebsocketController', () => {
 
                 await server.watchBranch(device1Info.serverConnectionId, {
                     type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
-                    protocol: 'updates',
                 });
 
                 expect(
@@ -283,8 +286,9 @@ describe('WebsocketController', () => {
 
                 await server.watchBranch(device1Info.serverConnectionId, {
                     type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'doesNotExist',
-                    protocol: 'updates',
                 });
 
                 expect(
@@ -310,9 +314,10 @@ describe('WebsocketController', () => {
 
                     await server.watchBranch(device1Info.serverConnectionId, {
                         type: 'repo/watch_branch',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
                         temporary: true,
-                        protocol: 'updates',
                     });
 
                     expect(
@@ -334,8 +339,9 @@ describe('WebsocketController', () => {
 
                     await server.watchBranch(device1Info.serverConnectionId, {
                         type: 'repo/watch_branch',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
-                        protocol: 'updates',
                         temporary: true,
                     });
 
@@ -347,8 +353,9 @@ describe('WebsocketController', () => {
 
                     await server.watchBranch(device3Info.serverConnectionId, {
                         type: 'repo/watch_branch',
+                        recordName: null,
+                        inst: 'inst',
                         branch: 'testBranch',
-                        protocol: 'updates',
                         temporary: true,
                     });
 
@@ -375,6 +382,8 @@ describe('WebsocketController', () => {
 
                 await server.watchBranch(device1Info.serverConnectionId, {
                     type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     protocol: 'updates',
                 });
@@ -419,6 +428,8 @@ describe('WebsocketController', () => {
 
                 await server.watchBranch(device1Info.serverConnectionId, {
                     type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     temporary: true,
                     protocol: 'updates',
@@ -426,6 +437,8 @@ describe('WebsocketController', () => {
 
                 await server.watchBranch(device2Info.serverConnectionId, {
                     type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                     temporary: true,
                     protocol: 'updates',
@@ -582,6 +595,8 @@ describe('WebsocketController', () => {
 
             await server.watchBranch(device1Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
                 protocol: 'updates',
             });
@@ -618,12 +633,16 @@ describe('WebsocketController', () => {
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
                 protocol: 'updates',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
                 protocol: 'updates',
             });
@@ -677,6 +696,8 @@ describe('WebsocketController', () => {
 
             await server.watchBranch(device1Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
                 protocol: 'updates',
             });
@@ -935,11 +956,15 @@ describe('WebsocketController', () => {
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
 
@@ -997,11 +1022,15 @@ describe('WebsocketController', () => {
 
                 await server.watchBranch(device2Info.serverConnectionId, {
                     type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                 });
 
                 await server.watchBranch(device3Info.serverConnectionId, {
                     type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                 });
 
@@ -1052,11 +1081,15 @@ describe('WebsocketController', () => {
 
             await server.watchBranch(device1Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
 
@@ -1119,11 +1152,15 @@ describe('WebsocketController', () => {
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
 
@@ -1183,11 +1220,15 @@ describe('WebsocketController', () => {
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
 
@@ -1241,11 +1282,15 @@ describe('WebsocketController', () => {
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
 
@@ -1305,6 +1350,8 @@ describe('WebsocketController', () => {
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
 
@@ -1334,6 +1381,8 @@ describe('WebsocketController', () => {
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
 
@@ -1374,6 +1423,8 @@ describe('WebsocketController', () => {
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
 
@@ -1408,16 +1459,22 @@ describe('WebsocketController', () => {
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device4Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch2',
             });
 
@@ -1463,6 +1520,8 @@ describe('WebsocketController', () => {
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
                 temporary: true,
             });
@@ -1500,6 +1559,8 @@ describe('WebsocketController', () => {
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
 
@@ -1523,6 +1584,8 @@ describe('WebsocketController', () => {
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
 
@@ -1557,10 +1620,14 @@ describe('WebsocketController', () => {
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
             await server.watchBranch(device3Info.serverConnectionId, {
                 type: 'repo/watch_branch',
+                recordName: null,
+                inst: 'inst',
                 branch: 'testBranch',
             });
 
@@ -1682,6 +1749,8 @@ describe('WebsocketController', () => {
 
                 await server.watchBranch(device1Info.serverConnectionId, {
                     type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                 });
 
@@ -1737,6 +1806,8 @@ describe('WebsocketController', () => {
 
                 await server.watchBranch(device1Info.serverConnectionId, {
                     type: 'repo/watch_branch',
+                    recordName: null,
+                    inst: 'inst',
                     branch: 'testBranch',
                 });
 

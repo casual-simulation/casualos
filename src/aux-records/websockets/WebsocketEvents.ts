@@ -196,15 +196,20 @@ export interface WatchBranchMessage {
     type: 'repo/watch_branch';
 
     /**
-     * The name of the branch to watch.
-     */
-    branch: string;
-
-    /**
      * The name of the record that the branch is for.
      * Null if the branch should be public and non-permanent.
      */
     recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
+
+    /**
+     * The name of the branch to watch.
+     */
+    branch: string;
 
     /**
      * Whether the branch should be temporary.
@@ -213,6 +218,12 @@ export interface WatchBranchMessage {
      * Defaults to false.
      */
     temporary?: boolean;
+
+    /**
+     * The protocol that should be used.
+     * Currently, "updates" is the only supported protocol.
+     */
+    protocol?: 'updates';
 }
 export const watchBranchMessageSchema = z.object({
     type: z.literal('repo/watch_branch'),
