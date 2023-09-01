@@ -496,6 +496,7 @@ function createCausalRepoServer(event: APIGatewayProxyEvent) {
         server,
         () => {
             cleanup();
+            messenger.unsubscribe();
         },
         rateLimiter,
     ] as const;
