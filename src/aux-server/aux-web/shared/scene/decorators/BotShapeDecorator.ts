@@ -21,13 +21,20 @@ import {
     AnimationMixer,
     Box3,
     Color,
+    DirectionalLight,
     Group,
+    HemisphereLight,
     LoopOnce,
     LoopRepeat,
     Mesh,
     Object3D,
+    PointLight,
+    SpotLight,
     MathUtils as ThreeMath,
     Vector3,
+    AmbientLight,
+    Light,
+    Material,
 } from '@casual-simulation/three';
 import { GLTF } from '@casual-simulation/three/examples/jsm/loaders/GLTFLoader';
 import { sortBy } from 'lodash';
@@ -47,6 +54,7 @@ import {
     DEFAULT_OPACITY,
     DEFAULT_TRANSPARENT,
     baseAuxMeshMaterial,
+    baseAuxPointLight,
     buildSRGBColor,
     calculateScale,
     createCircle,
@@ -125,6 +133,7 @@ export class BotShapeDecorator
 
     container: Group;
     mesh: Mesh | FrustumHelper;
+    light: Light;
 
     collider: Object3D;
     scene: Group;
@@ -499,6 +508,9 @@ export class BotShapeDecorator
         if (this.stroke) {
             this.stroke.dispose();
         }
+        if (this.collider) {
+            this.container.remove(this.collider);
+        }
         disposeObject3D(this.collider);
         if (this._iframe) {
             this.container.remove(this._iframe.object3d);
@@ -595,6 +607,7 @@ export class BotShapeDecorator
             });
         } else {
             setColor(this.mesh, color);
+            setColor(this.light, color);
         }
 
         if (this._keyboard) {
@@ -778,6 +791,18 @@ export class BotShapeDecorator
             this._createCircle();
         } else if (this._shape === 'keyboard') {
             this._createKeyboard();
+        } else if (this._shape === 'light') {
+            if (this._subShape === 'pointLight') {
+                this._createPointLight();
+            } else if (this._subShape === 'ambientLight') {
+                this._createAmbientLight();
+            } else if (this._subShape === 'directionalLight') {
+                this._createDirectionalLight();
+            } else if (this._subShape === 'spotLight') {
+                this._createSpotLight();
+            } else if (this._subShape === 'hemisphereLight') {
+                this._createHemisphereLight();
+            }
         }
 
         this.onMeshUpdated.invoke(this);
@@ -1148,6 +1173,69 @@ export class BotShapeDecorator
             this._updateOpacity(null);
             this._updateRenderOrder(null);
         }
+    }
+
+    private _createPointLight() {
+        const collider = (this.collider = createCube(1));
+        setColor(collider, 'clear');
+        const pointLight = new PointLight(0xffffff, 1, 10);
+        this.light = pointLight;
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+        this.container.add(pointLight);
+        pointLight.position.set(0, 0, 0);
+    }
+    private _createAmbientLight() {
+        const collider = (this.collider = createCube(1));
+        setColor(collider, 'clear');
+        const ambientLight = new AmbientLight(0x404040);
+        this.light = ambientLight;
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+        this.container.add(ambientLight);
+        ambientLight.position.set(0, 0, 0);
+    }
+
+    private _createDirectionalLight() {
+        const collider = (this.collider = createCube(1));
+        setColor(collider, 'clear');
+        const directionalLight = new DirectionalLight(0xffffff, 0.5);
+        this.light = directionalLight;
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+        this.container.add(directionalLight);
+        directionalLight.position.set(0, 0, 0);
+    }
+
+    private _createSpotLight() {
+        const collider = (this.collider = createCube(1));
+        setColor(collider, 'clear');
+        const spotLight = new SpotLight(0x00ff00);
+        this.light = spotLight;
+        //Todo
+        // spotLight.castShadow = true;
+
+        // spotLight.shadow.mapSize.width = 1024;
+        // spotLight.shadow.mapSize.height = 1024;
+
+        // spotLight.shadow.camera.near = 500;
+        // spotLight.shadow.camera.far = 4000;
+        // spotLight.shadow.camera.fov = 30;
+
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+        this.container.add(spotLight);
+        spotLight.position.set(0, 0, 0);
+        //this.scene.add(spotLight.target);
+    }
+    private _createHemisphereLight() {
+        const collider = (this.collider = createCube(1));
+        setColor(collider, 'clear');
+        const hemisphereLight = new HemisphereLight(0xffffbb, 0x080820, 1);
+        this.container.add(this.collider);
+        this.bot3D.colliders.push(this.collider);
+        this.container.add(hemisphereLight);
+        hemisphereLight.position.set(0, 0, 0);
     }
 
     private async _createHex() {

@@ -40,6 +40,13 @@ import {
     MeshNormalMaterial,
     Texture,
     Cache,
+    PointLight,
+    WebGLRenderer,
+    PCFSoftShadowMap,
+    PlaneGeometry,
+    SphereGeometry,
+    CameraHelper,
+    Light,
 } from '@casual-simulation/three';
 import { flatMap } from 'lodash';
 import {
@@ -53,7 +60,8 @@ import {
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
 import { Simulation } from '@casual-simulation/aux-vm';
-import { BackSide } from 'three';
+import { BackSide, PCFShadowMap } from 'three';
+import { render } from 'mustache';
 
 /**
  * Gets the direction of the up vector for 3D portals.
@@ -94,6 +102,46 @@ export function baseAuxDirectionalLight() {
     // let helper = new DirectionalLightHelper(dirLight);
     // dirLight.add(helper);
     return dirLight;
+}
+
+//Todo
+export function baseAuxPointLight() {
+    let pointLight = new PointLight(0xffffff, 1, 100);
+    pointLight.position.set(50, 50, 50);
+    pointLight.castShadow = false; //default
+
+    //Set up shadow properties for the light
+    pointLight.shadow.mapSize.width = 512; // default
+    pointLight.shadow.mapSize.height = 512; // default
+    pointLight.shadow.camera.near = 0.5; // default
+    pointLight.shadow.camera.far = 500; // default
+    return pointLight;
+}
+
+export function baseAuxPointLightShadow() {
+    let pointLightShadow = new WebGLRenderer();
+    pointLightShadow.shadowMap.enabled = true;
+    pointLightShadow.shadowMap.type = PCFSoftShadowMap;
+    return pointLightShadow;
+}
+
+//Create a sphere that cast shadows (but does not receive them)
+export function baseSphereGeometry() {
+    const sphereGeometry = new SphereGeometry(5, 32, 32);
+    const sphereMaterial = new MeshStandardMaterial({ color: 0xff0000 });
+    const sphere = new Mesh(sphereGeometry, sphereMaterial);
+    sphere.castShadow = true; //default is false
+    sphere.receiveShadow = false; //default
+    return sphere;
+}
+
+export function baseShadowPlane() {
+    //Create a plane that receives shadows (but does not cast them)
+    const planeGeometry = new PlaneGeometry(20, 20, 32, 32);
+    const planeMaterial = new MeshStandardMaterial({ color: 0x00ff00 });
+    const plane = new Mesh(planeGeometry, planeMaterial);
+    plane.receiveShadow = true;
+    return plane;
 }
 
 /**
@@ -727,23 +775,28 @@ export const DEFAULT_TRANSPARENT = Symbol('default_transparent');
  * @param color The color in sRGB space.
  */
 export function setColor(
-    mesh: Mesh | Sprite | ThreeLineSegments,
+    mesh: Mesh | Sprite | ThreeLineSegments | Light,
     color: string
 ) {
     if (!mesh) {
         return;
     }
-    const shapeMat = <
-        MeshStandardMaterial | MeshToonMaterial | LineBasicMaterial
-    >mesh.material;
-    if (color) {
-        shapeMat.visible = !isTransparent(color);
-        if (shapeMat.visible) {
-            shapeMat.color = buildSRGBColor(color);
-        }
+    if (mesh instanceof Light) {
+        mesh.color = buildSRGBColor(color);
     } else {
-        shapeMat.visible = true;
-        shapeMat.color = (<any>shapeMat)[DEFAULT_COLOR] ?? new Color(0xffffff);
+        const shapeMat = <
+            MeshStandardMaterial | MeshToonMaterial | LineBasicMaterial
+        >mesh.material;
+        if (color) {
+            shapeMat.visible = !isTransparent(color);
+            if (shapeMat.visible) {
+                shapeMat.color = buildSRGBColor(color);
+            }
+        } else {
+            shapeMat.visible = true;
+            shapeMat.color =
+                (<any>shapeMat)[DEFAULT_COLOR] ?? new Color(0xffffff);
+        }
     }
 }
 /**
