@@ -187,25 +187,28 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         };
     }
 
-    async getInstSize(recordName: string, inst: string): Promise<number> {
+    async getInstSize(
+        recordName: string | null,
+        inst: string
+    ): Promise<number> {
         return (
             (await this._temp.getInstSize(recordName, inst)) ??
             (await this._permanent.getInstSize(recordName, inst))
         );
     }
 
-    async addUpdate(
-        recordName: string,
+    async addUpdates(
+        recordName: string | null,
         inst: string,
         branch: string,
-        update: string,
+        updates: string[],
         sizeInBytes: number
     ): Promise<AddUpdatesResult> {
         await this._temp.addUpdates(
             recordName,
             inst,
             branch,
-            [update],
+            updates,
             sizeInBytes
         );
         const size = await this._temp.getInstSize(recordName, inst);
@@ -217,7 +220,7 @@ export class SplitInstRecordsStore implements InstRecordsStore {
     }
 
     async deleteBranch(
-        recordName: string,
+        recordName: string | null,
         inst: string,
         branch: string
     ): Promise<void> {

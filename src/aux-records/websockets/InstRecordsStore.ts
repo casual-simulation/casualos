@@ -85,14 +85,14 @@ export interface InstRecordsStore {
      * @param recordName The name of the record that the updates should be added to. If null, then the updates will be added to a tempPublic inst.
      * @param inst The name of the inst.
      * @param branch The branch that the updates should be added to.
-     * @param update The update that should be added.
+     * @param updates The updates that should be added.
      * @param sizeInBytes The size of the updates in bytes.
      */
-    addUpdate(
+    addUpdates(
         recordName: string | null,
         inst: string,
         branch: string,
-        update: string,
+        updates: string[],
         sizeInBytes: number
     ): Promise<AddUpdatesResult>;
 
@@ -111,6 +111,9 @@ export interface InstRecordsStore {
     /**
      * Replaces the current set of updates with a new update.
      * Useful for when updates have been merged and the old ones should be replaced by the new one.
+     *
+     * Depending on the implementation, this function may or may not be concurrent safe.
+     * That is, if two clients call this function at the same time for the same branch, then it is possible that the branch will be put into an invalid state.
      *
      * @param recordName The name of the record. If null, then the updates will be added to a tempPublic inst.
      * @param inst The name of the inst.

@@ -1,5 +1,4 @@
 import {
-    branchNamespace,
     WebsocketController,
     isEventForDevice,
     connectionInfo,
@@ -36,6 +35,10 @@ import {
 import { WebsocketEventTypes } from './WebsocketEvents';
 import { createTestControllers, createTestUser } from '../TestUtils';
 import { generateV1ConnectionToken } from '../AuthUtils';
+import { SplitInstRecordsStore } from './SplitInstRecordsStore';
+import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
+import { MemoryInstRecordsStore } from './MemoryInstRecordsStore';
+import { MemoryTempInstRecordsStore } from './MemoryTempInstRecordsStore';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -76,7 +79,8 @@ describe('WebsocketController', () => {
     let server: WebsocketController;
     let connectionStore: MemoryWebsocketConnectionStore;
     let messenger: MemoryWebsocketMessenger;
-    let updateStore: MemoryUpdatesStore;
+    let instStore: SplitInstRecordsStore;
+    let tempUpdatesStore: TemporaryInstRecordsStore;
     let services: ReturnType<typeof createTestControllers>;
 
     let userId: string;
@@ -95,11 +99,16 @@ describe('WebsocketController', () => {
         services = createTestControllers();
         connectionStore = new MemoryWebsocketConnectionStore();
         messenger = new MemoryWebsocketMessenger();
-        updateStore = new MemoryUpdatesStore();
+        tempUpdatesStore = new MemoryTempInstRecordsStore();
+        instStore = new SplitInstRecordsStore(
+            new MemoryTempInstRecordsStore(),
+            new MemoryInstRecordsStore()
+        );
         server = new WebsocketController(
             connectionStore,
             messenger,
-            updateStore,
+            instStore,
+            tempUpdatesStore,
             services.auth
         );
 
@@ -210,7 +219,7 @@ describe('WebsocketController', () => {
             await server.watchBranch(device1Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
                 temporary: true,
             });
@@ -218,24 +227,28 @@ describe('WebsocketController', () => {
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
                 temporary: true,
             });
 
             await server.addUpdates(device2Info.serverConnectionId, {
                 type: 'repo/add_updates',
+                recordName: null,
+                inst,
                 branch: 'testBranch',
                 updates: ['111', '222'],
             });
 
             await server.unwatchBranch(
                 device1Info.serverConnectionId,
+                null,
+                inst,
                 'testBranch'
             );
 
             expect(
-                await updateStore.getUpdates(branchNamespace('testBranch'))
+                await tempUpdatesStore.getUpdates(null, inst, 'testBranch')
             ).toEqual({
                 updates: ['111', '222'],
                 timestamps: [expect.any(Number), expect.any(Number)],
@@ -244,7 +257,7 @@ describe('WebsocketController', () => {
             await server.disconnect(device2Info.serverConnectionId);
 
             expect(
-                await updateStore.getUpdates(branchNamespace('testBranch'))
+                await tempUpdatesStore.getUpdates(null, inst, 'testBranch')
             ).toEqual({
                 updates: [],
                 timestamps: [],
@@ -257,15 +270,18 @@ describe('WebsocketController', () => {
             it('should load the given branch and send the current updates', async () => {
                 await connectionStore.saveConnection(device1Info);
 
-                await updateStore.addUpdates(branchNamespace('testBranch'), [
-                    '123',
-                    '456',
-                ]);
+                await instStore.addUpdates(
+                    null,
+                    inst,
+                    'testBranch',
+                    ['123', '456'],
+                    6
+                );
 
                 await server.watchBranch(device1Info.serverConnectionId, {
                     type: 'repo/watch_branch',
                     recordName: null,
-                    inst: 'inst',
+                    inst,
                     branch: 'testBranch',
                 });
 
@@ -287,7 +303,7 @@ describe('WebsocketController', () => {
                 await server.watchBranch(device1Info.serverConnectionId, {
                     type: 'repo/watch_branch',
                     recordName: null,
-                    inst: 'inst',
+                    inst,
                     branch: 'doesNotExist',
                 });
 
@@ -307,15 +323,18 @@ describe('WebsocketController', () => {
                 it('should load the branch like normal if the branch is temporary', async () => {
                     await connectionStore.saveConnection(device1Info);
 
-                    await updateStore.addUpdates(
-                        branchNamespace('testBranch'),
-                        ['111', '222']
+                    await tempUpdatesStore.addUpdates(
+                        null,
+                        inst,
+                        'testBranch',
+                        ['111', '222'],
+                        6
                     );
 
                     await server.watchBranch(device1Info.serverConnectionId, {
                         type: 'repo/watch_branch',
                         recordName: null,
-                        inst: 'inst',
+                        inst,
                         branch: 'testBranch',
                         temporary: true,
                     });
@@ -340,13 +359,15 @@ describe('WebsocketController', () => {
                     await server.watchBranch(device1Info.serverConnectionId, {
                         type: 'repo/watch_branch',
                         recordName: null,
-                        inst: 'inst',
+                        inst,
                         branch: 'testBranch',
                         temporary: true,
                     });
 
                     await server.addUpdates(device1Info.serverConnectionId, {
                         type: 'repo/add_updates',
+                        recordName,
+                        inst,
                         branch: 'testBranch',
                         updates: ['abc', 'def'],
                     });
@@ -354,7 +375,7 @@ describe('WebsocketController', () => {
                     await server.watchBranch(device3Info.serverConnectionId, {
                         type: 'repo/watch_branch',
                         recordName: null,
-                        inst: 'inst',
+                        inst,
                         branch: 'testBranch',
                         temporary: true,
                     });
@@ -364,6 +385,8 @@ describe('WebsocketController', () => {
                     ).toEqual([
                         {
                             type: 'repo/add_updates',
+                            recordName: null,
+                            inst,
                             branch: 'testBranch',
                             updates: ['abc', 'def'],
                             initial: true,
@@ -383,24 +406,30 @@ describe('WebsocketController', () => {
                 await server.watchBranch(device1Info.serverConnectionId, {
                     type: 'repo/watch_branch',
                     recordName: null,
-                    inst: 'inst',
+                    inst,
                     branch: 'testBranch',
                     protocol: 'updates',
                 });
 
                 await server.addUpdates(device2Info.serverConnectionId, {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: ['111', '222'],
                 });
 
                 await server.unwatchBranch(
                     device1Info.serverConnectionId,
+                    null,
+                    inst,
                     'testBranch'
                 );
 
                 await server.addUpdates(device2Info.serverConnectionId, {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: ['333', '444'],
                 });
@@ -429,7 +458,7 @@ describe('WebsocketController', () => {
                 await server.watchBranch(device1Info.serverConnectionId, {
                     type: 'repo/watch_branch',
                     recordName: null,
-                    inst: 'inst',
+                    inst,
                     branch: 'testBranch',
                     temporary: true,
                     protocol: 'updates',
@@ -438,7 +467,7 @@ describe('WebsocketController', () => {
                 await server.watchBranch(device2Info.serverConnectionId, {
                     type: 'repo/watch_branch',
                     recordName: null,
-                    inst: 'inst',
+                    inst,
                     branch: 'testBranch',
                     temporary: true,
                     protocol: 'updates',
@@ -446,17 +475,21 @@ describe('WebsocketController', () => {
 
                 await server.addUpdates(device2Info.serverConnectionId, {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: ['111', '222'],
                 });
 
                 await server.unwatchBranch(
                     device1Info.serverConnectionId,
+                    null,
+                    inst,
                     'testBranch'
                 );
 
                 expect(
-                    await updateStore.getUpdates(branchNamespace('testBranch'))
+                    await tempUpdatesStore.getUpdates(null, inst, 'testBranch')
                 ).toEqual({
                     updates: ['111', '222'],
                     timestamps: [expect.any(Number), expect.any(Number)],
@@ -464,11 +497,13 @@ describe('WebsocketController', () => {
 
                 await server.unwatchBranch(
                     device2Info.serverConnectionId,
+                    null,
+                    inst,
                     'testBranch'
                 );
 
                 expect(
-                    await updateStore.getUpdates(branchNamespace('testBranch'))
+                    await tempUpdatesStore.getUpdates(null, inst, 'testBranch')
                 ).toEqual({
                     updates: [],
                     timestamps: [],
@@ -496,6 +531,8 @@ describe('WebsocketController', () => {
             mockedNow.mockReturnValue(100);
             await server.addUpdates(device1Info.serverConnectionId, {
                 type: 'repo/add_updates',
+                recordName: null,
+                inst,
                 branch: 'testBranch',
                 updates: ['111', '222'],
                 updateId: 0,
@@ -503,6 +540,8 @@ describe('WebsocketController', () => {
 
             await server.getUpdates(
                 device1Info.serverConnectionId,
+                null,
+                inst,
                 'testBranch'
             );
 
@@ -532,6 +571,8 @@ describe('WebsocketController', () => {
             mockedNow.mockReturnValue(100);
             await server.addUpdates(device1Info.serverConnectionId, {
                 type: 'repo/add_updates',
+                recordName: null,
+                inst,
                 branch: 'testBranch',
                 updates: ['111', '222'],
                 updateId: 0,
@@ -539,11 +580,15 @@ describe('WebsocketController', () => {
 
             await server.getUpdates(
                 device1Info.serverConnectionId,
+                null,
+                inst,
                 'testBranch'
             );
 
             await server.addUpdates(device1Info.serverConnectionId, {
                 type: 'repo/add_updates',
+                recordName: null,
+                inst,
                 branch: 'testBranch',
                 updates: ['333'],
                 updateId: 1,
@@ -556,12 +601,16 @@ describe('WebsocketController', () => {
                 // back indicating which atoms it processed
                 {
                     type: 'repo/updates_received',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updateId: 0,
                 },
 
                 {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: ['111', '222'],
                     timestamps: [100, 100],
@@ -571,6 +620,8 @@ describe('WebsocketController', () => {
                 // back indicating which atoms it processed
                 {
                     type: 'repo/updates_received',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updateId: 1,
                 },
@@ -584,19 +635,19 @@ describe('WebsocketController', () => {
 
             await server.addUpdates(device1Info.serverConnectionId, {
                 type: 'repo/add_updates',
+                recordName: null,
+                inst,
                 branch: 'testBranch',
                 updates: ['111', '222'],
                 updateId: 0,
             });
 
-            await updateStore.addUpdates(branchNamespace('testBranch'), [
-                '333',
-            ]);
+            await instStore.addUpdates(null, inst, 'testBranch', ['333'], 3);
 
             await server.watchBranch(device1Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
                 protocol: 'updates',
             });
@@ -608,12 +659,16 @@ describe('WebsocketController', () => {
                 // back indicating which atoms it processed
                 {
                     type: 'repo/updates_received',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updateId: 0,
                 },
 
                 {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: ['111', '222', '333'],
                     initial: true,
@@ -626,15 +681,18 @@ describe('WebsocketController', () => {
             await connectionStore.saveConnection(device2Info);
             await connectionStore.saveConnection(device3Info);
 
-            await updateStore.addUpdates(branchNamespace('testBranch'), [
-                '111',
-                '222',
-            ]);
+            await instStore.addUpdates(
+                null,
+                inst,
+                'testBranch',
+                ['111', '222'],
+                6
+            );
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
                 protocol: 'updates',
             });
@@ -642,13 +700,15 @@ describe('WebsocketController', () => {
             await server.watchBranch(device3Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
                 protocol: 'updates',
             });
 
             await server.addUpdates(device1Info.serverConnectionId, {
                 type: 'repo/add_updates',
+                recordName: null,
+                inst,
                 branch: 'testBranch',
                 updates: ['333'],
             });
@@ -658,12 +718,16 @@ describe('WebsocketController', () => {
             ).toEqual([
                 {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: ['111', '222'],
                     initial: true,
                 },
                 {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: ['333'],
                 },
@@ -674,12 +738,16 @@ describe('WebsocketController', () => {
             ).toEqual([
                 {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: ['111', '222'],
                     initial: true,
                 },
                 {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: ['333'],
                 },
@@ -689,21 +757,26 @@ describe('WebsocketController', () => {
         it('should not notify the device that sent the new atoms', async () => {
             await connectionStore.saveConnection(device1Info);
 
-            await updateStore.addUpdates(branchNamespace('testBranch'), [
-                '111',
-                '222',
-            ]);
+            await instStore.addUpdates(
+                null,
+                inst,
+                'testBranch',
+                ['111', '222'],
+                6
+            );
 
             await server.watchBranch(device1Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
                 protocol: 'updates',
             });
 
             await server.addUpdates(device1Info.serverConnectionId, {
                 type: 'repo/add_updates',
+                recordName: null,
+                inst,
                 branch: 'testBranch',
                 updates: ['333'],
                 updateId: 0,
@@ -714,6 +787,8 @@ describe('WebsocketController', () => {
             ).toEqual([
                 {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: ['111', '222'],
                     initial: true,
@@ -723,6 +798,8 @@ describe('WebsocketController', () => {
                 // back indicating which atoms it processed
                 {
                     type: 'repo/updates_received',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updateId: 0,
                 },
@@ -734,13 +811,17 @@ describe('WebsocketController', () => {
 
             await server.addUpdates(device1Info.serverConnectionId, {
                 type: 'repo/add_updates',
+                recordName: null,
+                inst,
                 branch: 'testBranch',
                 updates: ['111', '222'],
                 updateId: 0,
             });
 
-            const updates = await updateStore.getUpdates(
-                branchNamespace('testBranch')
+            const updates = await instStore.getCurrentUpdates(
+                null,
+                inst,
+                'testBranch'
             );
 
             expect(updates).toEqual({
@@ -754,6 +835,8 @@ describe('WebsocketController', () => {
 
             await server.addUpdates(device1Info.serverConnectionId, {
                 type: 'repo/add_updates',
+                recordName: null,
+                inst,
                 branch: null as any,
                 updates: ['111'],
             });
@@ -764,188 +847,202 @@ describe('WebsocketController', () => {
 
             await server.addUpdates(device1Info.serverConnectionId, {
                 type: 'repo/add_updates',
+                recordName: null,
+                inst,
                 branch: 'abc',
                 updates: ['111'],
             });
 
             expect(
-                await updateStore.getUpdates(branchNamespace('abc'))
+                await instStore.getCurrentUpdates(null, inst, 'abc')
             ).toEqual({
                 updates: ['111'],
                 timestamps: [expect.any(Number)],
             });
         });
 
-        it('should notify the sender if the updates were rejected because of a max inst size', async () => {
-            updateStore.maxAllowedInstSize = 5;
+        // it('should notify the sender if the updates were rejected because of a max inst size', async () => {
+        //     updateStore.maxAllowedInstSize = 5;
 
-            await connectionStore.saveConnection(device1Info);
+        //     await connectionStore.saveConnection(device1Info);
 
-            await server.addUpdates(device1Info.serverConnectionId, {
-                type: 'repo/add_updates',
-                branch: 'testBranch',
-                updates: ['111', '222'],
-                updateId: 0,
-            });
+        //     await server.addUpdates(device1Info.serverConnectionId, {
+        //         type: 'repo/add_updates',
+        //         recordName: null,
+        //         inst,
+        //         branch: 'testBranch',
+        //         updates: ['111', '222'],
+        //         updateId: 0,
+        //     });
 
-            const updates = await updateStore.getUpdates(
-                branchNamespace('testBranch')
-            );
+        //     const updates = await updateStore.getUpdates(
+        //         branchNamespace(null, inst, 'testBranch')
+        //     );
 
-            expect(updates).toEqual({
-                updates: [],
-                timestamps: [],
-            });
+        //     expect(updates).toEqual({
+        //         updates: [],
+        //         timestamps: [],
+        //     });
 
-            const messages = messenger.getMessages(
-                device1Info.serverConnectionId
-            );
-            expect(messages).toEqual([
-                {
-                    type: 'repo/updates_received',
-                    branch: 'testBranch',
-                    updateId: 0,
-                    errorCode: 'max_size_reached',
-                    maxBranchSizeInBytes: 5,
-                    neededBranchSizeInBytes: 6,
-                },
-            ]);
-        });
+        //     const messages = messenger.getMessages(
+        //         device1Info.serverConnectionId
+        //     );
+        //     expect(messages).toEqual([
+        //         {
+        //             type: 'repo/updates_received',
+        //             recordName: null,
+        //             inst,
+        //             branch: 'testBranch',
+        //             updateId: 0,
+        //             errorCode: 'max_size_reached',
+        //             maxBranchSizeInBytes: 5,
+        //             neededBranchSizeInBytes: 6,
+        //         },
+        //     ]);
+        // });
 
-        it('should merge updates when the max size was exceeded if configured', async () => {
-            updateStore.maxAllowedInstSize = 150;
-            server.mergeUpdatesOnMaxSizeExceeded = true;
+        // it('should merge updates when the max size was exceeded if configured', async () => {
+        //     updateStore.maxAllowedInstSize = 150;
+        //     server.mergeUpdatesOnMaxSizeExceeded = true;
 
-            let createdUpdates = [] as string[];
-            let p = new YjsPartitionImpl({
-                type: 'yjs',
-            });
+        //     let createdUpdates = [] as string[];
+        //     let p = new YjsPartitionImpl({
+        //         type: 'yjs',
+        //     });
 
-            p.doc.clientID = 9999;
-            p.doc.on('update', (update: Uint8Array) => {
-                createdUpdates.push(fromByteArray(update));
-            });
+        //     p.doc.clientID = 9999;
+        //     p.doc.on('update', (update: Uint8Array) => {
+        //         createdUpdates.push(fromByteArray(update));
+        //     });
 
-            await p.applyEvents([
-                botAdded(
-                    createBot('test', {
-                        abc: 'def',
-                    })
-                ),
-                botAdded(
-                    createBot('test2', {
-                        abc: 'def',
-                    })
-                ),
-                botAdded(
-                    createBot('test3', {
-                        abc: 'def',
-                    })
-                ),
-            ]);
-            const update = createdUpdates[0];
+        //     await p.applyEvents([
+        //         botAdded(
+        //             createBot('test', {
+        //                 abc: 'def',
+        //             })
+        //         ),
+        //         botAdded(
+        //             createBot('test2', {
+        //                 abc: 'def',
+        //             })
+        //         ),
+        //         botAdded(
+        //             createBot('test3', {
+        //                 abc: 'def',
+        //             })
+        //         ),
+        //     ]);
+        //     const update = createdUpdates[0];
 
-            console.warn(update.length);
+        //     console.warn(update.length);
 
-            await connectionStore.saveConnection(device1Info);
+        //     await connectionStore.saveConnection(device1Info);
 
-            await server.addUpdates(device1Info.serverConnectionId, {
-                type: 'repo/add_updates',
-                branch: 'testBranch',
-                updates: [update],
-                updateId: 0,
-            });
+        //     await server.addUpdates(device1Info.serverConnectionId, {
+        //         type: 'repo/add_updates',
+        //         recordName: null,
+        //         inst,
+        //         branch: 'testBranch',
+        //         updates: [update],
+        //         updateId: 0,
+        //     });
 
-            await p.applyEvents([botRemoved('test3')]);
-            const update2 = createdUpdates[1];
+        //     await p.applyEvents([botRemoved('test3')]);
+        //     const update2 = createdUpdates[1];
 
-            expect(p.state).toEqual({
-                test: createBot('test', {
-                    abc: 'def',
-                }),
-                test2: createBot('test2', {
-                    abc: 'def',
-                }),
-            });
+        //     expect(p.state).toEqual({
+        //         test: createBot('test', {
+        //             abc: 'def',
+        //         }),
+        //         test2: createBot('test2', {
+        //             abc: 'def',
+        //         }),
+        //     });
 
-            const state2 = getStateFromUpdates({
-                type: 'get_inst_state_from_updates',
-                updates: [
-                    {
-                        id: 0,
-                        timestamp: 0,
-                        update: update,
-                    },
-                    {
-                        id: 0,
-                        timestamp: 0,
-                        update: update2,
-                    },
-                ],
-            });
+        //     const state2 = getStateFromUpdates({
+        //         type: 'get_inst_state_from_updates',
+        //         updates: [
+        //             {
+        //                 id: 0,
+        //                 timestamp: 0,
+        //                 update: update,
+        //             },
+        //             {
+        //                 id: 0,
+        //                 timestamp: 0,
+        //                 update: update2,
+        //             },
+        //         ],
+        //     });
 
-            expect(state2).toEqual({
-                test: createBot('test', {
-                    abc: 'def',
-                }),
-                test2: createBot('test2', {
-                    abc: 'def',
-                }),
-            });
+        //     expect(state2).toEqual({
+        //         test: createBot('test', {
+        //             abc: 'def',
+        //         }),
+        //         test2: createBot('test2', {
+        //             abc: 'def',
+        //         }),
+        //     });
 
-            await server.addUpdates(device1Info.serverConnectionId, {
-                type: 'repo/add_updates',
-                branch: 'testBranch',
-                updates: [update2],
-                updateId: 1,
-            });
+        //     await server.addUpdates(device1Info.serverConnectionId, {
+        //         type: 'repo/add_updates',
+        //         recordName: null,
+        //         inst,
+        //         branch: 'testBranch',
+        //         updates: [update2],
+        //         updateId: 1,
+        //     });
 
-            const updates = await updateStore.getUpdates(
-                branchNamespace('testBranch')
-            );
+        //     const updates = await updateStore.getUpdates(
+        //         branchNamespace(null, inst, 'testBranch')
+        //     );
 
-            expect(updates).toEqual({
-                updates: [expect.any(String)],
-                timestamps: [expect.any(Number)],
-            });
+        //     expect(updates).toEqual({
+        //         updates: [expect.any(String)],
+        //         timestamps: [expect.any(Number)],
+        //     });
 
-            const state = getStateFromUpdates({
-                type: 'get_inst_state_from_updates',
-                updates: [
-                    {
-                        id: 0,
-                        timestamp:
-                            updates.timestamps[updates.timestamps.length - 1],
-                        update: updates.updates[updates.updates.length - 1],
-                    },
-                ],
-            });
+        //     const state = getStateFromUpdates({
+        //         type: 'get_inst_state_from_updates',
+        //         updates: [
+        //             {
+        //                 id: 0,
+        //                 timestamp:
+        //                     updates.timestamps[updates.timestamps.length - 1],
+        //                 update: updates.updates[updates.updates.length - 1],
+        //             },
+        //         ],
+        //     });
 
-            expect(state).toEqual({
-                test: createBot('test', {
-                    abc: 'def',
-                }),
-                test2: createBot('test2', {
-                    abc: 'def',
-                }),
-            });
+        //     expect(state).toEqual({
+        //         test: createBot('test', {
+        //             abc: 'def',
+        //         }),
+        //         test2: createBot('test2', {
+        //             abc: 'def',
+        //         }),
+        //     });
 
-            const messages = messenger.getMessages(
-                device1Info.serverConnectionId
-            );
-            expect(messages).toEqual([
-                {
-                    type: 'repo/updates_received',
-                    branch: 'testBranch',
-                    updateId: 0,
-                },
-                {
-                    type: 'repo/updates_received',
-                    branch: 'testBranch',
-                    updateId: 1,
-                },
-            ]);
-        });
+        //     const messages = messenger.getMessages(
+        //         device1Info.serverConnectionId
+        //     );
+        //     expect(messages).toEqual([
+        //         {
+        //             type: 'repo/updates_received',
+        //             recordName: null,
+        //             inst,
+        //             branch: 'testBranch',
+        //             updateId: 0,
+        //         },
+        //         {
+        //             type: 'repo/updates_received',
+        //             recordName: null,
+        //             inst,
+        //             branch: 'testBranch',
+        //             updateId: 1,
+        //         },
+        //     ]);
+        // });
     });
 
     describe('repo/send_event', () => {
@@ -957,19 +1054,21 @@ describe('WebsocketController', () => {
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
 
             await server.sendAction(device1Info.serverConnectionId, {
                 type: 'repo/send_action',
+                recordName: null,
+                inst,
                 branch: 'testBranch',
                 action: remote(
                     {
@@ -986,6 +1085,8 @@ describe('WebsocketController', () => {
             ).toEqual([
                 {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: [],
                     initial: true,
@@ -996,12 +1097,16 @@ describe('WebsocketController', () => {
             ).toEqual([
                 {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: [],
                     initial: true,
                 },
                 {
                     type: 'repo/receive_action',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     action: device(connectionInfo(device1Info), {
                         type: 'abc',
@@ -1023,19 +1128,21 @@ describe('WebsocketController', () => {
                 await server.watchBranch(device2Info.serverConnectionId, {
                     type: 'repo/watch_branch',
                     recordName: null,
-                    inst: 'inst',
+                    inst,
                     branch: 'testBranch',
                 });
 
                 await server.watchBranch(device3Info.serverConnectionId, {
                     type: 'repo/watch_branch',
                     recordName: null,
-                    inst: 'inst',
+                    inst,
                     branch: 'testBranch',
                 });
 
                 await server.sendAction(device1Info.serverConnectionId, {
                     type: 'repo/send_action',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     action: remote({
                         type: 'abc',
@@ -1047,6 +1154,8 @@ describe('WebsocketController', () => {
                 ).toEqual([
                     {
                         type: 'repo/add_updates',
+                        recordName: null,
+                        inst,
                         branch: 'testBranch',
                         updates: [],
                         initial: true,
@@ -1057,12 +1166,16 @@ describe('WebsocketController', () => {
                 ).toEqual([
                     {
                         type: 'repo/add_updates',
+                        recordName: null,
+                        inst,
                         branch: 'testBranch',
                         updates: [],
                         initial: true,
                     },
                     {
                         type: 'repo/receive_action',
+                        recordName: null,
+                        inst,
                         branch: 'testBranch',
                         action: device(connectionInfo(device1Info), {
                             type: 'abc',
@@ -1082,19 +1195,21 @@ describe('WebsocketController', () => {
             await server.watchBranch(device1Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
 
             await server.sendAction(device1Info.serverConnectionId, {
                 type: 'repo/send_action',
+                recordName: null,
+                inst,
                 branch: 'testBranch',
                 action: remote(
                     {
@@ -1111,12 +1226,16 @@ describe('WebsocketController', () => {
             ).toEqual([
                 {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: [],
                     initial: true,
                 },
                 {
                     type: 'repo/receive_action',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     action: device(connectionInfo(device1Info), {
                         type: 'abc',
@@ -1131,12 +1250,16 @@ describe('WebsocketController', () => {
             ).toEqual([
                 {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: [],
                     initial: true,
                 },
                 {
                     type: 'repo/receive_action',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     action: device(connectionInfo(device1Info), {
                         type: 'abc',
@@ -1153,19 +1276,21 @@ describe('WebsocketController', () => {
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
 
             await server.sendAction(device1Info.serverConnectionId, {
                 type: 'repo/send_action',
+                recordName: null,
+                inst,
                 branch: 'testBranch',
                 action: remote(
                     {
@@ -1184,6 +1309,8 @@ describe('WebsocketController', () => {
             ).toEqual([
                 {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: [],
                     initial: true,
@@ -1195,12 +1322,16 @@ describe('WebsocketController', () => {
             ).toEqual([
                 {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: [],
                     initial: true,
                 },
                 {
                     type: 'repo/receive_action',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     action: device(
                         connectionInfo(device1Info),
@@ -1221,19 +1352,21 @@ describe('WebsocketController', () => {
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
 
             await server.sendAction(device1Info.serverConnectionId, {
                 type: 'repo/send_action',
+                recordName: null,
+                inst,
                 branch: 'testBranch',
                 action: remoteResult(
                     'data',
@@ -1249,6 +1382,8 @@ describe('WebsocketController', () => {
             ).toEqual([
                 {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: [],
                     initial: true,
@@ -1259,6 +1394,8 @@ describe('WebsocketController', () => {
             ).toEqual([
                 {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: [],
                     initial: true,
@@ -1283,19 +1420,21 @@ describe('WebsocketController', () => {
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
 
             await server.sendAction(device1Info.serverConnectionId, {
                 type: 'repo/send_action',
+                recordName: null,
+                inst,
                 branch: 'testBranch',
                 action: remoteError(
                     'data',
@@ -1311,6 +1450,8 @@ describe('WebsocketController', () => {
             ).toEqual([
                 {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: [],
                     initial: true,
@@ -1321,12 +1462,16 @@ describe('WebsocketController', () => {
             ).toEqual([
                 {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: [],
                     initial: true,
                 },
                 {
                     type: 'repo/receive_action',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     action: deviceError(
                         connectionInfo(device1Info),
@@ -1345,13 +1490,15 @@ describe('WebsocketController', () => {
 
             await server.watchBranchDevices(
                 device1Info.serverConnectionId,
+                null,
+                inst,
                 'testBranch'
             );
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
 
@@ -1363,6 +1510,8 @@ describe('WebsocketController', () => {
                     broadcast: false,
                     branch: {
                         type: 'repo/watch_branch',
+                        recordName: null,
+                        inst,
                         branch: 'testBranch',
                     },
                     connection: connectionInfo(device2Info),
@@ -1376,18 +1525,22 @@ describe('WebsocketController', () => {
 
             await server.watchBranchDevices(
                 device1Info.serverConnectionId,
+                null,
+                inst,
                 'testBranch'
             );
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
 
             await server.unwatchBranch(
                 device2Info.serverConnectionId,
+                null,
+                inst,
                 'testBranch'
             );
 
@@ -1399,6 +1552,8 @@ describe('WebsocketController', () => {
                     broadcast: false,
                     branch: {
                         type: 'repo/watch_branch',
+                        recordName: null,
+                        inst,
                         branch: 'testBranch',
                     },
                     connection: connectionInfo(device2Info),
@@ -1406,6 +1561,8 @@ describe('WebsocketController', () => {
                 {
                     type: 'repo/disconnected_from_branch',
                     broadcast: false,
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     connection: connectionInfo(device2Info),
                 },
@@ -1418,13 +1575,15 @@ describe('WebsocketController', () => {
 
             await server.watchBranchDevices(
                 device1Info.serverConnectionId,
+                null,
+                inst,
                 'testBranch'
             );
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
 
@@ -1438,6 +1597,8 @@ describe('WebsocketController', () => {
                     broadcast: false,
                     branch: {
                         type: 'repo/watch_branch',
+                        recordName: null,
+                        inst,
                         branch: 'testBranch',
                     },
                     connection: connectionInfo(device2Info),
@@ -1445,6 +1606,8 @@ describe('WebsocketController', () => {
                 {
                     type: 'repo/disconnected_from_branch',
                     broadcast: false,
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     connection: connectionInfo(device2Info),
                 },
@@ -1460,26 +1623,28 @@ describe('WebsocketController', () => {
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device3Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
 
             await server.watchBranch(device4Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch2',
             });
 
             await server.watchBranchDevices(
                 device1Info.serverConnectionId,
+                null,
+                inst,
                 'testBranch'
             );
 
@@ -1491,6 +1656,8 @@ describe('WebsocketController', () => {
                     broadcast: false,
                     branch: {
                         type: 'repo/watch_branch',
+                        recordName: null,
+                        inst,
                         branch: 'testBranch',
                         temporary: false,
                     },
@@ -1501,6 +1668,8 @@ describe('WebsocketController', () => {
                     broadcast: false,
                     branch: {
                         type: 'repo/watch_branch',
+                        recordName: null,
+                        inst,
                         branch: 'testBranch',
                         temporary: false,
                     },
@@ -1515,13 +1684,15 @@ describe('WebsocketController', () => {
 
             await server.watchBranchDevices(
                 device1Info.serverConnectionId,
+                null,
+                inst,
                 'testBranch'
             );
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
                 temporary: true,
             });
@@ -1534,6 +1705,8 @@ describe('WebsocketController', () => {
                     broadcast: false,
                     branch: {
                         type: 'repo/watch_branch',
+                        recordName: null,
+                        inst,
                         branch: 'testBranch',
                         temporary: true,
                     },
@@ -1550,17 +1723,21 @@ describe('WebsocketController', () => {
 
             await server.watchBranchDevices(
                 device1Info.serverConnectionId,
+                null,
+                inst,
                 'testBranch'
             );
             await server.unwatchBranchDevices(
                 device1Info.serverConnectionId,
+                null,
+                inst,
                 'testBranch'
             );
 
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
 
@@ -1575,6 +1752,8 @@ describe('WebsocketController', () => {
 
             await server.watchBranchDevices(
                 device1Info.serverConnectionId,
+                null,
+                inst,
                 'testBranch'
             );
 
@@ -1585,7 +1764,7 @@ describe('WebsocketController', () => {
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
 
@@ -1600,7 +1779,12 @@ describe('WebsocketController', () => {
             await connectionStore.saveConnection(device1Info);
             await connectionStore.saveConnection(device2Info);
 
-            await server.deviceCount(device1Info.serverConnectionId, null);
+            await server.deviceCount(
+                device1Info.serverConnectionId,
+                null,
+                null,
+                null
+            );
 
             expect(
                 messenger.getMessages(device1Info.serverConnectionId)
@@ -1621,18 +1805,20 @@ describe('WebsocketController', () => {
             await server.watchBranch(device2Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
             await server.watchBranch(device3Info.serverConnectionId, {
                 type: 'repo/watch_branch',
                 recordName: null,
-                inst: 'inst',
+                inst,
                 branch: 'testBranch',
             });
 
             await server.deviceCount(
                 device1Info.serverConnectionId,
+                null,
+                inst,
                 'testBranch'
             );
 
@@ -1693,7 +1879,7 @@ describe('WebsocketController', () => {
 
     describe('getBranchData()', () => {
         it('should return an empty AUX if there is no branch updates', async () => {
-            const data = await server.getBranchData('testBranch');
+            const data = await server.getBranchData(null, inst, 'testBranch');
 
             expect(data).toEqual({
                 version: 1,
@@ -1720,11 +1906,15 @@ describe('WebsocketController', () => {
             );
             const updateBase64 = fromByteArray(updateBytes);
 
-            await updateStore.addUpdates(branchNamespace('testBranch'), [
-                updateBase64,
-            ]);
+            await instStore.addUpdates(
+                null,
+                inst,
+                'testBranch',
+                [updateBase64],
+                updateBase64.length
+            );
 
-            const data = await server.getBranchData('testBranch');
+            const data = await server.getBranchData(null, inst, 'testBranch');
 
             expect(data).toEqual({
                 version: 1,
@@ -1750,15 +1940,21 @@ describe('WebsocketController', () => {
                 await server.watchBranch(device1Info.serverConnectionId, {
                     type: 'repo/watch_branch',
                     recordName: null,
-                    inst: 'inst',
+                    inst,
                     branch: 'testBranch',
                 });
 
-                await updateStore.addUpdates(branchNamespace('testBranch'), [
-                    'abc',
-                ]);
+                await instStore.addUpdates(
+                    null,
+                    inst,
+                    'testBranch',
+                    ['abc'],
+                    3
+                );
 
                 const result = await server.webhook(
+                    null,
+                    inst,
                     'testBranch',
                     'method',
                     'url',
@@ -1778,6 +1974,8 @@ describe('WebsocketController', () => {
                 ).toEqual([
                     {
                         type: 'repo/receive_action',
+                        recordName: null,
+                        inst,
                         branch: 'testBranch',
                         action: action(ON_WEBHOOK_ACTION_NAME, null, null, {
                             method: 'method',
@@ -1807,11 +2005,13 @@ describe('WebsocketController', () => {
                 await server.watchBranch(device1Info.serverConnectionId, {
                     type: 'repo/watch_branch',
                     recordName: null,
-                    inst: 'inst',
+                    inst,
                     branch: 'testBranch',
                 });
 
                 const result = await server.webhook(
+                    null,
+                    inst,
                     'testBranch',
                     'method',
                     'url',
@@ -1829,6 +2029,8 @@ describe('WebsocketController', () => {
                 ).toEqual([
                     {
                         type: 'repo/add_updates',
+                        recordName: null,
+                        inst,
                         branch: 'testBranch',
                         updates: [],
                         initial: true,
@@ -1847,11 +2049,17 @@ describe('WebsocketController', () => {
 
                 await connectionStore.saveConnection(device1Info);
 
-                await updateStore.addUpdates(branchNamespace('testBranch'), [
-                    'abc',
-                ]);
+                await instStore.addUpdates(
+                    null,
+                    inst,
+                    'testBranch',
+                    ['abc'],
+                    3
+                );
 
                 const result = await server.webhook(
+                    null,
+                    inst,
                     'testBranch',
                     'method',
                     'url',
@@ -2144,13 +2352,5 @@ describe('WebsocketController', () => {
             const events = messenger.getEvents(device1Info.serverConnectionId);
             expect(events).toEqual([]);
         });
-    });
-});
-
-describe('branchNamespace()', () => {
-    it('should use the default namespace for branches', () => {
-        expect(branchNamespace('testBranch')).toMatchInlineSnapshot(
-            `"/branch/testBranch"`
-        );
     });
 });

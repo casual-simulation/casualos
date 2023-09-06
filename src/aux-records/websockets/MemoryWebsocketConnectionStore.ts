@@ -1,9 +1,11 @@
 import { sortedIndexBy } from 'lodash';
 import {
+    BranchConnectionMode,
+    DeviceBranchConnection,
     DeviceConnection,
-    DeviceNamespaceConnection,
     WebsocketConnectionStore,
 } from './WebsocketConnectionStore';
+import { branchNamespace } from './Utils';
 
 /**
  * Defines a WebsocketConnectionStore that keeps all data in memory.
@@ -14,12 +16,12 @@ export class MemoryWebsocketConnectionStore
     /**
      * A map of namespaces to device connections.
      */
-    private _namespaceMap = new Map<string, DeviceNamespaceConnection[]>();
+    private _namespaceMap = new Map<string, DeviceBranchConnection[]>();
 
     /**
      * A map of connection IDs to connections.
      */
-    private _connectionMap = new Map<string, DeviceNamespaceConnection[]>();
+    private _connectionMap = new Map<string, DeviceBranchConnection[]>();
 
     private _connections = new Map<string, DeviceConnection>();
 
@@ -36,10 +38,16 @@ export class MemoryWebsocketConnectionStore
         this._connections.set(connection.serverConnectionId, connection);
     }
 
-    async saveNamespaceConnection(
-        connection: DeviceNamespaceConnection
+    async saveBranchConnection(
+        connection: DeviceBranchConnection
     ): Promise<void> {
-        let namespaceList = this._getNamespaceList(connection.namespace);
+        const namespace = branchNamespace(
+            connection.mode,
+            connection.recordName,
+            connection.inst,
+            connection.branch
+        );
+        let namespaceList = this._getNamespaceList(namespace);
         let connectionList = this._getConnectionList(
             connection.serverConnectionId
         );
@@ -57,24 +65,28 @@ export class MemoryWebsocketConnectionStore
             namespaceList.splice(namespaceIndex, 0, connection);
         }
 
-        const connectionIndex = sortedIndexBy(
-            connectionList,
-            connection,
-            (c) => c.namespace
+        const connectionIndex = sortedIndexBy(connectionList, connection, (c) =>
+            branchNamespace(c.mode, c.recordName, c.inst, c.branch)
         );
         const connectionItem = connectionList[connectionIndex];
         if (
             !connectionItem ||
-            connectionItem.namespace !== connection.namespace
+            connectionItem.recordName !== connection.recordName ||
+            connectionItem.inst !== connection.inst ||
+            connectionItem.branch !== connection.branch
         ) {
             connectionList.splice(connectionIndex, 0, connection);
         }
     }
 
-    async deleteNamespaceConnection(
+    async deleteBranchConnection(
         serverConnectionId: string,
-        namespace: string
+        mode: BranchConnectionMode,
+        recordName: string,
+        inst: string,
+        branch: string
     ): Promise<void> {
+        const namespace = branchNamespace(mode, recordName, inst, branch);
         let namespaceList = this._getNamespaceList(namespace);
         let connectionList = this._getConnectionList(serverConnectionId);
 
@@ -90,11 +102,15 @@ export class MemoryWebsocketConnectionStore
 
         const connectionIndex = sortedIndexBy(
             connectionList,
-            { namespace } as any,
-            (c) => c.namespace
+            { mode, recordName, inst, branch } as any,
+            (c) => branchNamespace(c.mode, c.recordName, c.inst, c.branch)
         );
         const connectionItem = connectionList[connectionIndex];
-        if (connectionItem.namespace === namespace) {
+        if (
+            connectionItem.recordName === recordName &&
+            connectionItem.inst === inst &&
+            connectionItem.branch === branch
+        ) {
             connectionList.splice(connectionIndex, 1);
         }
     }
@@ -103,7 +119,14 @@ export class MemoryWebsocketConnectionStore
         let connectionList = this._getConnectionList(serverConnectionId);
 
         for (let connection of connectionList) {
-            let namespaceList = this._getNamespaceList(connection.namespace);
+            let namespaceList = this._getNamespaceList(
+                branchNamespace(
+                    connection.mode,
+                    connection.recordName,
+                    connection.inst,
+                    connection.branch
+                )
+            );
             const namespaceIndex = sortedIndexBy(
                 namespaceList,
                 connection,
@@ -132,19 +155,31 @@ export class MemoryWebsocketConnectionStore
         });
     }
 
-    async getConnectionsByNamespace(
-        namespace: string
-    ): Promise<DeviceNamespaceConnection[]> {
-        return this._getNamespaceList(namespace);
+    async getConnectionsByBranch(
+        mode: BranchConnectionMode,
+        recordName: string,
+        inst: string,
+        branch: string
+    ): Promise<DeviceBranchConnection[]> {
+        return this._getNamespaceList(
+            branchNamespace(mode, recordName, inst, branch)
+        );
     }
 
-    async countConnectionsByNamespace(namespace: string): Promise<number> {
-        return this._getNamespaceList(namespace).length;
+    async countConnectionsByBranch(
+        mode: BranchConnectionMode,
+        recordName: string,
+        inst: string,
+        branch: string
+    ): Promise<number> {
+        return this._getNamespaceList(
+            branchNamespace(mode, recordName, inst, branch)
+        ).length;
     }
 
     async getConnections(
         connectionId: string
-    ): Promise<DeviceNamespaceConnection[]> {
+    ): Promise<DeviceBranchConnection[]> {
         return this._getConnectionList(connectionId);
     }
 
@@ -156,16 +191,21 @@ export class MemoryWebsocketConnectionStore
         return this._connections.size;
     }
 
-    async getNamespaceConnection(
+    async getBranchConnection(
         connectionId: string,
-        namespace: string
-    ): Promise<DeviceNamespaceConnection> {
+        recordName: string,
+        inst: string,
+        branch: string
+    ): Promise<DeviceBranchConnection> {
         return this._getConnectionList(connectionId).find(
-            (c) => c.namespace === namespace
+            (c) =>
+                c.recordName === recordName &&
+                c.inst === inst &&
+                c.branch === branch
         );
     }
 
-    private _getNamespaceList(namespace: string): DeviceNamespaceConnection[] {
+    private _getNamespaceList(namespace: string): DeviceBranchConnection[] {
         let list = this._namespaceMap.get(namespace);
         if (!list) {
             list = [];
@@ -174,9 +214,7 @@ export class MemoryWebsocketConnectionStore
         return list;
     }
 
-    private _getConnectionList(
-        connectionId: string
-    ): DeviceNamespaceConnection[] {
+    private _getConnectionList(connectionId: string): DeviceBranchConnection[] {
         let list = this._connectionMap.get(connectionId);
         if (!list) {
             list = [];

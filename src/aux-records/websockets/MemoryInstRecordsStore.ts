@@ -206,11 +206,11 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
         return b.updates.updates.length;
     }
 
-    async addUpdate(
-        recordName: string,
+    async addUpdates(
+        recordName: string | null,
         inst: string,
         branch: string,
-        update: string,
+        updates: string[],
         sizeInBytes: number
     ): Promise<AddUpdatesResult> {
         const r = this._records.get(recordName);
@@ -268,11 +268,11 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
         }
         i.instSizeInBytes = newSize;
 
-        storedUpdates.updates.push(update);
+        storedUpdates.updates.push(...updates);
         storedUpdates.timestamps.push(Date.now());
 
         const archivedUpdates = b.archived;
-        archivedUpdates.updates.push(update);
+        archivedUpdates.updates.push(...updates);
         archivedUpdates.timestamps.push(Date.now());
 
         return {

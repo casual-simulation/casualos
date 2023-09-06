@@ -136,15 +136,15 @@ export type WebsocketMessage =
     | UnwatchBranchMessage
     | AddUpdatesMessage
     | UpdatesReceivedMessage
-    | ResetMessage
+    // | ResetMessage
     | SendActionMessage
     | ReceiveDeviceActionMessage
     | ConnectedToBranchMessage
     | DisconnectedFromBranchMessage
     | BranchInfoMessage
-    | ListBranchesMessage
-    | BranchesStatusMessage
-    | ListConnectionsMessage
+    // | ListBranchesMessage
+    // | BranchesStatusMessage
+    // | ListConnectionsMessage
     | ConnectionCountMessage
     | TimeSyncRequestMessage
     | TimeSyncResponseMessage
@@ -227,8 +227,9 @@ export interface WatchBranchMessage {
 }
 export const watchBranchMessageSchema = z.object({
     type: z.literal('repo/watch_branch'),
-    branch: z.string(),
     recordName: z.string().nonempty().nullable(),
+    inst: z.string(),
+    branch: z.string(),
     temporary: z.boolean().optional(),
 });
 type ZodWatchBranchMessage = z.infer<typeof watchBranchMessageSchema>;
@@ -244,12 +245,25 @@ export interface UnwatchBranchMessage {
     type: 'repo/unwatch_branch';
 
     /**
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
+
+    /**
      * The name of the branch to unwatch.
      */
     branch: string;
 }
 export const unwatchBranchMessageSchema = z.object({
     type: z.literal('repo/unwatch_branch'),
+    recordName: z.string().nonempty().nullable(),
+    inst: z.string(),
     branch: z.string(),
 });
 type ZodUnwatchBranchMessage = z.infer<typeof unwatchBranchMessageSchema>;
@@ -265,6 +279,17 @@ type ZodUnwatchBranchMessageAssertion = HasType<
  */
 export interface AddUpdatesMessage {
     type: 'repo/add_updates';
+
+    /**
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
 
     /**
      * The branch that the updates are for.
@@ -301,6 +326,8 @@ export interface AddUpdatesMessage {
 }
 export const addUpdatesMessageSchema = z.object({
     type: z.literal('repo/add_updates'),
+    recordName: z.string().nonempty().nullable(),
+    inst: z.string(),
     branch: z.string(),
     updates: z.array(z.string()),
     updateId: z.number().optional(),
@@ -320,6 +347,17 @@ export interface UpdatesReceivedMessage {
     type: 'repo/updates_received';
 
     /**
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
+
+    /**
      * The branch that the updates were received for.
      */
     branch: string;
@@ -333,7 +371,7 @@ export interface UpdatesReceivedMessage {
      * The error code that occurred.
      * If omitted, then no error occurred.
      */
-    errorCode?: 'max_size_reached';
+    errorCode?: 'max_size_reached' | 'record_not_found' | 'inst_not_found';
 
     /**
      * The maximum allowed size for the inst.
@@ -349,9 +387,13 @@ export interface UpdatesReceivedMessage {
 }
 export const updatesReceivedMessageSchema = z.object({
     type: z.literal('repo/updates_received'),
+    recordName: z.string().nonempty().nullable(),
+    inst: z.string(),
     branch: z.string(),
     updateId: z.number(),
-    errorCode: z.enum(['max_size_reached']).optional(),
+    errorCode: z
+        .enum(['max_size_reached', 'record_not_found', 'inst_not_found'])
+        .optional(),
     maxBranchSizeInBytes: z.number().optional(),
     neededBranchSizeInBytes: z.number().optional(),
 });
@@ -361,30 +403,41 @@ type ZodUpdatesReceivedMessageAssertion = HasType<
     UpdatesReceivedMessage
 >;
 
-/**
- * Defines an event which indicates that the branch state should be reset.
- */
-export interface ResetMessage {
-    type: 'repo/reset';
+// /**
+//  * Defines an event which indicates that the branch state should be reset.
+//  */
+// export interface ResetMessage {
+//     type: 'repo/reset';
 
-    /**
-     * The branch that the atoms are for.
-     */
-    branch: string;
-}
+//     /**
+//      * The branch that the atoms are for.
+//      */
+//     branch: string;
+// }
 
-export const resetMessageSchema = z.object({
-    type: z.literal('repo/reset'),
-    branch: z.string(),
-});
-type ZodResetMessage = z.infer<typeof resetMessageSchema>;
-type ZodResetMessageAssertion = HasType<ZodResetMessage, ResetMessage>;
+// export const resetMessageSchema = z.object({
+//     type: z.literal('repo/reset'),
+//     branch: z.string(),
+// });
+// type ZodResetMessage = z.infer<typeof resetMessageSchema>;
+// type ZodResetMessageAssertion = HasType<ZodResetMessage, ResetMessage>;
 
 /**
  * Sends the given remote action to devices connected to the given branch.
  */
 export interface SendActionMessage {
     type: 'repo/send_action';
+
+    /**
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
 
     /**
      * The branch.
@@ -398,6 +451,8 @@ export interface SendActionMessage {
 }
 export const sendActionMessageSchema = z.object({
     type: z.literal('repo/send_action'),
+    recordName: z.string().nonempty().nullable(),
+    inst: z.string(),
     branch: z.string(),
     action: remoteActionsSchema,
 });
@@ -413,11 +468,31 @@ type ZodSendActionMessageAssertion = HasType<
 export interface ReceiveDeviceActionMessage {
     type: 'repo/receive_action';
 
+    /**
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
+
+    /**
+     * The branch that the action is for.
+     */
     branch: string;
+
+    /**
+     * The action that should be sent.
+     */
     action: DeviceAction | DeviceActionResult | DeviceActionError;
 }
 export const receiveDeviceActionMessageSchema = z.object({
     type: z.literal('repo/receive_action'),
+    recordName: z.string().nonempty().nullable(),
+    inst: z.string(),
     branch: z.string(),
     action: deviceActionsSchema,
 });
@@ -478,6 +553,17 @@ export interface DisconnectedFromBranchMessage {
     broadcast: boolean;
 
     /**
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
+
+    /**
      * The name of the branch that was disconnected.
      */
     branch: string;
@@ -490,6 +576,8 @@ export interface DisconnectedFromBranchMessage {
 export const disconnectedFromBranchMessageSchema = z.object({
     type: z.literal('repo/disconnected_from_branch'),
     broadcast: z.boolean(),
+    recordName: z.string().nonempty().nullable(),
+    inst: z.string(),
     branch: z.string(),
     connection: connectionInfoSchema,
 });
@@ -507,12 +595,32 @@ export type BranchInfoMessage =
 
 export interface BranchExistsInfoMessage {
     type: 'repo/branch_info/exists';
+    /**
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
+
+    /**
+     * The name of the branch.
+     */
     branch: string;
+
+    /**
+     * Whether the branch exists.
+     */
     exists: true;
 }
 export const branchExistsInfoMessageSchema = z.object({
     type: z.literal('repo/branch_info/exists'),
     exists: z.literal(true),
+    recordName: z.string().nonempty().nullable(),
+    inst: z.string(),
     branch: z.string(),
 });
 type ZodBranchExistsInfoMessage = z.infer<typeof branchExistsInfoMessageSchema>;
@@ -523,12 +631,32 @@ type ZodBranchExistsInfoMessageAssertion = HasType<
 
 export interface BranchDoesNotExistInfoMessage {
     type: 'repo/branch_info/not_exists';
+    /**
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
+
+    /**
+     * The name of the branch.
+     */
     branch: string;
+
+    /**
+     * Whether the branch exists.
+     */
     exists: false;
 }
 export const branchDoesNotExistInfoMessageSchema = z.object({
     type: z.literal('repo/branch_info/not_exists'),
     exists: z.literal(false),
+    recordName: z.string().nonempty().nullable(),
+    inst: z.string(),
     branch: z.string(),
 });
 type ZodBranchDoesNotExistInfoMessage = z.infer<
@@ -539,63 +667,84 @@ type ZodBranchDoesNotExistInfoMessageAssertion = HasType<
     BranchDoesNotExistInfoMessage
 >;
 
-export interface ListBranchesMessage {
-    type: 'repo/branches';
-    branches: string[];
-}
-export const listBranchesMessageSchema = z.object({
-    type: z.literal('repo/branches'),
-    branch: z.array(z.string()),
-});
-type ZodListBranchesMessage = z.infer<typeof listBranchesMessageSchema>;
-type ZodListBranchesMessageAssertion = HasType<
-    ZodListBranchesMessage,
-    ListBranchesMessage
->;
+// export interface ListBranchesMessage {
+//     type: 'repo/branches';
+//     branches: string[];
+// }
+// export const listBranchesMessageSchema = z.object({
+//     type: z.literal('repo/branches'),
+//     branch: z.array(z.string()),
+// });
+// type ZodListBranchesMessage = z.infer<typeof listBranchesMessageSchema>;
+// type ZodListBranchesMessageAssertion = HasType<
+//     ZodListBranchesMessage,
+//     ListBranchesMessage
+// >;
 
-export interface BranchesStatusMessage {
-    type: 'repo/branches_status';
-    branches: {
-        branch: string;
-        lastUpdateTime: Date;
-    }[];
-}
-export const branchesStatusMessageSchema = z.object({
-    type: z.literal('repo/branches_status'),
-    branches: z.array(
-        z.object({
-            branch: z.string(),
-            lastUpdateTime: z.date(),
-        })
-    ),
-});
-type ZodBranchesStatusMessage = z.infer<typeof branchesStatusMessageSchema>;
-type ZodBranchesStatusMessageAssertion = HasType<
-    ZodBranchesStatusMessage,
-    BranchesStatusMessage
->;
+// export interface BranchesStatusMessage {
+//     type: 'repo/branches_status';
+//     branches: {
+//         branch: string;
+//         lastUpdateTime: Date;
+//     }[];
+// }
+// export const branchesStatusMessageSchema = z.object({
+//     type: z.literal('repo/branches_status'),
+//     branches: z.array(
+//         z.object({
+//             branch: z.string(),
+//             lastUpdateTime: z.date(),
+//         })
+//     ),
+// });
+// type ZodBranchesStatusMessage = z.infer<typeof branchesStatusMessageSchema>;
+// type ZodBranchesStatusMessageAssertion = HasType<
+//     ZodBranchesStatusMessage,
+//     BranchesStatusMessage
+// >;
 
-export interface ListConnectionsMessage {
-    type: 'repo/connections';
-    connections: ConnectionInfo[];
-}
-export const listConnectionsMessageSchema = z.object({
-    type: z.literal('repo/connections'),
-    connections: z.array(connectionInfoSchema),
-});
-type ZodListConnectionsMessage = z.infer<typeof listConnectionsMessageSchema>;
-type ZodListConnectionsMessageAssertion = HasType<
-    ZodListConnectionsMessage,
-    ListConnectionsMessage
->;
+// export interface ListConnectionsMessage {
+//     type: 'repo/connections';
+//     connections: ConnectionInfo[];
+// }
+// export const listConnectionsMessageSchema = z.object({
+//     type: z.literal('repo/connections'),
+//     connections: z.array(connectionInfoSchema),
+// });
+// type ZodListConnectionsMessage = z.infer<typeof listConnectionsMessageSchema>;
+// type ZodListConnectionsMessageAssertion = HasType<
+//     ZodListConnectionsMessage,
+//     ListConnectionsMessage
+// >;
 
 export interface ConnectionCountMessage {
     type: 'repo/connection_count';
+
+    /**
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
+
+    /**
+     * The name of the branch.
+     */
     branch: string;
+
+    /**
+     * The number of connections.
+     */
     count: number;
 }
 export const connectionCountMessageSchema = z.object({
     type: z.literal('repo/connection_count'),
+    recordName: z.string().nonempty().nullable(),
+    inst: z.string(),
     branch: z.string(),
     count: z.number(),
 });
@@ -697,16 +846,16 @@ export const websocketMessageSchema = z.discriminatedUnion('type', [
     unwatchBranchMessageSchema,
     addUpdatesMessageSchema,
     updatesReceivedMessageSchema,
-    resetMessageSchema,
+    // resetMessageSchema,
     sendActionMessageSchema,
     receiveDeviceActionMessageSchema,
     connectedToBranchMessageSchema,
     disconnectedFromBranchMessageSchema,
     branchExistsInfoMessageSchema,
     branchDoesNotExistInfoMessageSchema,
-    listBranchesMessageSchema,
-    branchesStatusMessageSchema,
-    listConnectionsMessageSchema,
+    // listBranchesMessageSchema,
+    // branchesStatusMessageSchema,
+    // listConnectionsMessageSchema,
     connectionCountMessageSchema,
     timeSyncRequestMessageSchema,
     timeSyncResponseMessageSchema,

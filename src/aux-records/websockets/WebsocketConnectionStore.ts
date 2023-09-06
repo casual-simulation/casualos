@@ -12,18 +12,22 @@ export interface WebsocketConnectionStore {
      * Saves the given namespace connection to the store.
      * @param connection The connection to save.
      */
-    saveNamespaceConnection(
-        connection: DeviceNamespaceConnection
-    ): Promise<void>;
+    saveBranchConnection(connection: DeviceBranchConnection): Promise<void>;
 
     /**
      * Deletes the given connection from the store.
      * @param connectionId The ID of the connection.
-     * @param namespace The namespace that the connection should be deleted from.
+     * @param mode The mode of the connection.
+     * @param recordName The name of the record that the branch exists in.
+     * @param inst The name of the inst that the branch exists in.
+     * @param branch The name of the branch.
      */
-    deleteNamespaceConnection(
+    deleteBranchConnection(
         connectionId: string,
-        namespace: string
+        mode: BranchConnectionMode,
+        recordName: string | null,
+        inst: string,
+        branch: string
     ): Promise<void>;
 
     /**
@@ -44,17 +48,28 @@ export interface WebsocketConnectionStore {
     expireConnection(connectionId: string): Promise<void>;
 
     /**
-     * Gets all the connections for the given namespace.
-     * @param namespace The namespace.
+     * Gets all the connections for the given branch.
+     * @param mode The mode of the connections.
+     * @param recordName The name of the record that the branch exists in.
+     * @param inst The name of the inst that the branch exists in.
+     * @param branch The name of the branch.
      */
-    getConnectionsByNamespace(
-        namespace: string
-    ): Promise<DeviceNamespaceConnection[]>;
+    getConnectionsByBranch(
+        mode: BranchConnectionMode,
+        recordName: string | null,
+        inst: string,
+        branch: string
+    ): Promise<DeviceBranchConnection[]>;
 
     /**
-     * Counts the number of active connections for the given namespace.
+     * Counts the number of active connections for the given branch.
      */
-    countConnectionsByNamespace(namespace: string): Promise<number>;
+    countConnectionsByBranch(
+        mode: BranchConnectionMode,
+        recordName: string | null,
+        inst: string,
+        branch: string
+    ): Promise<number>;
 
     /**
      * Gets the given connection with the connection ID.
@@ -63,20 +78,25 @@ export interface WebsocketConnectionStore {
     getConnection(connectionId: string): Promise<DeviceConnection>;
 
     /**
-     * Gets the connection for the given connection ID and namespace.
+     * Gets the connection for the given connection ID and branch.
      * @param connectionId The ID of the connection to get.
-     * @param namespace The namespace of the connection to get.
+     * @param recordName The name of the record that the branch exists in.
+     * @param inst The name of the inst that the branch exists in.
+     * @param branch The name of the branch.
      */
-    getNamespaceConnection(
+    getBranchConnection(
         connectionId: string,
-        namespace: string
-    ): Promise<DeviceNamespaceConnection>;
+        mode: BranchConnectionMode,
+        recordName: string | null,
+        inst: string,
+        branch: string
+    ): Promise<DeviceBranchConnection>;
 
     /**
      * Gets the list of connections that are present for the given connection ID.
      * @param connectionId The ID of the connection.
      */
-    getConnections(connectionId: string): Promise<DeviceNamespaceConnection[]>;
+    getConnections(connectionId: string): Promise<DeviceBranchConnection[]>;
 
     /**
      * Counts the number of active connections.
@@ -133,13 +153,35 @@ export interface DeviceConnection {
 }
 
 /**
- * Defines an interface that represents the connection of a device to a namespace.
+ * Defines a list of modes that a connection can be in.
+ * - "branch": The connection is connected to a branch.
+ * - "watch": The connection is watching a branch for connection changes.
  */
-export interface DeviceNamespaceConnection extends DeviceConnection {
+export type BranchConnectionMode = 'branch' | 'watch_branch';
+
+/**
+ * Defines an interface that represents the connection of a device to a branch.
+ */
+export interface DeviceBranchConnection extends DeviceConnection {
     /**
-     * The namespace that the device is connected to.
+     * The mode of the connection.
      */
-    namespace: string;
+    mode: BranchConnectionMode;
+
+    /**
+     * The name of the record that the device is connected to.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst that the device is connected to.
+     */
+    inst: string;
+
+    /**
+     * The name of the branch that the device is connected to.
+     */
+    branch: string;
 
     /**
      * Whether the data stored by the connection is supposed to be temporary.

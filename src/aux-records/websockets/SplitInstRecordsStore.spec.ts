@@ -406,7 +406,13 @@ describe('SplitInstRecordsStore', () => {
         });
 
         it('should return the most recent update from the permanent store when there are no updates in the temp store', async () => {
-            await perm.addUpdate(recordName, instName, branchName, 'test', 4);
+            await perm.addUpdates(
+                recordName,
+                instName,
+                branchName,
+                ['test'],
+                4
+            );
 
             const result = await store.getCurrentUpdates(
                 recordName,
@@ -561,8 +567,14 @@ describe('SplitInstRecordsStore', () => {
 
         it('should merge the updates from the temp store and the permanent store', async () => {
             // const key = temp.getBranchKey(recordName, instName, branchName);
-            await perm.addUpdate(recordName, instName, branchName, 'test', 4);
-            await perm.addUpdate(recordName, instName, branchName, 'abc', 3);
+            await perm.addUpdates(
+                recordName,
+                instName,
+                branchName,
+                ['test'],
+                4
+            );
+            await perm.addUpdates(recordName, instName, branchName, ['abc'], 3);
             await temp.addUpdates(
                 recordName,
                 instName,
@@ -624,7 +636,13 @@ describe('SplitInstRecordsStore', () => {
         });
 
         it('should return the size from the temp store first', async () => {
-            await perm.addUpdate(recordName, instName, branchName, 'test', 4);
+            await perm.addUpdates(
+                recordName,
+                instName,
+                branchName,
+                ['test'],
+                4
+            );
             await temp.setInstSize(recordName, instName, 10);
 
             const result = await store.getInstSize(recordName, instName);
@@ -632,14 +650,20 @@ describe('SplitInstRecordsStore', () => {
         });
 
         it('should return the size from the permanent store if the temp store does not have a size', async () => {
-            await perm.addUpdate(recordName, instName, branchName, 'test', 4);
+            await perm.addUpdates(
+                recordName,
+                instName,
+                branchName,
+                ['test'],
+                4
+            );
 
             const result = await store.getInstSize(recordName, instName);
             expect(result).toEqual(4);
         });
     });
 
-    describe('addUpdate()', () => {
+    describe('addUpdates()', () => {
         beforeEach(async () => {
             await perm.saveInst({
                 recordName,
@@ -656,11 +680,11 @@ describe('SplitInstRecordsStore', () => {
         });
 
         it('should add the update to the temp store', async () => {
-            const result = await store.addUpdate(
+            const result = await store.addUpdates(
                 recordName,
                 instName,
                 branchName,
-                'test',
+                ['test'],
                 4
             );
 
@@ -737,7 +761,7 @@ describe('SplitInstRecordsStore', () => {
         });
 
         it('should remove the branch from the permanent store', async () => {
-            await perm.addUpdate(recordName, instName, branchName, 'abc', 3);
+            await perm.addUpdates(recordName, instName, branchName, ['abc'], 3);
 
             await store.deleteBranch(recordName, instName, branchName);
 
@@ -760,9 +784,15 @@ describe('SplitInstRecordsStore', () => {
         });
 
         it('should remove only the branch data', async () => {
-            await perm.addUpdate(recordName, instName, branchName, 'abc', 3);
+            await perm.addUpdates(recordName, instName, branchName, ['abc'], 3);
             await temp.addUpdates(recordName, instName, branchName, ['abc'], 3);
-            await perm.addUpdate(recordName, instName, 'otherBranch', 'def', 3);
+            await perm.addUpdates(
+                recordName,
+                instName,
+                'otherBranch',
+                ['def'],
+                3
+            );
             await temp.addUpdates(
                 recordName,
                 instName,
@@ -839,8 +869,8 @@ describe('SplitInstRecordsStore', () => {
                 ['abc', 'def'],
                 6
             );
-            await perm.addUpdate(recordName, instName, branchName, 'abc', 3);
-            await perm.addUpdate(recordName, instName, branchName, 'def', 3);
+            await perm.addUpdates(recordName, instName, branchName, ['abc'], 3);
+            await perm.addUpdates(recordName, instName, branchName, ['def'], 3);
 
             await store.replaceCurrentUpdates(
                 recordName,

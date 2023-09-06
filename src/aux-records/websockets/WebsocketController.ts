@@ -25,7 +25,6 @@ import {
     DeviceConnection,
     WebsocketConnectionStore,
 } from './WebsocketConnectionStore';
-import { UpdatesStore } from '@casual-simulation/causal-trees/core2';
 import {
     AddUpdatesMessage,
     LoginMessage,
@@ -39,6 +38,9 @@ import {
 } from './WebsocketEvents';
 import { ConnectionInfo } from '../common/ConnectionInfo';
 import { AuthController } from '../AuthController';
+import { InstRecordsStore } from './InstRecordsStore';
+import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
+import { sumBy } from 'lodash';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -46,7 +48,8 @@ import { AuthController } from '../AuthController';
 export class WebsocketController {
     private _connectionStore: WebsocketConnectionStore;
     private _messenger: WebsocketMessenger;
-    private _updatesStore: UpdatesStore;
+    private _instStore: InstRecordsStore;
+    private _temporaryStore: TemporaryInstRecordsStore;
     private _auth: AuthController;
 
     /**
@@ -63,12 +66,14 @@ export class WebsocketController {
     constructor(
         connectionStore: WebsocketConnectionStore,
         messenger: WebsocketMessenger,
-        updatesStore: UpdatesStore,
+        instStore: InstRecordsStore,
+        temporaryInstStore: TemporaryInstRecordsStore,
         auth: AuthController
     ) {
         this._connectionStore = connectionStore;
         this._messenger = messenger;
-        this._updatesStore = updatesStore;
+        this._instStore = instStore;
+        this._temporaryStore = temporaryInstStore;
         this._auth = auth;
     }
 
@@ -149,25 +154,32 @@ export class WebsocketController {
         await this._connectionStore.clearConnection(connectionId);
 
         for (let connection of loadedConnections) {
-            if (isBranchConnection(connection.namespace)) {
+            if (connection.mode === 'branch') {
                 if (connection.temporary) {
                     const count =
-                        await this._connectionStore.countConnectionsByNamespace(
-                            connection.namespace
+                        await this._connectionStore.countConnectionsByBranch(
+                            connection.mode,
+                            connection.recordName,
+                            connection.inst,
+                            connection.branch
                         );
 
                     if (count <= 0) {
                         // unload namespace
-                        await this._updatesStore.clearUpdates(
-                            connection.namespace
+                        await this._temporaryStore.deleteBranch(
+                            connection.recordName,
+                            connection.inst,
+                            connection.branch
                         );
                     }
                 }
 
-                const branch = branchFromNamespace(connection.namespace);
                 const watchingDevices =
-                    await this._connectionStore.getConnectionsByNamespace(
-                        watchBranchNamespace(branch)
+                    await this._connectionStore.getConnectionsByBranch(
+                        'watch_branch',
+                        connection.recordName,
+                        connection.inst,
+                        connection.branch
                     );
 
                 await this._messenger.sendMessage(
@@ -175,7 +187,9 @@ export class WebsocketController {
                     {
                         type: 'repo/disconnected_from_branch',
                         broadcast: false,
-                        branch: branch,
+                        recordName: connection.recordName,
+                        inst: connection.inst,
+                        branch: connection.branch,
                         connection: connectionInfo(connection),
                     }
                 );
@@ -191,9 +205,8 @@ export class WebsocketController {
             return;
         }
 
-        const namespace = branchNamespace(event.branch);
         console.log(
-            `[CausalRepoServer] [${namespace}] [${connectionId}] Watch`
+            `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, ${connectionId}] Watch`
         );
 
         const connection = await this._connectionStore.getConnection(
@@ -204,21 +217,31 @@ export class WebsocketController {
                 'Unable to watch_branch. The connection was not found!'
             );
         }
-        await this._connectionStore.saveNamespaceConnection({
+        await this._connectionStore.saveBranchConnection({
             ...connection,
             serverConnectionId: connectionId,
-            namespace: namespace,
+            mode: 'branch',
+            recordName: event.recordName,
+            inst: event.inst,
+            branch: event.branch,
             temporary: event.temporary || false,
         });
 
-        const updates = await this._updatesStore.getUpdates(namespace);
+        const updates = await this._instStore.getCurrentUpdates(
+            event.recordName,
+            event.inst,
+            event.branch
+        );
         const watchingDevices =
-            await this._connectionStore.getConnectionsByNamespace(
-                watchBranchNamespace(event.branch)
+            await this._connectionStore.getConnectionsByBranch(
+                'watch_branch',
+                event.recordName,
+                event.inst,
+                event.branch
             );
 
         console.log(
-            `[CausalRepoServer] [${event.branch}] [${connectionId}] Connected.`
+            `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, ${connectionId}] Connected.`
         );
         const promises = [
             this._messenger.sendMessage(
@@ -232,6 +255,8 @@ export class WebsocketController {
             ),
             this._messenger.sendMessage([connection.serverConnectionId], {
                 type: 'repo/add_updates',
+                recordName: event.recordName,
+                inst: event.inst,
                 branch: event.branch,
                 updates: updates.updates,
                 initial: true,
@@ -240,7 +265,12 @@ export class WebsocketController {
         await Promise.all(promises);
     }
 
-    async unwatchBranch(connectionId: string, branch: string) {
+    async unwatchBranch(
+        connectionId: string,
+        recordName: string | null,
+        inst: string,
+        branch: string
+    ) {
         if (!branch) {
             console.warn(
                 '[CasualRepoServer] Trying to unwatch branch with a null event!'
@@ -248,33 +278,48 @@ export class WebsocketController {
             return;
         }
 
-        const namespace = branchNamespace(branch);
         console.log(
-            `[CausalRepoServer] [${namespace}] [${connectionId}] Unwatch`
+            `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}, ${connectionId}] Unwatch`
         );
 
-        const connection = await this._connectionStore.getNamespaceConnection(
+        const connection = await this._connectionStore.getBranchConnection(
             connectionId,
-            namespace
+            'branch',
+            recordName,
+            inst,
+            branch
         );
         if (connection) {
-            await this._connectionStore.deleteNamespaceConnection(
+            await this._connectionStore.deleteBranchConnection(
                 connectionId,
-                namespace
+                'branch',
+                recordName,
+                inst,
+                branch
             );
             if (connection.temporary) {
                 const count =
-                    await this._connectionStore.countConnectionsByNamespace(
-                        namespace
+                    await this._connectionStore.countConnectionsByBranch(
+                        'branch',
+                        recordName,
+                        inst,
+                        branch
                     );
                 if (count <= 0) {
-                    await this._updatesStore.clearUpdates(connection.namespace);
+                    await this._temporaryStore.deleteBranch(
+                        recordName,
+                        inst,
+                        branch
+                    );
                 }
             }
 
             const watchingDevices =
-                await this._connectionStore.getConnectionsByNamespace(
-                    watchBranchNamespace(branch)
+                await this._connectionStore.getConnectionsByBranch(
+                    'watch_branch',
+                    recordName,
+                    inst,
+                    branch
                 );
 
             await this._messenger.sendMessage(
@@ -282,6 +327,8 @@ export class WebsocketController {
                 {
                     type: 'repo/disconnected_from_branch',
                     broadcast: false,
+                    recordName,
+                    inst,
                     branch: branch,
                     connection: connectionInfo(connection),
                 }
@@ -297,56 +344,57 @@ export class WebsocketController {
             return;
         }
 
-        const namespace = branchNamespace(event.branch);
-
         console.log(
-            `[CausalRepoServer] [${namespace}] [${connectionId}] Add Updates`
+            `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}] Add Updates`
         );
 
         if (event.updates) {
-            let result = await this._updatesStore.addUpdates(
-                namespace,
-                event.updates
+            let result = await this._instStore.addUpdates(
+                event.recordName,
+                event.inst,
+                event.branch,
+                event.updates,
+                sumBy(event.updates, (u) => u.length)
             );
 
             if (result.success === false) {
                 console.log(
-                    `[CausalRepoServer] [${namespace}] [${connectionId}] Failed to add updates`,
+                    `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}]  Failed to add updates`,
                     result
                 );
                 if (result.errorCode === 'max_size_reached') {
-                    if (this.mergeUpdatesOnMaxSizeExceeded) {
-                        try {
-                            console.log(
-                                `[CausalRepoServer] [${namespace}] [${connectionId}] Merging branch updates.`
-                            );
+                    // if (this.mergeUpdatesOnMaxSizeExceeded) {
+                    //     try {
+                    //         console.log(
+                    //             `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}]  Merging branch updates.`
+                    //         );
 
-                            const updates = await this._updatesStore.getUpdates(
-                                namespace
-                            );
-                            const mergedUpdates = mergeUpdates([
-                                ...updates.updates.map((u) => toByteArray(u)),
-                                ...event.updates.map((u) => toByteArray(u)),
-                            ]);
-                            result = await this._updatesStore.replaceUpdates(
-                                namespace,
-                                updates,
-                                [fromByteArray(mergedUpdates)]
-                            );
+                    //         const updates = await this._instStore.getUpdates(
+                    //             namespace
+                    //         );
+                    //         const mergedUpdates = mergeUpdates([
+                    //             ...updates.updates.map((u) => toByteArray(u)),
+                    //             ...event.updates.map((u) => toByteArray(u)),
+                    //         ]);
+                    //         result = await this._updatesStore.replaceUpdates(
+                    //             namespace,
+                    //             updates,
+                    //             [fromByteArray(mergedUpdates)]
+                    //         );
 
-                            if (result.success === false) {
-                                console.log(
-                                    `[CausalRepoServer] [${namespace}] [${connectionId}] Failed to merge branch updates`,
-                                    result
-                                );
-                            }
-                        } catch (err) {
-                            console.error(
-                                '[CausalRepoServer] Unable to merge branch updates!',
-                                err
-                            );
-                        }
-                    }
+                    //         if (result.success === false) {
+                    //             console.log(
+                    //                 `[CausalRepoServer] [${namespace}] [${connectionId}] Failed to merge branch updates`,
+                    //                 result
+                    //             );
+                    //         }
+                    //     } catch (err) {
+                    //         console.error(
+                    //             '[CausalRepoServer] Unable to merge branch updates!',
+                    //             err
+                    //         );
+                    //     }
+                    // }
 
                     if (result.success === false) {
                         if ('updateId' in event) {
@@ -354,6 +402,8 @@ export class WebsocketController {
 
                             await this._messenger.sendMessage([connectionId], {
                                 type: 'repo/updates_received',
+                                recordName: event.recordName,
+                                inst: event.inst,
                                 branch: event.branch,
                                 updateId: event.updateId,
                                 ...rest,
@@ -368,12 +418,17 @@ export class WebsocketController {
         const hasUpdates = event.updates && event.updates.length > 0;
         if (hasUpdates) {
             const connectedDevices =
-                await this._connectionStore.getConnectionsByNamespace(
-                    namespace
+                await this._connectionStore.getConnectionsByBranch(
+                    'branch',
+                    event.recordName,
+                    event.inst,
+                    event.branch
                 );
 
             let ret: AddUpdatesMessage = {
                 type: 'repo/add_updates',
+                recordName: event.recordName,
+                inst: event.inst,
                 branch: event.branch,
                 updates: event.updates,
             };
@@ -388,6 +443,8 @@ export class WebsocketController {
         if ('updateId' in event) {
             await this._messenger.sendMessage([connectionId], {
                 type: 'repo/updates_received',
+                recordName: event.recordName,
+                inst: event.inst,
                 branch: event.branch,
                 updateId: event.updateId,
             });
@@ -402,9 +459,14 @@ export class WebsocketController {
             return;
         }
 
-        const namespace = branchNamespace(event.branch);
+        // const namespace = branchNamespace(event.recordName, event.inst, event.branch);
         const connectedDevices =
-            await this._connectionStore.getConnectionsByNamespace(namespace);
+            await this._connectionStore.getConnectionsByBranch(
+                'branch',
+                event.recordName,
+                event.inst,
+                event.branch
+            );
 
         if (event.action.type === 'remote') {
             const action = event.action.event as BotAction;
@@ -468,16 +530,22 @@ export class WebsocketController {
             targetedDevices.map((c) => c.serverConnectionId),
             {
                 type: 'repo/receive_action',
+                recordName: event.recordName,
+                inst: event.inst,
                 branch: event.branch,
                 action: dEvent,
             }
         );
     }
 
-    async watchBranchDevices(connectionId: string, branch: string) {
-        const namespace = watchBranchNamespace(branch);
+    async watchBranchDevices(
+        connectionId: string,
+        recordName: string | null,
+        inst: string,
+        branch: string
+    ) {
         console.log(
-            `[CausalRepoServer] [${namespace}] [${connectionId}] Watch devices for branch`
+            `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId}] Watch devices for branch`
         );
 
         const connection = await this._connectionStore.getConnection(
@@ -488,16 +556,22 @@ export class WebsocketController {
                 'Unable to watch_branch_devices. The connection was not found!'
             );
         }
-        await this._connectionStore.saveNamespaceConnection({
+        await this._connectionStore.saveBranchConnection({
             ...connection,
+            mode: 'watch_branch',
             serverConnectionId: connectionId,
-            namespace: namespace,
+            recordName,
+            inst,
+            branch,
             temporary: true,
         });
 
         const currentDevices =
-            await this._connectionStore.getConnectionsByNamespace(
-                branchNamespace(branch)
+            await this._connectionStore.getConnectionsByBranch(
+                'watch_branch',
+                recordName,
+                inst,
+                branch
             );
         const promises = currentDevices.map((device) =>
             this._messenger.sendMessage([connectionId], {
@@ -506,6 +580,8 @@ export class WebsocketController {
                 connection: connectionInfo(device),
                 branch: {
                     type: 'repo/watch_branch',
+                    recordName: recordName,
+                    inst: inst,
                     branch: branch,
                     temporary: device.temporary,
                 },
@@ -515,34 +591,60 @@ export class WebsocketController {
         await Promise.all(promises);
     }
 
-    async unwatchBranchDevices(connectionId: string, branch: string) {
-        const namespace = watchBranchNamespace(branch);
-        await this._connectionStore.deleteNamespaceConnection(
+    async unwatchBranchDevices(
+        connectionId: string,
+        recordName: string | null,
+        inst: string,
+        branch: string
+    ) {
+        await this._connectionStore.deleteBranchConnection(
             connectionId,
-            namespace
+            'watch_branch',
+            recordName,
+            inst,
+            branch
         );
     }
 
-    async deviceCount(connectionId: string, branch: string | null) {
+    async deviceCount(
+        connectionId: string,
+        recordName: string | null,
+        inst: string | null,
+        branch: string | null
+    ) {
         const count =
             typeof branch !== 'undefined' && branch !== null
-                ? await this._connectionStore.countConnectionsByNamespace(
-                      branchNamespace(branch)
+                ? await this._connectionStore.countConnectionsByBranch(
+                      'branch',
+                      recordName,
+                      inst,
+                      branch
                   )
                 : await this._connectionStore.countConnections();
 
         await this._messenger.sendMessage([connectionId], {
             type: 'repo/connection_count',
+            recordName,
+            inst,
             branch,
             count: count,
         });
     }
 
-    async getBranchData(branch: string): Promise<StoredAux> {
-        const namespace = branchNamespace(branch);
-        console.log(`[CausalRepoServer] [${namespace}] Get Data`);
+    async getBranchData(
+        recordName: string | null,
+        inst: string,
+        branch: string
+    ): Promise<StoredAux> {
+        console.log(
+            `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}] Get Data`
+        );
 
-        const updates = await this._updatesStore.getUpdates(namespace);
+        const updates = await this._instStore.getCurrentUpdates(
+            recordName,
+            inst,
+            branch
+        );
         const partition = new YjsPartitionImpl({ type: 'yjs' });
 
         for (let updateBase64 of updates.updates) {
@@ -556,7 +658,12 @@ export class WebsocketController {
         };
     }
 
-    async getUpdates(connectionId: string, branch: string) {
+    async getUpdates(
+        connectionId: string,
+        recordName: string | null,
+        inst: string,
+        branch: string
+    ) {
         if (!branch) {
             console.warn(
                 '[CasualRepoServer] Trying to get branch with a null branch!'
@@ -573,15 +680,21 @@ export class WebsocketController {
             );
         }
 
-        const namespace = branchNamespace(branch);
+        // const namespace = branchNamespace(recordName, inst, branch);
         console.log(
-            `[CausalRepoServer] [${namespace}] [${connectionId}] Get Updates`
+            `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId}] Get Updates`
         );
 
-        const updates = await this._updatesStore.getUpdates(namespace);
+        const updates = await this._instStore.getAllUpdates(
+            recordName,
+            inst,
+            branch
+        );
 
         this._messenger.sendMessage([connection.serverConnectionId], {
             type: 'repo/add_updates',
+            recordName,
+            inst,
             branch: branch,
             updates: updates.updates,
             timestamps: updates.timestamps,
@@ -597,24 +710,35 @@ export class WebsocketController {
      * @param data The data included in the request.
      */
     async webhook(
+        recordName: string | null,
+        inst: string,
         branch: string,
         method: string,
         url: string,
         headers: object,
         data: object
     ): Promise<number> {
-        const namespace = branchNamespace(branch);
-        const count = await this._updatesStore.countUpdates(namespace);
+        // const namespace = branchNamespace(recordName, inst, branch);
+        const b = await this._instStore.getBranchByName(
+            recordName,
+            inst,
+            branch
+        );
 
-        if (count <= 0) {
+        if (!b) {
             return 404;
         }
 
         const connectedDevices =
-            await this._connectionStore.getConnectionsByNamespace(namespace);
+            await this._connectionStore.getConnectionsByBranch(
+                'branch',
+                recordName,
+                inst,
+                branch
+            );
 
         if (connectedDevices.some((d) => !d)) {
-            return 99;
+            return 500;
         }
 
         if (connectedDevices.length <= 0) {
@@ -642,6 +766,8 @@ export class WebsocketController {
 
         await this._messenger.sendMessage([randomDevice.serverConnectionId], {
             type: 'repo/receive_action',
+            recordName,
+            inst,
             branch,
             action: a as any,
         });
@@ -831,30 +957,6 @@ export function isEventForDevice(
         return true;
     }
     return false;
-}
-
-/**
- * Gets the namespace that the given branch should use.
- * @param branch The branch.
- */
-export function branchNamespace(branch: string) {
-    return `/branch/${branch}`;
-}
-
-/**
- * Gets the namespace that should be used for watching devices connected to branches.
- * @param branch The branch to watch.
- */
-export function watchBranchNamespace(branch: string) {
-    return `/watched_branch/${branch}`;
-}
-
-export function branchFromNamespace(namespace: string) {
-    return namespace.slice('/branch/'.length);
-}
-
-export function isBranchConnection(namespace: string) {
-    return namespace.startsWith('/branch/');
 }
 
 export type DownloadRequestResult =
