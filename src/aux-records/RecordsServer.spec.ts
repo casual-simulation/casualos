@@ -15,6 +15,7 @@ import { MemoryAuthMessenger } from './MemoryAuthMessenger';
 import {
     formatV1OpenAiKey,
     formatV1SessionKey,
+    generateV1ConnectionToken,
     parseSessionKey,
 } from './AuthUtils';
 import { AuthSession, AuthUser } from './AuthStore';
@@ -62,8 +63,17 @@ import { sortBy } from 'lodash';
 import { MemoryStore } from './MemoryStore';
 import { WebsocketController } from './websockets/WebsocketController';
 import { MemoryWebsocketConnectionStore } from './websockets/MemoryWebsocketConnectionStore';
-import { MemoryUpdatesStore } from '@casual-simulation/causal-trees';
 import { MemoryWebsocketMessenger } from './websockets/MemoryWebsocketMessenger';
+import { InstRecordsStore } from './websockets/InstRecordsStore';
+import { TemporaryInstRecordsStore } from './websockets/TemporaryInstRecordsStore';
+import { SplitInstRecordsStore } from './websockets/SplitInstRecordsStore';
+import { MemoryTempInstRecordsStore } from './websockets/MemoryTempInstRecordsStore';
+import { MemoryInstRecordsStore } from './websockets/MemoryInstRecordsStore';
+import {
+    WebsocketEventTypes,
+    WebsocketMessage,
+    WebsocketMessageEvent,
+} from './websockets/WebsocketEvents';
 
 console.log = jest.fn();
 
@@ -82,7 +92,8 @@ describe('RecordsServer', () => {
     let manualDataController: DataRecordsController;
     let manualDataStore: DataRecordsStore;
     let websocketConnectionStore: MemoryWebsocketConnectionStore;
-    let updatesStore: MemoryUpdatesStore;
+    let instStore: InstRecordsStore;
+    let tempInstStore: TemporaryInstRecordsStore;
     let websocketMessenger: MemoryWebsocketMessenger;
     let websocketController: WebsocketController;
 
@@ -132,6 +143,7 @@ describe('RecordsServer', () => {
     let allowedAccountOrigins: Set<string>;
     let allowedApiOrigins: Set<string>;
     let sessionKey: string;
+    let connectionKey: string;
     let userId: string;
     let sessionId: string;
     let ownerId: string;
@@ -246,12 +258,18 @@ describe('RecordsServer', () => {
         });
 
         websocketConnectionStore = new MemoryWebsocketConnectionStore();
-        updatesStore = new MemoryUpdatesStore();
         websocketMessenger = new MemoryWebsocketMessenger();
+        instStore = new SplitInstRecordsStore(
+            new MemoryTempInstRecordsStore(),
+            new MemoryInstRecordsStore()
+        );
+        tempInstStore = new MemoryTempInstRecordsStore();
         websocketController = new WebsocketController(
             websocketConnectionStore,
             websocketMessenger,
-            updatesStore
+            instStore,
+            tempInstStore,
+            authController
         );
 
         stripe = stripeMock = {
@@ -399,6 +417,7 @@ describe('RecordsServer', () => {
         }
 
         sessionKey = loginResult.sessionKey;
+        connectionKey = loginResult.connectionKey;
         userId = loginResult.userId;
 
         const services = {
@@ -8710,6 +8729,7 @@ describe('RecordsServer', () => {
                 subscriptionController,
                 null as any,
                 policyController,
+                null,
                 null
             );
 
@@ -8896,6 +8916,7 @@ describe('RecordsServer', () => {
                 subscriptionController,
                 null as any,
                 policyController,
+                null,
                 null
             );
 
@@ -9013,6 +9034,7 @@ describe('RecordsServer', () => {
                 subscriptionController,
                 null as any,
                 policyController,
+                null,
                 null
             );
 
@@ -9092,6 +9114,7 @@ describe('RecordsServer', () => {
                 subscriptionController,
                 null as any,
                 policyController,
+                null,
                 null
             );
 
@@ -10690,12 +10713,231 @@ describe('RecordsServer', () => {
             });
         });
 
-        // describe('login', () => {
-        //     it('should create a new connection', async () => {
+        describe('login', () => {
+            it('should return an error if the login message does not contain either a connectionToken or clientConnectionId', async () => {
+                await server.handleWebsocketRequest(
+                    wsMessage(
+                        connectionId,
+                        messageEvent(1, {
+                            type: 'login',
+                        } as any)
+                    )
+                );
 
-        //     });
-        // });
+                const errors = getWebSockerErrors(connectionId);
+
+                expect(errors).toEqual([
+                    [
+                        WebsocketEventTypes.Error,
+                        1,
+                        'unacceptable_connection_id',
+                        'A connection ID must be specified when logging in without a connection token.',
+                        null,
+                    ],
+                ]);
+            });
+
+            it('should return an error if the login message is improperly formattted', async () => {
+                await server.handleWebsocketRequest(
+                    wsMessage(connectionId, messageEvent(1, 123 as any))
+                );
+
+                const errors = getWebSockerErrors(connectionId);
+
+                expect(errors).toEqual([
+                    [
+                        WebsocketEventTypes.Error,
+                        1,
+                        'unnaceptable_request',
+                        'The request was invalid. One or more fields were invalid.',
+                        [
+                            {
+                                code: 'invalid_type',
+                                expected: 'object',
+                                message: 'Expected object, received number',
+                                path: [],
+                                received: 'number',
+                            },
+                        ],
+                    ],
+                ]);
+            });
+
+            it('should create a new connection for anonymous users', async () => {
+                await server.handleWebsocketRequest(
+                    wsMessage(
+                        connectionId,
+                        messageEvent(1, {
+                            type: 'login',
+                            clientConnectionId: 'clientConnectionId',
+                        })
+                    )
+                );
+
+                expectNoWebSocketErrors(connectionId);
+
+                const connection = await websocketConnectionStore.getConnection(
+                    connectionId
+                );
+
+                expect(connection).toEqual({
+                    serverConnectionId: connectionId,
+                    clientConnectionId: 'clientConnectionId',
+                    userId: null,
+                    sessionId: null,
+                    token: null,
+                });
+            });
+
+            it('should create a new connection for authenticated users', async () => {
+                const connectionToken = generateV1ConnectionToken(
+                    connectionKey,
+                    'clientConnectionId',
+                    'recordName',
+                    'inst'
+                );
+                await server.handleWebsocketRequest(
+                    wsMessage(
+                        connectionId,
+                        messageEvent(1, {
+                            type: 'login',
+                            connectionToken,
+                        })
+                    )
+                );
+
+                expectNoWebSocketErrors(connectionId);
+
+                const connection = await websocketConnectionStore.getConnection(
+                    connectionId
+                );
+
+                expect(connection).toEqual({
+                    serverConnectionId: connectionId,
+                    clientConnectionId: 'clientConnectionId',
+                    userId: userId,
+                    sessionId: sessionId,
+                    token: connectionToken,
+                });
+            });
+        });
+        const cases = [['anonymous'] as const, ['authenticated'] as const];
+
+        describe.each(cases)('%s', (c) => {
+            let connectionToken: string | null;
+            let recordName: string | null;
+            const inst = 'inst';
+            const clientConnectionId = 'clientConnectionId';
+            const branch = 'shared';
+
+            beforeEach(async () => {
+                if (c === 'authenticated') {
+                    recordName = 'testRecord';
+                    connectionToken = generateV1ConnectionToken(
+                        connectionKey,
+                        clientConnectionId,
+                        recordName,
+                        inst
+                    );
+
+                    await websocketController.login(connectionId, 1, {
+                        type: 'login',
+                        connectionToken,
+                    });
+                } else {
+                    recordName = null;
+                    connectionToken = null;
+                    await websocketController.login(connectionId, 1, {
+                        type: 'login',
+                        clientConnectionId,
+                    });
+                }
+
+                websocketMessenger.reset();
+            });
+
+            describe('repo/watch_branch', () => {
+                it('should be able to connect to branches', async () => {
+                    expectNoWebSocketErrors(connectionId);
+
+                    await server.handleWebsocketRequest(
+                        wsMessage(
+                            connectionId,
+                            messageEvent(2, {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst,
+                                branch,
+                            })
+                        )
+                    );
+
+                    expectNoWebSocketErrors(connectionId);
+                    expect(
+                        websocketMessenger.getMessages(connectionId)
+                    ).toEqual([
+                        {
+                            type: 'repo/add_updates',
+                            recordName,
+                            inst,
+                            branch,
+                            updates: [],
+                            initial: true,
+                        },
+                    ]);
+                });
+
+                it('should send the initial updates', async () => {
+                    expectNoWebSocketErrors(connectionId);
+
+                    await instStore.addUpdates(
+                        recordName,
+                        inst,
+                        branch,
+                        ['abc'],
+                        3
+                    );
+
+                    await server.handleWebsocketRequest(
+                        wsMessage(
+                            connectionId,
+                            messageEvent(2, {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst,
+                                branch,
+                            })
+                        )
+                    );
+
+                    expectNoWebSocketErrors(connectionId);
+                    expect(
+                        websocketMessenger.getMessages(connectionId)
+                    ).toEqual([
+                        {
+                            type: 'repo/add_updates',
+                            recordName,
+                            inst,
+                            branch,
+                            updates: ['abc'],
+                            initial: true,
+                        },
+                    ]);
+                });
+            });
+        });
     });
+
+    function expectNoWebSocketErrors(connectionId: string) {
+        const errors = getWebSockerErrors(connectionId);
+        expect(errors).toEqual([]);
+    }
+
+    function getWebSockerErrors(connectionId: string) {
+        const events = websocketMessenger.getEvents(connectionId);
+        const errors = events.filter((e) => e[0] === WebsocketEventTypes.Error);
+        return errors;
+    }
 
     function expectResponseBodyToEqual(
         response: GenericHttpResponse,
@@ -11020,6 +11262,15 @@ describe('RecordsServer', () => {
             body,
             ipAddress,
         };
+    }
+
+    function messageEvent(requestId: number, body: WebsocketMessage): string {
+        const e: WebsocketMessageEvent = [
+            WebsocketEventTypes.Message,
+            requestId,
+            body,
+        ];
+        return JSON.stringify(e);
     }
 
     function wsConnect(

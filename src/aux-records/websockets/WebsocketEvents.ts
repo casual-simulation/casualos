@@ -11,7 +11,7 @@ import {
     remoteActionsSchema,
     deviceActionsSchema,
 } from '../common/RemoteActions';
-import { z } from 'zod';
+import { ZodIssue, z } from 'zod';
 
 /**
  * Defines a websocket event.
@@ -39,13 +39,9 @@ export enum WebsocketEventTypes {
     Error = 5,
 }
 
-export const websocketEventSchema = z.tuple([
-    z.nativeEnum(WebsocketEventTypes),
-    z.number(),
-    z.any(),
-    z.string().optional(),
-    z.any().optional(),
-]);
+export const websocketEventSchema = z
+    .tuple([z.nativeEnum(WebsocketEventTypes), z.number()])
+    .rest(z.any());
 
 /**
  * Defines a websocket event that contains a message.
@@ -101,14 +97,17 @@ export type WebsocketErrorEvent = [
         | NotSupportedError
         | ValidateConnectionTokenFailure['errorCode']
         | 'unacceptable_connection_id'
-        | 'message_not_found',
-    errorMessage: string
+        | 'message_not_found'
+        | 'unnaceptable_request',
+    errorMessage: string,
+    issues: ZodIssue[]
 ];
 export const websocketErrorEventSchema = z.tuple([
     z.literal(WebsocketEventTypes.Error),
     z.number(),
     z.string(),
     z.string(),
+    z.array(z.any()),
 ]);
 
 /**
@@ -159,7 +158,7 @@ export interface LoginMessage {
     /**
      * The token that should be used to authenticate the connection.
      */
-    connectionToken: string;
+    connectionToken?: string;
 
     /**
      * The ID that the client wants to use for the connection.
@@ -169,7 +168,8 @@ export interface LoginMessage {
 }
 export const loginMessageSchema = z.object({
     type: z.literal('login'),
-    connectionToken: z.string(),
+    connectionToken: z.string().optional(),
+    clientConnectionId: z.string().optional(),
 });
 type ZodLoginMessage = z.infer<typeof loginMessageSchema>;
 type ZodLoginMessageAssertion = HasType<ZodLoginMessage, LoginMessage>;

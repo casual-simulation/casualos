@@ -23,7 +23,7 @@ import {
     CreateManageSubscriptionRequest,
     SubscriptionController,
 } from './SubscriptionController';
-import { z } from 'zod';
+import { ZodError, z } from 'zod';
 import { PublicRecordKeyPolicy } from './RecordsStore';
 import { RateLimitController } from './RateLimitController';
 import { AVAILABLE_PERMISSIONS_VALIDATION } from './PolicyPermissions';
@@ -32,6 +32,9 @@ import { AIController } from './AIController';
 import { AIChatMessage, AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
 import { WebsocketController } from './websockets/WebsocketController';
 import {
+    LoginMessage,
+    WatchBranchMessage,
+    WebsocketErrorEvent,
     WebsocketEventTypes,
     WebsocketMessage,
     websocketEventSchema,
@@ -856,8 +859,15 @@ export class RecordsServer {
         }
 
         if (request.type === 'connect') {
-            await this._websocketController.connect(request.connectionId);
+            console.log(
+                `[RecordsServer] Connection recieved: `,
+                request.connectionId
+            );
         } else if (request.type === 'disconnect') {
+            console.log(
+                `[RecordsServer] Disconnection recieved: `,
+                request.connectionId
+            );
             await this._websocketController.disconnect(request.connectionId);
         } else if (request.type === 'message') {
             if (typeof request.body !== 'string') {
@@ -876,14 +886,23 @@ export class RecordsServer {
             );
 
             if (parseResult.success === false) {
+                await this._sendWebsocketZodError(
+                    request.connectionId,
+                    null,
+                    parseResult.error
+                );
                 return;
             }
 
-            let [type, ...rest] = parseResult.data;
+            let [type, requestId, ...rest] = parseResult.data;
 
             if (type === WebsocketEventTypes.Message) {
                 const [message] = rest;
-                return await this._processWebsocketMessage(request, message);
+                return await this._processWebsocketMessage(
+                    request,
+                    requestId,
+                    message
+                );
             } else if (type === WebsocketEventTypes.UploadRequest) {
                 const [id] = rest;
                 return await this._processWebsocketUploadRequest(request, id);
@@ -897,11 +916,49 @@ export class RecordsServer {
         }
     }
 
+    private async _sendWebsocketZodError(
+        connectionId: string,
+        requestId: number | null,
+        error: ZodError<any>
+    ) {
+        await this._websocketController.sendError(connectionId, {
+            requestId: requestId,
+            errorCode: 'unnaceptable_request',
+            errorMessage:
+                'The request was invalid. One or more fields were invalid.',
+            issues: error.issues,
+        });
+    }
+
     private async _processWebsocketMessage(
         request: GenericWebsocketRequest,
+        requestId: number,
         message: WebsocketMessage
     ) {
         const messageResult = websocketMessageSchema.safeParse(message);
+
+        if (messageResult.success === false) {
+            await this._sendWebsocketZodError(
+                request.connectionId,
+                requestId,
+                messageResult.error
+            );
+            return;
+        }
+        const data = messageResult.data;
+
+        if (data.type === 'login') {
+            await this._websocketController.login(
+                request.connectionId,
+                requestId,
+                data as LoginMessage
+            );
+        } else if (data.type === 'repo/watch_branch') {
+            await this._websocketController.watchBranch(
+                request.connectionId,
+                data as WatchBranchMessage
+            );
+        }
     }
 
     private async _processWebsocketDownload(
@@ -4087,7 +4144,9 @@ export function getSessionKey(event: GenericHttpRequest): string {
  * Returns null if the authorization header is invalid.
  * @param authorization The authorization header value.
  */
-export function parseAuthorization(authorization: string): string {
+export function parseAuthorization(
+    authorization: string | null | undefined
+): string {
     if (
         typeof authorization === 'string' &&
         authorization.startsWith('Bearer ')

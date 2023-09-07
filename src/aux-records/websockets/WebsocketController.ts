@@ -46,6 +46,7 @@ import {
 import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
 import { sumBy } from 'lodash';
 import { PUBLIC_READ_MARKER, PUBLIC_WRITE_MARKER } from '../PolicyPermissions';
+import { ZodIssue } from 'zod';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -101,6 +102,7 @@ export class WebsocketController {
                         requestId,
                         'unacceptable_connection_id',
                         'A connection ID must be specified when logging in without a connection token.',
+                        null,
                     ]);
                     return;
                 }
@@ -123,6 +125,7 @@ export class WebsocketController {
                         requestId,
                         validationResult.errorCode,
                         validationResult.errorMessage,
+                        undefined,
                     ]);
                     return;
                 }
@@ -1089,6 +1092,7 @@ export class WebsocketController {
             error.requestId,
             error.errorCode,
             error.errorMessage,
+            error.issues,
         ]);
     }
 
@@ -1145,4 +1149,5 @@ export interface WebsocketControllerError {
     requestId: number;
     errorCode: WebsocketErrorEvent[2];
     errorMessage: string;
+    issues?: ZodIssue[];
 }

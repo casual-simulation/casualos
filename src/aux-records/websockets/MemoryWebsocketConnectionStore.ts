@@ -184,7 +184,7 @@ export class MemoryWebsocketConnectionStore
     }
 
     async getConnection(connectionId: string): Promise<DeviceConnection> {
-        return this._connections.get(connectionId);
+        return this._connections.get(connectionId) ?? null;
     }
 
     async countConnections(): Promise<number> {
