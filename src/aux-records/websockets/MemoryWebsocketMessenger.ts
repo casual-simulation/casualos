@@ -41,7 +41,7 @@ export class MemoryWebsocketMessenger implements WebsocketMessenger {
                 continue;
             }
             const list = this._getMessages(id);
-            list.push(data);
+            list.push(JSON.parse(JSON.stringify(data)));
         }
     }
 
@@ -50,7 +50,7 @@ export class MemoryWebsocketMessenger implements WebsocketMessenger {
         event: WebsocketEvent
     ): Promise<void> {
         const events = this._getEvents(connectionId);
-        events.push(event);
+        events.push(JSON.parse(JSON.stringify(event)));
     }
 
     async presignMessageUpload(): Promise<PresignFileUploadResult> {

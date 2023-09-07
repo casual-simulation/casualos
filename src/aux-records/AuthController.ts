@@ -679,7 +679,8 @@ export class AuthController {
                 };
             }
 
-            const [userId, sessionId, connectionId, inst, hash] = tokenValues;
+            const [userId, sessionId, connectionId, recordName, inst, hash] =
+                tokenValues;
             const session = await this._store.findSession(userId, sessionId);
 
             if (!session) {
@@ -769,6 +770,7 @@ export class AuthController {
                 userId: session.userId,
                 sessionId: session.sessionId,
                 connectionId: connectionId,
+                recordName: recordName,
                 inst: inst,
                 allSessionsRevokedTimeMs: userInfo.allSessionRevokeTimeMs,
                 subscriptionId: subscriptionId ?? undefined,

@@ -215,6 +215,7 @@ export interface InstRecord {
 export interface BranchRecordWithInst extends BranchRecord {
     /**
      * The inst that this branch belongs to.
+     * Null if the branch does not have a reocrd name.
      */
     linkedInst: InstRecord | null;
 }

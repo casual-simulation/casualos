@@ -39,6 +39,7 @@ import { SplitInstRecordsStore } from './SplitInstRecordsStore';
 import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
 import { MemoryInstRecordsStore } from './MemoryInstRecordsStore';
 import { MemoryTempInstRecordsStore } from './MemoryTempInstRecordsStore';
+import { PUBLIC_READ_MARKER, PUBLIC_WRITE_MARKER } from '../PolicyPermissions';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid');
@@ -252,16 +253,15 @@ describe('WebsocketController', () => {
             ).toEqual({
                 updates: ['111', '222'],
                 timestamps: [expect.any(Number), expect.any(Number)],
+                instSizeInBytes: 6,
+                branchSizeInBytes: 6,
             });
 
             await server.disconnect(device2Info.serverConnectionId);
 
             expect(
                 await tempUpdatesStore.getUpdates(null, inst, 'testBranch')
-            ).toEqual({
-                updates: [],
-                timestamps: [],
-            });
+            ).toEqual(null);
         });
     });
 
@@ -290,11 +290,25 @@ describe('WebsocketController', () => {
                 ).toEqual([
                     {
                         type: 'repo/add_updates',
+                        recordName: null,
+                        inst,
                         branch: 'testBranch',
                         updates: ['123', '456'],
                         initial: true, // should include whether this event includes the initial data.
                     },
                 ]);
+
+                expect(
+                    await instStore.getBranchByName(null, inst, 'testBranch')
+                ).toEqual({
+                    recordName: null,
+                    inst,
+                    branch: 'testBranch',
+                    temporary: false,
+                    linkedInst: null,
+                });
+                // Should not create an inst when the record name is null.
+                expect(await instStore.getInstByName(null, inst)).toBe(null);
             });
 
             it('should create a new orphan branch if the branch name does not exist', async () => {
@@ -312,11 +326,25 @@ describe('WebsocketController', () => {
                 ).toEqual([
                     {
                         type: 'repo/add_updates',
+                        recordName: null,
+                        inst,
                         branch: 'doesNotExist',
                         updates: [] as string[],
                         initial: true,
                     },
                 ]);
+
+                expect(
+                    await instStore.getBranchByName(null, inst, 'doesNotExist')
+                ).toEqual({
+                    recordName: null,
+                    inst,
+                    branch: 'doesNotExist',
+                    temporary: false,
+                    linkedInst: null,
+                });
+                // Should not create an inst when the record name is null.
+                expect(await instStore.getInstByName(null, inst)).toBe(null);
             });
 
             describe('temp', () => {
@@ -344,11 +372,31 @@ describe('WebsocketController', () => {
                     ).toEqual([
                         {
                             type: 'repo/add_updates',
+                            recordName: null,
+                            inst,
                             branch: 'testBranch',
                             updates: ['111', '222'],
                             initial: true,
                         },
                     ]);
+
+                    expect(
+                        await instStore.getBranchByName(
+                            null,
+                            inst,
+                            'testBranch'
+                        )
+                    ).toEqual({
+                        recordName: null,
+                        inst,
+                        branch: 'testBranch',
+                        temporary: true,
+                        linkedInst: null,
+                    });
+                    // Should not create an inst when the record name is null.
+                    expect(await instStore.getInstByName(null, inst)).toBe(
+                        null
+                    );
                 });
 
                 it('should load the updates that were added to the branch by another device', async () => {
@@ -366,7 +414,7 @@ describe('WebsocketController', () => {
 
                     await server.addUpdates(device1Info.serverConnectionId, {
                         type: 'repo/add_updates',
-                        recordName,
+                        recordName: null,
                         inst,
                         branch: 'testBranch',
                         updates: ['abc', 'def'],
@@ -392,6 +440,25 @@ describe('WebsocketController', () => {
                             initial: true,
                         },
                     ]);
+
+                    expect(
+                        await instStore.getBranchByName(
+                            null,
+                            inst,
+                            'testBranch'
+                        )
+                    ).toEqual({
+                        recordName: null,
+                        inst,
+                        branch: 'testBranch',
+                        temporary: true,
+                        linkedInst: null,
+                    });
+
+                    // Should not create an inst when the record name is null.
+                    expect(await instStore.getInstByName(null, inst)).toBe(
+                        null
+                    );
                 });
             });
         });
@@ -439,12 +506,16 @@ describe('WebsocketController', () => {
                 ).toEqual([
                     {
                         type: 'repo/add_updates',
+                        recordName: null,
+                        inst,
                         branch: 'testBranch',
                         updates: [],
                         initial: true,
                     },
                     {
                         type: 'repo/add_updates',
+                        recordName: null,
+                        inst,
                         branch: 'testBranch',
                         updates: ['111', '222'],
                     },
@@ -493,6 +564,8 @@ describe('WebsocketController', () => {
                 ).toEqual({
                     updates: ['111', '222'],
                     timestamps: [expect.any(Number), expect.any(Number)],
+                    instSizeInBytes: 6,
+                    branchSizeInBytes: 6,
                 });
 
                 await server.unwatchBranch(
@@ -504,10 +577,7 @@ describe('WebsocketController', () => {
 
                 expect(
                     await tempUpdatesStore.getUpdates(null, inst, 'testBranch')
-                ).toEqual({
-                    updates: [],
-                    timestamps: [],
-                });
+                ).toEqual(null);
             });
         });
     });
@@ -552,12 +622,16 @@ describe('WebsocketController', () => {
                 // back indicating which atoms it processed
                 {
                     type: 'repo/updates_received',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updateId: 0,
                 },
 
                 {
                     type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     updates: ['111', '222'],
                     timestamps: [100, 100],
@@ -630,6 +704,61 @@ describe('WebsocketController', () => {
     });
 
     describe('repo/add_updates', () => {
+        it('should create the branch if it does not exist', async () => {
+            await connectionStore.saveConnection(device1Info);
+
+            await server.addUpdates(device1Info.serverConnectionId, {
+                type: 'repo/add_updates',
+                recordName: null,
+                inst,
+                branch: 'testBranch',
+                updates: ['111', '222'],
+                updateId: 0,
+            });
+
+            await instStore.addUpdates(null, inst, 'testBranch', ['333'], 3);
+
+            await server.watchBranch(device1Info.serverConnectionId, {
+                type: 'repo/watch_branch',
+                recordName: null,
+                inst,
+                branch: 'testBranch',
+                protocol: 'updates',
+            });
+
+            expect(
+                await instStore.getBranchByName(null, inst, 'testBranch')
+            ).toEqual({
+                recordName: null,
+                inst,
+                branch: 'testBranch',
+                temporary: false,
+                linkedInst: null,
+            });
+            expect(
+                messenger.getMessages(device1Info.serverConnectionId)
+            ).toEqual([
+                // Server should send a atoms received event
+                // back indicating which atoms it processed
+                {
+                    type: 'repo/updates_received',
+                    recordName: null,
+                    inst,
+                    branch: 'testBranch',
+                    updateId: 0,
+                },
+
+                {
+                    type: 'repo/add_updates',
+                    recordName: null,
+                    inst,
+                    branch: 'testBranch',
+                    updates: ['111', '222', '333'],
+                    initial: true,
+                },
+            ]);
+        });
+
         it('should add the given updates to the given branch', async () => {
             await connectionStore.saveConnection(device1Info);
 
@@ -827,6 +956,7 @@ describe('WebsocketController', () => {
             expect(updates).toEqual({
                 updates: ['111', '222'],
                 timestamps: [expect.any(Number), expect.any(Number)],
+                instSizeInBytes: 6,
             });
         });
 
@@ -858,6 +988,7 @@ describe('WebsocketController', () => {
             ).toEqual({
                 updates: ['111'],
                 timestamps: [expect.any(Number)],
+                instSizeInBytes: 3,
             });
         });
 
@@ -1402,6 +1533,8 @@ describe('WebsocketController', () => {
                 },
                 {
                     type: 'repo/receive_action',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     action: deviceResult(
                         connectionInfo(device1Info),
@@ -1791,6 +1924,8 @@ describe('WebsocketController', () => {
             ).toEqual([
                 {
                     type: 'repo/connection_count',
+                    recordName: null,
+                    inst: null,
                     branch: null,
                     count: 2,
                 },
@@ -1827,6 +1962,8 @@ describe('WebsocketController', () => {
             ).toEqual([
                 {
                     type: 'repo/connection_count',
+                    recordName: null,
+                    inst,
                     branch: 'testBranch',
                     count: 2,
                 },
@@ -1994,20 +2131,13 @@ describe('WebsocketController', () => {
             }
         });
 
-        it('should return 404 if there are no updates in the branch', async () => {
+        it('should return 404 if there is no branch', async () => {
             const originalRandom = Math.random;
             try {
                 const randomMock = (Math.random = jest.fn());
                 randomMock.mockReturnValueOnce(0);
 
                 await connectionStore.saveConnection(device1Info);
-
-                await server.watchBranch(device1Info.serverConnectionId, {
-                    type: 'repo/watch_branch',
-                    recordName: null,
-                    inst,
-                    branch: 'testBranch',
-                });
 
                 const result = await server.webhook(
                     null,
@@ -2026,22 +2156,13 @@ describe('WebsocketController', () => {
                 expect(result).toEqual(404);
                 expect(
                     messenger.getMessages(device1Info.serverConnectionId)
-                ).toEqual([
-                    {
-                        type: 'repo/add_updates',
-                        recordName: null,
-                        inst,
-                        branch: 'testBranch',
-                        updates: [],
-                        initial: true,
-                    },
-                ]);
+                ).toEqual([]);
             } finally {
                 Math.random = originalRandom;
             }
         });
 
-        it('should return 503 if there are no connected devices', async () => {
+        it('should return 404 if there are no connected devices', async () => {
             const originalRandom = Math.random;
             try {
                 const randomMock = (Math.random = jest.fn());
@@ -2071,7 +2192,7 @@ describe('WebsocketController', () => {
                     }
                 );
 
-                expect(result).toEqual(503);
+                expect(result).toEqual(404);
                 expect(
                     messenger.getMessages(device1Info.serverConnectionId)
                 ).toEqual([]);

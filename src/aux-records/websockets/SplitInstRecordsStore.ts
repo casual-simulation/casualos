@@ -144,6 +144,8 @@ export class SplitInstRecordsStore implements InstRecordsStore {
 
         if (!tempUpdates) {
             return permUpdates;
+        } else if (!permUpdates) {
+            return tempUpdates;
         }
 
         let allUpdates = new Set<string>();

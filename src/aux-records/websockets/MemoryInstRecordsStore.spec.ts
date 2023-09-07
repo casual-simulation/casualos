@@ -24,7 +24,7 @@ describe('MemoryInstRecordsStore', () => {
                 inst: 'inst',
                 markers: [PUBLIC_READ_MARKER],
             });
-            await subject.addUpdate('recordName', 'inst', 'test', 'def', 3);
+            await subject.addUpdates('recordName', 'inst', 'test', ['def'], 3);
             expect(
                 await subject.getAllUpdates('recordName', 'inst', 'test')
             ).toEqual({
@@ -41,7 +41,7 @@ describe('MemoryInstRecordsStore', () => {
                 inst: 'inst',
                 markers: [PUBLIC_READ_MARKER],
             });
-            await subject.addUpdate('recordName', 'inst', 'test', 'abc', 3);
+            await subject.addUpdates('recordName', 'inst', 'test', ['abc'], 3);
             await subject.deleteBranch('recordName', 'inst', 'test');
             expect(
                 await subject.getAllUpdates('recordName', 'inst', 'test')

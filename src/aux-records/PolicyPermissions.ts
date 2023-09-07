@@ -931,6 +931,12 @@ export const RECORD_OWNER_ROLE_NAME = 'recordOwner';
 export const PUBLIC_READ_MARKER = 'publicRead';
 
 /**
+ * The name of the "publicWrite" resource marker.
+ * Used by default for public insts.
+ */
+export const PUBLIC_WRITE_MARKER = 'publicWrite';
+
+/**
  * The name of the "account" resource marker.
  * Used by default for policy and role records.
  */

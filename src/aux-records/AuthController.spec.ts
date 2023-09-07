@@ -1870,6 +1870,7 @@ describe('AuthController', () => {
                 const token = generateV1ConnectionToken(
                     connectionKey,
                     'connectionId',
+                    'recordName',
                     'inst'
                 );
                 const result = await controller.validateConnectionToken(token);
@@ -1879,6 +1880,7 @@ describe('AuthController', () => {
                     userId: userId,
                     sessionId: sessionId,
                     connectionId: 'connectionId',
+                    recordName: 'recordName',
                     inst: 'inst',
                 });
             });
@@ -1916,6 +1918,7 @@ describe('AuthController', () => {
                 const token = generateV1ConnectionToken(
                     connectionKey,
                     'connectionId',
+                    'recordName',
                     'inst'
                 );
                 const result = await controller.validateConnectionToken(token);
@@ -1970,6 +1973,7 @@ describe('AuthController', () => {
                 const token = generateV1ConnectionToken(
                     connectionKey,
                     'connectionId',
+                    'recordName',
                     'inst'
                 );
                 const result = await controller.validateConnectionToken(token);
@@ -1979,8 +1983,8 @@ describe('AuthController', () => {
                     userId: userId,
                     sessionId: sessionId,
                     connectionId: 'connectionId',
+                    recordName: 'recordName',
                     inst: 'inst',
-
                     subscriptionTier: 'alpha',
                     subscriptionId: 'sub_2',
                 });
@@ -2010,13 +2014,6 @@ describe('AuthController', () => {
                     ipAddress: '127.0.0.1',
                 });
 
-                // const connectionKey = formatV1ConnectionKey(
-                //     userId,
-                //     sessionId,
-                //     toBase64String(connectionSecret),
-                //     200
-                // );
-                // const token = generateV1ConnectionToken(connectionKey, 'connectionId', 'inst');
                 const result = await controller.validateConnectionToken(
                     'wrong token'
                 );
@@ -2062,6 +2059,7 @@ describe('AuthController', () => {
                 const token = generateV1ConnectionToken(
                     connectionKey,
                     'connectionId',
+                    'recordName',
                     'inst'
                 );
 
@@ -2109,6 +2107,7 @@ describe('AuthController', () => {
                 const token = generateV1ConnectionToken(
                     connectionKey,
                     'connectionId',
+                    'recordName',
                     'inst'
                 );
 
@@ -2164,6 +2163,7 @@ describe('AuthController', () => {
                 const token = generateV1ConnectionToken(
                     connectionKey,
                     'connectionId',
+                    'recordName',
                     'inst'
                 );
 
@@ -2233,6 +2233,7 @@ describe('AuthController', () => {
             const token = generateV1ConnectionToken(
                 response.connectionKey,
                 'connectionId',
+                'recordName',
                 'inst'
             );
 
@@ -2245,6 +2246,7 @@ describe('AuthController', () => {
                 userId: 'myid',
                 sessionId: fromByteArray(sessionId),
                 connectionId: 'connectionId',
+                recordName: 'recordName',
                 inst: 'inst',
             });
         });

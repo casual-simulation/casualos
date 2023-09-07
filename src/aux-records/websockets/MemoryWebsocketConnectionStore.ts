@@ -193,12 +193,14 @@ export class MemoryWebsocketConnectionStore
 
     async getBranchConnection(
         connectionId: string,
+        mode: BranchConnectionMode,
         recordName: string,
         inst: string,
         branch: string
     ): Promise<DeviceBranchConnection> {
         return this._getConnectionList(connectionId).find(
             (c) =>
+                c.mode === mode &&
                 c.recordName === recordName &&
                 c.inst === inst &&
                 c.branch === branch

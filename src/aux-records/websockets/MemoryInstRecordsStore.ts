@@ -38,7 +38,7 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
         inst: string,
         branch: string
     ): Promise<BranchRecordWithInst> {
-        const i = this._getInst(recordName, inst);
+        let i = this._getInst(recordName, inst);
 
         if (!i) {
             return null;
@@ -65,7 +65,7 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
 
     async saveInst(inst: InstWithBranches): Promise<void> {
         const r = this._getRecord(inst.recordName);
-        const i = this._getInst(inst.recordName, inst.inst);
+        let i = this._getInst(inst.recordName, inst.inst);
 
         const { branches, ...rest } = inst;
 
@@ -102,7 +102,7 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
     }
 
     async saveBranch(branch: BranchRecord): Promise<void> {
-        const i = this._getInst(branch.recordName, branch.inst);
+        let i = this._getInst(branch.recordName, branch.inst);
 
         if (!i) {
             return;
@@ -331,11 +331,11 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
         storedUpdates.updates = [];
         storedUpdates.timestamps = [];
 
-        return this.addUpdate(
+        return this.addUpdates(
             recordName,
             inst,
             branch,
-            updateToAdd,
+            [updateToAdd],
             sizeInBytes
         );
     }

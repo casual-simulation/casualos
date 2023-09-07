@@ -367,6 +367,31 @@ describe('SplitInstRecordsStore', () => {
         });
     });
 
+    describe('getBranchByName()', () => {
+        it('should return the result from the temp store if the record name is null', async () => {
+            await temp.saveBranchInfo({
+                recordName: null,
+                inst: instName,
+                branch: branchName,
+                linkedInst: null,
+                temporary: false,
+            });
+
+            const branch = await store.getBranchByName(
+                null,
+                instName,
+                branchName
+            );
+            expect(branch).toEqual({
+                recordName: null,
+                inst: instName,
+                branch: branchName,
+                temporary: false,
+                linkedInst: null,
+            });
+        });
+    });
+
     describe('getInstByName()', () => {
         it('should return null if the inst does not exist', async () => {
             const result = await store.getInstByName(recordName, instName);
@@ -523,7 +548,6 @@ describe('SplitInstRecordsStore', () => {
         });
 
         it('should return the updates from the temp store', async () => {
-            // const key = temp.getBranchKey(recordName, instName, branchName);
             await temp.addUpdates(
                 recordName,
                 instName,
@@ -615,6 +639,50 @@ describe('SplitInstRecordsStore', () => {
                 ],
                 instSizeInBytes: 13,
                 branchSizeInBytes: 13,
+            });
+        });
+
+        it('should return null if neither store has the updates', async () => {
+            const result = await store.getAllUpdates(
+                recordName,
+                instName,
+                'missing'
+            );
+
+            expect(result).toEqual(null);
+        });
+
+        it('should return the temp updates if the permanent store does not contain the branch', async () => {
+            await temp.addUpdates(
+                recordName,
+                instName,
+                'different',
+                ['test', 'abc'],
+                7
+            );
+            const result = await store.getAllUpdates(
+                recordName,
+                instName,
+                'different'
+            );
+
+            expect(result).toEqual({
+                updates: ['test', 'abc'],
+                timestamps: [expect.any(Number), expect.any(Number)],
+                instSizeInBytes: 7,
+                branchSizeInBytes: 7,
+            });
+
+            const tempResult = await temp.getUpdates(
+                recordName,
+                instName,
+                'different'
+            );
+            expect(tempResult).toEqual({
+                updates: ['test', 'abc'],
+                timestamps: [expect.any(Number), expect.any(Number)],
+                instSizeInBytes: 7,
+                branchSizeInBytes: 7,
             });
         });
     });

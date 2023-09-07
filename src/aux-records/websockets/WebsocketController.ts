@@ -38,9 +38,14 @@ import {
 } from './WebsocketEvents';
 import { ConnectionInfo } from '../common/ConnectionInfo';
 import { AuthController } from '../AuthController';
-import { InstRecordsStore } from './InstRecordsStore';
+import {
+    CurrentUpdates,
+    InstRecord,
+    InstRecordsStore,
+} from './InstRecordsStore';
 import { TemporaryInstRecordsStore } from './TemporaryInstRecordsStore';
 import { sumBy } from 'lodash';
+import { PUBLIC_READ_MARKER, PUBLIC_WRITE_MARKER } from '../PolicyPermissions';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -165,12 +170,24 @@ export class WebsocketController {
                         );
 
                     if (count <= 0) {
-                        // unload namespace
-                        await this._temporaryStore.deleteBranch(
+                        const branch = await this._instStore.getBranchByName(
                             connection.recordName,
                             connection.inst,
                             connection.branch
                         );
+
+                        if (branch.temporary) {
+                            await this._temporaryStore.deleteBranch(
+                                connection.recordName,
+                                connection.inst,
+                                connection.branch
+                            );
+                            await this._instStore.deleteBranch(
+                                connection.recordName,
+                                connection.inst,
+                                connection.branch
+                            );
+                        }
                     }
                 }
 
@@ -227,11 +244,44 @@ export class WebsocketController {
             temporary: event.temporary || false,
         });
 
-        const updates = await this._instStore.getCurrentUpdates(
+        const inst: InstRecord | null = await this._getOrCreateInst(
+            event.recordName,
+            event.inst
+        );
+        const branch = await this._getOrCreateBranch(
             event.recordName,
             event.inst,
-            event.branch
+            event.branch,
+            event.temporary,
+            inst
         );
+
+        let updates: CurrentUpdates;
+        if (branch.temporary) {
+            // Temporary branches use a temporary inst data store.
+            // This is because temporary branches are never persisted to disk.
+            updates = await this._temporaryStore.getUpdates(
+                event.recordName,
+                event.inst,
+                event.branch
+            );
+        } else {
+            updates = await this._instStore.getCurrentUpdates(
+                event.recordName,
+                event.inst,
+                event.branch
+            );
+        }
+
+        if (!updates) {
+            // branch info exists, but no updates for them exist yet.
+            updates = {
+                updates: [],
+                timestamps: [],
+                instSizeInBytes: 0,
+            };
+        }
+
         const watchingDevices =
             await this._connectionStore.getConnectionsByBranch(
                 'watch_branch',
@@ -263,6 +313,64 @@ export class WebsocketController {
             }),
         ];
         await Promise.all(promises);
+    }
+
+    private async _getOrCreateInst(
+        recordName: string | null,
+        instName: string
+    ) {
+        let inst: InstRecord | null = null;
+        if (recordName) {
+            let inst = await this._instStore.getInstByName(
+                recordName,
+                instName
+            );
+            if (!inst) {
+                // Create the inst
+                inst = {
+                    recordName: recordName,
+                    inst: instName,
+
+                    // TODO: Choose a better default marker for auto-created insts
+                    markers: [PUBLIC_WRITE_MARKER],
+                };
+                await this._instStore.saveInst(inst);
+            }
+        }
+
+        return inst;
+    }
+
+    private async _getOrCreateBranch(
+        recordName: string,
+        inst: string,
+        branch: string,
+        temporary: boolean,
+        linkedInst: InstRecord
+    ) {
+        let b = await this._instStore.getBranchByName(recordName, inst, branch);
+        if (!b) {
+            if (temporary) {
+                // Save the branch to the temp store
+                await this._temporaryStore.saveBranchInfo({
+                    recordName: recordName,
+                    inst: inst,
+                    branch: branch,
+                    temporary: true,
+                    linkedInst: linkedInst,
+                });
+            }
+            // Save the branch to the inst store
+            await this._instStore.saveBranch({
+                branch: branch,
+                inst: inst,
+                recordName: recordName,
+                temporary: temporary || false,
+            });
+            b = await this._instStore.getBranchByName(recordName, inst, branch);
+        }
+
+        return b;
     }
 
     async unwatchBranch(
@@ -306,11 +414,24 @@ export class WebsocketController {
                         branch
                     );
                 if (count <= 0) {
-                    await this._temporaryStore.deleteBranch(
-                        recordName,
-                        inst,
-                        branch
+                    const branch = await this._instStore.getBranchByName(
+                        connection.recordName,
+                        connection.inst,
+                        connection.branch
                     );
+
+                    if (branch.temporary) {
+                        await this._temporaryStore.deleteBranch(
+                            connection.recordName,
+                            connection.inst,
+                            connection.branch
+                        );
+                        await this._instStore.deleteBranch(
+                            connection.recordName,
+                            connection.inst,
+                            connection.branch
+                        );
+                    }
                 }
             }
 
@@ -349,67 +470,107 @@ export class WebsocketController {
         );
 
         if (event.updates) {
-            let result = await this._instStore.addUpdates(
+            let branch = await this._instStore.getBranchByName(
                 event.recordName,
                 event.inst,
-                event.branch,
-                event.updates,
-                sumBy(event.updates, (u) => u.length)
+                event.branch
             );
 
-            if (result.success === false) {
+            if (!branch) {
                 console.log(
-                    `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}]  Failed to add updates`,
-                    result
+                    `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}]  Branch not found!`
                 );
-                if (result.errorCode === 'max_size_reached') {
-                    // if (this.mergeUpdatesOnMaxSizeExceeded) {
-                    //     try {
-                    //         console.log(
-                    //             `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}]  Merging branch updates.`
-                    //         );
 
-                    //         const updates = await this._instStore.getUpdates(
-                    //             namespace
-                    //         );
-                    //         const mergedUpdates = mergeUpdates([
-                    //             ...updates.updates.map((u) => toByteArray(u)),
-                    //             ...event.updates.map((u) => toByteArray(u)),
-                    //         ]);
-                    //         result = await this._updatesStore.replaceUpdates(
-                    //             namespace,
-                    //             updates,
-                    //             [fromByteArray(mergedUpdates)]
-                    //         );
+                await this._getOrCreateInst(event.recordName, event.inst);
+                await this._instStore.saveBranch({
+                    branch: event.branch,
+                    inst: event.inst,
+                    recordName: event.recordName,
+                    temporary: false,
+                });
+                branch = await this._instStore.getBranchByName(
+                    event.recordName,
+                    event.inst,
+                    event.branch
+                );
+            }
 
-                    //         if (result.success === false) {
-                    //             console.log(
-                    //                 `[CausalRepoServer] [${namespace}] [${connectionId}] Failed to merge branch updates`,
-                    //                 result
-                    //             );
-                    //         }
-                    //     } catch (err) {
-                    //         console.error(
-                    //             '[CausalRepoServer] Unable to merge branch updates!',
-                    //             err
-                    //         );
-                    //     }
-                    // }
+            if (branch.temporary) {
+                // Temporary branches use a temporary inst data store.
+                // This is because temporary branches are never persisted to disk.
+                await this._temporaryStore.addUpdates(
+                    event.recordName,
+                    event.inst,
+                    event.branch,
+                    event.updates,
+                    sumBy(event.updates, (u) => u.length)
+                );
+            } else {
+                const result = await this._instStore.addUpdates(
+                    event.recordName,
+                    event.inst,
+                    event.branch,
+                    event.updates,
+                    sumBy(event.updates, (u) => u.length)
+                );
 
-                    if (result.success === false) {
-                        if ('updateId' in event) {
-                            let { success, branch, ...rest } = result;
+                if (result.success === false) {
+                    console.log(
+                        `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}]  Failed to add updates`,
+                        result
+                    );
+                    if (result.errorCode === 'max_size_reached') {
+                        // if (this.mergeUpdatesOnMaxSizeExceeded) {
+                        //     try {
+                        //         console.log(
+                        //             `[CausalRepoServer] [namespace: ${event.recordName}/${event.inst}/${event.branch}, connectionId: ${connectionId}]  Merging branch updates.`
+                        //         );
 
-                            await this._messenger.sendMessage([connectionId], {
-                                type: 'repo/updates_received',
-                                recordName: event.recordName,
-                                inst: event.inst,
-                                branch: event.branch,
-                                updateId: event.updateId,
-                                ...rest,
-                            });
+                        //         const updates = await this._instStore.getUpdates(
+                        //             namespace
+                        //         );
+                        //         const mergedUpdates = mergeUpdates([
+                        //             ...updates.updates.map((u) => toByteArray(u)),
+                        //             ...event.updates.map((u) => toByteArray(u)),
+                        //         ]);
+                        //         result = await this._updatesStore.replaceUpdates(
+                        //             namespace,
+                        //             updates,
+                        //             [fromByteArray(mergedUpdates)]
+                        //         );
+
+                        //         if (result.success === false) {
+                        //             console.log(
+                        //                 `[CausalRepoServer] [${namespace}] [${connectionId}] Failed to merge branch updates`,
+                        //                 result
+                        //             );
+                        //         }
+                        //     } catch (err) {
+                        //         console.error(
+                        //             '[CausalRepoServer] Unable to merge branch updates!',
+                        //             err
+                        //         );
+                        //     }
+                        // }
+
+                        if (result.success === false) {
+                            if ('updateId' in event) {
+                                let { success, branch, ...rest } = result;
+
+                                await this._messenger.sendMessage(
+                                    [connectionId],
+                                    {
+                                        type: 'repo/updates_received',
+                                        recordName: event.recordName,
+                                        inst: event.inst,
+                                        branch: event.branch,
+                                        updateId: event.updateId,
+                                        ...rest,
+                                    }
+                                );
+                            }
+                            return;
                         }
-                        return;
                     }
                 }
             }
@@ -568,7 +729,7 @@ export class WebsocketController {
 
         const currentDevices =
             await this._connectionStore.getConnectionsByBranch(
-                'watch_branch',
+                'branch',
                 recordName,
                 inst,
                 branch
@@ -640,11 +801,15 @@ export class WebsocketController {
             `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}] Get Data`
         );
 
-        const updates = await this._instStore.getCurrentUpdates(
+        const updates = (await this._instStore.getCurrentUpdates(
             recordName,
             inst,
             branch
-        );
+        )) ?? {
+            updates: [],
+            timestamps: [],
+            instSizeInBytes: 0,
+        };
         const partition = new YjsPartitionImpl({ type: 'yjs' });
 
         for (let updateBase64 of updates.updates) {
@@ -685,11 +850,14 @@ export class WebsocketController {
             `[CausalRepoServer] [namespace: ${recordName}/${inst}/${branch}, connectionId: ${connectionId}] Get Updates`
         );
 
-        const updates = await this._instStore.getAllUpdates(
+        const updates = (await this._instStore.getAllUpdates(
             recordName,
             inst,
             branch
-        );
+        )) ?? {
+            updates: [],
+            timestamps: [],
+        };
 
         this._messenger.sendMessage([connection.serverConnectionId], {
             type: 'repo/add_updates',
@@ -742,7 +910,7 @@ export class WebsocketController {
         }
 
         if (connectedDevices.length <= 0) {
-            return 503;
+            return 404;
         }
 
         // TODO: Replace with system that selects target devices with better uniformity
@@ -754,7 +922,7 @@ export class WebsocketController {
         const randomDevice = connectedDevices[randomDeviceIndex];
 
         if (!randomDevice) {
-            return 503;
+            return 500;
         }
 
         const a = action(ON_WEBHOOK_ACTION_NAME, null, null, {
