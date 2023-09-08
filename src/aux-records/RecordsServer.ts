@@ -35,13 +35,15 @@ import {
     AddUpdatesMessage,
     LoginMessage,
     SendActionMessage,
+    TimeSyncRequestMessage,
     UnwatchBranchMessage,
     WatchBranchMessage,
     WebsocketErrorEvent,
     WebsocketEventTypes,
     WebsocketMessage,
+    WebsocketRequestMessage,
     websocketEventSchema,
-    websocketMessageSchema,
+    websocketRequestMessageSchema,
 } from './websockets/WebsocketEvents';
 
 /**
@@ -936,9 +938,9 @@ export class RecordsServer {
     private async _processWebsocketMessage(
         request: GenericWebsocketRequest,
         requestId: number,
-        message: WebsocketMessage
+        message: WebsocketRequestMessage
     ) {
-        const messageResult = websocketMessageSchema.safeParse(message);
+        const messageResult = websocketRequestMessageSchema.safeParse(message);
 
         if (messageResult.success === false) {
             await this._sendWebsocketZodError(
@@ -998,6 +1000,12 @@ export class RecordsServer {
                 data.recordName,
                 data.inst,
                 data.branch
+            );
+        } else if (data.type === 'sync/time') {
+            await this._websocketController.syncTime(
+                request.connectionId,
+                data as TimeSyncRequestMessage,
+                Date.now()
             );
         }
     }

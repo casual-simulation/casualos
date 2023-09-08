@@ -128,28 +128,29 @@ export const websocketDownloadRequestEventSchema = z.tuple([
     z.record(z.string()),
 ]);
 
-export type WebsocketMessage =
-    | LoginMessage
+export type WebsocketResponseMessage =
     | LoginResultMessage
+    | TimeSyncResponseMessage
+    | UpdatesReceivedMessage
+    | ReceiveDeviceActionMessage
+    | ConnectedToBranchMessage
+    | DisconnectedFromBranchMessage
+    | RateLimitExceededMessage;
+
+export type WebsocketRequestMessage =
+    | LoginMessage
     | WatchBranchMessage
     | UnwatchBranchMessage
     | AddUpdatesMessage
-    | UpdatesReceivedMessage
-    // | ResetMessage
     | SendActionMessage
-    | ReceiveDeviceActionMessage
     | WatchBranchDevicesMessage
     | UnwatchBranchDevicesMessage
-    | ConnectedToBranchMessage
-    | DisconnectedFromBranchMessage
-    // | BranchInfoMessage
-    // | ListBranchesMessage
-    // | BranchesStatusMessage
-    // | ListConnectionsMessage
     | ConnectionCountMessage
-    | TimeSyncRequestMessage
-    | TimeSyncResponseMessage
-    | RateLimitExceededMessage;
+    | TimeSyncRequestMessage;
+
+export type WebsocketMessage =
+    | WebsocketRequestMessage
+    | WebsocketResponseMessage;
 
 /**
  * Defines a login message.
@@ -913,6 +914,23 @@ type ZodRateLimitExceededMessageAssertion = HasType<
     RateLimitExceededMessage
 >;
 
+export const websocketRequestMessageSchema = z.discriminatedUnion('type', [
+    loginMessageSchema,
+    watchBranchMessageSchema,
+    unwatchBranchMessageSchema,
+    addUpdatesMessageSchema,
+    sendActionMessageSchema,
+    watchBranchDevicesMessageSchema,
+    unwatchBranchDevicesMessageSchema,
+    connectionCountMessageSchema,
+    timeSyncRequestMessageSchema,
+]);
+type ZodWebsocketRequestMessage = z.infer<typeof websocketRequestMessageSchema>;
+type ZodWebsocketRequestMessageAssertion = HasType<
+    ZodWebsocketRequestMessage,
+    WebsocketRequestMessage
+>;
+
 export const websocketMessageSchema = z.discriminatedUnion('type', [
     loginMessageSchema,
     loginResultMessageSchema,
@@ -920,27 +938,21 @@ export const websocketMessageSchema = z.discriminatedUnion('type', [
     unwatchBranchMessageSchema,
     addUpdatesMessageSchema,
     updatesReceivedMessageSchema,
-    // resetMessageSchema,
     sendActionMessageSchema,
     receiveDeviceActionMessageSchema,
     watchBranchDevicesMessageSchema,
     unwatchBranchDevicesMessageSchema,
     connectedToBranchMessageSchema,
     disconnectedFromBranchMessageSchema,
-    // branchExistsInfoMessageSchema,
-    // branchDoesNotExistInfoMessageSchema,
-    // listBranchesMessageSchema,
-    // branchesStatusMessageSchema,
-    // listConnectionsMessageSchema,
     connectionCountMessageSchema,
     timeSyncRequestMessageSchema,
     timeSyncResponseMessageSchema,
     rateLimitExceededMessageSchema,
 ]);
-type ZodWebsocketMessage = z.infer<typeof websocketMessageSchema>;
+type ZodWebsocketMessage = z.infer<typeof websocketRequestMessageSchema>;
 type ZodWebsocketMessageAssertion = HasType<
     ZodWebsocketMessage,
-    WebsocketMessage
+    WebsocketRequestMessage
 >;
 
 export const websocketMessageEventSchema = z.tuple([

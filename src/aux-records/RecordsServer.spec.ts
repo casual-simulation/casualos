@@ -11424,6 +11424,33 @@ describe('RecordsServer', () => {
                 });
             });
         });
+
+        describe('sync/time', () => {
+            it('should return the current time', async () => {
+                await server.handleWebsocketRequest(
+                    wsMessage(
+                        connectionId,
+                        messageEvent(1, {
+                            type: 'sync/time',
+                            id: 100,
+                            clientRequestTime: 123,
+                        })
+                    )
+                );
+
+                expectNoWebSocketErrors(connectionId);
+
+                expect(websocketMessenger.getMessages(connectionId)).toEqual([
+                    {
+                        type: 'sync/time/response',
+                        id: 100,
+                        clientRequestTime: 123,
+                        serverReceiveTime: expect.any(Number),
+                        serverTransmitTime: expect.any(Number),
+                    },
+                ]);
+            });
+        });
     });
 
     function expectNoWebSocketErrors(connectionId: string) {
