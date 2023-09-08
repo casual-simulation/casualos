@@ -74,6 +74,9 @@ import {
     WebsocketMessage,
     WebsocketMessageEvent,
 } from './websockets/WebsocketEvents';
+import { toast } from '@casual-simulation/aux-common/bots';
+import { device, remote } from './common/RemoteActions';
+import { ConnectionInfo } from './common/ConnectionInfo';
 
 console.log = jest.fn();
 
@@ -10829,6 +10832,7 @@ describe('RecordsServer', () => {
             const inst = 'inst';
             const clientConnectionId = 'clientConnectionId';
             const branch = 'shared';
+            let connectionInfo: ConnectionInfo;
 
             beforeEach(async () => {
                 if (c === 'authenticated') {
@@ -10844,6 +10848,11 @@ describe('RecordsServer', () => {
                         type: 'login',
                         connectionToken,
                     });
+                    connectionInfo = {
+                        connectionId: clientConnectionId,
+                        sessionId,
+                        userId,
+                    };
                 } else {
                     recordName = null;
                     connectionToken = null;
@@ -10851,6 +10860,11 @@ describe('RecordsServer', () => {
                         type: 'login',
                         clientConnectionId,
                     });
+                    connectionInfo = {
+                        connectionId: clientConnectionId,
+                        sessionId: null,
+                        userId: null,
+                    };
                 }
 
                 websocketMessenger.reset();
@@ -10923,6 +10937,442 @@ describe('RecordsServer', () => {
                             initial: true,
                         },
                     ]);
+                });
+
+                it('should send updates when they are added', async () => {
+                    expectNoWebSocketErrors(connectionId);
+
+                    await server.handleWebsocketRequest(
+                        wsMessage(
+                            connectionId,
+                            messageEvent(2, {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst,
+                                branch,
+                            })
+                        )
+                    );
+
+                    expectNoWebSocketErrors(connectionId);
+
+                    await websocketController.addUpdates('connection2', {
+                        type: 'repo/add_updates',
+                        recordName,
+                        inst,
+                        branch,
+                        updates: ['abc'],
+                    });
+
+                    expectNoWebSocketErrors('connection2');
+
+                    expect(
+                        websocketMessenger.getMessages(connectionId)
+                    ).toEqual([
+                        {
+                            type: 'repo/add_updates',
+                            recordName,
+                            inst,
+                            branch,
+                            updates: [],
+                            initial: true,
+                        },
+                        {
+                            type: 'repo/add_updates',
+                            recordName,
+                            inst,
+                            branch,
+                            updates: ['abc'],
+                        },
+                    ]);
+                });
+            });
+
+            describe('repo/add_updates', () => {
+                it('should add updates to the branch', async () => {
+                    expectNoWebSocketErrors(connectionId);
+
+                    await server.handleWebsocketRequest(
+                        wsMessage(
+                            connectionId,
+                            messageEvent(2, {
+                                type: 'repo/add_updates',
+                                recordName,
+                                inst,
+                                branch,
+                                updates: ['abc'],
+                                updateId: 3,
+                            })
+                        )
+                    );
+
+                    expectNoWebSocketErrors(connectionId);
+                    expect(
+                        websocketMessenger.getMessages(connectionId)
+                    ).toEqual([
+                        {
+                            type: 'repo/updates_received',
+                            recordName,
+                            inst,
+                            branch,
+                            updateId: 3,
+                        },
+                    ]);
+
+                    expect(
+                        await instStore.getCurrentUpdates(
+                            recordName,
+                            inst,
+                            branch
+                        )
+                    ).toEqual({
+                        updates: ['abc'],
+                        timestamps: [expect.any(Number)],
+                        instSizeInBytes: 3,
+                    });
+                });
+            });
+
+            describe('repo/unwatch_branch', () => {
+                it('should stop sending updates', async () => {
+                    expectNoWebSocketErrors(connectionId);
+
+                    await server.handleWebsocketRequest(
+                        wsMessage(
+                            connectionId,
+                            messageEvent(2, {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst,
+                                branch,
+                            })
+                        )
+                    );
+
+                    expectNoWebSocketErrors(connectionId);
+
+                    await websocketController.addUpdates('connection2', {
+                        type: 'repo/add_updates',
+                        recordName,
+                        inst,
+                        branch,
+                        updates: ['abc'],
+                    });
+
+                    expectNoWebSocketErrors('connection2');
+
+                    await server.handleWebsocketRequest(
+                        wsMessage(
+                            connectionId,
+                            messageEvent(3, {
+                                type: 'repo/unwatch_branch',
+                                recordName,
+                                inst,
+                                branch,
+                            })
+                        )
+                    );
+
+                    expectNoWebSocketErrors(connectionId);
+
+                    await websocketController.addUpdates('connection2', {
+                        type: 'repo/add_updates',
+                        recordName,
+                        inst,
+                        branch,
+                        updates: ['def'],
+                    });
+
+                    expectNoWebSocketErrors('connection2');
+
+                    expect(
+                        websocketMessenger.getMessages(connectionId)
+                    ).toEqual([
+                        {
+                            type: 'repo/add_updates',
+                            recordName,
+                            inst,
+                            branch,
+                            updates: [],
+                            initial: true,
+                        },
+                        {
+                            type: 'repo/add_updates',
+                            recordName,
+                            inst,
+                            branch,
+                            updates: ['abc'],
+                        },
+                    ]);
+                });
+            });
+
+            describe('repo/send_action', () => {
+                it('should send an action to the specified device', async () => {
+                    expectNoWebSocketErrors(connectionId);
+                    await websocketController.login('connection2', 99, {
+                        type: 'login',
+                        clientConnectionId: 'clientConnectionId2',
+                    });
+                    await websocketController.watchBranch('connection2', {
+                        type: 'repo/watch_branch',
+                        recordName,
+                        inst,
+                        branch,
+                    });
+
+                    expectNoWebSocketErrors('connection2');
+
+                    await server.handleWebsocketRequest(
+                        wsMessage(
+                            connectionId,
+                            messageEvent(2, {
+                                type: 'repo/send_action',
+                                recordName,
+                                inst,
+                                branch,
+                                action: remote(toast('hello!'), {
+                                    connectionId: 'clientConnectionId2',
+                                }),
+                            })
+                        )
+                    );
+
+                    expectNoWebSocketErrors(connectionId);
+
+                    expect(
+                        websocketMessenger.getMessages('connection2').slice(2)
+                    ).toEqual([
+                        {
+                            type: 'repo/receive_action',
+                            recordName,
+                            inst,
+                            branch,
+                            action: device(connectionInfo, toast('hello!')),
+                        },
+                    ]);
+                });
+
+                it('should do nothing if no devices are matched by the selector', async () => {
+                    expectNoWebSocketErrors(connectionId);
+                    await websocketController.login('connection2', 99, {
+                        type: 'login',
+                        clientConnectionId: 'clientConnectionId2',
+                    });
+                    await websocketController.watchBranch('connection2', {
+                        type: 'repo/watch_branch',
+                        recordName,
+                        inst,
+                        branch,
+                    });
+
+                    expectNoWebSocketErrors('connection2');
+
+                    await server.handleWebsocketRequest(
+                        wsMessage(
+                            connectionId,
+                            messageEvent(2, {
+                                type: 'repo/send_action',
+                                recordName,
+                                inst,
+                                branch,
+                                action: remote(toast('hello!'), {
+                                    connectionId: 'missing',
+                                }),
+                            })
+                        )
+                    );
+
+                    expectNoWebSocketErrors(connectionId);
+
+                    expect(
+                        websocketMessenger.getMessages('connection2').slice(2)
+                    ).toEqual([]);
+                });
+            });
+
+            describe('repo/watch_branch_devices', () => {
+                it('should watch for connection events on the given branch', async () => {
+                    expectNoWebSocketErrors(connectionId);
+
+                    await server.handleWebsocketRequest(
+                        wsMessage(
+                            connectionId,
+                            messageEvent(2, {
+                                type: 'repo/watch_branch_devices',
+                                recordName,
+                                inst,
+                                branch,
+                            })
+                        )
+                    );
+
+                    expectNoWebSocketErrors(connectionId);
+
+                    await websocketController.login('connection2', 99, {
+                        type: 'login',
+                        clientConnectionId: 'clientConnectionId2',
+                    });
+                    await websocketController.watchBranch('connection2', {
+                        type: 'repo/watch_branch',
+                        recordName,
+                        inst,
+                        branch,
+                    });
+
+                    expectNoWebSocketErrors('connection2');
+
+                    expect(
+                        websocketMessenger.getMessages(connectionId)
+                    ).toEqual([
+                        {
+                            type: 'repo/connected_to_branch',
+                            broadcast: false,
+                            branch: {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst,
+                                branch,
+                            },
+                            connection: {
+                                connectionId: 'clientConnectionId2',
+                                sessionId: null,
+                                userId: null,
+                            },
+                        },
+                    ]);
+                });
+
+                it('should watch for disconnection events on the given branch', async () => {
+                    expectNoWebSocketErrors(connectionId);
+
+                    await server.handleWebsocketRequest(
+                        wsMessage(
+                            connectionId,
+                            messageEvent(2, {
+                                type: 'repo/watch_branch_devices',
+                                recordName,
+                                inst,
+                                branch,
+                            })
+                        )
+                    );
+
+                    expectNoWebSocketErrors(connectionId);
+
+                    await websocketController.login('connection2', 99, {
+                        type: 'login',
+                        clientConnectionId: 'clientConnectionId2',
+                    });
+                    await websocketController.watchBranch('connection2', {
+                        type: 'repo/watch_branch',
+                        recordName,
+                        inst,
+                        branch,
+                    });
+
+                    expectNoWebSocketErrors('connection2');
+
+                    await websocketController.unwatchBranch(
+                        'connection2',
+                        recordName,
+                        inst,
+                        branch
+                    );
+
+                    expectNoWebSocketErrors('connection2');
+
+                    expect(
+                        websocketMessenger.getMessages(connectionId)
+                    ).toEqual([
+                        {
+                            type: 'repo/connected_to_branch',
+                            broadcast: false,
+                            branch: {
+                                type: 'repo/watch_branch',
+                                recordName,
+                                inst,
+                                branch,
+                            },
+                            connection: {
+                                connectionId: 'clientConnectionId2',
+                                sessionId: null,
+                                userId: null,
+                            },
+                        },
+                        {
+                            type: 'repo/disconnected_from_branch',
+                            broadcast: false,
+                            recordName,
+                            inst,
+                            branch,
+                            connection: {
+                                connectionId: 'clientConnectionId2',
+                                sessionId: null,
+                                userId: null,
+                            },
+                        },
+                    ]);
+                });
+            });
+
+            describe('repo/unwatch_branch_devices', () => {
+                it('should stop watching for connection events', async () => {
+                    expectNoWebSocketErrors(connectionId);
+
+                    await server.handleWebsocketRequest(
+                        wsMessage(
+                            connectionId,
+                            messageEvent(2, {
+                                type: 'repo/watch_branch_devices',
+                                recordName,
+                                inst,
+                                branch,
+                            })
+                        )
+                    );
+
+                    expectNoWebSocketErrors(connectionId);
+
+                    await server.handleWebsocketRequest(
+                        wsMessage(
+                            connectionId,
+                            messageEvent(2, {
+                                type: 'repo/unwatch_branch_devices',
+                                recordName,
+                                inst,
+                                branch,
+                            })
+                        )
+                    );
+
+                    expectNoWebSocketErrors(connectionId);
+
+                    await websocketController.login('connection2', 99, {
+                        type: 'login',
+                        clientConnectionId: 'clientConnectionId2',
+                    });
+                    await websocketController.watchBranch('connection2', {
+                        type: 'repo/watch_branch',
+                        recordName,
+                        inst,
+                        branch,
+                    });
+
+                    expectNoWebSocketErrors('connection2');
+
+                    await websocketController.unwatchBranch(
+                        'connection2',
+                        recordName,
+                        inst,
+                        branch
+                    );
+
+                    expectNoWebSocketErrors('connection2');
+
+                    expect(
+                        websocketMessenger.getMessages(connectionId)
+                    ).toEqual([]);
                 });
             });
         });

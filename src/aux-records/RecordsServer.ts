@@ -32,7 +32,10 @@ import { AIController } from './AIController';
 import { AIChatMessage, AI_CHAT_MESSAGE_SCHEMA } from './AIChatInterface';
 import { WebsocketController } from './websockets/WebsocketController';
 import {
+    AddUpdatesMessage,
     LoginMessage,
+    SendActionMessage,
+    UnwatchBranchMessage,
     WatchBranchMessage,
     WebsocketErrorEvent,
     WebsocketEventTypes,
@@ -957,6 +960,37 @@ export class RecordsServer {
             await this._websocketController.watchBranch(
                 request.connectionId,
                 data as WatchBranchMessage
+            );
+        } else if (data.type === 'repo/unwatch_branch') {
+            await this._websocketController.unwatchBranch(
+                request.connectionId,
+                data.recordName,
+                data.inst,
+                data.branch
+            );
+        } else if (data.type === 'repo/add_updates') {
+            await this._websocketController.addUpdates(
+                request.connectionId,
+                data as AddUpdatesMessage
+            );
+        } else if (data.type === 'repo/send_action') {
+            await this._websocketController.sendAction(
+                request.connectionId,
+                data as SendActionMessage
+            );
+        } else if (data.type === 'repo/watch_branch_devices') {
+            await this._websocketController.watchBranchDevices(
+                request.connectionId,
+                data.recordName,
+                data.inst,
+                data.branch
+            );
+        } else if (data.type === 'repo/unwatch_branch_devices') {
+            await this._websocketController.unwatchBranchDevices(
+                request.connectionId,
+                data.recordName,
+                data.inst,
+                data.branch
             );
         }
     }

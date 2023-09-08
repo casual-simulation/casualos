@@ -138,6 +138,8 @@ export type WebsocketMessage =
     // | ResetMessage
     | SendActionMessage
     | ReceiveDeviceActionMessage
+    | WatchBranchDevicesMessage
+    | UnwatchBranchDevicesMessage
     | ConnectedToBranchMessage
     | DisconnectedFromBranchMessage
     | BranchInfoMessage
@@ -270,6 +272,78 @@ type ZodUnwatchBranchMessage = z.infer<typeof unwatchBranchMessageSchema>;
 type ZodUnwatchBranchMessageAssertion = HasType<
     ZodUnwatchBranchMessage,
     UnwatchBranchMessage
+>;
+
+/**
+ * Defines an event which indicates that devices connected to a branch should be watched.
+ */
+export interface WatchBranchDevicesMessage {
+    type: 'repo/watch_branch_devices';
+
+    /**
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
+
+    /**
+     * The name of the branch to unwatch.
+     */
+    branch: string;
+}
+export const watchBranchDevicesMessageSchema = z.object({
+    type: z.literal('repo/watch_branch_devices'),
+    recordName: z.string().nonempty().nullable(),
+    inst: z.string(),
+    branch: z.string(),
+});
+type ZodWatchBranchDevicesMessage = z.infer<
+    typeof watchBranchDevicesMessageSchema
+>;
+type ZodWatchBranchDevicesMessageAssertion = HasType<
+    ZodWatchBranchDevicesMessage,
+    WatchBranchDevicesMessage
+>;
+
+/**
+ * Defines an event which indicates that devices connected to a branch should be no longer be watched.
+ */
+export interface UnwatchBranchDevicesMessage {
+    type: 'repo/unwatch_branch_devices';
+
+    /**
+     * The name of the record that the branch is for.
+     * Null if the branch should be public and non-permanent.
+     */
+    recordName: string | null;
+
+    /**
+     * The name of the inst.
+     */
+    inst: string;
+
+    /**
+     * The name of the branch to unwatch.
+     */
+    branch: string;
+}
+export const unwatchBranchDevicesMessageSchema = z.object({
+    type: z.literal('repo/unwatch_branch_devices'),
+    recordName: z.string().nonempty().nullable(),
+    inst: z.string(),
+    branch: z.string(),
+});
+type ZodUnwatchBranchDevicesMessage = z.infer<
+    typeof unwatchBranchDevicesMessageSchema
+>;
+type ZodUnwatchBranchDevicesMessageAssertion = HasType<
+    ZodUnwatchBranchDevicesMessage,
+    UnwatchBranchDevicesMessage
 >;
 
 /**
@@ -849,6 +923,8 @@ export const websocketMessageSchema = z.discriminatedUnion('type', [
     // resetMessageSchema,
     sendActionMessageSchema,
     receiveDeviceActionMessageSchema,
+    watchBranchDevicesMessageSchema,
+    unwatchBranchDevicesMessageSchema,
     connectedToBranchMessageSchema,
     disconnectedFromBranchMessageSchema,
     branchExistsInfoMessageSchema,
