@@ -108,6 +108,17 @@ export class MemoryTempInstRecordsStore implements TemporaryInstRecordsStore {
         this._counts.set(key, (this._counts.get(key) ?? 0) + updates.length);
     }
 
+    async listPublicBranches(): Promise<TempBranchInfo[]> {
+        let publicBranches = [] as TempBranchInfo[];
+        for (let branch of this._branches.values()) {
+            if (branch.recordName === null) {
+                publicBranches.push(branch);
+            }
+        }
+
+        return publicBranches;
+    }
+
     async deleteBranch(
         recordName: string,
         inst: string,

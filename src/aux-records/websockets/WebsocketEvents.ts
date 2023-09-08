@@ -143,8 +143,8 @@ export type WebsocketMessage =
     | ConnectedToBranchMessage
     | DisconnectedFromBranchMessage
     | BranchInfoMessage
-    // | ListBranchesMessage
-    // | BranchesStatusMessage
+    | ListBranchesMessage
+    | BranchesStatusMessage
     // | ListConnectionsMessage
     | ConnectionCountMessage
     | TimeSyncRequestMessage
@@ -741,41 +741,55 @@ type ZodBranchDoesNotExistInfoMessageAssertion = HasType<
     BranchDoesNotExistInfoMessage
 >;
 
-// export interface ListBranchesMessage {
-//     type: 'repo/branches';
-//     branches: string[];
-// }
-// export const listBranchesMessageSchema = z.object({
-//     type: z.literal('repo/branches'),
-//     branch: z.array(z.string()),
-// });
-// type ZodListBranchesMessage = z.infer<typeof listBranchesMessageSchema>;
-// type ZodListBranchesMessageAssertion = HasType<
-//     ZodListBranchesMessage,
-//     ListBranchesMessage
-// >;
+export interface ListBranchesMessage {
+    type: 'repo/branches';
+    branches?: {
+        inst: string;
+        branch: string;
+    }[];
+}
+export const listBranchesMessageSchema = z.object({
+    type: z.literal('repo/branches'),
+    branches: z
+        .array(
+            z.object({
+                inst: z.string(),
+                branch: z.string(),
+            })
+        )
+        .optional(),
+});
+type ZodListBranchesMessage = z.infer<typeof listBranchesMessageSchema>;
+type ZodListBranchesMessageAssertion = HasType<
+    ZodListBranchesMessage,
+    ListBranchesMessage
+>;
 
-// export interface BranchesStatusMessage {
-//     type: 'repo/branches_status';
-//     branches: {
-//         branch: string;
-//         lastUpdateTime: Date;
-//     }[];
-// }
-// export const branchesStatusMessageSchema = z.object({
-//     type: z.literal('repo/branches_status'),
-//     branches: z.array(
-//         z.object({
-//             branch: z.string(),
-//             lastUpdateTime: z.date(),
-//         })
-//     ),
-// });
-// type ZodBranchesStatusMessage = z.infer<typeof branchesStatusMessageSchema>;
-// type ZodBranchesStatusMessageAssertion = HasType<
-//     ZodBranchesStatusMessage,
-//     BranchesStatusMessage
-// >;
+export interface BranchesStatusMessage {
+    type: 'repo/branches_status';
+    branches?: {
+        inst: string;
+        branch: string;
+        lastUpdateTime: Date;
+    }[];
+}
+export const branchesStatusMessageSchema = z.object({
+    type: z.literal('repo/branches_status'),
+    branches: z
+        .array(
+            z.object({
+                inst: z.string(),
+                branch: z.string(),
+                lastUpdateTime: z.date(),
+            })
+        )
+        .optional(),
+});
+type ZodBranchesStatusMessage = z.infer<typeof branchesStatusMessageSchema>;
+type ZodBranchesStatusMessageAssertion = HasType<
+    ZodBranchesStatusMessage,
+    BranchesStatusMessage
+>;
 
 // export interface ListConnectionsMessage {
 //     type: 'repo/connections';
@@ -929,8 +943,8 @@ export const websocketMessageSchema = z.discriminatedUnion('type', [
     disconnectedFromBranchMessageSchema,
     branchExistsInfoMessageSchema,
     branchDoesNotExistInfoMessageSchema,
-    // listBranchesMessageSchema,
-    // branchesStatusMessageSchema,
+    listBranchesMessageSchema,
+    branchesStatusMessageSchema,
     // listConnectionsMessageSchema,
     connectionCountMessageSchema,
     timeSyncRequestMessageSchema,

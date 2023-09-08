@@ -195,6 +195,12 @@ export interface TemporaryInstRecordsStore {
         inst: string,
         branch: string
     ): Promise<void>;
+
+    /**
+     * Gets the list of public branches that are stored.
+     * That is, branches that have a null record name.
+     */
+    listPublicBranches(): Promise<TempBranchInfo[]>;
 }
 
 export interface BranchUpdates extends CurrentUpdates {
