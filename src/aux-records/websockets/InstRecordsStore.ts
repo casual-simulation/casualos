@@ -28,12 +28,6 @@ export interface InstRecordsStore {
     ): Promise<BranchRecordWithInst | null>;
 
     /**
-     * Gets the list of public branches.
-     * That is, branches that do not belong to a record.
-     */
-    listPublicBranches(): Promise<BranchRecord[]>;
-
-    /**
      * Creates or updates the given inst.
      * If branches are included, then they will be added/updated to the inst as well.
      * @param inst The inst that should be saved.

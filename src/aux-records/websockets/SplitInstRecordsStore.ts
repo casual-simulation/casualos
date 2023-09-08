@@ -90,10 +90,6 @@ export class SplitInstRecordsStore implements InstRecordsStore {
         }
     }
 
-    async listPublicBranches(): Promise<BranchRecord[]> {
-        return await this._temp.listPublicBranches();
-    }
-
     async getCurrentUpdates(
         recordName: string | null,
         inst: string,

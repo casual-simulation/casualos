@@ -33,28 +33,6 @@ export class MemoryInstRecordsStore implements InstRecordsStore {
         };
     }
 
-    async listPublicBranches(): Promise<BranchRecord[]> {
-        let record = this._getRecord(null);
-        if (!record) {
-            return [];
-        }
-
-        let result: BranchRecord[] = [];
-        for (let inst of record.values()) {
-            for (let branch of inst.branches) {
-                if (branch.recordName === null) {
-                    result.push({
-                        recordName: branch.recordName,
-                        inst: branch.inst,
-                        branch: branch.branch,
-                        temporary: branch.temporary,
-                    });
-                }
-            }
-        }
-        return result;
-    }
-
     async getBranchByName(
         recordName: string,
         inst: string,
